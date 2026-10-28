@@ -45,7 +45,7 @@ internal class NotationPaintingTest {
         val notations = SongNotations(
             rendered = RenderedNotations(
                 request = null,
-                renderings = tunes.associateWith { NotationRendering(drawing, unitSize = 1f, systems = painter.paint(drawing, unitSize = 1f)) },
+                renderings = tunes.associate { AbcTune(it, 0) to NotationRendering(drawing, unitSize = 1f, systems = painter.paint(drawing, unitSize = 1f)) },
                 rerenderedTunes = emptySet(),
                 arrivingTunes = emptySet(),
             ),
@@ -54,7 +54,7 @@ internal class NotationPaintingTest {
         )
         tunes.forEach { tune ->
             val run = tune.lines().map { ChordProLine.Verbatim(text = it, environment = "abc") }
-            assertSame(assertNotNull(notations.of(run)).systems, assertNotNull(notations.of(run)).systems)
+            assertSame(assertNotNull(notations.of(run, 0)).systems, assertNotNull(notations.of(run, 0)).systems)
         }
     }
 

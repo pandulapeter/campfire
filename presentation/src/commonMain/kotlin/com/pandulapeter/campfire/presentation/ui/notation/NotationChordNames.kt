@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
  */
 internal data class NotationChordSpelling(val semitones: Int, val preferFlats: Boolean?, val notation: ChordNotation) {
 
-    /** This spelling moved [offset] semitones further, for a tune under a key change ([abcTuneOffsets]). */
+    /** This spelling moved [offset] semitones further, for a tune under a key change ([abcTunesOf]). */
     fun movedBy(offset: Int) = if (offset == 0) this else copy(semitones = semitones + offset)
 
     companion object {

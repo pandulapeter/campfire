@@ -38,6 +38,34 @@ class AbcTuneOffsetsTest {
             {end_of_abc}
             """.trimIndent(),
         )
-        assertEquals(mapOf("X:1\nK:G\nGAB|" to 0, "X:2\nK:D\nDEF|" to 2), abcTuneOffsets(song.blocks))
+        assertEquals(setOf(AbcTune("X:1\nK:G\nGAB|", 0), AbcTune("X:2\nK:D\nDEF|", 2)), abcTunesOf(song.blocks))
+    }
+
+    @Test
+    fun `a tune written again after a key change is moved by that one`() {
+        val song = ChordProParser.parse(
+            """
+            {start_of_abc}
+            X:1
+            K:G
+            GAB|
+            {end_of_abc}
+            {transpose: 2}
+            {start_of_abc}
+            X:2
+            K:D
+            DEF|
+            {end_of_abc}
+            {start_of_abc}
+            X:1
+            K:G
+            GAB|
+            {end_of_abc}
+            """.trimIndent(),
+        )
+        assertEquals(
+            listOf(AbcTune("X:1\nK:G\nGAB|", 0), AbcTune("X:2\nK:D\nDEF|", 2), AbcTune("X:1\nK:G\nGAB|", 2)),
+            abcTunesOf(song.blocks).toList(),
+        )
     }
 }

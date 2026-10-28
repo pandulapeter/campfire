@@ -32,7 +32,9 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   same symbols (spelling, notation, a numbering counted from the tune's first `K:`): **each drawn chord takes the name of
   the symbols it is a transposition of**, in whatever order abc2svg drew them, and one matching none (the capo
   module's line) or symbols named apart keeps abc2svg's. A tune under a mid-song `{transpose}` is moved by it too
-  (`abcTuneOffsets`).
+  (`abcTunesOf`), each copy of a tune by the key change it stands after: renderings are keyed by text and offset
+  (`AbcTune`), and a run carries its offset from the model (`SectionItem.RunSlot.tuneOffset`, `groupStartOffsetsOf`,
+  the walk the PDF shares; a key change inside a recalled chorus moves nothing after the recall).
 - A tune whose first `T:` is the song's title leaves its title and composer to the page (`AbcTitles.kt`, tested: a
   `%%writefields` line in that tune's header); the tunes of a medley, named otherwise, keep theirs.
 - `NotationPainter` turns a drawing into merged paths and text layouts, laid out at the unit size it was rendered for.

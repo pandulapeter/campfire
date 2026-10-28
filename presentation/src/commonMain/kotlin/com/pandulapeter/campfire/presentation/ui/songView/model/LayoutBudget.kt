@@ -88,7 +88,7 @@ internal object LayoutBudget {
                         characters += line.characterCount()
                         lines <= MAX_LINES && characters <= MAX_CHARACTERS
                     }
-                    if (keptLines.isNotEmpty()) keptParts += SectionPart.Lines(keptLines)
+                    if (keptLines.isNotEmpty()) keptParts += SectionPart.Lines(keptLines, part.tuneOffset)
                     if (keptLines.size < part.lines.size) break
                 }
             }

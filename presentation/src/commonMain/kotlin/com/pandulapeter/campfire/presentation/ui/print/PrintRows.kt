@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
@@ -55,8 +56,8 @@ internal class PrintRows(
     private val gridStyle = PrintStyle(size = options.fontSize, bold = true, monospace = true)
     private val labelSpace = options.fontSize * 0.3f
 
-    /** The engraved ABC tunes of the song being laid out, by their text; a run with none prints as its text. */
-    var notations: Map<String, NotationDrawing> = emptyMap()
+    /** The engraved ABC tunes of the song being laid out, by tune; a run with none prints as its text. */
+    var notations: Map<AbcTune, NotationDrawing> = emptyMap()
 
     // Chord names, spaces and the other short strings are measured over and over; only they are kept, so that the
     // substrings of lyrics the wrapping tries are not held for the life of a large setlist.
@@ -78,11 +79,12 @@ internal class PrintRows(
      * The rows of a group of `joinCutSections`, in the segments the breaks inside it cut it into, a segment that prints
      * nothing being empty, so that the layout still sees every break: a page has columns to break, which the screen does
      * not. Every other cut of a section is joined over as the screen joins it, so that a section is one unit to place.
+     * [startOffset] is the key change the group starts under (`groupStartOffsetsOf`), which moves its ABC tunes.
      */
-    fun groupSegments(group: List<ChordProBlock>, width: Float): List<List<Row>> = when (val first = group.firstSection()) {
-        is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = null).segments
+    fun groupSegments(group: List<ChordProBlock>, width: Float, startOffset: Int): List<List<Row>> = when (val first = group.firstSection()) {
+        is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = null, startOffset).segments
         is ChordProBlock.Comment -> listOf(commentRows(first, width))
-        is ChordProBlock.ChorusRecall -> listOf(recallRows(first, width))
+        is ChordProBlock.ChorusRecall -> listOf(recallRows(first, width, startOffset))
         is ChordProBlock.Transpose -> listOf(keyChangeRows(first, width))
         is ChordProBlock.Timing -> listOf(timingRows(first, width))
         ChordProBlock.Break -> listOf(emptyList())
@@ -99,21 +101,30 @@ internal class PrintRows(
         first: ChordProBlock.Section,
         width: Float,
         labelOverride: String?,
+        startOffset: Int,
     ): SectionSegments {
         val isChorus = first.type == SectionType.Chorus
         val lineWidth = if (isChorus) width - CHORUS_INDENT else width
         // A paragraph of lyrics is headed on screen by its fold toggle alone, an empty header, which a page has no use for.
         val sectionLabel = first.header(labels.sections).ifEmpty { null }
         val segments = mutableListOf(mutableListOf<SectionPart>())
+        var tuneOffset = startOffset
         group.forEach { block ->
             val parts = segments.last()
             when (block) {
                 is ChordProBlock.Section -> if (block.lines.isNotEmpty()) {
                     val previous = parts.lastOrNull()
-                    if (previous is SectionPart.Lines) parts[parts.lastIndex] = SectionPart.Lines(previous.lines + block.lines) else parts += SectionPart.Lines(block.lines)
+                    if (previous is SectionPart.Lines) {
+                        parts[parts.lastIndex] = SectionPart.Lines(previous.lines + block.lines, previous.tuneOffset)
+                    } else {
+                        parts += SectionPart.Lines(block.lines, tuneOffset)
+                    }
                 }
                 is ChordProBlock.Comment -> if (commentRows(block, lineWidth).isNotEmpty()) parts += SectionPart.Comment(block)
-                is ChordProBlock.Transpose -> if (keyChangeRows(block, lineWidth).isNotEmpty()) parts += SectionPart.KeyChange(block)
+                is ChordProBlock.Transpose -> {
+                    tuneOffset = block.semitones
+                    if (keyChangeRows(block, lineWidth).isNotEmpty()) parts += SectionPart.KeyChange(block)
+                }
                 ChordProBlock.Break -> segments += mutableListOf<SectionPart>()
                 is ChordProBlock.Timing, is ChordProBlock.ChorusRecall -> Unit
             }
@@ -148,7 +159,7 @@ internal class PrintRows(
             when (run.first().foldableKind()) {
                 FoldableKind.TAB -> if (options.showTabs) tabRows(run, sectionLabel, lineWidth) else emptyList()
                 FoldableKind.GRID -> if (options.showChords) gridRows(run, lineWidth) else emptyList()
-                FoldableKind.VERBATIM -> if (options.showSheetMusic) verbatimRows(run, lineWidth) else emptyList()
+                FoldableKind.VERBATIM -> if (options.showSheetMusic) verbatimRows(run, part.tuneOffset, lineWidth) else emptyList()
                 null -> run.flatMap { line ->
                     when (line) {
                         is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
@@ -254,8 +265,8 @@ internal class PrintRows(
      * A run of verbatim lines (`groupIntoRuns`), always preformatted, as the viewer draws it. Another program's notation
      * is left out of the selectable text: read back by the importer, ABC's `"G"` and `[CEG]` would become chords.
      */
-    private fun verbatimRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> =
-        lines.abcTune()?.let { notations[it] }?.let { notationRows(it, lineWidth) }
+    private fun verbatimRows(lines: List<ChordProLine>, tuneOffset: Int, lineWidth: Float): List<Row> =
+        lines.abcTune()?.let { notations[AbcTune(it, tuneOffset)] }?.let { notationRows(it, lineWidth) }
             ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isTablature = false, isSelectable = false, lineWidth)
 
     /**
@@ -358,12 +369,12 @@ internal class PrintRows(
      * on the chorus's bar after whatever else of it prints when none does: a recall says where the chorus is sung, even
      * with nothing under it. A recall is one unit, the breaks the parser copied into it included.
      */
-    private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
+    private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float, startOffset: Int): List<Row> {
         val recalled = recall.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
         var header: String? = recall.label ?: recalled?.header(labels.sections) ?: labels.sections.chorus
         val rows = recall.blocks.joinCutSections().flatMap { group ->
             when (val first = group.firstSection()) {
-                is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = header).let {
+                is ChordProBlock.Section -> sectionSegments(group, first, width, labelOverride = header, startOffset).let {
                     if (it.isLabelled) header = null
                     it.segments.flatten()
                 }
@@ -464,7 +475,7 @@ private const val FRAME_WIDTH = 0.75f
 
 /** What a section's group prints, in order, as the screen's `SectionPart`s are. */
 private sealed interface SectionPart {
-    data class Lines(val lines: List<ChordProLine>) : SectionPart
+    data class Lines(val lines: List<ChordProLine>, val tuneOffset: Int) : SectionPart
     data class Comment(val comment: ChordProBlock.Comment) : SectionPart
     data class KeyChange(val keyChange: ChordProBlock.Transpose) : SectionPart
 }

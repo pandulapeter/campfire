@@ -24,10 +24,10 @@ internal data class NotationTuneKey(
     val painting: NotationPainting,
 )
 
-/** The key of [tune], standing under a key change of [offset] semitones, in this request. */
-internal fun NotationRequest.keyOf(tune: String, offset: Int) = NotationTuneKey(
-    tune = tune,
-    chords = chords.movedBy(offset),
+/** The key of [tune] in this request. */
+internal fun NotationRequest.keyOf(tune: AbcTune) = NotationTuneKey(
+    tune = tune.text,
+    chords = chords.movedBy(tune.offset),
     width = width,
     unitSize = unitSize,
     songTitle = songTitle,
@@ -65,7 +65,7 @@ internal class NotationCache(
 
     /** Every tune of [request] rendered, or null where any one of them is not kept. */
     fun renderedFor(request: NotationRequest): RenderedNotations? {
-        val found = request.tunes.mapValues { (tune, offset) -> get(request.keyOf(tune, offset)) ?: return null }
+        val found = request.tunes.associateWith { get(request.keyOf(it)) ?: return null }
         return RenderedNotations(
             request = request,
             renderings = found,

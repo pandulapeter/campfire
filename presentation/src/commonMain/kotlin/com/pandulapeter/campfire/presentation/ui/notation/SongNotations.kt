@@ -46,12 +46,12 @@ internal val LocalAbcRenderer = staticCompositionLocalOf<AbcRenderer?> { null }
 @Immutable
 internal class SongNotations(
     private val rendered: RenderedNotations,
-    private val standIns: Map<String, String>,
+    private val standIns: Map<AbcTune, AbcTune>,
     private val unitSize: Float,
 ) {
-    /** What [run] is drawn as, or null where it is drawn as text. */
-    fun of(run: List<ChordProLine>): NotationRun? {
-        val tune = run.abcTune() ?: return null
+    /** What [run], standing after a key change of [tuneOffset] semitones, is drawn as, or null where it is drawn as text. */
+    fun of(run: List<ChordProLine>, tuneOffset: Int): NotationRun? {
+        val tune = AbcTune(run.abcTune() ?: return null, tuneOffset)
         val rendering = rendered.renderings[tune] ?: standIns[tune]?.let { rendered.renderings[it] } ?: return null
         return NotationRun(
             systems = rendering.systems,
@@ -83,12 +83,11 @@ internal class SongNotations(
 internal class NotationRun(val systems: List<NotationSystemPaint>, val measuredUnitSize: Float, val unitSize: Float, val isRerendered: Boolean)
 
 /**
- * What [rememberSongNotations] renders for: every tune of the song with the key change it stands under
- * ([abcTuneOffsets]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
+ * What [rememberSongNotations] renders for: every tune of the song under the key change it stands after ([abcTunesOf]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
  * same leaves to the page, and what its words are laid out with, so a new density or style paints again.
  */
 internal data class NotationRequest(
-    val tunes: Map<String, Int>,
+    val tunes: Set<AbcTune>,
     val width: Int,
     val unitSize: Float,
     val chords: NotationChordSpelling,
@@ -123,9 +122,9 @@ internal class NotationRendering(val drawing: NotationDrawing, val unitSize: Flo
  */
 internal class RenderedNotations(
     val request: NotationRequest?,
-    val renderings: Map<String, NotationRendering>,
-    val rerenderedTunes: Set<String>,
-    val arrivingTunes: Set<String>,
+    val renderings: Map<AbcTune, NotationRendering>,
+    val rerenderedTunes: Set<AbcTune>,
+    val arrivingTunes: Set<AbcTune>,
 ) {
     companion object {
         val NONE = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = emptySet(), arrivingTunes = emptySet())
@@ -169,12 +168,12 @@ internal fun rememberSongNotations(
 ): SongNotations {
     val renderer = LocalAbcRenderer.current
     val cache = LocalNotationCache.current
-    val tunes = remember(blocks) { abcTuneOffsets(blocks) }
+    val tunes = remember(blocks) { abcTunesOf(blocks) }
     val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting)
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
     val standIns = remember(tunes, rendered) {
-        notationStandInsOf(previous = rendered.request?.tunes?.keys?.toList().orEmpty(), current = tunes.keys.toList())
+        notationStandInsOf(previous = rendered.request?.tunes?.toList().orEmpty(), current = tunes.toList())
             .filterValues { it in rendered.renderings }
     }
     LaunchedEffect(renderer, request) {
@@ -185,15 +184,15 @@ internal fun rememberSongNotations(
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
         // Nothing to engrave where every tune is kept, so a pinch reversed to a size seen a moment ago is instant.
-        val isCached = cache != null && request.tunes.all { (tune, offset) -> cache[request.keyOf(tune, offset)] != null }
+        val isCached = cache != null && request.tunes.all { cache[request.keyOf(it)] != null }
         if (isOnlyResized && !isCached) delay(RERENDER_DELAY_MILLIS)
         // One painter per run, never one shared across runs: a cancelled run's painting goes on until its next suspension,
         // so two runs can overlap and would race on the painter's caches.
         val painter = request.painting.newPainter()
-        val renderings = request.tunes.mapNotNull { (tune, offset) ->
+        val renderings = request.tunes.mapNotNull { tune ->
             ensureActive() // a cancelled run (a newer request) stops between tunes rather than painting the rest
-            val key = request.keyOf(tune, offset)
-            (cache?.get(key) ?: render(renderer, painter, tune, offset, request)?.also { cache?.set(key, it) })?.let { tune to it }
+            val key = request.keyOf(tune)
+            (cache?.get(key) ?: render(renderer, painter, tune, request)?.also { cache?.set(key, it) })?.let { tune to it }
         }.toMap()
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
         // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
@@ -212,8 +211,8 @@ internal fun rememberSongNotations(
     }
 }
 
-private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: String, offset: Int, request: NotationRequest): NotationRendering? =
-    renderNotationDrawing(renderer, tune, request.width, request.chords.movedBy(offset), request.songTitle)?.let { drawing ->
+private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: AbcTune, request: NotationRequest): NotationRendering? =
+    renderNotationDrawing(renderer, tune.text, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { drawing ->
         NotationRendering(drawing, request.unitSize, withContext(Dispatchers.Default) { painter.paint(drawing, request.unitSize) })
     }
 

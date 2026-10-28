@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
+import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -48,7 +50,7 @@ internal suspend fun layoutPrintDocument(
     settings: PrintSettings,
     labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
-    notations: Map<String, Map<String, NotationDrawing>> = emptyMap(),
+    notations: Map<String, Map<AbcTune, NotationDrawing>> = emptyMap(),
 ): PrintDocument = PrintLayouter(
     options = settings.normalized(),
     labels = labels,
@@ -80,7 +82,7 @@ private class PrintLayouter(
     private val options: PrintSettings,
     private val labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
-    private val notations: Map<String, Map<String, NotationDrawing>>,
+    private val notations: Map<String, Map<AbcTune, NotationDrawing>>,
 ) {
     private val width = if (options.isLandscape) options.paper.height else options.paper.width
     private val height = if (options.isLandscape) options.paper.width else options.paper.height
@@ -220,13 +222,15 @@ private class PrintLayouter(
         // the first segment is ignored, since the heading has just started the song where it is. The blocks are grouped
         // as the screen groups them, which joins a change of tempo or time over exactly where it is not shown.
         val groups = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections).joinCutSections(joinsTimings = !options.showTempo)
+        // Worked out once rather than kept while placing, since the groups up to the first that prints are asked for twice.
+        val startOffsets = groupStartOffsetsOf(groups)
         val chordRows = entry.song?.let { chordDiagramRows(entry.chords).withSpaceBetween(scaleRows(entry.scales)) }.orEmpty()
         var firstGroup = -1
         var firstSegment = -1
         var firstBlockRows = if (entry.song == null) printRows.wrapped(labels.missing) else emptyList()
         for ((index, group) in groups.withIndex()) {
             if (group.isBreak()) continue
-            val segments = printRows.groupSegments(group, columnWidth)
+            val segments = printRows.groupSegments(group, columnWidth, startOffsets[index])
             firstSegment = segments.indexOfFirst { it.isNotEmpty() }
             if (firstSegment >= 0) {
                 firstGroup = index
@@ -256,9 +260,9 @@ private class PrintLayouter(
                     group.isBreak() -> if (y > margin) nextColumn()
                     // A change of tempo or time is kept with what it is written above, the way a heading is; one with
                     // nothing printed after it says nothing and is left out.
-                    index > firstGroup && group.singleOrNull() is ChordProBlock.Timing -> timingRows = printRows.groupSegments(group, columnWidth).single()
+                    index > firstGroup && group.singleOrNull() is ChordProBlock.Timing -> timingRows = printRows.groupSegments(group, columnWidth, startOffsets[index]).single()
                     else -> {
-                        val segments = printRows.groupSegments(group, columnWidth).let { if (index == firstGroup) it.drop(firstSegment) else it }
+                        val segments = printRows.groupSegments(group, columnWidth, startOffsets[index]).let { if (index == firstGroup) it.drop(firstSegment) else it }
                         var hasPlaced = false
                         segments.forEachIndexed { segmentIndex, rows ->
                             // A break inside a section starts a new column whether or not anything after it prints.

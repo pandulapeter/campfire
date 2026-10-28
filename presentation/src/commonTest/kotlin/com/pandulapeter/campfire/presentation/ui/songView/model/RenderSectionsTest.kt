@@ -20,6 +20,9 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.chords.ChordCell
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
+import com.pandulapeter.campfire.presentation.ui.notation.abcTune
+import com.pandulapeter.campfire.presentation.ui.notation.abcTunesOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
@@ -242,6 +245,32 @@ class RenderSectionsTest {
         assertEquals(listOf("Versszak: lines", "ABC-kotta: lines", "Melody: lines", "SVG: lines", "Textblock: lines"), shape(text))
         assertEquals(listOf("Versszak: lines", "Textblock: lines"), shape(text, shouldShowChords = false))
     }
+
+    @Test
+    fun `a run carries the key change it stands after`() {
+        val text = "{start_of_abc}\nX:1\nK:G\nGAB|\n{end_of_abc}\n{transpose: 1}\n{start_of_abc}\nX:2\nK:A\nABc|\n{end_of_abc}"
+
+        assertEquals(listOf("X:1\nK:G\nGAB|" to 0, "X:2\nK:A\nABc|" to 1), abcRunsOf(text).map { it.text to it.offset })
+    }
+
+    @Test
+    fun `a key change inside a recalled chorus moves no tune after the recall`() {
+        val text = "{soc}\n[C]la\n{transpose: 2}\n[D]lo\n{eoc}\n{transpose: 0}\n{chorus}\n{start_of_abc}\nX:1\nK:G\nGAB|\n{end_of_abc}"
+
+        val runs = abcRunsOf(text)
+        assertEquals(listOf(0), runs.map { it.offset })
+        // The screen finds a run's staff by the tune the renderings were made for, so the two walks must agree.
+        assertTrue(abcTunesOf(ChordProParser.parse(text).blocks).containsAll(runs))
+    }
+
+    /** The ABC runs of the song [text], each as the tune its key change makes it. */
+    private fun abcRunsOf(text: String) = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels, showsTiming = true)
+        .sections
+        .filterIsInstance<RenderSection.Lines>()
+        .flatMap { it.sectionItems }
+        .filterIsInstance<SectionItem.RunSlot>()
+        .mapNotNull { slot -> slot.run.abcTune()?.let { AbcTune(it, slot.tuneOffset) } }
+        .distinct()
 
     @Test
     fun `a section the file leaves unnamed is still headed, a paragraph by its fold toggle alone`() {

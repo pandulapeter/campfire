@@ -239,6 +239,7 @@ internal fun SongSectionContent(
                         run = sectionItem.run,
                         kind = sectionItem.kind,
                         runFoldKey = sectionItem.runFoldKey,
+                        tuneOffset = sectionItem.tuneOffset,
                         slotCount = sectionItem.slotCount,
                         shownSlots = sectionItem.slot..sectionItem.slot + lastSlotItem - item,
                         hasToggle = wholeSectionKind == null,
@@ -268,6 +269,7 @@ private fun SectionRun(
     run: List<ChordProLine>,
     kind: FoldableKind,
     runFoldKey: String,
+    tuneOffset: Int,
     slotCount: Int,
     shownSlots: IntRange,
     hasToggle: Boolean,
@@ -293,7 +295,7 @@ private fun SectionRun(
         if (foldedRuns.isCollapsed(runFoldKey)) return
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
     }
-    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run) else null
+    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run, tuneOffset) else null
     when {
         // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
         notationRun != null -> {

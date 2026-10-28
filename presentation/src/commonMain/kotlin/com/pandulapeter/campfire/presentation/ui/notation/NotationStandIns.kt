@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.presentation.ui.notation
  * one leaving and one coming; a tune added or removed beside the others pairs with nothing, so no tune is ever drawn as
  * its neighbour's staff.
  */
-internal fun notationStandInsOf(previous: List<String>, current: List<String>): Map<String, String> {
+internal fun <T> notationStandInsOf(previous: List<T>, current: List<T>): Map<T, T> {
     val currentSet = current.toSet()
     val previousSet = previous.toSet()
     val left = previous.filter { it !in currentSet }

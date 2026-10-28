@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
+import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
@@ -70,7 +71,7 @@ internal fun ChordProSong.toRenderSections(
      * Adds a section and what [joinCutSections] joined to it, or only the comments where lyrics-only mode leaves it
      * with nothing else to show; true when a section was added.
      */
-    fun addSection(pieces: List<ChordProBlock>, header: String?, foldKey: String): Boolean {
+    fun addSection(pieces: List<ChordProBlock>, header: String?, foldKey: String, startOffset: Int): Boolean {
         val comments = pieces.filterIsInstance<ChordProBlock.Comment>().mapNotNull { it.toRenderSection(shouldShowChords) }
         val sectionPieces = pieces.filterIsInstance<ChordProBlock.Section>()
         // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its heading with
@@ -80,30 +81,7 @@ internal fun ChordProSong.toRenderSections(
             sections += comments
             return false
         }
-        val parts = mutableListOf<SectionPart>()
-        pieces.forEach { piece ->
-            when (piece) {
-                is ChordProBlock.Section -> {
-                    val lines = piece.lines.prepareForDisplay(shouldShowChords)
-                    if (lines.isEmpty()) return@forEach
-                    // What cut the section there drew nothing (a break, a transposition of a song with no key to
-                    // name), so the halves are one run of lines again, and a tab on either side of the cut is folded and
-                    // wrapped as the one run it is.
-                    val previous = parts.lastOrNull()
-                    if (previous is SectionPart.Lines) {
-                        parts[parts.lastIndex] = SectionPart.Lines(previous.lines + lines)
-                    } else {
-                        parts += SectionPart.Lines(lines)
-                    }
-                }
-
-                is ChordProBlock.Comment -> piece.toRenderSection(shouldShowChords)?.let { parts += it }
-
-                is ChordProBlock.Transpose -> piece.toRenderSection(shouldShowChords)?.let { parts += it }
-
-                else -> Unit
-            }
-        }
+        val parts = sectionPartsOf(pieces, shouldShowChords, startOffset)
         // A section that ended up with no line to show is dropped, unless its header still says something.
         if (parts.none { it is SectionPart.Lines } && header.isNullOrEmpty()) {
             sections += comments
@@ -118,7 +96,10 @@ internal fun ChordProSong.toRenderSections(
         return true
     }
 
-    blocks.withNumberedSections(defaultLabels).joinCutSections(joinsTimings = !showsTiming).forEach { pieces ->
+    val groups = blocks.withNumberedSections(defaultLabels).joinCutSections(joinsTimings = !showsTiming)
+    // The key change each group starts under, which moves the ABC tunes in it as it moves the chords.
+    val startOffsets = groupStartOffsetsOf(groups)
+    groups.forEachIndexed { groupIndex, pieces ->
         val block = pieces.firstSection()
         val continuesAfterTiming = isAfterTiming && block is ChordProBlock.Section && block.isContinuation
         isAfterTiming = block is ChordProBlock.Timing || (isAfterTiming && block !is ChordProBlock.Section)
@@ -144,7 +125,7 @@ internal fun ChordProSong.toRenderSections(
                     when (val first = recalled.firstSection()) {
                         is ChordProBlock.Section -> {
                             val foldKey = if (index == 0) recallFoldKey else "$recallFoldKey/$index"
-                            if (addSection(recalled, header, foldKey)) header = null
+                            if (addSection(recalled, header, foldKey, startOffsets[groupIndex])) header = null
                         }
 
                         is ChordProBlock.Comment -> first.toRenderSection(shouldShowChords)?.let { sections += it }
@@ -165,10 +146,48 @@ internal fun ChordProSong.toRenderSections(
                         lastFoldKey = it
                         timingContinuations = 0
                     },
+                startOffset = startOffsets[groupIndex],
             )
         }
     }
     return sections
+}
+
+/**
+ * The lines, comments, and key changes of a section's [pieces] (see [joinCutSections]), its lines standing after the
+ * key change [startOffset] its group starts under until a `{transpose}` among the pieces moves it.
+ */
+private fun sectionPartsOf(pieces: List<ChordProBlock>, shouldShowChords: Boolean, startOffset: Int): List<SectionPart> {
+    val parts = mutableListOf<SectionPart>()
+    var tuneOffset = startOffset
+    pieces.forEach { piece ->
+        when (piece) {
+            is ChordProBlock.Section -> {
+                val lines = piece.lines.prepareForDisplay(shouldShowChords)
+                if (lines.isEmpty()) return@forEach
+                // What cut the section there drew nothing (a break, a transposition of a song with no key to
+                // name), so the halves are one run of lines again, and a tab on either side of the cut is folded and
+                // wrapped as the one run it is. The halves keep the first one's key change: an ABC run never straddles
+                // the cut, since its environment is a section of its own, and a {transpose} inside it is its text.
+                val previous = parts.lastOrNull()
+                if (previous is SectionPart.Lines) {
+                    parts[parts.lastIndex] = SectionPart.Lines(previous.lines + lines, previous.tuneOffset)
+                } else {
+                    parts += SectionPart.Lines(lines, tuneOffset)
+                }
+            }
+
+            is ChordProBlock.Comment -> piece.toRenderSection(shouldShowChords)?.let { parts += it }
+
+            is ChordProBlock.Transpose -> {
+                tuneOffset = piece.semitones
+                piece.toRenderSection(shouldShowChords)?.let { parts += it }
+            }
+
+            else -> Unit
+        }
+    }
+    return parts
 }
 
 /** What a comment is drawn as, or null where lyrics-only mode leaves out the tab or grid it is a note about. */

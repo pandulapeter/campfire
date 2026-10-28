@@ -33,9 +33,10 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   tune that did not render) prints preformatted like a tab without a staff, only with `showSheetMusic`, and never `isSelectable` (read back, ABC's
   `"G"` and `[CEG]` would be chords).
 - An `abc` run prints engraved where `printNotationsOf` rendered it (`PrintNotation`, a row per staff system): the
-  export screen renders every song's tunes in its own transposition and notation (`PrintSong.notationChords`) for the
-  column width (`printColumnWidth`) right before each layout, which waits for them, at the size that prints its lyrics
-  as large as the song's (`printNotationUnit`), smaller where the column is narrower (a chorus). Drawn by the screen's
+  export screen renders every song's tunes in its own transposition and notation (`PrintSong.notationChords`), each
+  copy of a tune under its own key change (`AbcTune`, each group's from `groupStartOffsetsOf`), for the column width
+  (`printColumnWidth`) right before each layout, which waits for them, at the size that prints its lyrics as large as
+  the song's (`printNotationUnit`), smaller where the column is narrower (a chorus). Drawn by the screen's
   `drawNotationSystem` in black, never in the text layer; a tune that does not render prints as its text.
 - Sections and runs are grouped by the screen's own `joinCutSections` and `groupIntoRuns` (`ui/songLayout/`):
   a chorus is one unit under one bar, a break the one cut the PDF keeps.

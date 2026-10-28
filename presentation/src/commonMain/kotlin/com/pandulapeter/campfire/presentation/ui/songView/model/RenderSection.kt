@@ -231,8 +231,9 @@ internal sealed interface RenderSection {
 @Immutable
 internal sealed interface SectionPart {
 
+    /** Lines standing after a key change of [tuneOffset] semitones, which moves an ABC tune among them (`abcTunesOf`). */
     @Immutable
-    data class Lines(val lines: List<ChordProLine>) : SectionPart {
+    data class Lines(val lines: List<ChordProLine>, val tuneOffset: Int = 0) : SectionPart {
         /** Run boundaries depend on the lines alone, including their environment labels. */
         val runs = lines.groupIntoRuns()
     }
@@ -254,7 +255,10 @@ internal sealed interface SectionItem {
     @Immutable
     data class Line(val line: ChordProLine) : SectionItem
 
-    /** The [slot]-th of the [slotCount] pieces of a run of tablature or grid lines, folded under [runFoldKey]. */
+    /**
+     * The [slot]-th of the [slotCount] pieces of a run of tablature or grid lines, folded under [runFoldKey]; an ABC tune
+     * among them stands after a key change of [tuneOffset] semitones.
+     */
     @Immutable
     data class RunSlot(
         val run: List<ChordProLine>,
@@ -262,6 +266,7 @@ internal sealed interface SectionItem {
         val slot: Int,
         val slotCount: Int,
         val runFoldKey: String,
+        val tuneOffset: Int,
     ) : SectionItem
 }
 
@@ -281,7 +286,7 @@ private fun buildSectionItems(parts: List<SectionPart>, sectionFold: String): Li
                 } else {
                     val runFoldKey = runNameCounts.nextRunFoldKey(sectionFold = sectionFold, label = run.first().environmentLabel, kind = kind)
                     val slotCount = run.runSlotCount(kind)
-                    List(slotCount) { slot -> SectionItem.RunSlot(run = run, kind = kind, slot = slot, slotCount = slotCount, runFoldKey = runFoldKey) }
+                    List(slotCount) { slot -> SectionItem.RunSlot(run = run, kind = kind, slot = slot, slotCount = slotCount, runFoldKey = runFoldKey, tuneOffset = part.tuneOffset) }
                 }
             }
         }

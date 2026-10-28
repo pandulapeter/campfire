@@ -38,11 +38,11 @@ class NotationArrivalTest {
 
     @Test
     fun `a rendering that re-renders a tune is no arrival`() {
-        assertNull(notationsOf(rerendered = setOf("a"), arriving = setOf("b")).arrival)
-        assertNotNull(notationsOf(rerendered = emptySet(), arriving = setOf("b")).arrival)
+        assertNull(notationsOf(rerendered = setOf(AbcTune("a", 0)), arriving = setOf(AbcTune("b", 0))).arrival)
+        assertNotNull(notationsOf(rerendered = emptySet(), arriving = setOf(AbcTune("b", 0))).arrival)
     }
 
-    private fun notationsOf(rerendered: Set<String>, arriving: Set<String>) = SongNotations(
+    private fun notationsOf(rerendered: Set<AbcTune>, arriving: Set<AbcTune>) = SongNotations(
         rendered = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = rerendered, arrivingTunes = arriving),
         standIns = emptyMap(),
         unitSize = 1f,

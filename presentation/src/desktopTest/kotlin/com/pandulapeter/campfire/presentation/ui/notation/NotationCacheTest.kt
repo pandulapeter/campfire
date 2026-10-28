@@ -33,13 +33,13 @@ internal class NotationCacheTest {
     @Test
     fun `a request is rendered from the cache only when every tune of it is cached`() {
         val cache = NotationCache()
-        val request = request("A" to 0, "B" to 0)
-        cache[request.keyOf("A", 0)] = rendering
+        val request = request(AbcTune("A", 0), AbcTune("B", 0))
+        cache[request.keyOf(AbcTune("A", 0))] = rendering
         assertNull(cache.renderedFor(request))
-        cache[request.keyOf("B", 0)] = rendering
+        cache[request.keyOf(AbcTune("B", 0))] = rendering
         val rendered = assertNotNull(cache.renderedFor(request))
         assertSame(request, rendered.request)
-        assertEquals(setOf("A", "B"), rendered.renderings.keys)
+        assertEquals(setOf(AbcTune("A", 0), AbcTune("B", 0)), rendered.renderings.keys)
         assertEquals(emptySet(), rendered.rerenderedTunes)
     }
 
@@ -47,20 +47,20 @@ internal class NotationCacheTest {
     fun `the tune used least recently leaves first`() {
         val cache = NotationCache(maxTunes = 3, maxWords = Int.MAX_VALUE)
         val request = request()
-        listOf("A", "B", "C").forEach { cache[request.keyOf(it, 0)] = rendering }
-        cache[request.keyOf("A", 0)]
-        cache[request.keyOf("D", 0)] = rendering
-        assertNull(cache[request.keyOf("B", 0)])
-        assertNotNull(cache[request.keyOf("A", 0)])
+        listOf("A", "B", "C").forEach { cache[request.keyOf(AbcTune(it, 0))] = rendering }
+        cache[request.keyOf(AbcTune("A", 0))]
+        cache[request.keyOf(AbcTune("D", 0))] = rendering
+        assertNull(cache[request.keyOf(AbcTune("B", 0))])
+        assertNotNull(cache[request.keyOf(AbcTune("A", 0))])
     }
 
     @Test
     fun `a tune under another transposition is another entry`() {
         val cache = NotationCache()
-        cache[request().keyOf("A", 0)] = rendering
-        assertNull(cache[request().keyOf("A", 2)])
-        assertNull(cache[request(chords = NotationChordSpelling.AS_WRITTEN.movedBy(1)).keyOf("A", 0)])
-        assertNotNull(cache[request().keyOf("A", 0)])
+        cache[request().keyOf(AbcTune("A", 0))] = rendering
+        assertNull(cache[request().keyOf(AbcTune("A", 2))])
+        assertNull(cache[request(chords = NotationChordSpelling.AS_WRITTEN.movedBy(1)).keyOf(AbcTune("A", 0))])
+        assertNotNull(cache[request().keyOf(AbcTune("A", 0))])
     }
 
     @Test
@@ -68,13 +68,13 @@ internal class NotationCacheTest {
         val words = notationWordsOf(rendering.systems)
         val cache = NotationCache(maxTunes = Int.MAX_VALUE, maxWords = words * 2)
         val request = request()
-        listOf("A", "B", "C").forEach { cache[request.keyOf(it, 0)] = rendering }
-        assertNull(cache[request.keyOf("A", 0)])
-        assertNotNull(cache[request.keyOf("B", 0)])
-        assertNotNull(cache[request.keyOf("C", 0)])
+        listOf("A", "B", "C").forEach { cache[request.keyOf(AbcTune(it, 0))] = rendering }
+        assertNull(cache[request.keyOf(AbcTune("A", 0))])
+        assertNotNull(cache[request.keyOf(AbcTune("B", 0))])
+        assertNotNull(cache[request.keyOf(AbcTune("C", 0))])
         val tooHeavy = NotationCache(maxTunes = Int.MAX_VALUE, maxWords = words - 1)
-        tooHeavy[request.keyOf("A", 0)] = rendering
-        assertNull(tooHeavy[request.keyOf("A", 0)])
+        tooHeavy[request.keyOf(AbcTune("A", 0))] = rendering
+        assertNull(tooHeavy[request.keyOf(AbcTune("A", 0))])
     }
 
     @Test
@@ -91,8 +91,8 @@ internal class NotationCacheTest {
         assertNull(notationPageWidth(availableWidth = 20.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
     }
 
-    private fun request(vararg tunes: Pair<String, Int>, chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN) = NotationRequest(
-        tunes = tunes.toMap(),
+    private fun request(vararg tunes: AbcTune, chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN) = NotationRequest(
+        tunes = tunes.toSet(),
         width = 300,
         unitSize = 1f,
         chords = chords,

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.NotationSystem
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -319,7 +320,7 @@ internal class PrintLayoutTest {
         val system = NotationSystem(width = 400f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())
         val drawing = NotationDrawing(listOf(system, system, system))
         val settings = PrintSettings(showTabs = false)
-        val document = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
+        val document = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf(AbcTune("X:1\nK:G\nGAB|", 0) to drawing)))
         val notations = document.pages.flatMap { it.notations }
         val heading = document.pages.flatMap { it.texts }.single { it.text == "ABC notation" }
         val scale = minOf(printNotationUnit(settings), printColumnWidth(settings) / 400f)
@@ -327,15 +328,30 @@ internal class PrintLayoutTest {
         assertTrue(notations.all { it.drawing === drawing && it.scale == scale && it.y > heading.y })
         notations.zipWithNext { above, below -> below.y - above.y }.forEach { pitch -> assertEquals(60f * scale, pitch, 0.001f) }
         assertTrue(document.pages.flatMap { it.texts }.none { it.text == "GAB|" })
-        val hidden = layoutPrintDocument(source(abc), PrintSettings(showSheetMusic = false), labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
+        val hidden = layoutPrintDocument(source(abc), PrintSettings(showSheetMusic = false), labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf(AbcTune("X:1\nK:G\nGAB|", 0) to drawing)))
         assertTrue(hidden.pages.all { it.notations.isEmpty() })
+    }
+
+    @Test fun `a tune printed twice around a key change prints each copy in its own key`() = runTest {
+        val tune = "X:1\nK:G\nGAB|"
+        fun drawing(width: Float) = NotationDrawing(listOf(NotationSystem(width = width, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())))
+        val notations = mapOf("song.cho" to mapOf(AbcTune(tune, 0) to drawing(100f), AbcTune(tune, 2) to drawing(120f)))
+        listOf(
+            "{start_of_abc}\n$tune\n{end_of_abc}\n{transpose: 2}\n{start_of_abc}\n$tune\n{end_of_abc}" to listOf(100f, 120f),
+            // The recall repeats the chorus's key change, which moves nothing after it, as on the screen.
+            "{soc}\n[C]la\n{transpose: 2}\n[D]lo\n{eoc}\n{transpose: 0}\n{chorus}\n{start_of_abc}\n$tune\n{end_of_abc}" to listOf(100f),
+        ).forEach { (text, widths) ->
+            val song = song(emptyList(), ChordProParser.parse(text).blocks)
+            val printed = layoutPrintDocument(source(song), PrintSettings(), labels, measureText = ::measure, notations = notations).pages.flatMap { it.notations }
+            assertEquals(widths, printed.map { it.drawing.systems.single().width }, text)
+        }
     }
 
     @Test fun `a staff system wider than the column is printed smaller`() = runTest {
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(ChordProLine.Verbatim("GAB|", "abc")))))
         val settings = PrintSettings(columns = 2)
         val wide = NotationDrawing(listOf(NotationSystem(width = 2000f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList())))
-        val notation = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("GAB|" to wide))).pages.flatMap { it.notations }.single()
+        val notation = layoutPrintDocument(source(abc), settings, labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf(AbcTune("GAB|", 0) to wide))).pages.flatMap { it.notations }.single()
         assertEquals(printColumnWidth(settings) / 2000f, notation.scale, 0.0001f)
     }
 
