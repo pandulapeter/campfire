@@ -183,7 +183,7 @@ internal class SharingTabTest {
 
     private companion object {
         /** Wide enough for the settings screen's category pane, which shows only the page picked. */
-        val WIDE_WINDOW = TestWindow(width = 1000.dp, height = 800.dp)
+        val WIDE_WINDOW = TestWindow(width = 1100.dp, height = 800.dp)
 
         const val GONE_SETLIST_TITLE = "A setlist deleted elsewhere"
 
