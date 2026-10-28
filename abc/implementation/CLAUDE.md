@@ -26,7 +26,9 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   abc2svg's own names.
 - **A tune is untrusted** (shared links, imports, pastes): the host replaces each `Abc` instance's `do_begin_end` so a
   `%%beginjs` block, which abc2svg would `eval`, is ignored. On the web that script would run in the page, beside OPFS
-  and the sync token.
+  and the sync token. A tune over `MAX_TUNE_LENGTH` characters or `MAX_TUNE_VOICES` voices is never rendered, and a
+  rendering of more than `MAX_SYSTEMS` systems is dropped: memory grows with the text, time with the voices times the
+  systems, and iOS and the web have no engine limits.
 - `AbcRendererImpl` puts format lines in front of the tune: the page (`%%pagewidth`, no margins), chord symbols,
   annotations, and lyrics at the page's text size (16 units, as a unit is drawn 1 dp times the reader's text size;
   abc2svg's 12 and 13 read as small print beside the lyrics), chord symbols in bold like the page's and tagged `gch`,
@@ -38,7 +40,9 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
 
 - Android and desktop (`jvmSharedMain`): `io.github.dokar3:quickjs-kt`, one engine for the process, started by the
   first render (~150 ms on the desktop, then ~5 ms a render), on a daemon thread of its own: a QuickJS context is used
-  by one thread at a time. Chosen over Rhino for being ~5× faster warm and ~20× faster cold at about the same download.
+  by one thread at a time. It runs under a memory limit and a per-evaluation timeout, and is closed and started again
+  after any failed render (a context that ran out of memory fails every later evaluation, or answers `null`), never
+  after a cancellation, which quickjs-kt turns into an interruption of the render. Chosen over Rhino for being ~5× faster warm and ~20× faster cold at about the same download.
 - **Rhino is the tested fallback** should quickjs-kt stall: `org.mozilla:rhino` 1.9.x (MPL-2.0, its NOTICE adds BSD-3;
   pin 1.9, as 2.0 will likely need Java 17 and break the embedding API), language version ES6 or later (abc2svg uses optional
   chaining), interpreted on Android (minSdk 26), compiled on the desktop only with jdk.dynalink in the jlink set. R8

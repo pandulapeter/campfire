@@ -90,6 +90,27 @@ class AbcRendererImplTest {
         assertIs<AbcRendering.Systems>(renderer.render("X:1\n%%beginjs\nwhile (true) {}\n%%endjs\n${REEL.substringAfter('\n')}", width = 800, transposition = 0))
     }
 
+    @Test
+    fun `a tune longer than the renderer takes fails without being rendered`() = runTest {
+        val bar = "\"D\"d2fd AdfA|"
+        val long = REEL.substringBefore("|:") + bar.repeat(AbcRendererImpl.MAX_TUNE_LENGTH / bar.length + 1)
+        assertIs<AbcRendering.Failed>(renderer.render(long, width = 800, transposition = 0))
+        assertIs<AbcRendering.Systems>(renderer.render(REEL, width = 800, transposition = 0))
+    }
+
+    @Test
+    fun `a tune naming more voices than the renderer takes fails without being rendered`() = runTest {
+        fun tuneOf(voices: Int) = "X:1\n%%score ${(1..voices).joinToString(" ")}\nK:C\nC|"
+        assertIs<AbcRendering.Failed>(renderer.render(tuneOf(AbcRendererImpl.MAX_TUNE_VOICES + 1), width = 800, transposition = 0))
+        assertIs<AbcRendering.Systems>(renderer.render(tuneOf(AbcRendererImpl.MAX_TUNE_VOICES), width = 800, transposition = 0))
+    }
+
+    @Test
+    fun `a rendering of more systems than the renderer takes fails`() = runTest {
+        val tune = "X:1\nL:1/8\nK:C\n" + "C\n".repeat(AbcRendererImpl.MAX_SYSTEMS + 1)
+        assertIs<AbcRendering.Failed>(renderer.render(tune, width = 800, transposition = 0))
+    }
+
     private companion object {
         val REEL = """
             X:1

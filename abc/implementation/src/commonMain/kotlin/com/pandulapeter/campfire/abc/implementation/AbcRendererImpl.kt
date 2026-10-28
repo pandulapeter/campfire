@@ -25,10 +25,18 @@ internal class AbcRendererImpl : AbcRenderer {
 
     private val engine = createAbcScriptEngine()
 
-    override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering = try {
+    override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering = when {
+        tune.length > MAX_TUNE_LENGTH -> AbcRendering.Failed("A tune longer than $MAX_TUNE_LENGTH characters")
+        voiceCountOf(tune) > MAX_TUNE_VOICES -> AbcRendering.Failed("A tune of more than $MAX_TUNE_VOICES voices")
+        else -> rendered(tune, width, transposition)
+    }
+
+    private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
         val output = engine.render(source = headerOf(width, transposition) + tune)
         if (output.startsWith(SEPARATOR)) {
             AbcRendering.Failed(output.drop(1).ifBlank { "abc2svg rendered nothing" })
+        } else if (output.count { it == SEPARATOR } + 1 > MAX_SYSTEMS) {
+            AbcRendering.Failed("A rendering of more than $MAX_SYSTEMS systems")
         } else {
             val systems = output.split(SEPARATOR).map { svg -> AbcSystem(svg = svg, height = heightOf(svg) ?: return AbcRendering.Failed("An SVG with no height")) }
             AbcRendering.Systems(systems)
@@ -56,18 +64,46 @@ internal class AbcRendererImpl : AbcRenderer {
 
     """.trimIndent()
 
+    /**
+     * The distinct voices [tune] names: in `V:` fields, inline `[V:` fields, and `%%score` / `%%staves` lines (or their
+     * `I:` forms), as abc2svg creates every voice those lines name.
+     */
+    private fun voiceCountOf(tune: String) = buildSet {
+        VOICE_FIELD.findAll(tune).forEach { add(it.groupValues[1]) }
+        SCORE_LINE.findAll(tune).forEach { line -> SCORE_VOICE.findAll(line.groupValues[1]).forEach { add(it.value) } }
+    }.size
+
     /** The root element's own height, which abc2svg always writes in pixels (`height="76.00px"`). */
     private fun heightOf(svg: String) = HEIGHT.find(svg.substringBefore('>'))?.groupValues?.get(1)?.toFloatOrNull()
 
-    private companion object {
+    internal companion object {
+        /**
+         * The longest tune rendered, in characters (about 3,800 dense bars). abc2svg's memory grows with the text, and iOS
+         * and the web have no engine limit; QuickJsAbcScriptEngine's memory limit sits above what this lets through.
+         */
+        const val MAX_TUNE_LENGTH = 50_000
+
+        /**
+         * The most voices a rendered tune may name. abc2svg lays every staff out in every system, so its time grows with
+         * the voices times the systems, not with the text: this keeps the web's main thread and iOS's engine thread, which
+         * nothing can interrupt, to under a second on a desktop. QuickJsAbcScriptEngine's timeout sits above it.
+         */
+        const val MAX_TUNE_VOICES = 32
+
+        /** The most systems of a rendering read: what the app parses, paints, and lays out (one note a line is a system a line). */
+        const val MAX_SYSTEMS = 2_000
+
         /** What `campfire-abc-host.js` joins the systems with, and puts in front of the messages when there are none. */
-        const val SEPARATOR = '\u0000'
+        private const val SEPARATOR = '\u0000'
 
         /**
          * The size chord symbols, annotations, and lyrics are meant to be drawn at: the page's text size (bodyLarge), as
          * the app draws one SVG unit as 1 dp times the reader's text size.
          */
-        const val TEXT_SIZE = 16f
-        val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
+        private const val TEXT_SIZE = 16f
+        private val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
+        private val VOICE_FIELD = Regex("""(?m)(?:^|\[)V:[ \t]*([^\s\]]+)""")
+        private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
+        private val SCORE_VOICE = Regex("""[^\s()\[\]{}|*]+""")
     }
 }
