@@ -13,6 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- Automatically update store listings in all languages: documentation/plans/store-listings-sync.md
 - **Support more languages**: Hebrew (RTL + font + editor)
 
 ## Short-term
