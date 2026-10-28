@@ -162,10 +162,10 @@ them. If a change has no effect a user could notice, it is not in the notes.
      bytes for Apple's keywords) against the limit in its heading (`.github/scripts/check_store_listings.py` checks
      every field with a limit in its heading, in every language).
    - **Every other language follows in the same step** (`<store>/<code>.md`, holding only the fields that store keeps
-     per language; the App Review notes, the Mac's sandbox information, the URLs, and the Microsoft title stay English
-     only): each English field the step changed is changed in every language's file of that store, in the app's own
-     words for that language (its `values-<code>/strings.xml`), keywords researched for the language rather than
-     translated, and the Play title and App Store name kept equal to the website's title in that language
+     per language; the App Review notes, the Mac's sandbox information, and the URLs stay English only): each English
+     field the step changed is changed in every language's file of that store, in the app's own words for that
+     language (its `values-<code>/strings.xml`), keywords researched for the language rather than translated, and the
+     Play title, the App Store name, and the Microsoft title kept equal to the website's title in that language
      (`i18n/<code>.json` of the CampfireWebsite repository, key `Campfire: Songbook &amp; Chords`). One subagent per
      language, all in one message, each handed the English diff of this step and its language's four files; then run
      `.github/scripts/check_store_listings.py` and fix every failure.

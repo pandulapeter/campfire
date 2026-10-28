@@ -17,6 +17,12 @@ the platforms' share sheets.
 
 Paste into the Partner Center listing language hu-hu.
 
+## Title
+
+```
+Campfire: Daloskönyv, akkordok
+```
+
 ## Short description (1,000 characters max)
 
 ```
