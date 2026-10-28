@@ -52,7 +52,7 @@ set holds the app's UI tests.
   stores' images laid out by hand (`Compositions.kt`): the feature graphic, header, and search results in every
   language, the icon, poster, and box art. The texts are `documentation/store-listings/screenshot-texts/<language>.md`,
   the chips' icons and corners `ListingChipStyles.kt`. `--frame readme` composes the README's banners straight into
-  `documentation/screenshots` as WebP and the website's link preview into `~/Desktop/Campfire website images/`.
+  `documentation/screenshots` as WebP and the website's link preview into the renders folder (`link-preview.png`).
 - **The banners** (`Banners.kt`, the shots the composed images show) are two sets, so that each skill renders only
   its own: `store-banners`, in every language, and `readme-banners`.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings

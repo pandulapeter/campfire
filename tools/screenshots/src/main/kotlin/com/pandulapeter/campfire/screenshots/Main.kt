@@ -29,8 +29,8 @@ import kotlin.system.exitProcess
  * takes about 1.6 GB. `--frame store` renders nothing: it frames the renders (from `--renders <folder>`, by default the
  * renders folder) into the store images in `~/Desktop/Campfire store images <version>` (or `--out <folder>`), the
  * listing ([frameListing]) and the stores' images laid out by hand ([frameCompositions]); `--frame readme` composes the
- * README's banners into `documentation/screenshots` and the website's link preview into `~/Desktop/Campfire website
- * images`. The paths the run needs are passed in by the build as system properties.
+ * README's banners into `documentation/screenshots` and the website's link preview into the renders folder, beside the
+ * renders it is made of, for the website-screenshots skill to copy into the website. The paths the run needs are passed in by the build as system properties.
  */
 fun main(args: Array<String>) {
     val options = args.toList().windowed(size = 2, step = 2, partialWindows = false).associate { (key, value) -> key to value }
@@ -38,10 +38,11 @@ fun main(args: Array<String>) {
         require(set == "store" || set == "readme") { "--frame takes store or readme, not $set." }
         val isForStores = set == "store"
         val renders = options["--renders"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders"))
-        val output = options["--out"]?.let(::File) ?: File(
-            System.getProperty("user.home"),
-            if (isForStores) "Desktop/Campfire store images ${requireProperty("campfire.screenshots.versionName")}" else "Desktop/Campfire website images",
-        )
+        val output = options["--out"]?.let(::File) ?: if (isForStores) {
+            File(System.getProperty("user.home"), "Desktop/Campfire store images ${requireProperty("campfire.screenshots.versionName")}")
+        } else {
+            renders
+        }
         // The store images replace the folder, so that a shot taken out of the listing leaves no image behind.
         if (isForStores) output.deleteRecursively()
         val texts = File(requireProperty("campfire.screenshots.screenshotTexts"))

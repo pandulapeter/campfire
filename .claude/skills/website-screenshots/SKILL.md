@@ -48,17 +48,16 @@ Nothing is committed, in either repository, unless the user asks.
    again rather than using a bad image.
 3. **Compose** the banners and the link preview: `./gradlew :tools:screenshots:run --args="--frame readme"` writes
    the README's `documentation/screenshots/01–06.webp` and the link preview into
-   `~/Desktop/Campfire website images/link-preview.png`. Look at each.
+   `tools/screenshots/renders/link-preview.png`. Look at each.
 4. **The website**: `python3 -I .claude/skills/website-screenshots/scripts/website_screenshots.py
-   tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "$HOME/Desktop/Campfire
-   website images/link-preview.png"` writes every website screenshot at the size the site draws its
-   device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a
+   tools/screenshots/renders/Website --link-preview tools/screenshots/renders/link-preview.png` writes every website
+   screenshot at the size the site draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a
    playing metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page
    fades in. Each language's renders (`renders/Website/<language>/`) go to `assets/screenshots/<language>/`, where the
    site's pages in that language pick them up; one identical to the English render is left out, so those pages fall
    back to the English file. It finds the website's repository as a sibling folder named `CampfireWebsite` (the
-   owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where there is none it writes to
-   the Desktop folder and says so.
+   owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where there is none it stops and
+   asks for `--website`.
 5. **Report** what was written where and anything that looked off.
 
 ## The shots and their rules

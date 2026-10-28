@@ -19,10 +19,9 @@ The renders of the app's other languages, in a folder per language (`hu/<name>.p
 same as the English one (nothing in it is translated) is left out, and an earlier copy of it removed, so those pages
 show the English file, which the visitor's browser may already have.
 The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
-is (CampfireWebsite) or as a plain clone is (campfire-website). Where none is there, the files go to the fallback folder
-instead, and it says so. A file the site no longer links stays where it is: remove it there.
+is (CampfireWebsite) or as a plain clone is (campfire-website); where none is there, it stops and says so. A file the site no longer links stays where it is: remove it there.
 
-Usage: python3 -I website_screenshots.py <render folder>/Website <fallback folder> [--link-preview <png>] [--website <repo>]
+Usage: python3 -I website_screenshots.py <render folder>/Website [--link-preview <png>] [--website <repo>]
 """
 
 import argparse
@@ -109,7 +108,6 @@ def copy_screenshots(renders, screenshots, english_renders=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("renders", type=pathlib.Path)
-    parser.add_argument("fallback", type=pathlib.Path)
     parser.add_argument("--link-preview", type=pathlib.Path)
     parser.add_argument("--website", type=pathlib.Path)
     arguments = parser.parse_args()
@@ -117,8 +115,7 @@ def main():
         sys.exit(f"There are no renders in {arguments.renders}: render the website set first (--only website).")
     target = website_assets(arguments.website)
     if target is None:
-        target = arguments.fallback
-        print(f"The website's repository is not next to this one ({' or '.join(SIBLINGS)}), so the files go to {target}.")
+        sys.exit(f"The website's repository is not next to this one ({' or '.join(SIBLINGS)}): pass its path with --website.")
     screenshots = target / "screenshots"
     copy_screenshots(arguments.renders, screenshots)
     for language in sorted(path for path in arguments.renders.iterdir() if path.is_dir()):
