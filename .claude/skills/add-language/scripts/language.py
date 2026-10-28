@@ -269,6 +269,8 @@ def check_wiring(code, english_name):
     ]
     checks += [(f"documentation/store-listings/{p.name}", rf"\b{english_name}\b[^\n]*, switchable inside the app")
                for p in sorted((ROOT / "documentation/store-listings").glob("*.md"))]
+    checks += [(f"documentation/store-listings/{code}/{p.name}", r"^## ") for p in sorted((ROOT / "documentation/store-listings").glob("*.md"))]
+    checks += [("app/desktop/AppxManifest.xml", rf'<Resource Language="{code}-[a-z]+" />')]
     checks += [(str(p.relative_to(ROOT)), rf'<string name="{key}">[^<]+</string>') for p in sorted(RESOURCES.glob("values*/strings.xml"))]
     errors = []
     for relative, pattern in checks:

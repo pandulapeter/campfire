@@ -6,7 +6,9 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
+import tempfile
 import unittest
+from pathlib import Path
 
 from check_store_listings import field_errors, listing_errors
 
@@ -52,6 +54,12 @@ class CheckStoreListingsTest(unittest.TestCase):
     def test_only_the_blocks_under_a_heading_count_towards_it(self):
         listing = "## Name (5 characters max)\n\n" + block("abcde") + "\n## Notes\n\n" + block("a" * 50)
         self.assertEqual([], field_errors("store.md", listing))
+
+    def test_a_translation_in_a_language_folder_is_judged_and_named_by_its_folder(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / "de").mkdir()
+            (Path(folder) / "de/google-play.md").write_text("## Title (5 characters max)\n" + block("Lagerfeuer"), encoding="utf-8")
+            self.assertEqual(["de/google-play.md: Title is 10 characters, 5 at most"], listing_errors(Path(folder)))
 
     def test_the_repository_listings_are_within_their_limits(self):
         self.assertEqual([], listing_errors())

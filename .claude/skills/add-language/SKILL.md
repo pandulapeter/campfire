@@ -84,8 +84,12 @@ Each item is checked by `wiring` in step 7.
 7. Web, `app/web/src/wasmJsMain/resources/index.html`: add a `<code>: { … }` block to `TEXTS` with every key the
    `en` block has, translated, and the code to the `navigator.language` alternation (`/^(hu|ro|<code>)\b/i`).
 
+8. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>-<region>" />` (lowercase, the region the
+   language's main Partner Center locale has, `de-de`) after the last one. Partner Center then asks for a listing in it,
+   which step 5's store listings provide.
+
 Nothing else per platform: Android needs no locale config (the language is chosen in the app), the desktop runtime
-already carries every locale (`jdk.localedata`), and the stores stay English (only `whats-new en-US` is published).
+already carries every locale (`jdk.localedata`), and only English release notes are published (`whats-new en-US`).
 
 ## 4. Docs that list the languages
 
@@ -95,7 +99,8 @@ Add the language to each list, in the house style (Oxford comma, the language la
 - `presentation/CLAUDE.md`: the summaries bullet's "(English, Hungarian, …)".
 - `app/web/CLAUDE.md`: "Texts follow `navigator.language` (…)".
 - `app/ios/CLAUDE.md`: the `Localizable.strings` (…) and `CFBundleLocalizations` (…) code lists.
-- `documentation/store-listings/*.md` (all four): "English, Hungarian, …, switchable inside the app".
+- `documentation/store-listings/*.md` (all four): "English, Hungarian, …, switchable inside the app", and the same line
+  in every existing translation (`documentation/store-listings/<language>/*.md`), named in that translation's language.
 
 Rewrap any line pushed past ~120 columns.
 
@@ -113,7 +118,11 @@ Rewrap any line pushed past ~120 columns.
 4. Read each agent's list of doubts. Look up how each doubtful key is used (`grep -rn "Res.string.<key>\b"` in
    `presentation/src/commonMain/kotlin`) and fix the ones that are wrong once the file is joined.
 5. Join: `python3 $L join <code> <scratchpad>/<code>` writes `values-<code>/strings.xml`.
-6. If the preflight noted that 0 takes the singular, give each plural that `values-fr` gives a `zero` item one too, on
+6. The store listings: one subagent (`model: "opus"`) writes `documentation/store-listings/<code>/` with the four
+   stores' files, translated from the English ones the way the existing translations are (read one first: which fields
+   each holds, the English headings and rules note, the locales line, keywords researched rather than translated, the
+   app's own words from the new `strings.xml`), and runs `.github/scripts/check_store_listings.py`.
+7. If the preflight noted that 0 takes the singular, give each plural that `values-fr` gives a `zero` item one too, on
    a line of its own after `<plurals>`: the plurals a count of 0 can reach ("Aucune chanson").
 
 ### Glossary to fill in

@@ -139,8 +139,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    background, so it runs while the store listings are updated.
 
 9. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
-   one file per store (`google-play.md`, `app-store.md`, `mac-app-store.md`, `microsoft-store.md`): the source of truth
-   for every field the user pastes into that store's console, one fenced block per field. Read each file whole,
+   one file per store (`google-play.md`, `app-store.md`, `mac-app-store.md`, `microsoft-store.md`), in English, and a
+   folder per other language of the app with the same four: the source of truth for every field the user pastes into
+   that store's console, one fenced block per field. Read each file whole,
    rules note first, and check every claim against the feature clusters of step 3:
    - **Edit only what the release made untrue or incomplete**: a new feature worth a line, a removed or renamed one, a
      changed count (instruments, sounds, colors, languages), a new platform behavior. A release that changes nothing a
@@ -160,6 +161,12 @@ them. If a change has no effect a user could notice, it is not in the notes.
      (an importer's name): "other songbook apps". Count every edited field with a real interpreter (Python's `len()`,
      bytes for Apple's keywords) against the limit in its heading (`.github/scripts/check_store_listings.py` checks
      every field with a limit in its heading).
+
+   - **Every translation follows** (`documentation/store-listings/<language>/`, one folder per language of the app,
+     holding only the fields each store keeps per language): a change to a translated field is made in every language
+     in the same step, in the app's own words for that language (its `values-<code>/strings.xml`), keywords researched
+     for the language rather than translated; one subagent per language. The App Review notes and the Mac's sandbox
+     information are English only.
 
    Keep the four descriptions saying the same thing in each platform's words. Apple's fields other than the
    promotional text change only with a version submitted for review; the listings are pasted by hand, never by the

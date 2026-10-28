@@ -9,6 +9,8 @@
 """
 Keeps every field of the store listings in documentation/store-listings within the limit its heading names, since Play
 Console, App Store Connect, and Partner Center refuse a field past it and the listings are pasted by hand at release.
+The English listings are the folder's own files, each translation a file of the same name in a folder per language
+(`de/app-store.md`), and every one is judged, since a translation runs longer than its English.
 
 A field is a `## <name> (<limit>)` heading and the fenced blocks under it, up to the next `## ` heading. Three limits
 are understood: `(N characters max)`, one block of at most N characters as Python's len() counts them; `(N bytes max)`,
@@ -87,8 +89,8 @@ def field_errors(name, text):
 
 def listing_errors(folder=LISTINGS):
     errors = []
-    for path in sorted(folder.glob("*.md")):
-        errors += field_errors(path.name, path.read_text(encoding="utf-8"))
+    for path in sorted(folder.rglob("*.md")):
+        errors += field_errors(path.relative_to(folder).as_posix(), path.read_text(encoding="utf-8"))
     return errors
 
 
