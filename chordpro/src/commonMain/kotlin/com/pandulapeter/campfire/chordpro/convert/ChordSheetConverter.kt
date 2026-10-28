@@ -530,12 +530,17 @@ public object ChordSheetConverter {
             parsed[index]?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
                 ?: (hasStructure && isBracketedHeading(lines[index].text))
         }
+        val isStaff = lines.indices.map { index ->
+            tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
+                lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
+        }
         return lines.mapIndexed { index, line ->
             val candidate = candidates[index]
             when {
                 line.text.isBlank() -> Kind.BLANK
-                tab.matches(line.text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
-                    lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
+                // A row of chord names right over a staff names its bars, its columns the staff's, so it stays in the tab
+                // as it stands rather than being set over a lyric line it was never written for.
+                isStaff[index] || candidate != null && isStaff.getOrNull(index + 1) == true -> Kind.TAB
                 headings[index] || line.isMarginLabel -> Kind.SECTION
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     metadata(line.text)?.first == "copyright" ||

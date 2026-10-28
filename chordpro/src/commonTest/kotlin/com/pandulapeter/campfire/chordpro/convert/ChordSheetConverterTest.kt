@@ -287,6 +287,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a row of chords over a staff stays in the tab, its columns kept`() {
+        assertEquals(
+            "{start_of_tab}\nAm        C\ne|---0---|---3---|\nB|---1---|---1---|\n{end_of_tab}\n",
+            convert("Am        C\ne|---0---|---3---|\nB|---1---|---1---|"),
+        )
+    }
+
+    @Test
     fun `tablature needs at least two staff lines`() {
         assertEquals("{start_of_tab}\ne|---0---|\nB|---1---|\n{end_of_tab}\n", convert("e|---0---|\nB|---1---|"))
         assertEquals("e|---0---|\n", convert("e|---0---|"))

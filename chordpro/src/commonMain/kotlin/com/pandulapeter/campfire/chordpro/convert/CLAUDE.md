@@ -33,6 +33,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - `setChordRows` sets the rows a format marks itself as they are marked, guessing nothing, for OpenSong.
 - `convert` can be told not to guess a title (`guessesTitle`), for a caller that has the song's title from another
   app's field.
+- A row of chord names right over a tab staff is a line of the tab, kept as it stands: its columns name the staff's
+  bars, and it was never written over a lyric.
 - The heading vocabulary lives in `ChordSheetHeadings`. A heading word that is also sung (`Hook`, `Tag`, `Coro`, `R`)
   is one only in brackets, with a colon, or with a chord row or a blank line after it.
 - Section labels printed in a margin column (the ChordPro app's `label`, `V1`, `Ch1`, `A1`) open the sections they
