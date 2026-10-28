@@ -6,11 +6,11 @@
     "studio": "remotion studio src/index.ts"
   },
   "dependencies": {
-    "@remotion/cli": "4.0.537",
+    "@remotion/cli": "4.0.539",
     "@types/react": "19.3.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "remotion": "4.0.537",
+    "remotion": "4.0.539",
     "typescript": "7.0.2"
   }
 }
