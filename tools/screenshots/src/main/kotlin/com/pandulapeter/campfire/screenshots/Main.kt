@@ -30,6 +30,10 @@ import kotlin.system.exitProcess
  */
 fun main(args: Array<String>) {
     val options = args.toList().windowed(size = 2, step = 2, partialWindows = false).associate { (key, value) -> key to value }
+    options["--frame-previews"]?.let { renders ->
+        runBlocking(Dispatchers.Main) { renderFramePreviews(renders = File(renders), output = File(requireNotNull(options["--out"]))) }
+        exitProcess(0)
+    }
     val output = options["--out"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders")).apply { deleteRecursively() }
     val only = options["--only"]?.split(',')?.map(String::trim)?.toSet()
     val shard = options["--shard"]?.let(Shard::parse) ?: Shard(index = 0, count = 1)

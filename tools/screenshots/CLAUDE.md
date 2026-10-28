@@ -47,6 +47,10 @@ set holds the app's UI tests.
 - **The Screenshot Bro project** that frames the renders is kept in `project/`: `project.json` as the app writes it,
   less what every run changes (each frame's screenshot, the modification time), and the images its logos show. The
   `store-screenshots` skill's `screenshot_bro_project.py` saves it from the app's container and restores it into one.
+- **Framing without Screenshot Bro** is in progress: `ListingImage` draws a render on the listing's gradient under its
+  headline, in a generic `DeviceFrame` (the promo video's), with `ListingChips` naming features on the frame's edges.
+  `--frame-previews <renders folder> --out <folder>` frames a run's listing renders with `ListingPreviews.kt`'s
+  English headlines and chips, for judging them before the listing is made with them.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
   the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
   belong to the Screenshot Bro project, not the images.
