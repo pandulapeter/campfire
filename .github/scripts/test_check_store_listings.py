@@ -55,11 +55,11 @@ class CheckStoreListingsTest(unittest.TestCase):
         listing = "## Name (5 characters max)\n\n" + block("abcde") + "\n## Notes\n\n" + block("a" * 50)
         self.assertEqual([], field_errors("store.md", listing))
 
-    def test_a_translation_in_a_language_folder_is_judged_and_named_by_its_folder(self):
+    def test_a_listing_in_a_store_folder_is_judged_and_named_by_its_store_and_language(self):
         with tempfile.TemporaryDirectory() as folder:
-            (Path(folder) / "de").mkdir()
-            (Path(folder) / "de/google-play.md").write_text("## Title (5 characters max)\n" + block("Lagerfeuer"), encoding="utf-8")
-            self.assertEqual(["de/google-play.md: Title is 10 characters, 5 at most"], listing_errors(Path(folder)))
+            (Path(folder) / "google-play").mkdir()
+            (Path(folder) / "google-play/de.md").write_text("## Title (5 characters max)\n" + block("Lagerfeuer"), encoding="utf-8")
+            self.assertEqual(["google-play/de.md: Title is 10 characters, 5 at most"], listing_errors(Path(folder)))
 
     def test_the_repository_listings_are_within_their_limits(self):
         self.assertEqual([], listing_errors())

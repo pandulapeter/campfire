@@ -16,7 +16,7 @@ The app is the Windows desktop build, so the text names a click, the keyboard, a
 the platforms' share sheets.
 
 Paste into Partner Center's Spanish listing: es-es. The title and Developed by are the same in every language and stay
-in `../microsoft-store.md`.
+in `en.md`.
 
 ## Short description (1,000 characters max)
 

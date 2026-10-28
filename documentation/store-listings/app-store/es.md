@@ -16,7 +16,7 @@ The app is the iOS and iPadOS build, so the text may name touch, the share sheet
 not the wallpaper's colors.
 
 Paste into App Store Connect's Spanish localizations: es-ES and es-MX. The URLs, copyright, and App Review notes are
-single-language and stay in `../app-store.md`.
+single-language and stay in `en.md`.
 
 ## Name (30 characters max)
 

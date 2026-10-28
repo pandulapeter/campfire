@@ -52,7 +52,7 @@ switch for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`f
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown, then "Bug fixes and improvements.", or (hand dispatch with
   nothing given) the commit log since the previous tag. The notes are English, written into every language's listing;
-  the listings themselves are pasted by hand from `documentation/store-listings`, a translation per language.
+  the listings themselves are pasted by hand from `documentation/store-listings/<store>/<language>.md`.
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
 
 ## The workflows

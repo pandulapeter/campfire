@@ -307,7 +307,7 @@ download address is Dropbox's alone.
   them simply lacks Drive.
 - The Mac App Store build already has `com.apple.security.network.server` (`app/desktop/app-store.entitlements`, for
   the Dropbox listener and the single-instance socket), so an any-port loopback needs nothing more. Its justification
-  in `documentation/store-listings/mac-app-store.md` names the Dropbox redirect; P5 rewords it.
+  in `documentation/store-listings/mac-app-store/en.md` names the Dropbox redirect; P5 rewords it.
 
 ### P5. Docs and listings
 

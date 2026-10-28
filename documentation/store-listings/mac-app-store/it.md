@@ -9,14 +9,14 @@
 -->
 # Mac App Store (Italian)
 
-Store rules: the App Store's (`app-store.md`), on the same app record: the name, subtitle, support URL, marketing URL,
+Store rules: the App Store's (`../app-store/it.md`), on the same app record: the name, subtitle, support URL, marketing URL,
 and copyright are shared with iOS and are kept there; the description, promotional text, keywords, and review notes
 are the Mac version's own. Every entitlement is justified under App Sandbox Information. The app is the desktop build,
 so the text names a click, the keyboard, right-clicking, the Dock, and dragging onto the window, never touch, the share
 sheet, or the wallpaper's colors.
 
-Paste into App Store Connect's it localization of the macOS version. The name and subtitle are in `app-store.md`; the
-review notes and App Sandbox information stay in `../mac-app-store.md`.
+Paste into App Store Connect's it localization of the macOS version. The name and subtitle are in `../app-store/it.md`; the
+review notes and App Sandbox information stay in `en.md`.
 
 ## Promotional text (170 characters max)
 

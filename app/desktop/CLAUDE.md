@@ -155,7 +155,7 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 - Only the `.msix` claims the `campfire` scheme (`windows.protocol`); the `.msi` is published by nothing.
 - **MSIX** (`packageReleaseMsix`): identity from `campfire.windows.*` (Partner Center's, verbatim), version
   `campfire.versionName` + `.0`. Unsigned: Partner Center signs. Declares every language of the app, and Partner Center
-  wants a listing for each declared one (`documentation/store-listings/<language>/microsoft-store.md`).
+  wants a listing for each declared one (`documentation/store-listings/microsoft-store/<language>.md`).
 - MSIX AppData writes are virtualized and the Store refuses `unvirtualizedResources`, so the task adds `-Dcampfire.packageFamilyName=<name>_<publisher id>` to `Campfire.cfg`, and `desktopDataDirectory()` (in both
   `:presentation` and `:data:source:local:implementation`) then uses `%LOCALAPPDATA%\Packages\<family>\LocalState`.
 

@@ -15,7 +15,7 @@ the subtitle; the promotional text can change at any time without a review, ever
 The app is the iOS and iPadOS build, so the text may name touch, the share sheet, and dragging from another app, but
 not the wallpaper's colors.
 
-Paste into App Store Connect's it localization. The URLs, copyright, and App Review notes stay in `../app-store.md`.
+Paste into App Store Connect's it localization. The URLs, copyright, and App Review notes stay in `en.md`.
 
 ## Name (30 characters max)
 

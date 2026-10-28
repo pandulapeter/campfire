@@ -9,7 +9,7 @@
 -->
 # Mac App Store (Romanian)
 
-Store rules: the App Store's (`app-store.md`), on the same app record: the name, subtitle, support URL, marketing URL,
+Store rules: the App Store's (`../app-store/ro.md`), on the same app record: the name, subtitle, support URL, marketing URL,
 and copyright are shared with iOS and are kept there; the description, promotional text, keywords, and review notes
 are the Mac version's own. Every entitlement is justified under App Sandbox Information. The app is the desktop build,
 so the text names a click, the keyboard, right-clicking, the Dock, and dragging onto the window, never touch, the share
