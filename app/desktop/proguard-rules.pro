@@ -31,6 +31,13 @@
 # https://github.com/Guardsquare/proguard/issues/533
 -optimizations !method/specialization/*,!method/generalization/*,!field/specialization/*,!field/generalization/*
 
+# The chord rows' drawing lambda (the key heading's clipped drawing among them) comes out of ProGuard's optimizer with a
+# stack map that no longer matches one of its exception handlers, so the JVM refuses the class with a VerifyError the
+# first time a song with chord diagrams opens, and the window shows the error instead of the song. Neither moving the
+# clipping into a function of its own nor turning off `code/allocation/variable` avoids it; only leaving the file's
+# class unoptimized does. Starting the app does not reach the class, so only opening such a song shows the break.
+-keep,allowshrinking,allowobfuscation class com.pandulapeter.campfire.presentation.ui.songView.SongChordsSectionKt { *; }
+
 # The single instance lock is held by keeping its FileLock in a field that nothing ever reads, since holding it is the
 # whole of its job. ProGuard removes a field that is only written, the lock and its channel are then unreachable, and
 # the first garbage collection closes the channel and releases the lock: every file opened in Explorer after that

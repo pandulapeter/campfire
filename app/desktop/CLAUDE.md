@@ -123,6 +123,8 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 
 - Type specialization/generalization optimizations are off: they drop a needed `checkcast` (`VerifyError` in
   `NavDisplay`).
+- `SongChordsSectionKt` is left unoptimized: the optimizer breaks a stack map in its drawing lambda (`VerifyError` on
+  opening a song with chord diagrams, which a start never reaches).
 - Keeps `SingleInstance.kt`'s write-only `heldLock`, or GC releases the lock.
 - Carries Coil's keep rules (ProGuard doesn't read them from the jar).
 - Obfuscation stays off: `TouchScreen.kt` finds the scene by its `androidx.compose.` class names.
