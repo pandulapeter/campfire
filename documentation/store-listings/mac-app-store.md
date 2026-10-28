@@ -99,7 +99,7 @@ tuner,metronome,chordpro,guitar,ukulele,mandolin,banjo,bass,piano,capo,transpose
 ```
 Campfire has no account and nothing to sign in to. Two public-domain demo songs and a setlist are loaded on first launch, so every feature can be reviewed without adding content. The first launch also opens a short onboarding, which can be skipped.
 
-Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Export in a song's or setlist's menu; Save QR code for a shared link), or dropped onto the window; the library itself stays inside the app's sandbox container.
+Files are only read and written where the user picks them in the system's open and save panels (Import files in the New button's menu on the Songs screen or in Settings → Library; Share or export in a song's or setlist's menu; Save QR code for a shared link), or dropped onto the window; the library itself stays inside the app's sandbox container.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user clicks the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 
@@ -107,7 +107,7 @@ Network use is limited to features the user starts: optional sync with the user'
 
 New in 5.2.0, and where to find it:
 - Continuous layout: Settings → Preferences → Song page → Layout (also under Preferences in a song's three-dot menu) switches between Pages and Continuous; the app also asks once, over the first song opened. In Continuous, the play button above the bottom step button starts the scroll, and a Scroll speed slider appears while it plays.
-- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device (nothing is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
+- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device by abc2svg, an engraving library bundled with the app and run in its embedded JavaScript engine (no code or content is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
 - Languages: German, Spanish, French, Italian, and Romanian, picked in Settings → General → Language or followed from the system.
 - Key changes: in a song whose key changes partway through, the chord diagrams at the top of the song are grouped under a heading for each key, and its Scales section suggests a scale for the part in the new key.
 - PDF import: PDFs imported through Import files in the New button's menu on the Songs screen leave out page headers and footers and keep listed chord shapes, repeat signs, and labelled song details.

@@ -130,7 +130,7 @@ Campfire has no account and nothing to sign in to. Two public-domain demo songs 
 
 New in 5.2.0, and where to find it:
 - Continuous layout: Settings → Preferences → Song page → Layout (also under Preferences in a song's three-dot menu) switches between Pages and Continuous; the app also asks once, over the first song opened. In Continuous, the play button above the bottom step button starts the scroll, and a Scroll speed slider appears while it plays.
-- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device (nothing is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
+- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device by abc2svg, an engraving library bundled with the app and run in the system's JavaScriptCore (no code or content is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
 - Languages: German, Spanish, French, Italian, and Romanian, picked in Settings → General → Language or followed from the system.
 - Key changes: in a song whose key changes partway through, the chord diagrams at the top of the song are grouped under a heading for each key, and its Scales section suggests a scale for the part in the new key.
 - PDF import: PDFs imported through Import files in the New button's menu on the Songs screen leave out page headers and footers and keep listed chord shapes, repeat signs, and labelled song details.
