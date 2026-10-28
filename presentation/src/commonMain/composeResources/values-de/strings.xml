@@ -1247,6 +1247,7 @@
     <string name="print_columns_increase">Mehr Spalten</string>
     <string name="print_chords">Akkorde und Raster</string>
     <string name="print_tabs">Tabulatur</string>
+    <string name="print_sheet_music">Noten</string>
     <string name="print_comments">Kommentare</string>
     <string name="print_key">Tonart, Transposition und Capo</string>
     <string name="print_tempo">Tempo und Taktart</string>

@@ -1247,6 +1247,7 @@
     <string name="print_columns_increase">Más columnas</string>
     <string name="print_chords">Acordes y cuadrículas</string>
     <string name="print_tabs">Tablaturas</string>
+    <string name="print_sheet_music">Partituras</string>
     <string name="print_comments">Comentarios</string>
     <string name="print_key">Tonalidad, transposición y capo</string>
     <string name="print_tempo">Tempo y compás</string>

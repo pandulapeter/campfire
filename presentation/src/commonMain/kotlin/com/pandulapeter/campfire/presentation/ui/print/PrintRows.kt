@@ -148,7 +148,7 @@ internal class PrintRows(
             when (run.first().foldableKind()) {
                 FoldableKind.TAB -> if (options.showTabs) tabRows(run, sectionLabel, lineWidth) else emptyList()
                 FoldableKind.GRID -> if (options.showChords) gridRows(run, lineWidth) else emptyList()
-                FoldableKind.VERBATIM -> if (options.showChords) verbatimRows(run, lineWidth) else emptyList()
+                FoldableKind.VERBATIM -> if (options.showSheetMusic) verbatimRows(run, lineWidth) else emptyList()
                 null -> run.flatMap { line ->
                     when (line) {
                         is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)

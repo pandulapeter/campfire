@@ -295,7 +295,7 @@ internal class PrintLayoutTest {
         assertFalse("Grid" in hidden || hidden.any { it.contains("G |") })
     }
 
-    @Test fun `an abc block prints preformatted and unselectable under its kind, and is left out when chords are hidden`() = runTest {
+    @Test fun `an abc block prints preformatted and unselectable under its kind, and is left out with the sheet music, not with the chords`() = runTest {
         val tied = "|:G2-G2 A2-A2|B2-B2 c2-c2:|"
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(
             ChordProLine.Verbatim("X:1", "abc"),
@@ -307,7 +307,9 @@ internal class PrintLayoutTest {
         val notation = texts.filter { it.y > heading.y && it.style.monospace }
         assertEquals(listOf("X:1", "\"G\"[CEG]2 [A2B] |", tied), notation.map { it.text })
         assertTrue(notation.all { it.style.monospace && !it.isSelectable })
-        val hidden = layout(source(abc), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        val withoutChords = layout(source(abc), PrintSettings(showChords = false, showTabs = false)).pages.flatMap { it.texts }.map { it.text }
+        assertTrue("X:1" in withoutChords)
+        val hidden = layout(source(abc), PrintSettings(showSheetMusic = false)).pages.flatMap { it.texts }.map { it.text }
         assertFalse("ABC notation" in hidden || "X:1" in hidden)
     }
 
@@ -325,7 +327,7 @@ internal class PrintLayoutTest {
         assertTrue(notations.all { it.drawing === drawing && it.scale == scale && it.y > heading.y })
         notations.zipWithNext { above, below -> below.y - above.y }.forEach { pitch -> assertEquals(60f * scale, pitch, 0.001f) }
         assertTrue(document.pages.flatMap { it.texts }.none { it.text == "GAB|" })
-        val hidden = layoutPrintDocument(source(abc), PrintSettings(showChords = false), labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
+        val hidden = layoutPrintDocument(source(abc), PrintSettings(showSheetMusic = false), labels, measureText = ::measure, notations = mapOf("song.cho" to mapOf("X:1\nK:G\nGAB|" to drawing)))
         assertTrue(hidden.pages.all { it.notations.isEmpty() })
     }
 
@@ -941,7 +943,7 @@ internal class PrintLayoutTest {
     @Test fun `the feature switches leave out what they take away whatever the options say`() {
         val chosen = PrintSettings(showChords = true, showTabs = true, showChordDiagrams = true, showScales = true, showKey = true, showTempo = true)
         assertEquals(
-            chosen.copy(showChords = false, showTabs = false, showChordDiagrams = false, showScales = false, showKey = false),
+            chosen.copy(showChords = false, showTabs = false, showSheetMusic = false, showChordDiagrams = false, showScales = false, showKey = false),
             chosen.withinFeatures(areChordsEnabled = false, areScaleSuggestionsEnabled = true, isMetronomeEnabled = true),
         )
         assertEquals(chosen.copy(showScales = false), chosen.withinFeatures(areChordsEnabled = true, areScaleSuggestionsEnabled = false, isMetronomeEnabled = true))

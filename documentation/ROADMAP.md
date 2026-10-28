@@ -14,6 +14,7 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - **Support more languages**: Hebrew (RTL + font + editor)
+- PDF export: sheet music should be allowed to be split across multiple pages
 
 ## Short-term
 

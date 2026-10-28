@@ -389,6 +389,7 @@ internal fun printSettings(isLandscape: Boolean) = buildJsonObject {
     listOf(
         "showChords",
         "showTabs",
+        "showSheetMusic",
         "showChordDiagrams",
         "showKey",
         "showTempo",

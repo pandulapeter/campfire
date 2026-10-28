@@ -41,7 +41,7 @@ pipeline is in `ui/print/CLAUDE.md`.
 - `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
   size and folded sections.
 - **The Features switches and the song preferences reach the export**: an option whose switch is off (chords, which
-  take tablature, diagrams, scales, and key; scale suggestions, which take scales; the metronome, which takes tempo) is
+  take tablature, sheet music, diagrams, scales, and key; scale suggestions, which take scales; the metronome, which takes tempo) is
   neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept for when the switch comes back.
 - A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
   entry's key. Missing or unreadable songs keep a visibly marked slot.
@@ -49,7 +49,7 @@ pipeline is in `ui/print/CLAUDE.md`.
   size, margins, page numbers), Running order for a setlist (whether, then folding out its own columns and its date,
   description, and artists), and Song sheets (for a setlist whether, then folding out their columns, a new page per
   song, then what a sheet prints in the order it prints it: artist, key, tempo, chord diagrams, scales, chords and grids,
-  tablature (apart from the chords, offered where a song has any), comments). Columns are a stepper inside the section
+  tablature and sheet music (each apart from the chords, offered where a song has any), comments). Columns are a stepper inside the section
   they shape, never a control between sections; a new option goes into the section, and at the place, where it prints.
 - **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
   excluded metadata. No platform print service: the file is saved or shared.

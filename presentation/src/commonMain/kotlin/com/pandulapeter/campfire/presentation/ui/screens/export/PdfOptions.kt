@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.print_section_page
 import com.pandulapeter.campfire.presentation.resources.print_song_sheet
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets_include
+import com.pandulapeter.campfire.presentation.resources.print_sheet_music
 import com.pandulapeter.campfire.presentation.resources.print_tabs
 import com.pandulapeter.campfire.presentation.resources.print_tempo
 import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
@@ -189,7 +190,7 @@ private fun RunningOrderOptions(
 /**
  * The song sheets: for a setlist whether they are printed at all, then, folding out while they are, their columns, and
  * for several songs whether each starts a page, then what each sheet prints, in the order it prints it: the artist under
- * the title, the key and the tempo, the chord diagrams and the scales, then the song's chords, tablature, and comments.
+ * the title, the key and the tempo, the chord diagrams and the scales, then the song's chords, tablature, sheet music, and comments.
  * Like the running order, they cannot be left out while it is.
  */
 @Composable
@@ -269,6 +270,13 @@ private fun SongSheetOptions(
                 onCheckedChange = { onSettings(settings.copy(showTabs = it)) },
             )
         }
+        if (areChordsEnabled && source.hasSheetMusic()) {
+            CheckboxListItem(
+                title = stringResource(Res.string.print_sheet_music),
+                isChecked = settings.showSheetMusic,
+                onCheckedChange = { onSettings(settings.copy(showSheetMusic = it)) },
+            )
+        }
         CheckboxListItem(
             title = stringResource(Res.string.print_comments),
             isChecked = settings.showComments,
@@ -277,8 +285,12 @@ private fun SongSheetOptions(
     }
 }
 
-private fun PrintSource.hasTabs() = songs.any { song ->
-    song.song?.blocks.orEmpty().any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Tab } }
+private fun PrintSource.hasTabs() = hasLine { it is ChordProLine.Tab }
+
+private fun PrintSource.hasSheetMusic() = hasLine { it is ChordProLine.Verbatim }
+
+private fun PrintSource.hasLine(predicate: (ChordProLine) -> Boolean) = songs.any { song ->
+    song.song?.blocks.orEmpty().any { block -> block is ChordProBlock.Section && block.lines.any(predicate) }
 }
 
 /** A section's columns, as a stepper beside its label like the page's text size and margins. */

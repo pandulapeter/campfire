@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.notation.renderNotationDrawing
  * which prints as its text.
  */
 internal suspend fun printNotationsOf(source: PrintSource, settings: PrintSettings, renderer: AbcRenderer): Map<String, Map<String, NotationDrawing>> {
-    if (!settings.normalized().showChords) return emptyMap()
+    if (!settings.normalized().showSheetMusic) return emptyMap()
     val width = (printColumnWidth(settings) / printNotationUnit(settings)).toInt()
     return source.songs.mapNotNull { song ->
         val tunes = abcTuneOffsets(song.song?.blocks.orEmpty())

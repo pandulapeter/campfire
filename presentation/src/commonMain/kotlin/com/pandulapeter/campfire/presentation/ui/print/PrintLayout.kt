@@ -28,7 +28,7 @@ import kotlinx.coroutines.yield
  * while it is suspended can the page paint and a newer choice of options cancel a stale layout.
  */
 /**
- * [this] with what the app's own feature switches take away left out too: the chords, the tablature, their diagrams, their
+ * [this] with what the app's own feature switches take away left out too: the chords, the tablature, the sheet music, their diagrams, their
  * scales, and the key with the Chords switch, the scales with the Scale suggestions one too, the tempo and the time signature with
  * the Metronome one. The options themselves are kept as they
  * were chosen, since a switch only hides, and switched back on the export prints them again.
@@ -36,6 +36,7 @@ import kotlinx.coroutines.yield
 internal fun PrintSettings.withinFeatures(areChordsEnabled: Boolean, areScaleSuggestionsEnabled: Boolean, isMetronomeEnabled: Boolean) = copy(
     showChords = showChords && areChordsEnabled,
     showTabs = showTabs && areChordsEnabled,
+    showSheetMusic = showSheetMusic && areChordsEnabled,
     showChordDiagrams = showChordDiagrams && areChordsEnabled,
     showScales = showScales && areChordsEnabled && areScaleSuggestionsEnabled,
     showKey = showKey && areChordsEnabled,

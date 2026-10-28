@@ -1247,6 +1247,7 @@
     <string name="print_columns_increase">Più colonne</string>
     <string name="print_chords">Accordi e griglie</string>
     <string name="print_tabs">Intavolature</string>
+    <string name="print_sheet_music">Spartiti</string>
     <string name="print_comments">Commenti</string>
     <string name="print_key">Tonalità, trasposizione e capotasto</string>
     <string name="print_tempo">Tempo e metro</string>

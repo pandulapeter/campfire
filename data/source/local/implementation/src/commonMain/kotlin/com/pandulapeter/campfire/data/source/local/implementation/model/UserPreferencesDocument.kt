@@ -104,6 +104,7 @@ internal data class PrintSettingsDocument(
     val showChords: Boolean = true,
     /** Null in a document from before the tablature had a box of its own, when [showChords] printed it, so that its choice still holds. */
     val showTabs: Boolean? = null,
+    val showSheetMusic: Boolean = true,
     val showChordDiagrams: Boolean = true,
     val showScales: Boolean = true,
     /**

@@ -1246,6 +1246,7 @@
     <string name="print_columns_increase">Több oszlop</string>
     <string name="print_chords">Akkordok és akkordrácsok</string>
     <string name="print_tabs">Tabulatúrák</string>
+    <string name="print_sheet_music">Kotta</string>
     <string name="print_comments">Megjegyzések</string>
     <string name="print_key">Hangnem, transzponálás és capo</string>
     <string name="print_tempo">Tempó és ütemmutató</string>

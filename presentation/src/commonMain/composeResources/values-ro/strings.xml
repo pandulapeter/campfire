@@ -1247,6 +1247,7 @@
     <string name="print_columns_increase">Mai multe coloane</string>
     <string name="print_chords">Acorduri și grile</string>
     <string name="print_tabs">Tabulaturi</string>
+    <string name="print_sheet_music">Partituri</string>
     <string name="print_comments">Comentarii</string>
     <string name="print_key">Tonalitate, transpunere și capodastru</string>
     <string name="print_tempo">Tempo și măsură</string>

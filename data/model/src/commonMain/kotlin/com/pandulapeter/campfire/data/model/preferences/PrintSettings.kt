@@ -26,6 +26,8 @@ data class PrintSettings(
     val showChords: Boolean = true,
     /** The tablature, apart from [showChords]: somebody can play a riff from it with no chord sheet to print, or the other way around. */
     val showTabs: Boolean = true,
+    /** Another program's notation (an ABC tune, engraved, or LilyPond and the like as text), apart from [showChords] like [showTabs]. */
+    val showSheetMusic: Boolean = true,
     /** The diagram of every chord a song plays under its heading, apart from [showChords]: a player can learn the shapes without the sheet. */
     val showChordDiagrams: Boolean = true,
     /**
