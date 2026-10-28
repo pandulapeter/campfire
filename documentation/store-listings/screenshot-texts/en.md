@@ -13,7 +13,8 @@ The headline and the feature chips of every store screenshot, read by `tools/scr
 every device's images; a file per language of the app. A headline breaks its lines where its block does on a
 phone or a tablet held upright and is one line elsewhere. A chip names what its shot shows but its headline does
 not, in the app's own words for it, and keeps to a few words: it wraps on a phone, and German and Hungarian run
-long. The chips' icons and places are the shot's, in `ListingChipStyles.kt`, in this file's order.
+long. The chips' icons and places are the shot's, in `ListingChipStyles.kt`, in this file's order. The last headline
+is the caption of Apple's search results image, one line over its devices.
 
 ## 01-songs headline (50 characters max)
 
@@ -165,4 +166,10 @@ Chord diagrams on paper
 
 ```
 Share as PDF
+```
+
+## search-results headline (60 characters max)
+
+```
+Lyrics, chords, and the click, wherever you play
 ```

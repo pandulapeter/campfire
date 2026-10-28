@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
         val readme = File(requireProperty("campfire.screenshots.readme"))
         val missing = runBlocking(Dispatchers.Main) {
             val listing = if (set == "banners") 0 else frameListing(renders = renders, texts = texts, output = output)
-            listing + if (set == "listing") 0 else frameCompositions(renders = renders, output = output, readme = readme)
+            listing + if (set == "listing") 0 else frameCompositions(renders = renders, texts = texts, output = output, readme = readme)
         }
         println("Framed into $output")
         exitProcess(if (missing == 0) 0 else 1)
@@ -65,15 +65,20 @@ fun main(args: Array<String>) {
             ?.let { Image.makeFromEncoded(it.readBytes()).toComposeImageBitmap() },
         versionName = requireProperty("campfire.screenshots.versionName"),
     )
-    // The listing is taken in every language of the app, each in a folder of its own, which `--frame listing` reads.
+    // The listing, and the banners the stores show in every language, are taken in every language of the app, each in a
+    // folder of its own, which the framing reads.
+    val languages = AppLanguage.entries.filter { it != AppLanguage.SYSTEM_DEFAULT }
     val listing = Device.entries.filter { it.isInListing }.flatMap { device ->
-        AppLanguage.entries.filter { it != AppLanguage.SYSTEM_DEFAULT }.flatMap { language ->
+        languages.flatMap { language ->
             shots.map { shot -> Job("listing", "${device.folder}/${language.id}", shot.id, device, shot.inTheme(shot.uiMode, language)) }
         }
     }
     val bannerJobs = banners.flatMap { banner ->
-        banner.slots.mapIndexed { index, (device, shot) ->
-            Job("banners", banner.folder, banner.fileName(index), device, shot)
+        (if (banner.isLocalized) languages else listOf(null)).flatMap { language ->
+            banner.slots.mapIndexed { index, (device, shot) ->
+                val folder = if (language == null) banner.folder else "${banner.folder}/${language.id}"
+                Job("banners", folder, banner.fileName(index), device, if (language == null) shot else shot.inTheme(shot.uiMode, language))
+            }
         }
     }
     val websiteJobs = websiteShots.map { (name, device, shot) -> Job("website", "Website", name, device, shot) }

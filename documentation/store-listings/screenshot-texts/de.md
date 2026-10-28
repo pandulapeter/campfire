@@ -162,3 +162,9 @@ Akkorddiagramme auf Papier
 ```
 Als PDF teilen
 ```
+
+## search-results headline (60 characters max)
+
+```
+Texte, Akkorde und der Klick, wo immer du spielst
+```

@@ -162,3 +162,9 @@ Diagrammi degli accordi su carta
 ```
 Condividi come PDF
 ```
+
+## search-results headline (60 characters max)
+
+```
+Testi, accordi e il clic, ovunque tu suoni
+```

@@ -162,3 +162,9 @@ Diagrammes d'accords sur papier
 ```
 Partage en PDF
 ```
+
+## search-results headline (60 characters max)
+
+```
+Paroles, accords et le clic, où que tu joues
+```

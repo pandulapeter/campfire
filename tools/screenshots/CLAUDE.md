@@ -50,10 +50,11 @@ set holds the app's UI tests.
   (`ListingCanvas.kt`): the listing's gradient, the headline, the screen in a generic `DeviceFrame` (the promo video's),
   and `ListingChips` naming features on the frame's edges, in the other theme than the screen's. The texts are
   `documentation/store-listings/screenshot-texts/<language>.md`, the chips' icons and corners `ListingChipStyles.kt`;
-  the images go to `<store>/<language>/<device>-<n>`, JPEG but for Microsoft's PNG. The images laid out by hand are
-  `Compositions.kt`, over the renders of `Banners.kt`: the stores' feature graphic, header, search results, icon,
-  poster, and box art, the website's link preview (`website/`), and the README's banners, written straight to
-  `documentation/screenshots` as WebP.
+  the images go to `<store>/<language>/<device>-<n>.png`, with no alpha channel (Apple refuses screenshots that have
+  one). The images laid out by hand are `Compositions.kt`, over the renders of `Banners.kt`: the stores' feature
+  graphic, header, and search results in every language (their banners render in each), the icon, poster, and box art,
+  the website's link preview (`website/`), and the README's banners, written straight to `documentation/screenshots`
+  as WebP.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
   the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
   and chips are drawn by the framing, never into the renders.

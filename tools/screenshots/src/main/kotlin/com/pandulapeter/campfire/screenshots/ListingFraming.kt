@@ -15,18 +15,17 @@ import androidx.compose.ui.unit.Density
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 import java.io.File
 
 /**
  * Frames the listing's renders in [renders] (`<device folder>/<language>/<shot id>.png`) into [output]: every listing
  * image of every store, in every language whose texts are in [texts] (`documentation/store-listings/screenshot-texts`),
- * as `<store>/<language>/<device>-<n>`, numbered by the shot's place in the listing. Returns how many images were
+ * as `<store>/<language>/<device>-<n>.png`, numbered by the shot's place in the listing. Returns how many images were
  * missing their render or their text.
  */
 internal suspend fun frameListing(renders: File, texts: File, output: File): Int {
-    val byLanguage = texts.listFiles { file -> file.extension == "md" }.orEmpty().associate { it.nameWithoutExtension to readListingTexts(it) }
+    val byLanguage = readAllListingTexts(texts)
     val devices = Device.entries.filter { it.isInListing }
     var missing = 0
     devices.forEach { device ->
@@ -40,10 +39,9 @@ internal suspend fun frameListing(renders: File, texts: File, output: File): Int
                     println("missing: ${source.relativeTo(renders)}${if (text == null) " (no text)" else ""}")
                     return@forEach
                 }
-                val format = if (canvas.store == "microsoft-store") EncodedImageFormat.PNG else EncodedImageFormat.JPEG
-                val file = File(output, "${canvas.store}/$language/${canvas.name}-${index + 1}.${format.extension}")
+                val file = File(output, "${canvas.store}/$language/${canvas.name}-${index + 1}.png")
                 file.parentFile.mkdirs()
-                file.writeBytes(frame(canvas = canvas, shot = shot, text = text, screen = Image.makeFromEncoded(source.readBytes()), format = format))
+                file.writeBytes(encodeImage(image = frame(canvas = canvas, shot = shot, text = text, screen = Image.makeFromEncoded(source.readBytes())), extension = "png"))
             }
             println("framed ${device.folder} / $language")
         }
@@ -51,8 +49,8 @@ internal suspend fun frameListing(renders: File, texts: File, output: File): Int
     return missing
 }
 
-/** One listing image of [shot] on [canvas], with [text]'s headline and chips around [screen], encoded as [format]. */
-private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, screen: Image, format: EncodedImageFormat): ByteArray {
+/** One listing image of [shot] on [canvas], with [text]'s headline and chips around [screen]. */
+private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, screen: Image): Image {
     val styles = listingChipStyles[shot.id].orEmpty()
     require(styles.size == text.chips.size) { "${shot.id} has ${text.chips.size} chip texts for ${styles.size} chips." }
     val bitmap = screen.toComposeImageBitmap()
@@ -78,15 +76,10 @@ private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, 
         delay(FRAME_MILLIS)
     }
     return try {
-        checkNotNull(scene.render(time).encodeToData(format, STORE_JPEG_QUALITY)).bytes
+        scene.render(time)
     } finally {
         scene.close()
     }
 }
 
-private val EncodedImageFormat.extension get() = if (this == EncodedImageFormat.PNG) "png" else "jpg"
-
 private const val LOADING_FRAMES = 30
-
-/** Enough that the gradient behind a frame shows no banding, and a screen's small text no ringing. */
-internal const val STORE_JPEG_QUALITY = 92

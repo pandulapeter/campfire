@@ -33,13 +33,14 @@ tool works.
 
 ## Where everything goes
 
-Everything lands in `~/Desktop/Campfire store images <version>/` (`campfire.versionName`), replaced by every run:
+Everything lands in `~/Desktop/Campfire store images <version>/` (`campfire.versionName`), replaced by every run, as
+PNG with no alpha channel (Apple refuses screenshots that have one, Play a feature graphic) but for Play's icon:
 
 | What | Made from | File |
 |---|---|---|
-| Store listings (9 devices × 8 shots × every language) | `Shot.kt`, the texts in `documentation/store-listings/screenshot-texts/<language>.md`, `ListingChipStyles.kt` | `<store>/<language>/<device>-<n>.jpg` (Microsoft's `.png`) |
-| Play Store feature graphic and icon | `Compositions.kt` | `google-play/feature-graphic.jpg`, `google-play/icon.png` |
-| Apple's product page header and search results image | `Compositions.kt` | `app-store/header.jpg`, `app-store/search-results.jpg` |
+| Store listings (9 devices × 8 shots × every language) | `Shot.kt`, the texts in `documentation/store-listings/screenshot-texts/<language>.md`, `ListingChipStyles.kt` | `<store>/<language>/<device>-<n>.png` |
+| Play Store feature graphic (every language) and icon | `Compositions.kt` | `google-play/<language>/feature-graphic.png`, `google-play/icon.png` |
+| Apple's product page header and search results image (every language; the caption is `search-results` in the texts) | `Compositions.kt` | `app-store/<language>/header.png`, `app-store/<language>/search-results.png` |
 | Microsoft's poster and box art | `Compositions.kt` | `microsoft-store/poster-art.png`, `microsoft-store/box-art.png` |
 
 The same framing also writes the website's link preview (`website/link-preview.png`) and the README's banners
@@ -49,7 +50,8 @@ every run. Nothing is committed unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` in the background (one app start
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` in the background (a render without
+   `--out` empties `renders/` first, so nothing else may render in the clone until the framing is done) (one app start
    per image, a few seconds each; the listing is about 500 images, half an hour): every shot of `Shot.kt` on every
    listing `Device` in every language, into `renders/<row label>/<language>/`, and the shots of `Banners.kt`.
    `--only` also takes device enum names and shot ids. A failed render is reported and the run goes on; grep the log

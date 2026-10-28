@@ -40,13 +40,14 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * [composition] drawn at a density of its scale, so that a dp is a pixel of it as laid out: its background, then its
  * elements back to front, a screen showing the render of its slot in [screens] in a light frame where [lightSlots] has
- * its slot.
+ * its slot, and a caption its text in [texts], the image's language's.
  */
 @Composable
 internal fun CompositionImage(
     composition: Composition,
     screens: Map<Int, ImageBitmap>,
     lightSlots: Set<Int>,
+    texts: Map<String, ListingText>,
 ) = Box(modifier = Modifier.fillMaxSize().drawBehind { drawRect(composition.background.brush(size.width, size.height)) }) {
     composition.elements.forEach { element ->
         Box(
@@ -76,7 +77,7 @@ internal fun CompositionImage(
                     modifier = Modifier.fillMaxSize(),
                 )
                 is Composition.Caption -> BasicText(
-                    text = element.text,
+                    text = texts.getValue(element.textId).headline,
                     style = TextStyle(
                         color = Color.White,
                         fontFamily = interFontFamily(),

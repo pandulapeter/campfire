@@ -162,3 +162,9 @@ Akkordábrák papíron
 ```
 Megosztás PDF-ként
 ```
+
+## search-results headline (60 characters max)
+
+```
+Dalszöveg, akkordok és metronóm, bárhol is játszol
+```

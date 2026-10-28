@@ -162,3 +162,9 @@ Diagrame de acorduri pe hârtie
 ```
 Partajare ca PDF
 ```
+
+## search-results headline (60 characters max)
+
+```
+Versuri, acorduri și metronom, oriunde ai cânta
+```

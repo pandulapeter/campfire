@@ -162,3 +162,9 @@ Diagramas de acordes en papel
 ```
 Comparte como PDF
 ```
+
+## search-results headline (60 characters max)
+
+```
+Letras, acordes y el clic, toques donde toques
+```

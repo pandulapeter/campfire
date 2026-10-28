@@ -65,14 +65,14 @@ internal val compositions = listOf(
             Logo(x = 49, y = 308, width = 154, height = 154),
             Screen(slot = 1, kind = FrameKind.PHONE, x = 612, y = 7, width = 399, height = 843),
         ),
-        outputs = listOf(Output("google-play/feature-graphic.jpg")),
+        outputs = listOf(Output("google-play/{language}/feature-graphic.png")),
     ),
     Composition(
         widthPx = 512,
         heightPx = 512,
         background = Background.LINEAR,
         elements = listOf(Logo(x = 63, y = 63, width = 385, height = 385)),
-        outputs = listOf(Output("google-play/icon.png")),
+        outputs = listOf(Output("google-play/icon.png", hasAlpha = true)),
     ),
     // Apple's product page header (21:9) and search results image (3:2), for iOS 27 and later.
     Composition(
@@ -85,7 +85,7 @@ internal val compositions = listOf(
             Screen(slot = 0, kind = FrameKind.TABLET, x = 380, y = 511, width = 1350, height = 1035),
             Screen(slot = 2, kind = FrameKind.PHONE, x = 2762, y = 437, width = 580, height = 1184),
         ),
-        outputs = listOf(Output("app-store/header.jpg")),
+        outputs = listOf(Output("app-store/{language}/header.png")),
     ),
     Composition(
         widthPx = 3840,
@@ -95,9 +95,9 @@ internal val compositions = listOf(
         elements = listOf(
             Screen(slot = 1, kind = FrameKind.PHONE, x = 2640, y = 480, width = 1000, height = 2041),
             Screen(slot = 0, kind = FrameKind.TABLET, x = 250, y = 440, width = 2700, height = 2070),
-            Caption(text = "Lyrics, chords, and the click, wherever you play", size = 140, x = 120, y = 80, width = 3600, height = 260),
+            Caption(textId = "search-results", size = 140, x = 120, y = 80, width = 3600, height = 260),
         ),
-        outputs = listOf(Output("app-store/search-results.jpg")),
+        outputs = listOf(Output("app-store/{language}/search-results.png")),
     ),
     // Microsoft's poster and box art: the mark alone.
     Composition(

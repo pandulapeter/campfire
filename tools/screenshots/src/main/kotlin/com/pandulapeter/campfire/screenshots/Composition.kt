@@ -14,7 +14,8 @@ package com.pandulapeter.campfire.screenshots
  * poster and box art, the README's banners, and the website's link preview. Its [elements] are drawn back to front on
  * a canvas of [widthPx] by [heightPx], in its pixels, over [background], and it is written to [outputs]: one file, or a
  * panorama cut into as many equal parts side by side, each scaled by [scale] (the README's banners are drawn at their
- * stores' size and written at half of it).
+ * stores' size and written at half of it). An output path's `{language}` is the language of an image drawn in every
+ * language of the app, which one whose [banner] is localized is.
  *
  * @property banner The folder of the [Banner] whose renders its screens show, by their slot.
  */
@@ -68,9 +69,12 @@ internal class Composition(
         override val height: Int,
     ) : Element
 
-    /** [text] set as the listing's headlines are, [size] pixels high, centered in the box. */
+    /**
+     * The headline called [textId] in the language's `screenshot-texts`, set as the listing's headlines are, [size]
+     * pixels high, centered in the box.
+     */
     class Caption(
-        val text: String,
+        val textId: String,
         val size: Int,
         override val x: Int,
         override val y: Int,
@@ -78,6 +82,10 @@ internal class Composition(
         override val height: Int,
     ) : Element
 
-    /** Where a file of the composition goes: [path] under the Desktop folder of the run, or under the README's own. */
-    class Output(val path: String, val isReadme: Boolean = false)
+    /**
+     * Where a file of the composition goes: [path] under the Desktop folder of the run, or under the README's own. Its
+     * extension decides the format; a PNG has no alpha channel unless [hasAlpha], since Apple refuses screenshots with
+     * one and Play a feature graphic.
+     */
+    class Output(val path: String, val isReadme: Boolean = false, val hasAlpha: Boolean = false)
 }

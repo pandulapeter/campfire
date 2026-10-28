@@ -44,4 +44,8 @@ internal fun readListingTexts(file: File): Map<String, ListingText> {
     return headlines.mapValues { (id, headline) -> ListingText(headline = headline, chips = chips[id].orEmpty()) }
 }
 
+/** The texts of every language in [folder], one file each, by the language's code, which is the file's name. */
+internal fun readAllListingTexts(folder: File) =
+    folder.listFiles { file -> file.extension == "md" }.orEmpty().associate { it.nameWithoutExtension to readListingTexts(it) }
+
 private val HEADING = Regex("""^## (\S+) (headline|chips) \(""")
