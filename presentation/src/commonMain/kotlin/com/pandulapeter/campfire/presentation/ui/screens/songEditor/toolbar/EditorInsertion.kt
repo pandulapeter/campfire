@@ -95,6 +95,16 @@ internal data class EditorInsertion(
             )
         }
 
+        /**
+         * An `abc` block around what is selected, most likely a pasted tune carrying its own `X:`, or around the
+         * [header] a tune needs to be drawn (`sheetMusicHeader`) with the caret on an empty line below it where nothing
+         * is.
+         */
+        fun sheetMusic(label: String, header: List<String>): EditorInsertion {
+            val section = section(label, name = "abc")
+            return section.copy(emptyPrefix = section.prefix + header.joinToString("\n") + "\n")
+        }
+
         /** A `{start_of_x}` … `{end_of_x}` environment around what is selected, which becomes its first lines. */
         fun section(label: String, name: String) = EditorInsertion(
             label = label,

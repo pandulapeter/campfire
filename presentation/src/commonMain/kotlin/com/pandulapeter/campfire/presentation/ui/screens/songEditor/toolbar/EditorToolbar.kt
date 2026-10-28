@@ -101,6 +101,8 @@ import org.jetbrains.compose.resources.painterResource
  *   ([chordShapeInstruments]), see `chordShapeInsertion`.
  * @param tabStaff The empty staff the Tab button writes where nothing is selected for the instrument picked from its
  *   menu, or for none, its strings named.
+ * @param sheetMusicHeader The lines the Sheet music button writes above the caret where nothing is selected
+ *   (`sheetMusicHeader`).
  * @param onValueToType Called after a write that left a value to type ([leavesValueToType]), so that the keyboard comes
  *   up for it even where the user had put it away. Never for the formatting buttons: markup is toggled around what is
  *   there, and with nothing selected its empty pair waits for words as much as a section does.
@@ -112,6 +114,7 @@ internal fun EditorToolbar(
     contentPadding: PaddingValues,
     chordShapes: EditorChordShapes,
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
+    sheetMusicHeader: List<String>,
     onValueToType: () -> Unit,
 ) {
     val onInsert = { insertion: EditorInsertion ->
@@ -128,7 +131,7 @@ internal fun EditorToolbar(
         verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
     ) {
         EditorToolbarRow(
-            groups = metadataInsertions() + lineKindInsertions(tabStaff),
+            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader),
             contentPadding = contentPadding,
             onInsert = onInsert,
         )
@@ -298,10 +301,14 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  * starts as an empty staff of one bar ([tabStaff]) — the picked instrument's strings in standard tuning, the player's
  * own instrument's for any — named, so that the file says what it is written in for whoever reads it in another
  * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
- * environment around it.
+ * environment around it. Sheet music likewise starts an empty block with the header a tune needs to be drawn
+ * (`sheetMusicHeader`) and only wraps a selection.
  */
 @Composable
-private fun lineKindInsertions(tabStaff: (UserPreferences.Instrument?) -> List<String>): List<List<EditorInsertion>> = listOf(
+private fun lineKindInsertions(
+    tabStaff: (UserPreferences.Instrument?) -> List<String>,
+    sheetMusicHeader: List<String>,
+): List<List<EditorInsertion>> = listOf(
     listOf(
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_section_tab),
@@ -309,7 +316,7 @@ private fun lineKindInsertions(tabStaff: (UserPreferences.Instrument?) -> List<S
                 tabInstruments.map { instrument -> EditorInsertion.tab(instrumentLabel(instrument), selector = instrument.id, staff = tabStaff(instrument)) },
         ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
-        EditorInsertion.section(stringResource(Res.string.song_editor_section_abc), name = "abc"),
+        EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_section_abc), header = sheetMusicHeader),
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(

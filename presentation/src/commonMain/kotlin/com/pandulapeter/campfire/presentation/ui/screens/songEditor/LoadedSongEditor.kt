@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorChordShapes
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.sheetMusicHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchSheet
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.editorSearchShortcuts
@@ -327,6 +328,9 @@ internal fun LoadedSongEditor(
                         tabStaff = remember(userPreferences) {
                             val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
                             { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, notation.toChordNotation()) }
+                        },
+                        sheetMusicHeader = remember(summary.metadata.key, summary.metadata.time) {
+                            sheetMusicHeader(summary.metadata.key?.takeIf(ChordProTransposer::isKey), summary.metadata.time)
                         },
                         onValueToType = typingRequest::request,
                     )

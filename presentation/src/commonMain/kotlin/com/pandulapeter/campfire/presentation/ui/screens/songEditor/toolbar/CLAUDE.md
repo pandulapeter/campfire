@@ -43,6 +43,9 @@ The editor's Shortcuts toolbar and its control row.
   `{end_of_tab}`) and writes one empty bar named by `emptyTabStaffFor`: that instrument's strings in standard tuning
   (Any: the player's instrument's, a guitar's for a fretless one), whatever the player's own tuning. With a selection
   it only wraps it (likely a pasted tab).
+- With nothing selected, Sheet music (`sheetMusicHeader`) writes `X:1`, the song's meter, `L:1/8`, and its key rebuilt
+  as root, minor, or mode in standard letters (abc2svg draws no tune without `X:`, fails on `K:H`, and reads
+  `K:A-moll` as A major), the caret below; with a selection it only wraps it.
 - Chord shape (`chordShapeInsertion`) sits with the chords, though it writes into the header, and asks which
   instrument (`chordShapeInstruments`: every one with shapes, no Any, the twelve-string a guitar). It writes a `{define}` for the chord at the caret into the
   header, **always the standard-tuning shape** (ChordPro gives a definition no tuning): the player's choice for that
