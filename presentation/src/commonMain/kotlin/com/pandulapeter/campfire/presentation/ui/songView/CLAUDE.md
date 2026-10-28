@@ -14,7 +14,7 @@ builds what it draws, `grid/` places it.
 
 ### Rendering
 
-- Tabs and grids are monospace: columns of characters that must line up. **Nothing on the page scrolls sideways.**
+- Tabs and grids are written in columns of characters that must line up. **Nothing on the page scrolls sideways.**
 - Lyrics take their direction from content (`TextDirection.Content`), so chords of an RTL line hang leftwards.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
   (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary, so no chord is pulled
@@ -37,8 +37,13 @@ builds what it draws, `grid/` places it.
   slot answers its height for any width at once (the systems at the text size's unit, scaled down to a narrower
   column), and the sizes pool is renewed when a rendering arrives.
 - A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested): strings run from bar to bar,
-  broken by every other character, and a bar joins the strings above and under it that have one in its column. Only
-  the screen draws them so far; the PDF prints the characters.
+  broken by every other character, and a bar joins the strings above and under it that have one in its column. The
+  PDF rules the same strokes (`PrintTabEngraver`).
+- Tablature is engraved (`TabStaffLines`, screen and PDF) at abc2svg's tab staff sizes (`TabEngraving`), so it reads
+  as one engraving with the sheet music; its monospaced columns only say where things go: frets in the lyrics' face's
+  bold tabular figures (string names regular), centred on their string and columns; its other lines in the lyrics'
+  face from the column each word starts at. Preformatted runs stay monospaced, at the lyrics' spacing. A line of chord
+  names in a tab run, engraved or not, is drawn as the page's chords (`isChordLine`).
 - Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) aligns bar lines across lines; each bar is one text,
   since only one monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`).
 - A paragraph holding nothing but one tab or grid run is headed "Tab" / "Grid" (screen and PDF).

@@ -53,14 +53,9 @@ public object ChordProTabWrapper {
      * continuation rows go without them, since a row too narrow to be read at is the greater loss. The rows are never
      * wider than [maxColumns] unless even that leaves fewer than [MIN_CAPACITY] columns, at which point the strings are
      * shown that wide anyway, since a staff cut into pieces of two characters is not a staff any more.
+     *
+     * Every line of every row tells whether it is a piece of a staff line, for drawing the staff.
      */
-    public fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
-        val rows = wrapLines(lines, maxColumns)
-        // A run that is one row of all its lines is the run as it came, and is handed back as the same list.
-        return if (rows.size == 1 && rows.single().size == lines.size) listOf(lines) else rows.map { row -> row.map { it.text } }
-    }
-
-    /** [wrap], with every line of every row telling whether it is a piece of a staff line, for drawing the staff. */
     public fun wrapLines(lines: List<String>, maxColumns: Int): List<List<TabRowLine>> {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         val length = lines.maxOfOrNull { it.length } ?: 0
@@ -96,7 +91,7 @@ public object ChordProTabWrapper {
      * a line with nothing left to say in a row (the chord names past the last chord) is left out of that row.
      *
      * The run comes back as a single row whenever it fits as it is, and so does one that would wrap into more row lines
-     * than half its characters, for the reason [wrap] gives.
+     * than half its characters, for the reason [wrapLines] gives.
      */
     public fun wrapPreformatted(lines: List<String>, maxColumns: Int): List<List<String>> {
         if ((lines.maxOfOrNull { it.length } ?: 0) <= maxColumns) return listOf(lines)
@@ -149,7 +144,7 @@ public object ChordProTabWrapper {
      * bare `I` stands between them like a bar line but makes no row of chords on its own, since it is a word far more
      * often than it is a chord.
      */
-    private fun isChordLine(line: String): Boolean {
+    public fun isChordLine(line: String): Boolean {
         val words = ChordProTokens.words(line).map { it.value }
         return words.any(::isChordWord) && words.all { word ->
             val trimmed = word.trim('(', ')')
@@ -176,7 +171,7 @@ public object ChordProTabWrapper {
     private val repeatCountRegex = Regex("[xX×]?\\d+[xX×]?")
     private const val ROMAN_ONE = "I"
 
-    /** [wrap] for the lines of one system, or null as soon as its rows hold more than [budget] lines. */
+    /** [wrapLines] for the lines of one system, or null as soon as its rows hold more than [budget] lines. */
     private fun wrapSystem(lines: List<String>, isStaffLine: List<Boolean>, maxColumns: Int, budget: Int): List<List<TabRowLine>>? {
         val length = lines.maxOfOrNull { it.length } ?: 0
         if (isStaffLine.none { it } || length <= maxColumns) {

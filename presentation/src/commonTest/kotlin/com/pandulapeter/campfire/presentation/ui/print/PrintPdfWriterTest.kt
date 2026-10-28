@@ -65,9 +65,9 @@ internal class PrintPdfWriterTest {
     @Test fun `invisible fonts carry Unicode clusters and printed styles across pages`() = runTest {
         val writer = PrintPdfWriter(100f, 100f, "Unicode")
         val glyphs = listOf(
-            PrintPdfText("Ő", 10f, 20f, 8f, 12f, PrintStyle(12, bold = true)),
-            PrintPdfText("\uD83D\uDE42", 18f, 20f, 12f, 12f, PrintStyle(12)),
-            PrintPdfText("e\u0301", 30f, 20f, 6f, 12f, PrintStyle(12, monospace = true)),
+            PrintPdfText("Ő", 10f, 20f, 8f, 12f, PrintStyle(12f, bold = true)),
+            PrintPdfText("\uD83D\uDE42", 18f, 20f, 12f, 12f, PrintStyle(12f)),
+            PrintPdfText("e\u0301", 30f, 20f, 6f, 12f, PrintStyle(12f, monospace = true)),
         )
         repeat(2) { writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs) }
         val text = writer.finish().decodeToString()
@@ -83,7 +83,7 @@ internal class PrintPdfWriterTest {
     @Test fun `a font splits after 255 distinct characters without truncating its Unicode map`() = runTest {
         val writer = PrintPdfWriter(1000f, 100f, "Many characters")
         val glyphs = (0x400..0x500).mapIndexed { index, code ->
-            PrintPdfText(code.toChar().toString(), index * 2f, 10f, 2f, 12f, PrintStyle(12))
+            PrintPdfText(code.toChar().toString(), index * 2f, 10f, 2f, 12f, PrintStyle(12f))
         }
         writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)
         val text = writer.finish().decodeToString()
@@ -105,7 +105,7 @@ internal class PrintPdfWriterTest {
     }
 
     @Test fun `right to left runs are found whole`() {
-        fun `glyph`(run: Int, isRtl: Boolean = false) = PrintPdfText("x", 0f, 0f, 1f, 1f, PrintStyle(12), run, isRtl)
+        fun `glyph`(run: Int, isRtl: Boolean = false) = PrintPdfText("x", 0f, 0f, 1f, 1f, PrintStyle(12f), run, isRtl)
         val glyphs = listOf(
             glyph(0), glyph(0),
             glyph(1, isRtl = true), glyph(1, isRtl = true),
@@ -126,7 +126,7 @@ internal class PrintPdfWriterTest {
             val start = match.range.last + 1
             return bytes.copyOfRange(start, start + match.groupValues[1].toInt())
         }
-        val style = PrintStyle(12)
+        val style = PrintStyle(12f)
         val image = "q 100 0 0 100 0 0 cm /Im0 Do Q\nBT 3 Tr\n/F0 12 Tf\n1 0 0 1 10 68 Tm [<01>"
         val latin = listOf(PrintPdfText("a", 10f, 20f, 6f, 12f, style, 0), PrintPdfText("b", 50f, 20f, 6f, 12f, style, 1))
         assertContentEquals(deflated("$image -2833.333 <02>] TJ\nET\n".encodeToByteArray()), content(latin))

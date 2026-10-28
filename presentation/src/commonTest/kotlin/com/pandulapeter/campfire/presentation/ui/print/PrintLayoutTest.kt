@@ -133,7 +133,7 @@ internal class PrintLayoutTest {
                 assertTrue(item.x >= margin)
                 assertTrue(item.x + measure(item.text, item.style) <= document.width - margin + 0.01f, item.toString())
                 assertTrue(item.y < document.height - margin + 0.01f)
-                if (item.text != "D" && item.style.size != 9) assertTrue(measure(item.text, item.style) <= columnWidth)
+                if (item.text != "D" && item.style.size != 9f) assertTrue(measure(item.text, item.style) <= columnWidth)
             }
             document.pages.forEach { page ->
                 page.texts.filter { it.text == "D" }.forEach { chord ->
@@ -266,6 +266,31 @@ internal class PrintLayoutTest {
         assertTrue(texts.any { it.text.startsWith("e|") && it.y > heading.y })
         val hidden = layout(source(tab), PrintSettings(showTabs = false)).pages.flatMap { it.texts }.map { it.text }
         assertFalse("Tab" in hidden || hidden.any { it.startsWith("e|") })
+    }
+
+    @Test fun `tablature is engraved, its strings ruled and its lines selectable as the file has them`() = runTest {
+        val staff = listOf("Am      G", "e|---0---|---3---|", "B|---1---|-------|")
+        val lines = staff.mapIndexed { index, text -> ChordProLine.Tab(text, continuesEnvironment = index > 0) }
+        val page = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, lines))))).pages.single()
+        val selectable = page.texts.filter { it.isSelectable && !it.isDrawn }
+        assertEquals(staff, selectable.map { it.text })
+        assertTrue(selectable.all { it.style.monospace && !it.style.bold })
+        val drawn = page.texts.filter { it.isDrawn && it.y in selectable.first().y - 1f..selectable.last().y + 12f }
+        assertTrue(drawn.none { it.isSelectable || "-" in it.text || "|" in it.text })
+        assertTrue(drawn.filter { it.text in listOf("0", "1", "3") }.all { it.style.bold && it.style.tabular })
+        assertTrue(drawn.filter { it.text in listOf("e", "B") }.all { !it.style.bold })
+        assertTrue(drawn.filter { it.text in listOf("Am", "G") }.all { it.style.bold && !it.style.monospace })
+        val strings = page.rules.filter { it.width > it.height }
+        assertEquals(2, strings.map { it.y }.distinct().size)
+        assertTrue(page.rules.any { it.height > strings.maxOf { string -> string.y } - strings.minOf { string -> string.y } })
+    }
+
+    @Test fun `a tab run's line of chords is printed bold and selectable in the regular weight`() = runTest {
+        val lines = listOf("G       C", "Some words here").mapIndexed { index, text -> ChordProLine.Tab(text, continuesEnvironment = index > 0) }
+        val texts = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, lines))))).pages.single().texts
+        val chords = texts.filter { it.text == "G       C" }
+        assertTrue(chords.single { it.isDrawn }.let { it.style.bold && !it.isSelectable })
+        assertTrue(chords.single { !it.isDrawn }.let { !it.style.bold && it.isSelectable })
     }
 
     @Test fun `tablature is printed or left out apart from the chords, its comments with it`() = runTest {
@@ -473,7 +498,7 @@ internal class PrintLayoutTest {
     @Test fun `a wrapped preformatted run has no gap between its systems`() = runTest {
         val lines = listOf("G" + " ".repeat(60) + "C", "Words ".repeat(12)).mapIndexed { i, text -> ChordProLine.Tab(text, continuesEnvironment = i > 0) }
         val page = layout(source(song(lines)), PrintSettings(columns = 2, fontSize = 16)).pages.single().texts
-        val texts = page.filter { it.style.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
+        val texts = page.filter { it.isDrawn && it.style.size == 16f && it.y > page.first { label -> label.text == "Verse" }.y }
         assertTrue(texts.size > 2)
         val pitch = lyricPitch(fontSize = 16)
         texts.zipWithNext().forEach { (upper, lower) -> assertEquals(pitch, lower.y - upper.y, 0.01f) }
@@ -557,7 +582,7 @@ internal class PrintLayoutTest {
         val lyrics = texts.first { it.text.contains("here") }
         val follow = texts.first { it.text.contains("follow") }
         assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
-        texts.filter { it.style.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
+        texts.filter { it.style.size != 9f }.forEach { assertTrue(it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
     }
 
     @Test fun `a chorus recall is headed by its own label`() = runTest {
@@ -604,7 +629,7 @@ internal class PrintLayoutTest {
         suspend fun rows(tokens: List<GridToken>): List<String> {
             val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
             // A two-column A4 page at 20 points holds three of these bars to a row, and not four.
-            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.style.size == 20 && it.style.bold }.map { it.text }
+            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.style.size == 20f && it.style.bold }.map { it.text }
         }
         val bars = setOf("|", "|:", ":|")
         val tokens = grid(emptyList())
@@ -671,7 +696,7 @@ internal class PrintLayoutTest {
         assertTrue(texts.single { it.text == "| G |" }.style.monospace)
         assertFalse(texts.single { it.text == "Sung words" }.style.monospace)
         assertFalse(texts.single { it.text == "D" }.style.monospace)
-        assertEquals(PrintStyle(19, bold = true), texts.single { it.text == "A song" }.style)
+        assertEquals(PrintStyle(19f, bold = true), texts.single { it.text == "A song" }.style)
         assertEquals(90, texts.single { it.text == "Verse" }.style.gray)
     }
 
@@ -721,11 +746,11 @@ internal class PrintLayoutTest {
         val column = columnsOf(settings).first()
         val barEnd = page.rules.maxOf { it.x + it.width }
         val label = page.texts.single { it.text == "Chorus" }
-        val chorusTexts = page.texts.filter { it.y >= label.y && it.style.size != 9 }
+        val chorusTexts = page.texts.filter { it.y >= label.y && it.style.size != 9f }
         assertTrue(chorusTexts.size > 5)
         chorusTexts.forEach { assertTrue(it.x > barEnd && it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
         // The label's row, then the wrapped first line and three more, each a lyric row tall.
-        val lyricRows = chorusTexts.count { it.style == PrintStyle(12) }
+        val lyricRows = chorusTexts.count { it.style == PrintStyle(12f) }
         assertTrue(lyricRows > 4)
         assertEquals(11 * 1.45f + lyricRows * lyricPitch(), page.rules.sumOf { it.height.toDouble() }.toFloat(), 0.01f)
         assertTrue(layout(source(song(lyrics(3)))).pages.single().rules.isEmpty())
@@ -973,7 +998,7 @@ internal class PrintLayoutTest {
         assertTrue(withoutDetails.none { it.text == "Artist" } && withoutDetails.any { it.text.startsWith("Key: B") })
         assertEquals("Tempo: 96 BPM   Time: 3/4", layout(source(entry), PrintSettings(showKey = false)).pages.single().texts.single { it.text.startsWith("Tempo") }.text)
         assertEquals("Key: B   Transposition: -3   Capo: 2", layout(source(entry), PrintSettings(showTempo = false)).pages.single().texts.single { it.text.startsWith("Key") }.text)
-        assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11, gray = 90) })
+        assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11f, gray = 90) })
     }
 
     @Test fun `the feature switches leave out what they take away whatever the options say`() {

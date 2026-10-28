@@ -18,7 +18,7 @@ class PrintPageCacheTest {
     private val measured = mutableListOf<PrintPage>()
     private val cache = PrintPageCache { page -> page.texts.map { it.text }.also { measured += page } }
 
-    private fun page(text: String) = PrintPage(texts = listOf(PrintText(text = text, x = 0f, y = 0f, style = PrintStyle(size = 10))))
+    private fun page(text: String) = PrintPage(texts = listOf(PrintText(text = text, x = 0f, y = 0f, style = PrintStyle(size = 10f))))
 
     @Test
     fun `a page drawn again is not laid out again`() {

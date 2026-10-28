@@ -45,8 +45,8 @@ internal class PrintRendererTest {
         val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
         val renderer = PrintRenderer(measurer)
         val content = "Árvíztűrő e\u0301 \uD83D\uDE42 ♯ ♭ \u200Bpadding\u00A0"
-        val page = PrintPage(listOf(PrintText(content, 23f, 31f, PrintStyle(14)),
-            PrintText("Am/G", 78f, 10f, PrintStyle(14, bold = true))))
+        val page = PrintPage(listOf(PrintText(content, 23f, 31f, PrintStyle(14f)),
+            PrintText("Am/G", 78f, 10f, PrintStyle(14f, bold = true))))
         val glyphs = renderer.selectableText(page)
         assertEquals(content.replace("\u200B", "").replace('\u00A0', ' ') + "Am/G", glyphs.joinToString("") { it.text })
         assertTrue(glyphs.all { it.width > 0 && it.height > 0 })
@@ -266,8 +266,8 @@ internal class PrintRendererTest {
 
     @Test fun `reusing the page bitmap leaks nothing between pages`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
-        val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20))))
-        val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20))))
+        val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20f))))
+        val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20f))))
         val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
         val width = 300
         val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }

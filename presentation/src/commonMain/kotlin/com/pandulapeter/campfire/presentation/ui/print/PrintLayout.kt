@@ -168,7 +168,7 @@ private class PrintLayouter(
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
             val x = margin + column * (columnWidth + gutter)
-            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting)) }
+            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting, part.isDrawn)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             row.notations.forEach { notation -> pages.last().notations.add(notation.copy(x = x + notation.x, y = y + notation.y)) }
@@ -388,7 +388,7 @@ private class PrintLayouter(
      */
     private fun finish(): PrintDocument {
         val nonempty = pages.filter { it.hasContent }
-        val style = PrintStyle(size = 9, gray = 90)
+        val style = PrintStyle(size = 9f, gray = 90)
         return PrintDocument(
             width = width,
             height = height,

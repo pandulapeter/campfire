@@ -44,16 +44,17 @@ internal class PrintRows(
 ) {
     // The page reads from the title down to the lyrics: the title large, the details and the section labels smaller and
     // gray, so that a label is never taken for a chord, and only tablature and grids in the monospace face.
-    val titleStyle = PrintStyle(size = (options.fontSize * 1.6f).roundToInt(), bold = true)
-    private val lyricStyle = PrintStyle(size = options.fontSize)
-    val chordStyle = PrintStyle(size = options.fontSize, bold = true)
-    private val annotationStyle = PrintStyle(size = options.fontSize, italic = true)
-    private val commentStyle = PrintStyle(size = options.fontSize, italic = true, gray = 90)
-    val detailStyle = PrintStyle(size = options.fontSize - 1, gray = 90)
-    val labelStyle = PrintStyle(size = options.fontSize - 1, bold = true, gray = 90)
-    val overviewArtistStyle = PrintStyle(size = options.fontSize, gray = 90)
-    private val tabStyle = PrintStyle(size = options.fontSize, monospace = true)
-    private val gridStyle = PrintStyle(size = options.fontSize, bold = true, monospace = true)
+    val titleStyle = PrintStyle(size = (options.fontSize * 1.6f).roundToInt().toFloat(), bold = true)
+    private val lyricStyle = PrintStyle(size = options.fontSize.toFloat())
+    val chordStyle = PrintStyle(size = options.fontSize.toFloat(), bold = true)
+    private val annotationStyle = PrintStyle(size = options.fontSize.toFloat(), italic = true)
+    private val commentStyle = PrintStyle(size = options.fontSize.toFloat(), italic = true, gray = 90)
+    val detailStyle = PrintStyle(size = options.fontSize - 1f, gray = 90)
+    val labelStyle = PrintStyle(size = options.fontSize - 1f, bold = true, gray = 90)
+    val overviewArtistStyle = PrintStyle(size = options.fontSize.toFloat(), gray = 90)
+    private val tabStyle = PrintStyle(size = options.fontSize.toFloat(), monospace = true)
+    private val gridStyle = PrintStyle(size = options.fontSize.toFloat(), bold = true, monospace = true)
+    private val tabEngraver = PrintTabEngraver(options.fontSize.toFloat(), ::measure)
     private val labelSpace = options.fontSize * 0.3f
 
     /** The engraved ABC tunes of the song being laid out, by tune; a run with none prints as its text. */
@@ -258,7 +259,7 @@ internal class PrintRows(
     private fun tabRows(lines: List<ChordProLine>, sectionLabel: String?, lineWidth: Float): List<Row> {
         val run = lines.map { (it as ChordProLine.Tab).text }
         val label = (lines.first() as ChordProLine.Tab).label?.takeUnless { it == sectionLabel }?.let { labelRows(it, lineWidth) }.orEmpty()
-        return label + monospaceRows(run, isTablature = ChordProTabWrapper.isTablature(run), isSelectable = true, lineWidth)
+        return label + if (ChordProTabWrapper.isTablature(run)) tabEngraver.rows(run, lineWidth) else monospaceRows(run, isSelectable = true, lineWidth)
     }
 
     /**
@@ -267,7 +268,7 @@ internal class PrintRows(
      */
     private fun verbatimRows(lines: List<ChordProLine>, tuneOffset: Int, lineWidth: Float): List<Row> =
         lines.abcTune()?.let { notations[AbcTune(it, tuneOffset)] }?.let { notationRows(it, lineWidth) }
-            ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isTablature = false, isSelectable = false, lineWidth)
+            ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isSelectable = false, lineWidth)
 
     /**
      * An engraved ABC tune, a row per staff system so that a page is never cut through one: at the size that sets its
@@ -282,19 +283,18 @@ internal class PrintRows(
         }
     }
 
-    /** The rows of a run of monospaced lines, wrapped into systems of the column's width. */
-    private fun monospaceRows(run: List<String>, isTablature: Boolean, isSelectable: Boolean, lineWidth: Float): List<Row> = buildList {
+    /**
+     * The rows of a run of preformatted lines (chord names over lyrics most often), read like wrapped text with no gap
+     * between its pieces. A tab run's line of chord names prints in the chords' weight, as on screen, but reaches the
+     * selectable text as the file has it ([PrintTabEngraver.selectable]).
+     */
+    private fun monospaceRows(run: List<String>, isSelectable: Boolean, lineWidth: Float): List<Row> = buildList {
         val characters = (lineWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
-        val systems = if (isTablature) {
-            ChordProTabWrapper.wrap(run, characters)
-        } else {
-            ChordProTabWrapper.wrapPreformatted(run, characters)
-        }
-        systems.forEachIndexed { systemIndex, system ->
-            // Staves without a gap between them read as one staff of twice the strings; a preformatted run (chord names
-            // over lyrics most often) is read like wrapped text, so it gets none.
-            if (isTablature && systemIndex > 0) add(Row(emptyList(), options.fontSize * 0.7f))
-            val rows = system.flatMap { wrapped(it, tabStyle, lineWidth, isSelectable) }
+        ChordProTabWrapper.wrapPreformatted(run, characters).forEach { system ->
+            val rows = system.flatMap { line ->
+                if (!isSelectable || !ChordProTabWrapper.isChordLine(line)) return@flatMap wrapped(line, tabStyle, lineWidth, isSelectable)
+                wrapped(line, gridStyle, lineWidth, isSelectable = false).map { row -> row.copy(parts = row.parts + row.parts.map(tabEngraver::selectable)) }
+            }
             val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
             if (systemHeight <= capacity) {
                 var rowY = 0f
@@ -441,7 +441,7 @@ internal class PrintRows(
     }
 }
 
-/** A text of a [Row], placed relative to the row's top left corner, with the markup [PrintText.formatting] says. */
+/** A text of a [Row], placed relative to its top left corner, with [PrintText.formatting]'s markup, drawn as [PrintText.isDrawn] says. */
 internal data class Part(
     val text: String,
     val x: Float = 0f,
@@ -449,6 +449,7 @@ internal data class Part(
     val style: PrintStyle,
     val isSelectable: Boolean = true,
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
+    val isDrawn: Boolean = true,
 )
 
 /**

@@ -40,15 +40,15 @@ class ChordProTabWrapperTest {
                 listOf("\u00A0e|---0---|", "\u00A0B|---1---|"),
                 listOf("\u00A0e|---2---|", "\u00A0B|---3---|"),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 12),
+            wrap(lines, maxColumns = 12),
         )
     }
 
     @Test
     fun `a run that fits is returned as it is`() {
-        val rows = ChordProTabWrapper.wrap(riff, maxColumns = riff.maxOf { it.length })
+        val rows = wrap(riff, maxColumns = riff.maxOf { it.length })
         assertEquals(1, rows.size)
-        assertSame(riff, rows.single())
+        assertEquals(riff, rows.single())
     }
 
     @Test
@@ -59,7 +59,7 @@ class ChordProTabWrapperTest {
         )
         assertFalse(ChordProTabWrapper.isTablature(lines))
         assertTrue(ChordProTabWrapper.isTablature(riff))
-        assertEquals(listOf(lines), ChordProTabWrapper.wrap(lines, maxColumns = 10))
+        assertEquals(listOf(lines), wrap(lines, maxColumns = 10))
     }
 
     @Test
@@ -85,13 +85,13 @@ class ChordProTabWrapperTest {
                     "E|-3-------|---------|",
                 ),
             ),
-            ChordProTabWrapper.wrap(riff, maxColumns = 25),
+            wrap(riff, maxColumns = 25),
         )
     }
 
     @Test
     fun `a row holds as many whole bars as fit`() {
-        val rows = ChordProTabWrapper.wrap(riff, maxColumns = 35)
+        val rows = wrap(riff, maxColumns = 35)
         assertEquals(2, rows.size)
         assertEquals("e|---------|---------|---------|", rows[0][1])
         assertEquals("e|---------|", rows[1][1])
@@ -116,7 +116,7 @@ class ChordProTabWrapperTest {
                     "B|" + "-".repeat(13) + "|",
                 ),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 20),
+            wrap(lines, maxColumns = 20),
         )
     }
 
@@ -130,13 +130,13 @@ class ChordProTabWrapperTest {
                 listOf("  " + "\uD834\uDD1E".repeat(2), "e$staff", "B$staff"),
                 listOf("e|--|", "B|--|"),
             ),
-            ChordProTabWrapper.wrap(clefs, maxColumns = 10),
+            wrap(clefs, maxColumns = 10),
         )
     }
 
     @Test
     fun `a row is never cut between a letter and its accent`() {
-        val rows = ChordProTabWrapper.wrap(accent, maxColumns = 12)
+        val rows = wrap(accent, maxColumns = 12)
 
         assertEquals("a".repeat(11), rows.first().first())
         assertEquals("  e\u0301bbbb", rows[1].first())
@@ -145,7 +145,7 @@ class ChordProTabWrapperTest {
     @Test
     fun `nothing is lost or repeated by moving a cut back`() {
         listOf(clefs to 10, accent to 12).forEach { (lines, maxColumns) ->
-            val rows = ChordProTabWrapper.wrap(lines, maxColumns)
+            val rows = wrap(lines, maxColumns)
             // Every row after the first puts the width of the string names in front of the text line.
             val text = rows.mapIndexedNotNull { index, row ->
                 row.first().takeUnless { it.startsWith("e|") }?.let { line -> if (index == 0) line else line.drop(2) }
@@ -159,9 +159,9 @@ class ChordProTabWrapperTest {
     @Test
     fun `a line of nothing but combining marks does not stall the wrap`() {
         val staff = listOf("e|" + "-".repeat(200) + "|", "B|" + "-".repeat(200) + "|")
-        val rows = ChordProTabWrapper.wrap(listOf("\u0301".repeat(200)) + staff, maxColumns = 20)
+        val rows = wrap(listOf("\u0301".repeat(200)) + staff, maxColumns = 20)
 
-        assertEquals(ChordProTabWrapper.wrap(staff, maxColumns = 20).size, rows.size)
+        assertEquals(wrap(staff, maxColumns = 20).size, rows.size)
         assertEquals(200, rows.flatten().sumOf { line -> line.count { it == '\u0301' } })
     }
 
@@ -186,7 +186,7 @@ class ChordProTabWrapperTest {
                     "B|--1-----1-----|",
                 ),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 20),
+            wrap(lines, maxColumns = 20),
         )
     }
 
@@ -197,7 +197,7 @@ class ChordProTabWrapperTest {
             "e|---------|---------|---------|",
             "B|---1-----|---1-----|---0-----|",
         )
-        val rows = ChordProTabWrapper.wrap(lines, maxColumns = 25)
+        val rows = wrap(lines, maxColumns = 25)
         assertEquals(listOf("e|---------|---------|", "B|---1-----|---1-----|"), rows[0])
         assertEquals(listOf("  G", "e|---------|", "B|---0-----|"), rows[1])
     }
@@ -213,7 +213,7 @@ class ChordProTabWrapperTest {
                 listOf("--0--2--3--5--7--8-", "--0--2--3--5--7--8-"),
                 listOf("-10--12--", "-10--12--"),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 19),
+            wrap(lines, maxColumns = 19),
         )
     }
 
@@ -226,7 +226,7 @@ class ChordProTabWrapperTest {
         )
         assertEquals(
             listOf("Eb|---------|", "Bb|---1-----|", " G|-----0---|"),
-            ChordProTabWrapper.wrap(lines, maxColumns = 14)[1],
+            wrap(lines, maxColumns = 14)[1],
         )
     }
 
@@ -241,7 +241,7 @@ class ChordProTabWrapperTest {
                 listOf("e|:--------:|", "B|:--1-----:|"),
                 listOf("e|:--------:|", "B|:--1-----:|"),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 15),
+            wrap(lines, maxColumns = 15),
         )
     }
 
@@ -256,13 +256,13 @@ class ChordProTabWrapperTest {
                 listOf("e|---------|", "B|---1-----|"),
                 listOf("e|---------|", "B|---1--"),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 12),
+            wrap(lines, maxColumns = 12),
         )
     }
 
     @Test
     fun `a row is never narrower than a staff can be read at`() {
-        val rows = ChordProTabWrapper.wrap(riff, maxColumns = 3)
+        val rows = wrap(riff, maxColumns = 3)
         assertTrue(rows.all { row -> row.all { it.length <= 10 } })
         assertTrue(rows.size > 2)
     }
@@ -277,7 +277,7 @@ class ChordProTabWrapperTest {
                 listOf("e|---5---|", "B|---5---|"),
                 listOf("e|---7---|", "B|---8---|"),
             ),
-            ChordProTabWrapper.wrap(lines, maxColumns = 12),
+            wrap(lines, maxColumns = 12),
         )
     }
 
@@ -290,13 +290,13 @@ class ChordProTabWrapperTest {
                 listOf("   Am", "e|---0---|", "B|---1---|"),
                 listOf("   F", "e|---1---|", "B|---1---|"),
             ),
-            ChordProTabWrapper.wrap(twoSystems, maxColumns = 12),
+            wrap(twoSystems, maxColumns = 12),
         )
     }
 
     @Test
     fun `a run of several systems that fits is still one row`() {
-        assertEquals(listOf(twoSystems), ChordProTabWrapper.wrap(twoSystems, maxColumns = 40))
+        assertEquals(listOf(twoSystems), wrap(twoSystems, maxColumns = 40))
     }
 
     @Test
@@ -304,16 +304,16 @@ class ChordProTabWrapperTest {
         listOf("EBGDAE", "DAGDAD").forEach { names ->
             val system = names.map { "$it|---0---|---3---|" }
 
-            val rows = ChordProTabWrapper.wrap(system, maxColumns = 12)
+            val rows = wrap(system, maxColumns = 12)
             assertEquals(2, rows.size, names)
             assertTrue(rows.all { it.size == 6 }, names)
-            assertEquals(4, ChordProTabWrapper.wrap(system + system, maxColumns = 12).size, names)
+            assertEquals(4, wrap(system + system, maxColumns = 12).size, names)
         }
     }
 
     @Test
     fun `staff lines without string names are one system until a non-staff line separates them`() {
-        val rows = ChordProTabWrapper.wrap(List(3) { "--0--2--3--5--7--8--10--12--" }, maxColumns = 19)
+        val rows = wrap(List(3) { "--0--2--3--5--7--8--10--12--" }, maxColumns = 19)
         assertEquals(2, rows.size)
         assertTrue(rows.all { it.size == 3 })
     }
@@ -321,21 +321,21 @@ class ChordProTabWrapperTest {
     @Test
     fun `a run that would wrap into more lines than can be drawn is returned whole`() {
         val unnamed = List(12_500) { "---" } + "-".repeat(50_000)
-        assertEquals(listOf(unnamed), ChordProTabWrapper.wrap(unnamed, maxColumns = 40))
+        assertEquals(listOf(unnamed), wrap(unnamed, maxColumns = 40))
 
         val named = List(283) { "${'A' + it % 26}${'a' + it / 26}|---" } + ("e|" + "-".repeat(1414))
-        assertEquals(listOf(named), ChordProTabWrapper.wrap(named, maxColumns = 40))
+        assertEquals(listOf(named), wrap(named, maxColumns = 40))
     }
 
     @Test
     fun `every copy of a repeated string name starts a system`() {
         val lines = List(16_000) { "e|---" } + ("e|" + "-".repeat(100_000))
-        assertTrue(ChordProTabWrapper.wrap(lines, maxColumns = 40).sumOf { it.size } < 20_000)
+        assertTrue(wrap(lines, maxColumns = 40).sumOf { it.size } < 20_000)
     }
 
     @Test
     fun `a row too narrow for the string names and a readable staff goes without the names`() {
-        val rows = ChordProTabWrapper.wrap(riff, maxColumns = 9)
+        val rows = wrap(riff, maxColumns = 9)
         assertTrue(rows.size > 2)
         assertTrue(rows.all { row -> row.all { it.length <= 9 } })
     }
@@ -421,4 +421,7 @@ class ChordProTabWrapperTest {
             rows,
         )
     }
+
+    /** The rows' lines as text, which is what most of these tests are about. */
+    private fun wrap(lines: List<String>, maxColumns: Int) = ChordProTabWrapper.wrapLines(lines, maxColumns).map { row -> row.map { it.text } }
 }

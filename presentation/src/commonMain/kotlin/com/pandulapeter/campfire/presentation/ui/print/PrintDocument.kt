@@ -160,14 +160,16 @@ internal fun printScaleGroupsOf(
 private val ChordProSong.isSongbook get() = blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
 
 /**
- * How a text is set: [size] in PDF points, [monospace] for the tablature and grids whose characters have to line up
- * (everything else is in the app's text font, as in the viewer), and [gray] from 0 (black) to 255 (white).
+ * How a text is set: [size] in PDF points, [monospace] for the grids and preformatted text whose characters have to
+ * line up (everything else is in the app's text font, as in the viewer), [tabular] for the figures of engraved
+ * tablature, and [gray] from 0 (black) to 255 (white).
  */
 internal data class PrintStyle(
-    val size: Int,
+    val size: Float,
     val bold: Boolean = false,
     val italic: Boolean = false,
     val monospace: Boolean = false,
+    val tabular: Boolean = false,
     val gray: Int = 0,
 )
 
@@ -180,6 +182,8 @@ internal data class PrintStyle(
  *   They are drawn as spans of the one text, laid out once, so that the bidirectional algorithm sees the whole line and a
  *   right-to-left one keeps its order; the selectable text is written in [style] alone, since the importer would read a
  *   bold word that is a chord name back as a chord.
+ * @property isDrawn False for a text that is only in the selectable text: engraved tablature is drawn as figures and
+ *   rules, and its lines reach the text layer as the file has them, under the drawing.
  */
 internal data class PrintText(
     val text: String,
@@ -188,6 +192,7 @@ internal data class PrintText(
     val style: PrintStyle,
     val isSelectable: Boolean = true,
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
+    val isDrawn: Boolean = true,
 )
 
 /** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */

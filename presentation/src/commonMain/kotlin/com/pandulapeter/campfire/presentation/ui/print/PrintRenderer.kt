@@ -67,7 +67,7 @@ internal class PrintRenderer(
         fontSize = size.sp,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
-        fontFeatureSettings = "liga=0",
+        fontFeatureSettings = if (tabular) "liga=0, tnum" else "liga=0",
     )
 
     private fun text(value: String, style: PrintStyle, formatting: List<Formatting> = emptyList()) = measurer.measure(
@@ -95,7 +95,7 @@ internal class PrintRenderer(
                     size = Size(rule.width, rule.height),
                 )
             }
-            page.texts.zip(layouts.of(page)) { item, layout -> drawText(layout, topLeft = Offset(item.x, item.y)) }
+            page.texts.zip(layouts.of(page)) { item, layout -> if (item.isDrawn) drawText(layout, topLeft = Offset(item.x, item.y)) }
             page.diagrams.forEach { diagram ->
                 translate(diagram.x, diagram.y) {
                     drawChordDiagram(

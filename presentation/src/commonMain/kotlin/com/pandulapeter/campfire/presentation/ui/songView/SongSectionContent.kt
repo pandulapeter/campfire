@@ -115,8 +115,14 @@ internal fun SongSectionContent(
     val isLastChunk = items.last >= section.itemCount - 1
     // Tablature and grids are both columns of characters that have to line up with the ones above and below them.
     val monospaceFontFamily = LocalMonospaceFontFamily.current
-    val monospaceLyricsStyle = lyricsStyle.copy(fontFamily = monospaceFontFamily)
-    val monospaceChordStyle = chordStyle.copy(fontFamily = monospaceFontFamily)
+    val runStyles = remember(lyricsStyle, chordStyle, monospaceFontFamily) {
+        RunStyles(
+            text = lyricsStyle,
+            chord = chordStyle,
+            monospaceText = lyricsStyle.copy(fontFamily = monospaceFontFamily),
+            monospaceChord = chordStyle.copy(fontFamily = monospaceFontFamily),
+        )
+    }
     if (isFirstChunk) when {
         isHeaderShown && isOnCard -> CardTitleRow(
             // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
@@ -250,8 +256,7 @@ internal fun SongSectionContent(
                         defaultLabels = defaultLabels,
                         headerStyle = headerStyle,
                         chevronSize = chevronSize,
-                        monospaceLyricsStyle = monospaceLyricsStyle,
-                        monospaceChordStyle = monospaceChordStyle,
+                        runStyles = runStyles,
                         textMeasurements = textMeasurements,
                         notations = notations,
                     )
@@ -280,8 +285,7 @@ private fun SectionRun(
     defaultLabels: DefaultSectionLabels,
     headerStyle: TextStyle,
     chevronSize: Dp,
-    monospaceLyricsStyle: TextStyle,
-    monospaceChordStyle: TextStyle,
+    runStyles: RunStyles,
     textMeasurements: SongTextMeasurements,
     notations: SongNotations,
 ) {
@@ -324,8 +328,8 @@ private fun SectionRun(
         // of a staff, and be drawn with strokes through it.
         kind == FoldableKind.TAB || kind == FoldableKind.VERBATIM -> {
             val lines = remember(run) { run.map { it.monospaceText.orEmpty() } }
-            val rows = remember(lines, monospaceLyricsStyle, textMeasurements, kind) {
-                textMeasurements.tabRows(lines, monospaceLyricsStyle, isPreformatted = kind == FoldableKind.VERBATIM)
+            val rows = remember(lines, runStyles, textMeasurements, kind) {
+                textMeasurements.tabRows(lines, runStyles, isPreformatted = kind == FoldableKind.VERBATIM)
             }
             shownSlots.forEach { slot ->
                 SongTabBlock(
@@ -344,8 +348,8 @@ private fun SectionRun(
                 alignedLines.getOrNull(slot)?.let { bars ->
                     SongGridLine(
                         bars = bars,
-                        lyricsStyle = monospaceLyricsStyle,
-                        chordStyle = monospaceChordStyle,
+                        lyricsStyle = runStyles.monospaceText,
+                        chordStyle = runStyles.monospaceChord,
                     )
                 }
             }

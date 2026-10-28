@@ -51,6 +51,10 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   keyboard, or not standard tuning) and the suggested scales under the diagrams are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
 - Markup's bold is drawn but written into the text layer in the regular weight: read back, a bold word that is a chord
   name would become a chord.
+- Tablature is engraved as on screen (`PrintTabEngraver`, see `ui/songView`): figures and rules, none of it
+  selectable; each line reaches the text layer as the file has it, an invisible monospaced text (`isDrawn` false) sized
+  to the columns and on the string's baseline, so it reads back as a tab. A tab run's chord line prints bold, written
+  regular the same way.
 - The playing row (`playingDetails`) **follows the reader's settings as the screen does**: transposition, capo, and
   tempo are the setlist's, else the reader's own, else the file's. The sounding key (the inferred one where the file
   names none, as on screen), the reader's transposition, and non-zero capo with `showKey` (none on the keyboard, as on
