@@ -122,8 +122,15 @@ class BaselineProfileGenerator {
         // opens the Metronome on a fresh install with a button group over the tools; a taller rail gives each its own item.
         (waitFor(By.text("Tools")) ?: waitFor(By.text("Metronome")))?.click()
         device.waitForIdle()
-        // Nothing on the Tuner asks for anything without a tap, so it is visited like the others.
-        listOf("Tuner", "Chords", "Scales").forEach { tool ->
+        // Opening the Tuner with a tap asks for the microphone on a fresh install, and the system's prompt then covers the
+        // app, so the walk could reach nothing after it. It is allowed, which also records the tuner listening; a later
+        // iteration finds the permission granted and no prompt.
+        toolButton("Tuner")?.let { tuner ->
+            tuner.click()
+            waitFor(By.text("While using the app"))?.click()
+            device.waitForIdle()
+        }
+        listOf("Chords", "Scales").forEach { tool ->
             toolButton(tool)?.click()
             device.waitForIdle()
         }
