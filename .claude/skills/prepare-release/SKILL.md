@@ -101,8 +101,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    questions, and check that the six (or fewer) that made it are the ones a user would miss most, that no two of them
    are about the same area, and that none claims more than the app does.
 
-   First start the baseline profile recording (step 10) in the background, so it runs while the user reads. Then show
-   the user, in the reply itself (not in a file):
+   Show the user, in the reply itself (not in a file):
    - the bullets as the dialog shows them, ranked, each `**Headline**` and its description, with its word count;
    - the cluster table, marking which clusters made it and why the rest did not;
    - the stores' `whats-new en-US` block (**Style — the store "what's new"**) with its character count, and which
@@ -136,6 +135,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
    the version as handled. The first installed version is always skipped, whatever its message contains.
 
+   Once every `strings.xml` holds its final message, start the baseline profile recording (step 10) in the
+   background, so it runs while the store listings are updated.
+
 9. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
    one file per store (`google-play.md`, `app-store.md`, `mac-app-store.md`, `microsoft-store.md`): the source of truth
    for every field the user pastes into that store's console, one fenced block per field. Read each file whole,
@@ -163,11 +165,11 @@ them. If a change has no effect a user could notice, it is not in the notes.
    promotional text change only with a version submitted for review; the listings are pasted by hand, never by the
    pipeline.
 
-10. **Always regenerate Android baseline profiles, started in step 7 so the recording runs during the changelog
-   review**, once every code change made while preparing the release is in place. The profile holds class and method
-   rules recorded from the built app, so the text of a string (the in-app message and its translations) never makes it
-   stale, but code does: if anything under `presentation`, `app` or the shared modules other than string values
-   changes after a recording (a fix the review turns up, a new string key), record it again. Run it with
+10. **Always regenerate Android baseline profiles, started at the end of step 8**, never before the changelog is
+   approved and the in-app message is written in every language, so the recording builds the app as it ships. Every
+   code change made while preparing the release must be in place by then; if anything under `presentation`, `app` or
+   the shared modules changes after a recording (a fix the listings review turns up, a new string key), record it
+   again. Run it with
    `run_in_background` and keep reviewing; check its result when it reports back. Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
    use an English emulator (boot `Resizable_Experimental` if needed), wait for it to finish booting, and select it
    explicitly with `ANDROID_SERIAL` when several devices are connected. Uninstall `com.pandulapeter.campfire` only
