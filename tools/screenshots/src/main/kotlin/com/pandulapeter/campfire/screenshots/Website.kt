@@ -221,8 +221,11 @@ private val tuner = mapOf(
 private const val UPTOWN_GIRL = "billy_joel-uptown_girl.cho"
 private const val ILL_BE_THERE_FOR_YOU = "the_rembrandts-ill_be_there_for_you.cho"
 
-/** The text sizes the website's text size slider stops at: from 100% to 230% in the app's own steps of 10%. */
-private val TEXT_SIZE_DEMO_FONT_SCALES = (10..23).map { it / 10f }
+/**
+ * The text sizes the website's text size slider stops at: those where I'll Be There for You's layout visibly changes,
+ * from four columns to three, three with larger text, and two.
+ */
+private val TEXT_SIZE_DEMO_FONT_SCALES = listOf(1f, 1.2f, 1.5f, 2f)
 private const val EDITOR_SCROLL = 0.3f
 private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.cho"
 

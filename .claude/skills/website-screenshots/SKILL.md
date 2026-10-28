@@ -73,7 +73,8 @@ Verse 3); Uptown Girl 100% with the metronome panel open (after Verse 3), under 
 (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets. A song longer than a page is cut
 wherever a column ends, so these were found by rendering every size from 80% to 130% and reading where page one ends;
 if a song, a device, or the layout changes, try again the same way. The laptop's text size demo is I'll Be There for
-You at every 10% from 100% to 230%, the app's own steps, wherever page one ends. The laptop's editor is scrolled past
+You at 100%, 120%, 150%, and 200%, wherever page one ends: the sizes where its layout visibly changes (four columns,
+three, three with larger text, two), since the steps between them barely change it. The laptop's editor is scrolled past
 Thinking Out Loud's directives. **Never fold the Chords section (or anything else) to make a song fit.** The laptop is
 a Mac window with no system chrome at 1.32×, a maximized window on a 14" MacBook Pro (`Device.LAPTOP`).
 

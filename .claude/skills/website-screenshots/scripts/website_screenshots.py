@@ -34,7 +34,7 @@ from PIL import Image, ImageChops, ImageFilter
 SIBLINGS = ("CampfireWebsite", "campfire-website")
 # The page draws each device no wider than it ever needs: at its widest (a 768 pixel window, two columns becoming one)
 # a laptop or a tablet screen is about 600 CSS pixels across, so 1200 device pixels on a 2x screen, and a phone 170, so
-# 340. Each is saved at about that, in its own proportions, which keeps the text sharp at the fewest bytes; the 14 of
+# 340. Each is saved at about that, in its own proportions, which keeps the text sharp at the fewest bytes; the 4 of
 # the text size demo load together.
 SIZES = {"phone": (450, 978), "tablet": (1200, 900), "laptop": (1200, 753)}
 OG_SIZE = (1200, 630)
