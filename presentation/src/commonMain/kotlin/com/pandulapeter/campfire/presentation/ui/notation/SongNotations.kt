@@ -40,17 +40,19 @@ internal val LocalAbcRenderer = staticCompositionLocalOf<AbcRenderer?> { null }
 /**
  * The staff notation of a song's `abc` runs, by tune, as last rendered: a run with none (not yet, or never, because it
  * failed) is drawn as its text. A new instance arrives once with every tune of the song, so the sections it changes are
- * measured again once rather than tune by tune.
+ * measured again once rather than tune by tune. A tune whose text changed is drawn as the rendering of the tune it
+ * replaced ([standIns], see [notationStandInsOf]) until its own arrives, so an edit keeps its staff meanwhile.
  */
 @Immutable
 internal class SongNotations(
     private val rendered: RenderedNotations,
+    private val standIns: Map<String, String>,
     private val unitSize: Float,
 ) {
     /** What [run] is drawn as, or null where it is drawn as text. */
     fun of(run: List<ChordProLine>): NotationRun? {
         val tune = run.abcTune() ?: return null
-        val rendering = rendered.renderings[tune] ?: return null
+        val rendering = rendered.renderings[tune] ?: standIns[tune]?.let { rendered.renderings[it] } ?: return null
         return NotationRun(
             systems = rendering.systems,
             measuredUnitSize = rendering.unitSize,
@@ -68,7 +70,7 @@ internal class SongNotations(
     val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
     companion object {
-        val NONE = SongNotations(RenderedNotations.NONE, unitSize = 1f)
+        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f)
     }
 }
 
@@ -171,7 +173,14 @@ internal fun rememberSongNotations(
     val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting)
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
+    val standIns = remember(tunes, rendered) {
+        notationStandInsOf(previous = rendered.request?.tunes?.keys?.toList().orEmpty(), current = tunes.keys.toList())
+            .filterValues { it in rendered.renderings }
+    }
     LaunchedEffect(renderer, request) {
+        // What the screen draws the edited tunes as while this runs: the composition that launched it computed them for
+        // this request, and nothing but this effect changes the renderings meanwhile.
+        val shownStandIns = standIns
         if (renderer == null || request == null || request == rendered.request) return@LaunchedEffect
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
@@ -186,9 +195,11 @@ internal fun rememberSongNotations(
             val key = request.keyOf(tune, offset)
             (cache?.get(key) ?: render(renderer, painter, tune, offset, request)?.also { cache?.set(key, it) })?.let { tune to it }
         }.toMap()
-        // A tune whose text alone changed (an edit) is new rather than re-rendered, and arrives the way the edit does.
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
-        val rerenderedTunes = if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()
+        // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
+        // block just added) arrives as data, replacing its text at once.
+        val rerenderedTunes = (if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()) +
+            renderings.keys.intersect(shownStandIns.keys)
         rendered = RenderedNotations(
             request = request,
             renderings = renderings,
@@ -196,7 +207,9 @@ internal fun rememberSongNotations(
             arrivingTunes = arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
         )
     }
-    return remember(rendered, unitSize) { if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, unitSize) }
+    return remember(rendered, standIns, unitSize) {
+        if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize)
+    }
 }
 
 private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: String, offset: Int, request: NotationRequest): NotationRendering? =

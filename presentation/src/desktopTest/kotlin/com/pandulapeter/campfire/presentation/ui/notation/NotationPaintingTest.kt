@@ -49,6 +49,7 @@ internal class NotationPaintingTest {
                 rerenderedTunes = emptySet(),
                 arrivingTunes = emptySet(),
             ),
+            standIns = emptyMap(),
             unitSize = 1f,
         )
         tunes.forEach { tune ->

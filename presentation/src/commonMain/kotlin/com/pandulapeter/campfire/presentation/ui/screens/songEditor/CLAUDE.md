@@ -109,6 +109,7 @@ numbers nothing to count from.
   break tab columns).
 - Split stacks the song in one column (`isSingleColumn`), since columns reshuffling on every keystroke hide the line
   being typed; Preview alone lays out like the details screen.
+- Typing in a tune keeps its staff until the new one is engraved (see `ui/notation`), so the sections under it hold still.
 
 ## Unsaved text and the draft
 

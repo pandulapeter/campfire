@@ -44,6 +44,7 @@ class NotationArrivalTest {
 
     private fun notationsOf(rerendered: Set<String>, arriving: Set<String>) = SongNotations(
         rendered = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = rerendered, arrivingTunes = arriving),
+        standIns = emptyMap(),
         unitSize = 1f,
     )
 }

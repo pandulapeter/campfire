@@ -52,6 +52,8 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   painting), so a tune seen before at the same width, size, and transposition is notation on its first frame. A cold one
   is text until it arrives, and its arrival (`arrivingTunesOf`, `SongNotations.arrival`) moves nothing gradually; a
   rendering that also re-renders a tune is the reader's change and is narrated whole.
+- **A tune whose text changed is drawn as the staff it replaced** (`notationStandInsOf`: the tunes that left paired in
+  order with those that came, where as many left as came) until its own rendering arrives, and cross-fades from it.
 - **The engine is warmed** (`NotationEngineWarmUp.kt`) 2 s after the library first holds a song with an `abc` block
   (`Song.hasSheetMusic`, from the library scan), on every platform the web included, so a tune's first open pays only
   its rendering.
