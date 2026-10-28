@@ -114,6 +114,10 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   a display (`xvfb-run` in CI); macOS has none.
 - Windows: ANGLE's DLLs are copied into `$APPDIR` from `angleRuntime` (its `skiko` version must equal Compose's), not
   the classpath, where ProGuard would join them into the jar. `SKIKO_RENDER_API=DIRECT3D` is the user's escape hatch.
+- QuickJS's library for the host is an app resource (`appResourcesRootDir`'s `common/`, extracted from the quickjs-kt
+  jar by `extractQuickJsLibrary`; nothing on a host it has none for), loaded through `com.dokar.quickjs.library.path`,
+  set in `main`, and the release jar's `jni/` is stripped with every platform's copy: otherwise the loader unpacks it
+  into the temporary folder on every launch (left behind on Windows, outside the signed bundle on the Mac App Store).
 
 ### ProGuard (`proguard-rules.pro`)
 

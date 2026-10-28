@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.buildLogic.tasks.msixPackageVersion
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.util.zip.ZipFile
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJLinkTask
 
@@ -138,6 +139,8 @@ compose.desktop {
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
         javaHome = toolchainLauncher.get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
+            // Holds QuickJS's library for the host in its common/ folder (see extractQuickJsLibrary).
+            appResourcesRootDir.set(layout.buildDirectory.dir("quickjsLibrary"))
             targetFormats(TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
@@ -405,21 +408,57 @@ tasks.matching { isMacAppStoreBuild && (it.name == "createDistributable" || it.n
 }
 
 /**
- * Takes the skiko library of the other kind of Mac out of the jar ProGuard joins everything into. The macOS skiko
- * runtime jar carries the libraries of both processors; the packaging moves the one for the machine it runs on into
- * the bundle and signs it there, and would leave the other one in the jar, unsigned. It is never loaded, but it is
- * twenty megabytes of every download, and a native binary without a signature inside a jar is exactly what the Mac
- * App Store's validation and notarization look for.
+ * QuickJS's library for the host, out of the quickjs-kt jar, which carries one for each of five platforms and would
+ * otherwise unpack it into the temporary folder on every launch. It goes into the app resources' `common/` folder, so
+ * every package carries it inside the image (signed with the bundle on macOS) and `main` points the loader at it. A
+ * host the jar has no library for (Windows on ARM) gets nothing, as tunes stay text there anyway, rather than a
+ * failing `run`; on the five it has, a library missing from the jar fails the build.
+ */
+val extractQuickJsLibrary = tasks.register<Sync>("extractQuickJsLibrary") {
+    val quickJsJar = configurations.runtimeClasspath.get().incoming.artifactView {
+        componentFilter { it is ModuleComponentIdentifier && it.group == "io.github.dokar3" && it.module == "quickjs-kt-jvm" }
+    }.files
+    val hostFolder = quickJsHostFolder
+    val destination = layout.buildDirectory.dir("quickjsLibrary/common")
+    from({ quickJsJar.map { zipTree(it) } })
+    if (hostFolder == null) exclude("**") else include("jni/$hostFolder/libquickjs.*")
+    eachFile { path = name }
+    includeEmptyDirs = false
+    into(destination)
+    doLast {
+        if (hostFolder != null && destination.get().asFile.listFiles().isNullOrEmpty()) {
+            throw GradleException("Expected QuickJS's library for $hostFolder in the quickjs-kt jar, found none.")
+        }
+    }
+}
+
+tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(extractQuickJsLibrary) }
+
+/**
+ * Takes the native libraries no image loads out of the jar ProGuard joins everything into. On every host that is the
+ * quickjs-kt jar's `jni/` folder, the libraries of five platforms, as the host's is an app resource
+ * (`extractQuickJsLibrary`). On a Mac it is also the skiko library of the other kind of Mac: the macOS skiko runtime
+ * jar carries the libraries of both processors, and the packaging moves the one for the machine it runs on into the
+ * bundle and signs it there, leaving the other one in the jar, unsigned. Neither is ever loaded, but they are megabytes
+ * of every download, and a native binary without a signature inside a jar is exactly what the Mac App Store's
+ * validation and notarization look for.
  */
 tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
     val proguardOutput = layout.buildDirectory.dir("compose/tmp/main-release/proguard")
     doLast {
-        if (!System.getProperty("os.name").orEmpty().lowercase().contains("mac")) return@doLast
-        val otherArchitecture = if (System.getProperty("os.arch") == "aarch64") "x64" else "arm64"
-        val unused = listOf("libskiko-macos-$otherArchitecture.dylib", "libskiko-macos-$otherArchitecture.dylib.sha256")
+        val unusedSkiko = if (System.getProperty("os.name").orEmpty().lowercase().contains("mac")) {
+            val otherArchitecture = if (System.getProperty("os.arch") == "aarch64") "x64" else "arm64"
+            listOf("libskiko-macos-$otherArchitecture.dylib", "libskiko-macos-$otherArchitecture.dylib.sha256")
+        } else {
+            emptyList()
+        }
         proguardOutput.get().asFile.listFiles { file -> file.extension == "jar" }.orEmpty().forEach { jar ->
             FileSystems.newFileSystem(jar.toPath()).use { zip ->
-                unused.map { zip.getPath(it) }.forEach { Files.deleteIfExists(it) }
+                unusedSkiko.map { zip.getPath(it) }.forEach { Files.deleteIfExists(it) }
+                val jni = zip.getPath("jni")
+                if (Files.exists(jni)) {
+                    Files.walk(jni).use { paths -> paths.sorted(Comparator.reverseOrder()).toList() }.forEach { Files.delete(it) }
+                }
             }
         }
     }
@@ -443,6 +482,23 @@ val isMacHost get() = System.getProperty("os.name").orEmpty().lowercase().contai
 
 /** Whether this build runs on Windows, which is the only host jpackage builds the .msi on. */
 val isWindowsHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
+
+/** The folder of the quickjs-kt jar's `jni/` that holds the host's library, as its loader names it; null for a host it has none for. */
+val quickJsHostFolder: String?
+    get() {
+        val system = when {
+            isMacHost -> "macos"
+            isWindowsHost -> "windows"
+            isLinuxHost -> "linux"
+            else -> return null
+        }
+        val architecture = when (System.getProperty("os.arch")) {
+            "aarch64", "arm64" -> "aarch64"
+            "amd64", "x86_64" -> "x64"
+            else -> return null
+        }
+        return "${system}_$architecture".takeIf { it in setOf("linux_aarch64", "linux_x64", "macos_aarch64", "macos_x64", "windows_x64") }
+    }
 
 /**
  * The ChordPro extensions the Windows installer claims: the ones no other application uses. An MSI can only make an

@@ -87,6 +87,16 @@ fun main(args: Array<String>) {
     if (isWindows && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null &&
         File(System.getProperty("skiko.library.path").orEmpty(), "libEGL.dll").isFile
     ) System.setProperty("skiko.rendering.angle.enabled", "true")
+    // QuickJS's loader otherwise unpacks its library from the jar into the temporary folder on every launch: outside the
+    // signed bundle on the Mac App Store, and left behind on Windows, which cannot delete a library still mapped. The
+    // packages carry the signed copy as an app resource. Only when the file is there, since the loader throws rather
+    // than falling back when this property names a folder without it (a run from the IDE, a host with no library).
+    if (System.getProperty("com.dokar.quickjs.library.path") == null) {
+        val quickJsLibrary = if (isWindows) "libquickjs.dll" else if (isMacOs) "libquickjs.dylib" else "libquickjs.so"
+        System.getProperty("compose.application.resources.dir")
+            ?.takeIf { File(it, quickJsLibrary).isFile }
+            ?.let { System.setProperty("com.dokar.quickjs.library.path", it) }
+    }
     OpenedFiles.listenForSystemRequests()
     openLaunchArguments(args.toList())
     startCampfireDependencyGraph()
