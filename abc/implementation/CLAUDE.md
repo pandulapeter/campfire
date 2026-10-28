@@ -39,10 +39,12 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
 ### Engines (`AbcScriptEngine`, `createAbcScriptEngine`)
 
 - Android and desktop (`jvmSharedMain`): `io.github.dokar3:quickjs-kt`, one engine for the process, started by the
-  first render (~150 ms on the desktop, then ~5 ms a render), on a daemon thread of its own: a QuickJS context is used
-  by one thread at a time. It runs under a memory limit and a per-evaluation timeout, and is closed and started again
-  after any failed render (a context that ran out of memory fails every later evaluation, or answers `null`), never
-  after a cancellation, which quickjs-kt turns into an interruption of the render. Chosen over Rhino for being ~5× faster warm and ~20× faster cold at about the same download.
+  first render or by the app's warm-up, whichever comes first (~150 ms on the desktop, then ~5 ms a render), on a
+  daemon thread of its own: a QuickJS context is used by one thread at a time. It runs under a memory limit and a
+  per-evaluation timeout, and is closed and started again after any failed render (a context that ran out of memory
+  fails every later evaluation, or answers `null`), never after a cancellation, which quickjs-kt turns into an
+  interruption of the render. Chosen over Rhino for being ~5× faster warm and ~20× faster cold at about the same
+  download.
 - **Rhino is the tested fallback** should quickjs-kt stall: `org.mozilla:rhino` 1.9.x (MPL-2.0, its NOTICE adds BSD-3;
   pin 1.9, as 2.0 will likely need Java 17 and break the embedding API), language version ES6 or later (abc2svg uses optional
   chaining), interpreted on Android (minSdk 26), compiled on the desktop only with jdk.dynalink in the jlink set. R8

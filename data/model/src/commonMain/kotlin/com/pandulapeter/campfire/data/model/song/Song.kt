@@ -88,6 +88,11 @@ data class Song(
      * name its key.
      */
     val capoChartKey: String? = null,
+    /**
+     * Whether the file holds an `abc` block, which the app draws as staff notation. Read with the rest of the metadata,
+     * so that the app can start the notation engine before any song with a tune is opened.
+     */
+    val hasSheetMusic: Boolean = false,
 ) {
 
     /** [key] read as the key the file's chords are written in, which is what every list names the sounding key from. */

@@ -28,7 +28,8 @@ builds what it draws, `grid/` places it.
   `ChordProLine.Verbatim`, always preformatted (`isPreformatted`), since a tied ABC line full of dashes would pass for a
   staff.
 - An `abc` run is engraved once its rendering arrives (`SongNotationBlock`, see `ui/notation`), and is the text above
-  until then or if it fails. It is headed "Sheet music", on screen and in the PDF: ABC is how it is written, which a
+  until then or if it fails. `SongLyrics` is handed its width at rest (`availableWidth`), which the tunes are engraved
+  for, so a tune rendered before is notation on its first frame and a push hiding the rail engraves once. It is headed "Sheet music", on screen and in the PDF: ABC is how it is written, which a
   reader need not know, and it may hold chords and several voices (a piano part), not only a melody. It keeps the
   text's slots: slot *n* draws staff system *n*, the last one the rest, so the section is cut between systems; each
   slot answers its height for any width at once (the systems at the text size's unit, scaled down to a narrower
@@ -98,7 +99,9 @@ builds what it draws, `grid/` places it.
   laid out at its new size at once, so its content is arranged once rather than at every size on the way, which
   re-wrapped chips and controls on every frame. Everything moves on one spring (`SongMotionSpec`). The playing controls,
   the chord diagrams, and the scale chips travel to a new arrangement of their rows during those too (`PlacementMotion`),
-  except a pinch, which resizes them every frame (`isTextScaling`).
+  except a pinch, which resizes them every frame (`isTextScaling`). **A tune's first rendering is data arriving**: the
+  pass that lays it out places every section, card, divider, and row at once (`SectionGlides.follow`'s `arrival`, and
+  `SongSectionChildren`'s `placesAtOnce` for that composition), never springing the song during an enter transition.
 - **A section is keyed by what it is, not what it shows** (`sectionKeysOf`: a lines section by its fold key), so it
   glides rather than being composed afresh; it is followed by its first baseline, so words a chord row grows or shrinks
   over glide from where they were. A chunk or a first-section control that comes with any other single change fades in

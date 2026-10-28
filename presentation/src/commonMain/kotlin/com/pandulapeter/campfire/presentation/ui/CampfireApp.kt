@@ -58,6 +58,9 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
+import com.pandulapeter.campfire.presentation.ui.notation.LocalNotationCache
+import com.pandulapeter.campfire.presentation.ui.notation.NotationCache
+import com.pandulapeter.campfire.presentation.ui.notation.WarmNotationEngine
 
 /**
  * The root of the shared Compose UI: theme, adaptive navigation chrome, the Navigation 3 display and the dialogs.
@@ -139,7 +142,10 @@ fun CampfireApp(
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
+        LocalNotationCache provides remember { NotationCache() },
     ) {
+        // The flow is handed over rather than collected here, so a change of the library recomposes nothing.
+        WarmNotationEngine(songs = viewModel.libraryState.allSongs)
         CampfireTheme(
             uiMode = userPreferences?.uiMode,
             themeColor = userPreferences?.themeColor,

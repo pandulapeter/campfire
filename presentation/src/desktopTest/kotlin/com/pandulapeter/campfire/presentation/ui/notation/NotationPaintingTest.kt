@@ -47,6 +47,7 @@ internal class NotationPaintingTest {
                 request = null,
                 renderings = tunes.associateWith { NotationRendering(drawing, unitSize = 1f, systems = painter.paint(drawing, unitSize = 1f)) },
                 rerenderedTunes = emptySet(),
+                arrivingTunes = emptySet(),
             ),
             unitSize = 1f,
         )

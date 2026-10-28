@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
@@ -112,9 +113,9 @@ public object ChordProParser {
     public fun parseMetadata(text: String): ChordProMetadata = scan(text, shouldDetectChords = false, notation = ChordNotation.STANDARD).metadata
 
     /**
-     * The directives of a song and whether it has any chords, from a single walk over the text. The library scan
-     * wants both for every file it reads, and asking for them separately walks each file twice. [notation] is the one
-     * [text] is written in, as for [parse].
+     * The directives of a song, whether it has any chords, and whether it holds sheet music, from a single walk over the
+     * text. The library scan wants them for every file it reads, and asking for them separately walks each file twice.
+     * [notation] is the one [text] is written in, as for [parse].
      */
     public fun summarize(text: String, notation: ChordNotation = ChordNotation.STANDARD): ChordProSummary = scan(text, shouldDetectChords = true, notation = notation)
 
@@ -128,6 +129,7 @@ public object ChordProParser {
         val metadata = MetadataBuilder()
         val transposition = Transposition()
         var hasChords = false
+        var hasSheetMusic = false
         var isGermanNotated = notation == ChordNotation.GERMAN
         ChordProLineScanner.scan(text).forEach { line ->
             if (line.isSourceComment) return@forEach
@@ -148,6 +150,7 @@ public object ChordProParser {
             }
             // Before the early return below, which skips lines once the chords are found: the body has begun either way.
             if (trimmedLine.isNotEmpty()) transposition.startBody()
+            if (environment == ABC) hasSheetMusic = true
             val isLookingForChords = shouldDetectChords && !hasChords
             val isLookingForNotation = !isGermanNotated && mayHoldGermanName(rawLine, environment)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
@@ -165,6 +168,7 @@ public object ChordProParser {
         return ChordProSummary(
             metadata = declared.copy(key = key),
             hasChords = hasChords,
+            hasSheetMusic = hasSheetMusic,
         )
     }
 

@@ -34,6 +34,9 @@ internal object ChordProVocabulary {
     const val TAB = "tab"
     const val GRID = "grid"
 
+    /** The environment of a tune in ABC notation, which the app draws as staff notation. */
+    const val ABC = "abc"
+
     /** The signs that may follow a note letter: the ASCII ones a file is written with and the typographic ones it may hold. */
     const val ACCIDENTALS = "#b♯♭"
 

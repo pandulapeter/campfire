@@ -58,6 +58,7 @@ internal class SectionGlides(
     private val glides = HashMap<Any, SectionGlide>()
     private var lastKeys: List<Any>? = null
     private var lastGrid: DecidedGrid? = null
+    private var lastArrival: Any? = null
 
     /** How far from its place the chunk or the card of [key] is drawn, which is state. */
     fun offsetOf(key: Any) = glides[key]?.offset ?: IntOffset.Zero
@@ -65,8 +66,14 @@ internal class SectionGlides(
     /**
      * Takes the [positions] the sections of [keys] are placed at in [grid], and starts a glide for every one whose
      * position moved: every one where [glidesEveryMove], otherwise only where the grid changed (see [SectionMotion]).
+     * A new [arrival] (`SongNotations.arrival`) places every one at once for the pass that first sees it.
      */
-    fun follow(keys: List<Any>, grid: DecidedGrid, positions: Array<IntOffset>, glidesEveryMove: Boolean) {
+    fun follow(keys: List<Any>, grid: DecidedGrid, positions: Array<IntOffset>, glidesEveryMove: Boolean, arrival: Any?) {
+        // A tune's first rendering is data arriving: the pass that lays it out sends every section straight to its new
+        // place, the grid's jump included, and only that pass. A token rather than a flag, which would stay set until the
+        // song is next composed and silence a later move that only measures.
+        val isArrival = arrival != null && arrival !== lastArrival
+        lastArrival = arrival
         if (keys !== lastKeys) {
             val current = keys.toHashSet()
             glides.entries.removeAll { (key, glide) -> (key !in current).also { if (it) glide.stop() } }
@@ -78,7 +85,7 @@ internal class SectionGlides(
             val glide = glides.getOrPut(key) { SectionGlide() }
             val previous = glide.target
             glide.target = positions[index]
-            if ((glidesEveryMove || isNewGrid) && previous != null && previous != positions[index]) {
+            if (!isArrival && (glidesEveryMove || isNewGrid) && previous != null && previous != positions[index]) {
                 glide.start(jump = previous - positions[index], scope = scope, spec = spec)
             }
         }

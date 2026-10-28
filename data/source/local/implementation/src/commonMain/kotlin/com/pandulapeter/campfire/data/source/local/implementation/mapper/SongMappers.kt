@@ -57,5 +57,6 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary, text: String): Song
         // Only a capo chart's key can mean the chords' or the sounding one, and only its chords tell which, so only such a
         // file is read whole: the scan of every other file stays the one walk the summary is.
         capoChartKey = if (key == null || (summary.metadata.capo ?: 0) == 0) null else SongKeys.capoChartKeyOf(ChordProParser.parse(text)),
+        hasSheetMusic = summary.hasSheetMusic,
     )
 }

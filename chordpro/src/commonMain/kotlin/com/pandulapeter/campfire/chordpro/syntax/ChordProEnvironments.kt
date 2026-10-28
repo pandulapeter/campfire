@@ -45,7 +45,7 @@ internal object ChordProEnvironments {
      * it as a ChordPro chord would corrupt music nobody asked to change. They are kept line for line and nothing in
      * them is a chord.
      */
-    val delegateEnvironments = setOf("abc", "ly", "svg", "textblock")
+    val delegateEnvironments = setOf(ChordProVocabulary.ABC, "ly", "svg", "textblock")
 
     /**
      * The label an environment directive gives its section: the whole value (`{sov: Verse 1}`), or its `label`

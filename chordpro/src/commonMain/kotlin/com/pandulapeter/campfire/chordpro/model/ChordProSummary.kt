@@ -10,11 +10,13 @@
 package com.pandulapeter.campfire.chordpro.model
 
 /**
- * Everything a song list needs to know about a file without keeping its text: the directives that describe it and
- * whether there is a chord anywhere in it. The two travel together because they are read together — a library scan
+ * Everything a song list needs to know about a file without keeping its text: the directives that describe it,
+ * whether there is a chord anywhere in it, and whether it holds sheet music. The two travel together because they are read together — a library scan
  * walks each file once, and that walk is the slowest thing the app does at start.
  */
 public data class ChordProSummary(
     val metadata: ChordProMetadata,
     val hasChords: Boolean,
+    /** Whether a line stands in an `abc` environment, the block the app draws as staff notation. */
+    val hasSheetMusic: Boolean = false,
 )

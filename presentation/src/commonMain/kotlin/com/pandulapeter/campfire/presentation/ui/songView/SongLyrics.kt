@@ -41,6 +41,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,9 +50,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.runtime.mutableIntStateOf
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
+import com.pandulapeter.campfire.presentation.ui.notation.notationPageWidth
 import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
@@ -87,6 +87,9 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * to their new place when the column count changes (e.g. when a window is resized), see [sectionMotion].
  *
  * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
+ * @param availableWidth The width this layout's content has inside the modifier's padding once any transition resizing
+ * it has ended, which its tunes are engraved for: known before the first layout, so a tune rendered before is notation
+ * on the first frame, and a push that hides a navigation rail engraves once, for the page it settles into.
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
  * fits into this if it can. It is the height the page has at rest, which may differ from [rowViewportHeight] for the
  * frames an app bar or a panel above it is moving, so that the grid is not searched again on every one of them.
@@ -150,6 +153,7 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
     model: SongLyricsModel,
+    availableWidth: Dp,
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
     sectionMotion: SectionMotion = SectionMotion.SPRING,
@@ -276,7 +280,6 @@ internal fun SongLyrics(
     // The staff notation of the song's ABC tunes, which replaces their text once it has been rendered: for a page as wide
     // as the widest column the song can have here, each SVG unit as large as the text size makes it. Its words are laid
     // out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
-    var songWidth by remember { mutableIntStateOf(0) }
     val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
     val fontResolver = LocalFontFamilyResolver.current
     val layoutDirection = LocalLayoutDirection.current
@@ -286,7 +289,12 @@ internal fun SongLyrics(
     val notationUnit = NOTATION_UNIT * fontScale
     val notations = rememberSongNotations(
         blocks = model.song.blocks,
-        width = if (songWidth == 0) null else with(density) { ((minOf(songWidth.toDp(), MAX_COLUMN_WIDTH * fontScale) - CARD_PADDING * 2) / notationUnit).toInt() },
+        width = notationPageWidth(
+            availableWidth = availableWidth,
+            maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
+            cardPadding = CARD_PADDING,
+            notationUnit = notationUnit,
+        ),
         unitSize = with(density) { notationUnit.toPx() },
         chords = model.notationChords,
         songTitle = model.song.metadata.title,
@@ -350,7 +358,12 @@ internal fun SongLyrics(
     }
     // A boolean rather than the width itself, which changes on every frame of a navigation rail animating.
     val isResizing = extraWidth > 0.dp
-    Box(modifier = modifier.onSizeChanged { songWidth = it.width }) {
+    // The composition a tune's first rendering lands in lays the song out anew without narrating it (see SectionGlides).
+    val notationArrival = notations.arrival
+    val seenArrival = remember { SeenArrival() }
+    val isNotationArriving = notationArrival != null && notationArrival !== seenArrival.value
+    SideEffect { seenArrival.value = notationArrival }
+    Box(modifier = modifier) {
         LookaheadScope {
             SongSectionsLayout(
                 modifier = Modifier.semantics { isTraversalGroup = true },
@@ -376,6 +389,7 @@ internal fun SongLyrics(
                 isSingleColumn = isSingleColumn,
                 sectionGlides = sectionGlides,
                 glidesEveryMove = sectionMotion == SectionMotion.SPRING && !isResizing,
+                arrival = notationArrival,
                 sectionMeasurements = sectionMeasurements,
                 lyricsLineHeight = textMeasurements.lyricsLineHeight,
                 centeringHold = centeringHold,
@@ -387,7 +401,7 @@ internal fun SongLyrics(
                     unitKeys = unitKeys,
                     cardKeys = cardKeys,
                     sectionMotion = sectionMotion,
-                    isResizing = isResizing,
+                    placesAtOnce = isResizing || isNotationArriving,
                     isTextScaling = isTextScaling,
                     notation = model.notation,
                     isSongInfoShown = isSongInfoShown,
@@ -436,6 +450,9 @@ private fun CutSongNotice(
 
 /** What the instrument pill's tuning half of [SongLyrics] last named. */
 private class LastShownTuning(var value: InstrumentTuning? = null)
+
+/** The tunes' arrival (`SongNotations.arrival`) [SongLyrics] was last composed with. Not a state. */
+private class SeenArrival(var value: Any? = null)
 
 private val MIN_COLUMN_WIDTH = 384.dp
 

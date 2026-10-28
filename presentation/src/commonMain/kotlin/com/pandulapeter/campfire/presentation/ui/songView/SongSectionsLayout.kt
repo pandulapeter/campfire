@@ -75,7 +75,7 @@ import kotlin.math.roundToInt
  * down to nothing, its size and content already the new ones. A single change glides every section that moved
  * ([glidesEveryMove]); a change that keeps coming only glides where the grid changes, since only that moves a section by
  * more than the frame's own change, and everything else is followed as it comes. The dividers between the rows glide
- * with them.
+ * with them. A tune's first rendering ([arrival]) is data arriving, and the pass that lays it out places everything.
  *
  * The layout is measured on every frame of a navigation transition and of a window being resized, so what the search
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
@@ -126,6 +126,7 @@ internal fun SongSectionsLayout(
     isSingleColumn: Boolean,
     sectionGlides: SectionGlides?,
     glidesEveryMove: Boolean,
+    arrival: Any?,
     sectionMeasurements: SectionMeasurements,
     lyricsLineHeight: Int,
     centeringHold: ColumnCenteringHold?,
@@ -269,6 +270,7 @@ internal fun SongSectionsLayout(
                     }
                 },
                 glidesEveryMove = glidesEveryMove,
+                arrival = arrival,
             )
         }
         layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {

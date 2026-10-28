@@ -62,6 +62,12 @@ internal class SongMappersTest {
         assertEquals(null, song(fileName = "a.cho", text = "{capo: 5}\n[D]a [G]b").chordsKey)
     }
 
+    @Test
+    fun `a song with an abc block carries that it holds sheet music`() {
+        assertTrue(song(fileName = "a.cho", text = "{title: A}\n{start_of_abc}\nX:1\nK:C\nCDEF|\n{end_of_abc}").hasSheetMusic)
+        assertFalse(song(fileName = "a.cho", text = "{title: A}\n[C]La").hasSheetMusic)
+    }
+
     private fun song(fileName: String, text: String) = StoredFileInfo(name = fileName, size = 0, lastModified = 0)
         .toSong(ChordProParser.summarize(text), text)
 }

@@ -345,6 +345,12 @@ internal fun SongDetailsPage(
                 )
             }
             SideEffect { flingBehavior.readingWindow = readingWindow }
+            // Read by both the padding and the width the song is handed, so the two can never drift apart. The pages fill
+            // the screen, so whatever the screen is still missing this layout is missing too: the width at rest is taken
+            // once, rather than a difference added back to a width that changes on every frame of a transition.
+            val startPadding = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
+            val endPadding = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
+            val settledPageWidth = maxOf(settledWidth, maxWidth)
             CompositionLocalProvider(LocalSongChange provides songChange) {
                 SongLyrics(
                     modifier = Modifier
@@ -355,15 +361,15 @@ internal fun SongDetailsPage(
                         )
                         .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
                         .padding(
-                            start = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
-                            end = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING,
+                            start = startPadding,
+                            end = endPadding,
                             top = topPadding,
                             bottom = bottomPadding,
                         ),
                     model = model,
+                    availableWidth = settledPageWidth - startPadding - endPadding,
                     availableHeight = if (isContinuous) Dp.Unspecified else settled.height - topPadding - bottomPadding,
-                    // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
-                    extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
+                    extraWidth = settledPageWidth - maxWidth,
                     sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
                     isTextScaling = isTextScaling,
                     fontScale = currentFontScale,

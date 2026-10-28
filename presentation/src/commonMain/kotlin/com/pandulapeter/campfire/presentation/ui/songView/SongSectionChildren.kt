@@ -42,6 +42,9 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
  * metronome panel moving or a navigation rail animating, and the whole song would be composed again with it. Every
  * parameter here is remembered by [SongLyrics] or its callers, so it keeps its identity over those frames and this
  * skips; a lambda or an object built in [SongLyrics]' body would make it compose again on every one of them.
+ *
+ * @param placesAtOnce Whether what changes is placed rather than moved: a window being resized, or a tune's first
+ * rendering arriving. No row travels and no chunk fades in then.
  */
 @Composable
 internal fun SongSectionChildren(
@@ -50,7 +53,7 @@ internal fun SongSectionChildren(
     unitKeys: List<UnitKey>,
     cardKeys: List<CardKey>,
     sectionMotion: SectionMotion,
-    isResizing: Boolean,
+    placesAtOnce: Boolean,
     isTextScaling: Boolean,
     notation: ChordNotation,
     isSongInfoShown: Boolean,
@@ -84,7 +87,7 @@ internal fun SongSectionChildren(
             // that comes with any other single change (a fold, a line edited) fades in where it lands while the others glide
             // around it. Never on the page's first frame, nor while a change keeps coming, which composes chunks on every step.
             val isArrivingWithChange = remember { change.isUnderWay }
-            val isFadingIn = remember { !isArrivingWithChange && !composition.isFirst && sectionMotion == SectionMotion.SPRING && !isResizing }
+            val isFadingIn = remember { !isArrivingWithChange && !composition.isFirst && sectionMotion == SectionMotion.SPRING && !placesAtOnce }
             // Each chunk is read as a whole and in the order the song declares, whatever column it was put in: the reading
             // order is otherwise worked out from the geometry, line by line across the page, which with two columns reads
             // the first line of each, then the second line of each.
@@ -105,7 +108,7 @@ internal fun SongSectionChildren(
                 songInfoEditing = songInfoEditing,
                 playingControls = playingControls,
                 playingTools = playingTools,
-                animatesRows = !isResizing && (sectionMotion == SectionMotion.SPRING || sectionMotion == SectionMotion.GLIDE && !isTextScaling),
+                animatesRows = !placesAtOnce && (sectionMotion == SectionMotion.SPRING || sectionMotion == SectionMotion.GLIDE && !isTextScaling),
                 chordDiagrams = chordDiagrams,
                 scaleSuggestions = scaleSuggestions,
                 tuningVisibility = tuningVisibility,

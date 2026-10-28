@@ -47,3 +47,11 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   with it (fading in from nothing blinked the tune out) while the sections glide, the first one (replacing the text)
   does not. Until then, and for a tune that fails, the run is its monospace text. The
   renderer comes from `LocalAbcRenderer`, provided by `CampfireApp`.
+- **Renderings are kept app-wide** (`NotationCache`, `LocalNotationCache` from `CampfireApp`: 16 tunes or 4,000 laid-out
+  words, least recently used out), keyed per tune by everything they depend on (text, spelling, width, unit, title,
+  painting), so a tune seen before at the same width, size, and transposition is notation on its first frame. A cold one
+  is text until it arrives, and its arrival (`arrivingTunesOf`, `SongNotations.arrival`) moves nothing gradually; a
+  rendering that also re-renders a tune is the reader's change and is narrated whole.
+- **The engine is warmed** (`NotationEngineWarmUp.kt`) 2 s after the library first holds a song with an `abc` block
+  (`Song.hasSheetMusic`, from the library scan), on every platform the web included, so a tune's first open pays only
+  its rendering.

@@ -21,7 +21,10 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
@@ -55,6 +58,14 @@ internal class SongNotations(
             isRerendered = tune in rendered.rerenderedTunes,
         )
     }
+
+    /**
+     * The rendering itself where it brings tunes their first staff and re-renders none, so that the pass laying it out
+     * places the song at once rather than moving it (`SectionGlides`); null otherwise. A rendering that re-renders any
+     * tune is a change the reader made and is narrated whole. An instance rebuilt for the same rendering (a pinch changes
+     * only the unit) hands the same token, so it is never a second arrival.
+     */
+    val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
     companion object {
         val NONE = SongNotations(RenderedNotations.NONE, unitSize = 1f)
@@ -104,22 +115,42 @@ internal data class NotationPainting(
  */
 internal class NotationRendering(val drawing: NotationDrawing, val unitSize: Float, val systems: List<NotationSystemPaint>)
 
-/** The renderings made for [request] (null before the first), and the tunes among them that had one before it. */
+/**
+ * The renderings made for [request] (null before the first), the tunes among them that had one before it, and the ones
+ * that arrive as data ([arrivingTunesOf]).
+ */
 internal class RenderedNotations(
     val request: NotationRequest?,
     val renderings: Map<String, NotationRendering>,
     val rerenderedTunes: Set<String>,
+    val arrivingTunes: Set<String>,
 ) {
     companion object {
-        val NONE = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = emptySet())
+        val NONE = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = emptySet(), arrivingTunes = emptySet())
     }
 }
+
+/**
+ * The tunes of a new rendering that arrive as data: rendered now and not before, and not replacing a staff the reader
+ * changed (or a stand-in), which are [rerendered]. Their relayout places the song at once rather than moving it.
+ */
+internal fun <T> arrivingTunesOf(previous: Set<T>, rendered: Set<T>, rerendered: Set<T>): Set<T> = rendered - previous - rerendered
+
+/** The SVG units a tune is engraved across on a page [availableWidth] wide: its widest column less a card's padding. */
+internal fun notationPageWidth(availableWidth: Dp, maxColumnWidth: Dp, cardPadding: Dp, notationUnit: Dp): Int? =
+    if (!availableWidth.isSpecified || availableWidth <= 0.dp) {
+        null
+    } else {
+        ((minOf(availableWidth, maxColumnWidth) - cardPadding * 2) / notationUnit).toInt().takeIf { it > 0 }
+    }
 
 /**
  * Renders every `abc` run of the song's [blocks] for a page [width] SVG units wide, each unit [unitSize] pixels, with its chords
  * named as [chords] says and the title it repeats of [songTitle] left out, once the width is known, and again whenever
  * one of those changes. Until the first rendering, and for a tune that fails, the runs stay text, which is what the
- * first frame shows: the notation replaces the text when it arrives rather than animating in over a wrong first frame.
+ * first frame shows: the notation replaces the text when it arrives rather than animating in over a wrong first frame,
+ * and the song around it is placed rather than moved ([SongNotations.arrival]). A song whose every tune the
+ * [NotationCache] keeps for this request starts from those renderings, on its first frame.
  *
  * A width or a unit size alone changes on every frame of a window being resized or a pinch, while the systems before
  * it are scaled to follow, so it is rendered only once it has stopped changing ([RERENDER_DELAY_MILLIS]); a new tune
@@ -135,27 +166,34 @@ internal fun rememberSongNotations(
     painting: NotationPainting,
 ): SongNotations {
     val renderer = LocalAbcRenderer.current
+    val cache = LocalNotationCache.current
     val tunes = remember(blocks) { abcTuneOffsets(blocks) }
-    var rendered by remember(renderer) { mutableStateOf(RenderedNotations.NONE) }
     val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting)
+    // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
+    var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
     LaunchedEffect(renderer, request) {
         if (renderer == null || request == null || request == rendered.request) return@LaunchedEffect
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
-        if (isOnlyResized) delay(RERENDER_DELAY_MILLIS)
+        // Nothing to engrave where every tune is kept, so a pinch reversed to a size seen a moment ago is instant.
+        val isCached = cache != null && request.tunes.all { (tune, offset) -> cache[request.keyOf(tune, offset)] != null }
+        if (isOnlyResized && !isCached) delay(RERENDER_DELAY_MILLIS)
         // One painter per run, never one shared across runs: a cancelled run's painting goes on until its next suspension,
         // so two runs can overlap and would race on the painter's caches.
         val painter = request.painting.newPainter()
         val renderings = request.tunes.mapNotNull { (tune, offset) ->
             ensureActive() // a cancelled run (a newer request) stops between tunes rather than painting the rest
-            render(renderer, painter, tune, offset, request)?.let { tune to it }
+            val key = request.keyOf(tune, offset)
+            (cache?.get(key) ?: render(renderer, painter, tune, offset, request)?.also { cache?.set(key, it) })?.let { tune to it }
         }.toMap()
         // A tune whose text alone changed (an edit) is new rather than re-rendered, and arrives the way the edit does.
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
+        val rerenderedTunes = if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()
         rendered = RenderedNotations(
             request = request,
             renderings = renderings,
-            rerenderedTunes = if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet(),
+            rerenderedTunes = rerenderedTunes,
+            arrivingTunes = arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
         )
     }
     return remember(rendered, unitSize) { if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, unitSize) }

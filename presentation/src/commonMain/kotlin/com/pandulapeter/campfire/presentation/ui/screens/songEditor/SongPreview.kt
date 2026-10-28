@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.ScrollState
@@ -29,6 +31,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -127,15 +130,20 @@ internal fun SongPreview(
     // user scroll past, so it decides that room and not the columns: the height the sections are laid out against is
     // the pane's less the resting inset, and the preview keeps its columns while the keyboard comes and goes.
     val restingBottomPadding = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding() + 32.dp
+    val layoutDirection = LocalLayoutDirection.current
+    // Read by both the padding and the width the song is handed, so the two can never drift apart.
+    val startPadding = 16.dp + contentPadding.calculateStartPadding(layoutDirection)
+    val endPadding = 16.dp + contentPadding.calculateEndPadding(layoutDirection)
     BoxWithConstraints(modifier = modifier) {
         SongLyrics(
             modifier = Modifier
                 .fillMaxSize()
                 .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
                 .bounceVerticalScroll(scrollState)
-                .padding(start = 16.dp, end = 16.dp, top = topPadding)
-                .padding(contentPadding.only(start = true, end = true, bottom = true, extraBottom = 32.dp)),
+                .padding(start = startPadding, end = endPadding, top = topPadding)
+                .padding(contentPadding.only(bottom = true, extraBottom = 32.dp)),
             model = preview.second,
+            availableWidth = maxWidth - startPadding - endPadding,
             availableHeight = maxHeight - topPadding - restingBottomPadding,
             fontScale = fontScale,
             sectionMotion = SectionMotion.NONE,
