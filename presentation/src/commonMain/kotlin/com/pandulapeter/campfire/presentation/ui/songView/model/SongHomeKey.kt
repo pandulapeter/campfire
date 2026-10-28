@@ -50,7 +50,7 @@ internal fun chordKeysOf(song: ChordProSong, analysis: SongScaleAnalysis?, isSon
     val homeGroup = analysis?.groups?.firstOrNull { it.isHome }
     val home = analysis?.let { homeKeyOf(it.groups) } ?: SongKeys.ofChords(song) ?: return null
     // The analysis's groups hold its numbered copies of the blocks, so the home's stretch is found among those.
-    val walked = if (homeGroup != null && analysis != null) song.copy(blocks = analysis.numbered) else song
+    val walked = if (homeGroup != null) song.copy(blocks = analysis.numbered) else song
     return ChordKeys(home, SongKeys.keysOfChords(walked, homeGroup?.blocks?.firstOrNull(), home))
 }
 

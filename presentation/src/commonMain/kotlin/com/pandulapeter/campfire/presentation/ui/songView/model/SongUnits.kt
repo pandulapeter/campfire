@@ -162,7 +162,7 @@ internal class SongUnits(
                         range.sumOf { item ->
                             when (it[item]) {
                                 SectionItemKind.CONTENT -> 1
-                                SectionItemKind.RUN -> runSlotLines((section as RenderSection.Lines).sectionItems[item] as SectionItem.RunSlot)
+                                SectionItemKind.RUN -> runSlotLines(section.sectionItems[item] as SectionItem.RunSlot)
                                 else -> 0
                             }
                         }
