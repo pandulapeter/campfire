@@ -70,7 +70,7 @@ small Android tablet, and Mac — dark in banner 1, light and in reverse order i
 
 The website's shots are in `Website.kt`, every one in every language of the app. Its tablet songs are set at the text
 size where page one ends exactly where a section ends, never inside one: Still Alive 110% (page one ends after
-Verse 4); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner sheet too; I'm Gonna Be
+Verse 3); Uptown Girl 100% with the metronome panel open (after Verse 3), under the tuner sheet too; I'm Gonna Be
 (500 Miles) 110% (after Verse 3), under the Choose chord shape and the scale sheets. A song longer than a page is cut
 wherever a column ends, so these were found by rendering every size from 80% to 130% and reading where page one ends;
 if a song, a device, or the layout changes, try again the same way. The laptop's text size demo is I'll Be There for

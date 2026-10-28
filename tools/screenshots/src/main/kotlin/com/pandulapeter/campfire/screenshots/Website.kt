@@ -273,7 +273,7 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 
 /**
  * A song from the library at [fontScale], chosen per song so that its first page on the device ends where a section
- * ends (for Still Alive, after Verse 4), since sections are cut across columns and pages wherever a column ends; a
+ * ends (for Still Alive, after Verse 3), since sections are cut across columns and pages wherever a column ends; a
  * change to the song, the device or the layout calls for looking again.
  * The Chords section is never folded to make room.
  */
