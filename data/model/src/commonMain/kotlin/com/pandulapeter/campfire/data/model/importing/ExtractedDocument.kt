@@ -9,8 +9,11 @@
  */
 package com.pandulapeter.campfire.data.model.importing
 
-/** Text only: document bytes and document-specific structures never enter the library. */
-data class ExtractedDocument(val pages: List<Page>) {
+/**
+ * Text only: document bytes and document-specific structures never enter the library. [isCampfireExport] is a PDF
+ * Campfire printed, which the import reads by the layout it knows.
+ */
+data class ExtractedDocument(val pages: List<Page>, val isCampfireExport: Boolean = false) {
     data class Page(val lines: List<Line>)
     data class Line(val spans: List<Span>, val isHeading: Boolean = false)
     data class Span(
@@ -21,5 +24,6 @@ data class ExtractedDocument(val pages: List<Page>) {
         val isBold: Boolean = false,
         val isMonospace: Boolean = false,
         val isRaised: Boolean = false,
+        val isItalic: Boolean = false,
     )
 }

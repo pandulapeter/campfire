@@ -45,6 +45,15 @@ class ChordPaddingTest {
     )
 
     @Test
+    fun `marked padding opens each run of padding with a mark and leaves the text's own spaces unmarked`() {
+        fun ChordProLine.Lyrics.padded(marksPadding: Boolean) =
+            padLyricsToFitChords(chordWidths = listOf(70f, 10f), gap = 0f, paddingWidth = 10f, measureWidth = { it.length * 10f }, marksPadding = marksPadding)
+        val line = lyrics("[Am]is a [C]house")
+        assertEquals("is a\u00A0\u2060\u00A0\u00A0\u200Bhouse", line.padded(marksPadding = true).text)
+        assertEquals(line.padded(marksPadding = false).text, line.padded(marksPadding = true).text.replace("\u2060", ""))
+    }
+
+    @Test
     fun `a chord only line breaks between its chords and nowhere else`() {
         val padded = lyrics("[C] [G] [Am] [F]").padded()
         assertFalse(' ' in padded.text)

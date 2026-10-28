@@ -9,8 +9,11 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
-/** Positioned text in arbitrary, consistent units. No document format crosses this boundary. */
-public data class ChordSheet(val pages: List<Page>, val originalText: String? = null) {
+/**
+ * Positioned text in arbitrary, consistent units. No document format crosses this boundary. [isCampfireExport] is a
+ * sheet Campfire printed itself, which is read by the layout it knows rather than guessed at.
+ */
+public data class ChordSheet(val pages: List<Page>, val originalText: String? = null, val isCampfireExport: Boolean = false) {
     public data class Page(val lines: List<Line>)
     public data class Line(val spans: List<Span>, val isHeading: Boolean = false)
     public data class Span(
@@ -21,6 +24,7 @@ public data class ChordSheet(val pages: List<Page>, val originalText: String? = 
         val isBold: Boolean = false,
         val isMonospace: Boolean = false,
         val isRaised: Boolean = false,
+        val isItalic: Boolean = false,
     )
 
     public companion object {

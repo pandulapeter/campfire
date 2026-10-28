@@ -51,6 +51,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   keyboard, or not standard tuning) and the suggested scales under the diagrams are **not `isSelectable`**: read back by the importer they'd be chords or a lyric.
 - Markup's bold is drawn but written into the text layer in the regular weight: read back, a bold word that is a chord
   name would become a chord.
+- Lyrics are padded under wide chords with marked runs (`padLyricsToFitChords`' `marksPadding`): the text layer writes
+  the padding as no-break spaces and the words' own spaces as spaces, so the import leaves the padding out.
 - Tablature is engraved as on screen (`PrintTabEngraver`, see `ui/songView`): figures and rules, none of it
   selectable; each line reaches the text layer as the file has it, an invisible monospaced text (`isDrawn` false) sized
   to the columns and on the string's baseline, so it reads back as a tab. A tab run's chord line prints bold, written

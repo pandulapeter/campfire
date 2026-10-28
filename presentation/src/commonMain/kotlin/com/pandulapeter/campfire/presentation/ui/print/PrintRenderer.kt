@@ -37,6 +37,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
 import com.pandulapeter.campfire.presentation.ui.notation.drawNotationSystem
+import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
+import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
@@ -135,6 +137,7 @@ internal class PrintRenderer(
         for ((run, item) in page.texts.withIndex()) {
             if (!item.isSelectable) continue
             val layout = pageLayouts[run]
+            val padding = item.text.paddingRuns()
             var offset = 0
             while (offset < item.text.length) {
                 if (++characters % 256 == 0) yield()
@@ -150,8 +153,16 @@ internal class PrintRenderer(
                     if (following != box && following.width != 0f) break
                     next()
                 }
-                // The chord layout adds invisible wrap opportunities and non-breaking padding, not song content.
-                val value = item.text.substring(start, offset).replace("\u200B", "").replace('\u00A0', ' ')
+                // The chord layout adds invisible wrap opportunities and marks, which are not song content, and makes the
+                // spaces under a chord non-breaking: those are written as the spaces they are, and only the padding as
+                // the no-break spaces it is, which the import leaves out of the words it reads back.
+                val value = buildString {
+                    for (index in start until offset) when (val character = item.text[index]) {
+                        '\u200B', PADDING_MARK -> Unit
+                        PADDING -> append(if (padding[index]) PADDING else ' ')
+                        else -> append(character)
+                    }
+                }
                 if (value.isNotEmpty()) add(PrintPdfText(value, item.x + box.left, item.y + box.top,
                     box.width.coerceAtLeast(0.001f), box.height.coerceAtLeast(0.001f), item.style, run,
                     isRtl = layout.getBidiRunDirection(start) == ResolvedTextDirection.Rtl))
@@ -226,4 +237,13 @@ internal fun printGray(argb: Int): Int {
     val green = argb shr 8 and 255
     val blue = argb and 255
     return (299 * red + 587 * green + 114 * blue) / 1000
+}
+
+/** Which characters of a padded lyric are padding: the no-break spaces after a [PADDING_MARK]. */
+private fun String.paddingRuns() = BooleanArray(length).also { runs ->
+    var isPadding = false
+    forEachIndexed { index, character ->
+        isPadding = character == PADDING_MARK || character == PADDING && isPadding
+        runs[index] = character == PADDING && isPadding
+    }
 }

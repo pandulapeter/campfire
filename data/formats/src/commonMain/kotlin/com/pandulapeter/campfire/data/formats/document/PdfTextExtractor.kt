@@ -32,6 +32,9 @@ object PdfTextExtractor {
      * reported as unreadable, which a real songbook must not be.
      */
     internal const val MAX_GLYPHS = 1_000_000
+
+    /** What Campfire's own PDF export names itself as, which tells the import to read the page by its layout. */
+    const val CAMPFIRE_PRODUCER = "Campfire"
     /** The glyphs shown at all, readable or not, which bounds the time a document can take. */
     internal const val MAX_SHOWN_GLYPHS = 2 * MAX_GLYPHS
     /**
@@ -134,7 +137,7 @@ object PdfTextExtractor {
         require(budget.shown > 0 && budget.unreadable * 2 <= budget.shown) { "PDF has no readable font mapping" }
         require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
         val repeated = runningLines(pages)
-        return ExtractedDocument(pages.mapIndexed { index, page ->
+        return ExtractedDocument(isCampfireExport = file.producer() == CAMPFIRE_PRODUCER, pages = pages.mapIndexed { index, page ->
             fun isRunning(line: Line) = line.text.trim().let { text ->
                 text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
             }

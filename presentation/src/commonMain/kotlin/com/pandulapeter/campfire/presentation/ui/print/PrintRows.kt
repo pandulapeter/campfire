@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
+import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import kotlin.math.roundToInt
 
@@ -194,6 +195,7 @@ internal class PrintRows(
                 gap = measure(" ", lyricStyle),
                 paddingWidth = measure("\u00A0", lyricStyle),
                 measureWidth = { measure(it, lyricStyle) },
+                marksPadding = true,
             )
         } else {
             visible
@@ -493,4 +495,4 @@ private fun GridToken.printText() = when (this) {
 }
 
 /** Blank once the padding the chords add (no-break spaces and the zero-width break opportunities) is disregarded too. */
-private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' }
+private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' || it == PADDING_MARK }

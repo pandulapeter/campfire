@@ -127,7 +127,7 @@ internal class PdfContentInterpreter(
                     budget.textBytes += value.length * 3
                     requireWithinLimit(budget.textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++budget.glyphCount <= PdfTextExtractor.MAX_GLYPHS) { "PDF text too large" }
                     require(start.x.isFinite() && start.y.isFinite() && end.x.isFinite() && abs(start.x) < 10_000_000 && abs(start.y) < 10_000_000)
-                    glyphs += Positioned(ExtractedDocument.Span(value, start.x, end.x, size, font.bold, font.monospace, abs(state.rise) > state.size * 0.15), start.y)
+                    glyphs += Positioned(ExtractedDocument.Span(value, start.x, end.x, size, font.bold, font.monospace, abs(state.rise) > state.size * 0.15, font.italic), start.y)
                 }
                 val advance = (glyph.width * state.size / 1000 + state.charSpace + if (glyph.code == 32) state.wordSpace else 0.0) * state.scale
                 state.text = state.text.translated(advance, 0.0)

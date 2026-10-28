@@ -17,6 +17,7 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private val descriptor = file.dictionary(descendant["FontDescriptor"])
     private val baseName = dictionary["BaseFont"].name().orEmpty().substringAfter('+')
     val bold = baseName.contains("bold", true) || baseName.contains("black", true) || file.number(descriptor?.get("FontWeight")) >= 600
+    val italic = listOf("italic", "oblique").any { baseName.contains(it, true) } || file.number(descriptor?.get("Flags")).toInt() and 64 != 0
     val monospace = file.number(descriptor?.get("Flags")).toInt() and 1 != 0 || listOf("courier", "mono", "consolas").any { baseName.contains(it, true) }
     private val unicode = mutableMapOf<Code, String>()
     private val lengths = mutableSetOf<Int>()

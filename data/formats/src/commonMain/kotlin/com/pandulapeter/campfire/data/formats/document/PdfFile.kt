@@ -42,6 +42,7 @@ internal class PdfFile(input: ByteArray) {
     private var fontTableEntries = 0L
     private var scanned = false
     private var root: PdfValue? = null
+    private var info: PdfValue? = null
     private var encrypted = false
     /** Found by a lazy recovery scan too, from inside whatever page or font asked, which must not read on regardless. */
     val isEncrypted get() = encrypted
@@ -66,6 +67,10 @@ internal class PdfFile(input: ByteArray) {
         return objects.values.filterIsInstance<PdfDictionary>().lastOrNull { it["Type"].name() == "Catalog" }
             ?: error("PDF has no catalog")
     }
+
+    /** The document information dictionary's `/Producer`, as Latin-1 text: who wrote the file, if it says. */
+    fun producer(): String? = ((resolve(info) as? PdfDictionary)?.let { resolve(it["Producer"]) } as? PdfString)
+        ?.bytes?.map { (it.toInt() and 0xFF).toChar() }?.joinToString("")
 
     fun resolve(value: PdfValue?): PdfValue? {
         if (value !is PdfReference) return value
@@ -126,6 +131,7 @@ internal class PdfFile(input: ByteArray) {
 
     private fun trailer(dictionary: PdfDictionary) {
         if (root == null) root = dictionary["Root"]
+        if (info == null) info = dictionary["Info"]
         if (dictionary["Encrypt"]?.let { it !is PdfKeyword || it.value != "null" } == true) encrypted = true
     }
 

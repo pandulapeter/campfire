@@ -76,6 +76,12 @@ internal class PrintRendererTest {
         Unit
     }
 
+    @Test fun `the text layer writes a lyric's spaces as spaces and only its marked padding as no-break spaces`() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val page = PrintPage(listOf(PrintText("is a\u00A0\u2060\u00A0\u00A0\u200Bhouse", 10f, 10f, PrintStyle(14f))))
+        assertEquals("is a \u00A0\u00A0house", renderer.selectableText(page).joinToString("") { it.text })
+    }
+
     @Test fun `exports a positioned song for the importer regression fixture`() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""

@@ -70,9 +70,12 @@ class DocumentGoldenTest {
     }
 
     private fun resource(name: String) = requireNotNull(javaClass.getResourceAsStream("/document/$name")) { name }.use { it.readBytes() }
-    private fun ExtractedDocument.sheet() = ChordSheet(pages.map { page ->
-        ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { span ->
-            ChordSheet.Span(span.text, span.start, span.end, span.size, span.isBold, span.isMonospace, span.isRaised)
-        }, line.isHeading) })
-    })
+    private fun ExtractedDocument.sheet() = ChordSheet(
+        pages = pages.map { page ->
+            ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { span ->
+                ChordSheet.Span(span.text, span.start, span.end, span.size, span.isBold, span.isMonospace, span.isRaised, span.isItalic)
+            }, line.isHeading) })
+        },
+        isCampfireExport = isCampfireExport,
+    )
 }
