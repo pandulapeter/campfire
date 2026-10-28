@@ -39,7 +39,10 @@ Nothing is committed, in either repository, unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only website,readme-banners"` in the background.
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only website,readme-banners" > <scratchpad>/render.log 2>&1`
+   in the background, and beside it, under Monitor (30 minutes, re-armed while the render runs),
+   `tools/screenshots/progress.sh <scratchpad>/render.log`: it prints the shots done and the time left every two
+   minutes, relayed to the user as they come, and stops once the build ends.
 2. **Check every image**: a contact sheet per folder (PIL), then anything that looks off at full size — the theme,
    nothing loading, no stray dialog or snackbar, the rules below, text fitting. Fix the shot or the tool and render
    again rather than using a bad image.

@@ -49,7 +49,10 @@ every run. Nothing is committed unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,store-banners"` in the background (a render without
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,store-banners" > <scratchpad>/render.log 2>&1` in the
+   background, and beside it, under Monitor (30 minutes, re-armed while the render runs),
+   `tools/screenshots/progress.sh <scratchpad>/render.log`: it prints the shots done and the time left every two
+   minutes, relayed to the user as they come, and stops once the build ends (a render without
    `--out` empties `renders/` first, so nothing else may render in the clone until the framing is done) (one app start
    per image, a few seconds each; the listing is about 500 images, half an hour): every shot of `Shot.kt` on every
    listing `Device` in every language, into `renders/<row label>/<language>/`, and the stores' shots of `Banners.kt`.
@@ -58,8 +61,8 @@ every run. Nothing is committed unless the user asks.
 2. **Check the renders**: a contact sheet per device and language (PIL), then anything that looks off at full size —
    the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting in every language.
    Fix the shot or the tool and render again rather than framing a bad image.
-3. **Frame**: `./gradlew :tools:screenshots:run --args="--frame store"` (a few minutes; it reports any render or text
-   missing). Look at a contact sheet per store and language and at every composed image: the headline on its lines,
+3. **Frame**: `./gradlew :tools:screenshots:run --args="--frame store"` (a few minutes, told to the user when it
+   starts and ends; it reports any render or text missing). Look at a contact sheet per store and language and at every composed image: the headline on its lines,
    every chip inside the image and readable, its lines balanced, none covering what its shot is about. A translation
    that wraps a chip into too many lines gets shorter words in its `screenshot-texts` file (`check_store_listings.py`
    holds them to their limits); then frame again, no render needed.
