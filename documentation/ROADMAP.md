@@ -17,7 +17,7 @@ What's planned for Campfire, grouped by area.
 
 ## Short-term
 
-- **Rename the `master` branch to `main`**
+- **Rename the new `master` branch to `main`**
 - **External monitor support**: an audience screen (a projector, a TV, or a monitor) showing the song in big text,
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
 - **Documentation of every keyboard shortcut** used in the app
