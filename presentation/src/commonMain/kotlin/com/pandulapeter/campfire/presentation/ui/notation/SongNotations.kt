@@ -58,6 +58,7 @@ internal class SongNotations(
             measuredUnitSize = rendering.unitSize,
             unitSize = unitSize,
             isRerendered = tune in rendered.rerenderedTunes,
+            reading = rendering.reading,
         )
     }
 
@@ -79,8 +80,15 @@ internal class SongNotations(
  * the unit the song's text size asks for now ([unitSize]), which differ while a pinch waits for its rendering. [isRerendered]
  * says the run was notation before this rendering too, so it replaces one the reader asked to change (a width, a text
  * size, a transposition) and cross-fades with it, where the first rendering, replacing the text, is data arriving.
+ * [reading] is what a screen reader is told the run is.
  */
-internal class NotationRun(val systems: List<NotationSystemPaint>, val measuredUnitSize: Float, val unitSize: Float, val isRerendered: Boolean)
+internal class NotationRun(
+    val systems: List<NotationSystemPaint>,
+    val measuredUnitSize: Float,
+    val unitSize: Float,
+    val isRerendered: Boolean,
+    val reading: NotationReading,
+)
 
 /**
  * What [rememberSongNotations] renders for: every tune of the song under the key change it stands after ([abcTunesOf]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
@@ -114,7 +122,12 @@ internal data class NotationPainting(
  * One tune's drawing, the pixels to the SVG unit it was rendered for, and its systems painted at that unit, kept for as
  * long as the rendering stands so the screen never paints during composition.
  */
-internal class NotationRendering(val drawing: NotationDrawing, val unitSize: Float, val systems: List<NotationSystemPaint>)
+internal class NotationRendering(
+    val drawing: NotationDrawing,
+    val unitSize: Float,
+    val systems: List<NotationSystemPaint>,
+    val reading: NotationReading,
+)
 
 /**
  * The renderings made for [request] (null before the first), the tunes among them that had one before it, and the ones
@@ -213,7 +226,14 @@ internal fun rememberSongNotations(
 
 private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: AbcTune, request: NotationRequest): NotationRendering? =
     renderNotationDrawing(renderer, tune.text, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { drawing ->
-        NotationRendering(drawing, request.unitSize, withContext(Dispatchers.Default) { painter.paint(drawing, request.unitSize) })
+        withContext(Dispatchers.Default) {
+            NotationRendering(
+                drawing = drawing,
+                unitSize = request.unitSize,
+                systems = painter.paint(drawing, request.unitSize),
+                reading = notationReadingOf(tune.text, request.songTitle, drawing.chordNames),
+            )
+        }
     }
 
 /**

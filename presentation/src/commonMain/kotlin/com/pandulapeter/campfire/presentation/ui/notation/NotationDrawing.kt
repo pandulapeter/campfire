@@ -12,9 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.notation
 /**
  * A tune's staff notation as plain data, read from one rendering by [parseNotationDrawing]: what is drawn of each
  * system, every coordinate in the system's own SVG units, its transforms already applied. Nothing here knows a
- * density, a font, or a colour; [NotationPainter] turns it into what a canvas draws.
+ * density, a font, or a colour; [NotationPainter] turns it into what a canvas draws. [chordNames] are the page's names
+ * of the tune's chord symbols, in the order written ([withChordNames]), none before they are given.
  */
-internal class NotationDrawing(val systems: List<NotationSystem>)
+internal class NotationDrawing(val systems: List<NotationSystem>, val chordNames: List<String> = emptyList())
 
 /** One staff system (or the tune's header), [width] by [height] units. */
 internal class NotationSystem(

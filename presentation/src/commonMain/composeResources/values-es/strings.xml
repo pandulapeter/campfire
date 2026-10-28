@@ -994,6 +994,8 @@
     <string name="song_details_section_tab">Tablatura</string>
     <string name="song_details_section_grid">Cuadrícula</string>
     <string name="song_details_section_abc">Partitura</string>
+    <string name="song_details_sheet_music_chords">Acordes: %1$s</string>
+    <string name="song_details_sheet_music_words">Letra: %1$s</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Mostrar la tablatura</string>

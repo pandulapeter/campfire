@@ -23,7 +23,9 @@ builds what it draws, `grid/` places it.
   as spans of its text (`formattedText`); padding under chords moves the ranges with the words and leaves the padding
   itself unformatted.
 - Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), and a tab
-  block's its lines, so screen readers read the chords.
+  block's its lines, so screen readers read the chords; an engraved tune's is its title, its chords as the page names
+  them, and its words (`NotationReading`), never its ABC source, led by the heading only where the tune names itself
+  nothing.
 - Each run of `ChordProLine.Tab` is one `SongTabBlock`: its columns only line up measured together. So is each run of
   `ChordProLine.Verbatim`, always preformatted (`isPreformatted`), since a tied ABC line full of dashes would pass for a
   staff.

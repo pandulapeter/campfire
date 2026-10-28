@@ -45,7 +45,7 @@ internal class NotationPaintingTest {
         val notations = SongNotations(
             rendered = RenderedNotations(
                 request = null,
-                renderings = tunes.associate { AbcTune(it, 0) to NotationRendering(drawing, unitSize = 1f, systems = painter.paint(drawing, unitSize = 1f)) },
+                renderings = tunes.associate { AbcTune(it, 0) to NotationRendering(drawing, unitSize = 1f, systems = painter.paint(drawing, unitSize = 1f), reading = NotationReading(emptyList(), emptyList(), null)) },
                 rerenderedTunes = emptySet(),
                 arrivingTunes = emptySet(),
             ),

@@ -993,6 +993,8 @@
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Rács</string>
     <string name="song_details_section_abc">Kotta</string>
+    <string name="song_details_sheet_music_chords">Akkordok: %1$s</string>
+    <string name="song_details_sheet_music_words">Dalszöveg: %1$s</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Tab megjelenítése</string>

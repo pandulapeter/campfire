@@ -65,7 +65,8 @@ internal fun abcChordNames(tune: String, symbols: List<String>, spelling: Notati
  * transposition of (the same chord, its root moved by [semitones]), whatever order the renderer drew them in, voice by
  * voice or system by system; one that matches none, or symbols named differently (`C#` and `Db` both drawn as `D`
  * under a numbering), keeps the renderer's name, which is still the right chord. A chord drawn as several runs (a jazz
- * chord's superscript) is read whole, and renamed, it is one run in its first one's font.
+ * chord's superscript) is read whole, and renamed, it is one run in its first one's font. The drawing keeps [names], in
+ * the order written, as what a screen reader is told the chords are ([notationReadingOf]).
  */
 internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<String>, semitones: Int): NotationDrawing {
     val namesByDrawn = HashMap<String, String?>()
@@ -91,6 +92,7 @@ internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<S
                 },
             )
         },
+        chordNames = names,
     )
 }
 

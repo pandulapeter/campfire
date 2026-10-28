@@ -994,6 +994,8 @@
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Grid</string>
     <string name="song_details_section_abc">Sheet music</string>
+    <string name="song_details_sheet_music_chords">Chords: %1$s</string>
+    <string name="song_details_sheet_music_words">Words: %1$s</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Show the tab</string>

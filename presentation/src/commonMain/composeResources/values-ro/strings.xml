@@ -994,6 +994,8 @@
     <string name="song_details_section_tab">Tabulatură</string>
     <string name="song_details_section_grid">Grilă</string>
     <string name="song_details_section_abc">Partitură</string>
+    <string name="song_details_sheet_music_chords">Acorduri: %1$s</string>
+    <string name="song_details_sheet_music_words">Versuri: %1$s</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Arată tabulatura</string>

@@ -50,7 +50,7 @@ import kotlin.math.roundToInt
 internal fun SongNotationBlock(
     modifier: Modifier = Modifier,
     run: NotationRun,
-    text: String,
+    description: String,
     slot: Int,
     isLastSlot: Boolean,
 ) {
@@ -61,9 +61,9 @@ internal fun SongNotationBlock(
     val unitSize = run.unitSize
     val pageWidth = run.systems.pageWidth()
     Layout(
-        // The notation is drawn, so a screen reader is handed the tune as it stands in the file, by the run's first piece.
+        // The notation is drawn, so a screen reader is told what it says instead, by the run's first piece.
         modifier = modifier
-            .then(if (slot == 0) Modifier.semantics { contentDescription = text } else Modifier)
+            .then(if (slot == 0) Modifier.semantics { contentDescription = description } else Modifier)
             .drawBehind {
                 val progress = crossfade.progress
                 crossfade.leaving?.let { leaving ->

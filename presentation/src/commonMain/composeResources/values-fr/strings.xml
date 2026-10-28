@@ -999,6 +999,8 @@
     <string name="song_details_section_tab">Tablature</string>
     <string name="song_details_section_grid">Grille</string>
     <string name="song_details_section_abc">Partition</string>
+    <string name="song_details_sheet_music_chords">Accords : %1$s</string>
+    <string name="song_details_sheet_music_words">Paroles : %1$s</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Afficher la tablature</string>

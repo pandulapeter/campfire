@@ -16,14 +16,8 @@ package com.pandulapeter.campfire.presentation.ui.notation
  * Done by a `%%writefields` line at the top of that tune's header, which abc2svg applies to that tune alone.
  */
 internal fun abcTuneWithoutSongTitle(tune: String, songTitle: String?): String {
-    val title = songTitle?.normalizedTitle()?.takeIf { it.isNotEmpty() } ?: return tune
     val lines = tune.lines()
-    val tuneStarts = lines.indices.filter { lines[it].startsWith("X:") }.ifEmpty { listOf(-1) }
-    val hidden = tuneStarts.filter { start ->
-        val end = tuneStarts.firstOrNull { it > start } ?: lines.size
-        val header = lines.subList(start + 1, end).takeWhile { !it.startsWith("K:") }
-        header.firstOrNull { it.startsWith("T:") }?.substringAfter(':')?.normalizedTitle() == title
-    }.toSet()
+    val hidden = firstTitlesOf(lines).filter { (_, title) -> title.isSongTitle(songTitle) }.map { it.first }.toSet()
     if (hidden.isEmpty()) return tune
     return buildList {
         if (-1 in hidden) add(HIDE_TITLE)
@@ -32,6 +26,29 @@ internal fun abcTuneWithoutSongTitle(tune: String, songTitle: String?): String {
             if (index in hidden) add(HIDE_TITLE)
         }
     }.joinToString(separator = "\n")
+}
+
+/**
+ * The titles [tune] shows: the first `T:` of each tune it holds, but one naming the song ([songTitle]), which
+ * [abcTuneWithoutSongTitle] leaves to the page.
+ */
+internal fun abcOwnTitles(tune: String, songTitle: String?): List<String> =
+    firstTitlesOf(tune.lines()).mapNotNull { (_, title) -> title?.trim()?.takeIf { it.isNotEmpty() && !title.isSongTitle(songTitle) } }
+
+/** The first title (`T:`) in the header of each tune of [lines], by the line its `X:` stands on (-1 for a tune with none). */
+private fun firstTitlesOf(lines: List<String>): List<Pair<Int, String?>> {
+    val tuneStarts = lines.indices.filter { lines[it].startsWith("X:") }.ifEmpty { listOf(-1) }
+    return tuneStarts.map { start ->
+        val end = tuneStarts.firstOrNull { it > start } ?: lines.size
+        val header = lines.subList(start + 1, end).takeWhile { !it.startsWith("K:") }
+        start to header.firstOrNull { it.startsWith("T:") }?.substringAfter(':')
+    }
+}
+
+/** Whether [this] title is [songTitle], case and spacing aside. */
+private fun String?.isSongTitle(songTitle: String?): Boolean {
+    val title = songTitle?.normalizedTitle()?.takeIf { it.isNotEmpty() } ?: return false
+    return this?.normalizedTitle() == title
 }
 
 private fun String.normalizedTitle() = trim().lowercase().split(Regex("\\s+")).joinToString(" ")

@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse_starting
 import com.pandulapeter.campfire.presentation.resources.song_details_section_expand_starting
+import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_chords
+import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_words
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
@@ -47,6 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
+import com.pandulapeter.campfire.presentation.ui.notation.describedAs
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 
 /**
@@ -299,12 +302,18 @@ private fun SectionRun(
     when {
         // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
         notationRun != null -> {
-            val text = remember(run) { run.joinToString(separator = "\n") { it.monospaceText.orEmpty() } }
+            // The templates unfilled, filled by withTexts: the chord names and the words are the file's, never the formatter's.
+            val heading = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run)
+            val chordsTemplate = textResource(Res.string.song_details_sheet_music_chords)
+            val wordsTemplate = textResource(Res.string.song_details_sheet_music_words)
+            val description = remember(notationRun.reading, heading, chordsTemplate, wordsTemplate) {
+                notationRun.reading.describedAs(heading, chordsTemplate, wordsTemplate)
+            }
             shownSlots.forEach { slot ->
                 SongNotationBlock(
                     modifier = runModifier.fillMaxWidth(),
                     run = notationRun,
-                    text = text,
+                    description = description,
                     slot = slot,
                     isLastSlot = slot == slotCount - 1,
                 )

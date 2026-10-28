@@ -28,7 +28,7 @@ internal class NotationCacheTest {
 
     private val painting = NotationPainting(Density(1f), LayoutDirection.Ltr, createFontFamilyResolver(), TextStyle.Default)
     private val drawing = assertNotNull(parseNotationDrawing(listOf(HEADER, SYSTEM)))
-    private val rendering = NotationRendering(drawing, unitSize = 1f, systems = painting.newPainter().paint(drawing, unitSize = 1f))
+    private val rendering = NotationRendering(drawing, unitSize = 1f, systems = painting.newPainter().paint(drawing, unitSize = 1f), reading = NotationReading(emptyList(), emptyList(), null))
 
     @Test
     fun `a request is rendered from the cache only when every tune of it is cached`() {
