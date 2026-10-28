@@ -30,7 +30,9 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
   column counts never change mid-handover. The interpolated room (`NavigationChromeSize.railWidth` / `barHeight`) is
   handed over as state-backed readers, read only in layout (`ChromeRoomPadding`, `KeyboardAwarePadding`), so the
   handover relayouts the screens without recomposing them; never read it while composing.
-- A label that does not fit its item shrinks to 75% before it is cut (`NavigationItemLabel`).
+- A label that does not fit its item shrinks to 75% before it is cut (`NavigationItemLabel`). The collapsed rail is
+  at least 96dp and keeps 4dp beside its widest label, so every language fits 96dp at the default text size; a larger
+  one grows the rail rather than cutting the label.
 - `NavigationChromeScaffold` is a `SubcomposeLayout` that measures the chrome before composing the screens: reporting
   its size back as state is one pass late and the first frame would be laid out without chrome.
 - **The chrome moves with the screen under a card**: while a card is dealt (until its pop has settled, two frames on),
