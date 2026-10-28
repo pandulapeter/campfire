@@ -36,15 +36,20 @@ internal class NotationPainter(
     private val density: Density,
     private val textStyle: TextStyle,
 ) {
-    private val paints = HashMap<NotationDrawing, List<NotationSystemPaint>>()
+    private val paints = HashMap<Pair<NotationDrawing, Float>, List<NotationSystemPaint>>()
     private val glyphPaths = HashMap<AbcMusicGlyph, Path>()
     private val pathParser = PathParser()
 
-    /** The systems of [drawing], its words laid out at [unitSize] pixels to the unit. */
-    fun paintOf(drawing: NotationDrawing, unitSize: Float) = paints.getOrPut(drawing) {
-        // Every rendering is a new drawing, and a window being resized asks for one after another, so only a few are kept.
+    /** The systems of [drawing], its words laid out at [unitSize] pixels to the unit, painted anew on every call. */
+    fun paint(drawing: NotationDrawing, unitSize: Float): List<NotationSystemPaint> = drawing.systems.map { paint(it, unitSize) }
+
+    /**
+     * [paint], kept for the drawings asked for most recently: the PDF draws its pages one at a time and asks for each
+     * system of a tune, and one tune can be printed at two scales (inside a chorus and outside it).
+     */
+    fun paintOf(drawing: NotationDrawing, unitSize: Float) = paints.getOrPut(drawing to unitSize) {
         if (paints.size >= MAX_PAINTED_DRAWINGS) paints.clear()
-        drawing.systems.map { paint(it, unitSize) }
+        paint(drawing, unitSize)
     }
 
     private fun paint(system: NotationSystem, unitSize: Float): NotationSystemPaint {

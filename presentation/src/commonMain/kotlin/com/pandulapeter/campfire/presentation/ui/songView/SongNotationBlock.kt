@@ -111,8 +111,8 @@ private fun DrawScope.drawSystems(
 
 /**
  * The rendering a newer one of the same run replaced ([leaving]), drawn fading out as the newer one fades in, both by
- * [progress], which is state: read it where it is drawn. Each rendering is told apart by its systems, which the painter
- * keeps for as long as the rendering stands, while a [NotationRun] is made again on every composition.
+ * [progress], which is state: read it where it is drawn. Each rendering is told apart by its systems, which the rendering
+ * holds for as long as it stands, while a [NotationRun] is made again on every composition.
  */
 private class NotationCrossfade(var systems: List<NotationSystemPaint>) {
     var leaving by mutableStateOf<NotationRun?>(null)

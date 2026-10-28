@@ -51,10 +51,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableIntStateOf
-import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
+import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
 import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
@@ -276,8 +278,10 @@ internal fun SongLyrics(
     // out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
     var songWidth by remember { mutableIntStateOf(0) }
     val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
-    val notationPainter = remember(textMeasurer, density, notationTextStyle) {
-        NotationPainter(textMeasurer = textMeasurer, density = density, textStyle = notationTextStyle)
+    val fontResolver = LocalFontFamilyResolver.current
+    val layoutDirection = LocalLayoutDirection.current
+    val notationPainting = remember(density, layoutDirection, fontResolver, notationTextStyle) {
+        NotationPainting(density, layoutDirection, fontResolver, notationTextStyle)
     }
     val notationUnit = NOTATION_UNIT * fontScale
     val notations = rememberSongNotations(
@@ -286,7 +290,7 @@ internal fun SongLyrics(
         unitSize = with(density) { notationUnit.toPx() },
         chords = model.notationChords,
         songTitle = model.song.metadata.title,
-        painter = notationPainter,
+        painting = notationPainting,
     )
     // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
     // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the

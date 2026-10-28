@@ -35,8 +35,11 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   (`abcTuneOffsets`).
 - A tune whose first `T:` is the song's title leaves its title and composer to the page (`AbcTitles.kt`, tested: a
   `%%writefields` line in that tune's header); the tunes of a medley, named otherwise, keep theirs.
-- `NotationPainter` turns a drawing into merged paths and text layouts once, laid out at the unit size it was
-  rendered for. `rememberSongNotations` renders a song's `abc` runs off the main thread for a page as wide as the
+- `NotationPainter` turns a drawing into merged paths and text layouts, laid out at the unit size it was rendered for.
+  The screen's systems are painted with the rendering, off the main thread (the web's only thread aside), by a painter
+  of each run of the rendering effect's own (`NotationPainting.newPainter`, its own `TextMeasurer`), and kept with the
+  rendering; nothing is painted during composition. The PDF keeps a few painted drawings by drawing and scale.
+  `rememberSongNotations` renders a song's `abc` runs off the main thread for a page as wide as the
   widest column, each unit `NOTATION_UNIT` (1 dp) times the text size, and again when the tunes, the transposition, the
   spelling, the width, or the text size change; a width or a text size alone waits 300 ms for the resize or pinch to
   settle, the systems scaled meanwhile (`SongNotationBlock`: the current unit, or smaller to fit the column). All tunes

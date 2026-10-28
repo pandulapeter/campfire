@@ -17,12 +17,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /** The app's [AbcRenderer], provided once by `CampfireApp`; where nothing provides one, ABC stays text. */
@@ -36,16 +42,14 @@ internal val LocalAbcRenderer = staticCompositionLocalOf<AbcRenderer?> { null }
 @Immutable
 internal class SongNotations(
     private val rendered: RenderedNotations,
-    private val painter: NotationPainter?,
     private val unitSize: Float,
 ) {
     /** What [run] is drawn as, or null where it is drawn as text. */
     fun of(run: List<ChordProLine>): NotationRun? {
         val tune = run.abcTune() ?: return null
         val rendering = rendered.renderings[tune] ?: return null
-        val painter = painter ?: return null
         return NotationRun(
-            systems = painter.paintOf(rendering.drawing, rendering.unitSize),
+            systems = rendering.systems,
             measuredUnitSize = rendering.unitSize,
             unitSize = unitSize,
             isRerendered = tune in rendered.rerenderedTunes,
@@ -53,7 +57,7 @@ internal class SongNotations(
     }
 
     companion object {
-        val NONE = SongNotations(RenderedNotations.NONE, painter = null, unitSize = 1f)
+        val NONE = SongNotations(RenderedNotations.NONE, unitSize = 1f)
     }
 }
 
@@ -67,8 +71,8 @@ internal class NotationRun(val systems: List<NotationSystemPaint>, val measuredU
 
 /**
  * What [rememberSongNotations] renders for: every tune of the song with the key change it stands under
- * ([abcTuneOffsets]), the page and unit it is laid out at, its chords, and the song's title, which a tune named the
- * same leaves to the page.
+ * ([abcTuneOffsets]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
+ * same leaves to the page, and what its words are laid out with, so a new density or style paints again.
  */
 internal data class NotationRequest(
     val tunes: Map<String, Int>,
@@ -76,10 +80,29 @@ internal data class NotationRequest(
     val unitSize: Float,
     val chords: NotationChordSpelling,
     val songTitle: String?,
+    val painting: NotationPainting,
 )
 
-/** One tune's drawing and the pixels to the SVG unit it was rendered for. */
-internal class NotationRendering(val drawing: NotationDrawing, val unitSize: Float)
+/** What a tune's words are laid out with: the page's density, direction, fonts, and the lyrics' unscaled style. */
+internal data class NotationPainting(
+    val density: Density,
+    val layoutDirection: LayoutDirection,
+    val fontResolver: FontFamily.Resolver,
+    val textStyle: TextStyle,
+) {
+    /** A painter of its own, for one job on any thread: a painter keeps caches that are not thread safe. */
+    fun newPainter() = NotationPainter(
+        textMeasurer = TextMeasurer(fontResolver, density, layoutDirection, cacheSize = 0),
+        density = density,
+        textStyle = textStyle,
+    )
+}
+
+/**
+ * One tune's drawing, the pixels to the SVG unit it was rendered for, and its systems painted at that unit, kept for as
+ * long as the rendering stands so the screen never paints during composition.
+ */
+internal class NotationRendering(val drawing: NotationDrawing, val unitSize: Float, val systems: List<NotationSystemPaint>)
 
 /** The renderings made for [request] (null before the first), and the tunes among them that had one before it. */
 internal class RenderedNotations(
@@ -109,18 +132,24 @@ internal fun rememberSongNotations(
     unitSize: Float,
     chords: NotationChordSpelling,
     songTitle: String?,
-    painter: NotationPainter,
+    painting: NotationPainting,
 ): SongNotations {
     val renderer = LocalAbcRenderer.current
     val tunes = remember(blocks) { abcTuneOffsets(blocks) }
     var rendered by remember(renderer) { mutableStateOf(RenderedNotations.NONE) }
-    val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle)
+    val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting)
     LaunchedEffect(renderer, request) {
         if (renderer == null || request == null || request == rendered.request) return@LaunchedEffect
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
         if (isOnlyResized) delay(RERENDER_DELAY_MILLIS)
-        val renderings = request.tunes.mapNotNull { (tune, offset) -> render(renderer, tune, offset, request)?.let { tune to it } }.toMap()
+        // One painter per run, never one shared across runs: a cancelled run's painting goes on until its next suspension,
+        // so two runs can overlap and would race on the painter's caches.
+        val painter = request.painting.newPainter()
+        val renderings = request.tunes.mapNotNull { (tune, offset) ->
+            ensureActive() // a cancelled run (a newer request) stops between tunes rather than painting the rest
+            render(renderer, painter, tune, offset, request)?.let { tune to it }
+        }.toMap()
         // A tune whose text alone changed (an edit) is new rather than re-rendered, and arrives the way the edit does.
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
         rendered = RenderedNotations(
@@ -129,11 +158,13 @@ internal fun rememberSongNotations(
             rerenderedTunes = if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet(),
         )
     }
-    return remember(rendered, painter, unitSize) { if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, painter, unitSize) }
+    return remember(rendered, unitSize) { if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, unitSize) }
 }
 
-private suspend fun render(renderer: AbcRenderer, tune: String, offset: Int, request: NotationRequest): NotationRendering? =
-    renderNotationDrawing(renderer, tune, request.width, request.chords.movedBy(offset), request.songTitle)?.let { NotationRendering(it, request.unitSize) }
+private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: String, offset: Int, request: NotationRequest): NotationRendering? =
+    renderNotationDrawing(renderer, tune, request.width, request.chords.movedBy(offset), request.songTitle)?.let { drawing ->
+        NotationRendering(drawing, request.unitSize, withContext(Dispatchers.Default) { painter.paint(drawing, request.unitSize) })
+    }
 
 /**
  * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as
