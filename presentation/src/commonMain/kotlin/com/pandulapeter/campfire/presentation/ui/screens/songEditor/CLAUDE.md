@@ -47,7 +47,8 @@ numbers nothing to count from.
 ## Transposition, caret, and undo
 
 - The stepper (`TextTranspositionControls`) mirrors the details screen's, but rewrites the file text: no amount or
-  reset; it shows the song's key, or `?` (a `{key}` naming none too). A chord, or a `{key}` it can move, enables it.
+  reset; it shows the song's key, or `?` (a `{key}` naming none too). A chord, a tune, or a `{key}` it can move,
+  enables it. It moves an `abc` tune through a `%%transpose` line it writes, updates, or removes.
 - Every whole-text rewrite keeps the caret and selection next to their text: transposition
   (`ChordProTransposer.transposedOffset`), Prettify (`ChordProPrettifier.prettifiedOffset`), sheet edits, save
   respelling, and file-follow (`editedOffset`). A revert keeps the offset.

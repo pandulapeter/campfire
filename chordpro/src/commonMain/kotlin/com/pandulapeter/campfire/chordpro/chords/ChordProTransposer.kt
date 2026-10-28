@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.chords
 
+import com.pandulapeter.campfire.chordpro.abc.AbcTranspositions
 import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabRetuner
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
@@ -87,7 +88,11 @@ public object ChordProTransposer {
         )
     }
 
-    /** Transposes raw ChordPro text in place, keeping its formatting and original notation. */
+    /**
+     * Transposes raw ChordPro text in place, keeping its formatting and original notation. The tunes of an `abc` block
+     * keep their notes and chord symbols as written and are moved by a `%%transpose` line of their own, which abc2svg
+     * adds to the reader's transposition ([AbcTranspositions]).
+     */
     public fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
         if (semitones == 0 && preferFlats == null) return text
         val written = ChordProNotation.withLowercaseMinorsExpanded(ChordProParser.parseAsWritten(text))
@@ -127,17 +132,23 @@ public object ChordProTransposer {
      * transposes the document under the caret keeps the caret next to the text it was next to, rather than at the
      * same character count, which every chord name that grew or shrank above it would have moved.
      *
-     * A transposition keeps every line and changes nothing but chord names (and the frets of a tab), so the offset
-     * keeps its line, and inside the line it keeps its place between the brackets; a line with no brackets to go by
-     * (a `{key}`, a grid or a tab line) keeps the text in front of its first change and behind its last one.
+     * A transposition changes nothing but chord names (and the frets of a tab) and the transposition line of an ABC tune,
+     * which it may write or remove, so the offset keeps its line (paired over those), and inside the line it keeps its
+     * place between the brackets; a line with no brackets to go by (a `{key}`, a grid or a tab line) keeps the text in
+     * front of its first change and behind its last one. A caret on a transposition line that was removed goes to the
+     * start of the line after it.
      */
     public fun transposedOffset(before: String, after: String, offset: Int): Int = ChordProOffsetMapping.transposedOffset(before, after, offset)
 
-    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = rewriteChordNamesInText(
-        text = text,
-        rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
-        rename = rename,
-        rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename, semitones) },
+    /** [text] with its chords renamed by [rename] and its ABC tunes moved by [semitones], see [AbcTranspositions.moved]. */
+    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = AbcTranspositions.moved(
+        text = rewriteChordNamesInText(
+            text = text,
+            rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
+            rename = rename,
+            rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename, semitones) },
+        ),
+        semitones = semitones,
     )
 
     /** Whether flats should be preferred for the key this song arrives in after the transposition. */

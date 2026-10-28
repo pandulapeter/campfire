@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import com.pandulapeter.campfire.chordpro.abc.AbcTranspositions
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,6 +55,18 @@ class NotationChordNamesTest {
         assertEquals(listOf("Sol", "Re7", "Mim", "Si♭", "Si"), namesIn(ChordNotation.LATIN))
         assertEquals(listOf("1", "5(7)", "6-", "♭3", "3"), namesIn(ChordNotation.NASHVILLE))
         assertEquals(listOf("I", "V7", "vi", "♭III", "III"), namesIn(ChordNotation.ROMAN))
+    }
+
+    @Test
+    fun `a tune's own transposition is added to the reader's when its chords are named`() {
+        val tune = "X:1\n%%transpose 1\nK:C\n\"C\"C"
+        val symbols = abcChordSymbols(tune)
+        val named = NotationChordSpelling(semitones = 2, preferFlats = null, notation = ChordNotation.STANDARD).movedBy(AbcTranspositions.of(tune))
+        val names = abcChordNames(tune, symbols, named)
+        assertEquals(listOf("E♭"), names)
+        // abc2svg drew C moved by the reader's 2 and the tune's 1, so only the sum finds the symbol it came from.
+        assertEquals(names, drawingWithChords("D♯").withChordNames(symbols, names, named.semitones).chordTexts())
+        assertEquals(listOf("D♯"), drawingWithChords("D♯").withChordNames(symbols, names, semitones = 2).chordTexts())
     }
 
     @Test

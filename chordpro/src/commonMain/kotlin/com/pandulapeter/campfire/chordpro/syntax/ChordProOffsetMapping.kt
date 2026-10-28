@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
+import com.pandulapeter.campfire.chordpro.abc.AbcTranspositions
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 
 /** Where a caret stands in a document after a transposition rewrote it, see [ChordProTransposer.transposedOffset]. */
@@ -20,16 +21,40 @@ internal object ChordProOffsetMapping {
         if (before == after) return clamped
         val beforeStarts = ChordProLines.lineStartOffsets(before)
         val afterStarts = ChordProLines.lineStartOffsets(after)
-        if (beforeStarts.size != afterStarts.size) return clamped.coerceAtMost(after.length)
+        val beforeLines = ChordProLines.splitLines(before)
+        val afterLines = ChordProLines.splitLines(after)
         val line = lastLineStartingAtOrBefore(beforeStarts, clamped)
         val column = clamped - beforeStarts[line]
-        val beforeLine = ChordProLines.splitLines(before)[line]
-        val afterLine = ChordProLines.splitLines(after)[line]
-        val afterLineStart = afterStarts[line]
+        if (beforeStarts.size == afterStarts.size) return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, line, column)
+        // An ABC tune's transposition line was written or removed; every other line is still there, in the same order.
+        val beforeOthers = beforeLines.indices.filter { !AbcTranspositions.isTranspositionLine(beforeLines[it]) }
+        val afterOthers = afterLines.indices.filter { !AbcTranspositions.isTranspositionLine(afterLines[it]) }
+        if (beforeOthers.size != afterOthers.size) return clamped.coerceAtMost(after.length)
+        val other = beforeOthers.indexOf(line)
+        if (other >= 0) return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, afterOthers[other], column)
+        // On a transposition line: the one at its place between the same two other lines, where both sides have as many
+        // there (a number rewritten), or else the start of the line after it (the line it stood on was removed).
+        val next = beforeOthers.count { it < line }
+        val beforeGroup = groupBefore(beforeOthers, next, beforeLines.size)
+        val afterGroup = groupBefore(afterOthers, next, afterLines.size)
+        if (beforeGroup.count() == afterGroup.count()) {
+            return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, afterGroup.first + (line - beforeGroup.first), column)
+        }
+        return if (next < afterOthers.size) afterStarts[afterOthers[next]] else after.length
+    }
+
+    /** The lines between the other line before the [next]-th of [others] and that one ([lineCount] past the last). */
+    private fun groupBefore(others: List<Int>, next: Int, lineCount: Int) =
+        (if (next > 0) others[next - 1] + 1 else 0) until (if (next < others.size) others[next] else lineCount)
+
+    /** [column] of [beforeLine] mapped onto line [afterIndex] of [after], its partner after the transposition. */
+    private fun offsetOnLine(beforeLine: String, after: String, afterLines: List<String>, afterStarts: IntArray, afterIndex: Int, column: Int): Int {
+        val afterLine = afterLines[afterIndex]
+        val afterLineStart = afterStarts[afterIndex]
         if (column > beforeLine.length) {
             // On the line break, or past the final one. The break is measured on the new text, since joinLines may
             // have given a file that mixed its endings a different separator.
-            val limit = if (line + 1 < afterStarts.size) afterStarts[line + 1] - 1 else after.length
+            val limit = if (afterIndex + 1 < afterStarts.size) afterStarts[afterIndex + 1] - 1 else after.length
             return (afterLineStart + afterLine.length + (column - beforeLine.length)).coerceAtMost(limit)
         }
         return afterLineStart + transposedColumn(beforeLine, afterLine, column).coerceIn(0, afterLine.length)

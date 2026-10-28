@@ -17,6 +17,6 @@ package com.pandulapeter.campfire.chordpro.model
 public data class ChordProSummary(
     val metadata: ChordProMetadata,
     val hasChords: Boolean,
-    /** Whether a line stands in an `abc` environment, the block the app draws as staff notation. */
+    /** Whether an `abc` environment holds a tune (an `X:` line), which the app draws as staff notation. */
     val hasSheetMusic: Boolean = false,
 )

@@ -301,8 +301,10 @@ internal fun LoadedSongEditor(
                         key = summary.metadata.key?.takeIf(ChordProTransposer::isKey)?.let { songRenderer.editorKeyOf(it, notation) }
                             ?.let(ChordProNotation::keyWithAccidentalSigns),
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
-                        // even before a chord has been written under it - where the transposition can move it at all.
-                        isTranspositionEnabled = summary.hasChords || summary.metadata.key?.let(ChordProTransposer::isMovableKey) == true,
+                        // even before a chord has been written under it - where the transposition can move it at all. So
+                        // is a tune, which the transposition moves by a transpose line of its own.
+                        isTranspositionEnabled = summary.hasChords || summary.hasSheetMusic ||
+                            summary.metadata.key?.let(ChordProTransposer::isMovableKey) == true,
                         onTransposed = { semitones ->
                             textFieldState.replaceWithTransposition(songRenderer.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals, notation))
                         },

@@ -89,7 +89,7 @@ data class Song(
      */
     val capoChartKey: String? = null,
     /**
-     * Whether the file holds an `abc` block, which the app draws as staff notation. Read with the rest of the metadata,
+     * Whether the file holds an `abc` block with a tune in it, which the app draws as staff notation. Read with the rest of the metadata,
      * so that the app can start the notation engine before any song with a tune is opened.
      */
     val hasSheetMusic: Boolean = false,

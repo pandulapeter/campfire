@@ -24,7 +24,8 @@
 
 - `ChordProTransposer`: **a bracket moves only if
   `ChordProChordNames.isChordName` accepts all of it** (`[Chorus 2x]` stays). The text transposition leaves
-  `{transpose}` alone, since each is relative to the song as written. A move's `capo` (what a capo stands for of the move)
+  `{transpose}` alone, since each is relative to the song as written, and moves each `abc` tune by a `%%transpose` line
+  of its own, the plain sum of the steps (removed at 0), its notes and chord symbols as written. A move's `capo` (what a capo stands for of the move)
   moves every chord name but no tab fret, tabs being counted from the capo.
 - `ChordProChords.parse` reads a name through the same walk as `isChordName`, so a name is read exactly where it is
   recognized. **`Chord.id` (`C#:0.3.7.10`) is what player shape choices are stored under**, inside a `voicingKey`

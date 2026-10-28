@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
+import com.pandulapeter.campfire.chordpro.abc.AbcLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
@@ -150,7 +151,8 @@ public object ChordProParser {
             }
             // Before the early return below, which skips lines once the chords are found: the body has begun either way.
             if (trimmedLine.isNotEmpty()) transposition.startBody()
-            if (environment == ABC) hasSheetMusic = true
+            // A block with no X: line renders nothing, and a transposition has nothing in it to move.
+            if (environment == ABC && AbcLines.field(rawLine)?.letter == ABC_TUNE_START) hasSheetMusic = true
             val isLookingForChords = shouldDetectChords && !hasChords
             val isLookingForNotation = !isGermanNotated && mayHoldGermanName(rawLine, environment)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
@@ -370,5 +372,6 @@ public object ChordProParser {
     private const val CHORUS = "chorus"
     private const val BRIDGE = "bridge"
     private const val GERMAN_LETTER = 'H'
+    private const val ABC_TUNE_START = 'X'
     private val SPELLING_SUFFIXES = setOf('s', 'f')
 }

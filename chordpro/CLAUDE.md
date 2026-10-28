@@ -32,7 +32,8 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
   (`ChordProHeaderLayout`); adding a line never reorders the others, only Prettify reorders the header. A body
   `{key}`/`{tempo}`/`{time}` is a mid-song change, never the header's.
 - **Delegated environments** (`abc`, `ly`, `svg`, `textblock`) are kept verbatim, with no chords, markup, or
-  definitions: only their closing `{end_of_…}` and a directive written with a colon are directives inside them.
+  definitions: only their closing `{end_of_…}` and a directive written with a colon are directives inside them. The
+  one exception: a transposition writes each `abc` tune's own `%%transpose` (`AbcTranspositions`).
 - **The model is immutable**, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
   collection mutated afterwards. It says what a thing is, never how it looks.
 - The caller supplies NFC normalization and tag folding; this module has none.

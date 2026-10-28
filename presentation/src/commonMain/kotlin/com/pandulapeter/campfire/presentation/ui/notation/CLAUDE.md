@@ -27,7 +27,7 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   theme cross-fade lays nothing out again.
 - **Chord names are the page's** (`NotationChordNames.kt`, tested): the semitones are the lyrics' chords' (the file's
   `{transpose}` plus the reader's sounding transposition, `NotationChordSpelling`, carried by `SongLyricsModel`), and
-  abc2svg moves the notes by them. abc2svg also renames every chord symbol whose first A–G letter it finds (it read
+  abc2svg moves the notes by them; a tune's own `%%transpose` adds to them (`AbcTranspositions.of`), the names too. abc2svg also renames every chord symbol whose first A–G letter it finds (it read
   "Do" as D), and annotations would zigzag, so its names are replaced in the drawing by the ones `:chordpro` gives the
   same symbols (spelling, notation, a numbering counted from the tune's first `K:`): **each drawn chord takes the name of
   the symbols it is a transposition of**, in whatever order abc2svg drew them, and one matching none (the capo

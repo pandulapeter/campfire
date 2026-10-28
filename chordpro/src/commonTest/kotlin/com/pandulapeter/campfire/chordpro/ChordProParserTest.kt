@@ -985,6 +985,8 @@ class ChordProParserTest {
         // After the chords are found the rest of the body is skipped for them, but not for this.
         assertTrue(ChordProParser.summarize("[Am]a\n{start_of_abc}\nX:1\nK:C\nCDEF|\n{end_of_abc}").hasSheetMusic)
         assertFalse(ChordProParser.summarize("[Am]a\n{start_of_tab}\ne|--0--3--|\n{end_of_tab}").hasSheetMusic)
+        // A block with no tune renders nothing.
+        assertFalse(ChordProParser.summarize("{start_of_abc}\nK:C\nCDEF|\n{end_of_abc}").hasSheetMusic)
     }
 
     @Test

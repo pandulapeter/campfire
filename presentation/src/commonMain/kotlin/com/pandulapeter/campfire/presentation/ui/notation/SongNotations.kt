@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
+import com.pandulapeter.campfire.chordpro.abc.AbcTranspositions
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlinx.coroutines.Dispatchers
@@ -259,8 +260,10 @@ internal suspend fun renderNotationDrawing(
 ): NotationDrawing? = when (val rendering = renderer.render(tune = abcTuneWithoutSongTitle(tune, songTitle), width = width, transposition = chords.semitones)) {
     is AbcRendering.Systems -> withContext(Dispatchers.Default) {
         parseNotationDrawing(rendering.systems)?.let { drawing ->
+            // abc2svg adds the tune's own %%transpose to the reader's, so the names are moved by both.
+            val named = chords.movedBy(AbcTranspositions.of(tune))
             val symbols = abcChordSymbols(tune)
-            drawing.withChordNames(symbols, abcChordNames(tune, symbols, chords), chords.semitones)
+            drawing.withChordNames(symbols, abcChordNames(tune, symbols, named), named.semitones)
         }
     }
 

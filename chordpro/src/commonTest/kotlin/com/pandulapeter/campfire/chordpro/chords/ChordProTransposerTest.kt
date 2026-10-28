@@ -438,11 +438,73 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `an abc block is left alone by the transposition`() {
-        val text = "{start_of_abc}\n[CEG]2\n{end_of_abc}\n[C]la"
+    fun `an abc tune is moved by a transpose line of its own`() {
+        val text = "{start_of_abc}\nX:1\nK:C\n[CEG]2\n{end_of_abc}\n[C]la"
 
-        assertEquals("{start_of_abc}\n[CEG]2\n{end_of_abc}\n[D]la", ChordProTransposer.transposeText(text, 2))
-        assertEquals(ChordProParser.parse("{start_of_abc}\n[CEG]2\n{end_of_abc}\n[D]la"), ChordProTransposer.transpose(ChordProParser.parse(text), 2))
+        assertEquals("{start_of_abc}\nX:1\n%%transpose 2\nK:C\n[CEG]2\n{end_of_abc}\n[D]la", ChordProTransposer.transposeText(text, 2))
+        assertEquals(
+            ChordProParser.parse("{start_of_abc}\nX:1\nK:C\n[CEG]2\n{end_of_abc}\n[D]la"),
+            ChordProTransposer.transpose(ChordProParser.parse(text), 2),
+        )
+    }
+
+    @Test
+    fun `an abc tune's own transpose line is moved further, and gone where it comes back to nothing`() {
+        assertEquals(
+            "{start_of_abc}\nX:1\n%%transpose 5\nK:C\nC|\n{end_of_abc}",
+            ChordProTransposer.transposeText("{start_of_abc}\nX:1\n%%transpose 3\nK:C\nC|\n{end_of_abc}", 2),
+        )
+        val text = "{start_of_abc}\nX:1\nK:C\nC|\n{end_of_abc}\n[C]la\n"
+        assertEquals(text, ChordProTransposer.transposeText(ChordProTransposer.transposeText(text, 1), -1))
+        assertEquals(
+            "{start_of_abc}\nX:1\nI:transpose 2 % up\nK:C\nC|\n{end_of_abc}",
+            ChordProTransposer.transposeText("{start_of_abc}\nX:1\nI:transpose 1 % up\nK:C\nC|\n{end_of_abc}", 1),
+        )
+    }
+
+    @Test
+    fun `every tune of an abc block gets a transpose line of its own, and a block without one is left alone`() {
+        assertEquals(
+            "{start_of_abc}\nX:1\n%%transpose -1\nK:C\nC|\nX:2\n%%transpose -1\nK:G\nG|\n{end_of_abc}",
+            ChordProTransposer.transposeText("{start_of_abc}\nX:1\nK:C\nC|\nX:2\nK:G\nG|\n{end_of_abc}", -1),
+        )
+        assertEquals("{start_of_abc}\nK:C\nCDEF|\n{end_of_abc}", ChordProTransposer.transposeText("{start_of_abc}\nK:C\nCDEF|\n{end_of_abc}", 2))
+        val text = "{start_of_abc}\nX:1\nK:C\nC|\n{end_of_abc}\n[C]la"
+        assertEquals("{start_of_abc}\nX:1\nK:C\nC|\n{end_of_abc}\n[C]la", ChordProTransposer.transposeText(text, 0, preferFlats = true))
+        assertEquals(
+            "{start_of_abc}\r\nX:1\r\n%%transpose 2\r\nK:C\r\nC|\r\n{end_of_abc}\r\n",
+            ChordProTransposer.transposeText("{start_of_abc}\r\nX:1\r\nK:C\r\nC|\r\n{end_of_abc}\r\n", 2),
+        )
+    }
+
+    @Test
+    fun `a tune stepped across an octave comes back as it was`() {
+        val text = "{start_of_abc}\nX:1\n%%transpose 5\nK:C\nC|\n{end_of_abc}"
+        val up = (1..7).runningFold(text) { stepped, _ -> ChordProTransposer.transposeText(stepped, 1) }
+        assertEquals("%%transpose 11", up[6].lines()[2])
+        assertEquals("%%transpose 12", up[7].lines()[2])
+        assertEquals(text, (1..7).fold(up.last()) { stepped, _ -> ChordProTransposer.transposeText(stepped, -1) })
+        assertEquals(
+            "{start_of_abc}\nX:1\n%%transpose 25\nK:C\nC|\n{end_of_abc}",
+            ChordProTransposer.transposeText("{start_of_abc}\nX:1\n%%transpose 36\nK:C\nC|\n{end_of_abc}", 1),
+        )
+    }
+
+    @Test
+    fun `a caret keeps its place when a tune's transpose line is written or removed`() {
+        val text = "{start_of_abc}\nX:1\nK:C\nC|\n{end_of_abc}\n[C]la la"
+        val lyricOffset = text.indexOf("la la") + 3
+        val (up, upOffset) = transposed(text, 2, lyricOffset)
+        assertEquals(up.indexOf("la la") + 3, upOffset)
+        val (back, backOffset) = transposed(up, -2, upOffset)
+        assertEquals(text, back)
+        assertEquals(lyricOffset, backOffset)
+        val unreadable = "{start_of_abc}\nX:1\n%%transpose M2\nK:C\nC|\n{end_of_abc}"
+        val (inserted, insertedOffset) = transposed(unreadable, 2, unreadable.indexOf("K:C") + 1)
+        assertEquals(inserted.indexOf("K:C") + 1, insertedOffset)
+        val rewritten = "{start_of_abc}\nX:1\n%%transpose 3\nK:C\nC|\n{end_of_abc}"
+        val (five, fiveOffset) = transposed(rewritten, 2, rewritten.indexOf("transpose 3") + 3)
+        assertEquals(five.indexOf("transpose 5") + 3, fiveOffset)
     }
 
     @Test
