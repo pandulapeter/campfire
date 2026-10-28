@@ -11,8 +11,8 @@
 # :tools:screenshots
 
 The store and website screenshots, rendered rather than taken: a plain JVM module that draws the desktop build
-offscreen (`ImageComposeScene`) as each platform's listing shows it, at the exact pixels of its Screenshot Bro device
-frame. Nothing depends on it; the `store-screenshots` and `website-screenshots` skills drive it, and its test source
+offscreen (`ImageComposeScene`) as each platform's listing shows it, at its device's own pixels, then framed into the
+store images, the README's banners, and the website's link preview. Nothing depends on it; the `store-screenshots` and `website-screenshots` skills drive it, and its test source
 set holds the app's UI tests.
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
@@ -44,16 +44,19 @@ set holds the app's UI tests.
 - **Nothing reaches outside** (`Fakes.kt`): sync shows a connected account and runs nothing, the metronome is silent and
   lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only scripted readings, the file picker
   writes nothing. Covers come from the copied cache.
-- **The Screenshot Bro project** that frames the renders is kept in `project/`: `project.json` as the app writes it,
-  less what every run changes (each frame's screenshot, the modification time), and the images its logos show. The
-  `store-screenshots` skill's `screenshot_bro_project.py` saves it from the app's container and restores it into one.
-- **Framing without Screenshot Bro** is in progress: `ListingImage` draws a render on the listing's gradient under its
-  headline, in a generic `DeviceFrame` (the promo video's), with `ListingChips` naming features on the frame's edges.
-  `--frame-previews <renders folder> --out <folder>` frames a run's listing renders with `ListingPreviews.kt`'s
-  English headlines and chips, for judging them before the listing is made with them.
+- **Framing** (`--frame all`, or `listing` or `banners`) renders nothing and writes into a new
+  `~/Desktop/Campfire store images <version>/`. The listing renders in every language of the app
+  (`renders/<row label>/<language>/<NN-id>.png`), and the framing draws each on its store's canvas
+  (`ListingCanvas.kt`): the listing's gradient, the headline, the screen in a generic `DeviceFrame` (the promo video's),
+  and `ListingChips` naming features on the frame's edges, in the other theme than the screen's. The texts are
+  `documentation/store-listings/screenshot-texts/<language>.md`, the chips' icons and corners `ListingChipStyles.kt`;
+  the images go to `<store>/<language>/<device>-<n>`, JPEG but for Microsoft's PNG. The images laid out by hand are
+  `Compositions.kt`, over the renders of `Banners.kt`: the stores' feature graphic, header, search results, icon,
+  poster, and box art, the website's link preview (`website/`), and the README's banners, written straight to
+  `documentation/screenshots` as WebP.
 - **The shots** are `shots` in `Shot.kt`, in listing order, each with theme, language, and a `drive` block that brings
   the app to its state through `CampfireViewModel`; keep their rules there so a retake is the same picture. Headlines
-  belong to the Screenshot Bro project, not the images.
+  and chips are drawn by the framing, never into the renders.
 - **Promo video footage** is `Promo.kt`, rendered only with `--only promo` into `Promo/`: stills and clips. `record`
   draws a frame every 1/60 s of the scene's clock as JPEGs, so animations play at their own speed however slow drawing
   is. A drag moves a finger a frame at a time (`touch`); a tap within a clip is press and release on separate frames at

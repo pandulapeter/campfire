@@ -25,7 +25,7 @@ export const C = {
   softWhite: "rgba(255,255,255,0.8)",
 };
 
-/** The store listings' backdrop (the Screenshot Bro project's linear rows): the app's purple into its icon's orange. */
+/** The store listings' backdrop: the app's purple into its icon's orange. */
 export const GRADIENT = "linear-gradient(135deg, #5A49CA, #F57C00)";
 
 export const fontFaces = `
@@ -179,7 +179,7 @@ const stageTransform = (format: Format, width: number, height: number, band: [nu
  * the frame's top edge and the top of the scene's highest device, [deviceTop] in the [band] of the scene's [Stage]
  * (in portrait, with [deviceBottom], between the device's bottom and the frame's bottom edge instead); in a landscape
  * frame it has a column of its own on the left, where a line too long for the column wraps. It is set as the store
- * listings' headlines are in Screenshot Bro: Inter Regular in white, letters 5% of the size closer, lines 0.9 apart.
+ * listings' headlines are: Inter Regular in white, letters 5% of the size closer, lines 0.9 apart.
  */
 export const Headline: React.FC<{
   lines: React.ReactNode[];

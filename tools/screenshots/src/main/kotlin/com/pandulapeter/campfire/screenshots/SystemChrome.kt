@@ -117,12 +117,10 @@ internal sealed interface SystemChrome {
     }
 
     data object ChromeOs : SystemChrome {
-        override val windowTop = SCREEN_BAR_UNDER_CAMERA_COVER_14
         override val windowBottom = 48.dp
 
         @Composable
         override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
-            CameraCoverBand(height = windowTop)
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -238,9 +236,8 @@ internal sealed interface SystemChrome {
 
     /**
      * A window zoomed to fill the screen under the menu bar, which on a MacBook with a camera housing is black whatever
-     * the theme and as tall as the housing. The Screenshot Bro rows cover the housing itself with a black strip. The
-     * window's buttons are where the desktop app's own are, measured from its window: 12pt across, 20pt apart, the first
-     * centered 14pt from the window's top and left edges.
+     * the theme and as tall as the housing. The window's buttons are where the desktop app's own are, measured from its
+     * window: 12pt across, 20pt apart, the first centered 14pt from the window's top and left edges.
      */
     data object MacOs : SystemChrome {
         override val windowTop = 37.dp
@@ -287,15 +284,13 @@ internal sealed interface SystemChrome {
      * the system tray at its end.
      */
     data object Windows : SystemChrome {
-        override val windowTop = SCREEN_BAR_UNDER_CAMERA_COVER_16
         override val windowBottom = 48.dp
         override val captionBar = 32.dp
 
         @Composable
         override fun Overlay(appearance: ChromeAppearance) = Box(Modifier.fillMaxSize()) {
-            CameraCoverBand(height = windowTop)
             val glyph = 1.dp
-            Row(Modifier.align(Alignment.TopEnd).padding(top = windowTop).height(captionBar)) {
+            Row(Modifier.align(Alignment.TopEnd).height(captionBar)) {
                 CaptionButton { drawLine(appearance.content, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), glyph.toPx()) }
                 CaptionButton {
                     val back = size.width * 0.2f
@@ -357,19 +352,6 @@ internal sealed interface SystemChrome {
         }
     }
 }
-
-/**
- * The Chromebook and Windows shots are framed in MacBook Pros, whose camera housing the Screenshot Bro rows hide under a
- * black bar across the top of the screen. The window starts under that bar instead of behind it - a black band of its
- * height on top, the image keeping the frame's size - so nothing of the app is covered and nothing is stretched. The
- * heights are the bars' as measured in the rows (about 66 and 70 px of the 16" and 14" screens), rounded up, since
- * band running past a bar is black against black.
- */
-private val SCREEN_BAR_UNDER_CAMERA_COVER_16 = 36.dp
-private val SCREEN_BAR_UNDER_CAMERA_COVER_14 = 38.dp
-
-@Composable
-private fun CameraCoverBand(height: Dp) = Box(Modifier.fillMaxWidth().height(height).background(Color.Black))
 
 /** What sets a phone's Android bars apart from a tablet's. */
 private class AndroidBarMetrics(

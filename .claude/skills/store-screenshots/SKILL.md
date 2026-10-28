@@ -1,6 +1,6 @@
 ---
 name: store-screenshots
-description: Retake Campfire's store images for every platform and form factor — the store listings (Play Store, App Store, Mac App Store, Microsoft Store), the Play Store feature graphic, and Apple's product page header and search results images. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, frames them in the Screenshot Bro project, and exports them to a new folder on the Desktop. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh, or update the store screenshots / store images / listing screenshots, or to add, change, or reorder one of them. Not for the README banners or campfire-songbook.com's screenshots and link preview (that is website-screenshots), nor for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
+description: Retake Campfire's store images for every platform and form factor — the store listings (Play Store, App Store, Mac App Store, Microsoft Store) in every language of the app, the Play Store feature graphic, and Apple's product page header and search results images. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, frames the listings with their translated headlines and feature chips and composes the multi-device images, into a folder on the Desktop named after the version. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh, or update the store screenshots / store images / listing screenshots, or to add, change, or reorder one of them. Not for the README banners or campfire-songbook.com's screenshots and link preview (that is website-screenshots), nor for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
 ---
 
 <!--
@@ -16,94 +16,53 @@ description: Retake Campfire's store images for every platform and form factor �
 # Campfire store images
 
 Every image is made from the desktop build drawn offscreen as each platform (the platforms share every line of the
-interface and its bundled fonts), with that platform's scale and system bars, at the exact pixels of the Screenshot Bro device frame
-it goes into. Nothing here touches the production apps: the tool is `tools/screenshots`, which no app module depends
-on, and the only seam in the app is `PlatformImpersonation` in `:presentation`'s desktop source set, which the desktop
-app never sets. See `tools/screenshots/CLAUDE.md` for how the tool works.
+interface and its bundled fonts), with that platform's scale and system bars. Nothing here touches the production apps:
+the tool is `tools/screenshots`, which no app module depends on, and the only seam in the app is `PlatformImpersonation`
+in `:presentation`'s desktop source set, which the desktop app never sets. See `tools/screenshots/CLAUDE.md` for how the
+tool works.
 
 ## What a run needs
 
 - **The library**, in `tools/screenshots/library/` (gitignored, never committed): a Campfire data folder's
-  `library/`, `covers/` and `preferences/preferences.json`, copied from the user's desktop library without the sync
-  credentials, the sync index or the log. If it is missing, stop and ask. Never write into the user's real data folder.
-  The shots name the owner's songs and setlists; with another library, the shots that open a missing one fail and are
-  reported, and the rest render.
-  Its setlists were trimmed for the shots (Frey-Tully Nuptials and Getting started); keep them that way.
-- **Screenshot Bro** running, with the `Campfire` project (`list_projects`), and **Full Disk Access for the IDE that
-  runs Claude Code** (Android Studio), without which nothing can be staged in the app's sandbox (step 3). The project
-  is kept in `tools/screenshots/project/` (its layout and the logos, with empty device frames). Where Screenshot Bro is
-  installed but has no `Campfire` project, quit it and run `python3 -I
-  .claude/skills/store-screenshots/scripts/screenshot_bro_project.py restore`, then reopen it; `--force` replaces a
-  project that is there, moving it to `project-backups/` in the app's folder. Without Screenshot Bro (no
-  `screenshot-bro` tools), say so and make what can be made without framing: steps 1 and 2, then copy
-  `tools/screenshots/renders/` to a new `~/Desktop/Campfire screenshots <date>/` (every shot unframed, at its device's
-  pixels, no headlines).
-- **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
-- The display does not matter: nothing is drawn on screen.
+  `library/`, `covers/` and `preferences/preferences.json`, stripped to what the images show. If it is missing, stop
+  and ask. Never write into the user's real data folder. Its setlists were trimmed for the shots (Frey-Tully Nuptials
+  and Getting started); keep them that way.
+- **Nothing else building in the clone** while a render runs: a jar rebuilt under it fails later shots with a
+  `ClassNotFoundException` while the run still reports them written.
+- **Pillow** for the contact sheets (`python3 -m pip install Pillow` where `import PIL` fails).
 
 ## Where everything goes
 
-| What | Made from | Ends up in |
-|---|---|---|
-| Store listings (9 rows × 8 shots), Play Store banner, Apple header and search results | `Shot.kt`, `Banners.kt` → Screenshot Bro | `~/Desktop/Campfire store images <date>/`, one folder per row (with the project's icon, poster and box art rows, which have no shots) |
-| The Screenshot Bro project | the app's container, by step 7 | `tools/screenshots/project/`: `project.json` without the frames' screenshots, and the logos |
+Everything lands in `~/Desktop/Campfire store images <version>/` (`campfire.versionName`), replaced by every run:
 
-The same project also frames the README banners and the website's link preview, which the `website-screenshots` skill
-makes: leave their rows alone here. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on every
-run. Nothing is committed; the user reviews and commits.
+| What | Made from | File |
+|---|---|---|
+| Store listings (9 devices × 8 shots × every language) | `Shot.kt`, the texts in `documentation/store-listings/screenshot-texts/<language>.md`, `ListingChipStyles.kt` | `<store>/<language>/<device>-<n>.jpg` (Microsoft's `.png`) |
+| Play Store feature graphic and icon | `Compositions.kt` | `google-play/feature-graphic.jpg`, `google-play/icon.png` |
+| Apple's product page header and search results image | `Compositions.kt` | `app-store/header.jpg`, `app-store/search-results.jpg` |
+| Microsoft's poster and box art | `Compositions.kt` | `microsoft-store/poster-art.png`, `microsoft-store/box-art.png` |
+
+The same framing also writes the website's link preview (`website/link-preview.png`) and the README's banners
+(`documentation/screenshots/01–06.webp`), which show the same shots: say so when they changed, since they are the
+`website-screenshots` skill's to publish. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on
+every run. Nothing is committed unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` (in the background; one app start
-   per image, a few seconds each) writes every shot of `Shot.kt` on every listing `Device` and the multi-device rows of
-   `Banners.kt` into `tools/screenshots/renders/<row label>/`, in up to four processes side by side (`--parallel <n>`
-   sets how many). `--only` also takes device enum names and shot ids (`IPHONE,03-metronome-tuner`) to render part of
-   it; without it, the run renders the website's set too. A failed render is reported and the
-   run goes on. Never rebuild the tool while a render is running.
-2. **Check every image before importing anything**: a contact sheet per shot (PIL), then any device that looks off at
-   full size — the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting. Fix the
-   shot or the tool and render again rather than importing a bad image.
-3. **Stage.** Screenshot Bro is sandboxed and reads only its own container: copy `renders/` into
-   `~/Library/Containers/xyz.tleskiv.screenshot/Data/tmp/campfire/`. The large Android tablet's frames are rotated
-   270°, so its images are staged rotated a quarter turn clockwise (PIL `ROTATE_270`).
-4. **Import.** Take `get_project` first: the user arranges the rows by hand between runs, and **their layout is kept
-   exactly** — positions, sizes, tilts, stacking. `import_screenshots` fills a row's device frames **one per column, in
-   column order, the rearmost frame of each column**, and **resizes every frame it fills to the image's aspect ratio**,
-   so after every import put each frame's `x`, `width` and `height` back. Extra images append columns: never pass more
-   than the row has.
-   - The nine listing rows (one frame per column): import the row's eight images in order.
-   - Rows with several frames in a column (the Play Store banner, Apple's header and search results): give each extra frame a temporary column (`add_template`, `delete_shape` the default device
-     it drops in, move the frame's `x` there), import, move it back, `remove_template`. Sending a frame to the back
-     with `z_order` does not change which frame of a column an import fills; only a column of its own does. Then restore the stacking with
-     `z_order: front` in back-to-front order, keeping every MacBook's black camera-housing strip above its frame.
-
-   | Row label | Row id |
-   |---|---|
-   | Play Store - Android Phone | `961E2ED3-1432-46EA-AF1F-5738741BB18E` |
-   | Play Store - Android Small Tablet | `C6B36C5A-7011-4721-AD0F-CE92E91DC1F2` |
-   | Play Store - Android Large Tablet | `4AB75520-E483-4E51-93A8-568848CE24BB` |
-   | Play Store - Chromebook | `15F6D06E-114E-468A-BEA1-E074FA445ECA` |
-   | App Store - iPhone | `CA8CB67F-AD3B-4CE6-95F1-1A23555C1320` |
-   | App Store - iPhone Duo | `755F5064-0A7F-4F17-828A-E985A26E2A8E` |
-   | App Store - iPad | `5B53E8FA-F8D5-4D72-B0A6-58D1F847CB0E` |
-   | Mac App Store - Mac | `09A157EA-A360-4800-B9F6-72E4ED90178F` |
-   | Microsoft Store - Windows | `C369F36A-B693-46C7-A53C-E8AA13CC6D53` |
-   | Play Store - Banner | `7EAB3190-9E8C-478D-B18A-3AD15B16DDA1` |
-   | App Store - Header (21:9, 3840×1646, iOS 27+) | `AACF099E-6929-47B0-8F4E-DF44DFEEC7B2` |
-   | App Store - Search results (3:2, 3840×2560, iOS 27+) | `D93A0DED-074D-4C47-B097-5CAC6DEC5DCA` |
-
-   If a row's label or column count is not what this table and the code expect, stop and say so. Headlines are the
-   project's text shapes, never part of the images.
-5. **Look at every row** with `render_preview`, a column at full size where anything is in doubt: the status bar's
-   time and the navigation labels uncut, the image filling its frame, nothing upside down or stretched.
-6. **Export** with `export_project` (into the app's temp folder; a non-empty `unrenderable` means holes — report it).
-   Copy every row's folder **except the two GitHub banners and the website's link preview** to a new
-   `~/Desktop/Campfire store images <date>/`.
-7. **Save the project**: `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save` copies
-   its layout back to `tools/screenshots/project/`, so headlines and frames moved by hand, here or in the app, show
-   up in the diff. A diff that is not the run's own changes is the user's work in the app: keep it.
-8. **Clean up** the staging and export folders in the app's container, and report the Desktop folder, what was
-   rendered and anything that looked off.
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` in the background (one app start
+   per image, a few seconds each; the listing is about 500 images, half an hour): every shot of `Shot.kt` on every
+   listing `Device` in every language, into `renders/<row label>/<language>/`, and the shots of `Banners.kt`.
+   `--only` also takes device enum names and shot ids. A failed render is reported and the run goes on; grep the log
+   for `Exception` as well, since a broken class fails a shot that still counts as written.
+2. **Check the renders**: a contact sheet per device and language (PIL), then anything that looks off at full size —
+   the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting in every language.
+   Fix the shot or the tool and render again rather than framing a bad image.
+3. **Frame**: `./gradlew :tools:screenshots:run --args="--frame all"` (a few minutes; it reports any render or text
+   missing). Look at a contact sheet per store and language and at every composed image: the headline on its lines,
+   every chip inside the image and readable, its lines balanced, none covering what its shot is about. A translation
+   that wraps a chip into too many lines gets shorter words in its `screenshot-texts` file (`check_store_listings.py`
+   holds them to their limits); then frame again, no render needed.
+4. **Report** the Desktop folder, what was rendered and framed, and anything that looked off.
 
 ## The shots and their rules
 
@@ -112,24 +71,26 @@ screenshots are shown at 9:41 on Wednesday, October 7, 2026 (setlist dates are m
 countdowns always read the same); the iPhone Duo is always part of the listing, shown unfolded and on its side
 (its inner display, 2853×2007 at 3x, as the iOS 27.1 simulator lays it out: no status bar across the top, but an 84pt
 strip along the right edge that the app is inset from and draws under, with the time and the status ring at its top,
-insets of 16pt at the top and 34pt at the bottom, and no home indicator drawn); the app icon anywhere in the system chrome is the default gradient one; Android phone frames are Screenshot Bro's Pixel frame; Share is shown on Android and iOS only; sync is a fake connected
+insets of 16pt at the top and 34pt at the bottom, and no home indicator drawn); the app icon anywhere in the system chrome is the default gradient one; Share is shown on Android and iOS only; sync is a fake connected
 account, "Connected as Péter Pandula"; only public domain songs are opened full screen in the listing.
 
-| # | Headline | Shot |
-|---|---|---|
-| 1 | Your songbook, synced to every screen | Songs, English only, by artist, from the top (the library's copy of Gimme! Gimme! Gimme! has no subtitle) |
-| 2 | Laid out for the way you play | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the phones at the largest text that keeps the whole first verse on the first page (the least room left spread between its sections): the iPhone at 110%, the Android phone and the Chromebook at 100% |
-| 3 | A metronome and tuner in every song | Home on the Range on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat |
-| 4 | Setlists ready for the gig | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
-| 5 | ChordPro editor with live preview | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
-| 6 | Every scale and mode, on your instrument | Scales tab on a guitar in standard tuning, in A, under the sheet of A minor pentatonic |
-| 7 | Chords for guitar, ukulele, and more | Chords tab on a ukulele in standard tuning, the chords of C |
-| 8 | Print a song or the whole set | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
+Each shot's headline and chips are in `documentation/store-listings/screenshot-texts`.
 
-The Play Store banner is the Android phone's shots 1 and 2; Apple's header the iPad's 4, the Mac's 2, and the
-iPhone's 1, and its search results image the iPad's 2 and the iPhone's 3, all dark. The README banners and the link
-preview show these shots too (the `website-screenshots` skill), so a changed shot changes them: say so, and that it
-takes a run of that skill.
+| # | Shot |
+|---|---|
+| 1 | Songs, English only, by artist, from the top (the library's copy of Gimme! Gimme! Gimme! has no subtitle) |
+| 2 | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the phones at the largest text that keeps the whole first verse on the first page (the least room left spread between its sections): the iPhone at 110%, the Android phone and the Chromebook at 100% |
+| 3 | Home on the Range on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat |
+| 4 | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
+| 5 | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
+| 6 | Scales tab on a guitar in standard tuning, in A, under the sheet of A minor pentatonic |
+| 7 | Chords tab on a ukulele in standard tuning, the chords of C |
+| 8 | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
+
+The Play Store feature graphic is the Android phone's shots 1 and 2; Apple's header the iPad's 4, the Mac's 2, and
+the iPhone's 1, and its search results image the iPad's 2 and the iPhone's 3, all dark. The README banners and the
+link preview show these shots too, so a changed shot changes them: say so, and that the `website-screenshots` skill
+publishes them.
 
 ## Changing a shot
 
@@ -137,10 +98,9 @@ The listing is `shots` in `Shot.kt`, in store order, and the multi-device rows a
 it is first composed (`prepare`, e.g. a list's scroll position), then drives `CampfireViewModel` or taps what is
 labelled with a string resource (`drive`, `tap`, `tapIfPresent`) — so it works in every language — and can catch a
 metronome beat (`beat`). Keep each shot's rules in its comment and in the table above. A store takes at most eight shots, so a
-new one replaces another rather than adding a column: move the headlines along in every listing row of the project and
-reimport. Every headline is above its frame, in every row.
+new one replaces another: its headline and chips go into every language's `screenshot-texts` file and its chips' icons
+and corners into `ListingChipStyles.kt`. The composed images' layouts are `Compositions.kt`, each device a box in the
+image's pixels with its tilt, the screen's slot an index into its banner in `Banners.kt`.
 
 The system chrome is `SystemChrome.kt`, measured against the real systems (Android emulators, iOS simulators, the
-desktop app's own window). The Chromebook and Windows rows are framed in MacBook Pros whose camera housing a black
-rectangle of the project hides; their shots start the window under a black band of that rectangle's height
-(36 and 38 dp), so if those rectangles or frames are moved or resized, measure again and update the band heights.
+desktop app's own window).

@@ -10,7 +10,7 @@
 Copies the website's screenshots from a render of the tool's `website` set into campfire-songbook.com's repository:
 every `<name>.png` of the render's Website folder as `assets/screenshots/<name>.webp`, scaled to the size the site
 draws that device at (SIZES, which the pages' width and height attributes and the stylesheet's aspect ratios repeat),
-and, when one is given, the link preview Screenshot Bro exported as `assets/og-image.jpg`, at the size of the one it
+and, when one is given, the link preview the screenshot tool composed as `assets/og-image.jpg`, at the size of the one it
 replaces. The renders of a playing click's beats (`<name>-beat-<n>-<theme>.png`) are not copied as screenshots: what each
 changes of `<name>-<theme>.png`, the lit beat and the metronome mark's pulse, goes side by side into one transparent
 `<name>-beats-<theme>.webp`, a layer per beat at the screenshot's size, which the page fades over it in turn.
@@ -124,7 +124,7 @@ def main():
     for language in sorted(path for path in arguments.renders.iterdir() if path.is_dir()):
         copy_screenshots(language, screenshots / language.name, english_renders=arguments.renders)
     if arguments.link_preview is None:
-        print("No link preview given (it is framed in Screenshot Bro), so og-image.jpg is left as it was.")
+        print("No link preview given (the screenshot tool composes it with --frame banners), so og-image.jpg is left as it was.")
         return
     og = target / "og-image.jpg"
     size = Image.open(og).size if og.exists() else OG_SIZE

@@ -56,7 +56,7 @@ internal fun ListingImage(
 ) = BoxWithConstraints(
     modifier = Modifier
         .fillMaxSize()
-        .background(Brush.linearGradient(listOf(PURPLE, ORANGE), start = Offset.Zero, end = Offset.Infinite)),
+        .background(Brush.linearGradient(listOf(BRAND_PURPLE, BRAND_ORANGE), start = Offset.Zero, end = Offset.Infinite)),
 ) {
     val fontSize = minOf(maxWidth * 0.072f, maxHeight * 0.053f)
     val margin = minOf(maxWidth, maxHeight) * 0.05f
@@ -121,11 +121,11 @@ internal fun fittedScreenWidth(kind: FrameKind, aspect: Float, roomWidth: Dp, ro
 )
 
 /** How wide the whole frame of [kind] is per unit of its screen's width: a laptop's base is 12% wider than its lid. */
-private fun frameWidthPerScreenWidth(kind: FrameKind, aspect: Float) =
+internal fun frameWidthPerScreenWidth(kind: FrameKind, aspect: Float) =
     (1f + (kind.bezel + RIM) * 2 * longPerWidth(aspect)) * if (kind == FrameKind.LAPTOP) 1.12f else 1f
 
 /** How tall the whole frame of [kind] is per unit of its screen's width, a laptop's base included. */
-private fun frameHeightPerScreenWidth(kind: FrameKind, aspect: Float) =
+internal fun frameHeightPerScreenWidth(kind: FrameKind, aspect: Float) =
     1f / aspect + ((kind.bezel + RIM) * 2 + kind.baseHeight) * longPerWidth(aspect)
 
 /** The screen's longer side per unit of its width, which every measurement of a frame is a share of. */
@@ -134,5 +134,7 @@ private fun longPerWidth(aspect: Float) = if (aspect >= 1f) 1f else 1f / aspect
 /** Half the height of a chip of two lines, in its text's size: its two lines, its padding, and the slack of its tilt. */
 private const val CHIP_HALF_HEIGHT = 1.6f
 
-private val PURPLE = Color(0xFF5A49CA)
-private val ORANGE = Color(0xFFF57C00)
+/** The app's purple and its icon's orange, which every image of the stores, the README, and the website runs between. */
+internal val BRAND_PURPLE = Color(0xFF5A49CA)
+
+internal val BRAND_ORANGE = Color(0xFFF57C00)

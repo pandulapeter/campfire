@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.screenshots
 
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.skia.Image
@@ -17,22 +18,37 @@ import java.io.File
 import kotlin.system.exitProcess
 
 /**
- * Renders the store screenshots - every [Shot] on every [Device] - and the README's [banners], into a folder per
- * Screenshot Bro row.
+ * Renders the store screenshots - every [Shot] on every [Device] - and the [banners] the composed images show, into a
+ * folder per device or banner.
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
  * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. `--shard <index>/<count>` renders every
  * count-th image from the index-th (to split a run across machines), and `--parallel <processes>` splits what is left
  * across that many processes of the tool ([renderInParallel]), by default half the processors and at most four, as each
- * takes about 1.6 GB. The paths the run needs
+ * takes about 1.6 GB. `--frame all` renders nothing: it frames the renders (from `--renders <folder>`, by default the
+ * renders folder) into the store images in `~/Desktop/Campfire store images <version>` (or `--out <folder>`), the
+ * listing ([frameListing]) and the images laid out by hand ([frameCompositions]), whose README banners go to
+ * `documentation/screenshots`; `--frame listing` or `--frame banners` frames one of the two. The paths the run needs
  * are passed in by the build as system properties.
  */
 fun main(args: Array<String>) {
     val options = args.toList().windowed(size = 2, step = 2, partialWindows = false).associate { (key, value) -> key to value }
-    options["--frame-previews"]?.let { renders ->
-        runBlocking(Dispatchers.Main) { renderFramePreviews(renders = File(renders), output = File(requireNotNull(options["--out"]))) }
-        exitProcess(0)
+    options["--frame"]?.let { set ->
+        val renders = options["--renders"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders"))
+        val output = options["--out"]?.let(::File)
+            ?: File(System.getProperty("user.home"), "Desktop/Campfire store images ${requireProperty("campfire.screenshots.versionName")}")
+        // Framing everything replaces the folder, so that a shot taken out of the listing leaves no image behind; framing one
+        // of the two sets keeps what the other left there.
+        if (set == "all") output.deleteRecursively()
+        val texts = File(requireProperty("campfire.screenshots.screenshotTexts"))
+        val readme = File(requireProperty("campfire.screenshots.readme"))
+        val missing = runBlocking(Dispatchers.Main) {
+            val listing = if (set == "banners") 0 else frameListing(renders = renders, texts = texts, output = output)
+            listing + if (set == "listing") 0 else frameCompositions(renders = renders, output = output, readme = readme)
+        }
+        println("Framed into $output")
+        exitProcess(if (missing == 0) 0 else 1)
     }
     val output = options["--out"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders")).apply { deleteRecursively() }
     val only = options["--only"]?.split(',')?.map(String::trim)?.toSet()
@@ -49,11 +65,15 @@ fun main(args: Array<String>) {
             ?.let { Image.makeFromEncoded(it.readBytes()).toComposeImageBitmap() },
         versionName = requireProperty("campfire.screenshots.versionName"),
     )
-    // A banner's files are numbered by the place of their device in it, which is the order they are imported in.
-    val listing = Device.entries.filter { it.isInListing }.flatMap { device -> shots.map { shot -> Job("listing", device.folder, shot.id, device, shot) } }
+    // The listing is taken in every language of the app, each in a folder of its own, which `--frame listing` reads.
+    val listing = Device.entries.filter { it.isInListing }.flatMap { device ->
+        AppLanguage.entries.filter { it != AppLanguage.SYSTEM_DEFAULT }.flatMap { language ->
+            shots.map { shot -> Job("listing", "${device.folder}/${language.id}", shot.id, device, shot.inTheme(shot.uiMode, language)) }
+        }
+    }
     val bannerJobs = banners.flatMap { banner ->
         banner.slots.mapIndexed { index, (device, shot) ->
-            Job("banners", banner.folder, "%02d-%s-%s".format(index + 1, shot.id, device.name.lowercase()), device, shot)
+            Job("banners", banner.folder, banner.fileName(index), device, shot)
         }
     }
     val websiteJobs = websiteShots.map { (name, device, shot) -> Job("website", "Website", name, device, shot) }

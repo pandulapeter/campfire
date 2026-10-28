@@ -14,17 +14,15 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 
 /**
- * One row of the Screenshot Bro project: the screen its device frame holds, in the pixels the frame expects and the
- * density the platform draws that screen at, and the system chrome around the app there.
+ * A device the shots are taken on: its screen, in pixels, the density the platform draws that screen at, and the system
+ * chrome around the app there.
  *
- * The pixel sizes are the screens of the frames' devices, so an image fills its frame exactly: the iPhone 17 Pro Max,
- * the iPhone Duo's inner display unfolded and on its side, the 13" iPad Pro, the Pixel 9, and the 14" and 16" MacBook Pros
- * the desktop rows are framed in. The Android tablet
- * frame is a generic one, whose screen (556 by 916 inside its 600 by 960) is a little narrower than a 16:10 tablet's,
- * and which fills it by cropping the image's sides, so its shots are rendered at that screen's own shape. The densities are the platforms' own for those screens (2x on a Retina display, which is also Windows at 200%),
- * which decides how much of the app fits, so the shots show as much of a song as the device would.
+ * The pixel sizes are real devices' screens: the iPhone 17 Pro Max, the iPhone Duo's inner display unfolded and on its
+ * side, the 13" iPad Pro, the Pixel 9, and the 14" and 16" MacBook Pros, and for the Android tablets a screen a little
+ * narrower than 16:10. The densities are the platforms' own for those screens (2x on a Retina display, which is also
+ * Windows at 200%), which decides how much of the app fits, so the shots show as much of a song as the device would.
  *
- * @property folder The name of the folder the shots are written to, which is the Screenshot Bro row's label.
+ * @property folder The name of the folder the shots are written to.
  */
 internal enum class Device(
     val folder: String,

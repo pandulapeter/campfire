@@ -1,6 +1,6 @@
 ---
 name: website-screenshots
-description: Retake campfire-songbook.com's images — its screenshots in every language of the app and its link preview (og-image.jpg) — and the README banners. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, frames the link preview and the banners in the Screenshot Bro project, and writes the website's images to the sibling CampfireWebsite repository and the banners to documentation/screenshots. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh, or update the website screenshots, the link preview / og-image, or the README banners / README screenshots, or to add, change, or reorder one of them. Not for the store listings and the stores' other images (that is store-screenshots), nor for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
+description: Retake campfire-songbook.com's images — its screenshots in every language of the app and its link preview (og-image.jpg) — and the README banners. Renders them with the offscreen screenshot tool in tools/screenshots, checks them, composes the link preview and the banners with it, and writes the website's images to the sibling CampfireWebsite repository and the banners to documentation/screenshots. Invoke this skill WHENEVER the user asks to retake, regenerate, refresh, or update the website screenshots, the link preview / og-image, or the README banners / README screenshots, or to add, change, or reorder one of them. Not for the store listings and the stores' other images (that is store-screenshots), nor for screenshots taken to verify a change while developing (that is the run skill and the platform verification recipes).
 ---
 
 <!--
@@ -17,74 +17,47 @@ description: Retake campfire-songbook.com's images — its screenshots in every 
 
 Made like the store images (the `store-screenshots` skill): the desktop build drawn offscreen as each platform by
 `tools/screenshots` (see its `CLAUDE.md`). The website's screenshots go to the site as rendered; its link preview and
-the README banners are multi-device rows framed in the same Screenshot Bro project as the store images.
+the README banners are composed from the same tool's renders (`Compositions.kt`).
 
 ## What a run needs
 
 - **The library**, in `tools/screenshots/library/` (gitignored, never committed): a Campfire data folder's
-  `library/`, `covers/`, and `preferences/preferences.json`, copied from the user's desktop library without the sync
-  credentials, the sync index, or the log. If it is missing, stop and ask. Never write into the user's real data
-  folder.
-- **Screenshot Bro** running, with the `Campfire` project (`list_projects`), and **Full Disk Access for the IDE that
-  runs Claude Code** (Android Studio). The link preview is part of the website, so a run needs it: without the
-  `screenshot-bro` tools, stop and say so (the server may only have failed to connect). Where Screenshot Bro is
-  installed but has no `Campfire` project, quit it and run `python3 -I
-  .claude/skills/store-screenshots/scripts/screenshot_bro_project.py restore`, then reopen it.
+  `library/`, `covers/`, and `preferences/preferences.json`, stripped to what the images show. If it is missing, stop
+  and ask. Never write into the user's real data folder.
+- **Nothing else building in the clone** while a render runs.
 - **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
 
 ## Where everything goes
 
 | What | Made from | Ends up in |
 |---|---|---|
-| Website screenshots | `Website.kt`, no Screenshot Bro | `../CampfireWebsite/assets/screenshots/*.webp` (or `../campfire-website/`) at each file's own size, the other languages in `assets/screenshots/<language>/` |
-| Website link preview | `Banners.kt` → Screenshot Bro (`Website - Link preview`) | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
-| README banners | `Banners.kt` → Screenshot Bro (`GitHub - Banner 1` / `2`) | `documentation/screenshots/01–06.webp`, 1200×900 |
+| Website screenshots | `Website.kt` | `../CampfireWebsite/assets/screenshots/*.webp` (or `../campfire-website/`) at each file's own size, the other languages in `assets/screenshots/<language>/` |
+| Website link preview | `Compositions.kt` | `../CampfireWebsite/assets/og-image.jpg`, 1200×630 |
+| README banners | `Compositions.kt` | `documentation/screenshots/01–06.webp`, 1200×900 |
 
-Nothing is committed, in either repository; the user reviews and commits.
+Nothing is committed, in either repository, unless the user asks.
 
 ## Steps
 
 1. **Render.** `./gradlew :tools:screenshots:run --args="--only website,banners"` in the background (the `banners`
-   set also holds the stores' multi-device rows, a handful of images; leave them). Never rebuild the tool while a
-   render is running.
-2. **Check every image before importing anything**: a contact sheet per folder (PIL), then anything that looks off at
-   full size — the theme, nothing loading, no stray dialog or snackbar, the rules below, text fitting. Fix the shot or
-   the tool and render again rather than importing a bad image.
-3. **Stage** the three rows' folders of `tools/screenshots/renders/` into
-   `~/Library/Containers/xyz.tleskiv.screenshot/Data/tmp/campfire/` (Screenshot Bro is sandboxed).
-4. **Import** into these rows only, after `get_project`: **the user's layout is kept exactly**. Each row has several
-   frames in a column, and `import_screenshots` fills only the rearmost frame of each column, one per column, resizing
-   every frame it fills to the image's aspect ratio. So give each extra frame a temporary column (`add_template`,
-   `delete_shape` the default device it drops in, move the frame's `x` there), import, move it back, `remove_template`,
-   and put each frame's `x`, `width`, and `height` back. Then restore the stacking with `z_order: front` in
-   back-to-front order, keeping every MacBook's black camera-housing strip above its frame.
-
-   | Row label | Row id |
-   |---|---|
-   | GitHub - Banner 1 | `D14A5619-01BE-4E2D-A654-187E8467999A` |
-   | GitHub - Banner 2 | `9B2BA297-3919-4691-A358-C90C3C2AAF95` |
-   | Website - Link preview | `EB3026C2-34AF-48BA-A338-DAD16A8014B9` |
-
-   If a row's label or frames are not what this table and `Banners.kt` expect, stop and say so.
-5. **Look at each row** with `render_preview`: the status bar's time and the navigation labels uncut, the images
-   filling their frames, nothing stretched.
-6. **Export** with `export_project` (into the app's temp folder; a non-empty `unrenderable` means holes — report it).
-   The banners go to the README: `python3 -I .claude/skills/website-screenshots/scripts/readme_banners.py <repo root>`
-   followed by banner 1's three exported images and then banner 2's.
-7. **The website**: `python3 -I .claude/skills/website-screenshots/scripts/website_screenshots.py
-   tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "<export folder>/Website -
-   Link preview — 1200x630/01_Website - Link preview_en.png"` writes every website screenshot at the size the site
-   draws its device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders
-   of a playing metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page
+   set also holds the stores' composed images' shots, a handful; leave them).
+2. **Check every image**: a contact sheet per folder (PIL), then anything that looks off at full size — the theme,
+   nothing loading, no stray dialog or snackbar, the rules below, text fitting. Fix the shot or the tool and render
+   again rather than using a bad image.
+3. **Compose** the banners and the link preview: `./gradlew :tools:screenshots:run --args="--frame banners"` writes
+   the README's `documentation/screenshots/01–06.webp` and, with the stores' composed images, the link preview into
+   `~/Desktop/Campfire store images <version>/website/link-preview.png`. Look at each.
+4. **The website**: `python3 -I .claude/skills/website-screenshots/scripts/website_screenshots.py
+   tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "$HOME/Desktop/Campfire
+   store images <version>/website/link-preview.png"` writes every website screenshot at the size the site draws its
+   device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a
+   playing metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page
    fades in. Each language's renders (`renders/Website/<language>/`) go to `assets/screenshots/<language>/`, where the
    site's pages in that language pick them up; one identical to the English render is left out, so those pages fall
    back to the English file. It finds the website's repository as a sibling folder named `CampfireWebsite` (the
    owner's) or `campfire-website` (a plain clone), or where `--website <path>` says; where there is none it writes to
    the Desktop folder and says so.
-8. **Save the project** with `python3 -I .claude/skills/store-screenshots/scripts/screenshot_bro_project.py save`; a
-   diff that is not the run's own changes is the user's work in the app: keep it.
-9. **Clean up** the staging and export folders in the app's container, and report what was written where and anything
-   that looked off.
+5. **Report** what was written where and anything that looked off.
 
 ## The shots and their rules
 

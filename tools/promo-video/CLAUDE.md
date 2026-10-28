@@ -59,7 +59,7 @@ Remotion is not open source: free for individuals and companies of up to three p
 - Text animates by moving and fading together, never masked or clipped.
 - No gradient text or buttons (they read as AI-made, and neither the app nor the website has them); the URL is plain
   text with nothing behind it.
-- Headlines look exactly like the store listings' in Screenshot Bro, only their size differs: Inter Regular, white,
+- Headlines look exactly like the store listings', only their size differs: Inter Regular, white,
   letter spacing −5% of the size, line height 0.9, centred, both lines alike.
 - In portrait and square, a headline is centred vertically in the gap between the frame's edge and its scene's device:
   above the device's top, or (the opening's, in portrait) below its bottom (`deviceTop`, `deviceBottom`).

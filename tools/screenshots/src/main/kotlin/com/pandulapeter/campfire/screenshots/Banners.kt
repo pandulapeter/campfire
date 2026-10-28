@@ -12,15 +12,19 @@ package com.pandulapeter.campfire.screenshots
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
- * A Screenshot Bro row that shows several of the listing's shots at once, each on another device, in the order its
- * devices are imported in: the README's banners, the Play Store's feature graphic and the website's link preview.
+ * A set of the listing's shots that one image shows at once, each on another device, which a [Composition] lays out: the
+ * README's banners, the Play Store's feature graphic, Apple's header and search results images, and the website's link
+ * preview.
  *
- * @property folder The name of the folder the shots are written to, which is the Screenshot Bro row's label.
+ * @property folder The name of the folder the shots are rendered into.
  */
 internal class Banner(
     val folder: String,
     val slots: List<Pair<Device, Shot>>,
-)
+) {
+    /** The name the render of the slot at [index] is written under, numbered by its place in [slots]. */
+    fun fileName(index: Int) = slots[index].let { (device, shot) -> "%02d-%s-%s".format(index + 1, shot.id, device.name.lowercase()) }
+}
 
 /**
  * The two banners at the top of the README - the same five shots, in the dark theme from the phone to the Mac and in
@@ -74,3 +78,6 @@ internal val banners: List<Banner> by lazy {
 }
 
 private fun shot(id: String) = shots.first { it.id == id }
+
+/** The banner rendered into [folder]. */
+internal fun banner(folder: String) = banners.first { it.folder == folder }

@@ -116,6 +116,8 @@ tasks.named<JavaExec>("run") {
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.library", file("library").absolutePath)
     systemProperty("campfire.screenshots.renders", file("renders").absolutePath)
+    systemProperty("campfire.screenshots.screenshotTexts", rootProject.file("documentation/store-listings/screenshot-texts").absolutePath)
+    systemProperty("campfire.screenshots.readme", rootProject.file("documentation/screenshots").absolutePath)
     systemProperty("campfire.screenshots.fonts", fonts.get().asFile.absolutePath)
     systemProperty("campfire.screenshots.appIcon", rootProject.file("app/desktop/src/main/composeResources/drawable/app_icon.png").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
