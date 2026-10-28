@@ -17,13 +17,14 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
  * preview.
  *
  * @property folder The name of the folder the shots are rendered into.
- * @property isLocalized Whether the shots are rendered in every language of the app, each into a folder of its own,
- *   for an image the stores show in every language.
+ * @property isForStores Whether a store shows the image, which is then rendered in every language of the app, each into
+ *   a folder of its own, with the store listing (the `store-banners` set); the README's and the website's are the
+ *   `readme-banners` set.
  */
 internal class Banner(
     val folder: String,
     val slots: List<Pair<Device, Shot>>,
-    val isLocalized: Boolean = false,
+    val isForStores: Boolean = false,
 ) {
     /** The name the render of the slot at [index] is written under, numbered by its place in [slots]. */
     fun fileName(index: Int) = slots[index].let { (device, shot) -> "%02d-%s-%s".format(index + 1, shot.id, device.name.lowercase()) }
@@ -55,7 +56,7 @@ internal val banners: List<Banner> by lazy {
         Banner(
             folder = "Play Store - Banner",
             slots = listOf(Device.ANDROID_PHONE to shot("01-songs"), Device.ANDROID_PHONE to shot("02-song")),
-            isLocalized = true,
+            isForStores = true,
         ),
         // Apple's product page header (21:9) and search results image (3:2): every Apple device at once on the first,
         // and the song on the iPad with its metronome and tuner on the iPhone on the second, all in the dark theme.
@@ -66,7 +67,7 @@ internal val banners: List<Banner> by lazy {
                 Device.MAC to shot("02-song"),
                 Device.IPHONE to shot("01-songs"),
             ),
-            isLocalized = true,
+            isForStores = true,
         ),
         Banner(
             folder = "App Store - Search results",
@@ -74,7 +75,7 @@ internal val banners: List<Banner> by lazy {
                 Device.IPAD to shot("02-song"),
                 Device.IPHONE to shot("03-metronome-tuner").inTheme(UserPreferences.UiMode.DARK),
             ),
-            isLocalized = true,
+            isForStores = true,
         ),
         Banner(
             folder = "Website - Link preview",

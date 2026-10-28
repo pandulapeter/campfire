@@ -125,6 +125,6 @@ internal val compositions = listOf(
             Logo(x = 23, y = 420, width = 181, height = 181),
             Screen(slot = 1, kind = FrameKind.PHONE, x = 768, y = 35, width = 466, height = 951, rotation = 9.1f),
         ),
-        outputs = listOf(Output("website/link-preview.png")),
+        outputs = listOf(Output("link-preview.png")),
     ),
 )

@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.screenshots
  * a canvas of [widthPx] by [heightPx], in its pixels, over [background], and it is written to [outputs]: one file, or a
  * panorama cut into as many equal parts side by side, each scaled by [scale] (the README's banners are drawn at their
  * stores' size and written at half of it). An output path's `{language}` is the language of an image drawn in every
- * language of the app, which one whose [banner] is localized is.
+ * language of the app, which one whose [banner] is for the stores is.
  *
  * @property banner The folder of the [Banner] whose renders its screens show, by their slot.
  */
@@ -28,6 +28,9 @@ internal class Composition(
     val outputs: List<Output>,
     val scale: Float = 1f,
 ) {
+    /** Whether a store shows it: everything but the README's banners and the website's link preview. */
+    val isForStores get() = banner?.let(::banner)?.isForStores ?: true
+
     enum class Background {
         /** The listing's: the app's purple at the top start corner running into the orange at the bottom end. */
         LINEAR,

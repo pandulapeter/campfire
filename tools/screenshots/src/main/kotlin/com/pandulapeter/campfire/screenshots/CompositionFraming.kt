@@ -23,18 +23,19 @@ import java.io.File
 import kotlin.math.roundToInt
 
 /**
- * Draws every [Composition] from the banners' renders in [renders] and writes its files: the store images and the link
- * preview into [output], the README's banners into [readme]. One whose banner is localized is drawn in every language
- * whose texts are in [texts], from that language's renders. Returns how many images were missing a render.
+ * Draws the stores' [Composition]s, or where not [isForStores] the README's and the website's, from the banners' renders
+ * in [renders] and writes their files: the README's banners into [readme], the others into [output]. One whose banner
+ * is for the stores is drawn in every language whose texts are in [texts], from that language's renders. Returns how
+ * many images were missing a render.
  */
-internal suspend fun frameCompositions(renders: File, texts: File, output: File, readme: File): Int {
+internal suspend fun frameCompositions(renders: File, texts: File, output: File, readme: File, isForStores: Boolean): Int {
     val byLanguage = readAllListingTexts(texts)
     var missing = 0
-    compositions.forEach { composition ->
+    compositions.filter { it.isForStores == isForStores }.forEach { composition ->
         val banner = composition.banner?.let(::banner)
-        val languages = if (banner?.isLocalized == true) byLanguage.keys.toList() else listOf(ENGLISH)
+        val languages = if (banner?.isForStores == true) byLanguage.keys.toList() else listOf(ENGLISH)
         languages.forEach { language ->
-            val folder = if (banner?.isLocalized == true) "${banner.folder}/$language" else banner?.folder
+            val folder = if (banner?.isForStores == true) "${banner.folder}/$language" else banner?.folder
             val slots = composition.elements.filterIsInstance<Composition.Screen>().map { it.slot }
             val sources = slots.associateWith { slot -> File(renders, "$folder/${checkNotNull(banner).fileName(slot)}.png") }
             val absent = sources.values.filterNot(File::isFile)

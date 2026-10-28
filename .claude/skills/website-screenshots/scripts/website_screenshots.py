@@ -124,7 +124,7 @@ def main():
     for language in sorted(path for path in arguments.renders.iterdir() if path.is_dir()):
         copy_screenshots(language, screenshots / language.name, english_renders=arguments.renders)
     if arguments.link_preview is None:
-        print("No link preview given (the screenshot tool composes it with --frame banners), so og-image.jpg is left as it was.")
+        print("No link preview given (the screenshot tool composes it with --frame readme), so og-image.jpg is left as it was.")
         return
     og = target / "og-image.jpg"
     size = Image.open(og).size if og.exists() else OG_SIZE

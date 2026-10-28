@@ -43,23 +43,22 @@ PNG with no alpha channel (Apple refuses screenshots that have one, Play a featu
 | Apple's product page header and search results image (every language; the caption is `search-results` in the texts) | `Compositions.kt` | `app-store/<language>/header.png`, `app-store/<language>/search-results.png` |
 | Microsoft's poster and box art | `Compositions.kt` | `microsoft-store/poster-art.png`, `microsoft-store/box-art.png` |
 
-The same framing also writes the website's link preview (`website/link-preview.png`) and the README's banners
-(`documentation/screenshots/01–06.webp`), which show the same shots: say so when they changed, since they are the
-`website-screenshots` skill's to publish. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on
+The README's banners and the website's link preview show the same shots: say so when a shot changed, since they are
+the `website-screenshots` skill's to remake. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on
 every run. Nothing is committed unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,banners"` in the background (a render without
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only listing,store-banners"` in the background (a render without
    `--out` empties `renders/` first, so nothing else may render in the clone until the framing is done) (one app start
    per image, a few seconds each; the listing is about 500 images, half an hour): every shot of `Shot.kt` on every
-   listing `Device` in every language, into `renders/<row label>/<language>/`, and the shots of `Banners.kt`.
+   listing `Device` in every language, into `renders/<row label>/<language>/`, and the stores' shots of `Banners.kt`.
    `--only` also takes device enum names and shot ids. A failed render is reported and the run goes on; grep the log
    for `Exception` as well, since a broken class fails a shot that still counts as written.
 2. **Check the renders**: a contact sheet per device and language (PIL), then anything that looks off at full size —
    the theme, nothing loading, no stray dialog or snackbar, the shot's rules (below), text fitting in every language.
    Fix the shot or the tool and render again rather than framing a bad image.
-3. **Frame**: `./gradlew :tools:screenshots:run --args="--frame all"` (a few minutes; it reports any render or text
+3. **Frame**: `./gradlew :tools:screenshots:run --args="--frame store"` (a few minutes; it reports any render or text
    missing). Look at a contact sheet per store and language and at every composed image: the headline on its lines,
    every chip inside the image and readable, its lines balanced, none covering what its shot is about. A translation
    that wraps a chip into too many lines gets shorter words in its `screenshot-texts` file (`check_store_listings.py`

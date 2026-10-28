@@ -39,17 +39,16 @@ Nothing is committed, in either repository, unless the user asks.
 
 ## Steps
 
-1. **Render.** `./gradlew :tools:screenshots:run --args="--only website,banners"` in the background (the `banners`
-   set also holds the stores' composed images' shots, a handful; leave them).
+1. **Render.** `./gradlew :tools:screenshots:run --args="--only website,readme-banners"` in the background.
 2. **Check every image**: a contact sheet per folder (PIL), then anything that looks off at full size — the theme,
    nothing loading, no stray dialog or snackbar, the rules below, text fitting. Fix the shot or the tool and render
    again rather than using a bad image.
-3. **Compose** the banners and the link preview: `./gradlew :tools:screenshots:run --args="--frame banners"` writes
-   the README's `documentation/screenshots/01–06.webp` and, with the stores' composed images, the link preview into
-   `~/Desktop/Campfire store images <version>/website/link-preview.png`. Look at each.
+3. **Compose** the banners and the link preview: `./gradlew :tools:screenshots:run --args="--frame readme"` writes
+   the README's `documentation/screenshots/01–06.webp` and the link preview into
+   `~/Desktop/Campfire website images/link-preview.png`. Look at each.
 4. **The website**: `python3 -I .claude/skills/website-screenshots/scripts/website_screenshots.py
    tools/screenshots/renders/Website "$HOME/Desktop/Campfire website images" --link-preview "$HOME/Desktop/Campfire
-   store images <version>/website/link-preview.png"` writes every website screenshot at the size the site draws its
+   website images/link-preview.png"` writes every website screenshot at the size the site draws its
    device at (the script's `SIZES`), as WebP, and the link preview as `og-image.jpg`. The `-beat-<n>` renders of a
    playing metronome become one `<name>-beats-<theme>.webp` instead, the lit beats on a transparent strip the page
    fades in. Each language's renders (`renders/Website/<language>/`) go to `assets/screenshots/<language>/`, where the

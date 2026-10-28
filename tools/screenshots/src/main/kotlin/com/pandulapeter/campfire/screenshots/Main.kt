@@ -23,29 +23,32 @@ import kotlin.system.exitProcess
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
- * shot's id, or `listing`, `banners`, `website` or `promo`) renders part of them. `--shard <index>/<count>` renders every
+ * shot's id, or `listing`, `store-banners`, `website`, `readme-banners` or `promo`) renders part of them. `--shard <index>/<count>` renders every
  * count-th image from the index-th (to split a run across machines), and `--parallel <processes>` splits what is left
  * across that many processes of the tool ([renderInParallel]), by default half the processors and at most four, as each
- * takes about 1.6 GB. `--frame all` renders nothing: it frames the renders (from `--renders <folder>`, by default the
+ * takes about 1.6 GB. `--frame store` renders nothing: it frames the renders (from `--renders <folder>`, by default the
  * renders folder) into the store images in `~/Desktop/Campfire store images <version>` (or `--out <folder>`), the
- * listing ([frameListing]) and the images laid out by hand ([frameCompositions]), whose README banners go to
- * `documentation/screenshots`; `--frame listing` or `--frame banners` frames one of the two. The paths the run needs
- * are passed in by the build as system properties.
+ * listing ([frameListing]) and the stores' images laid out by hand ([frameCompositions]); `--frame readme` composes the
+ * README's banners into `documentation/screenshots` and the website's link preview into `~/Desktop/Campfire website
+ * images`. The paths the run needs are passed in by the build as system properties.
  */
 fun main(args: Array<String>) {
     val options = args.toList().windowed(size = 2, step = 2, partialWindows = false).associate { (key, value) -> key to value }
     options["--frame"]?.let { set ->
+        require(set == "store" || set == "readme") { "--frame takes store or readme, not $set." }
+        val isForStores = set == "store"
         val renders = options["--renders"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders"))
-        val output = options["--out"]?.let(::File)
-            ?: File(System.getProperty("user.home"), "Desktop/Campfire store images ${requireProperty("campfire.screenshots.versionName")}")
-        // Framing everything replaces the folder, so that a shot taken out of the listing leaves no image behind; framing one
-        // of the two sets keeps what the other left there.
-        if (set == "all") output.deleteRecursively()
+        val output = options["--out"]?.let(::File) ?: File(
+            System.getProperty("user.home"),
+            if (isForStores) "Desktop/Campfire store images ${requireProperty("campfire.screenshots.versionName")}" else "Desktop/Campfire website images",
+        )
+        // The store images replace the folder, so that a shot taken out of the listing leaves no image behind.
+        if (isForStores) output.deleteRecursively()
         val texts = File(requireProperty("campfire.screenshots.screenshotTexts"))
         val readme = File(requireProperty("campfire.screenshots.readme"))
         val missing = runBlocking(Dispatchers.Main) {
-            val listing = if (set == "banners") 0 else frameListing(renders = renders, texts = texts, output = output)
-            listing + if (set == "listing") 0 else frameCompositions(renders = renders, texts = texts, output = output, readme = readme)
+            val listing = if (isForStores) frameListing(renders = renders, texts = texts, output = output) else 0
+            listing + frameCompositions(renders = renders, texts = texts, output = output, readme = readme, isForStores = isForStores)
         }
         println("Framed into $output")
         exitProcess(if (missing == 0) 0 else 1)
@@ -74,10 +77,16 @@ fun main(args: Array<String>) {
         }
     }
     val bannerJobs = banners.flatMap { banner ->
-        (if (banner.isLocalized) languages else listOf(null)).flatMap { language ->
+        (if (banner.isForStores) languages else listOf(null)).flatMap { language ->
             banner.slots.mapIndexed { index, (device, shot) ->
                 val folder = if (language == null) banner.folder else "${banner.folder}/${language.id}"
-                Job("banners", folder, banner.fileName(index), device, if (language == null) shot else shot.inTheme(shot.uiMode, language))
+                Job(
+                    set = if (banner.isForStores) "store-banners" else "readme-banners",
+                    folder = folder,
+                    name = banner.fileName(index),
+                    device = device,
+                    shot = if (language == null) shot else shot.inTheme(shot.uiMode, language),
+                )
             }
         }
     }
