@@ -52,6 +52,17 @@ class PdfRunningLinesTest {
     }
 
     @Test
+    fun `a section heading that opens two pages is kept`() = runTest {
+        val pages = extract(3) { page ->
+            val heading = when (page) { 2 -> "1 0 0 1 50 780 Tm (Verse 2) Tj "; 3 -> "1 0 0 1 50 780 Tm (Verse 6) Tj "; else -> "" }
+            heading + "1 0 0 1 50 700 Tm (A line sung on page $page) Tj"
+        }
+
+        assertEquals(listOf("Verse 2", "A line sung on page 2"), pages[1])
+        assertEquals(listOf("Verse 6", "A line sung on page 3"), pages[2])
+    }
+
+    @Test
     fun `a page count written out is this page's own only`() {
         assertTrue(PdfRunningLines.isPageCount("2 of 3", page = 2, pageCount = 3))
         assertTrue(PdfRunningLines.isPageCount("Page 2 of 3", page = 2, pageCount = 3))
