@@ -15,7 +15,7 @@
 #
 # The "what's new" text for the stores is read out of the release's description, from comments the rendered page hides:
 #
-#   <!-- whats-new en-US
+#   <!-- whats-new en
 #   - Up to 500 characters of plain text
 #   -->
 #   <!-- play-store update-priority: 0 -->

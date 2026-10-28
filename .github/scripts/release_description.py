@@ -61,10 +61,12 @@ def unreadable_instructions(body):
         text = comment.group(0)
         whats_new = WHATS_NEW.fullmatch(text)
         if whats_new:
-            language = whats_new.group(1).lower()
-            # A block in another language is left alone; one that is almost en-US was meant to be read.
-            if language != "en-us" and (language == "en" or language.startswith(("en-", "en_"))):
-                messages.append(f"The release has a \"whats-new {whats_new.group(1)}\" block; the stores read \"whats-new en-US\".")
+            tag = whats_new.group(1)
+            # A block is named by the app's language alone: each store's script writes it into every locale of that
+            # language the store has (fr-FR and fr-CA alike), so a country in the tag would be read as nothing.
+            if not re.fullmatch(r"[a-z]{2,3}", tag, re.I):
+                language = re.split(r"[-_]", tag)[0]
+                messages.append(f"The release has a \"whats-new {tag}\" block; it is named by the language alone, \"whats-new {language}\".")
             continue
         if PRIORITY.fullmatch(text) or SUBMIT.fullmatch(text):
             continue
@@ -86,8 +88,8 @@ def read(body):
     warnings = []
 
     # A case slip in the header still reads: whats-new is a word nobody means anything else by. A block in any other
-    # language is left alone, since every store listing is in English only.
-    match = re.search(r"<!--[ \t]*whats-new[ \t]+en-US[ \t]*\n(.*?)-->", body, re.S | re.I)
+    # language is left alone until the store scripts write the notes per language.
+    match = re.search(r"<!--[ \t]*whats-new[ \t]+en[ \t]*\n(.*?)-->", body, re.S | re.I)
     notes = match.group(1).strip() if match else ""
     if not notes:
         visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)

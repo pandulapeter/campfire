@@ -89,7 +89,7 @@ Each item is checked by `wiring` in step 7.
    which step 5's store listings provide.
 
 Nothing else per platform: Android needs no locale config (the language is chosen in the app), the desktop runtime
-already carries every locale (`jdk.localedata`), and only English release notes are published (`whats-new en-US`).
+already carries every locale (`jdk.localedata`), and only English release notes are published so far (`whats-new en`).
 
 ## 4. Docs that list the languages
 

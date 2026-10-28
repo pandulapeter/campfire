@@ -104,7 +104,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
    Show the user, in the reply itself (not in a file):
    - the bullets as the dialog shows them, ranked, each `**Headline**` and its description, with its word count;
    - the cluster table, marking which clusters made it and why the rest did not;
-   - the stores' `whats-new en-US` block (**Style — the store "what's new"**) with its character count, and which
+   - the stores' `whats-new en` block (**Style — the store "what's new"**) with its character count, and which
      bullets it dropped.
 
    Then **stop and wait for the user's answer**. Revise by their feedback and show the whole changelog again, as
@@ -300,11 +300,11 @@ the rendered release page does not show. They go at the very end of the draft, a
 all of them are always written:
 
 ```
-<!-- whats-new en-US
+<!-- whats-new en
 - bullet one
 - bullet two
 -->
-<!-- whats-new de-DE
+<!-- whats-new de
 - erster Punkt
 - zweiter Punkt
 -->
@@ -316,15 +316,17 @@ all of them are always written:
 <!-- microsoft-store submit: true -->
 ```
 
-- **`whats-new en-US`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
+- **`whats-new en`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
   Store read the same block as the "What's New" of the version submitted for review, and the Microsoft Store
   as the "What's new in this version" of its submission — so nothing in it may
   be about one store or assume one platform unless the bullet itself is about that platform. The
   release's bullets, trimmed to the ones a store visitor would care about, in the same voice as the
   GitHub notes, one per line as `- Headline: description.` (the same six-at-most bullets, without the bold).
 - **A `whats-new` block for every other language of the app**, right after the English one, in the order of the
-  `values-*` folders by code (list them as step 8 does): `de-DE`, `es-ES`, `fr-FR`, `hu-HU`, `it-IT`, `ro-RO`, and a new
-  language as its code and its main country (`pt-BR` for Portuguese, say). Each is that language's store notes,
+  `values-*` folders by code (list them as step 8 does): `de`, `es`, `fr`, `hu`, `it`, `ro`, and a new language as
+  its folder's code. **A block is named by the language alone, never with a country** (`fr`, not `fr-FR`):
+  `release_description.py` stops a release whose tag names one, and each store's script fills in every locale of that
+  language the store has (Play's `fr-FR` and `fr-CA`, Apple's plain `ro`). Each is that language's store notes,
   passed to the stores exactly as the English block is: the same bullets as the English block, in the same order,
   each one's headline the in-app message's headline in that language (step 8's `whats_new_message`) and its
   description condensed from that message's sentence the way the English block condenses the English one, in the
@@ -332,7 +334,7 @@ all of them are always written:
   the 500 characters included: languages run longer than English, so tighten the wording (never drop a bullet the
   English block keeps) and count each block with a real interpreter. The blocks are shown with their counts in step
   11's report. Until `documentation/plans/store-listings-sync.md` lands, `release_description.py` reads only
-  `whats-new en-US` and leaves the others alone, so the blocks go out unread and harmless.
+  `whats-new en` and leaves the others alone, so the blocks go out unread and harmless.
 - **500 characters at most**, newlines included — Play's limit, the tightest of the stores. Check it with
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.

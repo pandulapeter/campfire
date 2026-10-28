@@ -12,7 +12,7 @@ from release_description import ReleaseDescriptionError, read
 
 
 def notes_of(length):
-    return f"<!-- whats-new en-US\n{'x' * length}\n-->\n"
+    return f"<!-- whats-new en\n{'x' * length}\n-->\n"
 
 
 class ReadTest(unittest.TestCase):
@@ -25,25 +25,31 @@ class ReadTest(unittest.TestCase):
             self.assertEqual(outputs[f"{store}_submit"], "true")
 
     def test_no_notes_anywhere_give_the_default_line(self):
-        for body in ["", "<!-- whats-new en-US\n-->\n", "<!-- play-store update-priority: 0 -->\n<!-- app-store submit: true -->\n"]:
+        for body in ["", "<!-- whats-new en\n-->\n", "<!-- play-store update-priority: 0 -->\n<!-- app-store submit: true -->\n"]:
             self.assertEqual(read(body)["outputs"]["release_notes"], "Bug fixes and improvements.")
-        self.assertEqual(read("<!-- whats-new en-US\n-->\nVisible.")["outputs"]["release_notes"], "Visible.")
+        self.assertEqual(read("<!-- whats-new en\n-->\nVisible.")["outputs"]["release_notes"], "Visible.")
 
     def test_whats_new_is_read_in_either_case(self):
-        for header in ["en-US", "en-us", "EN-US"]:
+        for header in ["en", "EN"]:
             body = f"Visible.\n<!-- whats-new {header}\n- **Bold** stays\n-->\n"
             self.assertEqual(read(body)["outputs"]["release_notes"], "- **Bold** stays")
 
     def test_whats_new_in_another_language_is_left_alone(self):
-        body = "Visible.\n<!-- whats-new hu-HU\n- Magyar\n-->\n"
+        body = "Visible.\n<!-- whats-new hu\n- Magyar\n-->\n"
         self.assertEqual(read(body)["outputs"]["release_notes"], "Visible.")
 
+    def test_a_whats_new_naming_a_country_stops_the_release(self):
+        for tag in ["en-US", "en_GB", "hu-HU", "ro-RO", "pt-BR"]:
+            with self.assertRaises(ReleaseDescriptionError) as context:
+                read(f"Vis\n<!-- whats-new {tag}\n- n\n-->")
+            self.assertIn(f"\"whats-new {tag.split('-')[0].split('_')[0]}\"", context.exception.messages[0])
+
     def test_the_first_whats_new_wins(self):
-        body = "<!-- whats-new en-US\n- First\n-->\n<!-- whats-new en-US\n- Second\n-->\n"
+        body = "<!-- whats-new en\n- First\n-->\n<!-- whats-new en\n- Second\n-->\n"
         self.assertEqual(read(body)["outputs"]["release_notes"], "- First")
 
     def test_crlf_reads_like_lf(self):
-        lf = "Visible.\n<!-- whats-new en-US\n- One\n- Two\n-->\n<!-- play-store update-priority: 3 -->\n<!-- app-store submit: false -->\n"
+        lf = "Visible.\n<!-- whats-new en\n- One\n- Two\n-->\n<!-- play-store update-priority: 3 -->\n<!-- app-store submit: false -->\n"
         self.assertEqual(read(lf.replace("\n", "\r\n")), read(lf))
 
     def test_submit_values(self):
@@ -95,8 +101,7 @@ class ReadTest(unittest.TestCase):
             "<!-- play-store submit : false -->",
             "<!-- microsoft-store: submit false -->",
             "<!-- play-store update_priority: 5 -->",
-            "Vis\n<!-- whats-new en-US - one line -->",
-            "Vis\n<!-- whats-new en\n- n\n-->",
+            "Vis\n<!-- whats-new en - one line -->",
         ]:
             with self.assertRaises(ReleaseDescriptionError):
                 read(body)
@@ -112,7 +117,8 @@ class ReadTest(unittest.TestCase):
     def test_the_prepare_release_template_reads(self):
         body = (
             "Visible.\n\n"
-            "<!-- whats-new en-US\n- bullet one\n- bullet two\n-->\n"
+            "<!-- whats-new en\n- bullet one\n- bullet two\n-->\n"
+            "<!-- whats-new de\n- erster Punkt\n-->\n"
             "<!-- play-store update-priority: 3 -->\n"
             "<!-- play-store submit: true -->\n"
             "<!-- app-store submit: true -->\n"

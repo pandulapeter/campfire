@@ -42,8 +42,10 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 ### Release notes and per-store switches
 
 `publish-all.yml` reads hidden comments in the release description with `.github/scripts/release_description.py`
-(format in `publish-all.yml`'s header): the `whats-new` notes for every store, Play's `update-priority`, and a `submit`
-switch for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`false` leaves that store a draft).
+(format in `publish-all.yml`'s header): the `whats-new` notes for every store (one block per app language, named by
+the language alone, `whats-new en`: a country in the tag stops the release, since each store's locales are filled in
+from the language), Play's `update-priority`, and a `submit` switch for `play-store`, `app-store`, `mac-app-store`, and
+`microsoft-store` (`false` leaves that store a draft).
 
 - Anything unreadable is not taken as absent, since every default is the stronger action: an unknown store, a `submit`
   other than `true`/`false`, a priority outside 0–5, or notes over App Store Connect's 4 000 or Partner Center's 1 500
@@ -51,8 +53,9 @@ switch for `play-store`, `app-store`, `mac-app-store`, and `microsoft-store` (`f
   lines that fit).
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown, then "Bug fixes and improvements.", or (hand dispatch with
-  nothing given) the commit log since the previous tag. The notes are English, written into every language's listing;
-  the listings themselves are pasted by hand from `documentation/store-listings/<store>/<language>.md`.
+  nothing given) the commit log since the previous tag. Only the `en` block is read so far, written into every
+  language's listing; the listings themselves are pasted by hand from
+  `documentation/store-listings/<store>/<language>.md`.
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
 
 ## The workflows

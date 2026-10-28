@@ -16,15 +16,17 @@
 **Scope:**
 
 - **Updates only.** The owner creates every language's listing by hand once, in each console; from then on the release
-  keeps them current. A language the store has no listing for is never created by CI (see Decisions).
+  keeps them current. A language the store has no listing for is never created by CI (see Decisions). A regional copy
+  added in a console (Play's `fr-CA`, `es-419`, and `es-US` beside `fr-FR` and `es-ES`) is kept current from then on
+  with no change to the code or the files.
 - **Text only.** Screenshots, the app icon, the feature graphic, and every other image stay manual. No script reads,
   writes, or deletes an image, so an image set by hand is never touched.
 - **Release notes in every language**, so the stores stop showing English "What's new" in a German listing.
 
 ## What is there today (the hooks)
 
-- `release_description.py` reads the release body's hidden comments: one `whats-new en-US` block (a block in any other
-  language is ignored), Play's `update-priority`, and a `submit` switch per store. It holds the notes against every
+- `release_description.py` reads the release body's hidden comments: one `whats-new en` block (blocks are named by the
+  app's language alone, a country in the tag stops the release; a block in any other language is ignored), Play's `update-priority`, and a `submit` switch per store. It holds the notes against every
   store's limit before any build. `publish-all.yml` hands its outputs to the six workflows.
 - **Microsoft** (`microsoft_store_submission.py`): copies the last published submission, which already holds a
   `listings` dictionary keyed by language, writes `releaseNotes` into every listing's `baseListing`, replaces the
@@ -45,12 +47,18 @@
   `BLOCK` into the new module and import them back, so both read a heading the same way). The field key is the heading
   without its limit (`Full description`); a field with several blocks (Microsoft's product features, search terms) is a
   list.
-- **Locales are a table in the code**, not the prose line: per store, the app language → the store's locale codes the
-  file is written to. Play `es` → `es-ES`, `es-419`, `es-US`; `fr` → `fr-FR`, `fr-CA`; `en` → `en-US`. Apple `es` →
-  `es-ES`, `es-MX`; `fr` → `fr-FR`, `fr-CA`; `hu` → `hu`; `it` → `it`; `ro` → `ro`; `en` → `en-US`. Microsoft `en` →
-  `en-us`, `de` → `de-de`, and so on, as `AppxManifest.xml` declares them. Check every code against each console's
-  list once while writing this table.
-- **Fields are a table too**, per store: heading → API field. Every heading with a limit must be mapped or listed as
+- **Locales come from the store, not from a table**: everything in the repository is keyed by the app's language
+  (`fr`), and each store script asks the store which locales the listing has and writes a language's text into every
+  one whose language part is that language (`language(locale)`: the part before `-` or `_`, lowercased). So Play's
+  `fr-FR` and `fr-CA` both get `fr`, Play's `ro` and Microsoft's `ro-ro` both get `ro`, and a regional copy the owner
+  adds in a console later is filled on the next release with no change here. The store codes differ in case and in
+  whether they carry a country (Play `ro`, `hu-HU`; Apple `hu`, `de-DE`; Microsoft `hu-hu`), which is why no code is
+  ever written down. Every store script checks, before uploading anything: each app language has at least one locale
+  in the store (else fail, naming it: its first listing is added by hand), and a store locale whose language the app
+  lacks is left alone with a warning. A language whose store code is not its ISO 639-1 code (Play's `iw-IL` for
+  Hebrew, `fil` for Filipino) or which splits by script (`zh-CN`, `zh-TW`) needs an alias in `language()` when
+  add-language brings it in; a test lists today's languages against each store's documented codes.
+- **Fields are a table**, per store: heading → API field. Every heading with a limit must be mapped or listed as
   manual, and a test fails otherwise, so a renamed or new heading fails `tests.yml`, never a release:
 
   | Store | Written | Manual (stays pasted by hand) |
@@ -62,22 +70,23 @@
 
   English-only fields (URLs, review notes) are read from `en.md`; the URLs go to every locale's version localization.
 - `python3 .github/scripts/store_listings.py --check` (run by `tests.yml` beside `check_store_listings.py`): every store
-  folder has the same languages, every file parses, every mapped field is present in `en.md`, every language has its
-  locales. Tests in `test_store_listings.py`.
+  folder has the same languages, every file parses, every mapped field is present in `en.md`, and every
+  folder's languages are the app's `values-*` folders. Tests in `test_store_listings.py`.
 
 ## L2. Release notes in every language
 
 - The notes come from the release description, exactly as the English do: prepare-release already writes a
-  `whats-new <locale>` block per language of the app after `whats-new en-US` (`de-DE`, `es-ES`, `fr-FR`, `hu-HU`,
-  `it-IT`, `ro-RO`; its "Style — the store \"what's new\"" section), each at most 500 characters, translated from the
-  in-app message. Today `release_description.py` ignores every block but `en-US`.
-- `release_description.py` reads them all: each held against every store's limit (Play's 500 still only a warning), an
-  unknown locale or one written almost like a known one stopping the release as a malformed `en-US` does now. It hands
+  `whats-new <language>` block per language of the app after `whats-new en` (`de`, `es`, `fr`, `hu`, `it`, `ro`; its
+  "Style — the store \"what's new\"" section), each at most 500 characters, translated from the in-app message. Today
+  `release_description.py` ignores every block but `en`, and already stops a release whose tag names a country.
+- `release_description.py` reads them all: each held against every store's limit (Play's 500 still only a warning), a
+  language the app does not have stopping the release (the languages are the `values-*` folders, read from the
+  checkout). It hands
   the workflows, through `publish-all.yml`, one more output, `release_notes_by_language` (JSON, `{"de": "…", …}`, keyed
   by the app's language codes), beside today's `release_notes`. A language with no block, and the hand dispatch, which
   stays English, get the English notes. Update `publish-all.yml`'s header, where the block format is described.
-- Each store script maps languages to locales through L1's table and writes that language's notes to each: Play as the
-  release's notes per locale, Apple as each version localization's `whatsNew`, Microsoft as each listing's
+- Each store script maps the store's locales to languages as L1 says and writes that language's notes to each: Play as
+  the release's notes per locale, Apple as each version localization's `whatsNew`, Microsoft as each listing's
   `releaseNotes`.
 
 ## L3. A switch per store
@@ -92,10 +101,11 @@
 
 In `microsoft_store_submission.py`, beside `write_release_notes`:
 
-- `write_listings(submission, listings)`: for each language and locale, if `submission["listings"]` has that locale,
-  set the mapped `baseListing` fields; leave every other field (images, title, URLs) as it came. A locale the
-  submission has no listing for is **not created**: the run fails before anything is uploaded, naming the locale and
-  saying to add its listing in Partner Center once (by hand, with its screenshots), unless `listings: false`.
+- `write_listings(submission, listings)`: for each locale in `submission["listings"]`, set its language's mapped
+  `baseListing` fields; leave every other field (images, title, URLs) as it came. An app language with no listing is
+  **not created**: the run fails before anything is uploaded, naming the language and saying to add its listing in
+  Partner Center once (by hand, with its screenshots), unless `listings: false`. Partner Center's locales are the
+  manifest's `Resource` languages, so a regional copy there also needs a line in `AppxManifest.xml`.
 - Order in `main`: release notes, listings, then the package, so a refused listing fails before the upload. The
   existing draft handling is unchanged: a draft the script made is reused, a draft started in Partner Center still
   stops the run.
@@ -116,8 +126,9 @@ In `app_store_submission.py`, after the build is attached and before `submit`:
 
 - **Version localizations** (`GET /appStoreVersions/{id}/appStoreVersionLocalizations`): PATCH `description`,
   `keywords`, `promotionalText`, `supportUrl`, `marketingUrl`, and `whatsNew` per locale, replacing today's
-  `write_whats_new`. A locale with no localization is not created (it fails before submitting, as Microsoft's does),
-  since the owner adds each language once by hand.
+  `write_whats_new`. Every existing localization is written by its language (`fr-CA` gets `fr`); an app language with
+  none is not created (it fails before submitting, as Microsoft's does), since the owner adds each language once by
+  hand.
 - **Name and subtitle** (iOS run only; the Mac shares the app record): the app info in an editable state (`GET
   /apps/{id}/appInfos`, the one whose `appStoreState` is `PREPARE_FOR_SUBMISSION` or similar), then PATCH each
   `appInfoLocalization`'s `name` and `subtitle`. Apple refuses a name another app holds: that fails the run before
@@ -144,7 +155,9 @@ everything, on the same `PLAY_SERVICE_ACCOUNT_JSON`:
   `releaseNotes` per locale from L2, each cut to 500 at a line boundary: move that inline Python into the script) →
   `edits.listings.update` per locale (title, short and full description; Play's `listings.update` keeps the images) →
   `edits.commit` with `changesNotSentForReview=false`.
-- A locale with no listing is not created (fails before the commit, as above).
+- The locales are `edits.listings.list`'s, each written by its language as L1 says; an app language with no listing
+  is not created (fails before the commit, as above). Release notes go to the same locales, since Play refuses notes
+  in a language the listing lacks.
 - The alternative, keeping the action and writing listings in a separate edit first, is smaller but sends two changes
   for review; not recommended.
 - Tests: `test_play_store_release.py` with a fake request, as the others.
@@ -177,6 +190,9 @@ everything, on the same `PLAY_SERVICE_ACCOUNT_JSON`:
   Images are never touched.
 - **Play: replace the upload action with an own script** (one edit, one review). Alternative: two edits.
 - **Release notes per language from the in-app message.** Alternative: English notes in every language, as now.
+- **Keyed by language, locales read from each store.** A regional copy added in a console is filled automatically, and
+  no store's spelling of a code (Play's `ro`, Microsoft's `ro-ro`) is written down to drift. Alternative: a per-store
+  table of codes, which needs a code change for every locale added in a console.
 
 ## Risks
 
