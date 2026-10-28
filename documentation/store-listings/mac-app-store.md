@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.1: chords named as they sound under a capo, chord degrees, a preview of every song you import, bold, italic, and underlined lyrics, and ABC tunes as chord grids.
+New in 5.2: songs that scroll by themselves at their own pace, ABC tunes drawn as sheet music, chord diagrams that follow key changes, and five more languages.
 ```
 
 ## Description (4,000 characters max)
@@ -28,10 +28,12 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, zip archives, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
 
 Reading
 • Turn the page with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
+• Or one column that scrolls by itself, at a speed set for each song
+• ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for the people who only sing
 • Read only mode keeps a stray click from changing a song mid-set
@@ -55,8 +57,8 @@ Metronome
 
 Setlists
 • Play through the whole set without stopping, the tempo changing on the next bar
-• Every setlist remembers its own key, capo, and tempo for each song
-• A date and a countdown for the gig, and the set's total running time
+• Every setlist keeps its own key, capo, and tempo for each song
+• A gig date with a countdown, and the set's total running time
 • Archive a setlist after the gig instead of deleting it
 
 Organizing and editing
@@ -103,13 +105,12 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
 
-New in 5.1.0, and where to find it:
-- Capo: a song's chords, key, and scales are now named as they sound. The Capo control at the top of a song keeps the pitch and redraws the diagrams as the shapes fingered above the capo. The Chords and Scales tabs have a capo picker after the instrument.
-- Chord degrees: each chord diagram at the top of a song names its degree in the song's key, such as V7 beside G7. The switch is in Settings → Preferences, and under Preferences in the song's three-dot menu.
-- Bold, italic, and underline: the editor's Shortcuts row has a button for each, and Cmd + B, I, and U toggle them.
-- Import preview: importing a single song (Import files in the New button's menu on the Songs screen, or dropping a file onto the window) opens a preview before anything is saved; in a review of several songs, clicking a song's row opens it.
-- ABC tunes: .abc files import as one song per tune, with a chord grid and the tune kept as text; the app does not draw sheet music.
-- PDF options: "Share or export" in a song's or setlist's menu has a Tablature switch, and a setlist's "Include song sheets" leaves only the running order when turned off.
+New in 5.2.0, and where to find it:
+- Continuous layout: Settings → Preferences → Song page → Layout (also under Preferences in a song's three-dot menu) switches between Pages and Continuous; the app also asks once, over the first song opened. In Continuous, the play button above the bottom step button starts the scroll, and a Scroll speed slider appears while it plays.
+- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device (nothing is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
+- Languages: German, Spanish, French, Italian, and Romanian, picked in Settings → General → Language or followed from the system.
+- Key changes: in a song whose key changes partway through, the chord diagrams at the top of the song are grouped under a heading for each key, and its Scales section suggests a scale for the part in the new key.
+- PDF import: PDFs imported through Import files in the New button's menu on the Songs screen leave out page headers and footers and keep listed chord shapes, repeat signs, and labelled song details.
 ```
 
 ## App Sandbox Information

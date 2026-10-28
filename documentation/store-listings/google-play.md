@@ -32,10 +32,12 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have: text files, PDFs, Word documents, ChordPro files, zip archives, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
 
 Reading
 • Turn the page with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
+• Or one column that scrolls by itself, at a speed set for each song
+• ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for the people who only sing
 • Read only mode keeps a stray tap from changing a song mid-set
@@ -59,8 +61,8 @@ Metronome
 
 Setlists
 • Play through the whole set without stopping, the tempo changing on the next bar
-• Every setlist remembers its own key, capo, and tempo for each song
-• A date and a countdown for the gig, and the set's total running time
+• Every setlist keeps its own key, capo, and tempo for each song
+• A gig date with a countdown, and the set's total running time
 
 Organizing and editing
 • Search by title, artist, or tag
