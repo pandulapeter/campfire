@@ -20,15 +20,16 @@ internal class NormalizeTextUseCaseImpl : NormalizeTextUseCase {
     /**
      * Sorting, grouping and searching all run this over every song, so it walks the text once and only allocates a
      * new string when there is actually an accent to replace or a combining mark to drop - a chain of [String.replace] calls allocated one for
-     * every accent the app knows about, whether the text contained it or not.
+     * every accent the app knows about, whether the text contained it or not. The marks and letter forms of other
+     * scripts are folded from [ScriptFolding]'s table, which file names do not share.
      */
     override fun invoke(text: String): String {
         val lowercase = text.trim().lowercase()
         var builder: StringBuilder? = null
         for (index in lowercase.indices) {
             val character = lowercase[index]
-            val isCombiningMark = character.isCombiningMark()
-            val replacement = character.withoutAccent()
+            val isCombiningMark = character.isCombiningMark() || character.isFoldableMark()
+            val replacement = character.withoutAccent().withBaseLetterForm()
             if (replacement == character && !isCombiningMark) {
                 builder?.append(character)
             } else {

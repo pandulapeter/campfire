@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.text
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal class NormalizeSearchTextUseCaseImplTest {
 
@@ -29,6 +30,16 @@ internal class NormalizeSearchTextUseCaseImplTest {
     fun `accents and case are folded as for sorting`() {
         assertEquals("tukorfurogep", normalizeSearchText("Tükörfúrógép"))
         assertEquals("катюша", normalizeSearchText("Катюша"))
+    }
+
+    @Test
+    fun `an unpointed hebrew query finds the pointed word`() {
+        assertTrue(normalizeSearchText("שָׁלוֹם עֲלֵיכֶם").contains(normalizeSearchText("שלום")))
+    }
+
+    @Test
+    fun `a word typed with its final letter finds it inside a longer word`() {
+        assertTrue(normalizeSearchText("שלומית").contains(normalizeSearchText("שלום")))
     }
 
     @Test

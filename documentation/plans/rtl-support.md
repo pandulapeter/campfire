@@ -9,7 +9,7 @@
 -->
 # Plan: right-to-left support, Hebrew first
 
-**Status:** steps 1, 2, 3, 4, 5, 6, 7, 8, and 9 landed (2026-10-29). Written against the code on 2026-10-29 (abba88cf1). `ui/` is
+**Status:** steps 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10 landed (2026-10-29). Written against the code on 2026-10-29 (abba88cf1). `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 
 The goal is a Hebrew UI that reads right to left on every platform, and Hebrew songs that read correctly whatever the
@@ -162,8 +162,8 @@ Steps 1 and 2 come first; 3, 4–7, 8, 9, and 10 are independent of one another 
 What another RTL language adds once this plan has landed, and nothing else:
 
 - a row in each table: its font face (Noto Sans Arabic is ~150–250 KB a weight, fetched on the web only when needed),
-  its plural rule (Arabic: zero, one, two, few, many, other), and its foldable marks (Arabic harakat, U+064B–U+065F
-  and U+0670);
+  its plural rule (Arabic: zero, one, two, few, many, other), and its foldable marks (Arabic's harakat, U+064B–U+065F
+  and U+0670, already a row of `ScriptFolding`'s table);
 - for a joining script, the tatweel as its chord padding (step 5's seam), checked in Skia's FreeType path on the web
   and Linux, where joining is untested;
 - digits only if wanted: the app writes Western digits everywhere, which Arabic, Persian, and Urdu readers accept;

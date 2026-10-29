@@ -50,6 +50,14 @@ class SongSortingTest {
         assertEquals(listOf("yesterday.cho", "yesterday_2.cho"), sorted.songs.map { it.fileName })
     }
 
+    @Test
+    fun `a pointed and an unpointed title sort together`() {
+        val sorted = listOf(song("שלומית"), song("שלום", fileName = "b.cho"), song("שלוה"), song("שָׁלוֹם", fileName = "a.cho"))
+            .sortedFor(SortingMode.BY_TITLE, NormalizeTextUseCaseImpl()::invoke)
+
+        assertEquals(listOf("שלוה", "שָׁלוֹם", "שלום", "שלומית"), sorted.songs.map { it.title })
+    }
+
     private fun sections(sortingMode: SortingMode, vararg songs: Song): List<SongSection> {
         val sorted = songs.toList().sortedFor(sortingMode, NormalizeTextUseCaseImpl()::invoke)
         return sorted.songs.map { sorted.byFileName.getValue(it.fileName) }.cutIntoSections(sortingMode)

@@ -19,9 +19,9 @@ internal class NormalizeSearchTextUseCaseImpl(
 ) : NormalizeSearchTextUseCase {
 
     /**
-     * The marks are kept rather than dropped with the punctuation: the Latin ones are already gone by now, and what is
-     * left of them are the vowel signs of scripts like Devanagari or Thai, which are as much a part of the word as a
-     * letter is.
+     * The marks are kept rather than dropped with the punctuation: the Latin ones and those [ScriptFolding] names (the
+     * optional vowel points of Hebrew and Arabic) are already gone by now, and what is left of them are the vowel signs
+     * of scripts like Devanagari or Thai, which are as much a part of the word as a letter is.
      */
     override fun invoke(text: String): String {
         val normalized = normalizeText(text)
