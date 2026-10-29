@@ -575,7 +575,6 @@
     <string name="settings_open_source_licenses_description">Les bibliothèques, polices et formes d\'accords sur lesquelles repose Campfire, et leurs licences</string>
     <string name="open_source_licenses_intro">Campfire est open source et repose sur le travail d\'autres personnes. Sélectionne une entrée pour lire sa licence.</string>
     <string name="open_source_licenses_show">Afficher la licence</string>
-    <string name="open_source_licenses_hide">Masquer la licence</string>
     <string name="open_source_licenses_project">Page du projet</string>
     <string name="open_source_licenses_license">Licence</string>
     <string name="settings_support">Offre-moi un café</string>

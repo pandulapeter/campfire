@@ -571,7 +571,6 @@
     <string name="settings_open_source_licenses_description">Bibliotecile, fonturile și formele de acorduri pe care se bazează Campfire și licențele lor</string>
     <string name="open_source_licenses_intro">Campfire este open source și se bazează pe munca altora. Selectează o intrare ca să-i citești licența.</string>
     <string name="open_source_licenses_show">Arată licența</string>
-    <string name="open_source_licenses_hide">Ascunde licența</string>
     <string name="open_source_licenses_project">Pagina proiectului</string>
     <string name="open_source_licenses_license">Licență</string>
     <string name="settings_support">Cumpără-mi o cafea</string>

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicenseSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
@@ -217,7 +218,8 @@ private fun CampfireDialog(
         DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
-        DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel, urlOpener = urlOpener)
+        DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel)
+        is DialogType.OpenSourceLicense -> OpenSourceLicenseSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
 
         is DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,

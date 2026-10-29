@@ -571,7 +571,6 @@
     <string name="settings_open_source_licenses_description">A könyvtárak, betűtípusok és akkordfogások, amelyekre a Campfire épül, és a licenceik</string>
     <string name="open_source_licenses_intro">A Campfire nyílt forráskódú, és mások munkájára épül. Válassz ki egy elemet a licence elolvasásához.</string>
     <string name="open_source_licenses_show">Licenc megjelenítése</string>
-    <string name="open_source_licenses_hide">Licenc elrejtése</string>
     <string name="open_source_licenses_project">A projekt oldala</string>
     <string name="open_source_licenses_license">Licenc</string>
     <string name="settings_support">Hívj meg egy kávéra</string>

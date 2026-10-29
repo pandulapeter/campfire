@@ -11,15 +11,18 @@
 
 The open source licenses and What's new.
 
-### Open source licenses (`OpenSourceLicensesSheet.kt`)
+### Open source licenses (`OpenSourceLicensesSheet.kt`, `OpenSourceLicenseSheet.kt`)
 
+- The list is plain rows; selecting one stacks that entry's sheet over it (links, NOTICE, license), so closing it finds
+  the list where it was. The list reads every text as it opens and hands an entry's to its sheet, which then opens
+  whole; one selected before that reads its own.
 - **A build lists only what it ships** (`OpenSourceComponent.builds` against `appBuild`, which follows the screenshot
   tool's impersonation); `documentation/THIRD_PARTY_SOFTWARE.md` lists every build's.
 - Google's 220 KB Play license list is the Android build's alone. `OpenSourceComponentsTest` checks every build has
   every text it lists, and the order.
 - Skiko's native libraries differ: Windows and the web lack piex and the DNG SDK, and only Linux and the web carry
   FreeType.
-- An open entry's texts are list items cut at blank lines (`licenseTextChunks`): some run to thousands of lines.
+- An entry's texts are list items cut at blank lines (`licenseTextChunks`): some run to thousands of lines.
 
 ### What's new
 

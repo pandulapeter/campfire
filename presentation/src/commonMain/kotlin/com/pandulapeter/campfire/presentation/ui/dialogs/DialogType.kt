@@ -258,6 +258,17 @@ sealed interface DialogType {
     data object OpenSourceLicenses : DialogType
 
     /**
+     * One entry of [OpenSourceLicenses], put over it: the links, NOTICE, and license of the component named
+     * [componentName] (`OpenSourceComponent.name`). [texts] are those texts
+     * as the list had read them, in pieces (`licenseTextChunks`), so that the sheet opens whole on its first frame; null
+     * when the entry was selected before the list had read them, and the sheet reads them itself.
+     */
+    data class OpenSourceLicense(
+        val componentName: String,
+        val texts: List<String>?,
+    ) : DialogType
+
+    /**
      * What the process log holds, asked before it goes anywhere: from Settings, or on the launch after a crash
      * ([isAfterCrash]), where the question is also whether to send it at all.
      */

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.dialogs.about.openSourceComponents
 import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.filledForm
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.chordpro.model.Chord
@@ -63,6 +64,14 @@ class DialogStackTest {
     fun `the notation's choice stacks over the song display sheet, and replaces anything else`() {
         assertEquals(listOf(DialogType.SongDisplay), nextUnderlyingDialogs(openDialogs = listOf(DialogType.SongDisplay), next = DialogType.Notation))
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = DialogType.Notation))
+    }
+
+    @Test
+    fun `an open-source license stacks over the list of them`() {
+        val license = DialogType.OpenSourceLicense(componentName = openSourceComponents.first().name, texts = null)
+
+        assertEquals(listOf(DialogType.OpenSourceLicenses), nextUnderlyingDialogs(openDialogs = listOf(DialogType.OpenSourceLicenses), next = license))
+        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(DialogType.WhatsNew), next = license))
     }
 
     @Test

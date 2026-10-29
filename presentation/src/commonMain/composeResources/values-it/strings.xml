@@ -571,7 +571,6 @@
     <string name="settings_open_source_licenses_description">Le librerie, i caratteri e le forme degli accordi con cui è costruito Campfire, e le loro licenze</string>
     <string name="open_source_licenses_intro">Campfire è open source ed è costruito con il lavoro di altri. Seleziona una voce per leggerne la licenza.</string>
     <string name="open_source_licenses_show">Mostra la licenza</string>
-    <string name="open_source_licenses_hide">Nascondi la licenza</string>
     <string name="open_source_licenses_project">Pagina del progetto</string>
     <string name="open_source_licenses_license">Licenza</string>
     <string name="settings_support">Offrimi un caffè</string>
