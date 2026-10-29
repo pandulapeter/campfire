@@ -8,9 +8,11 @@
  * https://mozilla.org/MPL/2.0/.
  */
 import com.pandulapeter.campfire.buildLogic.tasks.AddLaunchAfterInstallToMsi
+import com.pandulapeter.campfire.buildLogic.tasks.PackageAppImage
 import com.pandulapeter.campfire.buildLogic.tasks.PackageMsix
 import com.pandulapeter.campfire.buildLogic.tasks.RecordClassDataArchive
 import com.pandulapeter.campfire.buildLogic.tasks.RewriteDebDesktopEntry
+import com.pandulapeter.campfire.buildLogic.tasks.appImageArchitecture
 import com.pandulapeter.campfire.buildLogic.tasks.msixPackageVersion
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -46,6 +48,10 @@ dependencies {
 }
 
 val versionName = project.property("campfire.versionName").toString()
+
+/** The line the packages give under the app's name: the installers' description and the AppImage's desktop entry. */
+val appDescription = "Your songbook, on every screen you own"
+
 group = "com.pandulapeter.campfire"
 version = versionName
 
@@ -144,7 +150,7 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
-            description = "Your songbook, on every screen you own"
+            description = appDescription
             vendor = "Pandula Péter"
             copyright = "Copyright (c) Pandula Péter 2017-2026"
             // What jdeps finds on top of the modules Compose Desktop includes by itself, plus the two it cannot:
@@ -342,6 +348,34 @@ val rewriteDebDesktopEntry = tasks.register<RewriteDebDesktopEntry>("rewriteDebD
 }
 tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.configureEach {
     finalizedBy(rewriteDebDesktopEntry)
+}
+
+/**
+ * Builds the AppImage the GitHub release carries beside the `.deb`, for the distributions that take no Debian package.
+ * It is the release app image as the `.deb` holds it, so it gets the same desktop entry keys, which have to agree with
+ * `setLinuxWindowClassName` in the same way. jpackage makes no AppImage, and appimagetool is not part of any JDK: the
+ * one it packs with and the runtime it puts in front are `campfire.linux.*` properties, which publish-linux.yml points at
+ * the copies it downloads and checks.
+ */
+tasks.register<PackageAppImage>("packageReleaseAppImage") {
+    val linux = isLinuxHost
+    val architectureName = appImageArchitecture(System.getProperty("os.arch").orEmpty())
+    // Elsewhere the release image is never built for nothing: the missing input stops the task before anything runs.
+    if (linux && architectureName != null) dependsOn(recordClassDataArchive)
+    doFirst {
+        if (!linux || architectureName == null) throw GradleException("An AppImage is made on a Linux host running on x86_64 or aarch64.")
+    }
+    appImage = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire")
+    icon = project.file("src/main/composeResources/drawable/app_icon.png")
+    applicationName = "Campfire"
+    comment = appDescription
+    categories = "AudioVideo;Audio;Music;"
+    windowClassName = "Campfire"
+    urlScheme = "campfire"
+    appImageTool = project.property("campfire.linux.appImageTool").toString()
+    runtimeFile = project.property("campfire.linux.appImageRuntime").toString()
+    architecture = architectureName.orEmpty()
+    outputFile = layout.buildDirectory.file("compose/binaries/main-release/appimage/Campfire-$versionName-${architectureName.orEmpty()}.AppImage")
 }
 
 /**

@@ -6,10 +6,11 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the Linux packages of the desktop app and attaches them to a GitHub release. jpackage only ever packages for the
-# machine it runs on, so there is one runner per processor. This is the whole of how the Linux build is handed out: no
-# store carries it, a Debian package is not something anybody signs on its own, and the release page is what the
-# website's download section (https://campfire-songbook.com/#download) and the README's "Get Campfire" section link to.
+# Builds the Linux packages of the desktop app - a .deb and an AppImage, for the distributions that take no Debian
+# package - and attaches them to a GitHub release. jpackage only ever packages for the machine it runs on, so there is
+# one runner per processor. This is the whole of how the Linux build is handed out: no store carries it, neither
+# package is something anybody signs on its own, and the release page is what the website's download section
+# (https://campfire-songbook.com/#download) and the README's "Get Campfire" section link to.
 #
 # Called by publish-all.yml for every release; dispatched by hand to attach the packages to a release that is already there.
 
@@ -51,9 +52,15 @@ jobs:
           - name: Linux (amd64)
             runner: ubuntu-22.04
             asset: linux-amd64.deb
+            appimage_architecture: x86_64
+            appimagetool_sha256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+            appimage_runtime_sha256: 2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
           - name: Linux (arm64)
             runner: ubuntu-22.04-arm
             asset: linux-arm64.deb
+            appimage_architecture: aarch64
+            appimagetool_sha256: f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
+            appimage_runtime_sha256: 00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -82,16 +89,37 @@ jobs:
       # native library is linked against - every desktop has them, but the arm64 runner image does not.
       - name: Install packaging tools
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
+      # Pinned releases, checked against the digests GitHub lists for them, rather than the continuous builds
+      # appimagetool would otherwise fetch its runtime from: the runtime is the part of the AppImage that runs first
+      # on every user's machine. Moving either forward means taking the new digests from its release page.
+      - name: Download appimagetool and the AppImage runtime
+        env:
+          ARCHITECTURE: ${{ matrix.appimage_architecture }}
+          TOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
+          RUNTIME_SHA256: ${{ matrix.appimage_runtime_sha256 }}
+        run: |
+          TOOLS="$RUNNER_TEMP/appimage-tools"
+          mkdir -p "$TOOLS"
+          curl --fail --location --silent --show-error --output "$TOOLS/appimagetool" \
+            "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-$ARCHITECTURE.AppImage"
+          curl --fail --location --silent --show-error --output "$TOOLS/runtime" \
+            "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-$ARCHITECTURE"
+          echo "$TOOL_SHA256  $TOOLS/appimagetool" | sha256sum --check
+          echo "$RUNTIME_SHA256  $TOOLS/runtime" | sha256sum --check
+          chmod +x "$TOOLS/appimagetool"
       # The app image is asked for by name: the Compose plugin hands jpackage the jars and the runtime directly, and the
       # package would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
-      # is what the package holds. The packaging starts the image once to record its class data sharing archive
+      # is what both packages hold. The packaging starts the image once to record its class data sharing archive
       # (recordClassDataArchive), which needs a display, and the runner has no GPU to draw it on.
-      - name: Build the package
+      - name: Build the packages
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
-          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable :app:desktop:packageReleaseDeb
+          TOOLS="$RUNNER_TEMP/appimage-tools"
+          SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable \
+            :app:desktop:packageReleaseDeb :app:desktop:packageReleaseAppImage \
+            "-Pcampfire.linux.appImageTool=$TOOLS/appimagetool" "-Pcampfire.linux.appImageRuntime=$TOOLS/runtime"
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows, so the app image is started once before
       # anybody downloads the package (.github/scripts/start_release_build.sh, which says what it checks). The classes it
@@ -113,7 +141,7 @@ jobs:
             --log "$RUNNER_TEMP/campfire.log" \
             --class-load class-load.txt --min-shared-percent 80 \
             -- xvfb-run --auto-servernum "$APP"
-      - name: Attach the package to the GitHub release
+      - name: Attach the .deb to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -126,4 +154,38 @@ jobs:
           fi
           ASSET="campfire-$VERSION_NAME-${{ matrix.asset }}"
           cp "$PACKAGE" "$ASSET"
+          gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
+      # The AppImage is started as a user starts it, runtime and AppRun included, after the .deb is attached, so a
+      # failure here withholds only the AppImage. The runner has no FUSE, so the runtime extracts the image into a
+      # temporary folder and starts it from there: the launcher it starts is found by the end of its path, which is
+      # the same wherever the image lands. The class data sharing archive is checked again, since the image runs
+      # from somewhere other than where the archive was recorded.
+      - name: Start the AppImage once
+        run: |
+          APPIMAGE=$(find app/desktop/build/compose/binaries/main-release/appimage -name '*.AppImage' | head -n 1)
+          if [ -z "$APPIMAGE" ]; then
+            echo "The AppImage is missing" >&2
+            exit 1
+          fi
+          HOME_DIRECTORY="$RUNNER_TEMP/campfire-appimage-home"
+          mkdir -p "$HOME_DIRECTORY"
+          export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY -Xlog:class+load=info:file=$RUNNER_TEMP/appimage-class-load.txt"
+          unset XDG_DATA_HOME
+          export SKIKO_RENDER_API=SOFTWARE_FAST
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          bash .github/scripts/start_release_build.sh \
+            --launcher "Campfire/bin/Campfire" \
+            --data "$HOME_DIRECTORY/.local/share/campfire" \
+            --log "$RUNNER_TEMP/campfire-appimage.log" \
+            --class-load "$RUNNER_TEMP/appimage-class-load.txt" --min-shared-percent 80 \
+            --started "The AppImage started" \
+            -- xvfb-run --auto-servernum "$APPIMAGE"
+      - name: Attach the AppImage to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
+          APPIMAGE=$(find app/desktop/build/compose/binaries/main-release/appimage -name '*.AppImage' | head -n 1)
+          ASSET="campfire-$VERSION_NAME-linux-${{ matrix.appimage_architecture }}.AppImage"
+          cp "$APPIMAGE" "$ASSET"
           gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber

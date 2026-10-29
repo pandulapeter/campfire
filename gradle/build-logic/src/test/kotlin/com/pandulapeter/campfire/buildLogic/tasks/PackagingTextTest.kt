@@ -127,6 +127,31 @@ class PackagingTextTest {
     }
 
     @Test
+    fun `an AppImage's desktop entry opens campfire links and names the window class`() {
+        val entry = appImageDesktopEntry(
+            name = "Campfire",
+            comment = "Your songbook",
+            executable = "Campfire",
+            icon = "campfire",
+            categories = "AudioVideo;Audio;Music;",
+            className = "Campfire",
+            scheme = "campfire",
+        ).trimEnd().lines()
+        assertEquals("[Desktop Entry]", entry.first())
+        assertTrue("Exec=Campfire %u" in entry)
+        assertTrue("Icon=campfire" in entry)
+        assertTrue("MimeType=x-scheme-handler/campfire;" in entry)
+        assertEquals("StartupWMClass=Campfire", entry.last())
+    }
+
+    @Test
+    fun `AppImages are made for the two processors the release is built on`() {
+        assertEquals("x86_64", appImageArchitecture("amd64"))
+        assertEquals("aarch64", appImageArchitecture("aarch64"))
+        assertEquals(null, appImageArchitecture("riscv64"))
+    }
+
+    @Test
     fun `SDK versions are ordered by number rather than by name`() {
         val names = listOf("10.0.9600.0", "10.0.22621.0", "10.0.19041.0")
         assertEquals("10.0.22621.0", names.maxBy(::newestSdkVersionKey))

@@ -22,6 +22,7 @@ of the source set of the builds that ship them.
 | [AndroidX](https://developer.android.com/jetpack/androidx) libraries (Activity, AppCompat, Browser, Core, Fragment, ProfileInstaller, and what they need) | The Android Open Source Project | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
 | AndroidX [multiplatform](https://github.com/JetBrains/compose-multiplatform-core) libraries (Annotation, Collection, Graphics Shapes, Lifecycle, Navigation 3, NavigationEvent, SavedState) | The Android Open Source Project, JetBrains | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [ANGLE](https://chromium.googlesource.com/angle/angle) | The ANGLE Project Authors | [BSD 3-Clause](../presentation/src/desktopMain/composeResources/files/licenses/angle_bsd_3.txt) | Windows |
+| [AppImage runtime](https://github.com/AppImage/type2-runtime) | probonopd and the AppImage contributors | [MIT](../presentation/src/desktopMain/composeResources/files/licenses/appimage_runtime_mit.txt) | Linux AppImage |
 | [ChordPro](https://www.chordpro.org) chord shapes | The ChordPro Team | [Artistic 2.0](../presentation/src/commonMain/composeResources/files/licenses/chordpro_artistic_2.0.txt) | All |
 | [chords-db](https://github.com/tombatossals/chords-db) and [its fork by Tabsy](https://github.com/tabsy-gr/chords-db) chord shapes | David Rubert and the chords-db contributors, Tabsy contributors | [MIT](../presentation/src/commonMain/composeResources/files/licenses/chords_db_mit.txt) | All |
 | [Coil](https://github.com/coil-kt/coil) | Coil Contributors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
@@ -44,9 +45,11 @@ of the source set of the builds that ship them.
 | [Koin](https://github.com/InsertKoinIO/koin) | Kotzilla, Koin contributors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [Kotlin](https://kotlinlang.org) and kotlinx (coroutines, serialization, datetime, io, atomicfu, browser) | JetBrains, Kotlin contributors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) ([NOTICE](../presentation/src/commonMain/composeResources/files/licenses/kotlin_notice.txt)) | All |
 | [Ktor](https://github.com/ktorio/ktor) | JetBrains, Ktor contributors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
+| [libfuse](https://github.com/libfuse/libfuse), inside the AppImage runtime | Miklos Szeredi and the libfuse contributors | [LGPL 2.1](../presentation/src/desktopMain/composeResources/files/licenses/libfuse_lgpl_2.1.txt) | Linux AppImage |
 | [libjpeg-turbo](https://libjpeg-turbo.org), inside Skia | The libjpeg-turbo Project, D. R. Commander, the Independent JPEG Group | [IJG, BSD 3-Clause, and zlib](../presentation/src/commonMain/composeResources/files/licenses/libjpeg_turbo.txt) | Desktop, iOS, web |
 | [libpng](http://www.libpng.org/pub/png/libpng.html), inside Skia | The PNG Reference Library Authors, Cosmin Truta, Glenn Randers-Pehrson, and the other libpng authors | [PNG Reference Library License version 2](../presentation/src/commonMain/composeResources/files/licenses/libpng_2.txt) | Desktop, iOS, web |
 | [libwebp](https://chromium.googlesource.com/webm/libwebp), inside Skia | Google | [BSD 3-Clause](../presentation/src/commonMain/composeResources/files/licenses/libwebp_bsd_3.txt) ([PATENTS](../presentation/src/commonMain/composeResources/files/licenses/libwebp_patents.txt)) | Desktop, iOS, web |
+| [musl](https://musl.libc.org), inside the AppImage runtime | Rich Felker, et al. | [MIT](../presentation/src/desktopMain/composeResources/files/licenses/musl_mit.txt) | Linux AppImage |
 | [OkHttp](https://github.com/square/okhttp) | Square | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Android |
 | [Okio](https://github.com/square/okio) | Square | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [piex](https://github.com/google/piex), inside Skia | Google | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | iOS, macOS, Linux |
@@ -57,9 +60,11 @@ of the source set of the builds that ship them.
 | [Skia](https://skia.org) | Google | [BSD 3-Clause](../presentation/src/commonMain/composeResources/files/licenses/skia_bsd_3.txt) | Desktop, iOS, web |
 | [Skiko](https://github.com/JetBrains/skiko) | JetBrains | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) ([NOTICE](../presentation/src/commonMain/composeResources/files/licenses/skiko_notice.txt)) | Desktop, iOS, web |
 | [SLF4J](https://www.slf4j.org) | QOS.ch | [MIT](../presentation/src/commonMain/composeResources/files/licenses/slf4j_mit.txt) | Android, desktop |
+| [squashfuse](https://github.com/vasi/squashfuse), inside the AppImage runtime | Dave Vasilevsky, Phillip Lougher | [BSD 2-Clause](../presentation/src/desktopMain/composeResources/files/licenses/squashfuse_bsd_2.txt) | Linux AppImage |
 | [Stately](https://github.com/touchlab/Stately) | Touchlab | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | All |
 | [Wuffs](https://github.com/google/wuffs), inside Skia | The Wuffs Authors | [Apache 2.0](../presentation/src/commonMain/composeResources/files/licenses/apache_2.0.txt) | Desktop, iOS, web |
-| [zlib](https://zlib.net), inside Skia | Jean-loup Gailly and Mark Adler | [zlib License](../presentation/src/commonMain/composeResources/files/licenses/zlib.txt) | Desktop, iOS, web |
+| [zlib](https://zlib.net), inside Skia and the AppImage runtime | Jean-loup Gailly and Mark Adler | [zlib License](../presentation/src/commonMain/composeResources/files/licenses/zlib.txt) | Desktop, iOS, web |
+| [Zstandard](https://facebook.github.io/zstd/), inside the AppImage runtime | Meta Platforms, Inc. and affiliates | [BSD 3-Clause](../presentation/src/desktopMain/composeResources/files/licenses/zstd_bsd_3.txt) | Linux AppImage |
 
 The chord shapes from chords-db and ChordPro were checked and reordered for Campfire; each table's source file names
 where its shapes came from.

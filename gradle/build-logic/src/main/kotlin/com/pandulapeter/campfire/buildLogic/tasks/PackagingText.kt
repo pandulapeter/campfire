@@ -65,6 +65,37 @@ internal fun withUrlScheme(lines: List<String>, scheme: String): List<String> {
 }
 
 /**
+ * The desktop entry an AppImage carries at its root, which is all an AppImage has to say how it is launched: the tools
+ * that integrate one into the menu (Gear Lever, AppImageLauncher, appimaged) copy it out, point its `Exec` at wherever
+ * the file was put and take the icon of the same name beside it. It says what the `.deb`'s entry says once
+ * [withUrlScheme] and [withStartupWmClass] have been through it.
+ */
+internal fun appImageDesktopEntry(name: String, comment: String, executable: String, icon: String, categories: String, className: String, scheme: String) =
+    withStartupWmClass(
+        withUrlScheme(
+            listOf(
+                "[Desktop Entry]",
+                "Type=Application",
+                "Name=$name",
+                "Comment=$comment",
+                "Exec=$executable",
+                "Icon=$icon",
+                "Terminal=false",
+                "Categories=$categories",
+            ),
+            scheme,
+        ),
+        className,
+    )
+
+/** The architecture names an AppImage is made and named for, by the JVM's `os.arch`; null for one it is not made for. */
+fun appImageArchitecture(osArch: String) = when (osArch) {
+    "amd64", "x86_64" -> "x86_64"
+    "aarch64", "arm64" -> "aarch64"
+    else -> null
+}
+
+/**
  * A package's post-install script that also refreshes the desktop database where the system has the command, after
  * the script has installed the desktop entry: before its closing `exit 0`, or at its end if it has none.
  */

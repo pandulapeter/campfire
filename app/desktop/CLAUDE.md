@@ -166,6 +166,12 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
   launchers match windows by `WM_CLASS`. It also claims `x-scheme-handler/campfire` (`Exec … %u`); `postinst` runs
   `update-desktop-database`, else the scheme waits for the next login.
 - No file associations (they are keyed by MIME type, which would claim every text file).
+- **AppImage** (`packageReleaseAppImage`, Linux host only): the release app image as the `.deb` holds it, in an AppDir
+  with an `AppRun`, a desktop entry carrying the same keys (`StartupWMClass`, the scheme) and the icon, packed by
+  appimagetool behind the static type-2 runtime (no `libfuse2` needed). Tool and runtime: `campfire.linux.*`, pinned
+  by `publish-linux.yml`. No sandbox, so the data directory and everything else are the `.deb`'s; the scheme and the
+  menu entry exist only once an integration tool (Gear Lever, AppImageLauncher) copies the entry out. The runtime's
+  libraries are credited for `AppBuild.LINUX`.
 
 ### Icons
 

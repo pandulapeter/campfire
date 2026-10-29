@@ -20,8 +20,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.AppBuild
  * Kept by hand rather than read off the build: a new dependency that ships in a build gets an entry here in the same
  * change, its license text, and its NOTICE where it has one, under `composeResources/files/licenses` of the source set
  * of the builds that show it (`commonMain` where several do), and the README's list too. What decided this list was
- * every artifact of the Android, desktop, and web runtime classpaths, the NOTICE files of their projects, and the
- * third-party code compiled into the native libraries Skiko ships for the desktop, iOS, and the web.
+ * every artifact of the Android, desktop, and web runtime classpaths, the NOTICE files of their projects, the
+ * third-party code compiled into the native libraries Skiko ships for the desktop, iOS, and the web, and the libraries
+ * the AppImage runtime is statically linked with.
  *
  * @property licenseFile The license's text among the app's files, which Google's Play libraries ship as their own list
  *   of what they bundle.
@@ -52,6 +53,9 @@ private val SKIA_RAW = setOf(AppBuild.IOS, AppBuild.MACOS, AppBuild.LINUX)
 
 /** The builds whose Skia rasterizes fonts with its own FreeType rather than with the system's font engine. */
 private val SKIA_FREETYPE = setOf(AppBuild.WEB, AppBuild.LINUX)
+
+/** What the AppImage runtime is made of, which runs first whenever the Linux build is started as an AppImage. */
+private val APPIMAGE = setOf(AppBuild.LINUX)
 
 private const val LICENSES = "files/licenses"
 private const val APACHE_2 = "Apache License 2.0"
@@ -126,6 +130,15 @@ internal val openSourceComponents = listOf(
         licenseFile = "$LICENSES/angle_bsd_3.txt",
         licenseUrl = BSD_3_URL,
         builds = setOf(AppBuild.WINDOWS),
+    ),
+    OpenSourceComponent(
+        name = "AppImage runtime",
+        holder = "probonopd and the AppImage contributors",
+        url = "https://github.com/AppImage/type2-runtime",
+        licenseName = MIT,
+        licenseFile = "$LICENSES/appimage_runtime_mit.txt",
+        licenseUrl = MIT_URL,
+        builds = APPIMAGE,
     ),
     OpenSourceComponent(
         name = "ChordPro",
@@ -256,6 +269,15 @@ internal val openSourceComponents = listOf(
     ),
     apache("Ktor", "JetBrains s.r.o., Ktor contributors", "https://github.com/ktorio/ktor"),
     OpenSourceComponent(
+        name = "libfuse",
+        holder = "Miklos Szeredi and the libfuse contributors",
+        url = "https://github.com/libfuse/libfuse",
+        licenseName = "GNU Lesser General Public License 2.1",
+        licenseFile = "$LICENSES/libfuse_lgpl_2.1.txt",
+        licenseUrl = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+        builds = APPIMAGE,
+    ),
+    OpenSourceComponent(
         name = "libjpeg-turbo",
         holder = "The libjpeg-turbo Project, D. R. Commander, the Independent JPEG Group",
         url = "https://libjpeg-turbo.org",
@@ -282,6 +304,15 @@ internal val openSourceComponents = listOf(
         licenseUrl = BSD_3_URL,
         noticeFile = "$LICENSES/libwebp_patents.txt",
         builds = SKIA,
+    ),
+    OpenSourceComponent(
+        name = "musl",
+        holder = "Rich Felker, et al.",
+        url = "https://musl.libc.org",
+        licenseName = MIT,
+        licenseFile = "$LICENSES/musl_mit.txt",
+        licenseUrl = MIT_URL,
+        builds = APPIMAGE,
     ),
     apache("OkHttp", "Square, Inc.", "https://github.com/square/okhttp", ANDROID),
     apache("Okio", "Square, Inc.", "https://github.com/square/okio"),
@@ -325,6 +356,15 @@ internal val openSourceComponents = listOf(
         licenseUrl = MIT_URL,
         builds = JVM,
     ),
+    OpenSourceComponent(
+        name = "squashfuse",
+        holder = "Dave Vasilevsky, Phillip Lougher",
+        url = "https://github.com/vasi/squashfuse",
+        licenseName = "BSD 2-Clause License",
+        licenseFile = "$LICENSES/squashfuse_bsd_2.txt",
+        licenseUrl = "https://opensource.org/license/bsd-2-clause",
+        builds = APPIMAGE,
+    ),
     apache("Stately", "Touchlab", "https://github.com/touchlab/Stately"),
     apache("Wuffs", "The Wuffs Authors", "https://github.com/google/wuffs", SKIA),
     OpenSourceComponent(
@@ -335,5 +375,14 @@ internal val openSourceComponents = listOf(
         licenseFile = "$LICENSES/zlib.txt",
         licenseUrl = "https://zlib.net/zlib_license.html",
         builds = SKIA,
+    ),
+    OpenSourceComponent(
+        name = "Zstandard",
+        holder = "Meta Platforms, Inc. and affiliates",
+        url = "https://facebook.github.io/zstd/",
+        licenseName = BSD_3,
+        licenseFile = "$LICENSES/zstd_bsd_3.txt",
+        licenseUrl = BSD_3_URL,
+        builds = APPIMAGE,
     ),
 )

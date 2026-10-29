@@ -33,7 +33,7 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 - Each workflow can be dispatched by hand (to publish without a release, or redo one store). It builds the tag's code,
   but `.github/scripts` and `.github/actions` come from the commit the workflow runs from — dispatching from a branch
   with `release_tag` set is how a script fix reaches an existing tag.
-- **A release carries only what no official channel offers**: just the Linux `.deb`. The Mac App Store build is the Mac
+- **A release carries only what no official channel offers**: just the Linux `.deb` and AppImage. The Mac App Store build is the Mac
   build (Apple silicon only), the Microsoft Store build the Windows one; `packageReleaseMsi` and `packageDmg` still build
   but nothing publishes them.
 - Every desktop leg starts the built app image before publishing (ProGuard breaks things only a start shows, see
@@ -67,8 +67,11 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
 
 ### `publish-linux.yml`
 
-- `packageReleaseDeb` on amd64 and arm64 (jpackage only packages for its own machine), attached to the release — the
-  only way Linux is distributed (website and README link to the latest release).
+- `packageReleaseDeb` and `packageReleaseAppImage` on amd64 and arm64 (jpackage only packages for its own machine),
+  attached to the release — the only way Linux is distributed (website and README link to the latest release).
+- appimagetool and the AppImage runtime are pinned releases checked against their SHA-256 in the matrix; a bump takes
+  the new digests from the release page. The AppImage gets its own start check (extracted, as the runner has no FUSE)
+  after the `.deb` is attached, so its failure withholds only the AppImage.
 - Runs on the **oldest** supported Ubuntu: a `.deb` depends on the system libraries it was built against.
 - Also builds `createReleaseDistributable` for the start check (the plugin leaves no image behind otherwise), both under
   Xvfb.
