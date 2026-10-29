@@ -48,8 +48,11 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
 
 ## Strings
 
-- `localization/ApplyLanguagePreference.kt` maps the preference to the generated `AppLocale` and sets
-  `currentLanguage`, which every `stringResource` observes.
+- `localization/ApplyLanguagePreference.kt` maps the preference to the generated `AppLocale` (a system code through
+  `:chordpro`'s `LanguageCodes` first, Android's `iw` being `he`) and sets `currentLanguage`, which every
+  `stringResource` observes.
+- **The layout direction is the app language's** (`AppLanguage.layoutDirection`), never the system's: `CampfireApp`
+  provides `LocalLayoutDirection` once, from `currentLanguage`, so it turns with the texts. The shells provide none.
 - The `com.hyperether.localization` plugin generates the string tables into
   `build/generated/compose/resourceGenerator/kotlin/commonCustomResClass` (package `…presentation.localization`).
 - Its `generateTranslateFile` task declares only the resources folder *path* as input, so `build.gradle.kts` registers

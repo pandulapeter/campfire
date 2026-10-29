@@ -24,6 +24,7 @@ import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.test.SkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
@@ -64,11 +65,15 @@ internal class TestWindow(val width: Dp, val height: Dp) {
     }
 }
 
-/** How the app is drawn for a test: in [language], in the dark theme or the light one, with the system's text size at [textScale]. */
+/**
+ * How the app is drawn for a test: in [language], in the dark theme or the light one, with the system's text size at
+ * [textScale], and laid out in [layoutDirection] where one is given instead of the language's own.
+ */
 internal data class TestAppearance(
     val language: AppLanguage = AppLanguage.ENGLISH,
     val isDark: Boolean = false,
     val textScale: Float = 1f,
+    val layoutDirection: LayoutDirection? = null,
 )
 
 /**
@@ -172,6 +177,7 @@ private fun runApp(
                 filePicker = TestFilePicker(pickedFiles),
                 isPrepared = true,
                 keyboardHeight = keyboardHeight.value,
+                layoutDirection = appearance.layoutDirection,
                 onViewModel = {},
                 onAppReady = { isAppReady = true },
             )

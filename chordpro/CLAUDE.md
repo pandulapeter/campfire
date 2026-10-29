@@ -37,6 +37,8 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - **The model is immutable**, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
   collection mutated afterwards. It says what a thing is, never how it looks.
 - The caller supplies NFC normalization and tag folding; this module has none.
+- **`language/` holds what every module asks about languages and scripts**: `LanguageCodes.current` reads a retired
+  code (`iw`) as its replacement, and `isStrongRtl` is the one test of whether a character reads from the right.
 
 ## Model and parser
 

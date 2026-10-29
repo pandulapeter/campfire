@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -25,9 +24,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.awt.SwingWindow
 import androidx.compose.ui.configureSwingGlobalsForCompose
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.window.WindowState
@@ -150,23 +147,19 @@ fun main(args: Array<String>) {
                     window.bringForward()
                 }
             }
-            CompositionLocalProvider(
-                LocalLayoutDirection.providesDefault(LayoutDirection.Ltr)
+            TitleBarInsets(
+                titleBar = titleBar,
+                isFullscreen = rememberIsFullscreen(window = window, windowState = windowState),
             ) {
-                TitleBarInsets(
-                    titleBar = titleBar,
-                    isFullscreen = rememberIsFullscreen(window = window, windowState = windowState),
-                ) {
-                    val currentViewModel = koinViewModel<CampfireViewModel>()
-                    SideEffect { viewModel.value = currentViewModel }
-                    titleBar?.let { TitleBarAppearance(window = window, titleBar = it, viewModel = currentViewModel) }
-                    CampfireDesktopApp(
-                        viewModel = currentViewModel,
-                        filesToImport = OpenedFiles.files,
-                        shareLinks = SharedLinks.links,
-                        onBackgroundColorChanged = { color -> window.setUndrawnAreaColor(Color(color.toArgb())) },
-                    )
-                }
+                val currentViewModel = koinViewModel<CampfireViewModel>()
+                SideEffect { viewModel.value = currentViewModel }
+                titleBar?.let { TitleBarAppearance(window = window, titleBar = it, viewModel = currentViewModel) }
+                CampfireDesktopApp(
+                    viewModel = currentViewModel,
+                    filesToImport = OpenedFiles.files,
+                    shareLinks = SharedLinks.links,
+                    onBackgroundColorChanged = { color -> window.setUndrawnAreaColor(Color(color.toArgb())) },
+                )
             }
         }
     }

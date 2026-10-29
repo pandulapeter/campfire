@@ -69,7 +69,7 @@
         android:label="@string/campfire"
         android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher"
-        android:supportsRtl="false"
+        android:supportsRtl="true"
         android:theme="@style/Campfire"
         tools:ignore="UnusedAttribute"
         tools:targetApi="s">

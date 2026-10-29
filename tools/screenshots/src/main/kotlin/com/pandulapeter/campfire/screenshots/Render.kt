@@ -82,6 +82,7 @@ internal suspend fun render(
                 filePicker = ScreenshotFilePicker(canShare = device.platform.canShare),
                 isPrepared = isPrepared,
                 keyboardHeight = keyboard.height,
+                layoutDirection = null,
                 onViewModel = { viewModel = it },
                 onAppReady = { isAppReady = true },
             )

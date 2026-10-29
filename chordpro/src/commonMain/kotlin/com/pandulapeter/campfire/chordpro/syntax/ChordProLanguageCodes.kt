@@ -27,8 +27,7 @@ internal object ChordProLanguageCodes {
 
     /**
      * ISO 639-2 to ISO 639-1, with both of the standard's three letter forms — the terminological (`deu`) and the
-     * bibliographic (`ger`) — plus the four two letter codes ISO 639-1 itself has since replaced (`in`, `iw`, `ji`,
-     * `mo`), which are still what a JVM writes for Indonesian, Hebrew, Yiddish and Moldavian.
+     * bibliographic (`ger`). The two letter codes ISO 639-1 itself has since replaced (`iw`) are `LanguageCodes`'.
      */
     val twoLetterEquivalents = mapOf(
         "aar" to "aa", "abk" to "ab", "afr" to "af", "aka" to "ak", "alb" to "sq", "amh" to "am", "ara" to "ar", "arg" to "an",
@@ -41,12 +40,12 @@ internal object ChordProLanguageCodes {
         "ful" to "ff", "geo" to "ka", "ger" to "de", "gla" to "gd", "gle" to "ga", "glg" to "gl", "glv" to "gv", "gre" to "el",
         "grn" to "gn", "guj" to "gu", "hat" to "ht", "hau" to "ha", "heb" to "he", "her" to "hz", "hin" to "hi", "hmo" to "ho",
         "hrv" to "hr", "hun" to "hu", "hye" to "hy", "ibo" to "ig", "ice" to "is", "ido" to "io", "iii" to "ii", "iku" to "iu",
-        "ile" to "ie", "in" to "id", "ina" to "ia", "ind" to "id", "ipk" to "ik", "isl" to "is", "ita" to "it", "iw" to "he",
-        "jav" to "jv", "ji" to "yi", "jpn" to "ja", "kal" to "kl", "kan" to "kn", "kas" to "ks", "kat" to "ka", "kau" to "kr",
+        "ile" to "ie", "ina" to "ia", "ind" to "id", "ipk" to "ik", "isl" to "is", "ita" to "it", "jav" to "jv", "jpn" to "ja",
+        "kal" to "kl", "kan" to "kn", "kas" to "ks", "kat" to "ka", "kau" to "kr",
         "kaz" to "kk", "khm" to "km", "kik" to "ki", "kin" to "rw", "kir" to "ky", "kom" to "kv", "kon" to "kg", "kor" to "ko",
         "kua" to "kj", "kur" to "ku", "lao" to "lo", "lat" to "la", "lav" to "lv", "lim" to "li", "lin" to "ln", "lit" to "lt",
         "ltz" to "lb", "lub" to "lu", "lug" to "lg", "mac" to "mk", "mah" to "mh", "mal" to "ml", "mao" to "mi", "mar" to "mr",
-        "may" to "ms", "mkd" to "mk", "mlg" to "mg", "mlt" to "mt", "mo" to "ro", "mol" to "ro", "mon" to "mn", "mri" to "mi",
+        "may" to "ms", "mkd" to "mk", "mlg" to "mg", "mlt" to "mt", "mol" to "ro", "mon" to "mn", "mri" to "mi",
         "msa" to "ms", "mya" to "my", "nau" to "na", "nav" to "nv", "nbl" to "nr", "nde" to "nd", "ndo" to "ng", "nep" to "ne",
         "nld" to "nl", "nno" to "nn", "nob" to "nb", "nor" to "no", "nya" to "ny", "oci" to "oc", "oji" to "oj", "ori" to "or",
         "orm" to "om", "oss" to "os", "pan" to "pa", "per" to "fa", "pli" to "pi", "pol" to "pl", "por" to "pt", "pus" to "ps",

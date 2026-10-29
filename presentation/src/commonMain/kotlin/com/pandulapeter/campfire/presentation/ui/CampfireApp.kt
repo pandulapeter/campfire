@@ -26,6 +26,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +45,8 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.ProvideCove
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.localization.ApplyLanguagePreference
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
+import com.pandulapeter.campfire.presentation.localization.layoutDirection
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.update.AppUpdateGate
@@ -79,6 +83,8 @@ import com.pandulapeter.campfire.presentation.ui.notation.WarmNotationEngine
  * @param onBackgroundColorChanged Called with the theme's background color whenever it changes, every frame of a
  *   cross fade included, for the shells whose window shows a color of its own where the app has not drawn yet: the
  *   desktop's, when it is resized faster than the app is laid out again.
+ * @param layoutDirection The direction to lay the app out in instead of its language's, for the screenshot tool to draw
+ *   a right-to-left layout before any language that needs one has strings of its own. Every shell leaves it null.
  */
 @Composable
 fun CampfireApp(
@@ -89,36 +95,14 @@ fun CampfireApp(
     shareLinks: Flow<SharedLink> = emptyFlow(),
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
+    layoutDirection: LayoutDirection? = null,
 ) {
     ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
     val showSyncNotification = rememberSyncNotifications(viewModel)
     MetronomeNotificationEffect(viewModel)
     MetronomeHapticsEffect(viewModel)
     ProvideCoverArtImageLoader()
-    // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
-    // while the app is away, so it is read again whenever Campfire comes back to the front: ON_START, which is iOS
-    // entering the foreground and the desktop window being restored, and not ON_RESUME, which iOS also sends after
-    // Control Center, a notification or a system alert. One only the app can see - Android's private storage, the
-    // browser's origin private file system - cannot change behind its back, and re-reading every song on each window
-    // focus would be cost with nothing to show for it.
-    //
-    // The desktop window also answers to its focus, since a song edited in another window next to it is brought back
-    // with a click rather than a restore - but only once the last rescan is old enough, so that switching between
-    // two windows does not re-read the library every time.
-    //
-    // The first start and the first resume are the ones that follow the initial load, and are skipped.
-    if (isLibraryEditableOutsideApp) {
-        var hasStartedBefore by remember { mutableStateOf(false) }
-        LifecycleEventEffect(Lifecycle.Event.ON_START) {
-            if (hasStartedBefore) viewModel.libraryState.refresh() else hasStartedBefore = true
-        }
-        if (isDesktopPlatform) {
-            var hasResumedBefore by remember { mutableStateOf(false) }
-            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                if (hasResumedBefore) viewModel.libraryState.refreshIfStale() else hasResumedBefore = true
-            }
-        }
-    }
+    LibraryRefreshEffects(viewModel)
     SyncLifecycleEffects(viewModel.syncController)
     // The editor's unsaved text goes to disk whenever the app stops being the one in front, and a waiting sync run
     // starts, see AppExitController.onAppPaused. ON_PAUSE rather than ON_STOP: it always comes first, and an app swiped
@@ -138,6 +122,7 @@ fun CampfireApp(
     // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
     // build's history that read it read the one this app is composed with.
     CompositionLocalProvider(
+        LocalLayoutDirection provides (layoutDirection ?: currentLanguage.value.layoutDirection),
         LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
@@ -197,6 +182,36 @@ fun CampfireApp(
                     modifier = Modifier.align(Alignment.TopCenter),
                     progress = (syncState as? SyncState.Connected)?.progress,
                 )
+            }
+        }
+    }
+}
+
+/**
+ * A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
+ * while the app is away, so it is read again whenever Campfire comes back to the front: ON_START, which is iOS
+ * entering the foreground and the desktop window being restored, and not ON_RESUME, which iOS also sends after
+ * Control Center, a notification or a system alert. One only the app can see - Android's private storage, the
+ * browser's origin private file system - cannot change behind its back, and re-reading every song on each window
+ * focus would be cost with nothing to show for it.
+ *
+ * The desktop window also answers to its focus, since a song edited in another window next to it is brought back
+ * with a click rather than a restore - but only once the last rescan is old enough, so that switching between
+ * two windows does not re-read the library every time.
+ *
+ * The first start and the first resume are the ones that follow the initial load, and are skipped.
+ */
+@Composable
+private fun LibraryRefreshEffects(viewModel: CampfireViewModel) {
+    if (isLibraryEditableOutsideApp) {
+        var hasStartedBefore by remember { mutableStateOf(false) }
+        LifecycleEventEffect(Lifecycle.Event.ON_START) {
+            if (hasStartedBefore) viewModel.libraryState.refresh() else hasStartedBefore = true
+        }
+        if (isDesktopPlatform) {
+            var hasResumedBefore by remember { mutableStateOf(false) }
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                if (hasResumedBefore) viewModel.libraryState.refreshIfStale() else hasResumedBefore = true
             }
         }
     }

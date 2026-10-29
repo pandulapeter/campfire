@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.syntax
 
+import com.pandulapeter.campfire.chordpro.language.LanguageCodes
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.Directive
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -103,13 +104,15 @@ internal object ChordProMetaItems {
      * filter group of its own for what is the same language to a song book, and the platforms disagree about what to
      * call one, a browser saying "American English" where the JDK says "English". A three letter ISO 639-2 code is
      * folded into its ISO 639-1 equivalent for the first of those reasons and one more, see
-     * [ChordProLanguageCodes]; one that has no such equivalent, which is most of what 639-2 adds, is kept as it is.
+     * [ChordProLanguageCodes], and a retired two letter code into the one that replaced it ([LanguageCodes]); one that
+     * has no such equivalent, which is most of what 639-2 adds, is kept as it is.
      */
     fun languageCode(value: String) = value.trim()
         .substringBefore('-')
         .substringBefore('_')
         .lowercase()
         .let { ChordProLanguageCodes.twoLetterEquivalents[it] ?: it }
+        .let(LanguageCodes::current)
         .takeIf { it.isNotEmpty() && it !in absentLanguageCodes }
 
     /** True for a `{meta}` directive whose key names the language, whatever its value then turns out to be worth. */
