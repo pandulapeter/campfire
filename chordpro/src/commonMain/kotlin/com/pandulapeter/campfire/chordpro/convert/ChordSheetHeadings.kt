@@ -45,22 +45,44 @@ internal object ChordSheetHeadings {
         )
     }
 
-    private val verse = listOf("Verse", "Versszak", "Vsz.", "Vsz", "Strophe", "Strofa", "Zwrotka", "Couplet", "Estrofa", "Estrofe", "Verso")
+    /**
+     * The type of a [label] known to be one, as Campfire's export prints its sections' labels, by the heading word it opens
+     * with whatever follows it (`Chorus (twice)`, `Bridge \u2014 build`): `pre-chorus` for the editor's own kind, which
+     * a site's heading is read as a bridge for, the [Heading.type] otherwise, and null for a label opening with none.
+     */
+    fun labelType(label: String): String? {
+        val text = label.trim()
+        fun opensWith(word: String) = text.startsWith(word, ignoreCase = true) && text.getOrNull(word.length)?.isLetter() != true
+        if (preChorus.any(::opensWith)) return PRE_CHORUS
+        return labelWords.firstOrNull(::opensWith)?.let { types[it.lowercase()] }
+    }
+
+    private const val PRE_CHORUS = "pre-chorus"
+
+    /** Every pre-chorus heading, the app's own label in each of its languages included. */
+    private val preChorus = listOf(
+        "Pre-Chorus", "Pre Chorus", "Prechorus", "Pr\u00e9-Refr\u00e3o", "Pre-Coro", "Pre-Estribillo", "Preestribillo", "Pr\u00e9-refrain",
+        "Pre-refrain", "Pre-ritornello", "Pre-refren", "Pre-refr\u00e9n", "\u05d8\u05e8\u05d5\u05dd\u05be\u05e4\u05d6\u05de\u05d5\u05df",
+    )
+
+    private val verse = listOf(
+        "Verse", "Versszak", "Vsz.", "Vsz", "Strophe", "Strofa", "Strof\u0103", "Zwrotka", "Couplet", "Estrofa", "Estrofe", "Verso", "\u05d1\u05d9\u05ea",
+    )
     private val chorus = listOf(
         "Chorus", "Refrain", "Refr\u00e9n", "Ref.", "Ref", "R.", "R", "Ritornello", "Refren", "Refrein", "Refr\u00e3o", "Refrao", "Coro",
-        "Estribillo", "Hook",
+        "Estribillo", "Hook", "\u05e4\u05d6\u05de\u05d5\u05df",
     )
     private val bridge = listOf(
-        "Bridge", "Pre-Chorus", "Pre Chorus", "Prechorus", "Post-Chorus", "Post Chorus", "Postchorus", "Puente", "Ponte", "Pont", "Brug",
-        "Pr\u00e9-Refr\u00e3o", "Pre-Coro", "Pre-Estribillo", "\u00c1tk\u00f6t\u00e9s", "\u00c1tvezet\u00e9s",
-    )
+        "Bridge", "Post-Chorus", "Post Chorus", "Postchorus", "Puente", "Ponte", "Pont", "Brug",
+        "\u00c1tk\u00f6t\u00e9s", "\u00c1tvezet\u00e9s", "\u05d2\u05e9\u05e8",
+    ) + preChorus
     private val untyped = listOf(
         "Intro", "Outro", "Solo", "Interlude", "Instrumental", "Instrumental break", "Tag", "Coda", "Ending", "Break", "Breakdown", "Vamp",
-        "Turnaround", "Parte",
+        "Turnaround", "Parte", "Sz\u00f3l\u00f3", "Assolo", "\u05e4\u05ea\u05d9\u05d7\u05d4", "\u05e1\u05d9\u05d5\u05dd", "\u05e1\u05d5\u05dc\u05d5",
     )
 
     /** Words that are also sung, which make a heading on their own only with brackets, a colon, or a chord row or blank line after them. */
-    private val sung = setOf("r", "coro", "parte", "tag", "break", "ending", "hook", "verso", "pont", "ponte")
+    private val sung = setOf("r", "coro", "parte", "tag", "break", "ending", "hook", "verso", "pont", "ponte", "\u05d1\u05d9\u05ea", "\u05d2\u05e9\u05e8")
 
     private val types = buildMap<String, String?> {
         verse.forEach { put(it.lowercase(), "verse") }
@@ -68,6 +90,8 @@ internal object ChordSheetHeadings {
         bridge.forEach { put(it.lowercase(), "bridge") }
         untyped.forEach { put(it.lowercase(), null) }
     }
+
+    private val labelWords = (verse + chorus + bridge + untyped).sortedByDescending { it.length }
 
     /** The longest word is tried first, so that "Instrumental break" is one word rather than "Instrumental" with a tail. */
     private val heading = Regex(
