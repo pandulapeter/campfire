@@ -63,6 +63,22 @@ class PdfRunningLinesTest {
     }
 
     @Test
+    fun `a songbook's footer counting each song's pages is dropped`() = runTest {
+        val footers = listOf("Page 1 of 1", "Page 1 of 3", "Page 2 of 3", "Page 3 of 3")
+        val pages = extract(4) { page -> "1 0 0 1 50 700 Tm (A line sung on page $page) Tj 1 0 0 1 50 20 Tm (${footers[page - 1]}) Tj" }
+
+        assertEquals((1..4).map { listOf("A line sung on page $it") }, pages)
+    }
+
+    @Test
+    fun `a time signature opening each page at the same place is kept`() = runTest {
+        val signatures = listOf("6/8", "3/4", "2/4", "3/4")
+        val pages = extract(4) { page -> "1 0 0 1 50 780 Tm (${signatures[page - 1]}) Tj 1 0 0 1 50 700 Tm (A line sung on page $page) Tj" }
+
+        assertEquals((1..4).map { listOf(signatures[it - 1], "A line sung on page $it") }, pages)
+    }
+
+    @Test
     fun `a page count written out is this page's own only`() {
         assertTrue(PdfRunningLines.isPageCount("2 of 3", page = 2, pageCount = 3))
         assertTrue(PdfRunningLines.isPageCount("Page 2 of 3", page = 2, pageCount = 3))

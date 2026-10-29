@@ -38,7 +38,9 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
 - Running lines (`PdfRunningLines`) are judged on each page's margins laid out across the whole width, never by the
   columns found below them: a short last page can read as columns, which would cut its header into parts no other
   page's header matches. A dropped margin line takes every line on its baseline with it. A number in a running line is
-  the same on every page or counts the pages, so a heading that happens to open two pages (`Verse 2`, `Verse 6`) stays.
+  the same on every page or counts the pages, so a heading that happens to open two pages (`Verse 2`, `Verse 6`) stays,
+  or the line is a page count of its own (`Page 1 of 2`, a songbook counting each song's pages), never a bare `1/2`,
+  which a time signature at the top of each song reads as too.
 - A PDF whose `/Producer` is Campfire is flagged (`ExtractedDocument.isCampfireExport`) for the converter to read by
   its layout; a span is italic by its font's name or its italic flag, and a line carries its baseline.
 - An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
