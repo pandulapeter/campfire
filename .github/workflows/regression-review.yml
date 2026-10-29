@@ -1,0 +1,146 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# A one-time, unattended regression review: Claude Code runs the codebase-review skill's review half on a branch of
+# its own, fixes the simple findings one commit each, commits a plan for each complex one, and the workflow opens a pull
+# request with the result and dispatches tests.yml on it (a pull request opened with the workflow's token starts no
+# workflow by itself). Dispatched by hand only; delete this file once the pull request is merged or closed.
+
+name: 'Regression review'
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'The commit the review starts from (the last review''s reviewed commit)'
+        default: 'cfcf08150'
+      budget:
+        description: 'The most the run may spend on the Anthropic API, in US dollars'
+        default: '85'
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: regression-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: Review, fix, and plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      BRANCH: review/50th-regression-${{ github.run_id }}
+      BASE: ${{ inputs.base }}
+      BUDGET: ${{ inputs.budget }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Set up the branch and the pre-commit hook
+        run: |
+          git config user.name 'Pandula Péter'
+          git config user.email 'pandulapeter@gmail.com'
+          git config core.hooksPath .githooks
+          git checkout -b "$BRANCH"
+          echo "START=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+      - name: Run the review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_BODY: ${{ runner.temp }}/pr-body.md
+        run: |
+          cat > "$RUNNER_TEMP/prompt.md" <<'PROMPT'
+          You are running unattended in a GitHub Actions job (Ubuntu, 4 cores, 16 GB, no display, no device, no Xcode).
+          Nobody can answer a question until the run is over: never use AskUserQuestion and never wait for an answer.
+
+          Task: the 50th Campfire review sweep, a thorough REGRESSION review of everything that landed since the 49th
+          review's reviewed commit, `git log $BASE..HEAD` (the 49th review's fixes and plans, the Hebrew translation and
+          right-to-left layout, and everything else in the range). Bring a fresh perspective: read the code as a newcomer
+          would, judge each change by what it does to the app's behaviour on every platform, and do not take earlier
+          sweeps' conclusions or the commit messages on trust. Angle for every reviewer: did these commits break
+          anything that worked at $BASE (callers, documented usages, other platforms, other languages, layouts in both
+          reading directions, persistence and sync formats), and are the fixes the 49th review's plans landed actually
+          right?
+
+          Follow `.claude/skills/codebase-review/SKILL.md`, the review half (sections 0, 1, 2, and 6) for this
+          repository, with these overrides for an unattended run:
+          - There is no memory directory here. Skip every memory read and write; the plans' README.md is the record.
+            Settled earlier, not to re-raise: the screenshot tool's parallel default not being memory-capped;
+            check_regexes.py's blind spots for a `val` or a parenthesised concatenation; the What's new text
+            (prepare-release rewrites it).
+          - The angle and the budget are set: the angle above, and a hard cap of $BUDGET US dollars for this whole run,
+            subagents included (enforced by --max-budget-usd; past it the run stops mid-work). Size the fan-out to it:
+            at most five area reviewers on the most capable model, the docs check on `sonnet`, at most two challengers.
+            Keep reviewer prompts focused on their area's files in the range.
+          - Open decisions are not asked: record each in the README under Decisions with the recommended default,
+            marked as awaiting the user, and carry on with the default wherever a plan needs one.
+          - You are already on the branch this run made; commit on it. Never create, switch, or push a branch, and never
+            open a pull request: the workflow pushes and opens it after you finish.
+          - Commit as you go (every simple fix as soon as it is verified, the plans as soon as they are challenged), so
+            a run cut short by the budget or the time limit still leaves its work. The plans folder,
+            `documentation/issues/`, is committed in one commit, `Add the 50th review plans.`, after the challenge.
+          - Gradle: one build at a time on this runner; only you run Gradle, never two subagents at once. Run the tests
+            of the touched modules and the compile of each touched platform (section "This repository"). iOS cannot be
+            compiled here: a fix touching an `iosMain` source set or `app/ios` is a plan, not a fix, unless it is a
+            comment or doc change. The workflow runs tests.yml (every test and every platform, iOS included) on the
+            branch afterwards.
+          - The pre-commit hook is installed and must pass; never bypass it with --no-verify.
+          - Load the `code-style` skill before the first edit and the `commit-messages` skill before the first commit,
+            and follow them.
+
+          Finally, write the pull request's description to the file named by the PR_BODY environment variable, in
+          Markdown: a first line saying what the sweep was (range, angle), the headlines, the fixes made (short hash and
+          message each), the plans by lane with their severity, what the challenge amended or dropped, and the open
+          decisions with their recommended defaults. Use the Oxford comma in every list of three or more. Keep it under
+          a screen and a half; the README in the plans folder holds the rest.
+          PROMPT
+          prompt="$(sed "s/\$BASE/$BASE/g; s/\$BUDGET/$BUDGET/g" "$RUNNER_TEMP/prompt.md")"
+          claude -p "$prompt" \
+            --model claude-opus-5-5 \
+            --dangerously-skip-permissions \
+            --max-budget-usd "$BUDGET" \
+            --output-format stream-json \
+            --verbose \
+            | tee "$RUNNER_TEMP/review.jsonl" \
+            | jq -r --unbuffered 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' || true
+      - name: Keep the run's transcript
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: review-transcript
+          path: ${{ runner.temp }}/review.jsonl
+          retention-days: 30
+      # Even after a failure or the budget running out: whatever was committed is worth a look.
+      - name: Push the branch and open the pull request
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(git rev-list --count "$START..HEAD")" = "0" ]; then
+            echo "The review committed nothing."
+            exit 0
+          fi
+          git push origin "$BRANCH"
+          body="$RUNNER_TEMP/pr-body.md"
+          if [ ! -s "$body" ]; then
+            {
+              echo "The 50th review, a regression review of \`$BASE..$START\`, ended before writing its summary (see the run's transcript artifact)."
+              echo
+              git log --format='- %h %s' "$START..HEAD"
+            } > "$body"
+          fi
+          gh pr create --base master --head "$BRANCH" --title 'The 50th review: a regression review since the 49th' --body-file "$body"
+          gh workflow run tests.yml --ref "$BRANCH"

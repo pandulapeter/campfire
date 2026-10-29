@@ -78,6 +78,12 @@ listing text as it is in the console and writes only the notes).
 
 ## The workflows
 
+### `regression-review.yml`
+
+One-time, dispatched by hand: Claude Code (`ANTHROPIC_API_KEY`, capped by the `budget` input) runs the
+`codebase-review` skill's review half unattended on a branch of its own; the workflow then pushes it, opens the pull
+request, and dispatches `tests.yml` on it. Delete it once that pull request is settled.
+
 ### `publish-web.yml`
 
 Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-website` repository
