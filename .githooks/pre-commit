@@ -17,6 +17,12 @@ python3 .github/scripts/check_store_listings.py
 python3 .github/scripts/store_listings.py --check
 python3 .github/scripts/check_doc_names.py --staged
 python3 .github/scripts/check_regexes.py
+# The IDE drops the shared iOS run configuration now and then, and a commit staging everything has carried that deletion
+# along several times.
+if git diff --cached --name-only --diff-filter=D | grep -qx '.run/iOS.run.xml'; then
+    echo "The commit deletes .run/iOS.run.xml; restore it with git restore --staged --worktree .run/iOS.run.xml." >&2
+    exit 1
+fi
 # Spotless needs Gradle, a few seconds with a warm daemon, so it runs only when Kotlin is staged. It checks the working
 # tree, which is what the staged files are unless a commit stages part of a file.
 if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.kts?$'; then
