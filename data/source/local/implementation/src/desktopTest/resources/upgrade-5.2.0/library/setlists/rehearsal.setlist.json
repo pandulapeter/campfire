@@ -1,0 +1,14 @@
+{
+    "title": "Rehearsal",
+    "date": "2026-11-05",
+    "songs": [
+        {
+            "file": "beatles-yesterday.cho",
+            "transposition": 2
+        },
+        {
+            "file": "oasis-wonderwall.cho",
+            "tempo": 90
+        }
+    ]
+}

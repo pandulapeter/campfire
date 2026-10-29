@@ -1,0 +1,52 @@
+{
+    "providerId": "dropbox",
+    "accountId": "dropbox:dbid:AAH4f99T0taONIb-OurWxbNQ6ywGRopQngc",
+    "lastSyncedAt": 1761000000000,
+    "isRunInProgress": false,
+    "isAutomaticRunInProgress": false,
+    "entries": {
+        "songs/john_newton-amazing_grace.cho": {
+            "localHash": "64fe55d2f15607e9b44fc67bfed8ef1c976bc3b055db271f23c4fa9ad23601ff",
+            "remoteRevision": "0162f00000001003"
+        },
+        "songs/leonard_cohen-hallelujah.cho": {
+            "localHash": "b23b650affcd1934e65dd09c9945131f9f9d7f3a37e8e3eeb986e55b1996c6d4",
+            "remoteRevision": "0162f00000002006"
+        },
+        "songs/nepdal-szol_a_kakas_mar.cho": {
+            "localHash": "02bae0f15adceb16a2f92bc0ea8abb9b74f13a63304bec6ef105acc766c58067",
+            "remoteRevision": "0162f00000003009"
+        },
+        "songs/oasis-wonderwall.cho": {
+            "localHash": "a28e99f9b161fbcd8dbe384fd0b5c5e898d2e07b3d146873a5155771442c2e9b",
+            "remoteRevision": "0162f0000000400c"
+        },
+        "songs/נעמי_שמר-ירושלים_של_זהב.cho": {
+            "localHash": "f254ca8ff52ca4a81cef67967a9b8294a680c1317b346524da63292955bf9f4d",
+            "remoteRevision": "0162f0000000500f"
+        },
+        "setlists/rehearsal.setlist.json": {
+            "localHash": "5b270d603cee57a4fe539d066550efe04b2c2dbcc82cd218044498cc33ff696b",
+            "remoteRevision": "0162f00000006012"
+        },
+        "setlists/summer_camp_2024.setlist.json": {
+            "localHash": "f29bf071ca7b79153bb6b217fec844652f00171ba67d34f6a3f24cee516830de",
+            "remoteRevision": "0162f00000007015"
+        },
+        "setlists/wedding.setlist.json": {
+            "localHash": "0ae48470c88bda42e38b280e26421cbabcff357007947b5844c5b19a24532f97",
+            "remoteRevision": "0162f00000008018"
+        }
+    },
+    "syncedPreferences": null,
+    "syncedPreferencesFields": [
+        "transposition",
+        "tempo",
+        "capo",
+        "autoScrollSpeed",
+        "beatLevels",
+        "chords",
+        "tags"
+    ],
+    "syncedPreferencesRevision": null
+}

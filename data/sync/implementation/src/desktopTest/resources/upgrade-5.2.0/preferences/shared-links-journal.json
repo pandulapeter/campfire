@@ -1,0 +1,15 @@
+{
+    "entries": [
+        {
+            "type": "rename",
+            "from": "summer_camp.setlist.json",
+            "to": "summer_camp_2024.setlist.json",
+            "shareId": "Hq7TmB3xKd"
+        },
+        {
+            "type": "stopItem",
+            "kind": "song",
+            "fileName": "beatles-yesterday.cho"
+        }
+    ]
+}
