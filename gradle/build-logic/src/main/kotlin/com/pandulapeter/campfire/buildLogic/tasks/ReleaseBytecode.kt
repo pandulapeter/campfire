@@ -14,7 +14,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * Runs [brokenClasses] over [jars] in a JVM of [java], the runtime the release ships with, and fails with what it
+ * Runs [brokenClasses] over [jars] in a JVM of [java], the JDK the release's runtime is cut from, and fails with what it
  * found. ProGuard's optimizer can write bytecode the JVM's verifier refuses, and the JVM verifies a class only the first
  * time something needs it: a class only an open song reaches starts the app fine and takes down the window later, so no
  * start of the release build shows it. Run in a JVM of its own, so that neither the build's JVM nor its metaspace

@@ -478,8 +478,8 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(ex
  * of every download, and a native binary without a signature inside a jar is exactly what the Mac App Store's
  * validation and notarization look for.
  *
- * Then has the runtime the release ships with verify every class of the jar (`verifyReleaseBytecode`), so that bytecode
- * ProGuard's optimizer broke stops the build rather than the app on the first screen that reaches it.
+ * Then has the JetBrains Runtime the release's own is cut from verify every class of the jar (`verifyReleaseBytecode`), so
+ * that bytecode ProGuard's optimizer broke stops the build rather than the app on the first screen that reaches it.
  */
 tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
     val proguardOutput = layout.buildDirectory.dir("compose/tmp/main-release/proguard")

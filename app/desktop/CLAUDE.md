@@ -130,8 +130,9 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 - Obfuscation stays off: `TouchScreen.kt` finds the scene by its `androidx.compose.` class names.
 - Output is one jar (Windows Defender rescans per file). The merge keeps the first of duplicate resources, so no two
   dependencies may ship the same `META-INF/services` file.
-- `proguardReleaseJars` ends by linking every class of its jar in the bundled runtime (`verifyReleaseBytecode`), so an
-  optimizer `VerifyError` fails the build and `tests.yml`; fix it with a rule here, never by dropping the check.
+- `proguardReleaseJars` ends by linking every class of its jar in the JetBrains Runtime the bundled one is cut from
+  (`verifyReleaseBytecode`), so an optimizer `VerifyError` fails the build and `tests.yml`; fix it with a rule here, never
+  by dropping the check. That JDK has every module, so a class needing one the image leaves out still passes.
 - **Start a release build before shipping it** (`runRelease`): what ProGuard breaks for reflection only shows then.
 
 ### macOS
