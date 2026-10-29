@@ -1,0 +1,147 @@
+{
+    "isPerformanceModeEnabled": true,
+    "shouldShowArchivedSetlists": true,
+    "isLyricsOnlyModeEnabled": true,
+    "areSongsEnabled": false,
+    "areSetlistsEnabled": false,
+    "isMetronomeEnabled": false,
+    "isTunerEnabled": false,
+    "fontScale": 1.4,
+    "sortingMode": "by_title",
+    "setlistSortingMode": "by_title",
+    "uiMode": "dark",
+    "themeColor": "teal",
+    "backgroundWarmth": 3,
+    "isAppIconThemed": false,
+    "isCoverArtEnabled": false,
+    "isSongDetailsLookupEnabled": false,
+    "shouldNumberSections": false,
+    "songLayout": "continuous",
+    "isSongLayoutChosen": true,
+    "language": "hu",
+    "accidentals": "flats",
+    "notation": "german",
+    "areChordDiagramsEnabled": false,
+    "areChordDegreesEnabled": false,
+    "isChordLibraryEnabled": false,
+    "areScalesEnabled": false,
+    "areScaleSuggestionsEnabled": false,
+    "isKeyShown": false,
+    "isDurationShownOnSongCards": true,
+    "isKeyShownOnSetlistCards": false,
+    "isDurationShownOnSetlistCards": false,
+    "tempoOnSongCards": true,
+    "tempoOnSetlistCards": false,
+    "instrument": "ukulele",
+    "tunings": {
+        "guitar": "guitar_drop_d",
+        "ukulele": "ukulele_baritone"
+    },
+    "toolCapo": 3,
+    "areScaleNoteNamesShown": true,
+    "chordVoicings": {
+        "guitar": {
+            "F:0.4.7": "x x 3 2 1 1"
+        }
+    },
+    "transpositions": {
+        "oasis-wonderwall.cho": 2,
+        "leonard_cohen-hallelujah.cho": -3
+    },
+    "tempos": {
+        "oasis-wonderwall.cho": 92
+    },
+    "capos": {
+        "leonard_cohen-hallelujah.cho": 5
+    },
+    "autoScrollSpeeds": {
+        "john_newton-amazing_grace.cho": 160
+    },
+    "beatLevels": {
+        "leonard_cohen-hallelujah.cho": {
+            "6/8": [
+                "accent",
+                "muted",
+                "normal",
+                "accent",
+                "muted",
+                "normal"
+            ]
+        }
+    },
+    "foldedSections": {
+        "oasis-wonderwall.cho": [
+            "chorus#1"
+        ]
+    },
+    "tagMatchMode": "all",
+    "languageMatchMode": "all",
+    "tagSortingMode": "alphabetical",
+    "languageSortingMode": "alphabetical",
+    "tagColors": {
+        "folk": "green",
+        "wedding": "pink"
+    },
+    "printSettings": {
+        "format": "pdf",
+        "paper": "letter",
+        "isLandscape": true,
+        "fontSize": 14,
+        "marginMm": 20,
+        "columns": 2,
+        "showChords": false,
+        "showTabs": false,
+        "showSheetMusic": false,
+        "showChordDiagrams": false,
+        "showScales": false,
+        "showKey": false,
+        "showTempo": false,
+        "showComments": false,
+        "showMetadata": false,
+        "showPageNumbers": false,
+        "startSongsOnNewPage": false,
+        "includeSetlistOverview": false,
+        "includeSongSheets": false,
+        "overviewColumns": 3,
+        "showOverviewDetails": false
+    },
+    "metronomeSettings": {
+        "sound": "cowbell",
+        "volume": 0.5,
+        "subdivision": "triplets",
+        "isVisualBeatEnabled": false,
+        "isHapticBeatEnabled": false,
+        "beatLevels": {
+            "7/8": [
+                "accent",
+                "normal",
+                "accent",
+                "normal",
+                "accent",
+                "normal",
+                "normal"
+            ]
+        },
+        "bpm": 132,
+        "timeSignature": "7/8",
+        "isSongPanelShown": true
+    },
+    "tunerSettings": {
+        "mode": "chromatic",
+        "referencePitch": 432,
+        "hasTurnedOnMicrophone": true
+    },
+    "seenWhatsNewVersions": [
+        "5.1.0",
+        "5.2.0"
+    ],
+    "isOnboardingPending": true,
+    "demoLibraryContentHashes": {
+        "songs/demo.cho": "abc123"
+    },
+    "sharedLinkImports": {
+        "https://www.dropbox.com/scl/fi/abc/wedding.zip?rlkey=x&dl=0": [
+            "setlists/wedding.setlist.json"
+        ]
+    }
+}

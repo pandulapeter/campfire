@@ -1,0 +1,16 @@
+{
+    "title": "Summer camp 2024",
+    "description": "The old campfire songs",
+    "date": "2024-07-12",
+    "isArchived": true,
+    "songs": [
+        {
+            "file": "oasis-wonderwall.cho",
+            "transposition": -2,
+            "capo": 4
+        },
+        {
+            "file": "john_newton-amazing_grace.cho"
+        }
+    ]
+}

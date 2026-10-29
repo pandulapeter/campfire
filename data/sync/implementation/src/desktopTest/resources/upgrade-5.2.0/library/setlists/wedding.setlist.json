@@ -1,0 +1,23 @@
+{
+    "title": "Wedding",
+    "description": "Anna and Bence, first dance at nine",
+    "date": "2026-12-19",
+    "isCountdownShown": true,
+    "songs": [
+        {
+            "file": "leonard_cohen-hallelujah.cho",
+            "transposition": 3,
+            "tempo": 64,
+            "capo": 1
+        },
+        {
+            "file": "נעמי_שמר-ירושלים_של_זהב.cho",
+            "transposition": -1,
+            "tempo": 96
+        },
+        {
+            "file": "nepdal-szol_a_kakas_mar.cho",
+            "capo": 0
+        }
+    ]
+}

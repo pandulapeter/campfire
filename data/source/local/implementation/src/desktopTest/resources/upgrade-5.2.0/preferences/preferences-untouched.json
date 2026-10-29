@@ -1,0 +1,22 @@
+{
+    "sortingMode": "by_artist",
+    "setlistSortingMode": "by_date",
+    "uiMode": "system_default",
+    "themeColor": "purple",
+    "songLayout": "pages",
+    "language": "system_default",
+    "accidentals": "original",
+    "notation": "standard",
+    "isKeyShownOnSetlistCards": true,
+    "instrument": "guitar",
+    "tagMatchMode": "any",
+    "languageMatchMode": "any",
+    "tagSortingMode": "by_usage",
+    "languageSortingMode": "by_usage",
+    "printSettings": {
+        "showTabs": true,
+        "showKey": true,
+        "showTempo": true,
+        "showOverviewDetails": true
+    }
+}

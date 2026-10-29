@@ -47,3 +47,7 @@ device that edited the old name since the last run puts it back, leaving both.
 
 A behaviour that spans devices (renames, conflicts, deletions, synced preferences) gets a case in `TwoDeviceSyncTest`,
 which runs two `Device`s against one fake cloud folder through the real engine.
+
+The upgrade-5.2.0 test resources, here and in `:data:source:local:implementation`, are the files the 5.2.0 release's own
+code wrote; they are never regenerated with today's code, which would agree with itself whatever it reads. A release
+whose files are worth checking the same way gets a folder of its own, written from a worktree at its tag.
