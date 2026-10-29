@@ -84,7 +84,7 @@ internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMe
         var end = Float.NEGATIVE_INFINITY
         val texts = WORD.findAll(text).map { word ->
             val layout = measure(word.value, if (isChord) chordStyle else wordStyle)
-            val x = maxOf(word.range.first * columnWidth, end + columnWidth)
+            val x = maxOf(word.range.first * columnWidth, end + columnWidth * TabEngraving.MIN_WORD_GAP_PER_COLUMN)
             end = x + layout.size.width
             PlacedTabText(layout = layout, x = x, y = 0f, isChord = isChord)
         }.toList()

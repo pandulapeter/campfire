@@ -78,7 +78,7 @@ internal class PrintTabEngraver(
         val style = if (ChordProTabWrapper.isChordLine(text)) chordStyle else wordStyle
         var end = Float.NEGATIVE_INFINITY
         return WORD.findAll(text).map { word ->
-            val x = maxOf(word.range.first * columnWidth, end + columnWidth)
+            val x = maxOf(word.range.first * columnWidth, end + columnWidth * TabEngraving.MIN_WORD_GAP_PER_COLUMN)
             end = x + measure(word.value, style)
             Part(word.value, x = x, y = top, style = style, isSelectable = false)
         }.toList()

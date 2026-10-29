@@ -42,7 +42,7 @@ builds what it draws, `grid/` places it.
 - Tablature is engraved (`TabStaffLines`, screen and PDF) at abc2svg's tab staff sizes (`TabEngraving`), so it reads
   as one engraving with the sheet music; its monospaced columns only say where things go: frets in the lyrics' face's
   bold tabular figures (string names regular), centred on their string and columns; its other lines in the lyrics'
-  face from the column each word starts at. Preformatted runs stay monospaced, at the lyrics' spacing. A line of chord
+  face from the column each word starts at, moved right only where it would touch the word before it. Preformatted runs stay monospaced, at the lyrics' spacing. A line of chord
   names in a tab run, engraved or not, is drawn as the page's chords (`isChordLine`).
 - Grids: `alignedGridBars` (`GridColumns.kt`, shared with the PDF) aligns bar lines across lines; each bar is one text,
   since only one monospaced text keeps its columns. A too-wide grid line breaks between bars (`SongGridLine`).

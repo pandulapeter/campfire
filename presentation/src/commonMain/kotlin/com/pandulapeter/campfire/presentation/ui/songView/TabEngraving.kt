@@ -28,6 +28,14 @@ internal object TabEngraving {
     /** A column is a fret's figure with a little air either side, which the string is broken by. */
     const val COLUMN_WIDTH_PER_FIGURE = 1.25f
 
+    /**
+     * The least gap between two words of a line over or under the staff, in columns: a word space of the lyrics' face.
+     * Each word starts at its own column, and the chord names and words are wider per character than a column is, so
+     * one written a single space after another would otherwise touch it; only then is it moved right, and by no more
+     * than this gap asks, since a whole column would put it over the next note rather than the one it was written over.
+     */
+    const val MIN_WORD_GAP_PER_COLUMN = 0.5f
+
     /** The width of a bar line or a string, in columns. */
     const val STROKE_WIDTH_PER_COLUMN = 0.08f
 
