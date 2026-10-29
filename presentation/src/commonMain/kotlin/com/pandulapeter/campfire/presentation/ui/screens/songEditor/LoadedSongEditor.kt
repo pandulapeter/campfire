@@ -138,6 +138,7 @@ internal fun LoadedSongEditor(
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
+    val textDirection = rememberEditorTextDirection(text)
     val songRenderer = viewModel.songRenderer
     val notation = viewModel.editorSession.editorNotation
     // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert. Only the
@@ -349,6 +350,7 @@ internal fun LoadedSongEditor(
                     .onFocusChanged { fieldFocus.hasFocus = it.hasFocus },
                 textFieldState = textFieldState,
                 text = text,
+                textDirection = textDirection,
                 isCompactTyping = isTypingInShortWindow,
                 scrollState = fieldScrollState,
                 horizontalScrollState = fieldHorizontalScrollState,

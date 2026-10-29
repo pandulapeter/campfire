@@ -33,6 +33,9 @@ import kotlinx.coroutines.withContext
  * the way the reader's do. It needs the parsed song, so the first one is worked out right here, so the field never
  * opens in the wrong direction, and every later one away from the main thread once the typing pauses: a song turns
  * around only when enough of its lyrics have changed script, never on the keystroke itself.
+ *
+ * Called once per opened song, by the editor next to its [text], not by the field: the panes compose the field afresh on
+ * every switch between Edit, Preview, and Split, and a long song parsed on each of them would stutter.
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @Composable

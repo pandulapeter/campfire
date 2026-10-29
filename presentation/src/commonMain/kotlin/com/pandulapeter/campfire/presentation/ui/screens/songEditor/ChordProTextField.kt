@@ -80,6 +80,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * around it is a focus group, so a focus callback or requester outside it would see that group rather than the field.
  * @param text The text of [textFieldState] as one string, the editor's copy of it, which the highlighting reads rather
  *   than copying the text again.
+ * @param textDirection The direction the song in [text] is read in ([rememberEditorTextDirection]), kept beside [text]
+ *   by the editor, so that a pane switch composing the field afresh never parses the song again.
  * @param scrollState How far the field is scrolled down, hoisted so that it survives the pane being composed again.
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  * @param searchHighlights The matches of the editor's search while its sheet is open, drawn behind the text; the current
@@ -97,6 +99,7 @@ internal fun ChordProTextField(
     fieldModifier: Modifier = Modifier,
     textFieldState: TextFieldState,
     text: State<String>,
+    textDirection: State<WritingDirection>,
     isCompactTyping: Boolean,
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
@@ -133,8 +136,7 @@ internal fun ChordProTextField(
     // a right-to-left song's lines start at the right, and the sideways scroll starts there too, where they do. The
     // margins stay on the sides of the window they belong to, so they are taken as left and right in the interface's
     // direction and handed to the field as such.
-    val textDirection by rememberEditorTextDirection(text)
-    val isRightToLeft = textDirection == WritingDirection.RIGHT_TO_LEFT
+    val isRightToLeft = textDirection.value == WritingDirection.RIGHT_TO_LEFT
     val interfaceLayoutDirection = LocalLayoutDirection.current
     val leftMargin = contentPadding.calculateLeftPadding(interfaceLayoutDirection) + 16.dp
     val rightMargin = contentPadding.calculateRightPadding(interfaceLayoutDirection) + 16.dp
@@ -219,7 +221,7 @@ internal fun ChordProTextField(
                 // so both follow the typing on their own.
                 .bounceVerticalScroll(scrollState)
                 .bounceHorizontalScroll(horizontalScrollState)
-                .editorArrowKeys(textFieldState = textFieldState, songDirection = { textDirection })
+                .editorArrowKeys(textFieldState = textFieldState, songDirection = { textDirection.value })
                 .then(fieldModifier),
             state = textFieldState,
             // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the
