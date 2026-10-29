@@ -29,8 +29,9 @@ language it does not name. The listing is written by language (store_listings.py
 language's description, keywords, promotional text, and, for iOS, the URLs (fr-FR and fr-CA alike), the version its
 copyright and App Review notes, and on iOS each app info localization its name and subtitle, which the Mac shares with
 iOS and never writes. An app language with no localization fails the run before any text is written or the version
-submitted (only the build is attached by then), since a language's first listing is added by hand in App Store Connect, with its screenshots; a name another app holds fails it
-with Apple's message, before the submission. When no app info is editable (a version in review) the name and subtitle
+submitted (by then the version may have been created or renamed, and the build attached), since a language's first
+listing is added by hand in App Store Connect, with its screenshots; a name another app holds fails it with Apple's
+message, before the submission. When no app info is editable (a version in review) the name and subtitle
 wait for the next version, with a warning. With --no-listings only the notes are written.
 
 A version that is already waiting for review or further along with this very build is left as it is, so a run that is
