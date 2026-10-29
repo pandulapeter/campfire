@@ -87,7 +87,7 @@ internal fun SettingsScreen(
     LaunchedEffect(tabs) {
         snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.GENERAL }
     }
-    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.getValue(it)) }
+    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.pages.getValue(it)) }
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
     LaunchedEffect(viewModel, scrollStates) {

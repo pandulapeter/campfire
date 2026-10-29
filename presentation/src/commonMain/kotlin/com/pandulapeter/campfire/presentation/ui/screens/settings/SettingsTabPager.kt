@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
+import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import kotlinx.coroutines.flow.collectLatest
@@ -96,6 +97,7 @@ internal fun SettingsTabPager(
         // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
         // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
+            scrollState = rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.tabRow),
             tabs = tabs,
             selectedTab = tabs[pagerState.targetPage],
             indicatorPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },

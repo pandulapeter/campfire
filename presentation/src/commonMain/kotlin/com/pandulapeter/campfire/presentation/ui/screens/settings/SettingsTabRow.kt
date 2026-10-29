@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,11 +47,14 @@ import kotlin.math.roundToInt
  *   resizing from one tab's name to the next as the pages are swiped - rather than setting off on an animation of its
  *   own once the page being headed for changes. Read while laying the indicator out, so a swipe moves it without
  *   recomposing the row.
+ * @param scrollState Where the row is scrolled, kept by the caller for the session: the row animates to the selected tab
+ *   on its first layout unless it is already there, and a state made with the row would start at General every time.
  * @param startPadding The window insets on the start edge, so the tabs start after the cutout rather than under it.
  */
 @Composable
 internal fun SettingsTabRow(
     modifier: Modifier = Modifier,
+    scrollState: ScrollState,
     tabs: List<SettingsTab>,
     selectedTab: SettingsTab,
     indicatorPosition: () -> Float,
@@ -65,6 +69,7 @@ internal fun SettingsTabRow(
             .padding(start = startPadding, end = endPadding)
             .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH),
         selectedTabIndex = tabs.indexOf(selectedTab).coerceAtLeast(0),
+        scrollState = scrollState,
         containerColor = Color.Transparent,
         edgePadding = 0.dp,
         indicator = {
