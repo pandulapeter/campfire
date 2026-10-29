@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
@@ -50,6 +51,9 @@ import kotlin.math.roundToInt
  * at, and the section this block is in is measured at several widths before one wins (see [SongSectionsLayout]):
  * a layout with no children answers every intrinsic measurement by running its measure block, so the height it
  * reports for a candidate width already counts the rows the tab would wrap into at that width.
+ *
+ * In a right-to-left song ([isAtEnd]) the rows are drawn moved to the line's end by the run's widest row, every slot by
+ * the same amount, so that the slots of one run stay lined up wherever the page puts them ([runShiftAtLineEnd]).
  */
 @Composable
 internal fun SongTabBlock(
@@ -58,6 +62,7 @@ internal fun SongTabBlock(
     rows: TabRows,
     slot: Int,
     isLastSlot: Boolean,
+    isAtEnd: Boolean,
 ) {
     val color = MaterialTheme.colorScheme.onSurface
     val chordColor = LocalSecondAccentColor.current
@@ -75,14 +80,17 @@ internal fun SongTabBlock(
         modifier = modifier
             .then(if (slot == 0) Modifier.semantics { contentDescription = lines.joinToString(separator = "\n") } else Modifier)
             .drawBehind {
-                var y = 0f
-                slotRows(size.width.roundToInt()).first.forEach { row ->
-                    drawStaff(row = row, top = y, columnWidth = rows.columnWidth, stringOffset = rows.stringOffset, color = staffColor)
-                    row.lines.forEach { line ->
-                        line.texts.forEach { text -> drawText(textLayoutResult = text.layout, color = if (text.isChord) chordColor else color, topLeft = Offset(text.x, y + text.y)) }
-                        y += line.height
+                val width = size.width.roundToInt()
+                translate(left = runShiftAtLineEnd(isAtEnd, size.width, if (isAtEnd) rows.extentAt(width) else 0f)) {
+                    var y = 0f
+                    slotRows(width).first.forEach { row ->
+                        drawStaff(row = row, top = y, columnWidth = rows.columnWidth, stringOffset = rows.stringOffset, color = staffColor)
+                        row.lines.forEach { line ->
+                            line.texts.forEach { text -> drawText(textLayoutResult = text.layout, color = if (text.isChord) chordColor else color, topLeft = Offset(text.x, y + text.y)) }
+                            y += line.height
+                        }
+                        y += rows.rowGap
                     }
-                    y += rows.rowGap
                 }
             },
     ) { _, constraints ->
@@ -199,6 +207,15 @@ internal class TabRows(
             }
         }
     }
+
+    /** How wide the widest row of every slot of the run is drawn at [width], strokes of its staff included. */
+    fun extentAt(width: Int): Float = at(width).maxOfOrNull { row ->
+        maxOf(
+            row.lines.maxOfOrNull { it.width } ?: 0f,
+            row.staff.strings.maxOfOrNull { it.to * columnWidth } ?: 0f,
+            row.staff.bars.maxOfOrNull { (it.column + 1) * columnWidth } ?: 0f,
+        )
+    } ?: 0f
 
     /**
      * A line of a run with no staff, drawn whole: a line of chord names over lyrics in a tab run is drawn as the page's

@@ -309,7 +309,8 @@ private fun SectionRun(
     }
     val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run, tuneOffset) else null
     // Music is laid out from the left whatever the song's direction: a grid's bars, a staff, a tune. Its toggle above is
-    // the song's.
+    // the song's, and so is the edge it is drawn at, read here before the direction is left to right.
+    val isAtEnd = LocalLayoutDirection.current == LayoutDirection.Rtl
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         when {
             // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
@@ -328,6 +329,7 @@ private fun SectionRun(
                         description = description,
                         slot = slot,
                         isLastSlot = slot == slotCount - 1,
+                        isAtEnd = isAtEnd,
                     )
                 }
             }
@@ -346,19 +348,25 @@ private fun SectionRun(
                         rows = rows,
                         slot = slot,
                         isLastSlot = slot == slotCount - 1,
+                        isAtEnd = isAtEnd,
                     )
                 }
             }
 
-            else -> Column(modifier = runModifier.fillMaxWidth()) {
+            else -> {
                 val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
-                shownSlots.forEach { slot ->
-                    alignedLines.getOrNull(slot)?.let { bars ->
-                        SongGridLine(
-                            bars = bars,
-                            lyricsStyle = runStyles.monospaceText,
-                            chordStyle = runStyles.monospaceChord,
-                        )
+                val extent = remember(alignedLines, runStyles, textMeasurements, isAtEnd) {
+                    if (isAtEnd) textMeasurements.gridWidth(alignedLines, runStyles) else 0
+                }
+                Column(modifier = runModifier.fillMaxWidth().atLineEnd(isAtEnd, extent)) {
+                    shownSlots.forEach { slot ->
+                        alignedLines.getOrNull(slot)?.let { bars ->
+                            SongGridLine(
+                                bars = bars,
+                                lyricsStyle = runStyles.monospaceText,
+                                chordStyle = runStyles.monospaceChord,
+                            )
+                        }
                     }
                 }
             }

@@ -62,6 +62,7 @@ internal class SongTextMeasurements(
     private val fragmentWidths = HashMap<String, Float>()
     private val tabRows = HashMap<TabRunKey, TabRows>()
     private val gridBars = HashMap<List<ChordProLine>, List<List<List<GridCell>>>>()
+    private val gridWidths = HashMap<Pair<List<List<List<GridCell>>>, RunStyles>, Int>()
 
     /** The laid out name of [chord], which is drawn as it is: the colour is given where it is drawn. */
     fun chordLayout(chord: ChordProLine.Lyrics.Chord) = if (chord.isAnnotation) {
@@ -83,6 +84,16 @@ internal class SongTextMeasurements(
     /** The bars of the grid run [run], aligned once for every chunk the run is drawn as. */
     fun gridBars(run: List<ChordProLine>) = gridBars.boundedTo(MAX_TAB_RUNS).getOrPut(run) {
         run.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
+    }
+
+    /**
+     * How wide the widest line of the aligned grid [bars] is unwrapped in [styles], which is what a right-to-left song
+     * moves the run to its start edge by ([atLineEnd]); every chunk of the run asks, so that its lines stay in columns.
+     */
+    fun gridWidth(bars: List<List<List<GridCell>>>, styles: RunStyles) = gridWidths.boundedTo(MAX_TAB_RUNS).getOrPut(bars to styles) {
+        bars.maxOfOrNull { line ->
+            line.sumOf { bar -> textMeasurer.measure(gridBarText(bar, styles.monospaceChord), styles.monospaceText).size.width }
+        } ?: 0
     }
 
     private fun measureFragment(fragment: String) = textMeasurer.measure(AnnotatedString(fragment), lyricsStyle).size.width.toFloat()

@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -44,19 +45,28 @@ internal fun SongGridLine(
     val beatColor = MaterialTheme.colorScheme.onSurfaceVariant
     bars.forEach { bar ->
         Text(
-            text = buildAnnotatedString {
-                bar.forEach { cell ->
-                    val spanStyle = when (cell.token) {
-                        is GridToken.Bar -> SpanStyle(color = barColor)
-                        is GridToken.Chord -> chordStyle.toSpanStyle().copy(color = chordColor)
-                        GridToken.Beat, is GridToken.Repeat -> SpanStyle(color = beatColor)
-                        is GridToken.Text, null -> null
-                    }
-                    if (spanStyle == null) append(cell.text) else withStyle(spanStyle) { append(cell.text) }
-                }
-            },
+            text = gridBarText(bar, chordStyle, chordColor = chordColor, barColor = barColor, beatColor = beatColor),
             style = lyricsStyle,
         )
+    }
+}
+
+/** One bar of a grid line as it is drawn, its chords in [chordStyle]; the colours change nothing of its width. */
+internal fun gridBarText(
+    bar: List<GridCell>,
+    chordStyle: TextStyle,
+    chordColor: Color = Color.Unspecified,
+    barColor: Color = Color.Unspecified,
+    beatColor: Color = Color.Unspecified,
+) = buildAnnotatedString {
+    bar.forEach { cell ->
+        val spanStyle = when (cell.token) {
+            is GridToken.Bar -> SpanStyle(color = barColor)
+            is GridToken.Chord -> chordStyle.toSpanStyle().copy(color = chordColor)
+            GridToken.Beat, is GridToken.Repeat -> SpanStyle(color = beatColor)
+            is GridToken.Text, null -> null
+        }
+        if (spanStyle == null) append(cell.text) else withStyle(spanStyle) { append(cell.text) }
     }
 }
 

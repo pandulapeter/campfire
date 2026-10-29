@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,7 +46,8 @@ import kotlin.math.roundToInt
  * once, which lets the section be measured at every width the column layout tries (see [SongTabBlock]). A rendering
  * that replaces one the reader changed ([NotationRun.isRerendered]) cross-fades with it ([NotationCrossfade]) rather
  * than fading in from nothing, which would blink the tune out for a moment; the slot takes its new height at once, and
- * the sections around it glide to their new places ([SectionMotion]).
+ * the sections around it glide to their new places ([SectionMotion]). In a right-to-left song ([isAtEnd]) a page
+ * narrower than the line is drawn at the line's end, as the PDF draws it ([runShiftAtLineEnd]).
  */
 @Composable
 internal fun SongNotationBlock(
@@ -54,6 +56,7 @@ internal fun SongNotationBlock(
     description: String,
     slot: Int,
     isLastSlot: Boolean,
+    isAtEnd: Boolean,
 ) {
     val color = MaterialTheme.colorScheme.onSurface
     val chordColor = LocalSecondAccentColor.current
@@ -70,9 +73,9 @@ internal fun SongNotationBlock(
                 crossfade.leaving?.let { leaving ->
                     val leavingColor = color.copy(alpha = color.alpha * (1f - progress))
                     val leavingChordColor = chordColor.copy(alpha = chordColor.alpha * (1f - progress))
-                    drawSystems(leaving.systems.inSlot(slot, isLastSlot), leaving.systems.pageWidth(), unitSize, leaving.measuredUnitSize, leavingColor, leavingChordColor)
+                    drawSystems(leaving.systems.inSlot(slot, isLastSlot), leaving.systems.pageWidth(), unitSize, leaving.measuredUnitSize, leavingColor, leavingChordColor, isAtEnd)
                 }
-                drawSystems(shown, pageWidth, unitSize, run.measuredUnitSize, color.copy(alpha = color.alpha * progress), chordColor.copy(alpha = chordColor.alpha * progress))
+                drawSystems(shown, pageWidth, unitSize, run.measuredUnitSize, color.copy(alpha = color.alpha * progress), chordColor.copy(alpha = chordColor.alpha * progress), isAtEnd)
             },
     ) { _, constraints ->
         val width = constraints.maxWidth
@@ -98,12 +101,15 @@ private fun DrawScope.drawSystems(
     measuredUnitSize: Float,
     color: Color,
     chordColor: Color,
+    isAtEnd: Boolean,
 ) {
     val scale = scaleAt(size.width.roundToInt(), pageWidth, unitSize)
-    var top = 0f
-    systems.forEach { system ->
-        drawNotationSystem(system = system, top = top, scale = scale, unitSize = measuredUnitSize, color = color, chordColor = chordColor)
-        top += system.height * scale
+    translate(left = runShiftAtLineEnd(isAtEnd, size.width, pageWidth * scale)) {
+        var top = 0f
+        systems.forEach { system ->
+            drawNotationSystem(system = system, top = top, scale = scale, unitSize = measuredUnitSize, color = color, chordColor = chordColor)
+            top += system.height * scale
+        }
     }
 }
 

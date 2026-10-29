@@ -23,7 +23,10 @@ builds what it draws, `grid/` places it.
   direction marks (`bidiMarkFor`) so the gap opens on that side. The first section keeps the screen's direction (`screenLayoutDirection`), as do the step
   buttons' inset (`isInsetAtLeft`) and the interface's sentences (`sentenceStyle`, `TextDirection.Content`).
 - **Music is always LTR**: chord names and annotations, tab, grid, and preformatted runs (laid out under an LTR
-  `LocalLayoutDirection`), and engraved notation (`NotationPainting`).
+  `LocalLayoutDirection`), and engraved notation (`NotationPainting`), drawn from the song's start edge as one block:
+  in an RTL song a run moves right by the line's width less its widest row over all its slots (`runShiftAtLineEnd`,
+  `atLineEnd` for grids), as the PDF's `atLineEnd` does, so a run that fills or wraps barely moves and its slots stay
+  in their columns. Only the drawing moves; sizes and intrinsics are unchanged.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces
   (`padLyricsToFitChords`); a padded line may break only between two chords at a word boundary, so no chord is pulled
   back over the one before, and never before a chord row's mark (`x4`, `|`), which would lose what it repeats or ends.
