@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -16,7 +17,12 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -31,7 +37,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The editor's field lays its lines out in its song's direction, whatever the interface's. */
+/** The editor's field lays its lines out in its song's direction, whatever the interface's, and moves by each line's own. */
 @OptIn(ExperimentalTestApi::class)
 internal class EditorDirectionTest {
 
@@ -49,6 +55,29 @@ internal class EditorDirectionTest {
     }
 
     @Test
+    fun `Left moves back on a directive of a Hebrew song and Shift + Left selects backwards`() = runAppTest(songs = listOf(SONG_FILE)) {
+        openHebrewEditor()
+        val start = fieldText().indexOf("Laderech")
+        selectInField(TextRange(start))
+        onNode(hasSetTextAction()).performKeyInput { pressKey(Key.DirectionLeft) }
+        waitForIdle()
+        assertEquals(TextRange(start - 1), fieldSelection())
+        onNode(hasSetTextAction()).performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionLeft) } }
+        waitForIdle()
+        assertEquals(TextRange(start - 1, start - 2), fieldSelection())
+    }
+
+    @Test
+    fun `Left moves forward on a Hebrew lyric line of a Hebrew song`() = runAppTest(songs = listOf(SONG_FILE)) {
+        openHebrewEditor()
+        val start = fieldText().indexOf("[Am]") + "[Am]".length
+        selectInField(TextRange(start))
+        onNode(hasSetTextAction()).performKeyInput { pressKey(Key.DirectionLeft) }
+        waitForIdle()
+        assertTrue(fieldSelection().end > start, "The caret went to ${fieldSelection()} from $start.")
+    }
+
+    @Test
     fun `an English song's lines are laid out from the left in a right-to-left interface`() = runAppTest(
         appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
@@ -57,6 +86,21 @@ internal class EditorDirectionTest {
         assertEquals(ResolvedTextDirection.Ltr, layout.getParagraphDirection(0))
         assertEquals(0f, layout.getLineLeft(0))
     }
+
+    private fun AppTestScope.openHebrewEditor() {
+        tap(hasText(SONG_TITLE) and hasClickAction())
+        tap(hasContentDescription(string(Res.string.songs_actions)))
+        tap(hasText(string(Res.string.songs_edit_song)) and hasClickAction())
+    }
+
+    private fun AppTestScope.selectInField(selection: TextRange) {
+        onNode(hasSetTextAction()).performTextInputSelection(selection)
+        waitForIdle()
+    }
+
+    private fun AppTestScope.fieldText() = onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text
+
+    private fun AppTestScope.fieldSelection() = onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange]
 
     /** The text of the editor's field and its layout. */
     private fun AppTestScope.fieldLayout(): Pair<String, TextLayoutResult> {

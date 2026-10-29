@@ -81,6 +81,11 @@ numbers nothing to count from.
 - A `BasicTextField` scrolled by a surrounding `verticalScroll` and `horizontalScroll`, not its own `scrollState`
   (which cannot hold room after the last line). **It never wraps**: tab staff lines must stay one screen line each.
   Margins and the bottom room are the field's decorator, so presses there place the caret.
+- **Every line is laid out in the song's direction** (one `textDirection` for the field: Skia resolves one for the
+  whole text, and inserted marks would shift every offset the layout reports). Left and Right follow each line's own
+  direction (`editorArrowKeys`, `ChordProLineDirections`): a directive, `#`, tab, grid, or delegated line is left to
+  right, a lyric or comment by its letters. Only character steps are answered; word and line steps stay the platform's.
+  A letterless row of a right-to-left song (`|---3---5---|`) shows reversed in the editor only.
 - Only the keyboard is excluded outside the scroll (`EditorFieldPadding`, read during layout). The preview lays out its
   sections against a height ignoring the keyboard, so sliding it moves neither pane's composition nor the columns.
 - Scroll states live next to the `TextFieldState`, not in the panes: panes are recomposed from scratch when Edit,

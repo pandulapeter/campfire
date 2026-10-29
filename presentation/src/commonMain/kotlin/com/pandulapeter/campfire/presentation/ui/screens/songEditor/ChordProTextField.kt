@@ -219,6 +219,7 @@ internal fun ChordProTextField(
                 // so both follow the typing on their own.
                 .bounceVerticalScroll(scrollState)
                 .bounceHorizontalScroll(horizontalScrollState)
+                .editorArrowKeys(textFieldState = textFieldState, songDirection = { textDirection })
                 .then(fieldModifier),
             state = textFieldState,
             // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the

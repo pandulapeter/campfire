@@ -22,7 +22,8 @@
   is added around a tab or grid, or inside a legacy heading section or implicit paragraph** — it would split or close
   it. `define` is deliberately not in `metadataOrder`.
 - `ChordProMarkupLines` is where markup is read, line by line, in one walk, by the parser's rule; `isLiteralAt` shares
-  its literal-line rule.
+  its literal-line rule, as does `ChordProLineDirections`, the direction a line is written in by itself (the editor's
+  arrow keys).
 - `ChordProFormattingTags` finds the tags that set a style around a selection by the parser's own reading, and takes
   the style off keeping every other byte: a span keeps its other attributes, and goes only once it has none.
 
