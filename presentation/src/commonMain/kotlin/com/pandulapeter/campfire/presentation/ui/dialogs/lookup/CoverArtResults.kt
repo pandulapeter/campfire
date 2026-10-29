@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.pandulapeter.campfire.data.model.catalogue.CoverArtCandidate
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_attribution
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_busy
@@ -300,7 +301,7 @@ private fun CoverArtTile(
     val details = listOfNotNull(candidate.artist.takeIf { it.isNotBlank() }, candidate.type, candidate.year)
     if (details.isNotEmpty()) {
         Text(
-            text = details.joinToString(" · "),
+            text = details.joinIsolated(" · "),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 2,

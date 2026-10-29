@@ -32,8 +32,8 @@ internal class ScalesFirstScreenTest {
     fun `a phone shows scales on the Scales tab's first screen`() = runAppTest(window = TestWindow.PHONE) {
         openScales()
         // The "C Major: " prefix of the cell's description: the bare title also starts the major pentatonic and blues.
-        val title = string(Res.string.scales_sheet_title, "C", string(Res.string.scale_major))
-        val cell = onNode(hasContentDescription(string(Res.string.scales_diagram, title, ""), substring = true))
+        val title = text(Res.string.scales_sheet_title, "C", string(Res.string.scale_major))
+        val cell = onNode(hasContentDescription(text(Res.string.scales_diagram, title, ""), substring = true))
         cell.assertIsDisplayed()
         val cellTop = cell.fetchSemanticsNode().boundsInRoot.top
         val barTop = onNode(hasText(string(Res.string.songs)) and hasClickAction()).fetchSemanticsNode().boundsInRoot.top

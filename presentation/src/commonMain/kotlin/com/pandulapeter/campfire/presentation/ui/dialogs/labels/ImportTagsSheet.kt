@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
@@ -42,7 +42,7 @@ internal fun ImportTagsSheet(
         viewModel = viewModel,
         tagsPerSong = listOf(tags),
         sheetKey = IMPORT_TAGS_SHEET_KEY,
-        subtitle = pluralStringResource(Res.plurals.import_review_tags_subtitle, songCount, songCount),
+        subtitle = pluralTextResource(Res.plurals.import_review_tags_subtitle, songCount, songCount.toString()),
         confirmLabel = stringResource(Res.string.done),
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         onSave = { draft, spellings -> viewModel.importReportState.setImportTags(draft.onKeys.mapNotNull(spellings::get)) },

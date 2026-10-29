@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
-import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_chord_diagram_description
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
@@ -51,7 +51,7 @@ internal fun OnboardingChordPreview(
 ) {
     PREVIEW_CHORDS.forEach { name ->
         val geometry = rememberChordGeometry(name = name, tuning = tuning) ?: return@forEach
-        val description = stringResource(Res.string.onboarding_chord_diagram_description, name)
+        val description = textResource(Res.string.onboarding_chord_diagram_description, name)
         Surface(
             modifier = Modifier.clearAndSetSemantics { contentDescription = description },
             shape = MaterialTheme.shapes.medium,

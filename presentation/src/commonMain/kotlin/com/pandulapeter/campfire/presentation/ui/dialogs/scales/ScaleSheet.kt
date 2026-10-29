@@ -49,6 +49,8 @@ import com.pandulapeter.campfire.chordpro.scales.ScaleSpelling
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_scale_degrees
@@ -121,7 +123,7 @@ internal fun ScaleSheet(
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.tunerController.stopScale() }
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
-        subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" "),
+        subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" ").isolatedLeftToRight(),
         titleMaxLines = 3,
         // A keyboard carries no labels, so only a neck has the toggle: the subtitle names a keyboard's notes.
         actions = if (geometry is ScaleDiagramGeometry.Fretboard) {
@@ -343,12 +345,12 @@ private fun ScaleRelations(
     val parent = scale.modeOf?.let { (parentId, degree) -> Scales.fromId(parentId)?.let { it to degree } }
     val parentRootName = ScaleSpelling.parentRootName(scale, rootName)
     if (parent != null && parentRootName != null) {
-        RelationLine(stringResource(Res.string.scales_mode_of, parent.second.toString(), scaleTitle(parent.first, parentRootName, notation)))
+        RelationLine(textResource(Res.string.scales_mode_of, parent.second.toString(), scaleTitle(parent.first, parentRootName, notation)))
     }
     if (scale.id == MAJOR_ID) {
         Scales.fromId(NATURAL_MINOR_ID)?.let { minor ->
             val relativeRoot = ScaleSpelling.noteNames(scale, rootName)[RELATIVE_MINOR_DEGREE]
-            RelationLine(stringResource(Res.string.scales_relative_minor, scaleTitle(minor, relativeRoot, notation)))
+            RelationLine(textResource(Res.string.scales_relative_minor, scaleTitle(minor, relativeRoot, notation)))
         }
     }
     scaleAliases(scale)?.let { aliases ->

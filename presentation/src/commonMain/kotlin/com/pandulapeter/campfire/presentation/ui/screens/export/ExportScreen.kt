@@ -67,7 +67,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.plainPluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
@@ -156,7 +156,7 @@ internal fun ExportScreen(
     val date = dialog.setlist?.date?.let { day ->
         dateFormatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString()
     }
-    val songsCount = pluralStringResource(Res.plurals.songs_selection_count, dialog.songs.size, dialog.songs.size)
+    val songsCount = plainPluralTextResource(Res.plurals.songs_selection_count, dialog.songs.size, dialog.songs.size.toString())
     // Several songs have no title of their own, so the file is titled with how many of them it holds.
     val titledSource = remember(state.source, date, songsCount) {
         state.source?.let { source ->

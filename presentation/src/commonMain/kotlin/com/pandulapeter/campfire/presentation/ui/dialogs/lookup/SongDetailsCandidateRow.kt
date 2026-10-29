@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_credits_failed
@@ -125,7 +126,7 @@ private fun CandidateSummary(
             candidate.album,
             candidate.year,
             candidate.duration?.let(ChordProDuration::format),
-        ).joinToString(" · "),
+        ).joinIsolated(" · "),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 2,

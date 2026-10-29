@@ -29,7 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_oversized
@@ -64,7 +64,7 @@ internal fun ImportReviewSummaryCard(
             SummaryText(stringResource(Res.string.import_review_name_taken_counts, summary.replacedCount, summary.numberedCount))
         }
         SummaryLine(isVisible = summary.alreadyThereCount > 0) {
-            SummaryText(pluralStringResource(Res.plurals.import_review_already_there, summary.alreadyThereCount, summary.alreadyThereCount))
+            SummaryText(pluralTextResource(Res.plurals.import_review_already_there, summary.alreadyThereCount, summary.alreadyThereCount.toString()))
         }
         SummaryLine(isVisible = summary.hasEntriesToChoose) {
             SummaryText(stringResource(Res.string.import_review_left_out_count, summary.leftOutCount))
@@ -99,5 +99,5 @@ private fun SummaryText(text: String) = AnimatedContent(
 
 @Composable
 private fun SummaryNote(text: PluralStringResource, count: Int) = SummaryLine(isVisible = count > 0, topPadding = 8.dp) {
-    ReportNote(text = pluralStringResource(text, count, count))
+    ReportNote(text = pluralTextResource(text, count, count.toString()))
 }

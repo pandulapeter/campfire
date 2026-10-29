@@ -186,12 +186,13 @@ internal class PrintRenderer(
                     next()
                 }
                 // The chord layout adds invisible wrap opportunities and marks, the direction marks closing in a piece
-                // read against its line among them, which are not song content, and makes the spaces under a chord
-                // non-breaking: those are written as the spaces they are, and only the padding as the no-break spaces it
-                // is, which the import leaves out of the words it reads back.
+                // read against its line among them, which are not song content, as the isolates a sentence puts around
+                // the texts it names are not, and makes the spaces under a chord non-breaking: those are written as the
+                // spaces they are, and only the padding as the no-break spaces it is, which the import leaves out of the
+                // words it reads back.
                 val value = buildString {
                     for (index in start until offset) when (val character = item.text[index]) {
-                        '\u200B', '\u200E', '\u200F', PADDING_MARK -> Unit
+                        '\u200B', '\u200E', '\u200F', '\u2066', '\u2067', '\u2068', '\u2069', PADDING_MARK -> Unit
                         PADDING -> append(if (padding[index]) PADDING else ' ')
                         else -> append(character)
                     }

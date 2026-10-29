@@ -66,7 +66,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 
 /**
@@ -129,7 +129,7 @@ internal fun ImportReportScreen(
             title = shown.title(progress),
             subtitle = when {
                 (shown as? ImportReport.Review)?.isDemoLibrary == true -> stringResource(Res.string.import_review_demo_library)
-                shown.sourceCount > 1 -> pluralStringResource(Res.plurals.import_review_from_files, shown.sourceCount, shown.sourceCount)
+                shown.sourceCount > 1 -> pluralTextResource(Res.plurals.import_review_from_files, shown.sourceCount, shown.sourceCount.toString())
                 else -> shown.sourceName?.let { textResource(Res.string.import_review_from, it) }
             },
             onClose = onBack,

@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.data.model.sync.SyncState
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
@@ -177,7 +177,7 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
     if (isStopEverythingAsked && shares.isNotEmpty()) {
         ConfirmationDialog(
             title = stringResource(Res.string.settings_sharing_stop_all),
-            text = pluralStringResource(Res.plurals.settings_sharing_stop_all_confirmation, shares.size, shares.size),
+            text = pluralTextResource(Res.plurals.settings_sharing_stop_all_confirmation, shares.size, shares.size.toString()),
             confirmLabel = stringResource(Res.string.share_stop),
             onDismiss = { isStopEverythingAsked = false },
             onConfirm = {

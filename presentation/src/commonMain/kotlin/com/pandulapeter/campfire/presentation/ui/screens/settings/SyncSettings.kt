@@ -30,7 +30,6 @@ import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncState
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
@@ -220,14 +219,14 @@ private val SyncState.Connected.outcomeKey: KClass<out SyncOutcome>?
 private fun SyncState.Connected.statusText(): String = when (val current = progress) {
     null -> when (val outcome = lastOutcome) {
         SyncOutcome.Interrupted -> stringResource(Res.string.settings_sync_interrupted)
-        is SyncOutcome.DeletionsNeedConfirmation -> pluralStringResource(
+        is SyncOutcome.DeletionsNeedConfirmation -> pluralTextResource(
             when (outcome.direction) {
                 SyncDeletionDirection.LOCAL -> Res.plurals.settings_sync_deletions_pending
                 SyncDeletionDirection.REMOTE -> Res.plurals.settings_sync_remote_deletions_pending
             },
             outcome.count,
-            outcome.count,
-            outcome.total,
+            outcome.count.toString(),
+            outcome.total.toString(),
         )
         is SyncOutcome.Failure -> stringResource(
             when (outcome.reason) {
@@ -288,10 +287,10 @@ private fun lastSyncedText(lastSyncedAt: Long?): String {
     val sinceLastSync by rememberElapsed(Instant.fromEpochMilliseconds(lastSyncedAt))
     return when (val elapsed = sinceLastSync) {
         Elapsed.Moments -> stringResource(Res.string.settings_sync_last_synced_moments_ago)
-        is Elapsed.Minutes -> pluralStringResource(Res.plurals.settings_sync_last_synced_minutes_ago, elapsed.minutes, elapsed.minutes)
-        is Elapsed.Hours -> pluralStringResource(Res.plurals.settings_sync_last_synced_hours_ago, elapsed.hours, elapsed.hours)
+        is Elapsed.Minutes -> pluralTextResource(Res.plurals.settings_sync_last_synced_minutes_ago, elapsed.minutes, elapsed.minutes.toString())
+        is Elapsed.Hours -> pluralTextResource(Res.plurals.settings_sync_last_synced_hours_ago, elapsed.hours, elapsed.hours.toString())
         Elapsed.Yesterday -> stringResource(Res.string.settings_sync_last_synced_yesterday)
-        is Elapsed.Days -> pluralStringResource(Res.plurals.settings_sync_last_synced_days_ago, elapsed.days, elapsed.days)
+        is Elapsed.Days -> pluralTextResource(Res.plurals.settings_sync_last_synced_days_ago, elapsed.days, elapsed.days.toString())
     }
 }
 

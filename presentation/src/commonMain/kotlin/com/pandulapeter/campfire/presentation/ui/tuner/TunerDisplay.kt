@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_cents
@@ -109,8 +109,8 @@ internal fun TunerDisplay(
             when {
                 isInTune -> stringResource(Res.string.tuner_reading_in_tune, name)
                 cents == 0 -> name
-                cents < 0 -> pluralStringResource(Res.plurals.tuner_reading_flat, -cents, name, -cents)
-                else -> pluralStringResource(Res.plurals.tuner_reading_sharp, cents, name, cents)
+                cents < 0 -> pluralTextResource(Res.plurals.tuner_reading_flat, -cents, name, (-cents).toString())
+                else -> pluralTextResource(Res.plurals.tuner_reading_sharp, cents, name, cents.toString())
             }
         }
     }
@@ -380,7 +380,7 @@ private fun TunerReadingLine(
             text = when (kind) {
                 TunerReadingKind.NONE -> ""
                 TunerReadingKind.IN_TUNE -> stringResource(Res.string.tuner_in_tune)
-                TunerReadingKind.CENTS -> pluralStringResource(Res.plurals.tuner_cents, abs(lastCents.roundToInt()), signedCents(lastCents))
+                TunerReadingKind.CENTS -> pluralTextResource(Res.plurals.tuner_cents, abs(lastCents.roundToInt()), signedCents(lastCents))
             },
             style = MaterialTheme.typography.titleMedium,
             color = if (isInTune) color.value else MaterialTheme.colorScheme.onSurface,

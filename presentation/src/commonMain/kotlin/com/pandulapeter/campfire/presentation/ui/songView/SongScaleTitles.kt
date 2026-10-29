@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.songView
 
 import androidx.compose.runtime.Composable
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_scales_and_unnamed
@@ -28,9 +27,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
  */
 @Composable
 internal fun SongScaleException.title(): String = when (chordNames.size) {
-    1 -> stringResource(Res.string.song_details_scales_over, chordNames.single())
-    2 -> stringResource(Res.string.song_details_scales_over_two, chordNames[0], chordNames[1])
-    else -> stringResource(Res.string.song_details_scales_over_several, chordNames.dropLast(1).joinToString(", "), chordNames.last())
+    1 -> textResource(Res.string.song_details_scales_over, chordNames.single())
+    2 -> textResource(Res.string.song_details_scales_over_two, chordNames[0], chordNames[1])
+    else -> textResource(Res.string.song_details_scales_over_several, chordNames.dropLast(1).joinToString(", "), chordNames.last())
 }
 
 /**

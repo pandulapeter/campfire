@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.save
@@ -36,7 +36,7 @@ internal fun SelectionLanguagesSheet(
         viewModel = viewModel,
         songs = songs,
         sheetKey = dialog.songFileNames.joinToString(),
-        subtitle = pluralStringResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size),
+        subtitle = pluralTextResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size.toString()),
         confirmLabel = stringResource(Res.string.save),
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         onSave = { draft -> viewModel.selectionEditing.setSelectionLanguages(fileNames = dialog.songFileNames, added = draft.added, removed = draft.removed) },

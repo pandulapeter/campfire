@@ -28,13 +28,13 @@ internal class LibraryCellSemanticsTest {
     @Test
     fun `a scale cell is a button with its description`() = runAppTest {
         openScales()
-        val title = string(Res.string.scales_sheet_title, "C", string(Res.string.scale_major))
-        onNode(hasClickAction() and hasContentDescription(string(Res.string.scales_diagram, title, ""), substring = true)).assertExists()
+        val title = text(Res.string.scales_sheet_title, "C", string(Res.string.scale_major))
+        onNode(hasClickAction() and hasContentDescription(text(Res.string.scales_diagram, title, ""), substring = true)).assertExists()
     }
 
     @Test
     fun `a chord cell is a button with its description`() = runAppTest {
         openChords()
-        onNode(hasClickAction() and hasContentDescription(string(Res.string.song_details_chord_diagram, "C", ""), substring = true)).assertExists()
+        onNode(hasClickAction() and hasContentDescription(text(Res.string.song_details_chord_diagram, "C", ""), substring = true)).assertExists()
     }
 }

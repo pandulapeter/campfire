@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
@@ -72,7 +71,7 @@ internal fun ChordReferenceSheet(
                 tuning = tuning,
                 notation = notation,
                 selection = selection,
-                tuningLine = if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
+                tuningLine = if (tuning.isStandard) null else textResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
                 capoLine = capoLine(chord, notation),
                 contentPadding = contentPadding,
                 onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, chord.shapeChord.id, shape?.let(ChordVoicings::write)) },

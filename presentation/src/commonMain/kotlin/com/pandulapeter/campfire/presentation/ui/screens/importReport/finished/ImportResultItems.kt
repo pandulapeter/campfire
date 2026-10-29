@@ -42,8 +42,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportResult
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.import_files_empty
@@ -125,7 +126,7 @@ internal fun LazyListScope.sections(
         item(key = "header_${section.kind}", contentType = "header") {
             SectionTitle(
                 modifier = ItemWidth.animateItem().padding(top = 8.dp),
-                text = pluralStringResource(section.kind.label, section.rows.size, section.rows.size),
+                text = pluralTextResource(section.kind.label, section.rows.size, section.rows.size.toString()),
             )
         }
         val songFileNames = section.rows.filter { it.isSong }.map { it.fileName }.distinct()
@@ -172,7 +173,7 @@ private fun ImportReportRowItem(
     ).takeIf { it.isNotEmpty() }?.let { lines ->
         {
             Text(
-                text = lines.joinToString(" · "),
+                text = lines.joinIsolated(" · "),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )

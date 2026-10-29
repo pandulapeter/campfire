@@ -181,11 +181,14 @@ wrong or undo it".
   `TEXTS` in `app/web/src/wasmJsMain/resources/index.html`.
 - Formatted strings are always called with their arguments (`%1$s`, `%1$d`); never concatenate a literal
   with a value. A sentence that takes text somebody else wrote — a title, a tag, a header value, a file
-  or account name — is read with `textResource(Res.string.x, text)` (`:presentation`'s
+  or account name, a chord or a key — is read with `textResource(Res.string.x, text)` (`:presentation`'s
   `localization/TextResource.kt`) instead: the plugin's formatter scans its own output a second time, and
-  the `% s` in `100% sure` is a format specifier to it (`pluralTextResource(Res.plurals.x, count, count.toString(),
-  text)` for a `<plurals>` that carries such text). Keys are lower_snake_case, grouped by intent, and an
-  existing key is reused rather than duplicated.
+  the `% s` in `100% sure` is a format specifier to it, and `textResource` puts each text in a direction isolate.
+  Text that leaves the screen (a field's first value, the PDF, a template filled later) takes
+  `plainTextResource`. Every `<plurals>` is read with `pluralTextResource(Res.plurals.x, count, count.toString())`,
+  never `pluralStringResource`: it picks the item by the language's rule. A list joined in code for display is
+  `joinIsolated(" · ")`. Keys are lower_snake_case, grouped by intent, and an existing key is reused rather
+  than duplicated.
 - **Hints name no input device**: every platform is used with a mouse, a finger, or a keyboard, so a hint says
   "Select a string", never "Tap" or "Click" (Hungarian: "Válassz ki", never "Koppints" or "Kattints"), and an
   accident is "by accident", not "an accidental tap". Where any input will do, say so ("Select anything on the page or

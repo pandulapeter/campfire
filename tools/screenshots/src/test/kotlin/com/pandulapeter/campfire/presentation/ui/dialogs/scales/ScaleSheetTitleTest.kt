@@ -55,9 +55,9 @@ internal class ScaleSheetTitleTest {
         waitForIdle()
         onNode(hasSetTextAction()).performTextInput(string(Res.string.scale_dominant_diminished))
         waitForIdle()
-        val title = string(Res.string.scales_sheet_title, "C", string(Res.string.scale_dominant_diminished))
+        val title = text(Res.string.scales_sheet_title, "C", string(Res.string.scale_dominant_diminished))
         // The cell is named "title: notes"; the prefix keeps a longer name starting with the same words from matching.
-        tap(hasContentDescription(string(Res.string.scales_diagram, title, ""), substring = true))
+        tap(hasContentDescription(text(Res.string.scales_diagram, title, ""), substring = true))
         val heading = onNode(hasText(title) and isHeading()).fetchSemanticsNode()
         val layout = mutableListOf<TextLayoutResult>().also { heading.config[SemanticsActions.GetTextLayoutResult].action?.invoke(it) }.single()
         assertTrue(layout.isWhole, "The sheet cuts \"$title\" short.")

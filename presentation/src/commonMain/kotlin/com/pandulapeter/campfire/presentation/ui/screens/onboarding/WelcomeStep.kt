@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_settings
@@ -73,7 +74,7 @@ internal fun WelcomeStep(
             )
             Text(
                 modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
-                text = stringResource(Res.string.onboarding_language, appLanguageName(language ?: AppLanguage.SYSTEM_DEFAULT)),
+                text = textResource(Res.string.onboarding_language, appLanguageName(language ?: AppLanguage.SYSTEM_DEFAULT)),
             )
         }
     }

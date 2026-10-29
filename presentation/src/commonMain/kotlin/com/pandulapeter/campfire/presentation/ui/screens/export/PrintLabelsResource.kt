@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.localization.plainTextResource
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.print.LABELLED_LABEL
@@ -46,10 +46,10 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val transposition = stringResource(Res.string.song_details_transposition)
     val capo = stringResource(Res.string.song_editor_insert_capo)
     val tempo = stringResource(Res.string.song_editor_insert_tempo)
-    val tempoValue = textResource(Res.string.song_details_tempo, TEMPO_VALUE)
+    val tempoValue = plainTextResource(Res.string.song_details_tempo, TEMPO_VALUE)
     val time = stringResource(Res.string.print_time)
     val missing = stringResource(Res.string.print_missing)
-    val labelledValue = textResource(Res.string.print_label_value, LABELLED_LABEL, LABELLED_VALUE)
+    val labelledValue = plainTextResource(Res.string.print_label_value, LABELLED_LABEL, LABELLED_VALUE)
     val scales = stringResource(Res.string.scales)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->

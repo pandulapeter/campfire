@@ -21,7 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.create
@@ -97,7 +97,7 @@ internal fun SelectionSetlistsSheet(
     if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_choose_setlists),
-            subtitle = pluralStringResource(Res.plurals.songs_selection_count, selection.size, selection.size),
+            subtitle = pluralTextResource(Res.plurals.songs_selection_count, selection.size, selection.size.toString()),
             actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel.setlistsController::setSetlistSortingMode) },
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
         ) { contentPadding ->

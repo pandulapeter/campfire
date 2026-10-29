@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_files_missing
@@ -84,11 +84,11 @@ private fun FilesSummary(
     val missing = source.songs.size - included
     val description = when (source.kind) {
         PrintSource.Kind.SONG -> stringResource(Res.string.print_files_song_description)
-        PrintSource.Kind.SETLIST -> pluralStringResource(Res.plurals.print_files_setlist_description, included, included)
-        PrintSource.Kind.SONGS -> pluralStringResource(Res.plurals.print_files_songs_description, included, included)
+        PrintSource.Kind.SETLIST -> pluralTextResource(Res.plurals.print_files_setlist_description, included, included.toString())
+        PrintSource.Kind.SONGS -> pluralTextResource(Res.plurals.print_files_songs_description, included, included.toString())
     }
     val title = filesFileName(source)
-    val missingNote = pluralStringResource(Res.plurals.print_files_missing, missing, missing)
+    val missingNote = pluralTextResource(Res.plurals.print_files_missing, missing, missing.toString())
     val textAlign = if (isInList) TextAlign.Start else TextAlign.Center
     val lines: @Composable () -> Unit = {
         Text(

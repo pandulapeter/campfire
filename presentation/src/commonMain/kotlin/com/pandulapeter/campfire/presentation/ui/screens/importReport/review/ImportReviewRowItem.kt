@@ -38,8 +38,9 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.import_preview_open
@@ -49,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.import_review_setlist_so
 import com.pandulapeter.campfire.presentation.resources.import_review_setlist_songs_in_import
 import com.pandulapeter.campfire.presentation.resources.import_review_will_be_numbered
 import com.pandulapeter.campfire.presentation.resources.import_review_will_replace
+import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
 import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -96,12 +98,12 @@ internal fun ImportReviewRowItem(
             resolution == ImportConflictResolution.REPLACE -> textResource(Res.string.import_review_will_replace, libraryName)
             else -> stringResource(Res.string.import_review_will_be_numbered)
         },
-        row.setlistSongCount?.let { count -> pluralStringResource(Res.plurals.import_review_setlist_songs, count, count) },
+        row.setlistSongCount?.let { count -> pluralTextResource(Res.plurals.import_review_setlist_songs, count, count.toString()) },
         // Said only where it differs: a setlist whose songs all arrive with it has nothing to warn about.
         row.setlistSongsInImport?.takeIf { it != row.setlistSongCount }?.let { stringResource(Res.string.import_review_setlist_songs_in_import, it) },
         if (row.isConverted) stringResource(Res.string.import_report_converted) else null,
-        if (row.repeatCount > 0) pluralStringResource(Res.plurals.import_review_repeated, row.repeatCount + 1, row.repeatCount + 1) else null,
-    ).takeIf { it.isNotEmpty() }?.joinToString(" · ")
+        if (row.repeatCount > 0) pluralTextResource(Res.plurals.import_review_repeated, row.repeatCount + 1, (row.repeatCount + 1).toString()) else null,
+    ).takeIf { it.isNotEmpty() }?.joinIsolated(" · ")
     val conflictChoice: (@Composable () -> Unit)? = if (isConflict) {
         {
             ConflictResolutionDropdown(
@@ -116,7 +118,7 @@ internal fun ImportReviewRowItem(
     if (openPreview != null) {
         ImportReviewSongRow(
             modifier = modifier,
-            title = row.headline,
+            title = row.headline(),
             description = description,
             isChosen = isChosen,
             onChosenChange = { onChosenChange(key, it) },
@@ -126,7 +128,7 @@ internal fun ImportReviewRowItem(
     } else {
         CheckboxListItem(
             modifier = modifier,
-            title = row.headline,
+            title = row.headline(),
             description = description,
             state = ToggleableState(isChosen),
             supportingControl = conflictChoice,
@@ -215,13 +217,13 @@ private fun ImportReviewInfoRow(
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = {
         Text(
-            text = row.headline,
+            text = row.headline(),
             maxLines = 1,
             overflow = if (row.title == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
         )
     },
     supportingContent = if (row.repeatCount > 0) {
-        { Text(pluralStringResource(Res.plurals.import_review_repeated, row.repeatCount + 1, row.repeatCount + 1)) }
+        { Text(pluralTextResource(Res.plurals.import_review_repeated, row.repeatCount + 1, (row.repeatCount + 1).toString())) }
     } else {
         null
     },
@@ -244,9 +246,9 @@ private fun PreviewChevron() = Icon(
 private val ImportReviewRow.openableLibraryFileName get() = libraryFileName?.takeIf { isSong && libraryTitle != null }
 
 /** "Artist - Title" where the header names both, the title alone where it names no artist, and the file name otherwise. */
-private val ImportReviewRow.headline
-    get() = when {
-        title == null -> fileName
-        subtitle == null -> title
-        else -> "$subtitle - $title"
-    }
+@Composable
+private fun ImportReviewRow.headline() = when {
+    title == null -> fileName
+    subtitle == null -> title
+    else -> textResource(Res.string.songs_artist_and_title, subtitle, title)
+}

@@ -294,7 +294,7 @@ private fun chordLibraryHeading(inputs: ChordLibraryInputs): String {
     val keyName = shownChordName(inputs.key, inputs.notation)
     val typed = inputs.query.trim()
     return if (typed.isEmpty()) {
-        stringResource(Res.string.chords_common, keyName)
+        textResource(Res.string.chords_common, keyName)
     } else {
         textResource(Res.string.chords_search_heading, typed, keyName)
     }

@@ -49,7 +49,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordVoicing
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_defined
@@ -291,7 +291,7 @@ private fun DefinedNote(
     text = if (movedBy == 0) {
         stringResource(Res.string.song_details_chord_defined)
     } else {
-        pluralStringResource(Res.plurals.song_details_chord_defined_moved, abs(movedBy), abs(movedBy))
+        pluralTextResource(Res.plurals.song_details_chord_defined_moved, abs(movedBy), abs(movedBy).toString())
     },
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.primary,

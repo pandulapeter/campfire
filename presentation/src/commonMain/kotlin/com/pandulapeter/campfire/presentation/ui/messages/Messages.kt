@@ -23,7 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
@@ -188,8 +188,8 @@ private fun messageText(current: Message?): String? =
             }
         )
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
-        is Message.SongsUpdated -> pluralStringResource(Res.plurals.songs_selection_updated, current.count, current.count)
-        is Message.SongsNotUpdated -> pluralStringResource(Res.plurals.songs_selection_failed, current.count, current.count)
+        is Message.SongsUpdated -> pluralTextResource(Res.plurals.songs_selection_updated, current.count, current.count.toString())
+        is Message.SongsNotUpdated -> pluralTextResource(Res.plurals.songs_selection_failed, current.count, current.count.toString())
         Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
         Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
         is Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
@@ -245,6 +245,6 @@ private fun importCounts(result: ImportResult) = listOf(
     Res.plurals.import_result_already_there to result.duplicateFileNames.size,
     Res.plurals.import_result_skipped to result.skippedFileNames.size,
 ).filter { (_, count) -> count > 0 }
-    .map { (resource, count) -> pluralStringResource(resource, count, count) }
+    .map { (resource, count) -> pluralTextResource(resource, count, count.toString()) }
     .ifEmpty { listOf(stringResource(Res.string.import_result_nothing)) }
-    .joinToString(" · ")
+    .joinIsolated(" · ")

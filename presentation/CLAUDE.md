@@ -59,5 +59,10 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   the `strings.xml` files too; without that, new strings render as "???" until a clean build.
 - A new `values-xx` folder needs a clean build (to regenerate `AppLocale`), the language in the iOS `Info.plist`'s
   `CFBundleLocalizations`, and an `InfoPlist.strings` for the microphone prompt (see `app/ios`).
-- `pluralStringResource(Res.plurals.x, count, count)`: the count is passed twice, once to pick the item and once to
-  fill `%1$d`. `pluralTextResource` (for plurals carrying user text) takes the count as text.
+- **Every plural goes through `pluralTextResource`** (`count.toString()` filling `%1$d`), never the plugin's own
+  plural lookups, whose selector knows no language's rule: `localization/PluralRules.kt` holds
+  CLDR's rule per language code (every `AppLocale` needs a row, a test says so) and `PluralTables.kt` reads the
+  generated tables, a `when` over `AppLocale` that a new language must join. A `zero` item reads 0 in any language.
+- **Texts put into a sentence are isolated** (U+2068 … U+2069, `TextIsolation.kt`) by `textResource`,
+  `pluralTextResource`, and `withTexts`; the marks draw as nothing but are characters, so a text that is written,
+  printed, or typed into a field takes the `plain…` variant, and the PDF's text layer drops them.

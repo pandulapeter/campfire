@@ -54,7 +54,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
@@ -136,7 +136,7 @@ internal fun SongPlayingDialog(
     val keyNote = if (fileTranspose == 0) {
         null
     } else {
-        pluralStringResource(
+        pluralTextResource(
             Res.plurals.song_details_playing_key_transposed,
             fileTranspose.absoluteValue,
             transpositionLabel(transposition = fileTranspose, key = null),

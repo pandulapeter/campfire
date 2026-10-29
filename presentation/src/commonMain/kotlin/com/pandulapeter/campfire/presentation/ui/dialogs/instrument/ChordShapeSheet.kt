@@ -206,7 +206,7 @@ private class ShapesArrival {
 /** The tuning the shapes are drawn for, named under the title where it is not the standard one. */
 @Composable
 private fun tuningLine(tuning: ChordTuning, notation: ChordNotation) =
-    if (tuning.isStandard) null else stringResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation))
+    if (tuning.isStandard) null else textResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation))
 
 /**
  * That the song defines the chord for standard tuning, which the tuning the sheet is in does not draw, with a button

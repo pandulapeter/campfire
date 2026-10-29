@@ -24,7 +24,7 @@ class NotationReadingTest {
     fun `a tune named as the song leaves its title to the page`() {
         val reading = notationReadingOf(SCARBOROUGH_FAIR, songTitle = "scarborough  fair", chordNames = listOf("Am"))
         assertEquals(emptyList(), reading.titles)
-        assertEquals("Sheet music. Chords: Am. Words: Are you going to Scarborough Fair", reading.describedAs("Sheet music", "Chords: %1\$s", "Words: %1\$s"))
+        assertEquals("Sheet music. Chords: \u2068Am\u2069. Words: \u2068Are you going to Scarborough Fair\u2069", reading.describedAs("Sheet music", "Chords: %1\$s", "Words: %1\$s"))
     }
 
     @Test
@@ -51,7 +51,7 @@ class NotationReadingTest {
     @Test
     fun `a description is one sentence per part`() {
         val reading = notationReadingOf("X:1\nT:Reel\nK:D\nDEF|", songTitle = null, chordNames = listOf("D", "A"))
-        assertEquals("Reel. Chords: D, A", reading.describedAs("Sheet music", "Chords: %1\$s", "Words: %1\$s"))
+        assertEquals("Reel. Chords: \u2068D, A\u2069", reading.describedAs("Sheet music", "Chords: %1\$s", "Words: %1\$s"))
     }
 
     private companion object {

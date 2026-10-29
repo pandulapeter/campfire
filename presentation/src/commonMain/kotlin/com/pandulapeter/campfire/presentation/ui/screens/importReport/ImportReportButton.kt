@@ -32,7 +32,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
@@ -114,7 +114,7 @@ private fun ImportReportStageButton(
         ImportReport.Review::class -> {
             val count = importCount ?: 0
             val isEnabled = count > 0 && isImportEnabled
-            val label = pluralStringResource(Res.plurals.import_review_confirm, count, count)
+            val label = pluralTextResource(Res.plurals.import_review_confirm, count, count.toString())
             val containerColor by animateColorAsState(
                 if (isEnabled) FloatingActionButtonDefaults.containerColor else MaterialTheme.colorScheme.surfaceContainerHighest,
             )

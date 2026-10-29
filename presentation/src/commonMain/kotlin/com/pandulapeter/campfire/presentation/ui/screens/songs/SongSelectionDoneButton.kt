@@ -44,7 +44,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
@@ -63,7 +63,7 @@ internal fun SongSelectionDoneButton(
     count: Int,
     onClick: () -> Unit,
 ) {
-    val description = pluralStringResource(Res.plurals.songs_selection_done, count, count)
+    val description = pluralTextResource(Res.plurals.songs_selection_done, count, count.toString())
     val containerColor = FloatingActionButtonDefaults.containerColor
     // The last count is kept while the pill leaves with the last untick, rather than a zero being shown on its way out.
     var shownCount by remember { mutableIntStateOf(count) }

@@ -46,7 +46,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.plainTextResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
@@ -171,7 +172,7 @@ private fun CampfireDialog(
         is DialogType.DuplicateSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_duplicate_setlist),
             subtitle = dialog.setlist.title,
-            initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
+            initialTitle = plainTextResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
             initialDescription = dialog.setlist.description,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.duplicate),
@@ -371,8 +372,8 @@ private fun CampfireDialog(
         )
 
         is DialogType.ConfirmImportReplace -> ConfirmationDialog(
-            title = pluralStringResource(Res.plurals.import_replace_title, dialog.count, dialog.count),
-            text = pluralStringResource(Res.plurals.import_replace_message, dialog.count),
+            title = pluralTextResource(Res.plurals.import_replace_title, dialog.count, dialog.count.toString()),
+            text = pluralTextResource(Res.plurals.import_replace_message, dialog.count),
             confirmLabel = stringResource(Res.string.import_conflicts_replace),
             onDismiss = viewModel.dialogHost::dismissDialog,
             onConfirm = {

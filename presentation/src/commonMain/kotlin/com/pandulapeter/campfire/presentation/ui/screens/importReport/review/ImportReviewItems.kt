@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_files_empty
@@ -82,7 +82,7 @@ internal fun LazyListScope.reviewHeader(
             ImportReviewTags(tags = tags, onEdit = onEditTags)
         }
         HeaderBlock(isVisible = sharedLinkUpdateCount > 0) {
-            ReportNote(text = pluralStringResource(Res.plurals.import_review_shared_updates, sharedLinkUpdateCount, sharedLinkUpdateCount))
+            ReportNote(text = pluralTextResource(Res.plurals.import_review_shared_updates, sharedLinkUpdateCount, sharedLinkUpdateCount.toString()))
         }
     }
 }
@@ -139,7 +139,7 @@ internal fun LazyListScope.reviewSections(
             val resolution by remember(section.rows) { derivedStateOf { groupConflictResolution(section.rows, choices()) } }
             ImportReviewSectionHeader(
                 modifier = ItemWidth.animateItem().padding(top = 8.dp),
-                title = pluralStringResource(section.kind.label, section.rows.size, section.rows.size),
+                title = pluralTextResource(section.kind.label, section.rows.size, section.rows.size.toString()),
                 boxState = boxState.takeIf { keys.size > 1 },
                 onBoxClick = { onEntriesChosenChange(keys, boxState != ToggleableState.On) },
                 isConflicts = isConflicts,

@@ -36,6 +36,8 @@ import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
+import com.pandulapeter.campfire.presentation.localization.pluralTemplate
+import com.pandulapeter.campfire.presentation.localization.withTexts
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
@@ -247,8 +249,11 @@ internal class AppTestScope(
         LocalizedStrings.getFormatted(resource, *arguments, locale = locale)
     }
 
+    /** The text of [resource] with [texts] put in as the app's `textResource` puts them, each isolated. */
+    fun text(resource: StringResource, vararg texts: String) = LocalizedStrings.getFormatted(resource, locale = locale).withTexts(*texts)
+
     /** The text of [resource] for [count] as the app shows it in the test's language, the count filling its first argument. */
-    fun pluralString(resource: PluralStringResource, count: Int) = LocalizedStrings.getPlural(resource, count, count, locale = locale)
+    fun pluralString(resource: PluralStringResource, count: Int) = pluralTemplate(resource, count, locale).withTexts(count.toString())
 
     /** Waits for the app to write [condition] true of the library, which it does off the main thread. */
     fun waitForLibrary(condition: () -> Boolean) = waitUntil(timeoutMillis = WRITE_TIMEOUT_MILLIS, condition = condition)

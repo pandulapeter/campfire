@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.localization.AppLocale
 import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
-import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_with_own_name
 
@@ -46,7 +46,7 @@ internal fun LanguageChoice(
             title = if (isSelected || ownName == localName) {
                 localName
             } else {
-                stringResource(Res.string.settings_user_interface_language_with_own_name, localName, ownName)
+                textResource(Res.string.settings_user_interface_language_with_own_name, localName, ownName)
             },
             isSelected = isSelected,
             onSelected = { onSelected(language) },

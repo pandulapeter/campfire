@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.tab_notice_octave_down
 import com.pandulapeter.campfire.presentation.resources.tab_notice_octave_up
 import com.pandulapeter.campfire.presentation.resources.tab_notice_other_instrument
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.localization.plainTextResource
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 
@@ -62,11 +62,11 @@ internal fun rememberTabNoticeLabels(): TabNoticeLabels {
     val instruments = UserPreferences.Instrument.entries.associate { instrument -> instrument.id to instrumentLabel(instrument) }
     val octaveUp = stringResource(Res.string.tab_notice_octave_up)
     val octaveDown = stringResource(Res.string.tab_notice_octave_down)
-    val otherInstrument = textResource(Res.string.tab_notice_other_instrument, INSTRUMENT)
+    val otherInstrument = plainTextResource(Res.string.tab_notice_other_instrument, INSTRUMENT)
     val notMoved = stringResource(Res.string.tab_notice_not_moved)
-    val notMovedInstrument = textResource(Res.string.tab_notice_not_moved_instrument, INSTRUMENT)
+    val notMovedInstrument = plainTextResource(Res.string.tab_notice_not_moved_instrument, INSTRUMENT)
     val hidden = stringResource(Res.string.tab_notice_hidden)
-    val hiddenInstrument = textResource(Res.string.tab_notice_hidden_instrument, INSTRUMENT)
+    val hiddenInstrument = plainTextResource(Res.string.tab_notice_hidden_instrument, INSTRUMENT)
     return remember(instruments, octaveUp, octaveDown, otherInstrument, notMoved, notMovedInstrument, hidden, hiddenInstrument) {
         TabNoticeLabels(
             octaveUp = octaveUp,

@@ -32,7 +32,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
@@ -121,7 +121,7 @@ private fun PreviewButton(
         ImportPreviewAction.IMPORT_AS_COPY -> stringResource(Res.string.import_preview_import_as_copy)
         ImportPreviewAction.REPLACE -> stringResource(Res.string.import_conflicts_replace)
         ImportPreviewAction.IMPORT_REVIEW -> importReviewSummary(importPreview.review.plan, importPreview.review.choices).importCount.let { count ->
-            pluralStringResource(Res.plurals.import_review_confirm, count, count)
+            pluralTextResource(Res.plurals.import_review_confirm, count, count.toString())
         }
     }
     val isWriting = isPrimary && importPreview.isWriting

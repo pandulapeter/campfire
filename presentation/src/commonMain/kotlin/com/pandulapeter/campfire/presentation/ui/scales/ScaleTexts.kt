@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.scales_diagram
 import com.pandulapeter.campfire.presentation.resources.scales_sheet_title
@@ -50,11 +51,11 @@ internal fun scaleAliases(scale: Scale): String? =
 /** [scale] in the key of [rootName], a note in the standard notation, named in [notation]: "C Dorian", "C-dúr". */
 @Composable
 internal fun scaleTitle(scale: Scale, rootName: String, notation: ChordNotation) =
-    stringResource(Res.string.scales_sheet_title, shownChordName(rootName, notation), scaleTitleName(scale))
+    textResource(Res.string.scales_sheet_title, shownChordName(rootName, notation), scaleTitleName(scale))
 
 /** What a screen reader says of a diagram of [scale] on [rootName]: the scale, then its notes. */
 @Composable
-internal fun scaleDiagramDescription(scale: Scale, rootName: String, notation: ChordNotation) = stringResource(
+internal fun scaleDiagramDescription(scale: Scale, rootName: String, notation: ChordNotation) = textResource(
     Res.string.scales_diagram,
     scaleTitle(scale, rootName, notation),
     shownScaleNoteNames(scale, rootName, notation).joinToString(" "),

@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_total_duration
 import com.pandulapeter.campfire.presentation.resources.setlists_total_duration_minimum
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
 import com.pandulapeter.campfire.presentation.ui.components.relativeDay
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.datetime.LocalDate
 
@@ -57,7 +57,7 @@ internal fun Setlist.countdownText(today: LocalDate): String? {
         RelativeDay.Today -> stringResource(Res.string.setlists_countdown_today)
         RelativeDay.Tomorrow -> stringResource(Res.string.setlists_countdown_tomorrow)
         RelativeDay.Yesterday -> stringResource(Res.string.setlists_countdown_yesterday)
-        is RelativeDay.InDays -> pluralStringResource(Res.plurals.setlists_countdown_in_days, day.days, day.days)
-        is RelativeDay.DaysAgo -> pluralStringResource(Res.plurals.setlists_countdown_days_ago, day.days, day.days)
+        is RelativeDay.InDays -> pluralTextResource(Res.plurals.setlists_countdown_in_days, day.days, day.days.toString())
+        is RelativeDay.DaysAgo -> pluralTextResource(Res.plurals.setlists_countdown_days_ago, day.days, day.days.toString())
     }
 }
