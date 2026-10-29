@@ -164,7 +164,8 @@ leaves `Connecting`. The rest is `data/source/remote/implementation/CLAUDE.md`'s
 - The `.deb` asks for a `shortcut` (jpackage writes a `.desktop` entry only then). `rewriteDebDesktopEntry` adds
   `StartupWMClass`, which **must equal** `setLinuxWindowClassName`'s value (the Linux-only `--add-opens` is for that):
   launchers match windows by `WM_CLASS`. It also claims `x-scheme-handler/campfire` (`Exec … %u`); `postinst` runs
-  `update-desktop-database`, else the scheme waits for the next login.
+  `update-desktop-database`, else the scheme waits for the next login. `postinst` and `prerm` call `xdg-desktop-menu`
+  only where it exists: a distrobox container can lack it with xdg-utils counted as installed, which failed the install.
 - No file associations (they are keyed by MIME type, which would claim every text file).
 - **AppImage** (`packageReleaseAppImage`, Linux host only): the release app image as the `.deb` holds it, in an AppDir
   with an `AppRun`, a desktop entry carrying the same keys (`StartupWMClass`, the scheme) and the icon, packed by

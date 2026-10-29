@@ -107,6 +107,17 @@ internal fun withDesktopDatabaseUpdate(lines: List<String>): String {
     return updated.joinToString(separator = "\n", postfix = "\n")
 }
 
+/**
+ * A package script's lines with every `xdg-desktop-menu` call made only where the command exists. jpackage's scripts
+ * call it under `set -e`, and a system can lack it although the package's dependency on xdg-utils is met (a distrobox
+ * container): the package would then fail to install, and once installed fail to be removed, over a menu entry the app
+ * does not need to run. Where the command exists, a failure of it still fails the script.
+ */
+internal fun withOptionalDesktopMenu(lines: List<String>) = lines.map { line ->
+    val call = line.trim()
+    if (call.startsWith("xdg-desktop-menu ")) "if command -v xdg-desktop-menu >/dev/null 2>&1; then $call; fi" else line
+}
+
 /** A package's md5sums text with the line of [path] given [hash], every other line as it was. */
 internal fun withUpdatedMd5(lines: List<String>, path: String, hash: String) = lines.joinToString(separator = "\n", postfix = "\n") { line ->
     if (line.substringAfter("  ") == path) "$hash  $path" else line

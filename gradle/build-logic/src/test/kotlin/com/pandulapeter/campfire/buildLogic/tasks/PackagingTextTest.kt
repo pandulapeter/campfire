@@ -118,6 +118,21 @@ class PackagingTextTest {
     }
 
     @Test
+    fun `the menu tool is called only where it exists, and every other line is kept`() {
+        val lines = listOf("set -e", "    configure)", "xdg-desktop-menu install /opt/campfire/lib/campfire-Campfire.desktop", "    ;;")
+        assertEquals(
+            listOf(
+                "set -e",
+                "    configure)",
+                "if command -v xdg-desktop-menu >/dev/null 2>&1; then xdg-desktop-menu install /opt/campfire/lib/campfire-Campfire.desktop; fi",
+                "    ;;",
+            ),
+            withOptionalDesktopMenu(lines),
+        )
+        assertEquals(withOptionalDesktopMenu(lines), withOptionalDesktopMenu(withOptionalDesktopMenu(lines)))
+    }
+
+    @Test
     fun `only the line of the entry gets the new hash`() {
         val lines = listOf("aaa  opt/campfire/bin/Campfire", "bbb  opt/campfire/lib/campfire-Campfire.desktop", "ccc  opt/campfire/lib/app.cfg")
         assertEquals(

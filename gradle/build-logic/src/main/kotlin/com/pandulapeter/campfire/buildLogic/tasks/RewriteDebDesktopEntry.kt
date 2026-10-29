@@ -24,10 +24,11 @@ import javax.inject.Inject
 /**
  * Unpacks each .deb, rewrites its one desktop entry and builds it again: the entry gets the StartupWMClass key and
  * claims the [urlScheme] (`withUrlScheme`), and the post-install script refreshes the desktop database, without which
- * the scheme is only known after the next login. It fails rather than doing nothing when there is no entry to rewrite,
- * since a package without it is wrong in a way only an installation shows. `fakeroot` keeps the repacked files owned
- * by root, as they were; the entry's line in the package's md5sums is brought up to date with it, so that a check of
- * the installed files does not report it.
+ * the scheme is only known after the next login. Both maintainer scripts call `xdg-desktop-menu` only where it
+ * exists (`withOptionalDesktopMenu`). It fails rather than doing nothing when there is no entry to rewrite, since a
+ * package without it is wrong in a way only an installation shows. `fakeroot` keeps the repacked files owned by root,
+ * as they were; the entry's line in the package's md5sums is brought up to date with it, so that a check of the
+ * installed files does not report it.
  */
 abstract class RewriteDebDesktopEntry : DefaultTask() {
 
@@ -65,7 +66,9 @@ abstract class RewriteDebDesktopEntry : DefaultTask() {
             // Not in md5sums, which lists the installed files only. jpackage always writes one; a package without it
             // gets none, since a script of its own would also have to install the entry, which is jpackage's job.
             val postinst = extracted.resolve("DEBIAN/postinst")
-            if (postinst.isFile) postinst.writeText(withDesktopDatabaseUpdate(postinst.readLines()))
+            if (postinst.isFile) postinst.writeText(withDesktopDatabaseUpdate(withOptionalDesktopMenu(postinst.readLines())))
+            val prerm = extracted.resolve("DEBIAN/prerm")
+            if (prerm.isFile) prerm.writeText(withOptionalDesktopMenu(prerm.readLines()).joinToString(separator = "\n", postfix = "\n"))
             val md5sums = extracted.resolve("DEBIAN/md5sums")
             if (md5sums.isFile) {
                 val entryPath = entry.relativeTo(extracted).invariantSeparatorsPath
