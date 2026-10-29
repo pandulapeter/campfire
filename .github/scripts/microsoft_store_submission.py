@@ -23,8 +23,10 @@ refused). A green run means submitted, not certified: certification answers by e
 
 The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any
 language it does not name, and every listing is written by its language (fr-fr and fr-ca alike). An app language with
-no listing in Partner Center fails the run before anything is changed, since a language's first listing is added there
-by hand, with its screenshots. With --no-listings only the notes are written, and a missing listing is no failure.
+no listing in Partner Center fails the run before any text is written or the package uploaded (a submission the run
+copied from the last published one stays behind as a draft, which the next run takes up), since a language's first
+listing is added there by hand, with its screenshots. With --no-listings only the notes are written, and a missing
+listing is no failure.
 
 With --prepare it writes the release notes, the listings, and the publish mode and leaves the packages alone, leaving
 the submission as a draft in Partner Center for somebody to add the release's screenshots to, replace the package by

@@ -69,7 +69,8 @@ listing text as it is in the console and writes only the notes).
   a store locale of a language the app lacks is left alone with a warning. A store code that is not the ISO 639-1 code
   needs an entry in `ALIASES`.
 - **A language's first listing is added by hand**, once, in every console, with its screenshots. A store without one
-  of the app's languages fails the run before anything is written (unless `listings: false`); nothing is ever created.
+  of the app's languages fails the run before any text is written or anything submitted (unless `listings: false`);
+  no listing is ever created.
 - **Never touched**: every image (screenshots, icon, feature graphic), the Microsoft title and "Developed by", and the
   Mac's App Sandbox Information (not in the API). Apple's copyright, URLs, and review notes come from `en.md`.
 - Each script prints per locale which fields changed, with old and new lengths, not the text.
