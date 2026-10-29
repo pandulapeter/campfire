@@ -89,37 +89,17 @@ jobs:
       # native library is linked against - every desktop has them, but the arm64 runner image does not.
       - name: Install packaging tools
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
-      # Pinned releases, checked against the digests GitHub lists for them, rather than the continuous builds
-      # appimagetool would otherwise fetch its runtime from: the runtime is the part of the AppImage that runs first
-      # on every user's machine. Moving either forward means taking the new digests from its release page.
-      - name: Download appimagetool and the AppImage runtime
-        env:
-          ARCHITECTURE: ${{ matrix.appimage_architecture }}
-          TOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
-          RUNTIME_SHA256: ${{ matrix.appimage_runtime_sha256 }}
-        run: |
-          TOOLS="$RUNNER_TEMP/appimage-tools"
-          mkdir -p "$TOOLS"
-          curl --fail --location --silent --show-error --output "$TOOLS/appimagetool" \
-            "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-$ARCHITECTURE.AppImage"
-          curl --fail --location --silent --show-error --output "$TOOLS/runtime" \
-            "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-$ARCHITECTURE"
-          echo "$TOOL_SHA256  $TOOLS/appimagetool" | sha256sum --check
-          echo "$RUNTIME_SHA256  $TOOLS/runtime" | sha256sum --check
-          chmod +x "$TOOLS/appimagetool"
       # The app image is asked for by name: the Compose plugin hands jpackage the jars and the runtime directly, and the
-      # package would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
-      # is what both packages hold. The packaging starts the image once to record its class data sharing archive
-      # (recordClassDataArchive), which needs a display, and the runner has no GPU to draw it on.
-      - name: Build the packages
+      # package would be the only thing left on disk. The packaging starts the image once to record its class data
+      # sharing archive (recordClassDataArchive), which needs a display, and the runner has no GPU to draw it on. The
+      # AppImage is built later, after the .deb is attached, so nothing it needs can withhold the .deb.
+      - name: Build the .deb
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           python3 .github/scripts/write_local_properties.py campfire.dropbox.appKey=DROPBOX_APP_KEY
-          TOOLS="$RUNNER_TEMP/appimage-tools"
           SKIKO_RENDER_API=SOFTWARE_FAST xvfb-run --auto-servernum ./gradlew :app:desktop:createReleaseDistributable \
-            :app:desktop:packageReleaseDeb :app:desktop:packageReleaseAppImage \
-            "-Pcampfire.linux.appImageTool=$TOOLS/appimagetool" "-Pcampfire.linux.appImageRuntime=$TOOLS/runtime"
+            :app:desktop:packageReleaseDeb
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows, so the app image is started once before
       # anybody downloads the package (.github/scripts/start_release_build.sh, which says what it checks). The classes it
@@ -155,10 +135,37 @@ jobs:
           ASSET="campfire-$VERSION_NAME-${{ matrix.asset }}"
           cp "$PACKAGE" "$ASSET"
           gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
-      # The AppImage is started as a user starts it, runtime and AppRun included, after the .deb is attached, so a
-      # failure here withholds only the AppImage. The runner has no FUSE, so the runtime extracts the image into a
-      # temporary folder and starts it from there: the launcher it starts is found by the end of its path, which is
-      # the same wherever the image lands. The class data sharing archive is checked again, since the image runs
+      # Pinned releases, checked against the digests GitHub lists for them, rather than the continuous builds
+      # appimagetool would otherwise fetch its runtime from: the runtime is the part of the AppImage that runs first
+      # on every user's machine. Moving either forward means taking the new digests from its release page.
+      - name: Download appimagetool and the AppImage runtime
+        env:
+          ARCHITECTURE: ${{ matrix.appimage_architecture }}
+          TOOL_SHA256: ${{ matrix.appimagetool_sha256 }}
+          RUNTIME_SHA256: ${{ matrix.appimage_runtime_sha256 }}
+        run: |
+          TOOLS="$RUNNER_TEMP/appimage-tools"
+          mkdir -p "$TOOLS"
+          curl --fail --location --silent --show-error --output "$TOOLS/appimagetool" \
+            "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-$ARCHITECTURE.AppImage"
+          curl --fail --location --silent --show-error --output "$TOOLS/runtime" \
+            "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-$ARCHITECTURE"
+          echo "$TOOL_SHA256  $TOOLS/appimagetool" | sha256sum --check
+          echo "$RUNTIME_SHA256  $TOOLS/runtime" | sha256sum --check
+          chmod +x "$TOOLS/appimagetool"
+      # recordClassDataArchive edits the app image in place and always reruns, which would make the image out of date and
+      # rebuild and retrain it; excluded, the AppImage packs exactly the image the .deb holds and the start check ran,
+      # and nothing needs a display.
+      - name: Build the AppImage
+        run: |
+          TOOLS="$RUNNER_TEMP/appimage-tools"
+          ./gradlew :app:desktop:packageReleaseAppImage -x :app:desktop:recordClassDataArchive \
+            "-Pcampfire.linux.appImageTool=$TOOLS/appimagetool" "-Pcampfire.linux.appImageRuntime=$TOOLS/runtime"
+          ./gradlew --stop
+      # The AppImage is started as a user starts it, runtime and AppRun included. Its tools are downloaded, and it is
+      # built and started, after the .deb is attached, so a failure in any of these withholds only the AppImage. The
+      # runner has no FUSE, so the runtime extracts the image into a temporary folder and starts it from there: the
+      # launcher it starts is found by the end of its path, which is the same wherever the image lands. The class data sharing archive is checked again, since the image runs
       # from somewhere other than where the archive was recorded.
       - name: Start the AppImage once
         run: |

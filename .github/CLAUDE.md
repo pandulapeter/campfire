@@ -96,7 +96,8 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
 - `packageReleaseDeb` and `packageReleaseAppImage` on amd64 and arm64 (jpackage only packages for its own machine),
   attached to the release — the only way Linux is distributed (website and README link to the latest release).
 - appimagetool and the AppImage runtime are pinned releases checked against their SHA-256 in the matrix; a bump takes
-  the new digests from the release page. The AppImage gets its own start check (extracted, as the runner has no FUSE)
+  the new digests from the release page. They are downloaded, and the AppImage built (packing the image the `.deb`
+  holds, `recordClassDataArchive` excluded) and given its own start check (extracted, as the runner has no FUSE),
   after the `.deb` is attached, so its failure withholds only the AppImage.
 - Runs on the **oldest** supported Ubuntu: a `.deb` depends on the system libraries it was built against.
 - Also builds `createReleaseDistributable` for the start check (the plugin leaves no image behind otherwise), both under
