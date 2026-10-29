@@ -18,9 +18,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_license
+import com.pandulapeter.campfire.presentation.resources.ic_log
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
@@ -143,7 +143,7 @@ private fun HelpSection(
     LinkListItem(
         title = processLogTitle,
         description = stringResource(Res.string.settings_log_description),
-        icon = painterResource(Res.drawable.ic_share),
+        icon = painterResource(Res.drawable.ic_log),
         onClick = onProcessLogClicked,
     )
 }
