@@ -34,7 +34,7 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   past a declared `/Length`.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, **found at every half point,
   not sampled**, since Campfire's own export leaves only 18 points between 20-point text. Each side is searched again
-  (three and four columns).
+  (three and four columns). A page whose letters mostly read from the right is read from its right column.
 - Running lines (`PdfRunningLines`) are judged on each page's margins laid out across the whole width, never by the
   columns found below them: a short last page can read as columns, which would cut its header into parts no other
   page's header matches. A dropped margin line takes every line on its baseline with it. A number in a running line is
@@ -42,7 +42,9 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
 - A PDF whose `/Producer` is Campfire is flagged (`ExtractedDocument.isCampfireExport`) for the converter to read by
   its layout; a span is italic by its font's name or its italic flag.
 - An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
-  logical order. One spanning several baselines (a hyphenated word) is ignored.
+  logical order. The glyphs stay on the span as its `pieces` where they spell its text in order, as Campfire's do, so
+  the converter can still tell where each character is drawn. One spanning several baselines (a hyphenated word) is
+  ignored.
 - Page, operator, and work yields keep the web build responsive.
 
 ## `zip/`

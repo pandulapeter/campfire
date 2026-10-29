@@ -15,10 +15,11 @@ import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 internal fun ExtractedDocument.toChordSheet() = ChordSheet(
     pages = pages.map { page ->
         ChordSheet.Page(page.lines.map { line ->
-            ChordSheet.Line(line.spans.map { span ->
-                ChordSheet.Span(span.text, span.start, span.end, span.size, span.isBold, span.isMonospace, span.isRaised, span.isItalic)
-            }, line.isHeading)
+            ChordSheet.Line(line.spans.map { it.toChordSheetSpan() }, line.isHeading)
         })
     },
     isCampfireExport = isCampfireExport,
 )
+
+private fun ExtractedDocument.Span.toChordSheetSpan(): ChordSheet.Span =
+    ChordSheet.Span(text, start, end, size, isBold, isMonospace, isRaised, isItalic, pieces.map { it.toChordSheetSpan() })

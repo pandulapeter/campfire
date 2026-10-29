@@ -16,6 +16,12 @@ package com.pandulapeter.campfire.data.model.importing
 data class ExtractedDocument(val pages: List<Page>, val isCampfireExport: Boolean = false) {
     data class Page(val lines: List<Line>)
     data class Line(val spans: List<Span>, val isHeading: Boolean = false)
+
+    /**
+     * @property pieces The glyphs a text written in its reading order stands for (a PDF's `ActualText`, which Campfire's
+     *   export writes over right-to-left text), in that order, each where it is drawn: a span placed by its ends alone
+     *   would no longer say where its characters are. Empty for a span that is what it shows.
+     */
     data class Span(
         val text: String,
         val start: Double,
@@ -25,5 +31,6 @@ data class ExtractedDocument(val pages: List<Page>, val isCampfireExport: Boolea
         val isMonospace: Boolean = false,
         val isRaised: Boolean = false,
         val isItalic: Boolean = false,
+        val pieces: List<Span> = emptyList(),
     )
 }

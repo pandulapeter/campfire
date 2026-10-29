@@ -66,6 +66,7 @@ internal fun produceLaidOutDocument(
                 labels = labels,
                 measureText = measurements::width,
                 notations = notations,
+                measureLyric = measurements::lyricLayout,
             )
         }
         value = LaidOutDocument(

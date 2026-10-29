@@ -1270,6 +1270,7 @@
     <string name="print_previous">Anterioara</string>
     <string name="print_next">Următoarea</string>
     <string name="print_time">Măsură</string>
+    <string name="print_label_value">%1$s: %2$s</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Link</string>

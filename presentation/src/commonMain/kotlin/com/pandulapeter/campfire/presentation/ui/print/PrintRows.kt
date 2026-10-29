@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
@@ -27,8 +28,6 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
-import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
-import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import kotlin.math.roundToInt
 
 /**
@@ -42,21 +41,31 @@ internal class PrintRows(
     private val columnWidth: Float,
     private val capacity: Float,
     private val measureText: (text: String, style: PrintStyle) -> Float,
+    measureLyric: PrintLyricMeasure?,
 ) {
+    /**
+     * The direction of the song being laid out (`ChordProSong.textDirection`), which its own texts are set in and its
+     * rows laid out in: a right-to-left song's from the right edge of the column. Music reads left to right whatever the
+     * song does, so tablature, grids, and sheet music keep their insides and only move to that edge. Null outside a song.
+     */
+    var direction: WritingDirection? = null
+
     // The page reads from the title down to the lyrics: the title large, the details and the section labels smaller and
     // gray, so that a label is never taken for a chord, and only tablature and grids in the monospace face.
-    val titleStyle = PrintStyle(size = (options.fontSize * 1.6f).roundToInt().toFloat(), bold = true)
-    private val lyricStyle = PrintStyle(size = options.fontSize.toFloat())
+    val titleStyle get() = PrintStyle(size = (options.fontSize * 1.6f).roundToInt().toFloat(), bold = true, direction = direction)
+    private val lyricStyle get() = PrintStyle(size = options.fontSize.toFloat(), direction = direction)
     val chordStyle = PrintStyle(size = options.fontSize.toFloat(), bold = true)
     private val annotationStyle = PrintStyle(size = options.fontSize.toFloat(), italic = true)
-    private val commentStyle = PrintStyle(size = options.fontSize.toFloat(), italic = true, gray = 90)
-    val detailStyle = PrintStyle(size = options.fontSize - 1f, gray = 90)
-    val labelStyle = PrintStyle(size = options.fontSize - 1f, bold = true, gray = 90)
+    private val commentStyle get() = PrintStyle(size = options.fontSize.toFloat(), italic = true, gray = 90, direction = direction)
+    val detailStyle get() = PrintStyle(size = options.fontSize - 1f, gray = 90, direction = direction)
+    val labelStyle get() = PrintStyle(size = options.fontSize - 1f, bold = true, gray = 90, direction = direction)
     val overviewArtistStyle = PrintStyle(size = options.fontSize.toFloat(), gray = 90)
-    private val tabStyle = PrintStyle(size = options.fontSize.toFloat(), monospace = true)
-    private val gridStyle = PrintStyle(size = options.fontSize.toFloat(), bold = true, monospace = true)
+    private val tabStyle = PrintStyle(size = options.fontSize.toFloat(), monospace = true, direction = WritingDirection.LEFT_TO_RIGHT)
+    private val gridStyle = PrintStyle(size = options.fontSize.toFloat(), bold = true, monospace = true, direction = WritingDirection.LEFT_TO_RIGHT)
     private val tabEngraver = PrintTabEngraver(options.fontSize.toFloat(), ::measure)
+    private val lyricRows = PrintLyricRows(options, capacity, ::measure, measureLyric)
     private val labelSpace = options.fontSize * 0.3f
+    private val isRightToLeft get() = direction == WritingDirection.RIGHT_TO_LEFT
 
     /** The engraved ABC tunes of the song being laid out, by tune; a run with none prints as its text. */
     var notations: Map<AbcTune, NotationDrawing> = emptyMap()
@@ -70,8 +79,8 @@ internal class PrintRows(
 
     fun tempoDetails(tempo: String?, time: String?) = if (options.showTempo) {
         listOfNotNull(
-            tempo?.takeIf { it.isNotBlank() }?.let { "${labels.tempo}: ${if (it.all(Char::isDigit)) labels.tempoValue.replace(TEMPO_VALUE, it) else it}" },
-            time?.takeIf { it.isNotBlank() }?.let { "${labels.time}: $it" },
+            tempo?.takeIf { it.isNotBlank() }?.let { labels.labelled(labels.tempo, if (it.all(Char::isDigit)) labels.tempoValue.replace(TEMPO_VALUE, it) else it) },
+            time?.takeIf { it.isNotBlank() }?.let { labels.labelled(labels.time, it) },
         )
     } else {
         emptyList()
@@ -149,7 +158,7 @@ internal class PrintRows(
             segments = rows.mapIndexed { index, segment ->
                 val labelRows = if (index == labelledIndex && label != null) labelRows(label, lineWidth) else emptyList()
                 val all = labelRows + segment
-                if (isChorus && all.isNotEmpty()) chorusBar(all, startsWithLabel = labelRows.isNotEmpty()) else all
+                if (isChorus && all.isNotEmpty()) chorusBar(all, startsWithLabel = labelRows.isNotEmpty(), width) else all
             },
             isLabelled = labelledIndex >= 0,
         )
@@ -164,7 +173,7 @@ internal class PrintRows(
                 FoldableKind.VERBATIM -> if (options.showSheetMusic) verbatimRows(run, part.tuneOffset, lineWidth) else emptyList()
                 null -> run.flatMap { line ->
                     when (line) {
-                        is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
+                        is ChordProLine.Lyrics -> lyricRows.rows(line, lineWidth, lyricStyle, chordStyle, annotationStyle)
                         ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
                         is ChordProLine.Tab, is ChordProLine.Grid, is ChordProLine.Verbatim -> emptyList()
                     }
@@ -180,89 +189,12 @@ internal class PrintRows(
         if (index > 0) listOf(Row(emptyList(), options.fontSize * 0.65f)) + rows else rows
     }
 
-    private fun lyricsRows(line: ChordProLine.Lyrics, lineWidth: Float): List<Row> {
-        // A chord row's repeat counts and bar lines are read with its chords, so they go with them rather than with the comments.
-        val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation && !it.isMark) options.showComments else options.showChords })
-        // Hiding a chord-only line must also remove the empty lyric row beneath it.
-        if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isPrintBlank()) return emptyList()
-        // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded to a column at
-        // most rather than to its full width.
-        val lyrics = if (visible.chords.isNotEmpty()) {
-            visible.padLyricsToFitChords(
-                chordWidths = visible.chords.map { chord ->
-                    minOf(measure(chord.name, if (chord.isAnnotation) annotationStyle else chordStyle), lineWidth)
-                },
-                gap = measure(" ", lyricStyle),
-                paddingWidth = measure("\u00A0", lyricStyle),
-                measureWidth = { measure(it, lyricStyle) },
-                paragraphDirection = null,
-                marksPadding = true,
-            )
-        } else {
-            visible
-        }
-        val chordLineHeight = options.fontSize * 1.3f
-        val wrappingStyle = lyrics.formatting.wrappingStyle(lyricStyle)
-        val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, wrappingStyle) }
-        var start = 0
-        return buildList {
-            fragments.forEachIndexed { fragmentIndex, fragment ->
-                val end = start + fragment.length
-                val pieces = styledPieces(lyrics.formatting, start, fragment, lyricStyle)
-                val chords = lyrics.chords.filter { it.position >= start && (it.position < end || fragmentIndex == fragments.lastIndex) }
-                // Chords anchored at the same character are kept beside each other; if the chord run is wider than the
-                // column, extra chord-only rows keep every symbol readable.
-                val parts = mutableListOf<Part>()
-                var chordX = 0f
-                var chordY = 0f
-                chords.forEach { chord ->
-                    val anchor = pieces.widthUntil((chord.position - start).coerceIn(0, fragment.length), ::measure)
-                    var x = maxOf(anchor, chordX)
-                    // An annotation is an instruction rather than a chord, so it is set apart from the chords.
-                    val style = if (chord.isAnnotation) annotationStyle else chordStyle
-                    val chordWidth = measure(chord.name, style)
-                    if (x > 0f && x + chordWidth > lineWidth) {
-                        chordY += chordLineHeight
-                        x = 0f
-                    }
-                    val pieces = wrapPrintText(chord.name, lineWidth) { measure(it, style) }
-                    pieces.forEachIndexed { pieceIndex, name ->
-                        if (pieceIndex > 0) {
-                            chordY += chordLineHeight
-                            x = 0f
-                        }
-                        parts += Part(name, x = x, y = chordY, style = style)
-                    }
-                    val lastWidth = if (pieces.size == 1) chordWidth else measure(pieces.last(), style)
-                    chordX = x + lastWidth + measure(" ", lyricStyle)
-                }
-                // A fragment of chords over nothing but padding is one row of chords, not chords over an empty lyric row;
-                // a blank fragment without chords is an empty line the song asked for.
-                val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
-                val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
-                if (!isChordsOnly) parts += Part(fragment, y = lyricY, style = lyricStyle, formatting = lyrics.formatting.clippedTo(start, fragment))
-                val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
-                if (rowHeight <= capacity) {
-                    add(Row(parts, rowHeight))
-                } else {
-                    // A very long annotation can span a page by itself. Keep its final line with the lyrics while
-                    // allowing its preceding lines to flow through the document.
-                    val byLine = parts.groupBy { it.y }.entries.toList()
-                    byLine.dropLast(2).forEach { (_, values) -> add(Row(values.map { it.copy(y = 0f) }, chordLineHeight)) }
-                    val last = byLine.takeLast(2)
-                    val top = last.first().key
-                    add(Row(last.flatMap { it.value }.map { it.copy(y = it.y - top) }, options.fontSize * 2.75f))
-                }
-                start = end
-            }
-        }
-    }
-
     /** A run of tab lines (`groupIntoRuns`), wrapped into systems of the column's width. */
     private fun tabRows(lines: List<ChordProLine>, sectionLabel: String?, lineWidth: Float): List<Row> {
         val run = lines.map { (it as ChordProLine.Tab).text }
         val label = (lines.first() as ChordProLine.Tab).label?.takeUnless { it == sectionLabel }?.let { labelRows(it, lineWidth) }.orEmpty()
-        return label + if (ChordProTabWrapper.isTablature(run)) tabEngraver.rows(run, lineWidth) else monospaceRows(run, isSelectable = true, lineWidth)
+        val systems = if (ChordProTabWrapper.isTablature(run)) tabEngraver.rows(run, lineWidth) else monospaceRows(run, isSelectable = true, lineWidth)
+        return label + systems.atLineEnd(lineWidth)
     }
 
     /**
@@ -271,7 +203,7 @@ internal class PrintRows(
      */
     private fun verbatimRows(lines: List<ChordProLine>, tuneOffset: Int, lineWidth: Float): List<Row> =
         lines.abcTune()?.let { notations[AbcTune(it, tuneOffset)] }?.let { notationRows(it, lineWidth) }
-            ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isSelectable = false, lineWidth)
+            ?: monospaceRows(lines.map { (it as ChordProLine.Verbatim).text }, isSelectable = false, lineWidth).atLineEnd(lineWidth)
 
     /**
      * An engraved ABC tune, a row per staff system so that a page is never cut through one: at the size that sets its
@@ -281,8 +213,9 @@ internal class PrintRows(
     private fun notationRows(drawing: NotationDrawing, lineWidth: Float): List<Row> {
         val pageWidth = drawing.systems.maxOfOrNull { it.width } ?: return emptyList()
         val scale = minOf(printNotationUnit(options), lineWidth / pageWidth)
+        val x = if (isRightToLeft) lineWidth - pageWidth * scale else 0f
         return drawing.systems.mapIndexed { index, system ->
-            Row(parts = emptyList(), height = system.height * scale, notations = listOf(PrintNotation(drawing, index, x = 0f, y = 0f, scale = scale)))
+            Row(parts = emptyList(), height = system.height * scale, notations = listOf(PrintNotation(drawing, index, x = x, y = 0f, scale = scale)))
         }
     }
 
@@ -316,6 +249,7 @@ internal class PrintRows(
     private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> {
         val run = lines.map { (it as ChordProLine.Grid).tokens }
         return run.alignedGridBars { it.printText() }.flatMap { bars -> gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, lineWidth) }
+            .atLineEnd(lineWidth)
     }
 
     private fun gridLineRows(bars: List<String>, lineWidth: Float): List<Row> = buildList {
@@ -338,7 +272,7 @@ internal class PrintRows(
 
     /** The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its first. */
     private fun keyChangeRows(keyChange: ChordProBlock.Transpose, width: Float): List<Row> =
-        keyChange.key?.takeIf { options.showKey && it.isNotBlank() }?.let { wrapped("${labels.key}: $it", detailStyle, width) }.orEmpty()
+        keyChange.key?.takeIf { options.showKey && it.isNotBlank() }?.let { wrapped(labels.labelled(labels.key, it), detailStyle, width) }.orEmpty()
 
     /**
      * How the song is played from a `{tempo}` or a `{time}` further down on, in the words and the type the heading names
@@ -361,7 +295,9 @@ internal class PrintRows(
         val wrappingStyle = stripped.formatting.wrappingStyle(style)
         var start = 0
         return wrapPrintText(stripped.text, width) { measure(it, wrappingStyle) }.map { fragment ->
-            val part = Part(fragment, style = style, formatting = stripped.formatting.clippedTo(start, fragment))
+            val formatting = stripped.formatting.clippedTo(start, fragment)
+            val x = if (style.isRightToLeft) width - styledPieces(formatting, 0, fragment, style).widthUntil(fragment.length, ::measure) else 0f
+            val part = Part(fragment, x = x, style = style, formatting = formatting)
             start += fragment.length
             Row(listOf(part), style.size * 1.45f)
         }
@@ -385,12 +321,13 @@ internal class PrintRows(
                 else -> emptyList()
             }
         }
-        return rows + header?.let { chorusBar(labelRows(it, width - CHORUS_INDENT), startsWithLabel = true) }.orEmpty()
+        return rows + header?.let { chorusBar(labelRows(it, width - CHORUS_INDENT), startsWithLabel = true, width) }.orEmpty()
     }
 
     /**
      * A line break inside a text (a setlist description has up to three lines) starts a row of its own, since a row is
-     * one line tall and the renderer would draw the rest over whatever comes under it.
+     * one line tall and the renderer would draw the rest over whatever comes under it. A right-to-left text ends at the
+     * right edge of [width].
      */
     fun wrapped(
         text: String,
@@ -398,7 +335,24 @@ internal class PrintRows(
         width: Float = columnWidth,
         isSelectable: Boolean = true,
     ): List<Row> = text.lines().flatMap { line ->
-        wrapPrintText(line, width) { measure(it, style) }.map { Row(listOf(Part(it, style = style, isSelectable = isSelectable)), style.size * 1.45f) }
+        wrapPrintText(line, width) { measure(it, style) }.map {
+            val x = if (style.isRightToLeft) width - measure(it, style) else 0f
+            Row(listOf(Part(it, x = x, style = style, isSelectable = isSelectable)), style.size * 1.45f)
+        }
+    }
+
+    /**
+     * [this], rows of music [lineWidth] wide at most, moved as one block to the right edge in a right-to-left song: a tab
+     * system, a grid, or a preformatted run reads left to right, and lines of it moved one by one would no longer line
+     * up in its columns.
+     */
+    private fun List<Row>.atLineEnd(lineWidth: Float): List<Row> {
+        if (!isRightToLeft || isEmpty()) return this
+        val extent = maxOf { row ->
+            maxOf(row.parts.maxOfOrNull { it.x + measure(it.text, it.style) } ?: 0f, row.rules.maxOfOrNull { it.x + it.width } ?: 0f)
+        }
+        val shift = (lineWidth - extent).coerceAtLeast(0f)
+        return map { row -> row.copy(parts = row.parts.map { it.copy(x = it.x + shift) }, rules = row.rules.map { it.copy(x = it.x + shift) }) }
     }
 
     /** The space above a label belongs to its first row, so that it never ends a column on its own or opens one with a gap. */
@@ -429,17 +383,19 @@ internal class PrintRows(
     }
 
     /**
-     * A chorus is indented, with a bar down its left side that every row carries its own piece of, so that the bar
+     * A chorus is indented, with a bar down its starting side that every row carries its own piece of, so that the bar
      * continues without a gap across a column or page break; on a label's row it starts at the label, not above it.
+     * [rows] were laid out in [width] less the indent, which in a right-to-left song is already the indent on the right.
      */
-    private fun chorusBar(rows: List<Row>, startsWithLabel: Boolean): List<Row> = rows.mapIndexed { index, row ->
+    private fun chorusBar(rows: List<Row>, startsWithLabel: Boolean, width: Float): List<Row> = rows.mapIndexed { index, row ->
         val top = if (index == 0 && startsWithLabel) labelSpace else 0f
+        val indent = if (isRightToLeft) 0f else CHORUS_INDENT
         Row(
-            parts = row.parts.map { it.copy(x = it.x + CHORUS_INDENT) },
+            parts = row.parts.map { it.copy(x = it.x + indent) },
             height = row.height,
-            rules = row.rules.map { it.copy(x = it.x + CHORUS_INDENT) } +
-                PrintRule(x = 0f, y = top, width = CHORUS_BAR_WIDTH, height = row.height - top),
-            notations = row.notations.map { it.copy(x = it.x + CHORUS_INDENT) },
+            rules = row.rules.map { it.copy(x = it.x + indent) } +
+                PrintRule(x = if (isRightToLeft) width - CHORUS_BAR_WIDTH else 0f, y = top, width = CHORUS_BAR_WIDTH, height = row.height - top),
+            notations = row.notations.map { it.copy(x = it.x + indent) },
         )
     }
 }
@@ -494,6 +450,3 @@ private fun GridToken.printText() = when (this) {
     is GridToken.Repeat -> text
     GridToken.Beat -> "."
 }
-
-/** Blank once the padding the chords add (no-break spaces and the zero-width break opportunities) is disregarded too. */
-private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' || it == PADDING_MARK }

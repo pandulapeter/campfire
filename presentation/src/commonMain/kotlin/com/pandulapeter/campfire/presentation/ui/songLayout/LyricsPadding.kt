@@ -20,8 +20,7 @@ import kotlin.math.ceil
  *
  * [paragraphDirection] is that of the paragraph the line is laid out in, where a bidirectional layout places its
  * characters: a piece read the other way (a Latin word in a Hebrew line) has its padding closed in by marks of its own
- * direction ([bidiMarkFor]), so the gap opens on the side its chord hangs to. Null where the caller draws every piece
- * left to right itself, as the PDF's rows do.
+ * direction ([bidiMarkFor]), so the gap opens on the side its chord hangs to. Null leaves the marks out.
  *
  * The padded line may only wrap between two chords, and only where the original text has a word boundary: the
  * whitespace at either end of a padded piece is made non-breaking too, so that a chord, the space it sits on and the

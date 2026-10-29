@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.print_label_value
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.scales
@@ -28,13 +29,16 @@ import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
+import com.pandulapeter.campfire.presentation.ui.print.LABELLED_LABEL
+import com.pandulapeter.campfire.presentation.ui.print.LABELLED_VALUE
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 
 /**
- * The words the PDF prints its values under, in the app's language, and the line naming the instrument and the tuning
- * its chord diagrams are drawn for, which says nothing for the instruments the diagrams name themselves.
+ * The words the PDF prints its values under, in the app's language, the way a value follows its label there, and the line
+ * naming the instrument and the tuning its chord diagrams are drawn for, which says nothing for the instruments the
+ * diagrams name themselves.
  */
 @Composable
 internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
@@ -45,6 +49,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val tempoValue = textResource(Res.string.song_details_tempo, TEMPO_VALUE)
     val time = stringResource(Res.string.print_time)
     val missing = stringResource(Res.string.print_missing)
+    val labelledValue = textResource(Res.string.print_label_value, LABELLED_LABEL, LABELLED_VALUE)
     val scales = stringResource(Res.string.scales)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->
@@ -59,7 +64,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             ).joinToString(" · ").ifEmpty { null }
         }
     }
-    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales) {
+    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue) {
         PrintLabels(
             key = key,
             transposition = transposition,
@@ -71,6 +76,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             sections = sections,
             chordTuning = chordTuning,
             scales = scales,
+            labelledValue = labelledValue,
         )
     }
 }

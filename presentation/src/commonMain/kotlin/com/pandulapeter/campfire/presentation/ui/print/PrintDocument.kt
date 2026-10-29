@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
@@ -162,7 +163,9 @@ private val ChordProSong.isSongbook get() = blocks.count { it is ChordProBlock.S
 /**
  * How a text is set: [size] in PDF points, [monospace] for the grids and preformatted text whose characters have to
  * line up (everything else is in the app's text font, as in the viewer), [tabular] for the figures of engraved
- * tablature, and [gray] from 0 (black) to 255 (white).
+ * tablature, and [gray] from 0 (black) to 255 (white). [direction] is the paragraph direction of a song's own texts, the
+ * song's, which a right-to-left one is laid out in from the right edge of its place; null leaves it to the text's first
+ * strong letter, as for the running order's lines, which belong to no one song.
  */
 internal data class PrintStyle(
     val size: Float,
@@ -171,7 +174,10 @@ internal data class PrintStyle(
     val monospace: Boolean = false,
     val tabular: Boolean = false,
     val gray: Int = 0,
-)
+    val direction: WritingDirection? = null,
+) {
+    val isRightToLeft get() = direction == WritingDirection.RIGHT_TO_LEFT
+}
 
 /**
  * Coordinates and sizes are PDF points (1/72 inch), independent of screen density and accessibility text size.
@@ -264,7 +270,21 @@ internal data class PrintLabels(
     val chordTuning: String? = null,
     /** The heading over a song's suggested scales, the song details screen's own. */
     val scales: String? = null,
-)
+    /**
+     * How a value is printed after its label ("Key: Am"), [LABELLED_LABEL] and [LABELLED_VALUE] standing for the two,
+     * since where the colon goes and how it is spaced is the language's to say.
+     */
+    val labelledValue: String = "$LABELLED_LABEL: $LABELLED_VALUE",
+) {
+    /** [value] after [label], as [labelledValue] puts it. */
+    fun labelled(label: String, value: String) = labelledValue.replace(LABELLED_LABEL, label).replace(LABELLED_VALUE, value)
+}
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */
 internal const val TEMPO_VALUE = "\u0001"
+
+/** What [PrintLabels.labelledValue] holds in place of the label. */
+internal const val LABELLED_LABEL = "\u0002"
+
+/** What [PrintLabels.labelledValue] holds in place of the value. */
+internal const val LABELLED_VALUE = "\u0003"

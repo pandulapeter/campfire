@@ -9,7 +9,7 @@
 -->
 # Plan: right-to-left support, Hebrew first
 
-**Status:** steps 1, 2, 3, 4, 5, and 6 landed (2026-10-29). Written against the code on 2026-10-29 (abba88cf1). `ui/` is
+**Status:** steps 1, 2, 3, 4, 5, 6, and 7 landed (2026-10-29). Written against the code on 2026-10-29 (abba88cf1). `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
 
 The goal is a Hebrew UI that reads right to left on every platform, and Hebrew songs that read correctly whatever the

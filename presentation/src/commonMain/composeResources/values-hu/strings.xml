@@ -1269,6 +1269,7 @@
     <string name="print_previous">Előző</string>
     <string name="print_next">Következő</string>
     <string name="print_time">Ütemmutató</string>
+    <string name="print_label_value">%1$s: %2$s</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Link</string>

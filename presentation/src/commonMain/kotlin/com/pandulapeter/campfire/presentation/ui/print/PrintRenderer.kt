@@ -30,9 +30,11 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
@@ -70,6 +72,11 @@ internal class PrintRenderer(
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
         fontFeatureSettings = if (tabular) "liga=0, tnum" else "liga=0",
+        textDirection = when (direction) {
+            WritingDirection.LEFT_TO_RIGHT -> TextDirection.Ltr
+            WritingDirection.RIGHT_TO_LEFT -> TextDirection.Rtl
+            null -> TextDirection.Unspecified
+        },
     )
 
     private fun text(value: String, style: PrintStyle, formatting: List<Formatting> = emptyList()) = measurer.measure(
@@ -77,7 +84,8 @@ internal class PrintRenderer(
         style = style.toTextStyle(),
         softWrap = false,
         density = Density(1f, 1f),
-        layoutDirection = LayoutDirection.Ltr,
+        // A text of no direction of its own (the running order's) is read by its first strong letter, else left to right.
+        layoutDirection = if (style.isRightToLeft) LayoutDirection.Rtl else LayoutDirection.Ltr,
     )
 
     /**
@@ -85,6 +93,30 @@ internal class PrintRenderer(
      * intermediate substrings, and keeping all of them alive for the life of a large setlist would cost more than it saves.
      */
     fun width(value: String, style: PrintStyle): Float = text(value, style).size.width.toFloat()
+
+    /**
+     * A lyric row laid out as it is drawn, and where the chords at [offsets] hang from, found as the screen's
+     * `SongLineWithChords` finds them: where the run a chord lands in reads the paragraph's way, the caret position is
+     * its character's starting edge; where it reads the other way, the caret at the run's boundary stands with the run
+     * before, so the character's own box says where it starts.
+     */
+    fun lyricLayout(value: String, style: PrintStyle, formatting: List<Formatting>, offsets: List<Int>): PrintLyricLayout {
+        val layout = text(value, style, formatting)
+        val isLineRightToLeft = style.isRightToLeft
+        return PrintLyricLayout(
+            width = layout.size.width.toFloat(),
+            anchors = offsets.map { requested ->
+                val offset = requested.coerceIn(0, value.length)
+                val isRunRightToLeft = if (offset < value.length) layout.getBidiRunDirection(offset) == ResolvedTextDirection.Rtl else isLineRightToLeft
+                val x = if (isRunRightToLeft == isLineRightToLeft) {
+                    layout.getHorizontalPosition(offset, usePrimaryDirection = true)
+                } else {
+                    layout.getBoundingBox(offset).let { if (isRunRightToLeft) it.right else it.left }
+                }
+                PrintChordAnchor(x, isRunRightToLeft)
+            },
+        )
+    }
 
     /** Draws [page] on white, [scale] being the size of a PDF point in the pixels of [scope]. */
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
@@ -153,12 +185,13 @@ internal class PrintRenderer(
                     if (following != box && following.width != 0f) break
                     next()
                 }
-                // The chord layout adds invisible wrap opportunities and marks, which are not song content, and makes the
-                // spaces under a chord non-breaking: those are written as the spaces they are, and only the padding as
-                // the no-break spaces it is, which the import leaves out of the words it reads back.
+                // The chord layout adds invisible wrap opportunities and marks, the direction marks closing in a piece
+                // read against its line among them, which are not song content, and makes the spaces under a chord
+                // non-breaking: those are written as the spaces they are, and only the padding as the no-break spaces it
+                // is, which the import leaves out of the words it reads back.
                 val value = buildString {
                     for (index in start until offset) when (val character = item.text[index]) {
-                        '\u200B', PADDING_MARK -> Unit
+                        '\u200B', '\u200E', '\u200F', PADDING_MARK -> Unit
                         PADDING -> append(if (padding[index]) PADDING else ' ')
                         else -> append(character)
                     }

@@ -263,6 +263,49 @@ internal class PrintRendererTest {
         Unit
     }
 
+    @Test fun `exports a right-to-left song from the right edge for the importer regression fixture`() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val labels = PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing",
+            DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid",
+                intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG"))
+        val parsed = ChordProParser.parse("""
+            {title: שיר ערש}
+            {artist: נעמי}
+            {key: Am}
+            {start_of_verse: Verse 1}
+            [Am]לילה [F]טוב, [C]ילדה [G]קטנה
+            [Dm]שירי Hello [E7]world עכ[Am]שיו
+            {end_of_verse}
+        """.trimIndent())
+        val document = layoutPrintDocument(PrintSource("שיר ערש", songs = listOf(PrintSong("hebrew.cho", "שיר ערש", "נעמי", song = parsed))),
+            PrintSettings(), labels, renderer::width, measureLyric = renderer::lyricLayout)
+        val texts = document.pages.single().texts
+        val lyric = texts.single { it.text.startsWith("לילה") }
+        assertEquals(document.width - PrintSettings().marginMm * 72f / 25.4f, lyric.x + renderer.width(lyric.text, lyric.style), 1f)
+        // A Hebrew word's chord ends where its first letter starts, at the word's right, and a Latin word's chord starts
+        // over its first letter, at the word's left.
+        val am = texts.first { it.text == "Am" }
+        assertEquals(lyric.x + renderer.width(lyric.text, lyric.style), am.x + renderer.width("Am", am.style), 1f)
+        val mixed = texts.single { it.text.startsWith("שירי") }
+        val world = renderer.lyricLayout(mixed.text, mixed.style, mixed.formatting, listOf(mixed.text.indexOf("world"))).anchors.single()
+        assertTrue(!world.isRightToLeft)
+        assertEquals(mixed.x + world.x, texts.single { it.text == "E7" }.x, 0.01f)
+        val bytes = renderer.pdf(document, "שיר ערש")
+        val columns = layoutPrintDocument(PrintSource("שורות", songs = listOf(PrintSong("hebrew-columns.cho", "שורות", null, song = ChordProParser.parse(
+            "{title: שורות}\n{start_of_verse: Verse 1}\n" + (1..30).joinToString("\n") { "[Am]שורה ${it.toString().padStart(2, '0')} שרים [F]ביחד." } + "\n{end_of_verse}",
+        )))), PrintSettings(columns = 2), labels, renderer::width, measureLyric = renderer::lyricLayout)
+        val page = columns.pages.single()
+        assertTrue(page.texts.first { it.text.startsWith("שורה 01") }.x > columns.width / 2)
+        assertTrue(page.texts.first { it.text.startsWith("שורה 30") }.x < columns.width / 2)
+        val columnBytes = renderer.pdf(columns, "שורות")
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "campfire-hebrew.pdf").writeBytes(bytes)
+            File(directory, "campfire-hebrew-columns.pdf").writeBytes(columnBytes)
+        }
+        Unit
+    }
+
     @Test fun `converts pixels to gray by luminance`() {
         assertEquals(76, printGray(0xFFFF0000.toInt()))
         assertEquals(149, printGray(0xFF00FF00.toInt()))

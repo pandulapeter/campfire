@@ -16,6 +16,12 @@ package com.pandulapeter.campfire.chordpro.convert
 public data class ChordSheet(val pages: List<Page>, val originalText: String? = null, val isCampfireExport: Boolean = false) {
     public data class Page(val lines: List<Line>)
     public data class Line(val spans: List<Span>, val isHeading: Boolean = false)
+
+    /**
+     * @property pieces What a span written in its reading order over text drawn otherwise is made of (a PDF's
+     *   `ActualText`), in that order, each where it is drawn, so that its characters can still be found on the page.
+     *   Empty for a span that is what it shows.
+     */
     public data class Span(
         val text: String,
         val start: Double,
@@ -25,6 +31,7 @@ public data class ChordSheet(val pages: List<Page>, val originalText: String? = 
         val isMonospace: Boolean = false,
         val isRaised: Boolean = false,
         val isItalic: Boolean = false,
+        val pieces: List<Span> = emptyList(),
     )
 
     public companion object {

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
+import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -34,8 +35,11 @@ internal object PdfLineLayout {
         // Each side is searched for a gutter of its own, since a page of three or four columns is split at one of
         // its gutters first and still holds the others on either side of it.
         fun columns(items: List<Positioned>): List<Line> {
-            val (first, second) = items.partition { it.span.start < gutter }
-            return if (first.isEmpty() || second.isEmpty()) rows(items, charge) else buildLines(first, charge) + buildLines(second, charge)
+            val (left, right) = items.partition { it.span.start < gutter }
+            if (left.isEmpty() || right.isEmpty()) return rows(items, charge)
+            // A page of right-to-left text is read from its right column, as Campfire's export fills a Hebrew song's.
+            val (first, second) = if (isMostlyRightToLeft(items)) right to left else left to right
+            return buildLines(first, charge) + buildLines(second, charge)
         }
         // The rows are cut out of one sorted pass rather than by filtering every glyph again for each of them, which is the
         // same partition, since both thresholds grow with the row.
@@ -51,6 +55,20 @@ internal object PdfLineLayout {
         }
         result += columns(sorted.subList(from, sorted.size))
         return result
+    }
+
+    /** Whether more of the letters of [items] read from the right than from the left. */
+    private fun isMostlyRightToLeft(items: List<Positioned>): Boolean {
+        var balance = 0
+        items.forEach { item ->
+            item.span.text.forEach { character ->
+                when {
+                    isStrongRtl(character.code) -> balance++
+                    character.isLetter() -> balance--
+                }
+            }
+        }
+        return balance > 0
     }
 
     /**

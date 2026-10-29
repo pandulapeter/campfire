@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.NotationSystem
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -696,7 +697,7 @@ internal class PrintLayoutTest {
         assertTrue(texts.single { it.text == "| G |" }.style.monospace)
         assertFalse(texts.single { it.text == "Sung words" }.style.monospace)
         assertFalse(texts.single { it.text == "D" }.style.monospace)
-        assertEquals(PrintStyle(19f, bold = true), texts.single { it.text == "A song" }.style)
+        assertEquals(PrintStyle(19f, bold = true, direction = WritingDirection.LEFT_TO_RIGHT), texts.single { it.text == "A song" }.style)
         assertEquals(90, texts.single { it.text == "Verse" }.style.gray)
     }
 
@@ -750,7 +751,7 @@ internal class PrintLayoutTest {
         assertTrue(chorusTexts.size > 5)
         chorusTexts.forEach { assertTrue(it.x > barEnd && it.x + measure(it.text, it.style) <= column.endInclusive + 0.01f, it.toString()) }
         // The label's row, then the wrapped first line and three more, each a lyric row tall.
-        val lyricRows = chorusTexts.count { it.style == PrintStyle(12f) }
+        val lyricRows = chorusTexts.count { it.style == PrintStyle(12f, direction = WritingDirection.LEFT_TO_RIGHT) }
         assertTrue(lyricRows > 4)
         assertEquals(11 * 1.45f + lyricRows * lyricPitch(), page.rules.sumOf { it.height.toDouble() }.toFloat(), 0.01f)
         assertTrue(layout(source(song(lyrics(3)))).pages.single().rules.isEmpty())
@@ -998,7 +999,7 @@ internal class PrintLayoutTest {
         assertTrue(withoutDetails.none { it.text == "Artist" } && withoutDetails.any { it.text.startsWith("Key: B") })
         assertEquals("Tempo: 96 BPM   Time: 3/4", layout(source(entry), PrintSettings(showKey = false)).pages.single().texts.single { it.text.startsWith("Tempo") }.text)
         assertEquals("Key: B   Transposition: -3   Capo: 2", layout(source(entry), PrintSettings(showTempo = false)).pages.single().texts.single { it.text.startsWith("Key") }.text)
-        assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11f, gray = 90) })
+        assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11f, gray = 90, direction = WritingDirection.LEFT_TO_RIGHT) })
     }
 
     @Test fun `the feature switches leave out what they take away whatever the options say`() {

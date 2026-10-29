@@ -52,7 +52,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - Markup's bold is drawn but written into the text layer in the regular weight: read back, a bold word that is a chord
   name would become a chord.
 - Lyrics are padded under wide chords with marked runs (`padLyricsToFitChords`' `marksPadding`): the text layer writes
-  the padding as no-break spaces and the words' own spaces as spaces, so the import leaves the padding out.
+  the padding as no-break spaces and the words' own spaces as spaces, so the import leaves the padding out, and drops
+  the direction marks closing in a piece read against its line.
 - Tablature is engraved as on screen (`PrintTabEngraver`, see `ui/songView`): figures and rules, none of it
   selectable; each line reaches the text layer as the file has it, an invisible monospaced text (`isDrawn` false) sized
   to the columns and on the string's baseline, so it reads back as a tab. A tab run's chord line prints bold, written
@@ -64,6 +65,20 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   song sheets' artist; the running order has its own: `showOverviewDetails` (the setlist's date and description and its
   songs' artists, read as `showMetadata` from a file older than it) and `overviewColumns`, its song list flowing in them
   under a heading that spans the page.
+
+### Direction
+
+- **A song's texts are set in its direction** (`PrintStyle.direction`, from `ChordProSong.textDirection`), the running
+  order's in none. A right-to-left song is laid out from the right: its texts end at the column's right edge, its
+  columns fill from the right (a song turning the direction starts a page when there are columns), its chorus is
+  indented and barred on the right, and its diagrams are listed from the right.
+- Music keeps reading left to right: tab systems, grids, and preformatted runs move to the right edge as one block, an
+  engraved tune too, and degrees and chord names are never set right to left.
+- A lyric row that is right to left or holds such text takes its chords' anchors from the renderer's layout
+  (`PrintRenderer.lyricLayout`, as `SongLineWithChords` finds them) and places them with `printChordLeft`; every other
+  row is measured by its widths. An overflowing chord starts the next chord line at the row's starting edge.
+- "Key: Am" and the other values are put after their labels by a string (`print_label_value`), which a language may
+  space or order otherwise.
 
 ### Renderer
 

@@ -18,7 +18,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   as one (`ChordSheet.isCampfireExport`) is read by the type each line is printed in (`ChordSheetCampfireLayout`):
   labels open sections (a label over a tab is the tab's), grids, italic comments, and boxed comments come back as
   written, the padding under wide chords is left out, a chord is set on the character it stands over, and staff lines
-  are told by the test the export engraves by. A wrapped tab system comes back as the system it was printed as.
+  are told by the test the export engraves by. A row holding right-to-left text arrives as one span in reading order
+  over its glyphs (`ChordSheet.Span.pieces`), and its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`): a
+  Hebrew letter's chord ends at its right edge, a Latin one's starts at its left. A wrapped tab system comes back as the system it was printed as.
 - A document is cut into songs by `ChordSheetPageSplit`: a later page opens a song only with a title in the type of
   the document's first one (a bold title of the body's size not followed by more bold lyrics, which is a chorus), and
   a page repeating the current song's title continues it, the repetition left out where it is marked (`(cont.)`, a

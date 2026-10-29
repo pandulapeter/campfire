@@ -87,7 +87,10 @@ internal class PdfContentInterpreter(
         budget.textBytes += text.length * 3
         requireWithinLimit(budget.textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++budget.glyphCount <= PdfTextExtractor.MAX_GLYPHS) { "PDF text too large" }
         val first = replaced.first()
-        val span = first.span.copy(text = text, start = replaced.minOf { it.span.start }, end = replaced.maxOf { it.span.end })
+        // The glyphs go along where they spell the text out in its order, as Campfire's export writes them, so that the
+        // converter still finds a chord's character over a row it can only place by its ends otherwise.
+        val pieces = if (replaced.joinToString("") { it.span.text } == text) replaced.map { it.span } else emptyList()
+        val span = first.span.copy(text = text, start = replaced.minOf { it.span.start }, end = replaced.maxOf { it.span.end }, pieces = pieces)
         replaced.clear()
         glyphs += Positioned(span, first.y)
     }

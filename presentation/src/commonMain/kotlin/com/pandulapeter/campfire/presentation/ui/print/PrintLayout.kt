@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.print
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.textDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -51,10 +53,12 @@ internal suspend fun layoutPrintDocument(
     labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
     notations: Map<String, Map<AbcTune, NotationDrawing>> = emptyMap(),
+    measureLyric: PrintLyricMeasure? = null,
 ): PrintDocument = PrintLayouter(
     options = settings.normalized(),
     labels = labels,
     measureText = measureText,
+    measureLyric = measureLyric,
     notations = notations,
 ).layout(source)
 
@@ -82,6 +86,7 @@ private class PrintLayouter(
     private val options: PrintSettings,
     private val labels: PrintLabels,
     measureText: (text: String, style: PrintStyle) -> Float,
+    measureLyric: PrintLyricMeasure?,
     private val notations: Map<String, Map<AbcTune, NotationDrawing>>,
 ) {
     private val width = if (options.isLandscape) options.paper.height else options.paper.width
@@ -105,6 +110,7 @@ private class PrintLayouter(
         columnWidth = columnWidth,
         capacity = capacity,
         measureText = measureText,
+        measureLyric = measureLyric,
     )
 
     private val pages = mutableListOf<PageContent>()
@@ -167,7 +173,12 @@ private class PrintLayouter(
         if ((fitsWhole && y + total > bottom) || (!fitsWhole && firstRows <= capacity && y + firstRows > bottom)) nextColumn()
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
-            val x = margin + column * (columnWidth + gutter)
+            // A right-to-left song's columns are filled from the right, as the screen fills them.
+            val x = if (printRows.direction == WritingDirection.RIGHT_TO_LEFT) {
+                width - margin - columnWidth - column * (columnWidth + gutter)
+            } else {
+                margin + column * (columnWidth + gutter)
+            }
             row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting, part.isDrawn)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
@@ -195,7 +206,7 @@ private class PrintLayouter(
         columnWidth = columnWidthFor(columns)
         columnTop = y
         source.songs.forEach { entry ->
-            val detail = entry.song?.metadata?.key?.takeIf { options.showKey }?.let { " (${labels.key}: $it)" }.orEmpty()
+            val detail = entry.song?.metadata?.key?.takeIf { options.showKey }?.let { " (${labels.labelled(labels.key, it)})" }.orEmpty()
             val missing = if (entry.song == null) " [${labels.missing}]" else ""
             val title = printRows.wrapped("${entry.index}. ${entry.title}$detail$missing", printRows.chordStyle, columnWidth)
             val artist = if (options.showOverviewDetails && !entry.artist.isNullOrBlank()) {
@@ -213,6 +224,11 @@ private class PrintLayouter(
     /** One song sheet: its heading, how it is played, its chord diagrams and its scales, then its blocks. */
     private suspend fun song(entry: PrintSong) {
         printRows.notations = notations[entry.fileName].orEmpty()
+        val direction = entry.song?.textDirection
+        // Columns filled from the other side would run into the ones the song before filled, so a song turning the
+        // direction starts a page of its own.
+        if (columns > 1 && (direction == WritingDirection.RIGHT_TO_LEFT) != (printRows.direction == WritingDirection.RIGHT_TO_LEFT)) newPage()
+        printRows.direction = direction
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = printRows.wrapped(title, printRows.titleStyle).toMutableList()
         if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += printRows.wrapped(it) }
@@ -301,7 +317,8 @@ private class PrintLayouter(
             val isFretted = chord.geometry is ChordDiagramGeometry.Fretted
             val diagramWidth = options.fontSize * if (isFretted) FRETTED_DIAGRAM_WIDTH else KEYBOARD_DIAGRAM_WIDTH
             val diagramHeight = options.fontSize * if (isFretted) FRETTED_DIAGRAM_HEIGHT else KEYBOARD_DIAGRAM_HEIGHT
-            val secondLines = (chord.letterName ?: chord.degree)?.let { wrappedNameLines(it, printRows.detailStyle) }.orEmpty()
+            // A degree is music too ("♭VII"), which a right-to-left paragraph would turn into "VII♭".
+            val secondLines = (chord.letterName ?: chord.degree)?.let { wrappedNameLines(it, printRows.detailStyle.copy(direction = WritingDirection.LEFT_TO_RIGHT)) }.orEmpty()
             val nameLines = wrappedNameLines(chord.name, printRows.chordStyle)
             val nameEnd = (secondLines + nameLines).maxOf { line -> line.maxOf { printRows.measure(it.text, it.style) } }
             DiagramCell(chord, diagramWidth, diagramHeight, maxOf(diagramWidth, nameEnd).coerceAtMost(columnWidth), secondLines, nameLines)
@@ -321,7 +338,7 @@ private class PrintLayouter(
             val diagrams = mutableListOf<PrintDiagram>()
             var headingHeight = 0f
             row.first().chord.keyName?.takeIf { starts[index] in groupStarts }?.let { key ->
-                wrappedNameLines("${labels.key}: $key", printRows.labelStyle).forEach { line ->
+                wrappedNameLines(labels.labelled(labels.key, key), printRows.labelStyle).forEach { line ->
                     line.forEach { run -> parts += Part(run.text, x = 0f, y = headingHeight, style = run.style, isSelectable = false) }
                     headingHeight += line.lineHeight()
                 }
@@ -342,7 +359,16 @@ private class PrintLayouter(
                 x += cell.width + gap
             }
             val height = rowNameHeight + row.maxOf { it.diagramHeight } + if (index < rows.lastIndex) gap else 0f
-            Row(parts, height, diagrams = diagrams)
+            if (printRows.direction == WritingDirection.RIGHT_TO_LEFT) {
+                // A right-to-left song's chords are listed from the right, each name and diagram kept as it reads.
+                Row(
+                    parts = parts.map { it.copy(x = columnWidth - it.x - printRows.measure(it.text, it.style)) },
+                    height = height,
+                    diagrams = diagrams.map { it.copy(x = columnWidth - it.x - it.width) },
+                )
+            } else {
+                Row(parts, height, diagrams = diagrams)
+            }
         }.let { diagramRows -> labels.chordTuning?.let { printRows.wrapped(it, printRows.detailStyle, isSelectable = false) + diagramRows } ?: diagramRows }
     }
 
@@ -355,7 +381,7 @@ private class PrintLayouter(
         if (!options.showScales || scales.isEmpty()) return emptyList()
         val heading = labels.scales?.let { printRows.wrapped(it, printRows.labelStyle, isSelectable = false) }.orEmpty()
         return heading + scales.flatMap { row ->
-            printRows.wrapped(row.title?.let { "$it: ${row.text}" } ?: row.text, printRows.detailStyle, isSelectable = false)
+            printRows.wrapped(row.title?.let { labels.labelled(it, row.text) } ?: row.text, printRows.detailStyle, isSelectable = false)
         }
     }
 
@@ -377,9 +403,9 @@ private class PrintLayouter(
      * so that a band reading from the page knows the chords are not the ones the song was written in.
      */
     private fun playingDetails(entry: PrintSong, song: ChordProSong): String = listOfNotNull(
-        song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { "${labels.key}: $it" },
-        entry.transposition.takeIf { options.showKey && it != 0 }?.let { "${labels.transposition}: ${if (it > 0) "+$it" else it}" },
-        song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { "${labels.capo}: $it" },
+        song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { labels.labelled(labels.key, it) },
+        entry.transposition.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.transposition, if (it > 0) "+$it" else "$it") },
+        song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.capo, "$it") },
     ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time)).joinToString(METADATA_SEPARATOR)
 
     /**

@@ -450,6 +450,22 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a right-to-left row of Campfire's own export takes each chord at the character it hangs from`() {
+        // "שלום world" laid out from the right: the Hebrew word at the right edge, the Latin one left of it, each glyph
+        // where the export drew it, the row's text in its reading order over them.
+        val glyphs = listOf(
+            span("\u05e9", 92.0, 100.0), span("\u05dc", 86.0, 92.0), span("\u05d5", 83.0, 86.0), span("\u05dd", 77.0, 83.0),
+            span(" ", 74.0, 77.0), span("w", 44.0, 52.0), span("o", 52.0, 58.0), span("r", 58.0, 62.0), span("l", 62.0, 65.0),
+            span("d", 65.0, 74.0),
+        )
+        val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 44.0, 100.0).copy(pieces = glyphs)))
+        val chords = ChordSheet.Line(listOf(span("G", 44.0, 52.0, bold = true), span("C", 75.5, 83.0, bold = true), span("Am", 88.5, 100.0, bold = true)))
+        val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue("[Am]\u05e9\u05dc\u05d5[C]\u05dd [G]world" in result, result)
+    }
+
+    @Test
     fun `derives plain title and expands tabs`() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))

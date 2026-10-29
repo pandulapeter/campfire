@@ -31,6 +31,21 @@ class DocumentGoldenTest {
     }
 
     @Test
+    fun `campfire export of a right-to-left song imports back unchanged, a Latin word's chord included`() = runBlocking {
+        val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-hebrew.pdf", resource("campfire-hebrew.pdf"))))
+        assertEquals(listOf(resource("campfire-hebrew.cho").decodeToString()), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+    }
+
+    @Test
+    fun `campfire export of a right-to-left song imports its columns from the right`() = runBlocking {
+        val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-hebrew-columns.pdf", resource("campfire-hebrew-columns.pdf"))))
+        val expected = "{title: \u05e9\u05d5\u05e8\u05d5\u05ea}\n\n{start_of_verse: Verse 1}\n" + (1..30).joinToString("\n") {
+            "[Am]\u05e9\u05d5\u05e8\u05d4 ${it.toString().padStart(2, '0')} \u05e9\u05e8\u05d9\u05dd [F]\u05d1\u05d9\u05d7\u05d3."
+        } + "\n{end_of_verse}\n"
+        assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+    }
+
+    @Test
     fun `campfire export imports both columns as one song in reading order`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns.pdf", resource("campfire-columns.pdf"))))
         val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
@@ -69,12 +84,13 @@ class DocumentGoldenTest {
         assertNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("protected.pdf", resource("protected.pdf"))))
     }
 
+    private fun ExtractedDocument.Span.toChordSheetSpan(): ChordSheet.Span =
+        ChordSheet.Span(text, start, end, size, isBold, isMonospace, isRaised, isItalic, pieces.map { it.toChordSheetSpan() })
+
     private fun resource(name: String) = requireNotNull(javaClass.getResourceAsStream("/document/$name")) { name }.use { it.readBytes() }
     private fun ExtractedDocument.sheet() = ChordSheet(
         pages = pages.map { page ->
-            ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { span ->
-                ChordSheet.Span(span.text, span.start, span.end, span.size, span.isBold, span.isMonospace, span.isRaised, span.isItalic)
-            }, line.isHeading) })
+            ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { it.toChordSheetSpan() }, line.isHeading) })
         },
         isCampfireExport = isCampfireExport,
     )

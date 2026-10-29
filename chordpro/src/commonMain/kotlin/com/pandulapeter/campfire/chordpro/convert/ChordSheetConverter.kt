@@ -163,6 +163,8 @@ public object ChordSheetConverter {
         /** What the layout of Campfire's own export says the line is, where the sheet is one ([isCampfire]). */
         val role: ChordSheetCampfireLayout.Role? = null,
         val isCampfire: Boolean = false,
+        /** Where the chords over a row of Campfire's own export holding right-to-left text hang from. */
+        val bidi: ChordSheetBidiAnchors? = null,
     )
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHORD, LYRIC }
@@ -199,6 +201,7 @@ public object ChordSheetConverter {
     private fun render(line: ChordSheet.Line, normalize: (String) -> String, dropsPadding: Boolean = false): Rendered {
         val text = StringBuilder()
         val positions = Positions(line.spans.sumOf { it.text.length })
+        val bidi = if (dropsPadding) ChordSheetBidiAnchors.Builder() else null
         var previous: ChordSheet.Span? = null
         for (span in line.spans) {
             val value = normalize(clean(if (dropsPadding) span.text.filterNot { it == ChordSheetCampfireLayout.PADDING } else span.text))
@@ -213,14 +216,19 @@ public object ChordSheetConverter {
                 // one's own advance is less than the extra space a document may put between all of its letters.
                 if ((gap > maxOf(width * 0.3, span.size * 0.15) || span.start == before.start && chord(value) && chord(before.text)) && text.lastOrNull() != ' ' && value.first() != ' ') {
                     val count = if (span.isMonospace) (gap / width).roundToInt().coerceIn(1, 1000) else 1
-                    repeat(count) { index -> text.append(' '); positions.add(before.end + index * width) }
+                    repeat(count) { index ->
+                        text.append(' ')
+                        positions.add(before.end + index * width)
+                        bidi?.gap()
+                    }
                 }
             }
             value.forEachIndexed { index, c -> text.append(c); positions.add(span.start + index * width) }
+            bidi?.span(span, { if (it == ChordSheetCampfireLayout.PADDING) "" else clean(it.toString()) }, value, width)
             previous = span
         }
         val result = text.toString().trimEnd()
-        return Rendered(result, positions.take(result.length), line)
+        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build())
     }
 
     /**
@@ -410,7 +418,7 @@ public object ChordSheetConverter {
             else -> return@flatMap listOf(line)
         }
         val after = if (end == colon) colon + 1 else end
-        val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size), isFromLabel = true)
+        val rest = line.copy(text = line.text.substring(after), positions = line.positions.copyOfRange(after, line.positions.size), isFromLabel = true, bidi = null)
         if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, end), positions = line.positions.copyOf(end)), rest) else listOf(line)
     }
 
@@ -905,7 +913,14 @@ public object ChordSheetConverter {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
-            if (exact != null) at = exact
+            // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
+            // order they are read off the chord row, which is left to right.
+            val bidi = lyrics.bidi?.takeIf { lyrics.isCampfire }
+                ?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = EXACT_POSITION)
+            if (bidi != null) {
+                at = bidi
+                if (at == lyrics.text.length) isAttachedAtEnd = true
+            } else if (exact != null) at = exact
             else if (lyrics.isCampfire && lyricsEnd != null && abs(lyricsEnd - x) <= EXACT_POSITION) {
                 at = lyrics.text.length
                 isAttachedAtEnd = true
@@ -933,7 +948,7 @@ public object ChordSheetConverter {
                     }
                 }
             }
-            at = at.coerceAtLeast(previous)
+            if (bidi == null) at = at.coerceAtLeast(previous)
             previous = at
             insertions.getOrPut(at) { mutableListOf() } += if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
         }
@@ -965,6 +980,14 @@ public object ChordSheetConverter {
         // Inline conversion uses different offsets after insertion; convert those tokens in the merged string.
         val converted = if (convertParentheses) parentheses.replace(merged) { if (chord(it.groupValues[1])) "[${ascii(it.groupValues[1])}]" else it.value } else merged
         return converted + row?.annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
+    }
+
+    /** Where the last character of [word] on the chord row [chords] ends. */
+    private fun chordEnd(chords: Rendered, word: Token): Double {
+        val last = (word.index + word.text.length - 1).coerceAtMost(chords.positions.lastIndex)
+        val position = chords.positions.getOrNull(last) ?: return 0.0
+        val span = chords.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end + 0.01 }
+        return position + (span?.let { (it.end - it.start) / clean(it.text).length.coerceAtLeast(1) } ?: 0.0)
     }
 
     /** An insertion or replacement must leave a supplementary character whole. */
