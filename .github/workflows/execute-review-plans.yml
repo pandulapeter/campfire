@@ -64,9 +64,10 @@ jobs:
           wait for an answer. These overrides of EXECUTION.md and the codebase-review skill hold for this run:
           - The user has said to carry out every plan: each open decision (D1 to D5) takes its recommended default.
             Record that in the README's Decisions section within the first plan's commit of lane A.
-          - Plan 13 is dropped: `regression-review.yml`, the workflow it changes, has been deleted. `git rm` it with its
-            README rows in one commit, `Drop the plan for the deleted review workflow.`, in the main checkout before
-            cutting the lanes (then take START from after that commit).
+          - Plan 13 has already been dropped (its workflow was deleted); a previous run committed that and nothing else.
+          - You run in print mode: ending your turn ends the run and kills every subagent still working. Launch each
+            lane's Agent call in the foreground, never with `run_in_background`; lanes meant to run in parallel go as
+            several Agent calls in one message. Never end your turn while a lane is unmerged or the report unwritten.
           - Plan 12 changes `.github/workflows/`, which this job's token cannot push: leave it untouched, as a skipped
             plan, for a normal checkout. Never commit anything under `.github/workflows/`.
           - iOS cannot be compiled here: skip `:app:ios:linkDebugFrameworkIosSimulatorArm64` in the full build. The
