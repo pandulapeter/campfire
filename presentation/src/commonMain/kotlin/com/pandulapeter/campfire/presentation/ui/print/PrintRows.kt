@@ -279,8 +279,17 @@ internal class PrintRows(
      * the opening values in, so that an import of the PDF reads it back as the change it is. Only what the song names is
      * printed, since a time signature the file never gave would come back as the song's own.
      */
-    private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> =
-        tempoDetails(timing.tempo, timing.time).joinToString(METADATA_SEPARATOR).takeIf { it.isNotEmpty() }?.let { wrapped(it, detailStyle, width) }.orEmpty()
+    private fun timingRows(timing: ChordProBlock.Timing, width: Float): List<Row> = detailRows(tempoDetails(timing.tempo, timing.time), width)
+
+    /**
+     * The labelled values [details] (`Key: Am`, `Tempo: 96 BPM`) in a row, as many to a row as fit [width]: a row breaks
+     * between two of them rather than inside one, which an import of the PDF would read as the label's whole value and
+     * a lyric under it.
+     */
+    fun detailRows(details: List<String>, width: Float = columnWidth): List<Row> = details.fold(emptyList<String>()) { lines, detail ->
+        val joined = lines.lastOrNull()?.let { it + METADATA_SEPARATOR + detail }
+        if (joined != null && measure(joined, detailStyle) <= width) lines.dropLast(1) + joined else lines + detail
+    }.flatMap { wrapped(it, detailStyle, width) }
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !(if (comment.isInTab) options.showTabs else options.showChords)) -> emptyList()
