@@ -475,6 +475,18 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a key printed with an accidental sign is written with the file's ASCII accidental`() {
+        fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
+        )
+        val page = ChordSheet.Page(
+            listOf(glyphs("A song", 19.0, bold = true), glyphs("Key: B\u266d   Capo: 3", 11.0), glyphs("Verse", 11.0, bold = true), glyphs("Words go here", 12.0)),
+        )
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue(result.startsWith("{title: A song}\n{key: Bb}\n{capo: 3}\n"), result)
+    }
+
+    @Test
     fun `a right-to-left row of Campfire's own export takes each chord at the character it hangs from`() {
         // "שלום world" laid out from the right: the Hebrew word at the right edge, the Latin one left of it, each glyph
         // where the export drew it, the row's text in its reading order over them.
