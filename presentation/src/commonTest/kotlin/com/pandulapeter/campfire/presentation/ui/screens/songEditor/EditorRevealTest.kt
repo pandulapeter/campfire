@@ -46,4 +46,27 @@ class EditorRevealTest {
         assertNull(revealTarget(lineTop = 500f, lineBottom = 540f, scroll = 1_000, uncoveredHeight = 0f, margin = 48f))
         assertNull(revealTarget(lineTop = 500f, lineBottom = 540f, scroll = 1_000, uncoveredHeight = -20f, margin = 48f))
     }
+
+    @Test
+    fun `a caret already in view is not scrolled to sideways`() {
+        assertNull(horizontalRevealTarget(x = 300f, scroll = 0, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = false))
+        // 1,700 from the left is 300 from the right, where a right-to-left field starts.
+        assertNull(horizontalRevealTarget(x = 1_700f, scroll = 0, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = true))
+    }
+
+    @Test
+    fun `a caret past the end of the pane is scrolled to the margin after the start`() {
+        assertEquals(952, horizontalRevealTarget(x = 1_000f, scroll = 0, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = false))
+        assertEquals(952, horizontalRevealTarget(x = 1_000f, scroll = 0, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = true))
+    }
+
+    @Test
+    fun `a right-to-left caret back near the right edge scrolls the field back to its start`() {
+        assertEquals(0, horizontalRevealTarget(x = 1_980f, scroll = 600, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = true))
+    }
+
+    @Test
+    fun `a left-to-right caret within the margin of the pane's left edge is revealed`() {
+        assertEquals(552, horizontalRevealTarget(x = 600f, scroll = 580, viewportWidth = 500, contentWidth = 2_000, margin = 48f, isRightToLeft = false))
+    }
 }

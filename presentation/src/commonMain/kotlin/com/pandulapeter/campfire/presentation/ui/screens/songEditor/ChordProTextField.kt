@@ -15,8 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -25,6 +24,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -37,6 +37,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextDirection
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -127,10 +129,19 @@ internal fun ChordProTextField(
     // end of a drag sends the scroll back to the caret and interrupts the fling. The search sheet's room changes it only
     // as the sheet settles, under the sheet's scrim, which no finger scrolls the field through.
     val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
-    val layoutDirection = LocalLayoutDirection.current
+    // The field is laid out in its song's direction, whatever the interface's, as the song's body is when it is read:
+    // a right-to-left song's lines start at the right, and the sideways scroll starts there too, where they do. The
+    // margins stay on the sides of the window they belong to, so they are taken as left and right in the interface's
+    // direction and handed to the field as such.
+    val textDirection by rememberEditorTextDirection(text)
+    val isRightToLeft = textDirection == WritingDirection.RIGHT_TO_LEFT
+    val interfaceLayoutDirection = LocalLayoutDirection.current
+    val leftMargin = contentPadding.calculateLeftPadding(interfaceLayoutDirection) + 16.dp
+    val rightMargin = contentPadding.calculateRightPadding(interfaceLayoutDirection) + 16.dp
     val textLayout = remember { TextLayoutHolder() }
     val density = LocalDensity.current
-    val textStart by rememberUpdatedState(with(density) { (contentPadding.calculateStartPadding(layoutDirection) + 16.dp).toPx() })
+    val textLeft by rememberUpdatedState(with(density) { leftMargin.toPx() })
+    val isLatestRightToLeft by rememberUpdatedState(isRightToLeft)
     // Snapshot state, read only by the reveal below: the field moves on its own while the sheet is up (the Shortcuts
     // collapsing as the keyboard comes, the title row of a short window), which has to reveal again like a moving sheet.
     var viewportTop by remember { mutableFloatStateOf(0f) }
@@ -166,7 +177,8 @@ internal fun ChordProTextField(
                 layout = layout,
                 scrollState = scrollState,
                 horizontalScrollState = horizontalScrollState,
-                textStart = textStart,
+                textLeft = textLeft,
+                isRightToLeft = isLatestRightToLeft,
                 uncoveredHeight = height,
                 margin = margin,
             )
@@ -182,61 +194,70 @@ internal fun ChordProTextField(
                 layout = layout,
                 scrollState = scrollState,
                 horizontalScrollState = horizontalScrollState,
-                textStart = textStart,
+                textLeft = textLeft,
+                isRightToLeft = isLatestRightToLeft,
                 uncoveredHeight = scrollState.viewportSize.toFloat(),
                 margin = margin,
             )
         }
     }
-    BasicTextField(
-        modifier = modifier
-            // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
-            // and only once it reaches above the navigation bar it covers, which is when the padding outgrows that bar:
-            // the viewport then ends at the keyboard, so the caret the field brings into view is never behind it.
-            .padding(EditorFieldPadding(contentPadding = contentPadding, restingBottomInset = restingBottomInset))
-            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-            .onGloballyPositioned { viewportTop = it.positionOnScreen().y }
-            // The field's own scrolling cannot hold any room after the last line, so it is never given less height than
-            // its text and the scrolling is a container around it, one per axis. The vertical one hands its viewport
-            // height on as the minimum, so a short song is still a field down to the bottom of the pane. The sideways
-            // one measures the field against an unbounded width, which is what keeps the text from wrapping, and
-            // still passes the pane's width on as the minimum, so the whole pane stays the field and a press
-            // anywhere in it places the caret. The field asks its ancestors to bring the caret into view as it moves,
-            // so both follow the typing on their own.
-            .bounceVerticalScroll(scrollState)
-            .bounceHorizontalScroll(horizontalScrollState)
-            .then(fieldModifier),
-        state = textFieldState,
-        // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the
-        // field's padding: a tighter leading fits three lines in what is left without making the letters any smaller.
-        textStyle = bodyLarge.copy(
-            lineHeight = if (isCompactTyping) 18.sp else bodyLarge.lineHeight,
-            fontFamily = LocalMonospaceFontFamily.current,
-            color = colorScheme.onSurface,
-        ),
-        // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
-        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
-        lineLimits = TextFieldLineLimits.MultiLine(),
-        inputTransformation = PastedTextFormatting,
-        outputTransformation = outputTransformation,
-        onTextLayout = { getResult -> textLayout.getResult = getResult },
-        cursorBrush = SolidColor(colorScheme.primary),
-        // The margins are part of the field rather than of the scrolling around it, so that the field starts at the
-        // edge of what it is scrolled in: the focus brings a field wider than the pane into view by its start edge,
-        // which would scroll a margin outside it out of sight on every tap that places the caret.
-        decorator = { innerTextField ->
-            Box(
-                modifier = Modifier.padding(
-                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                    bottom = restingBottomInset + 32.dp + with(density) { coveredRoom.toDp() },
-                ),
-                propagateMinConstraints = true,
-            ) {
-                innerTextField()
-            }
-        },
-    )
+    CompositionLocalProvider(LocalLayoutDirection provides if (isRightToLeft) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+        BasicTextField(
+            modifier = modifier
+                // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
+                // and only once it reaches above the navigation bar it covers, which is when the padding outgrows that bar:
+                // the viewport then ends at the keyboard, so the caret the field brings into view is never behind it.
+                .padding(EditorFieldPadding(contentPadding = contentPadding, restingBottomInset = restingBottomInset))
+                .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                .onGloballyPositioned { viewportTop = it.positionOnScreen().y }
+                // The field's own scrolling cannot hold any room after the last line, so it is never given less height than
+                // its text and the scrolling is a container around it, one per axis. The vertical one hands its viewport
+                // height on as the minimum, so a short song is still a field down to the bottom of the pane. The sideways
+                // one measures the field against an unbounded width, which is what keeps the text from wrapping, and
+                // still passes the pane's width on as the minimum, so the whole pane stays the field and a press
+                // anywhere in it places the caret. The field asks its ancestors to bring the caret into view as it moves,
+                // so both follow the typing on their own.
+                .bounceVerticalScroll(scrollState)
+                .bounceHorizontalScroll(horizontalScrollState)
+                .then(fieldModifier),
+            state = textFieldState,
+            // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the
+            // field's padding: a tighter leading fits three lines in what is left without making the letters any smaller.
+            textStyle = bodyLarge.copy(
+                lineHeight = if (isCompactTyping) 18.sp else bodyLarge.lineHeight,
+                fontFamily = LocalMonospaceFontFamily.current,
+                color = colorScheme.onSurface,
+                // Every line in the song's direction, a directive or a chord-only line too, as the reader lays them out: a
+                // Hebrew lyric between two chords then reads in its order, with each `[Am]` and `{...}` a left-to-right run
+                // inside it. A directive line cannot be kept left to right on its own: a paragraph style per line, the one
+                // way an output transformation could, lays every such line out as a paragraph of its own, which shows an
+                // empty line after each of them.
+                textDirection = if (isRightToLeft) TextDirection.Rtl else TextDirection.Ltr,
+            ),
+            // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+            lineLimits = TextFieldLineLimits.MultiLine(),
+            inputTransformation = PastedTextFormatting,
+            outputTransformation = outputTransformation,
+            onTextLayout = { getResult -> textLayout.getResult = getResult },
+            cursorBrush = SolidColor(colorScheme.primary),
+            // The margins are part of the field rather than of the scrolling around it, so that the field starts at the
+            // edge of what it is scrolled in: the focus brings a field wider than the pane into view by its start edge,
+            // which would scroll a margin outside it out of sight on every tap that places the caret.
+            decorator = { innerTextField ->
+                Box(
+                    modifier = Modifier.absolutePadding(
+                        left = leftMargin,
+                        right = rightMargin,
+                        bottom = restingBottomInset + 32.dp + with(density) { coveredRoom.toDp() },
+                    ),
+                    propagateMinConstraints = true,
+                ) {
+                    innerTextField()
+                }
+            },
+        )
+    }
 }
 
 /**
@@ -273,15 +294,17 @@ private suspend fun awaitLayout() = repeat(2) { withFrameNanos { } }
 
 /**
  * Scrolls the line holding [offset] into the top [uncoveredHeight] of the pane, the part above the sheet over the field,
- * unless it is there already (see [revealTarget]). The vertical scroll and the sideways one are containers around the field (see [ChordProTextField]), so its layout's
- * coordinates are theirs once the margin before the text is added.
+ * unless it is there already (see [revealTarget]), and sideways to it ([horizontalRevealTarget]). The vertical scroll and
+ * the sideways one are containers around the field (see [ChordProTextField]), so its layout's coordinates are theirs
+ * once the margin left of the text, [textLeft], is added.
  */
 private suspend fun revealOffset(
     offset: Int,
     layout: TextLayoutResult,
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
-    textStart: Float,
+    textLeft: Float,
+    isRightToLeft: Boolean,
     uncoveredHeight: Float,
     margin: Float,
 ) = coroutineScope {
@@ -291,9 +314,15 @@ private suspend fun revealOffset(
     revealTarget(lineTop = top, lineBottom = bottom, scroll = scrollState.value, uncoveredHeight = uncoveredHeight, margin = margin)?.let {
         launch { scrollState.animateScrollTo(it) }
     }
-    val x = textStart + layout.getHorizontalPosition(offset, usePrimaryDirection = true)
-    if (x < horizontalScrollState.value + margin || x > horizontalScrollState.value + horizontalScrollState.viewportSize - margin) {
-        launch { horizontalScrollState.animateScrollTo((x - margin).roundToInt().coerceAtLeast(0)) }
+    horizontalRevealTarget(
+        x = textLeft + layout.getHorizontalPosition(offset, usePrimaryDirection = true),
+        scroll = horizontalScrollState.value,
+        viewportWidth = horizontalScrollState.viewportSize,
+        contentWidth = horizontalScrollState.maxValue + horizontalScrollState.viewportSize,
+        margin = margin,
+        isRightToLeft = isRightToLeft,
+    )?.let {
+        launch { horizontalScrollState.animateScrollTo(it) }
     }
 }
 
