@@ -79,6 +79,13 @@ listing text as it is in the console and writes only the notes).
 
 ## The workflows
 
+### `pre-release-hunt.yml`
+
+One-time, dispatched by hand: Claude Code (`ANTHROPIC_API_KEY`, capped by the `budget` input) round-trips a corpus of
+songs through every format and loads files written by the last release's code, unattended on a branch of its own,
+committing each failure as a test with its fix or plan; the workflow then pushes it, opens the pull request, and
+dispatches `tests.yml` on it. Delete it once that pull request is settled.
+
 ### `publish-web.yml`
 
 Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-website` repository
