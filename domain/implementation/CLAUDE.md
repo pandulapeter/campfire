@@ -51,7 +51,8 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
   directly and owns the preference translation (`presentation/mapper/ChordProMappers.kt`).
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
   marks; the marks and word-final letter forms of other scripts come from one `ScriptFolding` row per script
-  (Hebrew points, cantillation, and final letters; Arabic harakat), which file names never use.
+  (Hebrew points, cantillation, and final letters; Arabic harakat, the small marks of religious texts, and tatweel),
+  which file names never use.
   `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols; it would break sorting (`a b` after
   `ab c`).
 - Connecting (`ConnectSyncProviderUseCaseImpl`), and restoring at startup when credentials come back connected

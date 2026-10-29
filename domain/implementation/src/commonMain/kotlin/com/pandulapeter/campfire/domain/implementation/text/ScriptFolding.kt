@@ -20,28 +20,32 @@ package com.pandulapeter.campfire.domain.implementation.text
  * @param marks The code points whose marks are dropped. Only a nonspacing mark (Mn) among them is: a block mixes its
  *   marks with punctuation and letters (a hyphen or a verse end between the points), which stay.
  * @param letterForms The contextual forms of letters, each folded to the letter at the same index of [baseLetters].
+ * @param fillers What is drawn only to stretch a word (Arabic's tatweel, `سـلام`), dropped as the marks are.
  */
 internal class ScriptFolding(
     val marks: List<CharRange>,
     val letterForms: String,
     val baseLetters: String,
+    val fillers: String,
 )
 
 /**
- * One row per script, Hebrew first: its points and cantillation, and its five final letters. Arabic's harakat and the
- * superscript alef follow; its letters' contextual forms are separate code points only in the presentation forms
- * blocks, which text typed today does not use.
+ * One row per script, Hebrew first: its points and cantillation, and its five final letters. Arabic's harakat, the
+ * superscript alef, and the small marks Quranic and religious texts carry follow, and its tatweel; its letters'
+ * contextual forms are separate code points only in the presentation forms blocks, which text typed today does not use.
  */
 private val SCRIPT_FOLDINGS = listOf(
     ScriptFolding(
         marks = listOf('֑'..'ׇ'),
         letterForms = "ךםןףץ",
         baseLetters = "כמנפצ",
+        fillers = "",
     ),
     ScriptFolding(
-        marks = listOf('ً'..'ٟ', 'ٰ'..'ٰ'),
+        marks = listOf('\u0610'..'\u061A', 'ً'..'ٟ', 'ٰ'..'ٰ', '\u06D6'..'\u06ED'),
         letterForms = "",
         baseLetters = "",
+        fillers = "\u0640",
     ),
 )
 
@@ -54,6 +58,9 @@ private val FIRST_FOLDED = SCRIPT_FOLDINGS.minOf { folding ->
 internal fun Char.isFoldableMark() = this >= FIRST_FOLDED &&
     category == CharCategory.NON_SPACING_MARK &&
     SCRIPT_FOLDINGS.any { folding -> folding.marks.any { this in it } }
+
+/** A filler of one of [SCRIPT_FOLDINGS]' rows, which sorting and searching drop with the marks. */
+internal fun Char.isFoldableFiller() = this >= FIRST_FOLDED && SCRIPT_FOLDINGS.any { folding -> this in folding.fillers }
 
 /** The letter behind a contextual form of one of [SCRIPT_FOLDINGS]' rows, or the character itself. */
 internal fun Char.withBaseLetterForm(): Char {
