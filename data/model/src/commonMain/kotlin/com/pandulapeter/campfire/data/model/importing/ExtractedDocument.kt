@@ -15,7 +15,12 @@ package com.pandulapeter.campfire.data.model.importing
  */
 data class ExtractedDocument(val pages: List<Page>, val isCampfireExport: Boolean = false) {
     data class Page(val lines: List<Line>)
-    data class Line(val spans: List<Span>, val isHeading: Boolean = false)
+
+    /**
+     * @property baseline Where the line sits on its page, growing downwards, in the page's units; null where the format
+     *   has no such position (Word) and for the blank lines put between paragraphs.
+     */
+    data class Line(val spans: List<Span>, val isHeading: Boolean = false, val baseline: Double? = null)
 
     /**
      * @property pieces The glyphs a text written in its reading order stands for (a PDF's `ActualText`, which Campfire's

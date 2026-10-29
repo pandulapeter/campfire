@@ -40,7 +40,7 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   page's header matches. A dropped margin line takes every line on its baseline with it. A number in a running line is
   the same on every page or counts the pages, so a heading that happens to open two pages (`Verse 2`, `Verse 6`) stays.
 - A PDF whose `/Producer` is Campfire is flagged (`ExtractedDocument.isCampfireExport`) for the converter to read by
-  its layout; a span is italic by its font's name or its italic flag.
+  its layout; a span is italic by its font's name or its italic flag, and a line carries its baseline.
 - An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
   logical order. The glyphs stay on the span as its `pieces` where they spell its text in order, as Campfire's do, so
   the converter can still tell where each character is drawn. One spanning several baselines (a hyphenated word) is

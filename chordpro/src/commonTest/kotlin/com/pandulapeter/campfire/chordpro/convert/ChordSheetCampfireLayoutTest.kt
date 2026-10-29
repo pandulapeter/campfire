@@ -107,7 +107,7 @@ class ChordSheetCampfireLayoutTest {
         listOf(ChordSheet.Span(value, RIGHT - inset - width, RIGHT - inset, BODY)),
     )
 
-    private fun boxes(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(lines.toList(), BODY).withIndex()
+    private fun boxes(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(lines.toList(), lines.map { false }, BODY).withIndex()
         .filter { it.value == ChordSheetCampfireLayout.Role.BOX_COMMENT }
         .map { it.index }
 
@@ -157,7 +157,62 @@ class ChordSheetCampfireLayoutTest {
         )
     }
 
+    /** [line] with its text [rows] body sizes under the page's first line, the way the export spaces its rows. */
+    private fun at(rows: Double, line: ChordSheet.Line) = line.copy(baseline = TOP + rows * BODY)
+
+    /** The roles of [lines], those holding only bold chords taken for chord rows, as the converter's test says. */
+    private fun roles(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(
+        lines.toList(),
+        lines.map { line -> line.spans.any { it.text.isNotBlank() } && line.spans.filter { it.text.isNotBlank() }.all { it.isBold } },
+        BODY,
+    )
+
+    @Test
+    fun `an italic line right under its chords is a lyric, as are its wrapped rows, and an italic line a row under chords alone is a comment`() {
+        val comment = ChordSheetCampfireLayout.Role.COMMENT
+        assertEquals(
+            listOf(null, null, null, null, comment, null, comment, null, comment),
+            roles(
+                at(0.0, chords("Am" to 0, "G" to 9)),
+                at(1.3, text("Ooh ooh baby", italic = true)),
+                at(2.75, text("and on", italic = true)),
+                at(4.2, chords("Am" to 0, "G" to 3)),
+                at(5.65, text("x2", italic = true)),
+                at(7.1, text("Hello world")),
+                at(8.55, text("Let it ring.", italic = true)),
+                text(""),
+                at(11.0, text("Somewhere unknown", italic = true)).copy(baseline = null),
+            ),
+        )
+    }
+
+    @Test
+    fun `an italic line under chords at the top of the next column is a comment`() {
+        assertEquals(ChordSheetCampfireLayout.Role.COMMENT, roles(at(30.0, chords("Am" to 0)), at(0.0, text("x2", italic = true)))[1])
+    }
+
+    @Test
+    fun `an italic lyric under its chords and a comment under chords alone both come back from campfire's pdf`() {
+        assertEquals(
+            """
+            {title: A song}
+
+            [Am]Ooh ooh [G]baby
+            [Am] [G]
+
+            {comment: x2}
+            """.trimIndent() + "\n",
+            convert(
+                at(0.0, chords("Am" to 0, "G" to 8)),
+                at(1.3, text("Ooh ooh baby", italic = true)),
+                at(2.75, chords("Am" to 0, "G" to 3)),
+                at(4.2, text("x2", italic = true)),
+            ),
+        )
+    }
+
     private companion object {
+        const val TOP = 100.0
         const val RIGHT = 400.0
         const val MARGIN = 40.0
         const val GLYPH = 6.0

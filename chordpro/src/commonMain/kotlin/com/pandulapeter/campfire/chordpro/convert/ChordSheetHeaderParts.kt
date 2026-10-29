@@ -41,6 +41,6 @@ internal object ChordSheetHeaderParts {
             parts.last() += span
             previous = span
         }
-        return parts.mapIndexed { index, spans -> PlacedLine(ChordSheet.Line(spans, line.isHeading), isHeaderPart = index > 0) }
+        return parts.mapIndexed { index, spans -> PlacedLine(line.copy(spans = spans), isHeaderPart = index > 0) }
     }
 }

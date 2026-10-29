@@ -413,6 +413,17 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun `lines carry their baselines growing down the page, and the blank line between paragraphs none`() = runTest {
+        val content = "BT /F1 10 Tf 1 0 0 1 50 700 Tm (Am) Tj 1 0 0 1 50 687 Tm (Hello world) Tj 1 0 0 1 50 600 Tm (Goodbye) Tj ET"
+        val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
+        assertEquals(listOf("Am", "Hello world", "", "Goodbye"), lines.map { it.spans.joinToString("") { span -> span.text } })
+        val baselines = lines.map { it.baseline }
+        assertEquals(null, baselines[2])
+        assertEquals(13.0, baselines[1]!! - baselines[0]!!, 0.001)
+        assertEquals(87.0, baselines[3]!! - baselines[1]!!, 0.001)
+    }
+
+    @Test
     fun `interprets text operators and graphics matrices`() = runTest {
         val content = "q 1 0 0 1 20 10 cm BT /F1 10 Tf 12 TL 1 0 0 1 30 690 Tm [(A) -400 (B)] TJ (C) ' 0 0 (D) \" 0 -12 TD (E) Tj T* (F) Tj 0 -12 Td (G) Tj ET Q"
         val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines

@@ -150,7 +150,7 @@ object PdfTextExtractor {
                 val previous = lines.getOrNull(index - 1)
                 val size = (line.spans + previous?.spans.orEmpty()).maxOfOrNull { it.size } ?: 12.0
                 if (previous != null && line.y - previous.y > size * 2.2) paragraphs += ExtractedDocument.Line(emptyList())
-                paragraphs += ExtractedDocument.Line(line.spans)
+                paragraphs += ExtractedDocument.Line(line.spans, baseline = line.y)
             }
             ExtractedDocument.Page(paragraphs)
         })

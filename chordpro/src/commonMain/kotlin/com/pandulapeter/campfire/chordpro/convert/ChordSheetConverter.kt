@@ -46,7 +46,7 @@ public object ChordSheetConverter {
             }.sorted()
                 .let { it.getOrNull(it.size / 2) ?: 1.0 }
             rendered.map { page ->
-                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, bodySize)
+                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, page.map { it.text.isNotBlank() && isChordRow(it.text) }, bodySize)
                 page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true) }
             }
         }

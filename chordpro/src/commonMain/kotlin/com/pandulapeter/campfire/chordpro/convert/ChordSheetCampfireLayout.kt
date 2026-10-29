@@ -25,29 +25,53 @@ internal object ChordSheetCampfireLayout {
 
     /**
      * The role of each line of a page, by the type it is set in and where it starts or, in a song printed from the
-     * right, where it ends.
+     * right, where it ends. [isChordRow] says which lines are rows of chords, the converter's own test of one.
      */
-    fun roles(lines: List<ChordSheet.Line>, bodySize: Double): List<Role?> {
+    fun roles(lines: List<ChordSheet.Line>, isChordRow: List<Boolean>, bodySize: Double): List<Role?> {
         // A line's first space counts: a lyric indented by spaces starts at the column, where its first one is.
         val starts = lines.map { line -> line.spans.firstOrNull()?.start }
         // Reading order is not the order on the page, so a right-to-left row ends where its rightmost glyph does.
         val ends = lines.map { line -> line.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.end } }
         val songs = songsOf(lines, bodySize)
-        return lines.mapIndexed { index, line ->
+        val roles = mutableListOf<Role?>()
+        lines.forEachIndexed { index, line ->
             val spans = line.spans.filter { it.text.isNotBlank() }
             val start = starts[index]
             val end = ends[index]
             val song = songs.first { index in it }
-            when {
+            roles += when {
                 spans.isEmpty() || start == null || end == null -> null
                 spans.all { it.isBold && it.isMonospace } -> Role.GRID
                 spans.all { it.isBold && !it.isMonospace && it.size < bodySize - LABEL_SIZE_STEP / 2 } -> Role.LABEL
-                spans.all { it.isItalic } -> Role.COMMENT
+                spans.all { it.isItalic } -> Role.COMMENT.takeUnless { isItalicLyric(lines, isChordRow, roles, index) }
                 !line.isPlain() -> null
                 isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end) }
                 isBoxed(song.mapNotNull { starts[it] }, start) -> Role.BOX_COMMENT
                 else -> null
             }
+        }
+        return roles
+    }
+
+    /**
+     * Whether a line wholly in italics is a lyric set in `<i>` rather than a comment, which differs from it only by a
+     * gray the text layer does not keep. The two are told apart by the line before: a lyric under its chords is one row
+     * of the export, its text 1.3 times its size under them, while a comment after a row of chords alone (an intro's,
+     * then `x2`) is the next row, 1.45 times its size under. A lyric wrapped onto the next row is a lyric too; a comment
+     * printed right under an all-italic lyric is then read as one more of its lines, the rarer of the two to meet. A
+     * line whose position is unknown, or one higher on the page than the line before (the next column), stays a
+     * comment.
+     */
+    private fun isItalicLyric(lines: List<ChordSheet.Line>, isChordRow: List<Boolean>, roles: List<Role?>, index: Int): Boolean {
+        val previous = (index - 1 downTo 0).firstOrNull { other -> lines[other].spans.any { it.text.isNotBlank() } } ?: return false
+        val baseline = lines[index].baseline ?: return false
+        val gap = baseline - (lines[previous].baseline ?: return false)
+        val size = lines[index].spans.filter { it.text.isNotBlank() }.maxOf { it.size }
+        return when {
+            gap <= 0.0 -> false
+            isChordRow[previous] -> gap < size * LYRIC_UNDER_CHORDS
+            roles[previous] == null && lines[previous].spans.filter { it.text.isNotBlank() }.all { it.isItalic } -> gap < size * WRAPPED_ROW
+            else -> false
         }
     }
 
@@ -118,6 +142,15 @@ internal object ChordSheetCampfireLayout {
     /** How far in from its frame a boxed comment's text starts (`PrintRows.boxedRows`), in points. */
     private const val BOX_INSET = 5.0
     private const val TOLERANCE = 0.75
+
+    /**
+     * Between a lyric's distance under its chords (1.3 times its size, `PrintLyricRows`) and the next row's (1.45 times,
+     * `PrintRows`).
+     */
+    private const val LYRIC_UNDER_CHORDS = 1.375
+
+    /** Just over the distance between rows (`PrintRows`, 1.45 times the size), which a wrapped lyric continues at. */
+    private const val WRAPPED_ROW = 1.5
 
     /** A song's title is set at 1.6 times the lyrics' size (`PrintRows.titleStyle`), over anything else in bold. */
     private const val TITLE_SIZE_RATIO = 1.3

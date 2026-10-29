@@ -52,11 +52,11 @@ internal object ChordSheetMarginLabels {
         placed.forEachIndexed { index, line ->
             val label = labels[index]
             if (label == null) { result += line; return@forEachIndexed }
-            val heading = PlacedLine(ChordSheet.Line(label.spans, isHeading = true), isMarginLabel = true)
+            val heading = PlacedLine(line.line.copy(spans = label.spans, isHeading = true), isMarginLabel = true)
             val previous = result.lastOrNull()
             if (previous != null && !previous.isMarginLabel && ChordSheetConverter.isChordRow(text(previous.line.spans))) result.add(result.lastIndex, heading)
             else result += heading
-            result += line.copy(line = ChordSheet.Line(label.rest, line.line.isHeading))
+            result += line.copy(line = line.line.copy(spans = label.rest))
         }
         return result
     }

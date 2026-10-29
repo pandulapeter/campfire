@@ -15,7 +15,13 @@ package com.pandulapeter.campfire.chordpro.convert
  */
 public data class ChordSheet(val pages: List<Page>, val originalText: String? = null, val isCampfireExport: Boolean = false) {
     public data class Page(val lines: List<Line>)
-    public data class Line(val spans: List<Span>, val isHeading: Boolean = false)
+
+    /**
+     * @property baseline Where the line's text sits on its page, in the page's units and growing downwards, which tells
+     *   rows of one printed line from lines printed one under another; null where the source has no such position (a
+     *   Word document, plain text).
+     */
+    public data class Line(val spans: List<Span>, val isHeading: Boolean = false, val baseline: Double? = null)
 
     /**
      * @property pieces What a span written in its reading order over text drawn otherwise is made of (a PDF's
