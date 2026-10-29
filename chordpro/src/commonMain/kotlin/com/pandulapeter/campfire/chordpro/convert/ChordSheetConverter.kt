@@ -269,7 +269,7 @@ public object ChordSheetConverter {
     private fun isBareLatinNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinNoteLength(it) == it.length }
     private fun isLatinChordBeyondNote(value: String) = ascii(value).removeSurrounding("(", ")").let { ChordProChordNames.latinExpanded(it) != null && !isBareLatinNote(it) }
     private fun isPositioned(row: List<Token>) = row.zipWithNext().any { (a, b) -> b.index - (a.index + a.text.length) >= 2 }
-    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "-", "/", "%", "N.C.", "NC", "(", ")", "...", "\u2026", ".") || ChordProRowMarks.repeatCount.matches(value)
+    private fun furniture(value: String) = value in listOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "-", "/", "%", "(", ")", "...", "\u2026", ".") || value in noChord || ChordProRowMarks.repeatCount.matches(value)
     private fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
@@ -917,7 +917,8 @@ public object ChordSheetConverter {
         // the edge it hangs from is looked for within an em of the lyric's type rather than at the export's exact point.
         val bidiTolerance = if (lyrics.isCampfire) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
         var isAttachedAtEnd = false
-        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) } + notes).sortedBy { it.index }) {
+        // Bar lines and repeat counts mean nothing over a lyric, but "no chord" says where the playing stops.
+        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { it.index }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
@@ -1023,6 +1024,7 @@ public object ChordSheetConverter {
     private const val EXACT_POSITION = 0.75
 
     /** A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). */
+    private val noChord = setOf("N.C.", "NC")
     private val token = Regex("\\|\\|:?|:\\|:|:\\|\\|?|\\|:?|[^\\s|]+")
     private val embed = Regex("^[0-9]*Embed$")
 
