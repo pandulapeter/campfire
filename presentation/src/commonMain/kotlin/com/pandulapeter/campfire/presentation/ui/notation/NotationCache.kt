@@ -39,20 +39,28 @@ internal fun NotationRequest.keyOf(tune: AbcTune) = NotationTuneKey(
  * on the first frame its song is opened again. Least recently used out first, bounded twice, whichever is reached
  * first: [maxTunes], and [maxWords] words laid out, since a painted tune's size is mostly its text layouts and one long
  * tune with words holds thousands of them. A rendering heavier than the whole bound is not kept (its page still shows
- * it). Main thread only, so it takes no lock: it is read in composition and written by the rendering effect once its
- * work off the main thread has returned.
+ * it). A tune that failed to render is remembered too, by the same key, the last [maxFailedTunes] of them, so that a
+ * resize or a transposition back to it draws it as its text at once instead of holding the single engraving thread for
+ * as long as the failure took again; a failure from a device too busy at that moment stays until the key changes too.
+ * Main thread only, so it takes no lock: it is read in composition and written by the rendering effect once its work
+ * off the main thread has returned.
  */
 internal class NotationCache(
     private val maxTunes: Int = MAX_CACHED_TUNES,
     private val maxWords: Int = MAX_CACHED_WORDS,
+    private val maxFailedTunes: Int = MAX_FAILED_TUNES,
 ) {
     /** In the order last used: common Kotlin's `LinkedHashMap` keeps insertion order only, so a read puts an entry back last. */
     private val renderings = LinkedHashMap<NotationTuneKey, NotationRendering>()
     private var words = 0
 
+    /** In the order last used, as [renderings] is. */
+    private val failed = LinkedHashMap<NotationTuneKey, Unit>()
+
     operator fun get(key: NotationTuneKey): NotationRendering? = renderings.remove(key)?.also { renderings[key] = it }
 
     operator fun set(key: NotationTuneKey, rendering: NotationRendering) {
+        failed.remove(key)
         renderings.remove(key)?.let { words -= it.words }
         if (rendering.words > maxWords) return
         renderings[key] = rendering
@@ -63,9 +71,27 @@ internal class NotationCache(
         }
     }
 
-    /** Every tune of [request] rendered, or null where any one of them is not kept. */
+    /** Whether the tune of [key] failed to render, last time it was tried. */
+    fun isFailed(key: NotationTuneKey) = (failed.remove(key) != null).also { if (it) failed[key] = Unit }
+
+    fun markFailed(key: NotationTuneKey) {
+        failed.remove(key)
+        failed[key] = Unit
+        if (failed.size > maxFailedTunes) failed.remove(failed.keys.first())
+    }
+
+    /** Whether the tune of [key] needs no rendering: it is kept, or it failed. */
+    fun isKept(key: NotationTuneKey) = get(key) != null || isFailed(key)
+
+    /**
+     * Every tune of [request] rendered, a failed one left out (it is drawn as its text), or null where any one of them is
+     * neither kept nor failed.
+     */
     fun renderedFor(request: NotationRequest): RenderedNotations? {
-        val found = request.tunes.associateWith { get(request.keyOf(it)) ?: return null }
+        val found = request.tunes.mapNotNull { tune ->
+            val key = request.keyOf(tune)
+            get(key)?.let { tune to it } ?: if (isFailed(key)) null else return null
+        }.toMap()
         return RenderedNotations(
             request = request,
             renderings = found,
@@ -80,6 +106,7 @@ internal class NotationCache(
     private companion object {
         const val MAX_CACHED_TUNES = 16
         const val MAX_CACHED_WORDS = 4_000
+        const val MAX_FAILED_TUNES = 64
     }
 }
 

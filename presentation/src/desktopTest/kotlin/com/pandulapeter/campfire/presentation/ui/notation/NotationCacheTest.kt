@@ -18,9 +18,11 @@ import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.HEADE
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.SYSTEM
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /** On the desktop, since the renderings it keeps are painted with a real measurer. */
 internal class NotationCacheTest {
@@ -74,6 +76,46 @@ internal class NotationCacheTest {
         val tooHeavy = NotationCache(maxTunes = Int.MAX_VALUE, maxWords = words - 1)
         tooHeavy[request.keyOf(AbcTune("A", 0))] = rendering
         assertNull(tooHeavy[request.keyOf(AbcTune("A", 0))])
+    }
+
+    @Test
+    fun `a failed tune is remembered for its key only`() {
+        val cache = NotationCache()
+        cache.markFailed(request().keyOf(AbcTune("A", 0)))
+        assertTrue(cache.isFailed(request().keyOf(AbcTune("A", 0))))
+        assertFalse(cache.isFailed(request().copy(width = 200).keyOf(AbcTune("A", 0))))
+    }
+
+    @Test
+    fun `the failed tune used least recently is forgotten first`() {
+        val cache = NotationCache(maxFailedTunes = 3)
+        val request = request()
+        listOf("A", "B", "C").forEach { cache.markFailed(request.keyOf(AbcTune(it, 0))) }
+        cache.isFailed(request.keyOf(AbcTune("A", 0)))
+        cache.markFailed(request.keyOf(AbcTune("D", 0)))
+        assertFalse(cache.isFailed(request.keyOf(AbcTune("B", 0))))
+        assertTrue(cache.isFailed(request.keyOf(AbcTune("A", 0))))
+        assertTrue(cache.isFailed(request.keyOf(AbcTune("D", 0))))
+    }
+
+    @Test
+    fun `a tune that renders is no longer failed`() {
+        val cache = NotationCache()
+        val key = request().keyOf(AbcTune("A", 0))
+        cache.markFailed(key)
+        cache[key] = rendering
+        assertFalse(cache.isFailed(key))
+    }
+
+    @Test
+    fun `a request with a failed tune is rendered from the cache with the other tunes`() {
+        val cache = NotationCache()
+        val request = request(AbcTune("A", 0), AbcTune("B", 0), AbcTune("C", 0))
+        cache[request.keyOf(AbcTune("A", 0))] = rendering
+        cache.markFailed(request.keyOf(AbcTune("B", 0)))
+        assertNull(cache.renderedFor(request))
+        cache[request.keyOf(AbcTune("C", 0))] = rendering
+        assertEquals(setOf(AbcTune("A", 0), AbcTune("C", 0)), assertNotNull(cache.renderedFor(request)).renderings.keys)
     }
 
     @Test

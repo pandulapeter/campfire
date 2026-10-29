@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
 /** The app's [AbcRenderer], provided once by `CampfireApp`; where nothing provides one, ABC stays text. */
@@ -209,7 +210,7 @@ internal fun rememberSongNotations(
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
         // Nothing to engrave where every tune is kept, so a pinch reversed to a size seen a moment ago is instant.
-        val isCached = cache != null && request.tunes.all { cache[request.keyOf(it)] != null }
+        val isCached = cache != null && request.tunes.all { cache.isKept(request.keyOf(it)) }
         if (isOnlyResized && !isCached) delay(RERENDER_DELAY_MILLIS)
         // One painter per run, never one shared across runs: a cancelled run's painting goes on until its next suspension,
         // so two runs can overlap and would race on the painter's caches.
@@ -217,7 +218,17 @@ internal fun rememberSongNotations(
         val renderings = request.tunes.mapNotNull { tune ->
             ensureActive() // a cancelled run (a newer request) stops between tunes rather than painting the rest
             val key = request.keyOf(tune)
-            (cache?.get(key) ?: render(renderer, painter, tune, request)?.also { cache?.set(key, it) })?.let { tune to it }
+            if (cache?.isFailed(key) == true) return@mapNotNull null
+            val rendering = cache?.get(key) ?: render(renderer, painter, tune, request).also { rendering ->
+                // A cancellation throws rather than returning null, but one racing the end of the work must not be
+                // remembered as the tune failing.
+                if (rendering == null) {
+                    if (isActive) cache?.markFailed(key)
+                } else {
+                    cache?.set(key, rendering)
+                }
+            }
+            rendering?.let { tune to it }
         }.toMap()
         val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
         // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
