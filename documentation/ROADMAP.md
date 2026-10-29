@@ -33,4 +33,7 @@ What's planned for Campfire, grouped by area.
 - **Multi-cursor support in the editor**: multiple carets and column selection.
   Plan: [multi-caret-editor.md](plans/multi-caret-editor.md)
 - **Comments in setlists**, between songs
+- **Importing sheet music from MusicXML** (`.musicxml` and `.mxl`, which every notation app exports) as a song with
+  its notation and, where the score has lyrics, a chord sheet of its verses; PDF sheet music stays out (it needs OMR).
+  Plan: [musicxml-import.md](plans/musicxml-import.md)
 - **A streaming zip writer** on all platforms
