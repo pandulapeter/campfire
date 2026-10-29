@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -623,6 +624,8 @@ public object ChordSheetConverter {
                             }
                         }
                     }
+                    // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
+                    name == ChordProVocabulary.KEY -> header += "{$name: ${headerValue(ascii(value))}}"
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
             }
