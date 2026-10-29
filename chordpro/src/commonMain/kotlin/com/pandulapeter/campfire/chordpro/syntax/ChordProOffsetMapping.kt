@@ -25,10 +25,11 @@ internal object ChordProOffsetMapping {
         val afterLines = ChordProLines.splitLines(after)
         val line = lastLineStartingAtOrBefore(beforeStarts, clamped)
         val column = clamped - beforeStarts[line]
-        if (beforeStarts.size == afterStarts.size) return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, line, column)
-        // An ABC tune's transposition line was written or removed; every other line is still there, in the same order.
         val beforeOthers = beforeLines.indices.filter { !AbcTranspositions.isTranspositionLine(beforeLines[it]) }
         val afterOthers = afterLines.indices.filter { !AbcTranspositions.isTranspositionLine(afterLines[it]) }
+        // One tune's transposition line removed and another's written leaves as many lines, every one between them moved.
+        if (beforeOthers == afterOthers) return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, line, column)
+        // An ABC tune's transposition line was written or removed; every other line is still there, in the same order.
         if (beforeOthers.size != afterOthers.size) return clamped.coerceAtMost(after.length)
         val other = beforeOthers.indexOf(line)
         if (other >= 0) return offsetOnLine(beforeLines[line], after, afterLines, afterStarts, afterOthers[other], column)

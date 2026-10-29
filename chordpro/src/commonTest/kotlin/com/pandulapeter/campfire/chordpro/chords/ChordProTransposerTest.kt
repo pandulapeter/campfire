@@ -508,6 +508,15 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a caret keeps its line when one tune's transpose line is removed and another's written`() {
+        val text = "{start_of_abc}\nX:1\n%%transpose -1\nK:C\nC|\n{end_of_abc}\n[C]la la\n{start_of_abc}\nX:2\nK:C\nC|\n{end_of_abc}"
+        val (up, upOffset) = transposed(text, 1, text.indexOf("la la") + 3)
+
+        assertEquals("{start_of_abc}\nX:1\nK:C\nC|\n{end_of_abc}\n[C#]la la\n{start_of_abc}\nX:2\n%%transpose 1\nK:C\nC|\n{end_of_abc}", up)
+        assertEquals(up.indexOf("la la") + 3, upOffset)
+    }
+
+    @Test
     fun `a grid written with non-breaking spaces is transposed`() {
         assertEquals(
             "{start_of_grid}\n|\u00A0Bm\u00A0.\u00A0A\u00A0|\n{end_of_grid}",
