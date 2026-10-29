@@ -72,11 +72,20 @@ internal object WebFilePicker : FilePicker {
         }
     }
 
-    override suspend fun shareText(text: String, subject: String) = shareUrl(url = text, title = subject).await<JsString>().toString() == SHARED
+    /**
+     * A link has no download to fall back to, so a share the browser refused (a lost press, another share still open, a
+     * payload it does not take) throws for the caller to report instead of passing for a dismissal.
+     */
+    override suspend fun shareText(text: String, subject: String) = when (val result = shareUrl(url = text, title = subject).await<JsString>().toString()) {
+        SHARED -> true
+        DISMISSED -> false
+        else -> throw IllegalStateException("The browser refused to share the link (${result.removePrefix(REFUSED_PREFIX)}).")
+    }
 }
 
 private const val SHARED = "shared"
 private const val DISMISSED = "dismissed"
+private const val REFUSED_PREFIX = "refused:"
 
 private fun isWebShareAvailable(): Boolean = js("typeof navigator.share === 'function'")
 
@@ -99,10 +108,11 @@ private fun shareFileData(name: String, mimeType: String, bytes: Int8Array): Pro
     )"""
 )
 
+/** Resolves with `shared`, with `dismissed` where the user closed the sheet (an `AbortError`), or with `refused:` and the error's name. */
 private fun shareUrl(url: String, title: String): Promise<JsString> = js(
     """navigator.share({ url: url, title: title }).then(
         function () { return 'shared'; },
-        function (error) { return error && error.name === 'AbortError' ? 'dismissed' : 'refused'; }
+        function (error) { return error && error.name === 'AbortError' ? 'dismissed' : 'refused:' + (error && error.name); }
     )"""
 )
 

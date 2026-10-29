@@ -147,6 +147,24 @@ class ExportControllerTest {
         assertTrue(controller.launchFileTransfer { } != null)
     }
 
+    @Test
+    fun `a link the platform refuses to share is reported as a failed export`() = runTest {
+        picker.shareTextFailure = IllegalStateException("refused")
+        val (controller, _, messageSink) = controller(visibleDialog = null)
+        controller.shareLink(picker, link = "https://example.com", subject = "Campfire")
+        runCurrent()
+        assertEquals(listOf<Message>(Message.ExportFailed), messageSink.messages())
+    }
+
+    @Test
+    fun `a dismissed link share says nothing`() = runTest {
+        val (controller, _, messageSink) = controller(visibleDialog = null)
+        controller.shareLink(picker, link = "https://example.com", subject = "Campfire")
+        runCurrent()
+        assertEquals(listOf("https://example.com"), picker.sharedTexts)
+        assertTrue(messageSink.messages().isEmpty())
+    }
+
     private fun MessageSink.messages() = messageQueue.value.map { it.value }
 
     private fun song(fileName: String) = Song(
@@ -198,6 +216,8 @@ class ExportControllerTest {
         var isSaved = true
         val saved = mutableListOf<ExportedFile>()
         val shared = mutableListOf<ExportedFile>()
+        val sharedTexts = mutableListOf<String>()
+        var shareTextFailure: Exception? = null
 
         override suspend fun pickFiles() = emptyList<ImportedFile>()
 
@@ -209,6 +229,12 @@ class ExportControllerTest {
         override suspend fun shareFile(file: ExportedFile): Boolean {
             shared += file
             return true
+        }
+
+        override suspend fun shareText(text: String, subject: String): Boolean {
+            shareTextFailure?.let { throw it }
+            sharedTexts += text
+            return false
         }
     }
 }

@@ -41,7 +41,9 @@ interface FilePicker {
 
     /**
      * Hands [text], an address, to whatever the platform offers to send it with, [subject] being what a message it goes
-     * out in is titled where the target takes one. Only asked where [canShare]; false where nothing was shown.
+     * out in is titled where the target takes one. Only asked where [canShare]. False where the user dismissed the sheet or
+     * nothing could be shown for a reason not worth telling (another sheet already up); an exception where the platform
+     * refused it for a reason the user should hear of, which the caller reports.
      */
     suspend fun shareText(text: String, subject: String): Boolean = false
 
