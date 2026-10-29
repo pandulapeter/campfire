@@ -12,9 +12,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.SectionTitle
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
@@ -66,11 +68,12 @@ internal fun ImportReviewSectionHeader(
     boxState?.let { shownState = it }
     Row(verticalAlignment = Alignment.CenterVertically) {
         SectionTitle(modifier = Modifier.weight(1f), text = title)
-        // A joining batch can bring a group its second row, or a search leave it one.
+        // A joining batch can bring a group its second row, or a search leave it one. The button is taller than the
+        // heading's text, so it folds rather than only fades, or the rows under the heading would jump.
         AnimatedVisibility(
             visible = boxState != null,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = fadeIn() + expandIn(expandFrom = Alignment.CenterStart),
+            exit = fadeOut() + shrinkOut(shrinkTowards = Alignment.CenterStart),
         ) {
             SelectAllButton(
                 modifier = Modifier.padding(end = 4.dp),
