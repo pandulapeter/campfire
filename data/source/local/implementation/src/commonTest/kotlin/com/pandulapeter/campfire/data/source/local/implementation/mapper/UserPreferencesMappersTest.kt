@@ -107,10 +107,30 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `the sheet music follows the chords option that printed it until it is chosen`() {
+        fun printSettingsOf(text: String) = UserPreferencesDocumentFormat.decode("""{"printSettings":$text}""").document.toModel().printSettings
+
+        assertEquals(false, printSettingsOf("""{"showChords":false}""").showSheetMusic)
+        assertEquals(true, printSettingsOf("""{"showChords":true}""").showSheetMusic)
+        assertEquals(true, printSettingsOf("""{"showChords":false,"showSheetMusic":true}""").showSheetMusic)
+        assertEquals(false, printSettingsOf("""{"showChords":true,"showSheetMusic":false}""").showSheetMusic)
+    }
+
+    @Test
+    fun `ticked sheet music is written so that it no longer follows the chords option`() {
+        val preferences = UserPreferencesDocument().toModel().let {
+            it.copy(printSettings = it.printSettings.copy(showChords = false, showSheetMusic = true))
+        }
+        val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
+        assertEquals(true, UserPreferencesDocumentFormat.decode(saved).document.printSettings.showSheetMusic)
+        assertTrue(UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings.showSheetMusic)
+    }
+
+    @Test
     fun `malformed print sizes and unknown paper fall back without losing other choices`() {
         val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(format = "docx", paper = "tabloid",
             fontSize = 400, marginMm = -1, columns = 50, overviewColumns = 0, showChords = false)).toModel()
-        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false, showTabs = false), preferences.printSettings)
+        assertEquals(PrintSettings(format = PrintSettings.Format.PDF, fontSize = 20, marginMm = 10, columns = 4, showChords = false, showTabs = false, showSheetMusic = false), preferences.printSettings)
     }
 
     @Test

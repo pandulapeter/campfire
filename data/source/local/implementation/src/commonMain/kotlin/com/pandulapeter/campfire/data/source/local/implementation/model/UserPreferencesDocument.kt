@@ -104,7 +104,13 @@ internal data class PrintSettingsDocument(
     val showChords: Boolean = true,
     /** Null in a document from before the tablature had a box of its own, when [showChords] printed it, so that its choice still holds. */
     val showTabs: Boolean? = null,
-    val showSheetMusic: Boolean = true,
+    /**
+     * Null in a document from before sheet music had a box of its own, when [showChords] printed it, so that its choice
+     * still holds. Since a field equal to its default is not written, a document from the version that added the box
+     * with the box ticked reads the same way; those are few, the box is one tick away, and from the next save the key
+     * is always written.
+     */
+    val showSheetMusic: Boolean? = null,
     val showChordDiagrams: Boolean = true,
     val showScales: Boolean = true,
     /**
