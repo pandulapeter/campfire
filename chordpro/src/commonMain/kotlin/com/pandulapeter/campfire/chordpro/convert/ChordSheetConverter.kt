@@ -1016,10 +1016,10 @@ public object ChordSheetConverter {
         return result.joinToString("\n").trim() + "\n"
     }
 
-    /** A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). */
     /** How close to a character a chord of Campfire's own export stands to be set on it, in points. */
     private const val EXACT_POSITION = 0.75
 
+    /** A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). */
     private val token = Regex("\\|\\|:?|:\\|:|:\\|\\|?|\\|:?|[^\\s|]+")
     private val embed = Regex("^[0-9]*Embed$")
 
