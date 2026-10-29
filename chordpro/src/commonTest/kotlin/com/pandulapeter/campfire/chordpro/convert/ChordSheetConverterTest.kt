@@ -466,6 +466,20 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a chord of a pointed right-to-left row never splits a letter from its points, which share the next letter's glyph`() {
+        // "הַמַּעֲלוֹת" as a PDF groups it: each letter's points drawn within the next letter's glyph, and so in its piece.
+        val glyphs = listOf(
+            span("\u05d4", 92.0, 100.0), span("\u05b7\u05de", 84.0, 92.0), span("\u05bc\u05b7\u05e2", 76.0, 84.0),
+            span("\u05b2\u05dc", 70.0, 76.0), span("\u05d5", 66.0, 70.0), span("\u05b9\u05ea", 58.0, 66.0),
+        )
+        val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 58.0, 100.0).copy(pieces = glyphs)))
+        val chords = ChordSheet.Line(listOf(span("A7", 66.0, 84.0, bold = true), span("Dm", 88.0, 100.0, bold = true)))
+        val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue("[Dm]\u05d4\u05b7\u05de\u05bc\u05b7[A7]\u05e2\u05b2\u05dc\u05d5\u05b9\u05ea" in result, result)
+    }
+
+    @Test
     fun `a right-to-left plain text sets each chord where a right-to-left display shows it, not at its character's index`() {
         // "הנה מה טוב ומה נעים" under "Dm         Am": shown from the right, the chords and the spaces between them are one
         // left-to-right run, so Am stands over the first word and Dm over the fourth, the other way round from their

@@ -42,7 +42,7 @@ internal class ChordSheetBidiAnchors private constructor(
             }
         }
         for (index in 0 until minOf(length, classes.size)) {
-            if (left[index].isNaN()) continue
+            if (left[index].isNaN() || classes[index] == MARK) continue
             if (classes[index] != LEFT_TO_RIGHT) abs(right[index] - chordEnd).takeIf { it <= tolerance + ROUNDING }?.let { consider(index, it) }
             if (classes[index] != RIGHT_TO_LEFT) abs(chordStart - left[index]).takeIf { it <= tolerance }?.let { consider(index, it) }
         }
@@ -114,9 +114,12 @@ internal class ChordSheetBidiAnchors private constructor(
 
         /**
          * Which edge a chord on [character] may hang from: a right-to-left letter's right, a left-to-right one's left
-         * (a digit's too), and either for a space or a mark, which takes the direction of what is around it.
+         * (a digit's too), and either for a space, which takes the direction of what is around it. A combining mark (a
+         * Hebrew point, an Arabic vowel) is none: it belongs to the letter before it, and a PDF often draws it within the
+         * next letter's glyph, sharing that letter's edges, where a chord taking it would split a letter from its marks.
          */
         private fun classOf(character: Char) = when {
+            character.category.let { it == CharCategory.NON_SPACING_MARK || it == CharCategory.ENCLOSING_MARK || it == CharCategory.COMBINING_SPACING_MARK } -> MARK
             isStrongRtl(character.code) -> RIGHT_TO_LEFT
             character.isLetterOrDigit() -> LEFT_TO_RIGHT
             else -> NEUTRAL
@@ -128,5 +131,6 @@ internal class ChordSheetBidiAnchors private constructor(
         private const val NEUTRAL = 0
         private const val LEFT_TO_RIGHT = 1
         private const val RIGHT_TO_LEFT = 2
+        private const val MARK = 3
     }
 }
