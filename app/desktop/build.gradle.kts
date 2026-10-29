@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.buildLogic.tasks.RecordClassDataArchive
 import com.pandulapeter.campfire.buildLogic.tasks.RewriteDebDesktopEntry
 import com.pandulapeter.campfire.buildLogic.tasks.appImageArchitecture
 import com.pandulapeter.campfire.buildLogic.tasks.msixPackageVersion
+import com.pandulapeter.campfire.buildLogic.tasks.verifyReleaseBytecode
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.util.zip.ZipFile
@@ -476,9 +477,13 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(ex
  * bundle and signs it there, leaving the other one in the jar, unsigned. Neither is ever loaded, but they are megabytes
  * of every download, and a native binary without a signature inside a jar is exactly what the Mac App Store's
  * validation and notarization look for.
+ *
+ * Then has the runtime the release ships with verify every class of the jar (`verifyReleaseBytecode`), so that bytecode
+ * ProGuard's optimizer broke stops the build rather than the app on the first screen that reaches it.
  */
 tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
     val proguardOutput = layout.buildDirectory.dir("compose/tmp/main-release/proguard")
+    val java = toolchainLauncher.map { it.executablePath.asFile }
     doLast {
         val unusedSkiko = if (System.getProperty("os.name").orEmpty().lowercase().contains("mac")) {
             val otherArchitecture = if (System.getProperty("os.arch") == "aarch64") "x64" else "arm64"
@@ -495,6 +500,7 @@ tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
                 }
             }
         }
+        verifyReleaseBytecode(java.get(), proguardOutput.get().asFile.listFiles { file -> file.extension == "jar" }.orEmpty().toList())
     }
 }
 

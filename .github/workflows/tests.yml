@@ -112,13 +112,14 @@ jobs:
         uses: ./.github/actions/setup-jdk
       # desktopTest compiles commonMain and desktopMain alone. The Android app compiles every library's androidMain, and
       # the web one their wasmJsMain; the distribution's Binaryen pass is left to publish-web.yml, since the compilation
-      # is what catches an error.
+      # is what catches an error. The desktop app goes through ProGuard as its release does, whose task also has every
+      # class it writes verified, since bytecode its optimizer breaks only fails once the class is used.
       - name: Compile the Android, desktop and web apps, the Baseline Profile generator and the screenshot tool
         run: >-
           ./gradlew --continue
           :app:android:assembleDebug
           :app:baselineprofile:compileNonMinifiedReleaseKotlin
-          :app:desktop:compileKotlin
+          :app:desktop:proguardReleaseJars
           :app:web:compileProductionExecutableKotlinWasmJs
           :tools:screenshots:compileKotlin
 
