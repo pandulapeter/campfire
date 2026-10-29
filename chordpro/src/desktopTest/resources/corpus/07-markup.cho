@@ -1,0 +1,8 @@
+{title: Bold And Italic}
+{key: C}
+{start_of_verse}
+<b>[C]Loud</b> words and <i>[F]quiet</i> ones
+<u>Under[G]lined</u> and <span weight="bold">[C]heavy</span>
+Plain &lt;angle&gt; text with <intro> kept
+{end_of_verse}
+{comment: <i>spoken</i> part}
