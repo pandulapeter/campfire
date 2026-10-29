@@ -64,18 +64,20 @@ internal data class SongScaleGroup(
  * home is then named by its sections too, since it no longer covers the song. At most [MAX_GROUP_SCALES] scales a
  * group (the home scale, then what a player reaches for first), since a row of rarities buries the answer and the
  * Scales tab has every other one, and [MAX_EXCEPTION_SCALES] scale over each of its chords worth one, the common one
- * first, every chord named as the page shows it in [notation].
+ * first, every chord named as the page shows it in [notation], a numbering counted from [inferredKey] where the file
+ * names no key.
  */
 internal fun songScaleGroupsOf(
     song: ChordProSong,
     labels: DefaultSectionLabels,
     notation: ChordNotation,
     analysis: SongScaleAnalysis = songScaleAnalysisOf(song, labels),
+    inferredKey: String? = null,
 ): List<SongScaleGroup> {
     val numbered = analysis.numbered
     val groups = analysis.groups
     if (groups.isEmpty()) return emptyList()
-    val shownNames = ChordProNotation.shownNames(song, notation)
+    val shownNames = ChordProNotation.shownNames(song, notation, fallbackKey = inferredKey)
     val exceptions = groups.map { group ->
         group.exceptions.map { exception ->
             SongScaleException(

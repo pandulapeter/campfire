@@ -83,7 +83,7 @@ internal fun SongPageSection(
     SwitchListItem(
         title = stringResource(Res.string.settings_chord_degrees),
         description = stringResource(Res.string.settings_chord_degrees_description),
-        isChecked = userPreferences?.areChordDegreesEnabled != false,
+        isChecked = userPreferences?.areChordDegreesEnabled == true,
         isEnabled = (areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
             (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled),
         onCheckedChange = preferencesController::setChordDegreesEnabled,

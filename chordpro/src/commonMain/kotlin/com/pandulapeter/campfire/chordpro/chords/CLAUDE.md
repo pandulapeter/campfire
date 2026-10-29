@@ -19,8 +19,9 @@
 - **Shown chords draw `♯` and `♭`** (`withAccidentalSigns`, after `toNotation`); anything typed, stored, copied, or
   exported keeps `#` and `b`, and every reader takes both.
 - Tab string names follow the notation; a system that could not come back exactly is left as written.
-- **Numberings are display only**: counted from the song's key per modulated stretch, no key = letters, and nothing is
-  ever read from numbers (`[1]` is as often an ending). Definitions follow the chords but do not vote on notation.
+- **Numberings are display only**: counted from the song's key per modulated stretch, else from the caller's
+  `fallbackKey` (the key its chords suggest, never written into the song), neither = letters, and nothing is ever read
+  from numbers (`[1]` is as often an ending). Definitions follow the chords but do not vote on notation.
 
 - `ChordProTransposer`: **a bracket moves only if
   `ChordProChordNames.isChordName` accepts all of it** (`[Chorus 2x]` stays). The text transposition leaves

@@ -111,7 +111,7 @@ data class UserPreferences(
      * Whether each chord diagram also names the step of the key its chord stands on (`V7` beside `G7`): a song's, in
      * its Chords section, and a scale's, in the scale sheet's chords.
      */
-    val areChordDegreesEnabled: Boolean = true,
+    val areChordDegreesEnabled: Boolean = false,
     /**
      * Whether the app has a chord library: the Chords tab, and the chords a scale sheet lists. It follows neither
      * [areChordsEnabled] nor [areChordDiagramsEnabled], which are about how a song is read.
@@ -434,9 +434,9 @@ data class UserPreferences(
         ;
 
         /**
-         * Whether the chords are counted from the song's key rather than named. Such a notation is only ever shown: a
-         * song with no key stays in letters, and so does every text that is typed, since a number means nothing until
-         * the key it counts from is written — so the editor's field is in [STANDARD] under one.
+         * Whether the chords are counted from the song's key rather than named, a song that names none counted from the
+         * key its chords suggest. Such a notation is only ever shown: every text that is typed stays in letters, since a
+         * number means nothing until the key it counts from is written — so the editor's field is in [STANDARD] under one.
          */
         val isNumbering get() = this == NASHVILLE || this == ROMAN
 

@@ -465,9 +465,9 @@
     <string name="settings_notation_latin">Latin</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, ahogy a dél-európai és latin-amerikai akkordfüzetekben szokás</string>
     <string name="settings_notation_nashville">Nashville-számok</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, a dal hangnemétől számolva, moll dal a saját alaphangjától. A hangnem nélküli dal betűs marad, és a szerkesztő mindig betűket mutat.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, a dal hangnemétől számolva, moll dal a saját alaphangjától. Ha a dal nem ad meg hangnemet, az akkordjai által sugallt hangnemtől számol, és a szerkesztő mindig betűket mutat.</string>
     <string name="settings_notation_roman">Római számok</string>
-    <string name="settings_notation_roman_description">I IV V vi, a dal hangnemétől számolva: dúr akkord nagy, moll akkord kis betűvel. A hangnem nélküli dal betűs marad, és a szerkesztő mindig betűket mutat.</string>
+    <string name="settings_notation_roman_description">I IV V vi, a dal hangnemétől számolva: dúr akkord nagy, moll akkord kis betűvel. Ha a dal nem ad meg hangnemet, az akkordjai által sugallt hangnemtől számol, és a szerkesztő mindig betűket mutat.</string>
     <string name="settings_accidentals">Módosítójelek</string>
     <string name="settings_accidentals_description">A fekete billentyűkre eső akkordok bével (%1$s) vagy kereszttel (%2$s) legyenek-e írva. Az eredeti beállítás mellett a Campfire a dal hangneméhez illőt választja.</string>
     <string name="settings_accidentals_original">Eredeti</string>

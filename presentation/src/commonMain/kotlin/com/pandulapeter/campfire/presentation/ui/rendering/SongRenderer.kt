@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeTextUseCase
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
+import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOf
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import org.koin.core.annotation.Single
 
@@ -47,7 +48,9 @@ class SongRenderer(
      * it — the transposition the user picked and the spelling they prefer, which is what the viewer renders. Build it
      * once for each set of the three rather than on every recomposition, which for a long song would be wasteful. It
      * touches nothing but its arguments and stateless functions, so it may run on a background thread, and it does:
-     * see `rememberSongLyricsModel`. The song is read as written, its `{key}` included, as the editor's preview shows it.
+     * see `rememberSongLyricsModel`. The song is read as written, its `{key}` included, as the editor's preview shows it;
+     * in a numbering, one that names no key is counted from the key its chords suggest ([inferredKeyOf]), as the song
+     * details screen counts it.
      */
     internal fun renderSong(
         text: String,
@@ -55,7 +58,10 @@ class SongRenderer(
         spelling: UserPreferences.ChordSpelling,
         writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
         tabs: TabReading? = null,
-    ) = notatedSong(transposedSong(text, transposition, spelling, writtenIn, tabs, readsKeyOfChords = false), spelling)
+    ) = transposedSong(text, transposition, spelling, writtenIn, tabs, readsKeyOfChords = false).let { song ->
+        // Only a numbering asks for the key a song naming none is in, which is a walk over the whole song.
+        notatedSong(song, spelling, inferredKey = if (spelling.notation.isNumbering) inferredKeyOf(song) else null)
+    }
 
     /**
      * [renderSong] up to its last step: the song moved and spelled as the viewer shows it, but still in the standard
@@ -93,9 +99,20 @@ class SongRenderer(
     /**
      * The last step of [renderSong], and on the model only: the file stays in the standard notation, which the
      * transposition works in, and in the ASCII `#` and `b` the chords are drawn with `♯` and `♭` in place of.
+     *
+     * @param inferredKey The key a song whose file names none is in, in the standard notation and in the frame of [song]'s
+     *   chords ([movedKey]): what a numbering counts it from, the song itself still naming no key.
      */
-    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling) =
-        ChordProNotation.withAccidentalSigns(ChordProNotation.toNotation(song, spelling.notation.toChordNotation()))
+    fun notatedSong(song: ChordProSong, spelling: UserPreferences.ChordSpelling, inferredKey: String? = null) =
+        ChordProNotation.withAccidentalSigns(ChordProNotation.toNotation(song, spelling.notation.toChordNotation(), fallbackKey = inferredKey))
+
+    /**
+     * The key the song's chords were found in when its text was read (`InferredSongKeys`), after the file's own
+     * `{transpose}`, moved by [transposition] alone into the frame of the chords [transposedSong] gives for it, still in
+     * the standard notation: what [notatedSong] counts a numbering from, and what [renderKey] names.
+     */
+    fun movedKey(inferredKey: String, transposition: Int, spelling: UserPreferences.ChordSpelling) =
+        ChordProTransposer.transpose(keyOnly(inferredKey), transposition, spelling.accidentals.toPreferFlats(), null).metadata.key
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
@@ -122,9 +139,10 @@ class SongRenderer(
      * [transpose] it opens with.
      */
     fun renderKey(key: String?, transpose: Int, transposition: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
-        val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
-        notatedSong(ChordProTransposer.transpose(keyOnly, transpose + transposition, spelling.accidentals.toPreferFlats(), null), spelling).metadata.key
+        notatedSong(ChordProTransposer.transpose(keyOnly(it), transpose + transposition, spelling.accidentals.toPreferFlats(), null), spelling).metadata.key
     }
+
+    private fun keyOnly(key: String) = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList())
 
     /** Formats the current editor draft without saving it or changing its chord notation. */
     fun prettifyText(text: String) = ChordProPrettifier.prettify(text)
@@ -160,10 +178,7 @@ class SongRenderer(
     fun editorSummaryCache(notation: UserPreferences.Notation) = ChordProSummaryCache(notation.toChordNotation())
 
     /** A key in the standard notation, as the editor's field written in [notation] would write it. */
-    fun editorKeyOf(key: String, notation: UserPreferences.Notation) = ChordProNotation.toNotation(
-        song = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList()),
-        notation = notation.toChordNotation(),
-    ).metadata.key
+    fun editorKeyOf(key: String, notation: UserPreferences.Notation) = ChordProNotation.toNotation(song = keyOnly(key), notation = notation.toChordNotation()).metadata.key
 
     /** The editor's text, written in [notation], as the file is to hold it: in the standard notation. */
     fun fileTextOf(editorText: String, notation: UserPreferences.Notation) =

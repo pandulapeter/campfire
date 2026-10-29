@@ -499,9 +499,9 @@
     <string name="settings_notation_latin">לטיני</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, כמו בדפי אקורדים בדרום אירופה ובאמריקה הלטינית</string>
     <string name="settings_notation_nashville">מספרי נאשוויל</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, נספרים מהטונליות של השיר, ושיר במינור מהטוניקה שלו. שיר בלי טונליות נשאר באותיות, והעורך תמיד באותיות.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, נספרים מהטונליות של השיר, ושיר במינור מהטוניקה שלו. שיר שלא מציין טונליות נספר מהטונליות שהאקורדים שלו מרמזים עליה, והעורך תמיד באותיות.</string>
     <string name="settings_notation_roman">ספרות רומיות</string>
-    <string name="settings_notation_roman_description">I IV V vi, נספרות מהטונליות של השיר: אותיות גדולות לאקורדי מז׳ור, קטנות למינור. שיר בלי טונליות נשאר באותיות, והעורך תמיד באותיות.</string>
+    <string name="settings_notation_roman_description">I IV V vi, נספרות מהטונליות של השיר: אותיות גדולות לאקורדי מז׳ור, קטנות למינור. שיר שלא מציין טונליות נספר מהטונליות שהאקורדים שלו מרמזים עליה, והעורך תמיד באותיות.</string>
     <string name="settings_accidentals">סימני היתק</string>
     <string name="settings_accidentals_description">האם אקורד על קליד שחור נכתב כבמול (%1$s) או כדיאז (%2$s). כשהוא נשאר כפי שנכתב, Campfire בוחר את מה שמתאים לטונליות של השיר.</string>
     <string name="settings_accidentals_original">כפי שנכתב</string>

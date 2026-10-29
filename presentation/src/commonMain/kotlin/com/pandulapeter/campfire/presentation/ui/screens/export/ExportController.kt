@@ -174,7 +174,7 @@ internal class ExportController(
         // them, which is also where the export offers them.
         val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
         // The diagrams name their degrees in print wherever they do on the screen.
-        val showsDegrees = preferences?.areChordDegreesEnabled != false
+        val showsDegrees = preferences?.areChordDegreesEnabled == true
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->
@@ -197,13 +197,15 @@ internal class ExportController(
             val printed = transposed?.withTempo(tempo)?.let { if (playsWithoutCapo) it.withoutCapo() else it.withCapo(capo) }
             // A file that names no key is named by the one its chords are in, as on the screen; that key is already in the
             // reader's notation, so it is set after the notation rather than before.
-            val inferredKey = if (song != null && song.key.isNullOrBlank() && content != null) {
-                val inferred = withContext(Dispatchers.Default) { songRenderer.inferredKeyOfText(content.text) }
-                songRenderer.renderKey(song = song, transposition = transposition, spelling = spelling, inferredKey = inferred)
+            val inferred = if (song != null && song.key.isNullOrBlank() && content != null) {
+                withContext(Dispatchers.Default) { songRenderer.inferredKeyOfText(content.text) }
             } else {
                 null
             }
-            val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling) } }?.let { rendered ->
+            val inferredKey = if (song != null && inferred != null) songRenderer.renderKey(song = song, transposition = transposition, spelling = spelling, inferredKey = inferred) else null
+            // A numbering counts the chords of a song naming no key from that key, in the frame of the printed chords.
+            val inferredChordsKey = inferred?.let { songRenderer.movedKey(inferredKey = it, transposition = transposition, spelling = spelling) }
+            val rendered = printed?.let { withContext(Dispatchers.Default) { songRenderer.notatedSong(it, spelling, inferredChordsKey) } }?.let { rendered ->
                 inferredKey?.takeIf { rendered.metadata.key.isNullOrBlank() }?.let { rendered.copy(metadata = rendered.metadata.copy(key = it)) } ?: rendered
             }
             // One walk answers the scales, the keys the chords are grouped by, and the degrees, as on the screen.
@@ -214,13 +216,13 @@ internal class ExportController(
             }
             val chords = if (transposed != null && chordTuning != null) {
                 withContext(Dispatchers.Default) {
-                    printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes, showsDegrees, analysis, shapeCapo)
+                    printChordsOf(transposed, spelling.notation.toChordNotation(), chordTuning, storedChordShapes, showsDegrees, analysis, shapeCapo, inferredChordsKey)
                 }
             } else {
                 emptyList()
             }
             val scaleGroups = if (transposed != null && suggestsScales) {
-                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation(), analysis) }
+                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation(), analysis, inferredChordsKey) }
             } else {
                 emptyList()
             }

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.rendering
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Notation
 import com.pandulapeter.campfire.data.model.song.Song
@@ -81,6 +82,25 @@ class SongRendererTest {
         assertEquals("G", renderer.inferredKeyOfText(text))
         assertEquals(inferredKeyOf(renderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)), renderer.inferredKeyOfText(text))
     }
+
+    @Test
+    fun `a numbering counts a song naming no key from the key its chords suggest, moved with the song`() {
+        val text = "[G]one [C]two [D]three [G]four"
+        val roman = UserPreferences.ChordSpelling(accidentals = UserPreferences.Accidentals.SHARPS, notation = Notation.ROMAN)
+        val inferred = renderer.inferredKeyOfText(text)!!
+        val moved = renderer.movedKey(inferredKey = inferred, transposition = 2, spelling = roman)
+        val page = renderer.notatedSong(renderer.transposedSong(text, transposition = 2, spelling = roman), roman, inferredKey = moved)
+
+        assertEquals("A", moved)
+        assertEquals(listOf("I", "IV", "V", "I"), lyricChordsOf(page))
+        assertNull(page.metadata.key)
+        // The editor's preview, which has no inferred key at hand, works it out.
+        assertEquals(listOf("I", "IV", "V", "I"), lyricChordsOf(renderer.renderSong(text, transposition = 0, spelling = roman)))
+        assertEquals(listOf("G", "C", "D", "G"), lyricChordsOf(renderer.renderSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)))
+    }
+
+    private fun lyricChordsOf(song: ChordProSong) =
+        song.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Lyrics>().flatMap { line -> line.chords.map { it.name } }
 
     @Test
     fun `a song with no key has no rendered key`() =

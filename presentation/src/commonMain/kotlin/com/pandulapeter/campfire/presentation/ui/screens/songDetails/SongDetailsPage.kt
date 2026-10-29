@@ -110,6 +110,9 @@ import org.jetbrains.compose.resources.painterResource
  *   same way as [tempoOverride].
  * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
+ * @param inferredChordsKey The key the song's chords were found in (`InferredSongKeys`) for a file that names none, in the
+ *   standard notation and in the frame of the chords [transposeSong] gives (`SongRenderer.movedKey`): what a numbering
+ *   counts them from, its diagrams' and its Scales section's names included.
  * @param inferredKey The sounding key the song's chords were found in (`InferredSongKeys`), named by the read only line of
  *   a file that names none; null where the playing controls are drawn, which name it themselves.
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
@@ -147,6 +150,7 @@ internal fun SongDetailsPage(
     tempoOverride: Int?,
     capoOverride: Int?,
     shapeCapo: Int,
+    inferredChordsKey: String?,
     inferredKey: String?,
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
@@ -162,7 +166,7 @@ internal fun SongDetailsPage(
     settledWidth: Dp,
     contentPadding: PaddingValues,
     transposeSong: (text: String, transposition: Int, capo: Int, spelling: UserPreferences.ChordSpelling, tabs: TabReading?) -> ChordProSong,
-    notateSong: (song: ChordProSong, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
+    notateSong: (song: ChordProSong, spelling: UserPreferences.ChordSpelling, inferredKey: String?) -> ChordProSong,
     onRetry: () -> Unit,
     headedOffset: () -> Int?,
     onTimingChanged: (SongTiming?) -> Unit,
@@ -206,6 +210,7 @@ internal fun SongDetailsPage(
             tempoOverride = tempoOverride,
             capoOverride = capoOverride,
             shapeCapo = shapeCapo,
+            inferredChordsKey = inferredChordsKey,
             inferredKey = inferredKey,
             showsTiming = shouldShowTempo,
             chordTuning = chordDiagrams?.tuning,
@@ -221,10 +226,11 @@ internal fun SongDetailsPage(
             // in; the page names the capo it is played at.
             val transposed = transposeSong(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs)
             prepareSongLyrics(
-                song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling).let { song ->
+                song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling, inputs.inferredChordsKey).let { song ->
                     inputs.inferredKey?.takeIf { song.metadata.key.isNullOrBlank() }?.let { song.copy(metadata = song.metadata.copy(key = it)) } ?: song
                 },
                 standardSong = transposed,
+                inferredKey = inputs.inferredChordsKey,
                 shapeCapo = inputs.shapeCapo,
                 shouldShowChords = inputs.shouldShowChords,
                 labels = inputs.labels,

@@ -114,7 +114,8 @@ internal data class PrintChord(
  * frame for a chord with none, so that the page and the screen finger every chord alike, and grouped by the key they
  * are first played in as the screen groups them ([groupedByKey], [chordKeysOf], from [analysis]). With [showsDegrees],
  * each is labelled with its step of that key. Under a [capo] each is the shape fingered above it, drawn where it is
- * played with the capo across it, as on the screen.
+ * played with the capo across it, as on the screen. A numbering counts a song naming no key from [inferredKey], as the
+ * page does.
  */
 internal fun printChordsOf(
     song: ChordProSong,
@@ -124,7 +125,8 @@ internal fun printChordsOf(
     showsDegrees: Boolean = false,
     analysis: SongScaleAnalysis? = null,
     capo: Int = 0,
-): List<PrintChord> = songChordsOf(song, notation, tuning, capo = capo).let { chords ->
+    inferredKey: String? = null,
+): List<PrintChord> = songChordsOf(song, notation, tuning, capo = capo, inferredKey = inferredKey).let { chords ->
     val keys = if (chords.isNotEmpty()) chordKeysOf(song, analysis, song.isSongbook) else null
     chords.groupedByKey(keys, notation).let { grouped -> if (showsDegrees) grouped.withDegrees(keys, notation) else grouped }
 }.map { chord ->
@@ -148,15 +150,17 @@ internal fun printScaleAnalysisOf(song: ChordProSong, labels: DefaultSectionLabe
 
 /**
  * The scales [song], transposed as it is printed and still in the standard notation, is played over, as the song details
- * screen's Scales section suggests them from [analysis], its sections named by [labels] and its chords in [notation];
- * none for a songbook, for which the section suggests none either.
+ * screen's Scales section suggests them from [analysis], its sections named by [labels] and its chords in [notation]
+ * (a numbering counted from [inferredKey] where the file names no key); none for a songbook, for which the section
+ * suggests none either.
  */
 internal fun printScaleGroupsOf(
     song: ChordProSong,
     labels: DefaultSectionLabels,
     notation: ChordNotation,
     analysis: SongScaleAnalysis? = printScaleAnalysisOf(song, labels),
-): List<SongScaleGroup> = analysis?.let { songScaleGroupsOf(song, labels, notation, it) }.orEmpty()
+    inferredKey: String? = null,
+): List<SongScaleGroup> = analysis?.let { songScaleGroupsOf(song, labels, notation, it, inferredKey) }.orEmpty()
 
 private val ChordProSong.isSongbook get() = blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
 

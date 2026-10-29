@@ -50,6 +50,9 @@ public enum class ChordNotation {
     ROMAN,
     ;
 
-    /** Whether the chords are counted from the song's key rather than named, which only a parsed song can be shown in. */
+    /**
+     * Whether the chords are counted from the song's key, or from the key its chords suggest where it names none, rather
+     * than named, which only a parsed song can be shown in.
+     */
     public val isNumbering: Boolean get() = this == NASHVILLE || this == ROMAN
 }

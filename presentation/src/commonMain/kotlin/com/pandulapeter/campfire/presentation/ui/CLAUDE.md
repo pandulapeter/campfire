@@ -172,7 +172,8 @@ The view model facade, the composition root, and the product rules every screen 
     disabled only once neither songs nor the Chords and Scales tabs name a chord.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in
     the PDF too; chosen shapes kept. The instrument pill stays (keyboard's missing capo, tuner).
-  - **Chord degrees** (`areChordDegreesEnabled`): disabled while no diagram it labels is drawn (a song's, in neither
+  - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like
+    the notation gone wrong; disabled while no diagram it labels is drawn (a song's, in neither
     numbering, which already names its chords by degree, or a scale sheet's chords, which need the Scales and Chords
     tabs); takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion

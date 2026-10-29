@@ -465,9 +465,9 @@
     <string name="settings_notation_latin">Latina</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, come negli spartiti dell\'Europa meridionale e dell\'America Latina</string>
     <string name="settings_notation_nashville">Numeri Nashville</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, contati dalla tonalità della canzone, e per una canzone minore dalla sua tonica. Una canzone senza tonalità mantiene le lettere, e l\'editor usa sempre le lettere.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, contati dalla tonalità della canzone, e per una canzone minore dalla sua tonica. Una canzone che non indica la tonalità è contata da quella suggerita dai suoi accordi, e l\'editor usa sempre le lettere.</string>
     <string name="settings_notation_roman">Numeri romani</string>
-    <string name="settings_notation_roman_description">I IV V vi, contati dalla tonalità della canzone: maiuscole per gli accordi maggiori, minuscole per i minori. Una canzone senza tonalità mantiene le lettere, e l\'editor usa sempre le lettere.</string>
+    <string name="settings_notation_roman_description">I IV V vi, contati dalla tonalità della canzone: maiuscole per gli accordi maggiori, minuscole per i minori. Una canzone che non indica la tonalità è contata da quella suggerita dai suoi accordi, e l\'editor usa sempre le lettere.</string>
     <string name="settings_accidentals">Alterazioni</string>
     <string name="settings_accidentals_description">Se un accordo su un tasto nero viene scritto con il bemolle (%1$s) o con il diesis (%2$s). Con «Originale», Campfire sceglie quello adatto alla tonalità della canzone.</string>
     <string name="settings_accidentals_original">Originale</string>

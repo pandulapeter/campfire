@@ -465,9 +465,9 @@
     <string name="settings_notation_latin">Latin</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, the way chord charts do in Southern Europe and Latin America</string>
     <string name="settings_notation_nashville">Nashville numbers</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, counted from the song\'s key, a minor song from its own tonic. A song with no key keeps its letters, and the editor is always in letters.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, counted from the song\'s key, a minor song from its own tonic. A song that names no key is counted from the key its chords suggest, and the editor is always in letters.</string>
     <string name="settings_notation_roman">Roman numerals</string>
-    <string name="settings_notation_roman_description">I IV V vi, counted from the song\'s key: capitals for major chords, small letters for minor. A song with no key keeps its letters, and the editor is always in letters.</string>
+    <string name="settings_notation_roman_description">I IV V vi, counted from the song\'s key: capitals for major chords, small letters for minor. A song that names no key is counted from the key its chords suggest, and the editor is always in letters.</string>
     <string name="settings_accidentals">Accidentals</string>
     <string name="settings_accidentals_description">Whether a chord on a black key is written as a flat (%1$s) or as a sharp (%2$s). Left as written, Campfire picks whichever fits the key of the song.</string>
     <string name="settings_accidentals_original">As written</string>

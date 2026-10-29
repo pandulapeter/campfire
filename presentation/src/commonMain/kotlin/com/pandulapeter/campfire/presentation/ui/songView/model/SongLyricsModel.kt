@@ -103,6 +103,9 @@ internal class SongLyricsModel(
  * @param notation The notation [song] is written in.
  * @param standardSong [song] before it was written in [notation], which its chords are read from, and before an override
  * of its capo: the scales read the file's own, which says how its `{key}` is meant ([SongKeys]).
+ * @param inferredKey The key [standardSong]'s chords suggest where its file names none, in the standard notation and in
+ * the frame of its chords: what a numbering counts them from (`ChordProNotation.toNotation`'s `fallbackKey`), so that the
+ * Chords and Scales sections name a chord as the page does.
  * @param shapeCapo The fret the Chords section's shapes are fingered above, see [songChordsOf]'s `capo`.
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
@@ -121,6 +124,7 @@ internal fun prepareSongLyrics(
     chordTuning: ChordTuning? = null,
     notation: ChordNotation = ChordNotation.STANDARD,
     standardSong: ChordProSong = song,
+    inferredKey: String? = null,
     searchesShapes: Boolean = true,
     suggestsScales: Boolean = false,
     showsDegrees: Boolean = false,
@@ -128,7 +132,7 @@ internal fun prepareSongLyrics(
     notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
-        songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo)
+        songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo, inferredKey = inferredKey)
     } else {
         emptyList()
     }
@@ -151,8 +155,8 @@ internal fun prepareSongLyrics(
         // The chords collected answer it where there are any, which spares the first model of a page, built in the frame
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
-        hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation)),
-        scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis) else emptyList(),
+        hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation, inferredKey)),
+        scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis, inferredKey) else emptyList(),
         notationChords = notationChords,
     )
 }
@@ -218,6 +222,7 @@ internal data class SongLyricsInputs(
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val shapeCapo: Int = 0,
+    val inferredChordsKey: String? = null,
     val inferredKey: String? = null,
     val showsTiming: Boolean = true,
     val chordTuning: ChordTuning? = null,

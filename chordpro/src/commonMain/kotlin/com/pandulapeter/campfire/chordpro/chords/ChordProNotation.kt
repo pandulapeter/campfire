@@ -30,8 +30,9 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
  * `Do Re Mi Fa Sol La Si` and keeps everything else, and since no Latin name is a standard one, a Latin chord is read
  * as the chord it names wherever it stands, whatever notation the text is said to be in ([read]).
  *
- * The numberings ([ChordNotation.isNumbering]) count the chords from the song's key, which only a parsed song has: a
- * song is shown in them by [toNotation], and a text is never converted into them, nor read as written in them.
+ * The numberings ([ChordNotation.isNumbering]) count the chords from the song's key, or from the key its chords suggest
+ * where it names none, which only a parsed song has: a song is shown in them by [toNotation], and a text is never
+ * converted into them, nor read as written in them.
  *
  * The lowercase minors of Central European charts (`a` for `Am`, `h` for `Hm`) are a spelling of their own rather than
  * a notation: they are read as the minor chord they stand for in every one, and a conversion keeps them lowercase where
@@ -46,18 +47,24 @@ public object ChordProNotation {
      *
      * In a numbering the key, and the key a `{transpose}` names, stay in letters, since a number means nothing without
      * them, and so do the song's definitions, which no page names; a modulation renumbers the stretch it starts from the
-     * key it moved to, so that a chorus reads `1 4 5` before it and after it. A song whose key is not a note is left in
-     * letters, since the first chord is too weak a guess to give every number on the page its meaning.
+     * key it moved to, so that a chorus reads `1 4 5` before it and after it.
+     *
+     * A song whose file names no key is counted from [fallbackKey], the key its chords suggest, which the caller worked
+     * out from the whole song as the key it names it by, in the standard notation and in the frame of [song]'s chords
+     * before any modulation: it stands where a written `{key}` would, and is never added to the song, which names no key
+     * still. A song with neither, or whose key is not a note, is left in letters, since its first chord is too weak a
+     * guess to give every number on the page its meaning.
      */
-    public fun toNotation(song: ChordProSong, notation: ChordNotation): ChordProSong = rewriteAt(song, notation)?.let { ChordProChordRewriter.rewriteChords(song, it) } ?: song
+    public fun toNotation(song: ChordProSong, notation: ChordNotation, fallbackKey: String? = null): ChordProSong =
+        rewriteAt(song, notation, fallbackKey)?.let { ChordProChordRewriter.rewriteChords(song, it) } ?: song
 
     /**
      * Every name [ChordProChords.namesIn] lists for [song], which is in [ChordNotation.STANDARD], mapped to the name
      * [toNotation] shows it under in [notation] where it is first played: in a numbering, a chord played on both sides of
-     * a modulation is named by the step it is first played on.
+     * a modulation is named by the step it is first played on. [fallbackKey] is [toNotation]'s, so that the two agree.
      */
-    public fun shownNames(song: ChordProSong, notation: ChordNotation): Map<String, String> {
-        val rewriteAt = rewriteAt(song, notation)
+    public fun shownNames(song: ChordProSong, notation: ChordNotation, fallbackKey: String? = null): Map<String, String> {
+        val rewriteAt = rewriteAt(song, notation, fallbackKey)
         val names = LinkedHashMap<String, String>()
         ChordProChords.forEachName(song) { name, offset -> names.getOrPut(name) { rewriteAt?.invoke(offset)?.rename?.invoke(name) ?: name } }
         return names
@@ -268,11 +275,13 @@ public object ChordProNotation {
 
     /**
      * The rewrite of each stretch of [song] in [notation], by the offset a `{transpose}` moved it by, or null where the
-     * song stays as it is: in the standard notation, and in a numbering for a song whose key is not a note.
+     * song stays as it is: in the standard notation, and in a numbering for a song whose key, the [fallbackKey] where its
+     * file names none, is not a note.
      */
-    private fun rewriteAt(song: ChordProSong, notation: ChordNotation): ((Int) -> ChordProChordRewriter.ChordRewrite)? {
+    private fun rewriteAt(song: ChordProSong, notation: ChordNotation, fallbackKey: String?): ((Int) -> ChordProChordRewriter.ChordRewrite)? {
         if (notation.isNumbering) {
-            val tonic = song.metadata.key?.let(ChordProNashville::tonicOf) ?: return null
+            val key = song.metadata.key?.takeIf { it.isNotBlank() } ?: fallbackKey
+            val tonic = key?.let(ChordProNashville::tonicOf) ?: return null
             val rewrites = mutableMapOf<Int, ChordProChordRewriter.ChordRewrite>()
             return { offset -> rewrites.getOrPut(offset) { numbering(tonic + offset, isRoman = notation == ChordNotation.ROMAN) } }
         }

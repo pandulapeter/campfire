@@ -469,9 +469,9 @@
     <string name="settings_notation_latin">Latine</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, comme dans les grilles d\'accords d\'Europe du Sud et d\'Amérique latine</string>
     <string name="settings_notation_nashville">Chiffres de Nashville</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, comptés depuis la tonalité de la chanson, et pour une chanson mineure depuis sa propre tonique. Une chanson sans tonalité garde ses lettres, et l\'éditeur est toujours en lettres.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, comptés depuis la tonalité de la chanson, et pour une chanson mineure depuis sa propre tonique. Une chanson qui n\'indique pas de tonalité est comptée depuis celle que suggèrent ses accords, et l\'éditeur est toujours en lettres.</string>
     <string name="settings_notation_roman">Chiffres romains</string>
-    <string name="settings_notation_roman_description">I IV V vi, comptés depuis la tonalité de la chanson : majuscules pour les accords majeurs, minuscules pour les mineurs. Une chanson sans tonalité garde ses lettres, et l\'éditeur est toujours en lettres.</string>
+    <string name="settings_notation_roman_description">I IV V vi, comptés depuis la tonalité de la chanson : majuscules pour les accords majeurs, minuscules pour les mineurs. Une chanson qui n\'indique pas de tonalité est comptée depuis celle que suggèrent ses accords, et l\'éditeur est toujours en lettres.</string>
     <string name="settings_accidentals">Altérations</string>
     <string name="settings_accidentals_description">Écrire un accord sur une touche noire avec un bémol (%1$s) ou un dièse (%2$s). Tel qu\'écrit, Campfire choisit ce qui convient à la tonalité de la chanson.</string>
     <string name="settings_accidentals_original">Tel qu\'écrit</string>

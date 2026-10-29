@@ -107,7 +107,7 @@ internal fun SongPages(
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
-    val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled != false
+    val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled == true
     val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     LaunchedEffect(pagerState) {
@@ -203,6 +203,10 @@ internal fun SongPages(
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             capoOverride = capo.takeUnless { it.isDefault || playsWithoutCapo }?.fret,
             shapeCapo = shapeCapo,
+            // A numbering counts a song naming no key from it.
+            inferredChordsKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
+                viewModel.songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
+            },
             // Only the read only line needs it, as the controls name the key otherwise.
             inferredKey = if (isReadOnly) {
                 inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {

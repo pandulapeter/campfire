@@ -96,6 +96,23 @@ class ChordProNashvilleTest {
         assertSame(noKey, ChordProNotation.toNotation(noKey, ChordNotation.NASHVILLE))
         assertEquals(listOf("C", "G"), lyricChords(shown("{key: unknown}\n[C]a [G]b")))
         assertNull(ChordProNashville.tonicOf("Unknown"))
+        assertSame(noKey, ChordProNotation.toNotation(noKey, ChordNotation.NASHVILLE, fallbackKey = "unknown"))
+    }
+
+    @Test
+    fun `a song with no key is counted from the key its chords suggest, which it still does not name`() {
+        val noKey = ChordProTransposer.transpose(ChordProParser.parse("[G]a [C]b [D]c\n{transpose: 2}\n[G]d"), 0)
+        val song = ChordProNotation.toNotation(noKey, ChordNotation.ROMAN, fallbackKey = "G")
+
+        assertEquals(listOf("I", "IV", "V", "I"), lyricChords(song))
+        assertNull(song.metadata.key)
+        assertEquals(mapOf("G" to "I", "C" to "IV", "D" to "V", "A" to "I"), ChordProNotation.shownNames(noKey, ChordNotation.ROMAN, fallbackKey = "G"))
+    }
+
+    @Test
+    fun `a key the file names wins over the one its chords suggest`() {
+        assertEquals(listOf("5", "1"), lyricChords(ChordProNotation.toNotation(ChordProParser.parse("{key: C}\n[G]a [C]b"), ChordNotation.NASHVILLE, fallbackKey = "G")))
+        assertEquals(listOf("G", "C"), lyricChords(ChordProNotation.toNotation(ChordProParser.parse("[G]a [C]b"), ChordNotation.GERMAN, fallbackKey = "G")))
     }
 
     @Test

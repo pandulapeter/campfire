@@ -88,6 +88,8 @@ internal data class SongChord(
  * under the capo it names; under any other capo it is kept only where the difference moves it down by exactly that many
  * frets, so a capo lower than the file's, or an open shape that cannot go down, gives way to the player's shape, and the
  * app's and the player's shapes are those of the chord moved down by it.
+ *
+ * [inferredKey] is the key the page counts a numbering from where the file names none (`SongRenderer.movedKey`).
  */
 internal fun songChordsOf(
     song: ChordProSong,
@@ -95,8 +97,9 @@ internal fun songChordsOf(
     tuning: ChordTuning,
     searchesShapes: Boolean = true,
     capo: Int = 0,
+    inferredKey: String? = null,
 ): List<SongChord> {
-    val shownNames = ChordProNotation.shownNames(song, notation)
+    val shownNames = ChordProNotation.shownNames(song, notation, fallbackKey = inferredKey)
     val definitions = song.metadata.definitions.filter { it.instrument == tuning.instrument }.map(ChordProDefinitions::sounding)
     val songCapo = (song.metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
     fun definitionOf(name: String, chord: Chord) =
@@ -201,8 +204,8 @@ internal fun List<SongChord>.groupedByKey(keys: ChordKeys?, notation: ChordNotat
  * [MAX_SONG_CHORDS]. Asked where there is no tuning to collect them for, so that the Chords section is there for the
  * same songs whatever the instrument.
  */
-internal fun hasSongChords(song: ChordProSong, notation: ChordNotation): Boolean {
-    val chords = ChordProNotation.shownNames(song, notation).keys.mapNotNull { ChordProChords.parse(it) }.distinct()
+internal fun hasSongChords(song: ChordProSong, notation: ChordNotation, inferredKey: String? = null): Boolean {
+    val chords = ChordProNotation.shownNames(song, notation, fallbackKey = inferredKey).keys.mapNotNull { ChordProChords.parse(it) }.distinct()
     return chords.isNotEmpty() && chords.size <= MAX_SONG_CHORDS
 }
 

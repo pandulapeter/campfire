@@ -465,9 +465,9 @@
     <string name="settings_notation_latin">Lateinisch</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, wie in Akkordblättern in Südeuropa und Lateinamerika üblich</string>
     <string name="settings_notation_nashville">Nashville-Zahlen</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, gezählt von der Tonart des Songs, ein Moll-Song von seinem eigenen Grundton aus. Ein Song ohne Tonart behält seine Buchstaben, und der Editor zeigt immer Buchstaben.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, gezählt von der Tonart des Songs, ein Moll-Song von seinem eigenen Grundton aus. Ein Song ohne Tonartangabe wird von der Tonart aus gezählt, die seine Akkorde nahelegen, und der Editor zeigt immer Buchstaben.</string>
     <string name="settings_notation_roman">Römische Ziffern</string>
-    <string name="settings_notation_roman_description">I IV V vi, gezählt von der Tonart des Songs: Großbuchstaben für Dur-Akkorde, Kleinbuchstaben für Moll. Ein Song ohne Tonart behält seine Buchstaben, und der Editor zeigt immer Buchstaben.</string>
+    <string name="settings_notation_roman_description">I IV V vi, gezählt von der Tonart des Songs: Großbuchstaben für Dur-Akkorde, Kleinbuchstaben für Moll. Ein Song ohne Tonartangabe wird von der Tonart aus gezählt, die seine Akkorde nahelegen, und der Editor zeigt immer Buchstaben.</string>
     <string name="settings_accidentals">Vorzeichen</string>
     <string name="settings_accidentals_description">Ob ein Akkord auf einer schwarzen Taste mit Be (%1$s) oder mit Kreuz (%2$s) geschrieben wird. Bei „Original“ wählt Campfire, was zur Tonart des Songs passt.</string>
     <string name="settings_accidentals_original">Original</string>

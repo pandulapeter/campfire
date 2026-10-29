@@ -182,4 +182,12 @@ class SongChordsTest {
         assertEquals(listOf("C", "Am"), chords.map { it.name })
         assertEquals(listOf(null, null), chords.map { it.letterName })
     }
+
+    @Test
+    fun `a song with no key is listed by the steps of the key its chords suggest under a numbering`() {
+        val chords = songChordsOf(ChordProParser.parse("[C]la [Am]la"), ChordNotation.NASHVILLE, ChordTuning.GUITAR, inferredKey = "C")
+        assertEquals(listOf("1", "6-"), chords.map { it.name })
+        assertEquals(listOf("C", "Am"), chords.map { it.letterName })
+        assertTrue(hasSongChords(ChordProParser.parse("[C]la [Am]la"), ChordNotation.NASHVILLE, inferredKey = "C"))
+    }
 }

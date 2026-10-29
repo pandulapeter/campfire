@@ -88,6 +88,7 @@ internal fun ChordShapeSheet(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
     val capos by viewModel.overrides.capos.collectAsStateWithLifecycle()
+    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
     // The sheet is opened from a song's Chords section, which an instrument without shapes leaves out, so only an
     // instrument changed while it was open gets here without a tuning; there are no shapes to offer then.
     val tuning = userPreferences.let { if (it == null) ChordTuning.GUITAR else it.chordTuning() } ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
@@ -101,9 +102,15 @@ internal fun ChordShapeSheet(
     )
     val transposition = playback.soundingTransposition
     val capo = playback.shapeCapoFor(userPreferences)
-    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning) {
+    // A numbering names the chords of a song naming no key by the steps of the key they suggest, as the page does.
+    val inferredKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
+        viewModel.songRenderer.movedKey(inferredKey = it, transposition = transposition, spelling = spelling)
+    }
+    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning, inferredKey) {
         value = text?.let {
-            withContext(Dispatchers.Default) { songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo) }
+            withContext(Dispatchers.Default) {
+                songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo, inferredKey = inferredKey)
+            }
         }
     }
     val chord = chords?.firstOrNull { it.name == dialog.chordName }

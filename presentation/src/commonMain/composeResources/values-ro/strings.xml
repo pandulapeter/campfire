@@ -500,9 +500,9 @@
     <string name="settings_notation_latin">Latină</string>
     <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, ca în fișele de acorduri din Europa de Sud și America Latină</string>
     <string name="settings_notation_nashville">Numere Nashville</string>
-    <string name="settings_notation_nashville_description">1 4 5 6-, numărate de la tonalitatea cântecului, un cântec minor de la propria tonică. Un cântec fără tonalitate își păstrează literele, iar editorul folosește mereu litere.</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, numărate de la tonalitatea cântecului, un cântec minor de la propria tonică. Un cântec care nu își indică tonalitatea este numărat de la cea sugerată de acordurile sale, iar editorul folosește mereu litere.</string>
     <string name="settings_notation_roman">Cifre romane</string>
-    <string name="settings_notation_roman_description">I IV V vi, numărate de la tonalitatea cântecului: majuscule pentru acordurile majore, litere mici pentru cele minore. Un cântec fără tonalitate își păstrează literele, iar editorul folosește mereu litere.</string>
+    <string name="settings_notation_roman_description">I IV V vi, numărate de la tonalitatea cântecului: majuscule pentru acordurile majore, litere mici pentru cele minore. Un cântec care nu își indică tonalitatea este numărat de la cea sugerată de acordurile sale, iar editorul folosește mereu litere.</string>
     <string name="settings_accidentals">Alterații</string>
     <string name="settings_accidentals_description">Dacă un acord pe o clapă neagră se scrie cu bemol (%1$s) sau cu diez (%2$s). Lăsat pe „Original”, Campfire alege varianta potrivită tonalității cântecului.</string>
     <string name="settings_accidentals_original">Original</string>
