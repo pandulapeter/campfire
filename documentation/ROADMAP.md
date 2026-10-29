@@ -15,7 +15,7 @@ What's planned for Campfire, grouped by area.
 
 - Automatically update store listings in all languages: documentation/plans/store-listings-sync.md
 - Find a solution for storing the library used for screenshot generation in the cloud
-- **Support more languages**: Hebrew (RTL + font + editor)
+- **Support more languages**: Hebrew (RTL + font + editor). Plan: [rtl-support.md](plans/rtl-support.md)
 
 ## Short-term
 
