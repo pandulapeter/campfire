@@ -7,7 +7,9 @@
 # https://mozilla.org/MPL/2.0/.
 
 [versions]
+#noinspection UnusedVersionCatalogEntry
 android-compileSdk = "37" # https://developer.android.com/tools/releases/platforms
+#noinspection UnusedVersionCatalogEntry
 android-minSdk = "28"
 androidx-activity = "1.13.0" # https://developer.android.com/jetpack/androidx/releases/activity
 androidx-benchmark = "1.5.0" # https://developer.android.com/jetpack/androidx/releases/benchmark
@@ -21,11 +23,12 @@ coil = "3.6.3" # https://github.com/coil-kt/coil/releases
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in-app-updates
 google-playInstallReferrer = "2.2" # https://developer.android.com/google/play/installreferrer/library
-gradle = "9.4.1" # https://developer.android.com/studio/releases/gradle-plugin
+gradle = "9.5.0" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jbr-api = "1.12.0" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
 jetbrains-compose = "1.12.2" # https://github.com/JetBrains/compose-jb/releases
 jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.compose.material3)
+#noinspection UnusedVersionCatalogEntry
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
 koin-compilerPlugin = "1.2.1" # https://github.com/InsertKoinIO/koin-compiler-plugin/releases
@@ -35,6 +38,7 @@ kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.12.0" # https://github.com/Kotlin/kotlinx.serialization/releases
+#noinspection UnusedVersionCatalogEntry
 ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
 ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
 quickjs = "1.0.15" # https://github.com/dokar3/quickjs-kt/releases
@@ -81,6 +85,7 @@ kotlin-composeCompiler = { module = "org.jetbrains.kotlin:compose-compiler-gradl
 kotlin-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlin-browser" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlin-coroutines" }
+#noinspection UnusedVersionCatalogEntry
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
@@ -107,4 +112,5 @@ koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-com
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+#noinspection UnusedVersionCatalogEntry
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
