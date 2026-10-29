@@ -87,6 +87,8 @@ internal class SectionPlacement(
 /**
  * Places the units of [grid], measured [unitHeights] tall at the [widths] they were given, under [dividerHeight] tall
  * dividers: every pixel value is the layout's, [rowViewportHeight] null where the scroll does not rest on the rows.
+ * [layoutDirection] is the song's, which orders the columns and the start edge of a cell; [isInsetAtLeft] says which
+ * edge the step buttons' inset is on, the end of the screen's own direction, which may be the song's start.
  */
 internal fun placeSections(
     grid: SectionGrid,
@@ -107,6 +109,7 @@ internal fun placeSections(
     rowViewportTopPaddingPx: Int,
     rowViewportBottomPaddingPx: Int,
     layoutDirection: LayoutDirection,
+    isInsetAtLeft: Boolean,
     lineHeightPx: Int,
     heldSpreads: ColumnSpreads?,
     heldPageShifts: Map<Int, Int>?,
@@ -122,7 +125,7 @@ internal fun placeSections(
         grid.arrange(unitHeights, sectionGapPx, rowGapPx, unitSections = units.unitSections, piecePadding = piecePadding).height > availableHeightPx ||
             hasSeveralPages && rowViewportHeight != null
         )
-    val cellStarts = cellStartsOf(grid, slotWidths, width, layoutWidth, isInset, endInsetPx, columnGapPx, layoutDirection)
+    val cellStarts = cellStartsOf(grid, slotWidths, width, layoutWidth, isInset, endInsetPx, columnGapPx, layoutDirection, isInsetAtLeft)
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight != null
     val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight else 0
     // How much of the viewport a row has with the scroll resting on the divider above it: measured from the row's top
@@ -184,7 +187,8 @@ internal fun placeSections(
 /**
  * Where every cell of [grid] starts, [slotWidths] wide: the cells of a row spread evenly across the width, a row of
  * fewer columns than the fullest (the last page, as a rule) packed from the start edge of the fullest one, or every row
- * in one block where the grid shares a keyline.
+ * in one block where the grid shares a keyline. The first column is at the start edge of [layoutDirection], the song's;
+ * the inset of [endInsetPx] is on the left where [isInsetAtLeft], whichever way the song reads.
  */
 internal fun cellStartsOf(
     grid: SectionGrid,
@@ -195,7 +199,20 @@ internal fun cellStartsOf(
     endInsetPx: Int,
     columnGapPx: Int,
     layoutDirection: LayoutDirection,
+    isInsetAtLeft: Boolean,
 ): Array<IntArray> {
+    val isLtr = layoutDirection == LayoutDirection.Ltr
+
+    /** Lays [widths] out from [start] towards the right, the first column leftmost only where the song reads from the left. */
+    fun packed(widths: IntArray, start: Int, gap: Int): IntArray {
+        var x = start
+        val starts = IntArray(widths.size)
+        for (column in if (isLtr) widths.indices else widths.indices.reversed()) {
+            starts[column] = x
+            if (widths[column] > 0) x += widths[column] + gap
+        }
+        return starts
+    }
     // The space a row leaves is shared out evenly: as much of it before the first column, between every two and after
     // the last, so that no column looks pushed to one side of the row. Two columns are never closer than a column gap,
     // what is left of the space then being split between the two edges. The whole width is shared out wherever that
@@ -204,9 +221,8 @@ internal fun cellStartsOf(
         val shownCount = widths.count { it > 0 }
         val freeSpace = (regionWidth - widths.sum()).coerceAtLeast(0)
         val gap = maxOf(columnGapPx, freeSpace / (shownCount + 1))
-        var start = regionStart + ((freeSpace - gap * (shownCount - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0)
         // A column left empty takes no room at all.
-        return IntArray(widths.size) { column -> start.also { if (widths[column] > 0) start += widths[column] + gap } }
+        return packed(widths, start = regionStart + ((freeSpace - gap * (shownCount - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0), gap = gap)
     }
     fun startsOf(widths: IntArray): IntArray {
         val acrossWholeWidth = spacedEvenly(widths, regionStart = 0, regionWidth = width)
@@ -214,9 +230,9 @@ internal fun cellStartsOf(
         val rowStart = widths.indices.filter { widths[it] > 0 }.minOfOrNull { acrossWholeWidth[it] } ?: 0
         return when {
             !isInset -> acrossWholeWidth
-            layoutDirection == LayoutDirection.Ltr && rowEnd <= layoutWidth -> acrossWholeWidth
-            layoutDirection == LayoutDirection.Rtl && rowStart >= endInsetPx -> acrossWholeWidth
-            layoutDirection == LayoutDirection.Ltr -> spacedEvenly(widths, regionStart = 0, regionWidth = layoutWidth)
+            !isInsetAtLeft && rowEnd <= layoutWidth -> acrossWholeWidth
+            isInsetAtLeft && rowStart >= endInsetPx -> acrossWholeWidth
+            !isInsetAtLeft -> spacedEvenly(widths, regionStart = 0, regionWidth = layoutWidth)
             else -> spacedEvenly(widths, regionStart = endInsetPx, regionWidth = layoutWidth)
         }
     }
@@ -226,7 +242,6 @@ internal fun cellStartsOf(
         // first as a column gap where that is further.
         val blockWidth = slotWidths.maxOfOrNull { widths -> widths.sum() + columnGapPx * (widths.size - 1) } ?: 0
         val blockStart = startsOf(intArrayOf(blockWidth)).first()
-        val isLtr = layoutDirection == LayoutDirection.Ltr
         Array(slotWidths.size) { row ->
             val widths = slotWidths[row]
             IntArray(widths.size) { column ->
@@ -248,15 +263,14 @@ internal fun cellStartsOf(
         val fullColumns = slotWidths[fullRow].indices.filter { slotWidths[fullRow][it] > 0 }
         val fullStart = fullColumns.minOfOrNull { starts[fullRow][it] } ?: return starts
         val fullEnd = fullColumns.maxOf { starts[fullRow][it] + slotWidths[fullRow][it] }
-        val regionStart = if (isInset && layoutDirection == LayoutDirection.Rtl) endInsetPx else 0
-        val regionEnd = if (isInset && layoutDirection == LayoutDirection.Ltr) layoutWidth else width
+        val regionStart = if (isInset && isInsetAtLeft) endInsetPx else 0
+        val regionEnd = if (isInset && !isInsetAtLeft) layoutWidth else width
         for (row in slotWidths.indices) {
             if (grid.wideRows[row] || shownCount(row) >= shownCount(fullRow)) continue
             val widths = slotWidths[row]
             val blockWidth = widths.sum() + columnGapPx * (shownCount(row) - 1).coerceAtLeast(0)
-            val blockStart = if (layoutDirection == LayoutDirection.Ltr) fullStart else fullEnd - blockWidth
-            var x = blockStart.coerceAtMost(regionEnd - blockWidth).coerceAtLeast(regionStart)
-            starts[row] = IntArray(widths.size) { column -> x.also { if (widths[column] > 0) x += widths[column] + columnGapPx } }
+            val blockStart = if (isLtr) fullStart else fullEnd - blockWidth
+            starts[row] = packed(widths, start = blockStart.coerceAtMost(regionEnd - blockWidth).coerceAtLeast(regionStart), gap = columnGapPx)
         }
         starts
     }

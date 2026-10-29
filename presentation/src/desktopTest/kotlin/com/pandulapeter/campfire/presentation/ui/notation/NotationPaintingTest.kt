@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.notation
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.HEADER
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.SYSTEM
@@ -58,5 +57,5 @@ internal class NotationPaintingTest {
         }
     }
 
-    private fun painting() = NotationPainting(Density(1f), LayoutDirection.Ltr, createFontFamilyResolver(), TextStyle.Default)
+    private fun painting() = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)
 }

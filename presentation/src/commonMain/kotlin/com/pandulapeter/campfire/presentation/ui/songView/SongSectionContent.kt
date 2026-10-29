@@ -26,13 +26,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -113,13 +117,14 @@ internal fun SongSectionContent(
     val chevronSize = FOLD_CHEVRON_SIZE * fontScale
     val isFirstChunk = items.first == 0
     val isLastChunk = items.last >= section.itemCount - 1
-    // Tablature and grids are both columns of characters that have to line up with the ones above and below them.
+    // Tablature and grids are both columns of characters that have to line up with the ones above and below them, and
+    // music, read from the left in a song that reads from the right too.
     val monospaceFontFamily = LocalMonospaceFontFamily.current
     val runStyles = remember(lyricsStyle, chordStyle, monospaceFontFamily) {
         RunStyles(
-            text = lyricsStyle,
+            text = lyricsStyle.copy(textDirection = TextDirection.Ltr),
             chord = chordStyle,
-            monospaceText = lyricsStyle.copy(fontFamily = monospaceFontFamily),
+            monospaceText = lyricsStyle.copy(fontFamily = monospaceFontFamily, textDirection = TextDirection.Ltr),
             monospaceChord = chordStyle.copy(fontFamily = monospaceFontFamily),
         )
     }
@@ -303,54 +308,58 @@ private fun SectionRun(
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
     }
     val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run, tuneOffset) else null
-    when {
-        // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
-        notationRun != null -> {
-            // The templates unfilled, filled by withTexts: the chord names and the words are the file's, never the formatter's.
-            val heading = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run)
-            val chordsTemplate = textResource(Res.string.song_details_sheet_music_chords)
-            val wordsTemplate = textResource(Res.string.song_details_sheet_music_words)
-            val description = remember(notationRun.reading, heading, chordsTemplate, wordsTemplate) {
-                notationRun.reading.describedAs(heading, chordsTemplate, wordsTemplate)
-            }
-            shownSlots.forEach { slot ->
-                SongNotationBlock(
-                    modifier = runModifier.fillMaxWidth(),
-                    run = notationRun,
-                    description = description,
-                    slot = slot,
-                    isLastSlot = slot == slotCount - 1,
-                )
-            }
-        }
-
-        // Another program's notation is always preformatted text: a tied ABC line full of dashes could pass for a string
-        // of a staff, and be drawn with strokes through it.
-        kind == FoldableKind.TAB || kind == FoldableKind.VERBATIM -> {
-            val lines = remember(run) { run.map { it.monospaceText.orEmpty() } }
-            val rows = remember(lines, runStyles, textMeasurements, kind) {
-                textMeasurements.tabRows(lines, runStyles, isPreformatted = kind == FoldableKind.VERBATIM)
-            }
-            shownSlots.forEach { slot ->
-                SongTabBlock(
-                    modifier = runModifier.fillMaxWidth(),
-                    lines = lines,
-                    rows = rows,
-                    slot = slot,
-                    isLastSlot = slot == slotCount - 1,
-                )
-            }
-        }
-
-        else -> Column(modifier = runModifier.fillMaxWidth()) {
-            val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
-            shownSlots.forEach { slot ->
-                alignedLines.getOrNull(slot)?.let { bars ->
-                    SongGridLine(
-                        bars = bars,
-                        lyricsStyle = runStyles.monospaceText,
-                        chordStyle = runStyles.monospaceChord,
+    // Music is laid out from the left whatever the song's direction: a grid's bars, a staff, a tune. Its toggle above is
+    // the song's.
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        when {
+            // An ABC tune once it has been engraved, which until then (and where it cannot be) is the text below.
+            notationRun != null -> {
+                // The templates unfilled, filled by withTexts: the chord names and the words are the file's, never the formatter's.
+                val heading = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run)
+                val chordsTemplate = textResource(Res.string.song_details_sheet_music_chords)
+                val wordsTemplate = textResource(Res.string.song_details_sheet_music_words)
+                val description = remember(notationRun.reading, heading, chordsTemplate, wordsTemplate) {
+                    notationRun.reading.describedAs(heading, chordsTemplate, wordsTemplate)
+                }
+                shownSlots.forEach { slot ->
+                    SongNotationBlock(
+                        modifier = runModifier.fillMaxWidth(),
+                        run = notationRun,
+                        description = description,
+                        slot = slot,
+                        isLastSlot = slot == slotCount - 1,
                     )
+                }
+            }
+
+            // Another program's notation is always preformatted text: a tied ABC line full of dashes could pass for a string
+            // of a staff, and be drawn with strokes through it.
+            kind == FoldableKind.TAB || kind == FoldableKind.VERBATIM -> {
+                val lines = remember(run) { run.map { it.monospaceText.orEmpty() } }
+                val rows = remember(lines, runStyles, textMeasurements, kind) {
+                    textMeasurements.tabRows(lines, runStyles, isPreformatted = kind == FoldableKind.VERBATIM)
+                }
+                shownSlots.forEach { slot ->
+                    SongTabBlock(
+                        modifier = runModifier.fillMaxWidth(),
+                        lines = lines,
+                        rows = rows,
+                        slot = slot,
+                        isLastSlot = slot == slotCount - 1,
+                    )
+                }
+            }
+
+            else -> Column(modifier = runModifier.fillMaxWidth()) {
+                val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
+                shownSlots.forEach { slot ->
+                    alignedLines.getOrNull(slot)?.let { bars ->
+                        SongGridLine(
+                            bars = bars,
+                            lyricsStyle = runStyles.monospaceText,
+                            chordStyle = runStyles.monospaceChord,
+                        )
+                    }
                 }
             }
         }

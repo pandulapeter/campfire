@@ -39,6 +39,9 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
 - The caller supplies NFC normalization and tag folding; this module has none.
 - **`language/` holds what every module asks about languages and scripts**: `LanguageCodes.current` reads a retired
   code (`iw`) as its replacement, and `isStrongRtl` is the one test of whether a character reads from the right.
+  `ChordProSong.textDirection` is a song's one direction: right to left where every language it declares is in
+  `RightToLeftLanguages` (the `add-language` skill's `language.py` holds the same list), else by a vote of its lyrics'
+  strong letters, a tie left to right.
 
 ## Model and parser
 

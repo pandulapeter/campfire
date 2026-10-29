@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
@@ -97,6 +98,9 @@ import kotlin.math.roundToInt
  * [SectionGrid.arrange]). The grid is still decided without that space, since it is not something a shorter song could
  * save.
  *
+ * The layout is laid out in the song's direction (the `LocalLayoutDirection` [SongLyrics] provides it with), which
+ * orders its columns, while [stepButtonInset] is on the end edge of the screen around it, [screenLayoutDirection].
+ *
  * [lyricsLineHeight] is the height of one line of lyrics in pixels, at the size the song is drawn at: twice it is the
  * height of a chorded line, which the flows are handed as what the empty space of a column is counted in, and a unit
  * wraps a line more wherever a width makes it a line of lyrics taller than at the width that wraps nothing.
@@ -117,6 +121,7 @@ internal fun SongSectionsLayout(
     rowViewportBottomPadding: Dp,
     stepButtonInset: Dp,
     keepsStepButtonInset: Boolean,
+    screenLayoutDirection: LayoutDirection,
     extraWidth: Dp,
     units: SongUnits,
     unitKeys: List<UnitKey>,
@@ -222,6 +227,7 @@ internal fun SongSectionsLayout(
             rowViewportTopPaddingPx = rowViewportTopPadding.roundToPx(),
             rowViewportBottomPaddingPx = rowViewportBottomPadding.roundToPx(),
             layoutDirection = layoutDirection,
+            isInsetAtLeft = screenLayoutDirection == LayoutDirection.Rtl,
             lineHeightPx = lineHeightPx,
             heldSpreads = centeringHold?.heldSpreads(grid.columnCounts, grid.joinsPrevious),
             heldPageShifts = centeringHold?.heldPageShifts(grid.columnCounts, grid.joinsPrevious),

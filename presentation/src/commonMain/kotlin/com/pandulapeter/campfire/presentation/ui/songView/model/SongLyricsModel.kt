@@ -22,6 +22,8 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.textDirection
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -48,6 +50,8 @@ import kotlinx.coroutines.withContext
  * heads the song's first section then ([RenderSection.Metadata.instrumentPill]), since it is what brings the diagrams
  * back.
  * @param notationChords How the chords over the lyrics are named, which an engraved ABC tune's chord symbols follow.
+ * @param textDirection The one direction the song's body is laid out in, whatever the interface's (see
+ * `ChordProSong.textDirection`): a walk over its lyrics, so made with the model, off the main thread, rather than per frame.
  */
 internal class SongLyricsModel(
     val song: ChordProSong,
@@ -60,6 +64,7 @@ internal class SongLyricsModel(
     val hasChords: Boolean = chords.isNotEmpty(),
     val scaleGroups: List<SongScaleGroup> = emptyList(),
     val notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
+    val textDirection: WritingDirection = song.textDirection,
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -80,6 +85,7 @@ internal class SongLyricsModel(
         hasChords = hasChords,
         scaleGroups = scaleGroups,
         notationChords = notationChords,
+        textDirection = textDirection,
     )
 }
 

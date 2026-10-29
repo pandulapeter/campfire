@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -49,11 +52,31 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * is off towards. With nothing heard the needle is gone and the scale rests. In tune the needle gives way to the notch
  * closing into a check, so that being in tune is never said by color alone.
  *
+ * Laid out from the left in every language, as a ruler is: flat on the left, where the scale's negative side is drawn.
+ *
  * @param accentColor What the check is drawn in, the needle's color being the text's; the window is always tinted with
  * the second accent color, the color of what is played.
  */
 @Composable
 internal fun TunerMeter(
+    modifier: Modifier = Modifier,
+    cents: Float?,
+    isInTune: Boolean,
+    accentColor: Color,
+    height: Dp,
+) = CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    TunerMeterRow(
+        modifier = modifier,
+        cents = cents,
+        isInTune = isInTune,
+        accentColor = accentColor,
+        height = height,
+    )
+}
+
+/** [TunerMeter]'s scale and the words at its ends, from the left. */
+@Composable
+private fun TunerMeterRow(
     modifier: Modifier = Modifier,
     cents: Float?,
     isInTune: Boolean,

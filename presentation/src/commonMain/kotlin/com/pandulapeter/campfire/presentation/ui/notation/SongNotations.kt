@@ -110,16 +110,18 @@ internal data class NotationRequest(
     val painting: NotationPainting,
 )
 
-/** What a tune's words are laid out with: the page's density, direction, fonts, and the lyrics' unscaled style. */
+/**
+ * What a tune's words are laid out with: the page's density, fonts, and the lyrics' unscaled style. Always from the
+ * left, as music is, whatever the song's or the app's direction.
+ */
 internal data class NotationPainting(
     val density: Density,
-    val layoutDirection: LayoutDirection,
     val fontResolver: FontFamily.Resolver,
     val textStyle: TextStyle,
 ) {
     /** A painter of its own, for one job on any thread: a painter keeps caches that are not thread safe. */
     fun newPainter() = NotationPainter(
-        textMeasurer = TextMeasurer(fontResolver, density, layoutDirection, cacheSize = 0),
+        textMeasurer = TextMeasurer(fontResolver, density, LayoutDirection.Ltr, cacheSize = 0),
         density = density,
         textStyle = textStyle,
     )

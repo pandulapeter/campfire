@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -37,12 +38,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -285,9 +288,27 @@ private fun TunerNoteLabel(
     }
 }
 
-/** A note in the reader's notation, with its octave set smaller after it. */
+/** A note in the reader's notation, with its octave set smaller after it, on its right in every language. */
 @Composable
 private fun TunerNoteName(
+    modifier: Modifier = Modifier,
+    note: Int,
+    notation: ChordNotation,
+    color: State<Color>,
+    isCompact: Boolean,
+) = CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    NoteAndOctave(
+        modifier = modifier,
+        note = note,
+        notation = notation,
+        color = color,
+        isCompact = isCompact,
+    )
+}
+
+/** [TunerNoteName] from the left. */
+@Composable
+private fun NoteAndOctave(
     modifier: Modifier = Modifier,
     note: Int,
     notation: ChordNotation,

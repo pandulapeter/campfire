@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextDirection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -290,7 +291,8 @@ private fun ScaleFormula(
         Text(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             text = scaleStepsText(scale),
-            style = MaterialTheme.typography.bodyMedium,
+            // Read from the left in every language, as the degrees above it are.
+            style = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Ltr),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

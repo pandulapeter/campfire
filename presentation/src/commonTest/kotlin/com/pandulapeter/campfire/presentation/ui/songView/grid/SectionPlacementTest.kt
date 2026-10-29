@@ -30,7 +30,8 @@ class SectionPlacementTest {
         isInset: Boolean = false,
         endInset: Int = 0,
         layoutDirection: LayoutDirection = LayoutDirection.Ltr,
-    ) = cellStartsOf(grid, cellWidths, width, layoutWidth, isInset, endInset, SECTION_GAP, layoutDirection)
+        isInsetAtLeft: Boolean = layoutDirection == LayoutDirection.Rtl,
+    ) = cellStartsOf(grid, cellWidths, width, layoutWidth, isInset, endInset, SECTION_GAP, layoutDirection, isInsetAtLeft)
 
     private fun place(
         grid: SectionGrid,
@@ -60,6 +61,7 @@ class SectionPlacementTest {
         rowViewportTopPaddingPx = 0,
         rowViewportBottomPaddingPx = 0,
         layoutDirection = layoutDirection,
+        isInsetAtLeft = layoutDirection == LayoutDirection.Rtl,
         lineHeightPx = LINE_HEIGHT,
         heldSpreads = null,
         heldPageShifts = null,
@@ -83,8 +85,8 @@ class SectionPlacementTest {
         val ltr = place(oneRowOfTwo, units, intArrayOf(100, 100), cellWidths, unitWidths)
         assertEquals(starts[0], ltr.positions[0].x)
         val rtl = place(oneRowOfTwo, units, intArrayOf(100, 100), cellWidths, unitWidths, layoutDirection = LayoutDirection.Rtl)
-        assertEquals(starts[0] + 300 - 200, rtl.positions[0].x)
-        assertEquals(ltr.positions[1], rtl.positions[1])
+        assertEquals(starts[1] + 300 - 200, rtl.positions[0].x)
+        assertEquals(ltr.positions[0].x, rtl.positions[1].x)
     }
 
     @Test
@@ -94,7 +96,8 @@ class SectionPlacementTest {
         val ltr = cellStarts(grid, slotWidths)
         assertEquals(ltr[0][0], ltr[1][0])
         val rtl = cellStarts(grid, slotWidths, layoutDirection = LayoutDirection.Rtl)
-        assertEquals(rtl[0][2] + 300, rtl[1][0] + 300)
+        assertEquals(rtl[0][0], rtl[1][0])
+        assertTrue(rtl[0][0] > rtl[0][1] && rtl[0][1] > rtl[0][2], rtl[0].toList().toString())
     }
 
     @Test
@@ -116,7 +119,24 @@ class SectionPlacementTest {
         val wide = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400)), layoutWidth = 900, isInset = true, endInset = 100).single()
         assertTrue(wide[1] + 400 <= 900, wide.toList().toString())
         val rtl = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400)), layoutWidth = 900, isInset = true, endInset = 100, layoutDirection = LayoutDirection.Rtl).single()
-        assertTrue(rtl[0] >= 100, rtl.toList().toString())
+        assertTrue(rtl.min() >= 100, rtl.toList().toString())
+    }
+
+    @Test
+    fun `a right-to-left song starts from the right column, and keeps out of the buttons on the screen's own end edge`() {
+        val ltr = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400))).single()
+        val rtl = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400)), layoutDirection = LayoutDirection.Rtl).single()
+        assertEquals(ltr.reversed(), rtl.toList())
+        val inLeftToRightScreen = cellStarts(
+            oneRowOfTwo,
+            arrayOf(intArrayOf(400, 400)),
+            layoutWidth = 900,
+            isInset = true,
+            endInset = 100,
+            layoutDirection = LayoutDirection.Rtl,
+            isInsetAtLeft = false,
+        ).single()
+        assertTrue(inLeftToRightScreen[0] > inLeftToRightScreen[1] && inLeftToRightScreen.max() + 400 <= 900, inLeftToRightScreen.toList().toString())
     }
 
     @Test

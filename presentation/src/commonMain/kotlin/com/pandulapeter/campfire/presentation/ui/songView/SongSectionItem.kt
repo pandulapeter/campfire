@@ -29,6 +29,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
@@ -59,37 +61,43 @@ internal fun SongSectionItem(
     isScalesSectionFadingIn: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
+    sentenceStyle: TextStyle,
     chordStyle: TextStyle,
+    screenLayoutDirection: LayoutDirection,
     textMeasurements: SongTextMeasurements,
     notations: SongNotations,
     foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
 ) = when (section) {
-    is RenderSection.Metadata -> SongMetadataSection(
-        modifier = modifier,
-        metadata = section.metadata,
-        isSongInfoShown = isSongInfoShown,
-        songInfoEditing = songInfoEditing,
-        playingControls = playingControls,
-        playingTools = playingTools,
-        readsDefaults = section.readsDefaults,
-        animatesControls = animatesRows,
-        titleStyle = headerStyle,
-        lyricsStyle = lyricsStyle,
-        fontScale = fontScale,
-        instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->
-            {
-                SongInstrumentPill(
-                    chordDiagrams = chordDiagrams,
-                    headerStyle = headerStyle,
-                    tuningVisibility = tuningVisibility,
-                    onInstrumentClicked = onInstrumentClicked,
-                    onTuningClicked = chordDiagrams.onTuningClicked ?: {},
-                )
-            }
-        },
-    )
+    // The song's first section is the screen's controls and the interface's words about the song, so it keeps the
+    // screen's direction in a song read the other way.
+    is RenderSection.Metadata -> CompositionLocalProvider(LocalLayoutDirection provides screenLayoutDirection) {
+        SongMetadataSection(
+            modifier = modifier,
+            metadata = section.metadata,
+            isSongInfoShown = isSongInfoShown,
+            songInfoEditing = songInfoEditing,
+            playingControls = playingControls,
+            playingTools = playingTools,
+            readsDefaults = section.readsDefaults,
+            animatesControls = animatesRows,
+            titleStyle = headerStyle,
+            lyricsStyle = sentenceStyle,
+            fontScale = fontScale,
+            instrumentPill = chordDiagrams?.onInstrumentClicked?.takeIf { section.instrumentPill != null }?.let { onInstrumentClicked ->
+                {
+                    SongInstrumentPill(
+                        chordDiagrams = chordDiagrams,
+                        headerStyle = headerStyle,
+                        tuningVisibility = tuningVisibility,
+                        onInstrumentClicked = onInstrumentClicked,
+                        onTuningClicked = chordDiagrams.onTuningClicked ?: {},
+                    )
+                }
+            },
+        )
+    }
 
     is RenderSection.Chords -> SongChordsSection(
         modifier = modifier.padding(horizontal = CARD_PADDING),
@@ -131,7 +139,7 @@ internal fun SongSectionItem(
     is RenderSection.Timing -> SongTimingLine(
         modifier = modifier,
         timing = section,
-        style = lyricsStyle,
+        style = sentenceStyle,
     )
 
     is RenderSection.Lines -> LinesSectionItem(

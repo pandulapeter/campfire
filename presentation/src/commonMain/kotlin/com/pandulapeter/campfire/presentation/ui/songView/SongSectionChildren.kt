@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 
@@ -43,6 +44,8 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
  * parameter here is remembered by [SongLyrics] or its callers, so it keeps its identity over those frames and this
  * skips; a lambda or an object built in [SongLyrics]' body would make it compose again on every one of them.
  *
+ * @param sentenceStyle The lyrics' style for the interface's own sentences, which take their direction from their text.
+ * @param screenLayoutDirection The direction of the screen around the song, which its first section's controls keep.
  * @param placesAtOnce Whether what changes is placed rather than moved: a window being resized, or a tune's first
  * rendering arriving. No row travels and no chunk fades in then.
  */
@@ -69,7 +72,9 @@ internal fun SongSectionChildren(
     hasScaleFoldBeenToggled: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
+    sentenceStyle: TextStyle,
     chordStyle: TextStyle,
+    screenLayoutDirection: LayoutDirection,
     textMeasurements: SongTextMeasurements,
     notations: SongNotations,
     foldedRuns: FoldedRuns?,
@@ -118,7 +123,9 @@ internal fun SongSectionChildren(
                 isScalesSectionFadingIn = hasScaleFoldBeenToggled,
                 headerStyle = headerStyle,
                 lyricsStyle = lyricsStyle,
+                sentenceStyle = sentenceStyle,
                 chordStyle = chordStyle,
+                screenLayoutDirection = screenLayoutDirection,
                 textMeasurements = textMeasurements,
                 notations = notations,
                 foldedRuns = foldedRuns,

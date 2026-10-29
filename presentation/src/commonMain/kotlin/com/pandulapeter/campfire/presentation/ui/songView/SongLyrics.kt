@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
@@ -67,6 +68,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -261,22 +264,30 @@ internal fun SongLyrics(
     // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
     // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
     // every frame of a theme cross-fade while the size of the text does not.
-    // The direction of a line is its own content's rather than the app's, so that a Hebrew or Arabic line is a right to
-    // left paragraph starting at the right edge, as its reader expects, and the chords above it are laid out that way.
+    // Every lyric line is a paragraph in the song's one direction rather than its own content's or the app's, so that in
+    // a Hebrew or Arabic song a line opening with a Latin word, or holding only chords, still starts at the right edge
+    // with the chords above it hanging leftwards, as the lines around it do. The interface's own sentences in the song
+    // (the first section's line of values, a change of tempo) take their direction from their text instead. Chord
+    // names, and the annotations in their row, are music, read from the left whatever the song or the app.
     // Remembered, so that every comparison of them below and in the sections is one of identity (TextStyle.equals checks
     // that first) rather than a deep one on every composition.
+    val screenLayoutDirection = LocalLayoutDirection.current
+    val songLayoutDirection = if (model.textDirection == WritingDirection.RIGHT_TO_LEFT) LayoutDirection.Rtl else LayoutDirection.Ltr
     val localTextStyle = LocalTextStyle.current
     val typography = MaterialTheme.typography
-    val lyricsStyle = remember(localTextStyle, typography, fontScale) {
+    val sentenceStyle = remember(localTextStyle, typography, fontScale) {
         localTextStyle.merge(typography.bodyLarge).scaled(fontScale).copy(
             color = Color.Unspecified,
             textDirection = TextDirection.Content,
         )
     }
+    val lyricsStyle = remember(sentenceStyle, songLayoutDirection) {
+        sentenceStyle.copy(textDirection = if (songLayoutDirection == LayoutDirection.Rtl) TextDirection.Rtl else TextDirection.Ltr)
+    }
     val headerStyle = remember(typography, fontScale) { typography.titleSmall.scaled(fontScale) }
-    val chordStyle = remember(lyricsStyle) { lyricsStyle.copy(fontWeight = FontWeight.Bold) }
+    val chordStyle = remember(lyricsStyle) { lyricsStyle.copy(fontWeight = FontWeight.Bold, textDirection = TextDirection.Ltr) }
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
-    val annotationStyle = remember(lyricsStyle) { lyricsStyle.copy(fontStyle = FontStyle.Italic) }
+    val annotationStyle = remember(lyricsStyle) { lyricsStyle.copy(fontStyle = FontStyle.Italic, textDirection = TextDirection.Ltr) }
     // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
     // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
@@ -285,9 +296,8 @@ internal fun SongLyrics(
     // out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
     val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
     val fontResolver = LocalFontFamilyResolver.current
-    val layoutDirection = LocalLayoutDirection.current
-    val notationPainting = remember(density, layoutDirection, fontResolver, notationTextStyle) {
-        NotationPainting(density, layoutDirection, fontResolver, notationTextStyle)
+    val notationPainting = remember(density, fontResolver, notationTextStyle) {
+        NotationPainting(density, fontResolver, notationTextStyle)
     }
     val notationUnit = NOTATION_UNIT * fontScale
     val notations = rememberSongNotations(
@@ -373,66 +383,73 @@ internal fun SongLyrics(
     val isNotationArriving = notationArrival != null && notationArrival !== seenArrival.value
     SideEffect { seenArrival.value = notationArrival }
     Box(modifier = modifier) {
-        LookaheadScope {
-            SongSectionsLayout(
-                modifier = Modifier.semantics { isTraversalGroup = true },
-                minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
-                narrowColumnWidth = NARROW_COLUMN_WIDTH * fontScale,
-                maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
-                columnGap = COLUMN_GAP,
-                sectionGap = SECTION_GAP,
-                rowGap = ROW_GAP,
-                availableHeight = availableHeight,
-                maxRowHeight = availableHeight,
-                rowViewportHeight = rowViewportHeight,
-                rowViewportTopPadding = rowViewportTopPadding,
-                rowViewportBottomPadding = rowViewportBottomPadding,
-                stepButtonInset = stepButtonInset,
-                keepsStepButtonInset = keepsStepButtonInset,
-                extraWidth = extraWidth,
-                units = units,
-                unitKeys = unitKeys,
-                cardKeys = cardKeys,
-                cardPadding = CARD_PADDING,
-                canCutSections = canCutSections,
-                isSingleColumn = isSingleColumn,
-                sectionGlides = sectionGlides,
-                glidesEveryMove = sectionMotion == SectionMotion.SPRING && !isResizing,
-                arrival = notationArrival,
-                sectionMeasurements = sectionMeasurements,
-                lyricsLineHeight = textMeasurements.lyricsLineHeight,
-                centeringHold = centeringHold,
-                onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
-            ) {
-                SongSectionChildren(
-                    sections = sections,
+        // The song's body is laid out in the song's direction, its columns, sections, and chord diagrams too; the first
+        // section's controls are the screen's, and SongSectionItem gives them back its direction.
+        CompositionLocalProvider(LocalLayoutDirection provides songLayoutDirection) {
+            LookaheadScope {
+                SongSectionsLayout(
+                    modifier = Modifier.semantics { isTraversalGroup = true },
+                    minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
+                    narrowColumnWidth = NARROW_COLUMN_WIDTH * fontScale,
+                    maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
+                    columnGap = COLUMN_GAP,
+                    sectionGap = SECTION_GAP,
+                    rowGap = ROW_GAP,
+                    availableHeight = availableHeight,
+                    maxRowHeight = availableHeight,
+                    rowViewportHeight = rowViewportHeight,
+                    rowViewportTopPadding = rowViewportTopPadding,
+                    rowViewportBottomPadding = rowViewportBottomPadding,
+                    stepButtonInset = stepButtonInset,
+                    keepsStepButtonInset = keepsStepButtonInset,
+                    screenLayoutDirection = screenLayoutDirection,
+                    extraWidth = extraWidth,
                     units = units,
                     unitKeys = unitKeys,
                     cardKeys = cardKeys,
-                    sectionMotion = sectionMotion,
-                    placesAtOnce = isResizing || isNotationArriving,
-                    isTextScaling = isTextScaling,
-                    notation = model.notation,
-                    isSongInfoShown = isSongInfoShown,
-                    songInfoEditing = songInfoEditing,
-                    playingControls = shownPlayingControls,
-                    playingTools = playingTools,
-                    chordDiagrams = chordDiagrams,
-                    scaleSuggestions = shownScaleSuggestions,
-                    tuningVisibility = tuningVisibility,
-                    chordLayouts = chordLayouts,
-                    onChordFoldToggled = onChordFoldToggled,
-                    hasChordFoldBeenToggled = hasChordFoldBeenToggled,
-                    hasScaleFoldBeenToggled = hasScaleFoldBeenToggled,
-                    headerStyle = headerStyle,
-                    lyricsStyle = lyricsStyle,
-                    chordStyle = chordStyle,
-                    textMeasurements = textMeasurements,
-                    notations = notations,
-                    foldedRuns = foldedRuns,
-                    defaultLabels = defaultLabels,
-                    fontScale = fontScale,
-                )
+                    cardPadding = CARD_PADDING,
+                    canCutSections = canCutSections,
+                    isSingleColumn = isSingleColumn,
+                    sectionGlides = sectionGlides,
+                    glidesEveryMove = sectionMotion == SectionMotion.SPRING && !isResizing,
+                    arrival = notationArrival,
+                    sectionMeasurements = sectionMeasurements,
+                    lyricsLineHeight = textMeasurements.lyricsLineHeight,
+                    centeringHold = centeringHold,
+                    onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows) },
+                ) {
+                    SongSectionChildren(
+                        sections = sections,
+                        units = units,
+                        unitKeys = unitKeys,
+                        cardKeys = cardKeys,
+                        sectionMotion = sectionMotion,
+                        placesAtOnce = isResizing || isNotationArriving,
+                        isTextScaling = isTextScaling,
+                        notation = model.notation,
+                        isSongInfoShown = isSongInfoShown,
+                        songInfoEditing = songInfoEditing,
+                        playingControls = shownPlayingControls,
+                        playingTools = playingTools,
+                        chordDiagrams = chordDiagrams,
+                        scaleSuggestions = shownScaleSuggestions,
+                        tuningVisibility = tuningVisibility,
+                        chordLayouts = chordLayouts,
+                        onChordFoldToggled = onChordFoldToggled,
+                        hasChordFoldBeenToggled = hasChordFoldBeenToggled,
+                        hasScaleFoldBeenToggled = hasScaleFoldBeenToggled,
+                        headerStyle = headerStyle,
+                        lyricsStyle = lyricsStyle,
+                        sentenceStyle = sentenceStyle,
+                        chordStyle = chordStyle,
+                        screenLayoutDirection = screenLayoutDirection,
+                        textMeasurements = textMeasurements,
+                        notations = notations,
+                        foldedRuns = foldedRuns,
+                        defaultLabels = defaultLabels,
+                        fontScale = fontScale,
+                    )
+                }
             }
         }
         if (model.isCut) {

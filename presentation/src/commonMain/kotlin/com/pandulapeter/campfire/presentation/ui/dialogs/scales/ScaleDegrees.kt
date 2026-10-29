@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import androidx.compose.ui.text.style.TextDirection
 import com.pandulapeter.campfire.chordpro.scales.Scale
 import com.pandulapeter.campfire.presentation.ui.scales.SCALE_NOTE_LEAD_MILLIS
 import com.pandulapeter.campfire.presentation.ui.scales.displayedDegree
@@ -96,7 +97,8 @@ internal fun ScaleDegrees(
             append(degreesText.text)
             degreesText.ranges.forEachIndexed { index, range -> addStyle(SpanStyle(color = colors[index]), range.first, range.last + 1) }
         },
-        style = MaterialTheme.typography.titleMedium,
+        // Read from the left in every language, as a scale is played up.
+        style = MaterialTheme.typography.titleMedium.copy(textDirection = TextDirection.Ltr),
         textAlign = TextAlign.Center,
         onTextLayout = { layout = it },
     )

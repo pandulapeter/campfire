@@ -34,6 +34,7 @@ RESOURCES = ROOT / "presentation/src/commonMain/composeResources"
 ENGLISH = RESOURCES / "values/strings.xml"
 FONTS = sorted((RESOURCES / "font").glob("*.ttf"))
 
+# The same list as :chordpro's RightToLeftLanguages, which folds the retired iw and ji before asking; keep them alike.
 RIGHT_TO_LEFT = {"ar", "arc", "ckb", "dv", "fa", "he", "iw", "ji", "ks", "ps", "sd", "syr", "ug", "ur", "yi"}
 
 # Codes the platforms report differently: older JDKs and every Android report the legacy one as Locale.language, and

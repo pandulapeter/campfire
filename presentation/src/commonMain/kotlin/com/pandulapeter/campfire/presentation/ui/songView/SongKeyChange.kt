@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -31,6 +32,7 @@ internal fun SongKeyChange(
 ) = Text(
     modifier = modifier,
     text = textResource(Res.string.song_details_key_change, keyChange.key),
-    style = chordStyle,
+    // A sentence of the interface's around the key's name, so it reads in its own text's direction, not the chords'.
+    style = chordStyle.copy(textDirection = TextDirection.Content),
     color = LocalSecondAccentColor.current,
 )

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
@@ -62,7 +63,8 @@ internal class ChordCellLayouts(
 
     /** The heading over each cell starting a key's chords, null over every other cell and where there is one key. */
     val headings by lazy(LazyThreadSafetyMode.NONE) {
-        val headingStyle = chordStyle.copy(fontWeight = FontWeight.Normal)
+        // A sentence of the interface's around the key's name, so it reads in its own text's direction, not the chords'.
+        val headingStyle = chordStyle.copy(fontWeight = FontWeight.Normal, textDirection = TextDirection.Content)
         cells.mapIndexed { index, cell ->
             cell.keyName?.takeIf { index in groupStarts }?.let { key ->
                 textMeasurer.measure(AnnotatedString(keyHeading.withTexts(key)), headingStyle, maxLines = 1, softWrap = false)

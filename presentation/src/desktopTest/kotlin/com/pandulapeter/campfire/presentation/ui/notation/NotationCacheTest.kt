@@ -13,7 +13,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.HEADER
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.SYSTEM
@@ -26,7 +25,7 @@ import kotlin.test.assertSame
 /** On the desktop, since the renderings it keeps are painted with a real measurer. */
 internal class NotationCacheTest {
 
-    private val painting = NotationPainting(Density(1f), LayoutDirection.Ltr, createFontFamilyResolver(), TextStyle.Default)
+    private val painting = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)
     private val drawing = assertNotNull(parseNotationDrawing(listOf(HEADER, SYSTEM)))
     private val rendering = NotationRendering(drawing, unitSize = 1f, systems = painting.newPainter().paint(drawing, unitSize = 1f), reading = NotationReading(emptyList(), emptyList(), null))
 
