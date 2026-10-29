@@ -75,9 +75,15 @@ kotlin {
                 implementation(libs.kotlin.serialization.json)
             }
         }
+        desktopTest {
+            // The round-trip tests read the song corpus :chordpro's own round trips run over.
+            resources.srcDir(rootProject.file("chordpro/src/desktopTest/resources"))
+        }
         desktopTest.dependencies {
             // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.
             implementation(compose.desktop.currentOs)
+            // Reads the exported PDFs back as the import does, for the round trip through Campfire's own PDF.
+            implementation(project(":data:formats"))
             // Reads back the QR codes ui/share draws, as a decoder written by somebody else; nothing ships it.
             implementation(libs.zxing.core)
         }
