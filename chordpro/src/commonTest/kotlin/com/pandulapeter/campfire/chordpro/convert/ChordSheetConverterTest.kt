@@ -54,6 +54,12 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `no chord over a lyric is kept where it stands, unlike a bar line`() {
+        assertEquals("[N.C.]Stop right [G]there and [D]go\n", convert("N.C.       G         D\nStop right there and go"))
+        assertEquals("[Am]Hello [NC]world [G]again\n", convert("Am  |  NC    G\nHello world again"))
+    }
+
+    @Test
     fun `one chord is ambiguous until another line makes the context clear`() {
         assertEquals("A\nlong time ago\n", convert("A\nlong time ago"))
         assertEquals("A long time ago\nAm I\n", convert("A long time ago\nAm I"))
