@@ -1,0 +1,11 @@
+{title: Blues In A}
+{key: A}
+{time: 4/4}
+{start_of_grid: 4x4}
+| A7 . . . | D7 . . . | A7 . . . | A7 . . . |
+| D7 . . . | D7 . . . | A7 . . . | A7 . . . |
+| E7 . . . | D7 . . . | A7 . D7 . | A7 . E7 . |
+{end_of_grid}
+{start_of_verse}
+[A7]Woke up this [D7]morning
+{end_of_verse}

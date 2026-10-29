@@ -1,0 +1,47 @@
+{title: Everything At Once}
+{subtitle: Live version}
+{artist: The Testers}
+{composer: A. Composer}
+{lyricist: B. Lyricist}
+{album: Directives}
+{year: 1999}
+{key: Bb}
+{capo: 3}
+{tempo: 96}
+{time: 6/8}
+{duration: 3:45}
+{tag: folk}
+{tag: campfire}
+{language: en}
+{link: https://example.com/song}
+{copyright: 1999 Nobody}
+{meta: arranger Someone}
+
+{comment: Play softly}
+{comment_italic: with feeling}
+{comment_box: Watch the key change}
+{start_of_intro}
+[Bb]  [F]  [Gm]  [Eb]
+{end_of_intro}
+{start_of_verse}
+[Bb]One two [F]three
+{end_of_verse}
+{start_of_pre_chorus}
+[Cm]Building [F]up
+{end_of_pre_chorus}
+{start_of_chorus: Refrain}
+[Eb]Sing it [Bb]loud
+{end_of_chorus}
+{start_of_bridge}
+[Gm]Bridge [D7]line
+{end_of_bridge}
+{key: C}
+{start_of_verse: Verse 2}
+[C]Higher [G]now
+{end_of_verse}
+{start_of_solo}
+[Am]  [F]  [C]  [G]
+{end_of_solo}
+{start_of_outro}
+[C]Fade [G]out [C]
+{end_of_outro}

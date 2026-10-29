@@ -1,0 +1,9 @@
+{title: Custom Shapes}
+{key: D}
+{define: Dsus4 base-fret 1 frets x x 0 2 3 3}
+{define: A/C# base-fret 1 frets x 4 2 2 2 x}
+{define: Bm7 base-fret 2 frets x 1 3 1 2 1}
+{start_of_verse}
+[D]Hold [Dsus4]on [D]tight
+[A/C#]Walking [Bm7]down
+{end_of_verse}
