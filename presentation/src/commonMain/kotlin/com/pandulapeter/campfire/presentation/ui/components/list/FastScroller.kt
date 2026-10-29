@@ -69,7 +69,9 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.channels.Channel
@@ -193,17 +195,23 @@ internal fun FastScroller(
                     )
                     val trackColor = idleColor.copy(alpha = TRACK_ALPHA * hover)
                     val thumbWidth = THUMB_WIDTH.toPx()
+                    // The column sits at the list's end edge, and a draw scope's coordinates are not mirrored.
+                    val thumbLeft = if (layoutDirection == LayoutDirection.Rtl) {
+                        THUMB_END_PADDING.toPx()
+                    } else {
+                        size.width - thumbWidth - THUMB_END_PADDING.toPx()
+                    }
                     drawRoundRect(
                         color = trackColor,
                         alpha = alpha.value,
-                        topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = 0f),
+                        topLeft = Offset(x = thumbLeft, y = 0f),
                         size = Size(width = thumbWidth, height = size.height),
                         cornerRadius = CornerRadius(thumbWidth / 2),
                     )
                     drawRoundRect(
                         color = thumbColor,
                         alpha = alpha.value,
-                        topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = state.thumbTop),
+                        topLeft = Offset(x = thumbLeft, y = state.thumbTop),
                         size = Size(width = thumbWidth, height = state.thumbHeight),
                         cornerRadius = CornerRadius(thumbWidth / 2),
                     )
@@ -212,7 +220,11 @@ internal fun FastScroller(
         // The label is level with the thumb, at the same height as the finger on it, clamped into the track near its end.
         // It is a pill reaching out of the thumb with the letter at its far end, under the last button of the app bar's
         // pill, since a finger on a touch screen covers more than its own width of the screen around the thumb; it is
-        // wider than the touch column, so it is measured without the column's width.
+        // wider than the touch column, so it is measured without the column's width. It grows out of the thumb's side.
+        val bubbleTransformOrigin = TransformOrigin(
+            pivotFractionX = if (LocalLayoutDirection.current == LayoutDirection.Rtl) 0f else 1f,
+            pivotFractionY = 0.5f,
+        )
         AnimatedVisibility(
             visible = state.isDragging && label != null,
             modifier = Modifier
@@ -225,9 +237,9 @@ internal fun FastScroller(
                     )
                 }
                 .wrapContentWidth(align = Alignment.End, unbounded = true),
-            enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
+            enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = bubbleTransformOrigin) +
                     fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
-            exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
+            exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = bubbleTransformOrigin) +
                     fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
         ) {
             var lastLabel by remember { mutableStateOf(label.orEmpty()) }
@@ -541,6 +553,5 @@ private val BUBBLE_GAP = 4.dp
 /** As wide as it takes to center the letter, in the round end of the pill, under the app bar pill's last button. */
 private val BUBBLE_WIDTH = CLOSED_PILL_LAST_ACTION_END_INSET - THUMB_END_PADDING - THUMB_WIDTH - BUBBLE_GAP + BUBBLE_HEIGHT / 2
 private val BUBBLE_ELEVATION = 3.dp
-private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
 private const val TRACK_ALPHA = 0.12f
