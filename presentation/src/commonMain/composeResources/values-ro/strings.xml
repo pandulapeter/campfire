@@ -41,39 +41,48 @@
     <string name="import_status_unknown_failure">Importul nu s-a putut încheia. Verifică biblioteca înainte să încerci din nou.</string>
     <plurals name="import_status_songs">
         <item quantity="one">%1$d cântec importat</item>
-        <item quantity="other">%1$d cântece importate</item>
+        <item quantity="few">%1$d cântece importate</item>
+        <item quantity="other">%1$d de cântece importate</item>
     </plurals>
     <plurals name="import_status_setlists">
         <item quantity="one">%1$d listă importată</item>
-        <item quantity="other">%1$d liste importate</item>
+        <item quantity="few">%1$d liste importate</item>
+        <item quantity="other">%1$d de liste importate</item>
     </plurals>
     <plurals name="import_status_duplicates">
         <item quantity="one">%1$d fișier deja în bibliotecă</item>
-        <item quantity="other">%1$d fișiere deja în bibliotecă</item>
+        <item quantity="few">%1$d fișiere deja în bibliotecă</item>
+        <item quantity="other">%1$d de fișiere deja în bibliotecă</item>
     </plurals>
     <plurals name="import_status_left_out">
         <item quantity="one">%1$d fișier omis la alegerea ta</item>
-        <item quantity="other">%1$d fișiere omise la alegerea ta</item>
+        <item quantity="few">%1$d fișiere omise la alegerea ta</item>
+        <item quantity="other">%1$d de fișiere omise la alegerea ta</item>
     </plurals>
     <plurals name="import_status_skipped">
         <item quantity="one">%1$d fișier neacceptat sau nevalid</item>
-        <item quantity="other">%1$d fișiere neacceptate sau nevalide</item>
+        <item quantity="few">%1$d fișiere neacceptate sau nevalide</item>
+        <item quantity="other">%1$d de fișiere neacceptate sau nevalide</item>
     </plurals>
     <plurals name="import_status_oversized">
         <item quantity="one">%1$d fișier peste limita de mărime a importului</item>
-        <item quantity="other">%1$d fișiere peste limita de mărime a importului</item>
+        <item quantity="few">%1$d fișiere peste limita de mărime a importului</item>
+        <item quantity="other">%1$d de fișiere peste limita de mărime a importului</item>
     </plurals>
     <plurals name="import_status_unreadable">
         <item quantity="one">%1$d document fără text lizibil</item>
-        <item quantity="other">%1$d documente fără text lizibil</item>
+        <item quantity="few">%1$d documente fără text lizibil</item>
+        <item quantity="other">%1$d de documente fără text lizibil</item>
     </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d fișier care nu a putut fi importat</item>
-        <item quantity="other">%1$d fișiere care nu au putut fi importate</item>
+        <item quantity="few">%1$d fișiere care nu au putut fi importate</item>
+        <item quantity="other">%1$d de fișiere care nu au putut fi importate</item>
     </plurals>
     <plurals name="import_status_unprocessed">
         <item quantity="one">%1$d fișier neprocesat</item>
-        <item quantity="other">%1$d fișiere neprocesate</item>
+        <item quantity="few">%1$d fișiere neprocesate</item>
+        <item quantity="other">%1$d de fișiere neprocesate</item>
     </plurals>
     <string name="import_report_search">Caută fișiere</string>
     <string name="import_files_empty">Niciun fișier potrivit</string>
@@ -84,34 +93,41 @@
     <string name="import_details">Detalii</string>
     <plurals name="import_replace_title">
         <item quantity="one">Înlocuiești %1$d fișier?</item>
-        <item quantity="other">Înlocuiești %1$d fișiere?</item>
+        <item quantity="few">Înlocuiești %1$d fișiere?</item>
+        <item quantity="other">Înlocuiești %1$d de fișiere?</item>
     </plurals>
     <plurals name="import_replace_message">
         <item quantity="one">Fișierul din bibliotecă va fi suprascris. Acțiunea nu poate fi anulată.</item>
+        <item quantity="few">Fișierele din bibliotecă vor fi suprascrise. Acțiunea nu poate fi anulată.</item>
         <item quantity="other">Fișierele din bibliotecă vor fi suprascrise. Acțiunea nu poate fi anulată.</item>
     </plurals>
     <string name="import_files">Importă fișiere</string>
     <plurals name="import_result_songs">
         <item quantity="one">%1$d cântec importat</item>
-        <item quantity="other">%1$d cântece importate</item>
+        <item quantity="few">%1$d cântece importate</item>
+        <item quantity="other">%1$d de cântece importate</item>
     </plurals>
     <plurals name="import_result_setlists">
         <item quantity="one">%1$d listă importată</item>
-        <item quantity="other">%1$d liste importate</item>
+        <item quantity="few">%1$d liste importate</item>
+        <item quantity="other">%1$d de liste importate</item>
     </plurals>
     <plurals name="import_result_already_there">
         <item quantity="one">%1$d deja în bibliotecă</item>
+        <item quantity="few">%1$d deja în bibliotecă</item>
         <item quantity="other">%1$d deja în bibliotecă</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d omis</item>
+        <item quantity="few">%1$d omise</item>
         <item quantity="other">%1$d omise</item>
     </plurals>
     <string name="import_result_nothing">Nu s-a importat nimic</string>
     <string name="import_converted">Convertite: %1$d — merită o privire în editor.</string>
     <plurals name="import_unreadable_documents">
         <item quantity="one">Un document nu are text pe care Campfire să-l poată citi (o scanare, un PDF protejat sau un format Word vechi).</item>
-        <item quantity="other">%1$d documente nu au text pe care Campfire să-l poată citi (scanări, PDF-uri protejate sau un format Word vechi).</item>
+        <item quantity="few">%1$d documente nu au text pe care Campfire să-l poată citi (scanări, PDF-uri protejate sau un format Word vechi).</item>
+        <item quantity="other">%1$d de documente nu au text pe care Campfire să-l poată citi (scanări, PDF-uri protejate sau un format Word vechi).</item>
     </plurals>
     <string name="import_failed">Importul a eșuat</string>
     <string name="import_interrupted">Importul a fost întrerupt. Deschide din nou fișierele pentru a le importa.</string>
@@ -125,15 +141,18 @@
     <string name="export_too_large_to_import">Arhiva depășește cei 24 MB pe care Campfire îi poate importa deodată. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă cântecele câteva mii o dată.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un fișier nu a putut fi citit și nu este în arhivă: %2$s</item>
-        <item quantity="other">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
+        <item quantity="few">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
+        <item quantity="other">%1$d de fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
     </plurals>
     <plurals name="import_review_skipped">
         <item quantity="one">Un fișier nu este nici cântec, nici listă și nu poate fi importat.</item>
-        <item quantity="other">%1$d fișiere nu sunt nici cântece, nici liste și nu pot fi importate.</item>
+        <item quantity="few">%1$d fișiere nu sunt nici cântece, nici liste și nu pot fi importate.</item>
+        <item quantity="other">%1$d de fișiere nu sunt nici cântece, nici liste și nu pot fi importate.</item>
     </plurals>
     <plurals name="import_oversized">
         <item quantity="one">Un fișier este prea mare și nu poate fi importat.</item>
-        <item quantity="other">%1$d fișiere sunt prea mari și nu pot fi importate.</item>
+        <item quantity="few">%1$d fișiere sunt prea mari și nu pot fi importate.</item>
+        <item quantity="other">%1$d de fișiere sunt prea mari și nu pot fi importate.</item>
     </plurals>
     <string name="import_conflicts_keep_both">Păstrează ambele</string>
     <string name="import_conflicts_keep_both_description">Importă-le lângă fișierele cu care se suprapun, numerotate „_2”</string>
@@ -154,7 +173,8 @@
     <string name="import_review_title_empty">Nimic de importat</string>
     <plurals name="import_review_from_files">
         <item quantity="one">Din %1$d fișier</item>
-        <item quantity="other">Din %1$d fișiere</item>
+        <item quantity="few">Din %1$d fișiere</item>
+        <item quantity="other">Din %1$d de fișiere</item>
     </plurals>
     <string name="import_review_from">Din %1$s</string>
     <string name="import_warning_songs_off">Cântecele sunt dezactivate în Setări, așa că nimic din ce imporți aici nu va apărea până nu le reactivezi.</string>
@@ -162,47 +182,56 @@
     <string name="import_review_demo_library">Bibliotecă demonstrativă</string>
     <plurals name="import_review_shared_updates">
         <item quantity="one">Un fișier importat anterior din acest link este actualizat la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
-        <item quantity="other">%1$d fișiere importate anterior din acest link sunt actualizate la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
+        <item quantity="few">%1$d fișiere importate anterior din acest link sunt actualizate la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
+        <item quantity="other">%1$d de fișiere importate anterior din acest link sunt actualizate la versiunea partajată. Alege Păstrează ambele ca să-ți păstrezi modificările.</item>
     </plurals>
     <plurals name="import_review_confirm">
         <item quantity="one">Importă %1$d fișier</item>
-        <item quantity="other">Importă %1$d fișiere</item>
+        <item quantity="few">Importă %1$d fișiere</item>
+        <item quantity="other">Importă %1$d de fișiere</item>
     </plurals>
     <string name="import_review_summary_counts">Cântece de importat: %1$d · Liste: %2$d</string>
     <string name="import_review_name_taken_counts">Nume ocupate: Înlocuiește %1$d · Păstrează ambele %2$d</string>
     <plurals name="import_review_already_there">
         <item quantity="one">Unul este deja în bibliotecă și rămâne neatins</item>
+        <item quantity="few">%1$d sunt deja în bibliotecă și rămân neatinse</item>
         <item quantity="other">%1$d sunt deja în bibliotecă și rămân neatinse</item>
     </plurals>
     <string name="import_review_left_out_count">Omise de tine: %1$d</string>
     <string name="import_review_tags">Etichete pentru cântecele importate</string>
     <plurals name="import_review_tags_subtitle">
         <item quantity="one">Adăugate singurului cântec scris de acest import</item>
-        <item quantity="other">Adăugate celor %1$d cântece scrise de acest import</item>
+        <item quantity="few">Adăugate celor %1$d cântece scrise de acest import</item>
+        <item quantity="other">Adăugate celor %1$d de cântece scrise de acest import</item>
     </plurals>
     <plurals name="import_review_conflicts">
         <item quantity="one">%1$d nume deja ocupat</item>
-        <item quantity="other">%1$d nume deja ocupate</item>
+        <item quantity="few">%1$d nume deja ocupate</item>
+        <item quantity="other">%1$d de nume deja ocupate</item>
     </plurals>
     <plurals name="import_review_songs">
         <item quantity="one">%1$d cântec</item>
-        <item quantity="other">%1$d cântece</item>
+        <item quantity="few">%1$d cântece</item>
+        <item quantity="other">%1$d de cântece</item>
     </plurals>
     <plurals name="import_review_setlists">
         <item quantity="one">%1$d listă</item>
-        <item quantity="other">%1$d liste</item>
+        <item quantity="few">%1$d liste</item>
+        <item quantity="other">%1$d de liste</item>
     </plurals>
     <string name="import_review_will_be_numbered">Va fi numerotat lângă cel pe care îl ai</string>
     <string name="import_review_will_replace">Îl va înlocui pe cel pe care îl ai: %1$s</string>
     <string name="import_review_show_library_song">Arată-l pe cel pe care îl ai</string>
     <plurals name="import_review_setlist_songs">
         <item quantity="one">Un cântec</item>
-        <item quantity="other">%1$d cântece</item>
+        <item quantity="few">%1$d cântece</item>
+        <item quantity="other">%1$d de cântece</item>
     </plurals>
     <string name="import_review_setlist_songs_in_import">%1$d dintre ele în acest import</string>
     <plurals name="import_review_repeated">
         <item quantity="one">Apare o dată în fișiere</item>
-        <item quantity="other">Apare de %1$d ori în fișiere</item>
+        <item quantity="few">Apare de %1$d ori în fișiere</item>
+        <item quantity="other">Apare de %1$d de ori în fișiere</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Previzualizare: încă nu e în bibliotecă</string>
@@ -280,19 +309,23 @@
     <string name="songs_share_songs">Partajează cântecele</string>
     <plurals name="songs_selection_done">
         <item quantity="one">Gata, %1$d cântec selectat</item>
-        <item quantity="other">Gata, %1$d cântece selectate</item>
+        <item quantity="few">Gata, %1$d cântece selectate</item>
+        <item quantity="other">Gata, %1$d de cântece selectate</item>
     </plurals>
     <plurals name="songs_selection_count">
         <item quantity="one">%1$d cântec</item>
-        <item quantity="other">%1$d cântece</item>
+        <item quantity="few">%1$d cântece</item>
+        <item quantity="other">%1$d de cântece</item>
     </plurals>
     <plurals name="songs_selection_updated">
         <item quantity="one">%1$d cântec actualizat</item>
-        <item quantity="other">%1$d cântece actualizate</item>
+        <item quantity="few">%1$d cântece actualizate</item>
+        <item quantity="other">%1$d de cântece actualizate</item>
     </plurals>
     <plurals name="songs_selection_failed">
         <item quantity="one">%1$d cântec nu a putut fi actualizat</item>
-        <item quantity="other">%1$d cântece nu au putut fi actualizate</item>
+        <item quantity="few">%1$d cântece nu au putut fi actualizate</item>
+        <item quantity="other">%1$d de cântece nu au putut fi actualizate</item>
     </plurals>
     <string name="songs_all_hidden">Toate cântecele sunt ascunse</string>
     <string name="songs_all_hidden_hint">Filtrele ascund întreaga bibliotecă.</string>
@@ -350,11 +383,13 @@
     <string name="setlists_countdown_yesterday">Ieri</string>
     <plurals name="setlists_countdown_in_days">
         <item quantity="one">Peste %1$d zi</item>
-        <item quantity="other">Peste %1$d zile</item>
+        <item quantity="few">Peste %1$d zile</item>
+        <item quantity="other">Peste %1$d de zile</item>
     </plurals>
     <plurals name="setlists_countdown_days_ago">
         <item quantity="one">Acum %1$d zi</item>
-        <item quantity="other">Acum %1$d zile</item>
+        <item quantity="few">Acum %1$d zile</item>
+        <item quantity="other">Acum %1$d de zile</item>
     </plurals>
     <!-- A setlist's total duration, as a show's length is named: how long its songs take to play. -->
     <string name="setlists_total_duration">Durată totală: %1$s</string>
@@ -633,7 +668,8 @@
     <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
     <plurals name="tuner_cents">
         <item quantity="one">%1$s cent</item>
-        <item quantity="other">%1$s cenți</item>
+        <item quantity="few">%1$s cenți</item>
+        <item quantity="other">%1$s de cenți</item>
     </plurals>
     <string name="tuner_in_tune">Acordat</string>
     <string name="tuner_flat">Prea jos</string>
@@ -641,11 +677,13 @@
     <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
     <plurals name="tuner_reading_flat">
         <item quantity="one">%1$s, cu %2$d cent prea jos</item>
-        <item quantity="other">%1$s, cu %2$d cenți prea jos</item>
+        <item quantity="few">%1$s, cu %2$d cenți prea jos</item>
+        <item quantity="other">%1$s, cu %2$d de cenți prea jos</item>
     </plurals>
     <plurals name="tuner_reading_sharp">
         <item quantity="one">%1$s, cu %2$d cent prea sus</item>
-        <item quantity="other">%1$s, cu %2$d cenți prea sus</item>
+        <item quantity="few">%1$s, cu %2$d cenți prea sus</item>
+        <item quantity="other">%1$s, cu %2$d de cenți prea sus</item>
     </plurals>
     <string name="tuner_reading_in_tune">%1$s, acordat</string>
     <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
@@ -980,7 +1018,8 @@
     <string name="song_details_playing_override_reset">Resetează</string>
     <plurals name="song_details_playing_key_transposed">
         <item quantity="one">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s semiton când cântecul este afișat.</item>
-        <item quantity="other">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s semitonuri când cântecul este afișat.</item>
+        <item quantity="few">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s semitonuri când cântecul este afișat.</item>
+        <item quantity="other">Tonalitatea în care sunt scrise acordurile. Fișierul le mută cu %1$s de semitonuri când cântecul este afișat.</item>
     </plurals>
     <string name="song_details_playing_tempo">Tempo (BPM)</string>
     <string name="song_details_playing_range">de la %1$d la %2$d</string>
@@ -1089,7 +1128,8 @@
     <string name="song_details_chord_defined">Definit în acest cântec</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Definit în acest cântec, mutat cu %1$d tastă</item>
-        <item quantity="other">Definit în acest cântec, mutat cu %1$d taste</item>
+        <item quantity="few">Definit în acest cântec, mutat cu %1$d taste</item>
+        <item quantity="other">Definit în acest cântec, mutat cu %1$d de taste</item>
     </plurals>
     <string name="song_details_timing">De aici: %1$s</string>
     <string name="song_details_composer">Compozitor</string>
@@ -1119,16 +1159,19 @@
     <string name="settings_sync_last_synced_moments_ago">Ultima sincronizare reușită: acum câteva clipe</string>
     <plurals name="settings_sync_last_synced_minutes_ago">
         <item quantity="one">Ultima sincronizare reușită: acum un minut</item>
-        <item quantity="other">Ultima sincronizare reușită: acum %1$d minute</item>
+        <item quantity="few">Ultima sincronizare reușită: acum %1$d minute</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d de minute</item>
     </plurals>
     <plurals name="settings_sync_last_synced_hours_ago">
         <item quantity="one">Ultima sincronizare reușită: acum o oră</item>
-        <item quantity="other">Ultima sincronizare reușită: acum %1$d ore</item>
+        <item quantity="few">Ultima sincronizare reușită: acum %1$d ore</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d de ore</item>
     </plurals>
     <string name="settings_sync_last_synced_yesterday">Ultima sincronizare reușită: ieri</string>
     <plurals name="settings_sync_last_synced_days_ago">
         <item quantity="one">Ultima sincronizare reușită: acum %1$d zi</item>
-        <item quantity="other">Ultima sincronizare reușită: acum %1$d zile</item>
+        <item quantity="few">Ultima sincronizare reușită: acum %1$d zile</item>
+        <item quantity="other">Ultima sincronizare reușită: acum %1$d de zile</item>
     </plurals>
     <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
     <string name="settings_sync_failed_network">Serviciul nu poate fi accesat. Campfire va încerca din nou data viitoare.</string>
@@ -1138,12 +1181,14 @@
     <string name="settings_sync_failed_remote_full">Dosarul din cloud este plin, așa că nu se mai poate încărca nimic. Eliberează spațiu acolo și sincronizează din nou.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Un fișier nu a putut fi sincronizat: %2$s</item>
-        <item quantity="other">%1$d fișiere nu au putut fi sincronizate. Printre ele: %2$s</item>
+        <item quantity="few">%1$d fișiere nu au putut fi sincronizate. Printre ele: %2$s</item>
+        <item quantity="other">%1$d de fișiere nu au putut fi sincronizate. Printre ele: %2$s</item>
     </plurals>
     <string name="settings_sync_preferences_failed">Setările cântecelor (transpunere, capodastru și tempo) nu au putut fi sincronizate. Campfire va încerca din nou data viitoare.</string>
     <plurals name="settings_sync_conflicts">
         <item quantity="one">Au fost păstrate ambele versiuni ale unui fișier modificat în două locuri: %2$s</item>
-        <item quantity="other">Au fost păstrate ambele versiuni pentru %1$d fișiere modificate în două locuri. Printre ele: %2$s</item>
+        <item quantity="few">Au fost păstrate ambele versiuni pentru %1$d fișiere modificate în două locuri. Printre ele: %2$s</item>
+        <item quantity="other">Au fost păstrate ambele versiuni pentru %1$d de fișiere modificate în două locuri. Printre ele: %2$s</item>
     </plurals>
 
     <string name="settings_sync_cancel">Oprește sincronizarea</string>
@@ -1152,12 +1197,14 @@
     <string name="settings_sync_interrupted">Ultima sincronizare a fost oprită înainte să se încheie. Tot ce fusese deja transferat a fost păstrat.</string>
     <plurals name="settings_sync_deletions_pending">
         <item quantity="one">Fișierul sincronizat a dispărut din dosarul din cloud. Îl ștergi și de aici sau îl păstrezi și îl încarci din nou?</item>
+        <item quantity="few">%1$d din cele %2$d fișiere sincronizate au dispărut din dosarul din cloud. Le ștergi și de aici sau le păstrezi și le încarci din nou?</item>
         <item quantity="other">%1$d din cele %2$d fișiere sincronizate au dispărut din dosarul din cloud. Le ștergi și de aici sau le păstrezi și le încarci din nou?</item>
     </plurals>
     <string name="settings_sync_delete_locally">Șterge-le și de aici</string>
     <string name="settings_sync_keep_and_upload">Păstrează și încarcă</string>
     <plurals name="settings_sync_remote_deletions_pending">
         <item quantity="one">Fișierul sincronizat a dispărut de pe acest dispozitiv. Îl ștergi și din dosarul din cloud sau îl păstrezi și îl descarci din nou?</item>
+        <item quantity="few">%1$d din cele %2$d fișiere sincronizate au dispărut de pe acest dispozitiv. Le ștergi și din dosarul din cloud sau le păstrezi și le descarci din nou?</item>
         <item quantity="other">%1$d din cele %2$d fișiere sincronizate au dispărut de pe acest dispozitiv. Le ștergi și din dosarul din cloud sau le păstrezi și le descarci din nou?</item>
     </plurals>
     <string name="settings_sync_delete_remotely">Șterge-le și din cloud</string>
@@ -1226,15 +1273,18 @@
     <string name="print_files_song_description">Versuri și acorduri ca text simplu, care rămâne editabil și transpozabil, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">Singurul cântec al listei ca fișier ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
-        <item quantity="other">Cele %1$d cântece ale listei ca fișiere ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
+        <item quantity="few">Cele %1$d cântece ale listei ca fișiere ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
+        <item quantity="other">Cele %1$d de cântece ale listei ca fișiere ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
     </plurals>
     <plurals name="print_files_songs_description">
         <item quantity="one">%1$d cântec ca fișier ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
-        <item quantity="other">%1$d cântece ca fișiere ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
+        <item quantity="few">%1$d cântece ca fișiere ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
+        <item quantity="other">%1$d de cântece ca fișiere ChordPro, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</item>
     </plurals>
     <plurals name="print_files_missing">
         <item quantity="one">%1$d cântec lipsește sau nu poate fi citit și este omis.</item>
-        <item quantity="other">%1$d cântece lipsesc sau nu pot fi citite și sunt omise.</item>
+        <item quantity="few">%1$d cântece lipsesc sau nu pot fi citite și sunt omise.</item>
+        <item quantity="other">%1$d de cântece lipsesc sau nu pot fi citite și sunt omise.</item>
     </plurals>
     <string name="print_section_page">Pagină</string>
     <string name="print_a4">A4</string>
@@ -1324,7 +1374,8 @@
     <string name="settings_sharing_stop_all">Oprește toate partajările</string>
     <plurals name="settings_sharing_stop_all_confirmation">
         <item quantity="one">Oprești partajarea pentru %1$d element? Linkul lui nu va mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
-        <item quantity="other">Oprești partajarea pentru toate cele %1$d elemente? Linkurile lor nu vor mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
+        <item quantity="few">Oprești partajarea pentru toate cele %1$d elemente? Linkurile lor nu vor mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
+        <item quantity="other">Oprești partajarea pentru toate cele %1$d de elemente? Linkurile lor nu vor mai funcționa pentru nimeni și nici linkurile rămase de la partajările eșuate. Copiile deja importate rămân ale celor care le-au importat.</item>
     </plurals>
     <string name="share_stop_all_failed">Nu toate partajările au putut fi oprite. Linkurile încă afișate funcționează în continuare.</string>
     <string name="share_stop_all_failed_network">Pentru a opri partajările e nevoie de o conexiune la Dropbox. Linkurile încă afișate funcționează în continuare.</string>
