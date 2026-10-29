@@ -9,13 +9,19 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.math.ceil
 
 /**
  * Returns a copy of the line where every piece of lyrics that sits under a chord is at least as wide as the chord
- * (plus [gap]), by appending non-breaking spaces, each [paddingWidth] wide, to it. Chord positions are updated to point
- * into the padded lyrics.
+ * (plus [gap]), by appending padding ([chordPaddingAfter]: non-breaking spaces), each [paddingWidth] wide, to it. Chord
+ * positions are updated to point into the padded lyrics.
+ *
+ * [paragraphDirection] is that of the paragraph the line is laid out in, where a bidirectional layout places its
+ * characters: a piece read the other way (a Latin word in a Hebrew line) has its padding closed in by marks of its own
+ * direction ([bidiMarkFor]), so the gap opens on the side its chord hangs to. Null where the caller draws every piece
+ * left to right itself, as the PDF's rows do.
  *
  * The padded line may only wrap between two chords, and only where the original text has a word boundary: the
  * whitespace at either end of a padded piece is made non-breaking too, so that a chord, the space it sits on and the
@@ -35,32 +41,43 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
     gap: Float,
     paddingWidth: Float,
     measureWidth: (String) -> Float,
+    paragraphDirection: WritingDirection?,
     marksPadding: Boolean = false,
 ): ChordProLine.Lyrics {
     val paddedLyrics = StringBuilder(text.substring(0, chords.first().position))
-    fun pad(count: Int) {
-        if (marksPadding && count > 0) paddedLyrics.append(PADDING_MARK)
-        repeat(count) { paddedLyrics.append(PADDING) }
-    }
-    // Where each piece of the text starts in the padded one, so that the formatting can be moved with it.
+    // Where each piece of the text starts in the padded one, so that the formatting can be moved with it, and where in the
+    // piece a direction mark went in, if one did.
     val pieceStarts = IntArray(chords.size)
+    val markOffsets = IntArray(chords.size) { -1 }
     val paddedChords = chords.mapIndexed { index, chord ->
         val end = chords.getOrNull(index + 1)?.position ?: text.length
         val fragment = text.substring(chord.position, end)
         val paddedChord = chord.copy(position = paddedLyrics.length)
         pieceStarts[index] = paddedLyrics.length
         val missingWidth = chordWidths[index] + gap - measureWidth(fragment)
+        val paddingCount = if (missingWidth > 0 && paddingWidth > 0) ceil(missingWidth / paddingWidth).toInt() else 0
         val isBeforeMark = chords.getOrNull(index + 1)?.isMark == true
-        if (isBeforeMark) {
-            fragment.forEach { paddedLyrics.append(if (it.isWhitespace()) PADDING else it) }
-            if (missingWidth > 0 && paddingWidth > 0) pad(ceil(missingWidth / paddingWidth).toInt())
-        } else if (missingWidth > 0 && paddingWidth > 0) {
+        if (isBeforeMark || paddingCount > 0) {
             val innerStart = fragment.indexOfFirst { !it.isWhitespace() }.let { if (it < 0) fragment.length else it }
             val innerEnd = fragment.indexOfLast { !it.isWhitespace() } + 1
-            repeat(innerStart) { paddedLyrics.append(PADDING) }
-            if (innerEnd > innerStart) paddedLyrics.append(fragment, innerStart, innerEnd)
-            repeat(fragment.length - maxOf(innerStart, innerEnd)) { paddedLyrics.append(PADDING) }
-            pad(ceil(missingWidth / paddingWidth).toInt())
+            // The mark goes right after the piece's last letter rather than after its trailing spaces: a space between a
+            // number and the mark would still be neutral between two directions, and take the paragraph's.
+            val bidiMark = if (paddingCount > 0 && paragraphDirection != null) bidiMarkFor(fragment, paragraphDirection) else null
+            fragment.forEachIndexed { characterIndex, character ->
+                if (characterIndex == innerEnd && bidiMark != null) paddedLyrics.append(bidiMark)
+                // Only the spaces at either end of a piece are made non-breaking, except before a mark, which no space of
+                // the piece may be sent off from.
+                val isEdgeSpace = isBeforeMark || characterIndex < innerStart || characterIndex >= innerEnd
+                paddedLyrics.append(if (character.isWhitespace() && isEdgeSpace) PADDING else character)
+            }
+            if (innerEnd == fragment.length && bidiMark != null) paddedLyrics.append(bidiMark)
+            if (bidiMark != null) markOffsets[index] = innerEnd
+            if (paddingCount > 0) {
+                if (marksPadding) paddedLyrics.append(PADDING_MARK)
+                val paddingCharacter = chordPaddingAfter(fragment.lastOrNull()?.code ?: 0)
+                repeat(paddingCount) { paddedLyrics.append(paddingCharacter) }
+            }
+            if (bidiMark != null) paddedLyrics.append(bidiMark)
         } else {
             paddedLyrics.append(fragment)
         }
@@ -72,7 +89,10 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
         text = paddedLyrics.toString(),
         chords = paddedChords,
         formatting = formatting.map { range ->
-            range.copy(start = paddedOffset(range.start, pieceStarts, isEnd = false), end = paddedOffset(range.end, pieceStarts, isEnd = true))
+            range.copy(
+                start = paddedOffset(range.start, pieceStarts, markOffsets, isEnd = false),
+                end = paddedOffset(range.end, pieceStarts, markOffsets, isEnd = true),
+            )
         },
     )
 }
@@ -80,15 +100,20 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
 /**
  * Where [offset] of the text stands in the padded one, whose pieces start at [pieceStarts]. An offset at the end of a
  * piece is both its end and the next one's start: the end of a range stops before the padding, which is not part of the
- * text it formats, and the start of one comes after it.
+ * text it formats, and the start of one comes after it. A direction mark the piece got at [markOffsets] moves what follows
+ * it by one, and an end at the mark stops before it.
  */
-private fun ChordProLine.Lyrics.paddedOffset(offset: Int, pieceStarts: IntArray, isEnd: Boolean): Int {
+private fun ChordProLine.Lyrics.paddedOffset(offset: Int, pieceStarts: IntArray, markOffsets: IntArray, isEnd: Boolean): Int {
     var piece = -1
     for (index in chords.indices) {
         val position = chords[index].position
         if (if (isEnd) position < offset else position <= offset) piece = index else break
     }
-    return if (piece < 0) offset else pieceStarts[piece] + offset - chords[piece].position
+    if (piece < 0) return offset
+    val pieceOffset = offset - chords[piece].position
+    val markOffset = markOffsets[piece]
+    val isAfterMark = markOffset >= 0 && (pieceOffset > markOffset || pieceOffset == markOffset && !isEnd)
+    return pieceStarts[piece] + pieceOffset + if (isAfterMark) 1 else 0
 }
 
 /**

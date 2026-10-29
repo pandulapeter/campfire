@@ -32,13 +32,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * The lyrics are laid out with a line height that leaves room above every (wrapped) line for the chords,
@@ -46,7 +46,8 @@ import kotlin.math.min
  * Whenever a chord is wider than the piece of lyrics beneath it, that piece is padded with non-breaking spaces so
  * that consecutive chords never overlap and the line wraps before the chords would run off the edge.
  * The chords are kept apart in the direction the line runs: a line whose content is right to left is drawn from the
- * right edge leftwards, and a chord then hangs to the left of the character it belongs to.
+ * right edge leftwards. Each chord hangs from its character in the direction of the run it lands in ([chordLeft]), so in
+ * a right-to-left line a chord hangs to the left of a Hebrew letter and to the right of a Latin one.
  */
 @Composable
 internal fun SongLineWithChords(
@@ -59,12 +60,14 @@ internal fun SongLineWithChords(
     val annotationColor = MaterialTheme.colorScheme.onSurfaceVariant
     val change = LocalSongChange.current
     val chordLayouts = remember(line, textMeasurements) { line.chords.map(textMeasurements::chordLayout) }
-    val paddedLine = remember(line, textMeasurements, density) {
+    val paragraphDirection = if (lyricsStyle.textDirection == TextDirection.Rtl) WritingDirection.RIGHT_TO_LEFT else WritingDirection.LEFT_TO_RIGHT
+    val paddedLine = remember(line, textMeasurements, density, paragraphDirection) {
         line.padLyricsToFitChords(
             chordWidths = chordLayouts.map { it.size.width.toFloat() },
             gap = with(density) { CHORD_GAP.toPx() },
             paddingWidth = textMeasurements.paddingWidth,
             measureWidth = textMeasurements::fragmentWidth,
+            paragraphDirection = paragraphDirection,
         )
     }
     val paddedText = remember(paddedLine) { paddedLine.formattedText() }
@@ -112,27 +115,34 @@ internal fun SongLineWithChords(
                         val offset = chord.position.coerceIn(0, textLength)
                         val lineIndex = layout.getLineForOffset(offset)
                         // A right to left paragraph is laid out from the right edge leftwards, so x falls as the offset
-                        // grows and the chords have to be kept apart the other way. The paragraph's direction rather than
-                        // that of the run the chord lands in, since "further along the line" is the paragraph's to say: two
-                        // chords of one line answering differently would be drawn on top of each other.
+                        // grows and the chords have to be kept apart the other way.
                         val isRightToLeft = layout.getParagraphDirection(offset) == ResolvedTextDirection.Rtl
                         if (lineIndex != previousLineIndex) {
                             previousLineIndex = lineIndex
                             previousChordEdge = if (isRightToLeft) size.width else 0f
                         }
                         val chordWidth = chordLayout.size.width
-                        val maxX = max(0f, size.width - chordWidth)
-                        val position = layout.getHorizontalPosition(offset, usePrimaryDirection = true)
-                        // Kept inside the line where that leaves the chord before it alone; where it cannot, the chord stays
-                        // where it belongs and what reaches past the edge is clipped, since a chord drawn over another one
-                        // cannot be read at all.
-                        val x = if (isRightToLeft) {
-                            // The chord hangs to the left of its character, the way it hangs to the right of it in a line
-                            // that runs the other way, so the position is its right edge.
-                            min(previousChordEdge - chordWidth, max(min(position, previousChordEdge) - chordWidth, 0f))
+                        val isRunRightToLeft = if (offset < textLength) {
+                            layout.getBidiRunDirection(offset) == ResolvedTextDirection.Rtl
                         } else {
-                            max(previousChordEdge, min(max(position, previousChordEdge), maxX))
+                            isRightToLeft
                         }
+                        // Where the run reads the paragraph's way, the caret position is the character's starting edge. Where
+                        // it reads the other way, the caret at a run boundary stands with the run before, so the character's
+                        // own box says where it starts.
+                        val anchor = if (isRunRightToLeft == isRightToLeft) {
+                            layout.getHorizontalPosition(offset, usePrimaryDirection = true)
+                        } else {
+                            layout.getBoundingBox(offset).let { if (isRunRightToLeft) it.right else it.left }
+                        }
+                        val x = chordLeft(
+                            anchor = anchor,
+                            chordWidth = chordWidth.toFloat(),
+                            rowWidth = size.width,
+                            previousChordEdge = previousChordEdge,
+                            isRunRightToLeft = isRunRightToLeft,
+                            isLineRightToLeft = isRightToLeft,
+                        )
                         drawText(
                             textLayoutResult = chordLayout,
                             color = if (chord.isAnnotation) annotationColor else chordColor,

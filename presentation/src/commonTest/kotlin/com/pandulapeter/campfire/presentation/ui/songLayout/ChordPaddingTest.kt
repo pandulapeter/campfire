@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
@@ -37,17 +38,19 @@ class ChordPaddingTest {
     }
 
     /** Every character is 10 wide, and every chord [chordWidth], the gap included. */
-    private fun ChordProLine.Lyrics.padded(chordWidth: Float = 45f) = padLyricsToFitChords(
-        chordWidths = chords.map { chordWidth },
-        gap = 0f,
-        paddingWidth = 10f,
-        measureWidth = { it.length * 10f },
-    )
+    private fun ChordProLine.Lyrics.padded(chordWidth: Float = 45f, paragraphDirection: WritingDirection? = WritingDirection.LEFT_TO_RIGHT) =
+        padLyricsToFitChords(
+            chordWidths = chords.map { chordWidth },
+            gap = 0f,
+            paddingWidth = 10f,
+            measureWidth = { it.length * 10f },
+            paragraphDirection = paragraphDirection,
+        )
 
     @Test
     fun `marked padding opens each run of padding with a mark and leaves the text's own spaces unmarked`() {
         fun ChordProLine.Lyrics.padded(marksPadding: Boolean) =
-            padLyricsToFitChords(chordWidths = listOf(70f, 10f), gap = 0f, paddingWidth = 10f, measureWidth = { it.length * 10f }, marksPadding = marksPadding)
+            padLyricsToFitChords(chordWidths = listOf(70f, 10f), gap = 0f, paddingWidth = 10f, measureWidth = { it.length * 10f }, paragraphDirection = null, marksPadding = marksPadding)
         val line = lyrics("[Am]is a [C]house")
         assertEquals("is a\u00A0\u2060\u00A0\u00A0\u200Bhouse", line.padded(marksPadding = true).text)
         assertEquals(line.padded(marksPadding = false).text, line.padded(marksPadding = true).text.replace("\u2060", ""))
@@ -117,5 +120,45 @@ class ChordPaddingTest {
         assertEquals('H', padded.text[padded.chords[0].position])
         assertEquals('w', padded.text[padded.chords[1].position])
         assertEquals('a', padded.text[padded.chords[2].position])
+    }
+
+    @Test
+    fun `a line read the paragraph's way is padded the same in either direction or none`() {
+        val latin = lyrics("[C]Hello [G]world [Am]again")
+        assertEquals(latin.padded(paragraphDirection = null), latin.padded(paragraphDirection = WritingDirection.LEFT_TO_RIGHT))
+        val hebrew = lyrics("[Am]שלום [C]עולם [G]שוב")
+        assertEquals(hebrew.padded(paragraphDirection = null), hebrew.padded(paragraphDirection = WritingDirection.RIGHT_TO_LEFT))
+    }
+
+    @Test
+    fun `the padding of a latin word or a number in a hebrew line keeps to its own run`() {
+        mapOf("[Am]שלום [C]Hello [G]עולם" to "Hello", "[Am]שיר [C]1 [D]2 [G]עולם" to "1").forEach { (line, word) ->
+            val padded = lyrics(line).padded(chordWidth = 100f, paragraphDirection = WritingDirection.RIGHT_TO_LEFT)
+            val piece = padded.text.substring(padded.chords[1].position, padded.chords[2].position)
+            assertTrue(piece.startsWith("$word\u200E\u00A0"), line)
+            assertTrue(piece.endsWith("\u00A0\u200E\u200B"), line)
+        }
+    }
+
+    @Test
+    fun `the padding of a hebrew word in a latin line keeps to its own run`() {
+        val padded = lyrics("[C]Hello [Am]שלום [G]world").padded(chordWidth = 100f)
+        val piece = padded.text.substring(padded.chords[1].position, padded.chords[2].position)
+        assertEquals(2, piece.count { it == '\u200F' })
+        assertTrue(piece.startsWith("שלום\u200F"))
+    }
+
+    @Test
+    fun `formatting keeps its words around a direction mark`() {
+        val line = lyrics("[Am]שלום [C]Hello [G]עולם").copy(
+            formatting = listOf(ChordProLine.Lyrics.Formatting(5, 11, ChordProLine.Lyrics.Formatting.Style.BOLD)),
+        )
+        val padded = line.padded(chordWidth = 100f, paragraphDirection = WritingDirection.RIGHT_TO_LEFT)
+        assertEquals("Hello\u200E\u00A0", padded.text.substring(padded.formatting.single().start, padded.formatting.single().end))
+    }
+
+    @Test
+    fun `every script is padded with no-break spaces`() {
+        listOf('a'.code, 'ש'.code, 'ب'.code, '1'.code, ' '.code).forEach { assertEquals('\u00A0', chordPaddingAfter(it)) }
     }
 }

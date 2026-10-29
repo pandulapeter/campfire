@@ -195,6 +195,7 @@ internal class PrintRows(
                 gap = measure(" ", lyricStyle),
                 paddingWidth = measure("\u00A0", lyricStyle),
                 measureWidth = { measure(it, lyricStyle) },
+                paragraphDirection = null,
                 marksPadding = true,
             )
         } else {

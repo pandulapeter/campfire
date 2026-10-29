@@ -17,8 +17,10 @@ builds what it draws, `grid/` places it.
 - Tabs and grids are written in columns of characters that must line up. **Nothing on the page scrolls sideways.**
 - **A song has one direction** (`SongLyricsModel.textDirection`, from `:chordpro`'s `ChordProSong.textDirection`),
   whatever the UI's: `SongLyrics` provides it as `LocalLayoutDirection` over the body (columns, sections, chord
-  diagrams) and every lyric line is a paragraph of it (`TextDirection.Rtl` / `Ltr`), so chords hang leftwards over
-  every line of an RTL song. The first section keeps the screen's direction (`screenLayoutDirection`), as do the step
+  diagrams) and every lyric line is a paragraph of it (`TextDirection.Rtl` / `Ltr`), so chords follow one another
+  leftwards over every line of an RTL song. Each hangs from its character in its run's direction (`chordLeft`): a Latin
+  word or a number in a Hebrew line has its chord to the right of its first character, and its padding closed in by
+  direction marks (`bidiMarkFor`) so the gap opens on that side. The first section keeps the screen's direction (`screenLayoutDirection`), as do the step
   buttons' inset (`isInsetAtLeft`) and the interface's sentences (`sentenceStyle`, `TextDirection.Content`).
 - **Music is always LTR**: chord names and annotations, tab, grid, and preformatted runs (laid out under an LTR
   `LocalLayoutDirection`), and engraved notation (`NotationPainting`).
