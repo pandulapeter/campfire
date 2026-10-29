@@ -232,7 +232,7 @@ private class PrintLayouter(
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = printRows.wrapped(title, printRows.titleStyle).toMutableList()
         if (options.showMetadata) entry.artist?.takeIf { it.isNotBlank() }?.let { heading += printRows.wrapped(it) }
-        entry.song?.let { playingDetails(entry, it).takeIf(String::isNotBlank)?.let { heading += printRows.wrapped(it, printRows.detailStyle) } }
+        entry.song?.let { heading += printRows.detailRows(playingDetails(entry, it)) }
         // The heading travels with the first segment that prints anything (a missing song's notice standing in for it),
         // or with the chord diagrams and scales where the song has them: that segment whole where heading and segment fit
         // a column together, otherwise its first two rows, after which it flows on from under its heading. A break before
@@ -402,11 +402,11 @@ private class PrintLayouter(
      * file never gave would come back from an import as the song's own. The transposition is named rather than undone,
      * so that a band reading from the page knows the chords are not the ones the song was written in.
      */
-    private fun playingDetails(entry: PrintSong, song: ChordProSong): String = listOfNotNull(
+    private fun playingDetails(entry: PrintSong, song: ChordProSong): List<String> = listOfNotNull(
         song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { labels.labelled(labels.key, it) },
         entry.transposition.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.transposition, if (it > 0) "+$it" else "$it") },
         song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.capo, "$it") },
-    ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time)).joinToString(METADATA_SEPARATOR)
+    ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time))
 
     /**
      * The page number sits centred in the band the layout keeps free above the bottom margin (a 9 pt line is about 11 pt

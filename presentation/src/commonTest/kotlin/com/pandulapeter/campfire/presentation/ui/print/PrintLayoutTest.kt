@@ -120,6 +120,15 @@ internal class PrintLayoutTest {
         }
     }
 
+    @Test fun `a narrow column breaks the playing row between its values, never between a label and its value`() = runTest {
+        val entry = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
+            ChordProMetadata(key = "Bb", capo = 3, tempo = "96", time = "6/8"), listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2)))))
+        val texts = layout(source(entry), PrintSettings(columns = 4)).pages.single().texts.map { it.text }
+        val details = texts.filter { text -> listOf("Key:", "Capo:", "Tempo:", "Time:").any { it in text } }
+        assertTrue(details.size > 1, details.toString())
+        assertEquals(listOf("Key: Bb", "Capo: 3", "Tempo: 96 BPM", "Time: 6/8"), details.flatMap { it.split(METADATA_SEPARATOR) }, details.toString())
+    }
+
     @Test fun `long songs keep every line and chord within printable columns`() = runTest {
         val lines = (1..180).map { ChordProLine.Lyrics("Line $it " + "words ".repeat(14), listOf(ChordProLine.Lyrics.Chord(0, "D", false))) }
         (2..PrintSettings.MAX_COLUMNS).forEach { columns ->
