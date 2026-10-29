@@ -450,6 +450,25 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `an artist of Campfire's own export longer than the title is still its artist`() {
+        fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
+        )
+        val page = ChordSheet.Page(
+            listOf(
+                glyphs("Wagon Wheel", 19.0, bold = true),
+                glyphs("Old Crow Medicine Show", 12.0),
+                glyphs("Key: A   Tempo: 145 BPM", 11.0),
+                glyphs("Verse", 11.0, bold = true),
+                glyphs("Headed down south to the land of the pines", 12.0),
+            ),
+        )
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue(result.startsWith("{title: Wagon Wheel}\n{key: A}\n{tempo: 145}\n{artist: Old Crow Medicine Show}\n"), result)
+        assertFalse("\nOld Crow" in result, result)
+    }
+
+    @Test
     fun `a right-to-left row of Campfire's own export takes each chord at the character it hangs from`() {
         // "שלום world" laid out from the right: the Hebrew word at the right edge, the Latin one left of it, each glyph
         // where the export drew it, the row's text in its reading order over them.

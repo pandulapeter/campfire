@@ -652,7 +652,10 @@ public object ChordSheetConverter {
         val artist = last + 1
         // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
         val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
-        if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || lines[artist].text.length < title.length &&
+        // Campfire's export sets the artist in the lyrics' type, between the title and the row of the song's key, tempo,
+        // and time, where no lyric ever stands, so there a name longer than the title is the artist all the same.
+        val isCampfireArtist = lines.getOrNull(artist)?.isCampfire == true && kinds.getOrNull(artist + 1) == Kind.METADATA
+        if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || isCampfireArtist || lines[artist].text.length < title.length &&
                 lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
             header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
             omitted += artist
