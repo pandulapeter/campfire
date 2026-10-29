@@ -69,14 +69,30 @@ platform for RTL.
 the interface, JetBrains Mono (no-ligatures) for tabs and the editor, so a song looks and breaks the same on a phone, a
 computer, and paper (PDF and diagram numbers included). Subset to Latin, Greek, and Cyrillic; Inter's ♭ ♮ ♯ and
 JetBrains Mono's ♮ are drawn into them by `tools/fonts/accidentals.py` (upstream has none), rerun on any new subset.
-Others fall back to system fonts (Skia's Roboto on the web, which lacks most symbols), so a string uses no character the
-bundled files lack (⌘ is written "Cmd").
+Others fall back to the script faces below and system fonts (Skia's Roboto on the web, which lacks most symbols), so a
+string uses no character the bundled files lack (⌘ is written "Cmd").
 
 - `InterfaceTypography.kt`: Material's type scale in Inter Regular/Medium/Bold, read before the first frame except on
   the web, whose actual returns null until all three weights are fetched; the theme isn't settled until then (no second
   layout of every line), and after five seconds falls back to Material's, as a failed fetch is never reported.
 - `MonospaceFontFamily.kt`: `LocalMonospaceFontFamily`, provided by the theme so the web fetches it at launch.
 - `app/web`'s `index.html` preloads them **by their path in the distribution**: renaming one means renaming it there.
+
+### Script faces
+
+- `ScriptFaces.kt` is the table of faces for scripts Inter lacks, a row each (Noto Sans Hebrew first): its ranges, the
+  languages written in it, its file. `tools/fonts/script_faces.py` subsets an upstream file to the ranges its row names,
+  so another script is a row, a run, and its license credited. No code asks for a script by name.
+- `ProvideScriptFaces` registers them as **fallbacks** of the resolver's Skia font collection. Skia asks the platform's
+  fonts first, so the bundled face is what the web and a Linux desktop without one draw; it takes a fallback by
+  character alone, the first registered face that has it whatever the weight, so only Regular is bundled (Hebrew titles
+  are not bolder on the web) and no two rows may share a character (tested). Android does nothing: its fallback is the
+  system's, whose Hebrew is Noto Sans Hebrew. JetBrains Mono falls back the same way, so the editor's Hebrew is
+  proportional: the fallback cannot tell monospace text from the rest.
+- **The web fetches a face only when needed** (`NeededScriptFaces.kt`: the interface's language, the library's names,
+  tags, declared languages, and opened songs' text), keeps it for the session, and registers it with a new resolver,
+  which lays every text out again once (Compose keeps measured text). A face needed at launch holds the launch screen,
+  five seconds at most. It is not preloaded by `index.html`; the offline copy still keeps it with the build.
 
 ## The app icon and the app's own colors
 

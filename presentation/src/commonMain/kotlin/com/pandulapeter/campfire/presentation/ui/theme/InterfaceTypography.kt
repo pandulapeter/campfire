@@ -35,7 +35,8 @@ internal expect fun interfaceTypography(): Typography?
  * lines and pages in the same places on a phone, a computer and paper. Bundled in the three weights Material's type
  * scale and the app use: Regular, Medium and Bold. The files are subset to the Latin, Greek and Cyrillic scripts,
  * punctuation and arrows, and keep only the default layout features, which takes them to a sixth of their size; a
- * character outside that falls back to the system's fonts (on the web, to the Roboto Skia carries). The ♭ ♮ ♯ signs,
+ * character outside that falls back to the system's fonts and to the faces of [scriptFaces] (on the web, to those and
+ * the Roboto Skia carries). The ♭ ♮ ♯ signs,
  * which Inter lacks, are drawn into the bundled files by `tools/fonts`, so a scale's degrees and a title's accidentals
  * are set in the same face as the rest. Italic is left to the text engine to slant.
  */

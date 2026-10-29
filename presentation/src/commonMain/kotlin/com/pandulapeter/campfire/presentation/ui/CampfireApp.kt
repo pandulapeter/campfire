@@ -135,6 +135,7 @@ fun CampfireApp(
             uiMode = userPreferences?.uiMode,
             themeColor = userPreferences?.themeColor,
             backgroundWarmth = userPreferences?.backgroundWarmth ?: 0,
+            neededScriptFaces = rememberNeededScriptFaces(viewModel),
         ) { isThemeSettled, launchScreenColors ->
             val backgroundColor = MaterialTheme.colorScheme.background
             SideEffect { onBackgroundColorChanged(backgroundColor) }

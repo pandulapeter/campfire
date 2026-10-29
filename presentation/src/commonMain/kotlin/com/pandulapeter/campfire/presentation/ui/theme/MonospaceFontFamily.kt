@@ -38,7 +38,8 @@ internal expect fun monospaceFontFamily(): FontFamily
  * JetBrains Mono, bundled so that a tab's columns are the same width everywhere, in the variant without programming
  * ligatures, which would draw a tab's `--` and `|-` as joined shapes. The files are subset to the Latin, Greek and
  * Cyrillic scripts and the symbols a song uses (the accidentals, box drawing, punctuation), which halves them; its ♮,
- * which upstream lacks, is drawn in by `tools/fonts`. A character outside that falls back to the default font.
+ * which upstream lacks, is drawn in by `tools/fonts`. A character outside that falls back as the interface's does, to
+ * proportional faces (see [ProvideScriptFaces]), so a Hebrew line of the editor is not set on the grid.
  *
  * Bold is bundled because the editor sets the chords and directives in it; italic is left to the text engine to slant.
  */

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
+import kotlinx.coroutines.flow.Flow
 import kotlin.math.roundToInt
 
 /**
@@ -53,16 +54,18 @@ import kotlin.math.roundToInt
  * costs nothing when there is nothing to correct: a preference that resolves to the palette already on screen is not a
  * change and does not animate.
  *
- * @param content Told whether the scheme it is drawn in is the final one and its typography is in (see
- *   [interfaceTypography]), which is what holds the launch screen in front of the app until the colors underneath have
+ * @param neededScriptFaces The faces of other scripts the interface and the library need, see [ProvideScriptFaces].
+ * @param content Told whether the scheme it is drawn in is the final one and its typography and the faces it needs
+ *   are in (see [interfaceTypography] and [ProvideScriptFaces]), which is what holds the launch screen in front of the app until the colors underneath have
  *   stopped moving and the text will not be laid out again in another font, and given the launch screen's colors.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CampfireTheme(
+internal fun CampfireTheme(
     uiMode: UserPreferences.UiMode?,
     themeColor: UserPreferences.ThemeColor?,
     backgroundWarmth: Int,
+    neededScriptFaces: Flow<Set<ScriptFace>>,
     content: @Composable (isThemeSettled: Boolean, launchScreenColors: LaunchScreenColors) -> Unit,
 ) {
     val isDarkTheme = uiMode.isDarkTheme()
@@ -152,23 +155,23 @@ fun CampfireTheme(
         progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
     }
     val typography = interfaceTypography()
-    MaterialExpressiveTheme(
-        colorScheme = lerp(start, stop, steppedProgress),
-        motionScheme = MOTION_SCHEME,
-        typography = typography ?: MaterialTheme.typography,
-    ) {
-        CompositionLocalProvider(
-            LocalMonospaceFontFamily provides monospaceFontFamily(),
-            LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, steppedProgress),
+    ProvideScriptFaces(neededScriptFaces) { areScriptFacesIn ->
+        MaterialExpressiveTheme(
+            colorScheme = lerp(start, stop, steppedProgress),
+            motionScheme = MOTION_SCHEME,
+            typography = typography ?: MaterialTheme.typography,
         ) {
-            // The scheme asked for is not the one being shown from the composition the preferences arrive in until
-            // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
-            // so the target being reached is read from the schemes rather than from the animation alone, which is not
-            // running yet in that one frame.
-            content(
-                targetColorScheme === stop && !progress.isRunning && !launchProgress.isRunning && typography != null,
-                launchScreenColors,
-            )
+            CompositionLocalProvider(
+                LocalMonospaceFontFamily provides monospaceFontFamily(),
+                LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, steppedProgress),
+            ) {
+                // The scheme asked for is not the one being shown from the composition the preferences arrive in until
+                // the fade that follows has ended, and the effect above starts that fade one frame after that
+                // composition - so the target being reached is read from the schemes rather than from the animation
+                // alone, which is not running yet in that one frame.
+                val isColorSchemeSettled = targetColorScheme === stop && !progress.isRunning && !launchProgress.isRunning
+                content(isColorSchemeSettled && typography != null && areScriptFacesIn, launchScreenColors)
+            }
         }
     }
 }
