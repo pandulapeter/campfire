@@ -517,6 +517,15 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a caret on the last line goes to the end when that line is a transpose line the transposition removes`() {
+        val text = "{start_of_abc}\nX:1\n%%transpose -1"
+        val (up, upOffset) = transposed(text, 1, text.length)
+
+        assertEquals("{start_of_abc}\nX:1", up)
+        assertEquals(up.length, upOffset)
+    }
+
+    @Test
     fun `a grid written with non-breaking spaces is transposed`() {
         assertEquals(
             "{start_of_grid}\n|\u00A0Bm\u00A0.\u00A0A\u00A0|\n{end_of_grid}",
