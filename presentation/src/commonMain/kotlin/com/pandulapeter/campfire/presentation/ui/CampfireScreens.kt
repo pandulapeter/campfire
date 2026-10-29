@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.areToolsGrouped
 import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrim
+import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.navigationTransition
 import com.pandulapeter.campfire.presentation.ui.chrome.predictivePopTransition
 import androidx.compose.foundation.layout.Box
@@ -271,7 +272,12 @@ internal fun CampfireScreens(
             // The export screen is dealt over the screens the way a destination is, so they give way to it the same way.
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat() }
+                .graphicsLayer {
+                    translationX = endwardTranslation(
+                        distance = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat(),
+                        layoutDirection = layoutDirection,
+                    )
+                }
                 .coveredScreenScrim(scrimColor) { exportTransition.progress.value }
                 .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,

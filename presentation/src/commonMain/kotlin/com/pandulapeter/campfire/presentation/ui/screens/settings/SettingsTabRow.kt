@@ -83,7 +83,8 @@ internal fun SettingsTabRow(
                     val width = span?.width?.roundToInt() ?: 0
                     val placeable = measurable.measure(Constraints(minWidth = width, maxWidth = width, maxHeight = constraints.maxHeight))
                     // The row centers what this reports inside the selected tab on its own, so that centering is taken
-                    // back off the span, which is measured from the start of the row.
+                    // back off the span, which is measured from the start of the row. Both are logical, as the tab
+                    // positions and the pager's position are, and placeRelative mirrors them in a right-to-left row.
                     val rowOffset = tabPositions.getOrNull(tabs.indexOf(selectedTab))?.let { ((it.width - it.contentWidth) / 2).toPx() } ?: 0f
                     layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(((span?.start ?: 0f) - rowOffset).roundToInt(), 0) }
                 },

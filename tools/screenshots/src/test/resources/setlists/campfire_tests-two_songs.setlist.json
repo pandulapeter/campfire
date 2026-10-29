@@ -1,0 +1,15 @@
+{
+    "title": "Two Songs",
+    "description": "The two demo songs in the order they are sung, so that a song read from it has one on either side to turn to.",
+    "isArchived": false,
+    "songs": [
+        {
+            "file": "traditional_american-home_on_the_range_my_western_home.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_american-house_of_the_rising_sun.cho",
+            "transposition": 0
+        }
+    ]
+}

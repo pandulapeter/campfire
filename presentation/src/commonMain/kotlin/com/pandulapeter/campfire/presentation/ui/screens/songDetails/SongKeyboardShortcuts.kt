@@ -30,13 +30,16 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
+import com.pandulapeter.campfire.presentation.ui.components.horizontalArrowStep
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import kotlinx.coroutines.launch
 
 /**
  * Drives the song details screen from the arrow keys: Up and Down scroll the song being read, Left and Right step
- * to the previous and the next song of the setlist. That is a keyboard on the desktop and the web, and it is also
+ * to the song of the setlist that lies that way in the pager ([horizontalArrowStep]), the next one being on the left in
+ * a right-to-left layout. That is a keyboard on the desktop and the web, and it is also
  * a page turner pedal paired with a phone or a tablet, which is exactly what those send. Where the song has its buttons
  * that step through it - between its rows where it is read across the columns, between its sections otherwise - Up and
  * Down press those instead of scrolling, and so do Page Up and Page Down, which the other kind of pedal sends: a pedal
@@ -106,6 +109,7 @@ internal fun Modifier.songKeyboardShortcuts(
     // The focus inside a window stays where it was when the window loses it, so that is not reported below.
     val windowInfo = LocalWindowInfo.current
     val overlayState = LocalOverlayState.current
+    val layoutDirection = LocalLayoutDirection.current
     LaunchedEffect(windowInfo) { snapshotFlow { windowInfo.isWindowFocused }.collect { if (!it) heldStepKeys.clear() } }
     return this
         .focusRequester(focusRequester)
@@ -157,9 +161,11 @@ internal fun Modifier.songKeyboardShortcuts(
             val action = when (keyEvent.key) {
                 Key.DirectionUp -> onScrollUp
                 Key.DirectionDown -> onScrollDown
-                Key.DirectionLeft -> onPreviousSong
-                Key.DirectionRight -> onNextSong
-                else -> null
+                else -> when (keyEvent.key.horizontalArrowStep(layoutDirection)) {
+                    -1 -> onPreviousSong
+                    1 -> onNextSong
+                    else -> null
+                }
             } ?: return@onPreviewKeyEvent false
             action()
             true

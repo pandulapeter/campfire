@@ -99,7 +99,7 @@ only), and nothing on the desktop.
 ### Keyboard (`SongKeyboardShortcuts.kt`)
 
 - Up and Down scroll a tenth of the viewport, linearly over the key repeat interval; Left and Right change the setlist's
-  song. Where the step buttons are, Up, Down, Page Up, and Page Down press them instead (a Bluetooth page turner sends
+  song, physically (`horizontalArrowStep`: in RTL Left is the next song), as the print preview's arrows turn pages. Where the step buttons are, Up, Down, Page Up, and Page Down press them instead (a Bluetooth page turner sends
   exactly these; a nudge leaves the player mid-verse); elsewhere the page keys are unconsumed. Counted from the page the
   pager is heading to, so two quick presses go two songs.
 - The screen takes focus as it opens (nothing on it would otherwise), and the handler is in the preview pass, so it sees

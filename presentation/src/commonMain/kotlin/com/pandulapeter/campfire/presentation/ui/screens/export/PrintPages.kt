@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOverlay
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.horizontalArrowStep
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isCtrlWheelZoomOwnedByApp
@@ -204,12 +205,13 @@ internal fun PrintPages(
                 if (event.type != KeyEventType.KeyDown || event.isAltPressed || event.isCtrlPressed || event.isMetaPressed) {
                     return@onKeyEvent false
                 }
+                // The arrows go to the page lying that way, which in a right-to-left layout is the next one for Left.
                 val target = when (event.key) {
-                    Key.DirectionLeft, Key.PageUp -> pagerState.currentPage - 1
-                    Key.DirectionRight, Key.PageDown -> pagerState.currentPage + 1
+                    Key.PageUp -> pagerState.currentPage - 1
+                    Key.PageDown -> pagerState.currentPage + 1
                     Key.MoveHome -> 0
                     Key.MoveEnd -> pageCount - 1
-                    else -> return@onKeyEvent false
+                    else -> pagerState.currentPage + (event.key.horizontalArrowStep(layoutDirection) ?: return@onKeyEvent false)
                 }
                 turnTo(target)
                 true

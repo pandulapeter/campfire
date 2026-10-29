@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
@@ -30,6 +31,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import com.pandulapeter.campfire.presentation.ui.chrome.slideFractionSpec
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
@@ -46,7 +48,7 @@ internal class ExportTransition {
 
 /**
  * Puts [ExportScreen] over the whole app for as long as the view model's dialog is an export, dealing it in from
- * the right edge and taking it away again with the spring, the direction and the background slide of the app's own
+ * the end edge and taking it away again with the spring, the direction and the background slide of the app's own
  * navigation, and following a predictive back gesture as a destination's pop does. It is drawn inside the app's own
  * layout rather than in a window of its own, so that the snackbars of a failed export still show over it; it is still a
  * dialog to the view model, which is what lets the desktop's Escape, the web's Back and another dialog put up in its
@@ -80,6 +82,7 @@ internal fun ExportHost(
         )
     }
     val spec = MaterialTheme.motionScheme.slideFractionSpec()
+    val layoutDirection = LocalLayoutDirection.current
     LaunchedEffect(transition) {
         snapshotFlow {
             val gestureProgress = (backGesture.transitionState as? NavigationEventTransitionState.InProgress)
@@ -107,7 +110,12 @@ internal fun ExportHost(
         Box(
             Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = ((1f - transition.progress.value) * size.width).roundToInt().toFloat() },
+                .graphicsLayer {
+                    translationX = endwardTranslation(
+                        distance = ((1f - transition.progress.value) * size.width).roundToInt().toFloat(),
+                        layoutDirection = layoutDirection,
+                    )
+                },
         ) {
             ExportScreen(viewModel, dialog)
         }

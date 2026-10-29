@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
+import com.pandulapeter.campfire.presentation.ui.chrome.endwardTranslation
 import kotlin.math.abs
 
 /**
@@ -23,8 +25,9 @@ import kotlin.math.abs
 internal val LocalOnboardingPageOffset = compositionLocalOf<() -> Float> { { 0f } }
 
 /**
- * Where one layer of a page is drawn while it turns: moved sideways by [shift] page widths on top of the pager's own
- * move, scaled by [scale] around its center, and [alpha] opaque.
+ * Where one layer of a page is drawn while it turns: moved sideways by [shift] page widths towards the end edge on top
+ * of the pager's own move, scaled by [scale] around its center, and [alpha] opaque. The offset it is computed from is
+ * logical, as the pager's pages are, so the shift is too; the right-to-left pager lays the next page out on the left.
  */
 internal data class OnboardingLayerMotion(
     val shift: Float,
@@ -63,9 +66,10 @@ internal fun onboardingAnswersMotion(offset: Float): OnboardingLayerMotion {
 @Composable
 internal fun Modifier.onboardingLayerMotion(motion: (offset: Float) -> OnboardingLayerMotion): Modifier {
     val pageOffset = LocalOnboardingPageOffset.current
+    val layoutDirection = LocalLayoutDirection.current
     return graphicsLayer {
         val layer = motion(pageOffset())
-        translationX = layer.shift * size.width
+        translationX = endwardTranslation(distance = layer.shift * size.width, layoutDirection = layoutDirection)
         scaleX = layer.scale
         scaleY = layer.scale
         alpha = layer.alpha

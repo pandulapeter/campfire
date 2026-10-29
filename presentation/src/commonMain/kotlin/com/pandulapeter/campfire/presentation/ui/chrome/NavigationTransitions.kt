@@ -29,16 +29,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation3.scene.Scene
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlin.math.roundToInt
 
 /**
- * The screens are a deck of cards. Pushing one deals it over the top of the deck: it slides in from the end while
- * the screen it lands on gives way in the same direction over a small fraction of the distance. Popping takes the
- * top card off again: it slides back out and the screen underneath returns from that short offset. The screen
- * underneath moves as one piece, its navigation chrome included, so it keeps whatever it had on screen (its scroll
- * position, the caret in its search field) in the same place relative to itself across the whole transition.
+ * The screens are a deck of cards. Pushing one deals it over the top of the deck: it slides in from the end edge (the
+ * right in a left-to-right layout, the left in a right-to-left one) while the screen it lands on gives way in the same
+ * direction over a small fraction of the distance. Popping takes the top card off again: it slides back out and the
+ * screen underneath returns from that short offset. The screen underneath moves as one piece, its navigation chrome
+ * included, so it keeps whatever it had on screen (its scroll position, the caret in its search field) in the same
+ * place relative to itself across the whole transition.
  *
  * Switching between top level destinations is not a deal but a swap of the bottom card, so those fade through in
  * place, next to a navigation bar and a navigation rail alike: nothing about two tabs puts one of them in any
@@ -92,7 +94,7 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigati
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(
     motionScheme: MotionScheme,
 ): ContentTransform {
-    val direction = AnimatedContentTransitionScope.SlideDirection.Left
+    val direction = AnimatedContentTransitionScope.SlideDirection.Start
     val spec = motionScheme.slideSpec()
     return ContentTransform(
         targetContentEnter = slideIntoContainer(towards = direction, animationSpec = spec),
@@ -113,7 +115,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(
     motionScheme: MotionScheme,
 ): ContentTransform {
-    val direction = AnimatedContentTransitionScope.SlideDirection.Right
+    val direction = AnimatedContentTransitionScope.SlideDirection.End
     val spec = motionScheme.slideSpec()
     return ContentTransform(
         targetContentEnter = slideIntoContainer(
@@ -147,6 +149,16 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.onboardin
 internal fun backgroundSlideOffset(fullSlideOffset: Int) = (fullSlideOffset * BACKGROUND_SLIDE_FRACTION).roundToInt()
 
 /**
+ * A horizontal translation of [distance] pixels towards the end edge, for the slides drawn by hand in a graphics layer
+ * (the export screen's), which unlike [AnimatedContentTransitionScope.SlideDirection.End] are not resolved against the
+ * layout direction by Compose.
+ */
+internal fun endwardTranslation(distance: Float, layoutDirection: LayoutDirection) = when (layoutDirection) {
+    LayoutDirection.Ltr -> distance
+    LayoutDirection.Rtl -> -distance
+}
+
+/**
  * The theme's default spatial spring, made to settle once the card is within a pixel of where it lands. The theme's
  * spring carries no visibility threshold, so on an [IntOffset] it runs on to a hundredth of a pixel: a screen that
  * has not moved a whole pixel for the last third of a second is still counted as moving, and [ScreenSurface] takes
@@ -171,7 +183,7 @@ internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialS
 /**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as
  * [popTransition], except that both screens follow the finger with linear specs. Their direction is fixed to the
- * horizontal pop, regardless of which edge the gesture started from.
+ * horizontal pop, towards the end edge, regardless of which edge the gesture started from.
  *
  * Going back from Setlists or Settings to Songs is a swap of tabs rather than a card being taken off, so it cross
  * fades in place, for the reasons [navigationTransition] gives. It is a cross fade rather than [tabTransition]'s fade
@@ -193,7 +205,7 @@ internal fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predicti
         )
     }
     scrim.motion = DeckMotion.PredictivePop
-    val towards = AnimatedContentTransitionScope.SlideDirection.Right
+    val towards = AnimatedContentTransitionScope.SlideDirection.End
     val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
     return ContentTransform(
         targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset),

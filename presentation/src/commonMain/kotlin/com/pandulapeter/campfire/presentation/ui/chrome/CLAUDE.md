@@ -16,7 +16,8 @@ The navigation chrome (bar, rail, transitions, and the Tools item), laid around 
 - Chrome kind (`navigationChromeKind`): bar under 600dp, rail above, expanded `WideNavigationRail` where three Songs
   columns still fit beside it, the fast scroller counted (decided from `minSongColumnWidth`, not the sorted grid's).
 - **Transitions** (all in `NavigationTransitions.kt`, shared by every platform): tabs fade through in place, no slide;
-  cards (`SongDetails`, `SongEditor`) enter and leave to the right regardless of the predictive gesture's edge, the
+  cards (`SongDetails`, `SongEditor`) enter and leave at the end edge (`SlideDirection.Start`/`End`: the left in RTL)
+  regardless of the predictive gesture's edge, the export screen's hand-rolled slide too (`endwardTranslation`), the
   screen beneath moving 12% with a scrim (theme `scrim` at 32%, via `NavigationScrim`, animated per entry so it follows
   the gesture). `predictivePopTransitionSpec` uses linear specs; going back from Setlists/Settings to Songs is a cross
   fade (a fade through held halfway would show neither screen). `navigationTransition` decides push vs. pop from scene
