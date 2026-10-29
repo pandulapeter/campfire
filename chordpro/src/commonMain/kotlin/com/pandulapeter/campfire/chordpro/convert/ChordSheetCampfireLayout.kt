@@ -125,16 +125,27 @@ internal object ChordSheetCampfireLayout {
     }
 
     /**
-     * The section a label opens: a verse, chorus, or bridge by the heading words the converter knows, any other kind
-     * the export names by its last word (`Intro`, `Organ solo`), and a verse under its own name otherwise.
+     * The section a label opens: a verse, chorus, bridge, or pre-chorus by the heading word it opens with, in any language
+     * the app prints its labels in ([ChordSheetHeadings.labelType]), any other kind the export names by its last word
+     * (`Intro`, `Organ solo`) or the app's label for it, and a verse under its own name otherwise.
      */
-    fun sectionType(label: String): String =
-        ChordSheetHeadings.parse(label)?.type ?: label.trim().lowercase().split(' ').lastOrNull { it.isNotEmpty() }?.takeIf { it in customTypes } ?: "verse"
+    fun sectionType(label: String): String = ChordSheetHeadings.labelType(label)
+        ?: label.trim().lowercase().split(' ').lastOrNull { it.isNotEmpty() }?.let { word -> word.takeIf { it in customTypes } ?: localizedTypes[word] }
+        ?: "verse"
 
     /** The no-break spaces the export pads a lyric with under a chord wider than its syllable, which are not its words. */
     const val PADDING = '\u00A0'
 
     private val customTypes = setOf("intro", "outro", "solo", "interlude", "instrumental", "coda", "tag", "ending", "break", "riff")
+
+    /** The app's labels for the kinds [customTypes] names, where its language spells them otherwise. */
+    private val localizedTypes = mapOf(
+        "sz\u00f3l\u00f3" to "solo",
+        "assolo" to "solo",
+        "\u05e4\u05ea\u05d9\u05d7\u05d4" to "intro",
+        "\u05e1\u05d5\u05dc\u05d5" to "solo",
+        "\u05e1\u05d9\u05d5\u05dd" to "outro",
+    )
 
     /** The labels are a point smaller than the lyrics (`PrintRows.labelStyle`). */
     private const val LABEL_SIZE_STEP = 1.0
