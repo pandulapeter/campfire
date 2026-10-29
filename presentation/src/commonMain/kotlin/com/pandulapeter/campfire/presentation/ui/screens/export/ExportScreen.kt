@@ -291,6 +291,9 @@ internal fun ExportScreen(
         }
     }
     val close = { viewModel.dialogHost.dismissSheet(dialog) }
+    val isShareOffered = remember(filePicker, state.settings.format, state.source) {
+        canShareExport(filePicker, state.settings.format, state.source)
+    }
     val content = exportContentOf(isFailed = state.failed, isLayoutFailed = state.layoutFailed, isPdf = isPdf, hasSource = state.source != null)
     val canSaveNow = content == PrintScreenContent.LOADED && when {
         // The QR code is what a link saves, by Ctrl / Cmd + S, and Share in the app bar shares the link.
@@ -340,7 +343,7 @@ internal fun ExportScreen(
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) } ?: songsCount,
                     // The screen itself is called Share, so the Link format's button says what it sends.
                     shareLabel = stringResource(if (isLink) Res.string.share_send else Res.string.print_share),
-                    canShare = filePicker.canShare && exportProgress == null && canSaveNow,
+                    canShare = isShareOffered && exportProgress == null && canSaveNow,
                     onShare = { requestExport(ExportRequest.SHARE) },
                     onClose = close,
                 )

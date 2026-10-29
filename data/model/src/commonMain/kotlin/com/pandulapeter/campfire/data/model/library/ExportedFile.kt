@@ -29,5 +29,6 @@ data class ExportedFile(
         const val TEXT_MIME_TYPE = "text/plain"
         const val ZIP_MIME_TYPE = "application/zip"
         const val PNG_MIME_TYPE = "image/png"
+        const val PDF_MIME_TYPE = "application/pdf"
     }
 }

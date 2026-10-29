@@ -35,6 +35,10 @@ import kotlin.js.Promise
  * The browser has no file dialog of its own to call: picking is a hidden `<input type="file">` that is clicked, and
  * saving is a `Blob` behind an `<a download>`. Both live in a `js(...)` block for the same reason the OPFS storage
  * does - crossing the Kotlin/Wasm boundary once per step is far cheaper than once per element.
+ *
+ * Sharing is the Web Share API where the browser has it (the phones' browsers, Safari, Chrome and Edge on Windows and
+ * ChromeOS; not Firefox on a computer), each kind of file asked about separately, since every browser keeps its own list
+ * of the kinds it lets out.
  */
 internal object WebFilePicker : FilePicker {
 
@@ -49,7 +53,58 @@ internal object WebFilePicker : FilePicker {
         downloadFile(name = file.name, mimeType = file.mimeType, bytes = file.bytes.toInt8Array())
         return true
     }
+
+    override val canShare = isWebShareAvailable()
+
+    override fun canShareFile(fileName: String, mimeType: String) = canShareFiles(name = fileName, mimeType = mimeType)
+
+    /**
+     * The browser lets a share out only within a few seconds of a press, which a long PDF can outlast while it is drawn: a
+     * share refused for that, or for anything but the user closing the sheet, is downloaded instead, so the file the user
+     * asked for still comes out.
+     */
+    override suspend fun shareFile(file: ExportedFile): Boolean {
+        if (!canShareFile(fileName = file.name, mimeType = file.mimeType)) return saveFile(file)
+        return when (shareFileData(name = file.name, mimeType = file.mimeType, bytes = file.bytes.toInt8Array()).await<JsString>().toString()) {
+            SHARED -> true
+            DISMISSED -> false
+            else -> saveFile(file)
+        }
+    }
+
+    override suspend fun shareText(text: String, subject: String) = shareUrl(url = text, title = subject).await<JsString>().toString() == SHARED
 }
+
+private const val SHARED = "shared"
+private const val DISMISSED = "dismissed"
+
+private fun isWebShareAvailable(): Boolean = js("typeof navigator.share === 'function'")
+
+/** Asked with an empty file, since the browser decides by the name and the type alone. */
+private fun canShareFiles(name: String, mimeType: String): Boolean = js(
+    """(function () {
+        try {
+            return typeof navigator.canShare === 'function' && navigator.canShare({ files: [new File([], name, { type: mimeType })] });
+        } catch (error) {
+            return false;
+        }
+    })()"""
+)
+
+/** Resolves with `shared`, with `dismissed` where the user closed the sheet (an `AbortError`), or with `refused`. */
+private fun shareFileData(name: String, mimeType: String, bytes: Int8Array): Promise<JsString> = js(
+    """navigator.share({ files: [new File([bytes], name, { type: mimeType })] }).then(
+        function () { return 'shared'; },
+        function (error) { return error && error.name === 'AbortError' ? 'dismissed' : 'refused'; }
+    )"""
+)
+
+private fun shareUrl(url: String, title: String): Promise<JsString> = js(
+    """navigator.share({ url: url, title: title }).then(
+        function () { return 'shared'; },
+        function (error) { return error && error.name === 'AbortError' ? 'dismissed' : 'refused'; }
+    )"""
+)
 
 /**
  * Resolves with the picked files, or with an empty list when the dialog was dismissed. A dismissed dialog is the

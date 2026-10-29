@@ -549,6 +549,8 @@
     <string name="settings_distribution_microsoft_store">Microsoft Store</string>
     <string name="settings_rate">Noter Campfire</string>
     <string name="settings_rate_description">Laisse un avis sur %1$s</string>
+    <string name="settings_share_app">Partager Campfire</string>
+    <string name="settings_share_app_description">Envoie un lien vers l\'app à un ami</string>
     <string name="settings_about">À propos</string>
     <string name="settings_git_hub">Campfire sur GitHub</string>
     <string name="settings_git_hub_description">Code source et suivi des problèmes</string>

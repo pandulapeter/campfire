@@ -86,6 +86,9 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
   decides the one "Rate Campfire" row (absent on Linux, the web, and where the listing is null) and
   `canAskForDonations` (never on Apple platforms, guideline 3.1.1).
 - The row says *rate*, never *install*: a second copy would have its own library.
+- "Share Campfire" (after it) sends the website's address, never a listing, through `FilePicker.shareText`, and only
+  where `canShare` (Android, iOS, browsers with the Web Share API): elsewhere it would repeat the download row. Never rewarded (Apple 3.2.2, Play's
+  incentivized installs).
 - **campfire-songbook.com is the website** (downloads, support page, privacy policy) and is linked first; **GitHub is
   the source code and issue tracker**, after it. Nothing else is linked but the author's site and the donation page.
 - Every About row has a description and a leading icon, none a trailing mark.

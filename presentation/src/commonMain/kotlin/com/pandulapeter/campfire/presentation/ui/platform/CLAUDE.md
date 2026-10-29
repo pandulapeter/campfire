@@ -60,7 +60,10 @@ The `expect` declarations and the interfaces the platform shells provide.
 ### `FilePicker.kt`
 
 - `saveFile` returns false for a dismissed dialog and throws for a failed write (the view model reports it).
-- `shareText` (a shared link) exists only where `canShare`: Android's `ACTION_SEND`, iOS's share sheet with an `NSURL`.
+- `shareText` (a shared link) exists only where `canShare`: Android's `ACTION_SEND`, iOS's share sheet with an `NSURL`,
+  the web's `navigator.share` where the browser has it. `canShareFile` asks per kind of file, since a browser shares
+  only its own list (Chrome: PDF, PNG, `.txt`; no zip or `.cho`); the web downloads a share the browser refuses (a
+  press more than a few seconds old, as after a long PDF), a closed sheet excepted.
 - A `CreateDocument` that cannot be filled is deleted (it is created empty). Unreadable handed-over documents
   (`toImportedFiles`, desktop `readAsImportedFiles`) are passed on empty so the import reports them as skipped.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):

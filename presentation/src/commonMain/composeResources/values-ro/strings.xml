@@ -545,6 +545,8 @@
     <string name="settings_distribution_microsoft_store">Microsoft Store</string>
     <string name="settings_rate">Evaluează Campfire</string>
     <string name="settings_rate_description">Lasă o recenzie pe %1$s</string>
+    <string name="settings_share_app">Distribuie Campfire</string>
+    <string name="settings_share_app_description">Trimite unui prieten un link către aplicație</string>
     <string name="settings_about">Despre</string>
     <string name="settings_git_hub">Campfire pe GitHub</string>
     <string name="settings_git_hub_description">Codul sursă și urmărirea problemelor</string>

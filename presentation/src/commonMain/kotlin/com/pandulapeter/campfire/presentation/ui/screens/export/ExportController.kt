@@ -35,7 +35,9 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.DEVELOPER_EMAIL
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.PROCESS_LOG_FILE_NAME
 import com.pandulapeter.campfire.presentation.ui.platform.appBuild
+import com.pandulapeter.campfire.presentation.ui.platform.canShareProcessLog
 import com.pandulapeter.campfire.presentation.ui.platform.readProcessLog
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
@@ -288,7 +290,7 @@ internal class ExportController(
                         // file all the same once it answered.
                         _pdfExportProgress.value = null
                     }
-                    bytes?.let { ExportedFile(fileName, "application/pdf", it) }
+                    bytes?.let { ExportedFile(fileName, ExportedFile.PDF_MIME_TYPE, it) }
                 }
             } finally {
                 _pdfExportProgress.value = null
@@ -347,9 +349,14 @@ internal class ExportController(
         }
     }
 
-    /** Hands a link to the platform's share sheet, as one transfer, since the sheet cannot be up twice either. */
+    /** Hands a link to the platform's share sheet, while the export screen it was made on is still open. */
     fun shareLink(filePicker: FilePicker, dialog: DialogType.Export, link: String, subject: String) {
         if (dialogHost.visibleDialog.value != dialog) return
+        shareLink(filePicker = filePicker, link = link, subject = subject)
+    }
+
+    /** Hands a link to the platform's share sheet, as one transfer, since the sheet cannot be up twice either. */
+    fun shareLink(filePicker: FilePicker, link: String, subject: String) {
         launchFileTransfer {
             try {
                 filePicker.shareText(text = link, subject = subject)
@@ -383,7 +390,7 @@ internal class ExportController(
     fun sendProcessLog(filePicker: FilePicker) = launchFileTransfer {
         val file = withContext(Dispatchers.Default) { readProcessLog() }?.let { log ->
             ExportedFile(
-                name = "campfire-log.txt",
+                name = PROCESS_LOG_FILE_NAME,
                 mimeType = ExportedFile.TEXT_MIME_TYPE,
                 bytes = "Campfire $CAMPFIRE_VERSION_NAME (${appBuild.name.lowercase()})\n\n$log".encodeToByteArray(),
             )
@@ -396,7 +403,7 @@ internal class ExportController(
             println("Could not email the log: ${exception.message}")
             false
         }
-        if (!isEmailed) save(filePicker = filePicker, savedMessage = Message.ProcessLogSaved, isShare = filePicker.canShare) { file }
+        if (!isEmailed) save(filePicker = filePicker, savedMessage = Message.ProcessLogSaved, isShare = filePicker.canShareProcessLog) { file }
     }
 
     /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */

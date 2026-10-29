@@ -14,12 +14,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_share
 import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.presentation.resources.songs_share_songs
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
+import com.pandulapeter.campfire.presentation.ui.print.filesFileName
+import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 
 /** What the screen's area shows, which it fades between; a new document is not one of these, see [PrintPreview]. */
 internal enum class PrintScreenContent { FAILED, LOADING, LOADED }
@@ -94,4 +100,19 @@ internal fun exportTitleOf(dialog: DialogType.Export) = when {
     dialog.setlist != null -> Res.string.setlists_share
     dialog.songs.isNotEmpty() -> Res.string.songs_share_songs
     else -> Res.string.songs_share_song
+}
+
+/**
+ * Whether the app bar's Share does something Save does not: a link goes out as text wherever there is a share sheet, a
+ * file only where the platform shares its kind (a browser refuses an archive or a `.cho`, which Share would then only
+ * download, as Save does).
+ */
+internal fun canShareExport(filePicker: FilePicker, format: PrintSettings.Format, source: PrintSource?) = when {
+    format == PrintSettings.Format.LINK -> filePicker.canShare
+    source == null -> false
+    format == PrintSettings.Format.FILES -> filesFileName(source).let { fileName ->
+        val isArchive = fileName.endsWith(LibraryFiles.ARCHIVE_EXTENSION)
+        filePicker.canShareFile(fileName, if (isArchive) ExportedFile.ZIP_MIME_TYPE else ExportedFile.TEXT_MIME_TYPE)
+    }
+    else -> filePicker.canShareFile(pdfFileName(source), ExportedFile.PDF_MIME_TYPE)
 }

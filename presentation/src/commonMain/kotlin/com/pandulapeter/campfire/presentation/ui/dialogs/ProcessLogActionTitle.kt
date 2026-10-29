@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_log_email
 import com.pandulapeter.campfire.presentation.resources.settings_log_save
 import com.pandulapeter.campfire.presentation.resources.settings_log_share
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.canShareProcessLog
 
 /**
  * What sending the log is called here, which is what it does here: the Settings row and the dialog it opens, see
@@ -25,7 +26,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 internal fun processLogActionTitle(filePicker: FilePicker) = stringResource(
     when {
         filePicker.canEmailFiles -> Res.string.settings_log_email
-        filePicker.canShare -> Res.string.settings_log_share
+        filePicker.canShareProcessLog -> Res.string.settings_log_share
         else -> Res.string.settings_log_save
     },
 )

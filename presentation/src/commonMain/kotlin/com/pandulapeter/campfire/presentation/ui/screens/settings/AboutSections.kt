@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_log
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
@@ -43,6 +44,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy_description
 import com.pandulapeter.campfire.presentation.resources.settings_rate
 import com.pandulapeter.campfire.presentation.resources.settings_rate_description
+import com.pandulapeter.campfire.presentation.resources.settings_share_app
+import com.pandulapeter.campfire.presentation.resources.settings_share_app_description
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_version
@@ -70,17 +73,28 @@ import org.jetbrains.compose.resources.painterResource
  *
  * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
  * says "rate", never "get it from the store": a store page has an install button on it, and somebody who has the
- * direct download would end up with a second copy of the app, sandboxed, with a library of its own.
+ * direct download would end up with a second copy of the app, sandboxed, with a library of its own. For the same
+ * reason the share row sends the website's address, never a store listing, and it is there only where the platform
+ * has a share sheet: elsewhere it would be the download row again. Nothing is ever given for a share, which both
+ * stores forbid.
  */
 @Composable
 internal fun AboutSections(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
 ) {
-    AppSection(urlOpener = urlOpener)
+    val filePicker = LocalFilePicker.current
+    AppSection(
+        urlOpener = urlOpener,
+        onShareClicked = if (filePicker.canShare) {
+            { viewModel.exportController.shareLink(filePicker = filePicker, link = WEBSITE_URL, subject = "Campfire") }
+        } else {
+            null
+        },
+    )
     HelpSection(
         urlOpener = urlOpener,
-        processLogTitle = processLogActionTitle(LocalFilePicker.current),
+        processLogTitle = processLogActionTitle(filePicker),
         onProcessLogClicked = { viewModel.dialogHost.showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
     )
     LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.dialogHost.showDialog(DialogType.OpenSourceLicenses) })
@@ -89,6 +103,7 @@ internal fun AboutSections(
 @Composable
 private fun AppSection(
     urlOpener: (String) -> Unit,
+    onShareClicked: (() -> Unit)?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_campfire)) {
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
@@ -105,6 +120,14 @@ private fun AppSection(
                 onClick = { urlOpener(listingUrl) },
             )
         }
+    }
+    if (onShareClicked != null) {
+        LinkListItem(
+            title = stringResource(Res.string.settings_share_app),
+            description = stringResource(Res.string.settings_share_app_description),
+            icon = painterResource(Res.drawable.ic_share),
+            onClick = onShareClicked,
+        )
     }
     if (canAskForDonations) {
         LinkListItem(

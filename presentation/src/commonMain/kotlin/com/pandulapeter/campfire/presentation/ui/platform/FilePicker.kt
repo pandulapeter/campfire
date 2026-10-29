@@ -45,8 +45,15 @@ interface FilePicker {
      */
     suspend fun shareText(text: String, subject: String): Boolean = false
 
-    /** Whether [shareFile] does something other than [saveFile], and [shareText] something at all. */
+    /** Whether there is a share sheet: [shareText] does something at all, and [shareFile] something other than [saveFile]. */
     val canShare: Boolean get() = false
+
+    /**
+     * Whether [shareFile] hands a file named [fileName], of [mimeType], to the share sheet rather than saving it. Asked per
+     * kind of file because a browser shares only the kinds it trusts (Chrome takes a PDF, an image, or a `.txt`, never an
+     * archive or a `.cho`), and a Share that would only download what Save downloads is not offered.
+     */
+    fun canShareFile(fileName: String, mimeType: String): Boolean = canShare
 
     /**
      * Opens a new mail to [to], titled [subject], with [file] attached, for the user to read and send. False where nothing

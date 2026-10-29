@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.library.ExportedFile
+
 /**
  * Everything the process printed lately, oldest line first, each one stamped with the time it was written at: the
  * diagnostics of the shared code and the shells, which are plain `println`s, the platform's own error output, and every
@@ -30,6 +32,12 @@ internal expect fun hasPendingCrashReport(): Boolean
 
 /** Forgets the crash [hasPendingCrashReport] reported, once the user has answered about it either way. */
 internal expect fun forgetPendingCrashReport()
+
+/** What the log goes out as: a plain `.txt`, which is also a kind of file every browser that shares files shares. */
+internal const val PROCESS_LOG_FILE_NAME = "campfire-log.txt"
+
+/** Whether the log is handed to the share sheet where it cannot be mailed, which also decides what sending it is called. */
+internal val FilePicker.canShareProcessLog get() = canShareFile(PROCESS_LOG_FILE_NAME, ExportedFile.TEXT_MIME_TYPE)
 
 /** Where the log goes, from Settings and after a crash, attached to a mail where the platform can. */
 internal const val DEVELOPER_EMAIL = "pandulapeter@gmail.com"

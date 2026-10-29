@@ -109,7 +109,8 @@ pipeline is in `ui/print/CLAUDE.md`.
   Cancel, `cancelPdfExport`, until the picker is up). The button leaves while there are no pages. Failures, including
   `OutOfMemoryError` (not catchable on the web), report a failed export.
 - A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a
-  share leaves it open. Share is an app bar action where `FilePicker.canShare` (Android, iOS).
+  share leaves it open. Share is an app bar action where the platform shares what the format makes
+  (`canShareExport`: Android, iOS, and browsers with the Web Share API, which share a PDF but no zip or `.cho`).
 - `pdfFileName` names it by `LibraryFiles.songBaseName`, like the library.
 
 ## Layout

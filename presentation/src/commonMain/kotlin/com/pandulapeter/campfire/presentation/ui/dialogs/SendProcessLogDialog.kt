@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.forgetPendingCrashReport
 import com.pandulapeter.campfire.presentation.ui.platform.isCopyConfirmedBySystem
 import com.pandulapeter.campfire.presentation.ui.platform.plainTextClipEntry
+import com.pandulapeter.campfire.presentation.ui.platform.canShareProcessLog
 import kotlinx.coroutines.launch
 
 /**
@@ -69,7 +70,7 @@ internal fun SendProcessLogDialog(
         confirmLabel = stringResource(
             when {
                 canEmail -> Res.string.log_dialog_email
-                filePicker.canShare -> Res.string.log_dialog_share
+                filePicker.canShareProcessLog -> Res.string.log_dialog_share
                 else -> Res.string.save
             },
         ),
