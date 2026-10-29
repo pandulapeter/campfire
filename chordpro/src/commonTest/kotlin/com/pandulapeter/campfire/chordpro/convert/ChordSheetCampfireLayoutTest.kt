@@ -102,7 +102,63 @@ class ChordSheetCampfireLayoutTest {
         assertFalse("{start_of_solo" in convert(*lines, isCampfireExport = false))
     }
 
+    /** A row of a right-to-left song as the reader hands it over: one span over its glyphs, ending [inset] from the right. */
+    private fun rtl(value: String, inset: Double = 0.0, width: Double = value.length * GLYPH) = ChordSheet.Line(
+        listOf(ChordSheet.Span(value, RIGHT - inset - width, RIGHT - inset, BODY)),
+    )
+
+    private fun boxes(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(lines.toList(), BODY).withIndex()
+        .filter { it.value == ChordSheetCampfireLayout.Role.BOX_COMMENT }
+        .map { it.index }
+
+    @Test
+    fun `a lyric of a song printed from the right is never a boxed comment by where it starts`() {
+        assertEquals(
+            emptyList(),
+            boxes(
+                rtl("שלום עולם ומלואו"),
+                rtl("שלום עולם"),
+                rtl("שלום עולם ומלואו וכו"),
+                // Starts 5 points right of the line two above it, which in a song printed from the left would be a box.
+                rtl("שלום עולם", width = 9 * GLYPH - 5.0),
+                rtl("שלום"),
+            ),
+        )
+    }
+
+    @Test
+    fun `a boxed comment of a song printed from the right is found by its right edge, in any letters`() {
+        assertEquals(listOf(1), boxes(rtl("שלום עולם ומלואו"), rtl("לאט לאט", inset = 5.0), rtl("שלום עולם")))
+        assertEquals(listOf(1), boxes(rtl("שלום עולם ומלואו"), rtl("x2", inset = 5.0), rtl("שלום עולם"), rtl("שלום")))
+    }
+
+    @Test
+    fun `a chorus of a song printed from the right is no box, and a box inside it is one`() {
+        assertEquals(
+            listOf(3),
+            boxes(rtl("שלום עולם ומלואו"), rtl("שלום עולם"), rtl("שלום עולם ומלואו", inset = 8.0), rtl("לאט לאט", inset = 13.0), rtl("שלום", inset = 8.0)),
+        )
+    }
+
+    @Test
+    fun `each song on a page is judged from its own side`() {
+        assertEquals(
+            listOf(1, 6),
+            boxes(
+                text("Hello world"),
+                text("Pick slowly.", x = MARGIN + 5.0),
+                text("Hello"),
+                ChordSheet.Line(listOf(ChordSheet.Span("שיר", RIGHT - 3 * 19.0, RIGHT, 19.0, isBold = true))),
+                rtl("שלום עולם ומלואו"),
+                rtl("שלום עולם"),
+                rtl("x2", inset = 5.0),
+                rtl("שלום עולם", width = 9 * GLYPH - 5.0),
+            ),
+        )
+    }
+
     private companion object {
+        const val RIGHT = 400.0
         const val MARGIN = 40.0
         const val GLYPH = 6.0
         const val BODY = 12.0

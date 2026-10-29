@@ -9,34 +9,95 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
+
 /**
  * What the layout of Campfire's own PDF export ([ChordSheet.isCampfireExport]) says about a line, which is read rather
  * than guessed, since the export prints each kind of line in a type of its own: a section's label bold and a point
  * smaller than the lyrics, a grid bold in the monospaced face, a comment in italics, and a boxed comment's text 5 points
- * in from the column, inside a frame the text layer does not carry. Every other line is read as any sheet's is.
+ * in from the lines around it, on the song's side, inside a frame the text layer does not carry. Every other line is
+ * read as any sheet's is.
  */
 internal object ChordSheetCampfireLayout {
 
     enum class Role { LABEL, GRID, COMMENT, BOX_COMMENT }
 
-    /** The role of each line of a page, by the type it is set in and where it starts. */
+    /**
+     * The role of each line of a page, by the type it is set in and where it starts or, in a song printed from the
+     * right, where it ends.
+     */
     fun roles(lines: List<ChordSheet.Line>, bodySize: Double): List<Role?> {
         // A line's first space counts: a lyric indented by spaces starts at the column, where its first one is.
         val starts = lines.map { line -> line.spans.firstOrNull()?.start }
+        // Reading order is not the order on the page, so a right-to-left row ends where its rightmost glyph does.
+        val ends = lines.map { line -> line.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.end } }
+        val songs = songsOf(lines, bodySize)
         return lines.mapIndexed { index, line ->
             val spans = line.spans.filter { it.text.isNotBlank() }
             val start = starts[index]
+            val end = ends[index]
+            val song = songs.first { index in it }
             when {
-                spans.isEmpty() || start == null -> null
+                spans.isEmpty() || start == null || end == null -> null
                 spans.all { it.isBold && it.isMonospace } -> Role.GRID
                 spans.all { it.isBold && !it.isMonospace && it.size < bodySize - LABEL_SIZE_STEP / 2 } -> Role.LABEL
                 spans.all { it.isItalic } -> Role.COMMENT
-                spans.none { it.isBold || it.isItalic || it.isMonospace } && starts.any { other ->
-                    other != null && start - other in BOX_INSET - TOLERANCE..BOX_INSET + TOLERANCE
-                } && starts.none { other -> other != null && start - other in TOLERANCE..BOX_INSET - TOLERANCE } -> Role.BOX_COMMENT
+                !line.isPlain() -> null
+                isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end) }
+                isBoxed(song.mapNotNull { starts[it] }, start) -> Role.BOX_COMMENT
                 else -> null
             }
         }
+    }
+
+    /**
+     * Whether a line's [edge] sits 5 points in from some other line's and none lies between the two: the box against the
+     * lines around it rather than the column, which also finds a box inside a chorus, whose lines are indented by more.
+     * The edges of a song printed from the right are passed negated, so that "in" is always the larger value.
+     */
+    private fun isBoxed(edges: List<Double>, edge: Double) = edges.any { other -> edge - other in BOX_INSET - TOLERANCE..BOX_INSET + TOLERANCE } &&
+        edges.none { other -> edge - other in TOLERANCE..BOX_INSET - TOLERANCE }
+
+    /**
+     * The lines of each song on the page, cut at the titles, since one page may end a song printed from the left and
+     * start one printed from the right. The lines before the first title are the song the page continues.
+     */
+    private fun songsOf(lines: List<ChordSheet.Line>, bodySize: Double): List<IntRange> {
+        val titles = lines.indices.filter { index ->
+            val spans = lines[index].spans.filter { it.text.isNotBlank() }
+            spans.isNotEmpty() && spans.all { it.isBold && !it.isMonospace && it.size >= bodySize * TITLE_SIZE_RATIO }
+        }
+        return (listOf(0) + titles + lines.size).distinct().zipWithNext { from, until -> from until until }
+    }
+
+    /**
+     * Whether the song holding the line at [index] is printed flush right. The export sets every row of a right-to-left
+     * song from the right, an English comment or lyric in it too, so the side is the song's, never the line's own
+     * letters: more of its plain lines end at its right edge than start at its left one, and a tie (one line, lines of
+     * one width) goes to the letters of those lines. Only the lines beside the candidate count, so that each column of
+     * a two-column page is judged by its own edges.
+     */
+    private fun isFlushRight(lines: List<ChordSheet.Line>, starts: List<Double?>, ends: List<Double?>, song: IntRange, index: Int): Boolean {
+        val from = starts[index] ?: return false
+        val until = ends[index] ?: return false
+        val column = song.mapNotNull { other ->
+            val otherStart = starts[other]
+            val otherEnd = ends[other]
+            if (otherStart != null && otherEnd != null && lines[other].isPlain() && otherStart < until && otherEnd > from) Triple(other, otherStart, otherEnd) else null
+        }
+        val left = column.minOf { it.second }
+        val right = column.maxOf { it.third }
+        val flushLeft = column.count { it.second - left <= TOLERANCE }
+        val flushRight = column.count { right - it.third <= TOLERANCE }
+        return if (flushRight != flushLeft) flushRight > flushLeft else {
+            writingDirectionOf(column.joinToString(" ") { (other) -> lines[other].spans.joinToString("") { it.text } }) == WritingDirection.RIGHT_TO_LEFT
+        }
+    }
+
+    /** Whether a line is set in the lyrics' type: text, none of it bold, italic, or monospaced. */
+    private fun ChordSheet.Line.isPlain() = spans.filter { it.text.isNotBlank() }.let { spans ->
+        spans.isNotEmpty() && spans.none { it.isBold || it.isItalic || it.isMonospace }
     }
 
     /**
@@ -57,4 +118,7 @@ internal object ChordSheetCampfireLayout {
     /** How far in from its frame a boxed comment's text starts (`PrintRows.boxedRows`), in points. */
     private const val BOX_INSET = 5.0
     private const val TOLERANCE = 0.75
+
+    /** A song's title is set at 1.6 times the lyrics' size (`PrintRows.titleStyle`), over anything else in bold. */
+    private const val TITLE_SIZE_RATIO = 1.3
 }

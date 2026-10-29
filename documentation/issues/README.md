@@ -87,7 +87,7 @@ regenerates only the goldens its change moves, and the merge re-runs `:tools:scr
 `chordpro/CLAUDE.md` (A and B may each add a sentence; merge word by word). Plan 12 changes
 `.github/workflows/`, which the unattended workflow's token cannot push: land it from a normal checkout. Plan 13 was dropped: the workflow it changed, `regression-review.yml`, was deleted.
 
-## Decisions (awaiting the user; the plans carry the recommended default)
+## Decisions (the user took every recommended default)
 
 - **D1 (plan 04): how the editor treats lines in another direction.** Recommended: **B**, arrow keys move by each
   line's own direction (directive, tab, grid, and `abc` lines left to right), the display unchanged; tab rows without
