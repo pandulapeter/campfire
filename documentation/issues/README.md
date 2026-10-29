@@ -66,7 +66,6 @@ App Store case); each was fixed by one more commit (88ae181a4, d144cd3b4). Verif
 | 10 | Mirror the remaining direction-bearing icons | low | D |
 | 11 | Give the Romanian plurals their "few" form | low | D |
 | 12 | Attach the Linux .deb before the AppImage is built | medium | E |
-| 13 | Keep an unattended review's work when it touches a workflow file | low | E |
 | 14 | Frame the Hebrew store images with the bundled Hebrew font | low | E |
 
 ## Lanes
@@ -77,7 +76,7 @@ App Store case); each was fixed by one more commit (88ae181a4, d144cd3b4). Verif
 | B | Editor | 04, 05 | `presentation/…/ui/screens/songEditor/`, the new helper in `chordpro/…/edit/`, `tools/screenshots/…/songEditor/EditorDirectionTest.kt` |
 | C | Print settings, notation, song view | 06, 07, 08 | `data/source/local/implementation` preferences document and mapper, `presentation/…/ui/notation/`, `presentation/…/ui/songView/` (or `ui/print/` under D2's option B) |
 | D | Web share, icons, Romanian | 09, 10, 11 | `presentation/src/wasmJsMain/…/FilePicker.wasmJs.kt`, `FilePicker.kt`, `ExportController.kt` and its test, `composeResources/drawable/`, `ui/theme/CLAUDE.md`, `values-ro/strings.xml`, the new `PluralItemsTest.kt` |
-| E | CI and the screenshot tool | 12, 13, 14 | `.github/workflows/publish-linux.yml`, `.github/workflows/regression-review.yml`, `.github/CLAUDE.md`, `tools/screenshots/src/main/…/Listing*.kt`, `Composition*.kt`, `tools/screenshots/CLAUDE.md` |
+| E | CI and the screenshot tool | 12, 14 | `.github/workflows/publish-linux.yml`, `.github/CLAUDE.md`, `tools/screenshots/src/main/…/Listing*.kt`, `Composition*.kt`, `tools/screenshots/CLAUDE.md` |
 
 **Merge order: A, E, C, D, B.** A is pure logic everyone else is independent of; E touches only CI and the framing
 code; C, D, and B each may move golden renders under `tools/screenshots`, B (the editor, with the open decision D1 and
@@ -85,8 +84,8 @@ the most UI) last.
 
 **Shared files:** golden renders under `tools/screenshots/src/test/resources` (C's 08, D's 10, B's 04): each lane
 regenerates only the goldens its change moves, and the merge re-runs `:tools:screenshots:test` after each lane;
-`chordpro/CLAUDE.md` (A and B may each add a sentence; merge word by word). Plans 12 and 13 change
-`.github/workflows/`, which the unattended workflow's token cannot push: land them from a normal checkout.
+`chordpro/CLAUDE.md` (A and B may each add a sentence; merge word by word). Plan 12 changes
+`.github/workflows/`, which the unattended workflow's token cannot push: land it from a normal checkout. Plan 13 was dropped: the workflow it changed, `regression-review.yml`, was deleted.
 
 ## Decisions (awaiting the user; the plans carry the recommended default)
 
