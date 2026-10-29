@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
 
@@ -84,13 +85,18 @@ internal class SearchPill {
     /**
      * Where the pill stands while the search is closed: [height] tall around the middle of the buttons' row, with a
      * detached button's room cut off its end by [detachProgress], which leaves the pill ending as far past the last
-     * action as it starts before the first one.
+     * action as it starts before the first one. The rectangles are the bar's own, never mirrored, so the end is the
+     * left edge in a [layoutDirection] read from the right.
      */
-    fun closedBounds(height: Float, detachProgress: Float) = closedActions.copy(
-        top = closedActions.center.y - height / 2,
-        right = closedActions.right - closedSearchActionsWidth * detachProgress,
-        bottom = closedActions.center.y + height / 2,
-    )
+    fun closedBounds(height: Float, detachProgress: Float, layoutDirection: LayoutDirection): Rect {
+        val detachedRoom = closedSearchActionsWidth * detachProgress
+        return Rect(
+            left = closedActions.left + if (layoutDirection == LayoutDirection.Rtl) detachedRoom else 0f,
+            top = closedActions.center.y - height / 2,
+            right = closedActions.right - if (layoutDirection == LayoutDirection.Rtl) 0f else detachedRoom,
+            bottom = closedActions.center.y + height / 2,
+        )
+    }
 }
 
 /**

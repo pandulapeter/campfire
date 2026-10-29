@@ -266,7 +266,11 @@ internal fun SearchableTopAppBar(
                         // Always fully opaque: the pill is one surface whose color must not change anywhere along the trip,
                         // a back gesture's preview included, which fades what the field holds and leaves the pill alone.
                         // Thinner than the buttons' touch targets, which stay whole and reach past its top and bottom.
-                        val closedBounds = pill.closedBounds(height = closedPillHeight, detachProgress = detachProgress.value)
+                        val closedBounds = pill.closedBounds(
+                            height = closedPillHeight,
+                            detachProgress = detachProgress.value,
+                            layoutDirection = layoutDirection,
+                        )
                         val bounds = lerp(closedBounds, pill.openField, pillProgress.value)
                         drawRoundRect(
                             color = pillColor,
@@ -280,7 +284,9 @@ internal fun SearchableTopAppBar(
                 SearchPillPresses(
                     modifier = Modifier.matchParentSize(),
                     pill = pill,
-                    closedBounds = { pill.closedBounds(height = closedPillHeight, detachProgress = detachProgress.value) },
+                    closedBounds = {
+                        pill.closedBounds(height = closedPillHeight, detachProgress = detachProgress.value, layoutDirection = layoutDirection)
+                    },
                     openProgress = { pillProgress.value },
                 )
                 Row(

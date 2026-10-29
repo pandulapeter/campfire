@@ -32,7 +32,8 @@ The top app bars of the list screens.
   (`areClosedSearchActionsKeptInSearch`).
 - New is a filled 48dp circle **beside the pill** (`areClosedSearchActionsDetached`) that never moves as search opens
   and closes: the pill's end and the gap before the circle follow the search's spring, and the circle fades and scales in
-  place, since a clipped shrink would slice it.
+  place, since a clipped shrink would slice it. The pill's rectangles are the bar's own, never mirrored, so its end
+  is the left edge right to left (`SearchPill.closedBounds`).
 - The divider before it (`ClosedSearchActionsDivider`, shown with `areClosedSearchActionsShown`) animates on the search
   action's spring, not inside the button's exit, whose clipped shrink would cut it off on the first frame.
 - The bar stays filled while the list has no header (placeholder, ranked results).
