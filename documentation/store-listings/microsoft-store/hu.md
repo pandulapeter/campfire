@@ -92,7 +92,7 @@ Szabd magadra
 • Világos és sötét téma, a hátteret melegebbre hangoló szépia csúszka és tíz színséma
 • A tálcaikon a választott színt követi
 • Kapcsold ki a metronómot, a hangolót, a skálákat, a listákat, az akkordokat vagy a borítóképeket, ha sosem használod őket
-• Angol, magyar, román, német, spanyol, francia és olasz nyelv, az appon belül váltható
+• Angol, magyar, román, német, spanyol, francia, olasz és héber nyelv, az appon belül váltható
 
 A dalaid a tieid
 A könyvtárad egy mappa az eszközödön, tele közönséges ChordPro-szövegfájlokkal. A Campfire offline is működik, nem kell hozzá fiók, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek és daladatok letöltéséhez. Bármikor mindent exportálhatsz.

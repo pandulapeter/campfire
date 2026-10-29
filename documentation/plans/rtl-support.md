@@ -9,8 +9,9 @@
 -->
 # Plan: right-to-left support, Hebrew first
 
-**Status:** steps 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10 landed (2026-10-29). Written against the code on 2026-10-29 (abba88cf1). `ui/` is
-`presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in the root `CLAUDE.md`.
+**Status:** every step (1 to 11) has landed (2026-10-29); Hebrew is an app language. Written against the code on
+2026-10-29 (abba88cf1). `ui/` is `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, as in
+the root `CLAUDE.md`.
 
 The goal is a Hebrew UI that reads right to left on every platform, and Hebrew songs that read correctly whatever the
 UI language is: on screen, in the editor, in the PDF, and when imported. Hebrew is the only RTL language planned, but

@@ -65,7 +65,9 @@ internal class OnboardingFooterTest {
         val dots = (1..MAX_PAGES).flatMap { step -> (step..MAX_PAGES).map { hasContentDescription(string(Res.string.onboarding_progress, step, it)) } }
             .single { onAllNodes(it).fetchSemanticsNodes().isNotEmpty() }
             .let { onNode(it).fetchSemanticsNode().boundsInRoot }
-        val isBeside = start.right <= dots.left && dots.right <= end.left
+        // Which button is on the left is the language's direction.
+        val (left, right) = listOf(start, end).sortedBy { it.left }
+        val isBeside = left.right <= dots.left && dots.right <= right.left
         val isAbove = dots.bottom <= start.top && dots.bottom <= end.top
         assertTrue(isBeside || isAbove, "$case: the dots ($dots) overlap the buttons ($start, $end).")
         return end

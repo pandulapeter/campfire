@@ -180,7 +180,8 @@ internal class ImportReviewTest {
                     assertTrue(button.textLayout.isWhole, "$case: \"$text\" is cut short.")
                     val title = onNode(hasText(heading), useUnmergedTree = true).fetchSemanticsNode()
                     assertTrue(title.textLayout.isWhole, "$case: \"$heading\" is cut short beside \"$text\".")
-                    assertTrue(title.boundsInRoot.right <= button.boundsInRoot.left, "$case: \"$heading\" runs under \"$text\".")
+                    val isApart = title.boundsInRoot.right <= button.boundsInRoot.left || button.boundsInRoot.right <= title.boundsInRoot.left
+                    assertTrue(isApart, "$case: \"$heading\" runs under \"$text\".")
                     if (label == Res.string.deselect_all) {
                         onNode(hasText(text) and hasClickAction()).performClick()
                         waitForIdle()

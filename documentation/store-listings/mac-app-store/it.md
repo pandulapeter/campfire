@@ -36,7 +36,7 @@ Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor, incolla
 Lettura
 • Gira pagina con un clic, i tasti freccia o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
 • Oppure una colonna che scorre da sola, con una velocità per ogni canzone
-• Le melodie ABC come spartito, anche nel PDF
+• Melodie ABC come spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
 • La modalità Sola lettura protegge le canzoni da un clic accidentale sul palco
@@ -83,7 +83,7 @@ Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori
 • L'icona nel Dock segue il colore che scegli
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese e italiano, selezionabili nell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano ed ebraico, selezionabili nell'app
 
 Le tue canzoni sono tue
 La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta: per sincronizzare e condividere col tuo Dropbox, senza server in mezzo, aprire un link condiviso e scaricare copertine e dati delle canzoni. Puoi esportare tutto quando vuoi.

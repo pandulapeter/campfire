@@ -238,7 +238,10 @@ def join(code, directory):
     for number in range(1, len(ranges) + 1):
         part = (Path(directory) / f"xx_{number}.xml").read_text().rstrip("\n").split("\n")
         expected = ranges[number - 1][1] - ranges[number - 1][0] + 1
-        if len(part) != expected:
+        # A plural item of a quantity the English has none of (`zero`, or a category of the language's own) is a line
+        # of its own, the only kind a translation adds.
+        added = sum(1 for line in part if re.search(r'<item quantity="(zero|two|few|many)"', line))
+        if len(part) - added != expected:
             sys.exit(f"xx_{number}.xml has {len(part)} lines, en_{number}.xml {expected}.")
         parts += part
     target = RESOURCES / f"values-{code}/strings.xml"
@@ -277,7 +280,15 @@ def check_strings(code):
         source = english.get(key, "")
         if sorted(SPECIFIER.findall(source)) != sorted(SPECIFIER.findall(text)):
             message = f"{key}: placeholders {SPECIFIER.findall(source)} became {SPECIFIER.findall(text)}"
-            (warnings if key.endswith(":one") and not SPECIFIER.findall(text) else errors).append(message)
+            # A `one` item may spell its count out ("one song"), dropping the number but nothing else.
+            dropped = sorted(SPECIFIER.findall(source))
+            for kept in SPECIFIER.findall(text):
+                if kept in dropped:
+                    dropped.remove(kept)
+            is_count_spelled = key.endswith(":one") and len(SPECIFIER.findall(text)) + len(dropped) == len(SPECIFIER.findall(source)) and all(d.endswith("$d") for d in dropped)
+            (warnings if is_count_spelled else errors).append(message)
+        if source.count("\u00a0") > text.count("\u00a0"):
+            errors.append(f"{key}: the English keeps a count on its word's line with a no-break space (U+00A0); keep each.")
         if text == source and len(source) > 12:
             warnings.append(f"{key}: identical to English ({source[:50]!r}); fine only for names and symbols.")
         if right_to_left(text) and not is_right_to_left(code):
@@ -338,7 +349,8 @@ def check_wiring(code, english_name):
         ("app/ios/CLAUDE.md", rf"`CFBundleLocalizations` \([^)]*`{code}`"),
     ]
     stores = sorted(p.name for p in (ROOT / "documentation/store-listings").iterdir() if p.is_dir())
-    checks += [(f"documentation/store-listings/{store}/en.md", rf"\b{english_name}\b[^\n]*, switchable inside the app") for store in stores]
+    # The screenshots' texts are the one folder that is no store's listing, with no description to name the languages in.
+    checks += [(f"documentation/store-listings/{store}/en.md", rf"\b{english_name}\b[^\n]*, switchable inside the app") for store in stores if store != "screenshot-texts"]
     checks += [(f"documentation/store-listings/{store}/{code}.md", r"(?m)^## ") for store in stores]
     checks += [("app/desktop/AppxManifest.xml", rf'<Resource Language="{code}-[a-z]+" />')]
     checks += [(str((PRESENTATION / "localization/PluralTables.kt").relative_to(ROOT)), rf"AppLocale\.{code.upper()} -> {strings_object}\.plurals")]

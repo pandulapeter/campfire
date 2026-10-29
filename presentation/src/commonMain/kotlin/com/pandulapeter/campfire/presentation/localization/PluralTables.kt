@@ -30,6 +30,7 @@ private val AppLocale.plurals
         AppLocale.DE -> StringsDe.plurals
         AppLocale.ES -> StringsEs.plurals
         AppLocale.FR -> StringsFr.plurals
+        AppLocale.HE -> StringsHe.plurals
         AppLocale.HU -> StringsHu.plurals
         AppLocale.IT -> StringsIt.plurals
         AppLocale.RO -> StringsRo.plurals

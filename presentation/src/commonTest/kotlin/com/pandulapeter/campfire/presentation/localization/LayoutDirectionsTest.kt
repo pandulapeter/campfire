@@ -22,8 +22,14 @@ class LayoutDirectionsTest {
     }
 
     @Test
-    fun `every language the app speaks today is laid out from the left`() {
-        AppLocale.entries.forEach { locale -> assertEquals(LayoutDirection.Ltr, locale.layoutDirection, locale.code) }
+    fun `a language written from the right is laid out from the right and every other from the left`() {
+        assertEquals(LayoutDirection.Rtl, AppLocale.HE.layoutDirection)
+        AppLocale.entries.filter { it != AppLocale.HE }.forEach { locale -> assertEquals(LayoutDirection.Ltr, locale.layoutDirection, locale.code) }
+    }
+
+    @Test
+    fun `Android's legacy code for Hebrew finds the Hebrew strings`() {
+        assertEquals(AppLocale.HE, resolvedAppLocale(language = AppLanguage.SYSTEM_DEFAULT, systemLanguage = "iw"))
     }
 
     @Test

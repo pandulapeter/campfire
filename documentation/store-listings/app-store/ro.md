@@ -93,7 +93,7 @@ Pe gustul tău
 • Temă deschisă sau întunecată, glisor sepia și zece scheme de culori
 • Pictograma aplicației preia culoarea aleasă
 • Dezactivezi orice funcție pe care n-o folosești
-• Engleză, maghiară, română, germană, spaniolă, franceză și italiană, de ales din aplicație
+• Engleză, maghiară, română, germană, spaniolă, franceză, italiană și ebraică, de ales din aplicație
 
 Cântecele tale sunt ale tale
 Biblioteca ta e un folder cu fișiere text ChordPro obișnuite, pe dispozitiv. Campfire merge offline, fără cont, și nu colectează date: fără statistici, urmărire sau reclame. Iese pe internet doar la cererea ta: ca să sincronizeze și să partajeze prin Dropboxul tău, fără server la mijloc, să deschidă un link partajat și să descarce coperte și detalii despre cântece. Poți exporta totul oricând.

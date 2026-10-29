@@ -83,7 +83,7 @@ Import, export, partage et synchro
 À ton image
 • Thèmes clair et sombre, curseur sépia et dix palettes de couleurs, ou les couleurs de ton fond d'écran
 • Désactive ce dont tu ne te sers jamais
-• Anglais, hongrois, roumain, allemand, espagnol, français et italien, au choix dans l'app
+• Anglais, hongrois, roumain, allemand, espagnol, français, italien et hébreu, au choix dans l'app
 
 Tes chansons t'appartiennent
 Ta bibliothèque : un dossier de simples fichiers ChordPro sur ton appareil. Campfire marche hors ligne, sans compte, et ne collecte aucune donnée : ni statistiques, ni pistage, ni pub. Il ne va en ligne qu'à ta demande : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, récupérer pochettes et infos des chansons. Tout s'exporte à tout moment.

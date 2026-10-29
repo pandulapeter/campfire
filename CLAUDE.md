@@ -116,7 +116,7 @@ campfire.log / campfire.log.1          desktop only, here: the process log (Andr
 
 ### Strings
 
-- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es|-fr|-it]/strings.xml`, read as
+- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es|-fr|-it|-he]/strings.xml`, read as
   the `code-style` skill says.
 - A counted sentence is a `<plurals>` with `one` and `other` (and any other category its language's rule names), not
   a second key. A `zero` item reads 0 in any language, for a 0 worded apart ("Aucune chanson"); French 0 already

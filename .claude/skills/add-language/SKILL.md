@@ -162,7 +162,8 @@ Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, harmonic, melodic, penta
 >
 > Structure (a script checks this): the same lines, keys, order, and blank lines; every XML comment exactly as it is,
 > in English. Keep every placeholder (`%1$s`, `%2$d`, `{completed}`), which you may reorder, and `\n`, `<b>`/`<i>`/`<u>`,
-> ChordPro syntax (`{title}`, `[Am]`), file names, shortcuts (Ctrl+V, ⌘V), and URLs. Quotes: use the language's own
+> ChordPro syntax (`{title}`, `[Am]`), file names, shortcuts (Ctrl+V, ⌘V), URLs, and every no-break space (U+00A0,
+> which keeps a count on its word's line). Quotes: use the language's own
 > quotation marks. Plurals: the app picks the item by <Language>'s CLDR rule, whose categories are <the preflight's
 > plural NOTE>; write the `one` and `other` items the English has, and add an item of another of those categories
 > (on a line of its own, after `one`) only where it reads differently from `other`. A category without an item reads

@@ -92,7 +92,7 @@ Mach sie zu deiner
 • Helles und dunkles Design, ein Sepia-Regler, der den Hintergrund wärmer macht, und zehn Farbschemata
 • Das Symbol in der Taskleiste folgt der Farbe, die du wählst
 • Schalte Metronom, Stimmgerät, Tonleitern, Setlists, Akkorde oder Cover ab, wenn du sie nie nutzt
-• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch und Italienisch, in der App umschaltbar
+• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch und Hebräisch, in der App umschaltbar
 
 Deine Songs gehören dir
 Deine Bibliothek ist ein Ordner mit ganz normalen ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur für das, worum du es bittest: zum Synchronisieren und Teilen über deine eigene Dropbox, ohne Server dazwischen, zum Öffnen eines geteilten Links und zum Laden von Coverbildern und Songangaben. Du kannst jederzeit alles exportieren.

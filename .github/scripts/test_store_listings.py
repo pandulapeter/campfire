@@ -35,7 +35,7 @@ class LanguageTest(unittest.TestCase):
         for store, locales in STORE_LOCALES.items():
             matched, missing, unknown = match_locales(locales, app_languages())
             self.assertEqual([], missing, store)
-            self.assertEqual({"he"}, {language(locale) for locale in unknown}, store)
+            self.assertEqual([], unknown, store)
 
     def test_a_regional_copy_gets_its_language(self):
         matched, missing, unknown = match_locales(["fr-FR", "fr-CA", "ro", "ja-JP"], ["fr", "ro", "de"])

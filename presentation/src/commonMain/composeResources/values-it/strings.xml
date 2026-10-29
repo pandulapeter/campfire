@@ -537,6 +537,7 @@
     <string name="settings_user_interface_language_spanish">Spagnolo</string>
     <string name="settings_user_interface_language_french">Francese</string>
     <string name="settings_user_interface_language_italian">Italiano</string>
+    <string name="settings_user_interface_language_hebrew">Ebraico</string>
     <string name="settings_distributions_all">Tutte le versioni di Campfire</string>
     <string name="settings_distributions_all_description">Su campfire-songbook.com</string>
     <string name="settings_distribution_play_store">Google Play</string>

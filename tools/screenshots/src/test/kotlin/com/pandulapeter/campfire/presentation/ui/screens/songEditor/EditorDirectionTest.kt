@@ -18,7 +18,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
-import androidx.compose.ui.unit.LayoutDirection
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
@@ -50,7 +50,7 @@ internal class EditorDirectionTest {
 
     @Test
     fun `an English song's lines are laid out from the left in a right-to-left interface`() = runAppTest(
-        appearance = TestAppearance(layoutDirection = LayoutDirection.Rtl),
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
         openEditor()
         val (_, layout) = fieldLayout()

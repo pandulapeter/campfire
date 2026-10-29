@@ -83,7 +83,7 @@ Importieren, exportieren, teilen und synchronisieren
 Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata oder Farben deines Hintergrundbilds
 • Schalte ab, was du nie nutzt
-• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch und Italienisch, in der App umschaltbar
+• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch und Hebräisch, in der App umschaltbar
 
 Deine Songs gehören dir
 Deine Bibliothek ist ein Ordner normaler ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur, wenn du es willst: für Sync und Teilen über deine eigene Dropbox (ohne Server dazwischen), geteilte Links sowie Cover und Songangaben. Du kannst jederzeit alles exportieren.

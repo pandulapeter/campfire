@@ -1,0 +1,24 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+
+/* The share extension's Hebrew strings. Keep in step with en.lproj. */
+"share_saving" = "שמירה ב־Campfire…";
+"share_saved" = "נשמר ב־Campfire";
+"share_saved_detail" = "פתחו את Campfire כדי להוסיף אותו לספרייה.";
+"share_link" = "Campfire לא פותח דפי אינטרנט.";
+"share_link_detail" = "בחרו את הטקסט של דף האקורדים ושתפו אותו במקום.";
+"share_unsupported" = "אי אפשר לייבא את זה ל־Campfire.";
+"share_unsupported_detail" = "אפשר לייבא שירים, טקסט פשוט, מסמכי PDF ו־Word, וארכיוני zip.";
+"share_too_large" = "זה גדול מדי לייבוא.";
+"share_too_large_detail" = "Campfire מייבא עד 24 MB בכל פעם, 16 MB למסמך אחד ו־8 MB לקובץ טקסט או שיר אחד.";
+"share_inbox_full" = "כמה שיתופים עדיין ממתינים.";
+"share_inbox_full_detail" = "פתחו את Campfire כדי לסיים אותם קודם.";
+"share_failed" = "לא ניתן היה לשמור את זה עבור Campfire.";
+"share_done" = "סיום";

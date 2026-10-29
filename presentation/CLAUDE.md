@@ -43,8 +43,8 @@ The entire UI plus the thin per-platform shells the `:app:*` modules call into. 
   `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is downloaded from the address
   `SharedLink.Readable.downloadUrl` builds (never one the text names) and always reviewed.
 - Summaries report unreadable documents separately and append the number of converted songs actually written (English,
-  Hungarian, Romanian, German, Spanish, French, and Italian). A document that is one song is previewed like any batch of
-  one song (`ui/screens/songDetails/`).
+  Hungarian, Romanian, German, Spanish, French, Italian, and Hebrew). A document that is one song is previewed like any
+  batch of one song (`ui/screens/songDetails/`).
 
 ## Strings
 

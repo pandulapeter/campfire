@@ -1,0 +1,1383 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Shared -->
+    <string name="back">חזרה</string>
+    <string name="close">סגירה</string>
+    <string name="cancel">ביטול</string>
+    <string name="done">סיום</string>
+    <string name="delete">מחיקה</string>
+    <string name="create">יצירה</string>
+    <string name="duplicate">שכפול</string>
+    <string name="share_or_export">שיתוף או ייצוא</string>
+    <string name="save">שמירה</string>
+    <string name="select_all">בחירת הכול</string>
+    <string name="deselect_all">ביטול בחירת הכול</string>
+    <string name="retry">ניסיון חוזר</string>
+    <string name="add_demo_library">הוספת ספריית ההדגמה</string>
+    <string name="confirm_exit_title">לסגור את Campfire?</string>
+    <string name="confirm_exit_message">בטוח שרוצים לצאת מהאפליקציה?</string>
+
+    <!-- Import and export -->
+    <string name="import_progress_title">ייבוא קבצים</string>
+    <string name="import_progress_unpacking">פותחים את הקבצים והארכיונים שנבחרו</string>
+    <string name="import_progress_reading">קוראים וממירים את השירים</string>
+    <string name="import_progress_comparing">בודקים כפילויות והתנגשויות</string>
+    <string name="import_progress_importing">מוסיפים את הקבצים לספרייה</string>
+    <string name="import_progress_finishing">מעדכנים את הספרייה</string>
+    <string name="import_progress_count">%1$d מתוך %2$d עובדו</string>
+    <string name="import_progress_wait">יש להשאיר את Campfire פתוח עד שהייבוא יסתיים.</string>
+    <string name="import_status_title">הייבוא הושלם</string>
+    <string name="import_status_stopped">הייבוא נעצר</string>
+    <string name="import_status_partial">הייבוא נעצר בעקבות כשל. הקבצים שכבר יובאו נמצאים בספרייה; שאר הקבצים לא עובדו.</string>
+    <string name="import_status_unknown_failure">לא ניתן היה להשלים את הייבוא. כדאי לבדוק את הספרייה לפני שמנסים שוב.</string>
+    <plurals name="import_status_songs">
+        <item quantity="one">שיר אחד יובא</item>
+        <item quantity="two">שני שירים יובאו</item>
+        <item quantity="other">%1$d שירים יובאו</item>
+    </plurals>
+    <plurals name="import_status_setlists">
+        <item quantity="one">סט־ליסט אחד יובא</item>
+        <item quantity="two">שני סט־ליסטים יובאו</item>
+        <item quantity="other">%1$d סט־ליסטים יובאו</item>
+    </plurals>
+    <plurals name="import_status_duplicates">
+        <item quantity="one">קובץ אחד כבר נמצא בספרייה</item>
+        <item quantity="two">שני קבצים כבר נמצאים בספרייה</item>
+        <item quantity="other">%1$d קבצים כבר נמצאים בספרייה</item>
+    </plurals>
+    <plurals name="import_status_left_out">
+        <item quantity="one">קובץ אחד הושמט לפי בחירתך</item>
+        <item quantity="two">שני קבצים הושמטו לפי בחירתך</item>
+        <item quantity="other">%1$d קבצים הושמטו לפי בחירתך</item>
+    </plurals>
+    <plurals name="import_status_skipped">
+        <item quantity="one">קובץ אחד לא נתמך או לא תקין</item>
+        <item quantity="two">שני קבצים לא נתמכים או לא תקינים</item>
+        <item quantity="other">%1$d קבצים לא נתמכים או לא תקינים</item>
+    </plurals>
+    <plurals name="import_status_oversized">
+        <item quantity="one">קובץ אחד חורג ממגבלת הגודל לייבוא</item>
+        <item quantity="two">שני קבצים חורגים ממגבלת הגודל לייבוא</item>
+        <item quantity="other">%1$d קבצים חורגים ממגבלת הגודל לייבוא</item>
+    </plurals>
+    <plurals name="import_status_unreadable">
+        <item quantity="one">מסמך אחד ללא טקסט קריא</item>
+        <item quantity="two">שני מסמכים ללא טקסט קריא</item>
+        <item quantity="other">%1$d מסמכים ללא טקסט קריא</item>
+    </plurals>
+    <plurals name="import_status_failed">
+        <item quantity="one">קובץ אחד שלא ניתן היה לייבא</item>
+        <item quantity="two">שני קבצים שלא ניתן היה לייבא</item>
+        <item quantity="other">%1$d קבצים שלא ניתן היה לייבא</item>
+    </plurals>
+    <plurals name="import_status_unprocessed">
+        <item quantity="one">קובץ אחד לא עובד</item>
+        <item quantity="two">שני קבצים לא עובדו</item>
+        <item quantity="other">%1$d קבצים לא עובדו</item>
+    </plurals>
+    <string name="import_report_search">חיפוש קבצים</string>
+    <string name="import_files_empty">אין קבצים תואמים</string>
+    <string name="import_report_clean">שום דבר לא הושמט.</string>
+    <string name="import_report_left_out">חלק מהקבצים לא יובאו. כל אחד מהם מופיע למטה, תחת הסיבה.</string>
+    <string name="import_report_converted">הומרו, כדאי להציץ בהם בעורך</string>
+    <string name="import_report_edit">פתיחה בעורך</string>
+    <string name="import_details">פרטים</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">להחליף קובץ אחד?</item>
+        <item quantity="two">להחליף שני קבצים?</item>
+        <item quantity="other">להחליף %1$d קבצים?</item>
+    </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">הקובץ שבספרייה יידרס. אי אפשר לבטל את הפעולה.</item>
+        <item quantity="other">הקבצים שבספרייה יידרסו. אי אפשר לבטל את הפעולה.</item>
+    </plurals>
+    <string name="import_files">ייבוא קבצים</string>
+    <plurals name="import_result_songs">
+        <item quantity="one">שיר אחד יובא</item>
+        <item quantity="two">שני שירים יובאו</item>
+        <item quantity="other">%1$d שירים יובאו</item>
+    </plurals>
+    <plurals name="import_result_setlists">
+        <item quantity="one">סט־ליסט אחד יובא</item>
+        <item quantity="two">שני סט־ליסטים יובאו</item>
+        <item quantity="other">%1$d סט־ליסטים יובאו</item>
+    </plurals>
+    <plurals name="import_result_already_there">
+        <item quantity="one">אחד כבר נמצא בספרייה</item>
+        <item quantity="two">שניים כבר נמצאים בספרייה</item>
+        <item quantity="other">%1$d כבר נמצאים בספרייה</item>
+    </plurals>
+    <plurals name="import_result_skipped">
+        <item quantity="one">אחד דולג</item>
+        <item quantity="two">שניים דולגו</item>
+        <item quantity="other">%1$d דולגו</item>
+    </plurals>
+    <string name="import_result_nothing">שום דבר לא יובא</string>
+    <string name="import_converted">הומרו: %1$d — כדאי להציץ בהם בעורך.</string>
+    <plurals name="import_unreadable_documents">
+        <item quantity="one">במסמך אחד אין טקסט ש־Campfire יכול לקרוא (סריקה, PDF מוגן או פורמט Word ישן).</item>
+        <item quantity="two">בשני מסמכים אין טקסט ש־Campfire יכול לקרוא (סריקות, קובצי PDF מוגנים או פורמט Word ישן).</item>
+        <item quantity="other">ב־%1$d מסמכים אין טקסט ש־Campfire יכול לקרוא (סריקות, קובצי PDF מוגנים או פורמט Word ישן).</item>
+    </plurals>
+    <string name="import_failed">הייבוא נכשל</string>
+    <string name="import_interrupted">הייבוא נקטע. כדי לייבא את הקבצים, פתחו אותם שוב.</string>
+    <string name="export_failed">לא ניתן היה לשמור או לשתף</string>
+    <string name="export_pdf_saved">קובץ ה־PDF נשמר</string>
+    <string name="export_song_saved">השיר נשמר</string>
+    <string name="export_setlist_saved">הסט־ליסט נשמר</string>
+    <string name="export_songs_saved">השירים נשמרו</string>
+    <string name="export_library_saved">הספרייה יוצאה</string>
+    <string name="export_log_saved">היומן נשמר</string>
+    <string name="export_too_large_to_import">הארכיון הזה גדול מ־24 MB, המגבלה ש־Campfire יכול לייבא בבת אחת. זהו עותק מלא של הספרייה; כדי לשחזר אותו, יש לחלץ אותו ולייבא את השירים כמה אלפים בכל פעם.</string>
+    <plurals name="export_skipped_files">
+        <item quantity="one">קובץ אחד לא נקרא ואינו נמצא בארכיון: %2$s</item>
+        <item quantity="two">שני קבצים לא נקראו ואינם נמצאים בארכיון. ביניהם: %2$s</item>
+        <item quantity="other">%1$d קבצים לא נקראו ואינם נמצאים בארכיון. ביניהם: %2$s</item>
+    </plurals>
+    <plurals name="import_review_skipped">
+        <item quantity="one">קובץ אחד אינו שיר ואינו סט־ליסט, ולכן אי אפשר לייבא אותו.</item>
+        <item quantity="two">שני קבצים אינם שירים ואינם סט־ליסטים, ולכן אי אפשר לייבא אותם.</item>
+        <item quantity="other">%1$d קבצים אינם שירים ואינם סט־ליסטים, ולכן אי אפשר לייבא אותם.</item>
+    </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">קובץ אחד גדול מדי ואי אפשר לייבא אותו.</item>
+        <item quantity="two">שני קבצים גדולים מדי ואי אפשר לייבא אותם.</item>
+        <item quantity="other">%1$d קבצים גדולים מדי ואי אפשר לייבא אותם.</item>
+    </plurals>
+    <string name="import_conflicts_keep_both">שמירת שניהם</string>
+    <string name="import_conflicts_keep_both_description">ייבוא לצד הקבצים שהם מתנגשים בהם, עם המספור “_2”</string>
+    <string name="import_conflicts_replace">החלפה</string>
+    <string name="import_conflicts_replace_description">דריסה של מה שיש בספרייה. הקבצים שהוחלפו יימחקו.</string>
+    <string name="import_conflicts_mixed">משולב</string>
+    <string name="import_loading_title">קוראים את הקבצים</string>
+    <string name="import_progress_downloading">מורידים את הקובץ</string>
+    <string name="import_failed_unreachable">אין גישה אל %1$s. בדקו את החיבור לאינטרנט ונסו שוב.</string>
+    <string name="import_failed_not_found">אין מה להוריד בכתובת הזו. ייתכן שהקישור פג או הוסר.</string>
+    <string name="import_failed_too_large">הקובץ הזה גדול מ־24 MB, המגבלה ש־Campfire יכול לייבא בבת אחת.</string>
+    <string name="import_failed_unreadable">לא ניתן היה לקרוא את הקבצים. שום דבר לא יובא.</string>
+    <string name="import_failed_link_gone">הקישור הזה כבר לא פעיל. ייתכן שמי ששיתף אותו הפסיק לשתף.</string>
+    <string name="import_failed_link_unreachable">לא ניתן היה להוריד את “%1$s”. בדקו את החיבור לאינטרנט ונסו שוב.</string>
+    <string name="import_failed_link_unreachable_untitled">לא ניתן היה להוריד את מה שהקישור משתף. בדקו את החיבור לאינטרנט ונסו שוב.</string>
+    <string name="import_retry">ניסיון חוזר</string>
+    <string name="import_review_title">סקירת הייבוא</string>
+    <string name="import_review_title_empty">אין מה לייבא</string>
+    <plurals name="import_review_from_files">
+        <item quantity="one">מקובץ אחד</item>
+        <item quantity="two">משני קבצים</item>
+        <item quantity="other">מ־%1$d קבצים</item>
+    </plurals>
+    <string name="import_review_from">מתוך %1$s</string>
+    <string name="import_warning_songs_off">השירים כבויים בהגדרות, ולכן שום דבר שמיובא כאן לא יוצג עד שיופעלו מחדש.</string>
+    <string name="import_warning_setlists_off">הסט־ליסטים כבויים בהגדרות, ולכן הסט־ליסטים שמיובאים כאן לא יוצגו עד שיופעלו מחדש.</string>
+    <string name="import_review_demo_library">ספריית הדגמה</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">קובץ אחד שייבאתם בעבר מהקישור הזה יעודכן לגרסה המשותפת. כדי לשמור על השינויים שלכם, בחרו “שמירת שניהם”.</item>
+        <item quantity="two">שני קבצים שייבאתם בעבר מהקישור הזה יעודכנו לגרסה המשותפת. כדי לשמור על השינויים שלכם, בחרו “שמירת שניהם”.</item>
+        <item quantity="other">%1$d קבצים שייבאתם בעבר מהקישור הזה יעודכנו לגרסה המשותפת. כדי לשמור על השינויים שלכם, בחרו “שמירת שניהם”.</item>
+    </plurals>
+    <plurals name="import_review_confirm">
+        <item quantity="one">ייבוא קובץ אחד</item>
+        <item quantity="two">ייבוא שני קבצים</item>
+        <item quantity="other">ייבוא %1$d קבצים</item>
+    </plurals>
+    <string name="import_review_summary_counts">שירים לייבוא: %1$d · סט־ליסטים: %2$d</string>
+    <string name="import_review_name_taken_counts">שמות תפוסים: החלפה %1$d · שמירת שניהם %2$d</string>
+    <plurals name="import_review_already_there">
+        <item quantity="one">אחד כבר נמצא בספרייה ונשאר כמו שהוא</item>
+        <item quantity="two">שניים כבר נמצאים בספרייה ונשארים כמו שהם</item>
+        <item quantity="other">%1$d כבר נמצאים בספרייה ונשארים כמו שהם</item>
+    </plurals>
+    <string name="import_review_left_out_count">הושמטו לפי בחירתך: %1$d</string>
+    <string name="import_review_tags">תגיות לשירים המיובאים</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">יתווספו לשיר היחיד שהייבוא הזה כותב</item>
+        <item quantity="two">יתווספו לשני השירים שהייבוא הזה כותב</item>
+        <item quantity="other">יתווספו ל־%1$d השירים שהייבוא הזה כותב</item>
+    </plurals>
+    <plurals name="import_review_conflicts">
+        <item quantity="one">שם אחד כבר תפוס</item>
+        <item quantity="two">שני שמות כבר תפוסים</item>
+        <item quantity="other">%1$d שמות כבר תפוסים</item>
+    </plurals>
+    <plurals name="import_review_songs">
+        <item quantity="one">שיר אחד</item>
+        <item quantity="two">שני שירים</item>
+        <item quantity="other">%1$d שירים</item>
+    </plurals>
+    <plurals name="import_review_setlists">
+        <item quantity="one">סט־ליסט אחד</item>
+        <item quantity="two">שני סט־ליסטים</item>
+        <item quantity="other">%1$d סט־ליסטים</item>
+    </plurals>
+    <string name="import_review_will_be_numbered">יקבל מספר לצד הקיים</string>
+    <string name="import_review_will_replace">יחליף את הקיים: %1$s</string>
+    <string name="import_review_show_library_song">הצגת הקיים</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">שיר אחד</item>
+        <item quantity="two">שני שירים</item>
+        <item quantity="other">%1$d שירים</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">%1$d מהם בייבוא הזה</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">מופיע פעם אחת בקבצים</item>
+        <item quantity="two">מופיע פעמיים בקבצים</item>
+        <item quantity="other">מופיע %1$d פעמים בקבצים</item>
+    </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">תצוגה מקדימה: עדיין לא בספרייה</string>
+    <string name="import_preview_name_taken">שיר אחר בשם הזה כבר נמצא בספרייה.</string>
+    <string name="import_preview_shared_update">כבר ייבאתם את השיר המשותף הזה בעבר. “החלפה” תעדכן אותו לגרסה הזו.</string>
+    <string name="import_preview_include">ייבוא השיר הזה</string>
+    <string name="import_preview_choices">אפשרויות לשיר הזה</string>
+    <string name="import_preview_name_taken_choice">השם תפוס: %1$s</string>
+    <string name="import_preview_left_out">הושמט מהייבוא</string>
+    <string name="import_preview_already_there">כבר בספרייה, אין מה לייבא</string>
+    <string name="import_preview_import">ייבוא</string>
+    <string name="import_preview_import_as_copy">ייבוא כעותק</string>
+    <string name="import_preview_importing">מייבאים את השיר</string>
+    <string name="import_preview_imported">נוסף לספרייה</string>
+    <string name="import_preview_open">קריאת השיר</string>
+
+    <!-- Errors -->
+    <string name="error_no_data">לא ניתן היה לטעון דבר</string>
+    <string name="error_no_data_hint">לא ניתן היה לקרוא את הספרייה.</string>
+    <string name="error_operation_failed">משהו השתבש</string>
+    <string name="error_link_not_opened">לא ניתן היה לפתוח את %1$s</string>
+
+    <!-- Songs screen -->
+    <string name="songs">שירים</string>
+    <string name="songs_search">חיפוש בשירים</string>
+    <string name="songs_clear">ניקוי</string>
+    <string name="songs_sort">מיון שירים</string>
+    <string name="songs_filter">סינון שירים</string>
+    <string name="songs_filter_active">סינון שירים, יש מסננים פעילים</string>
+    <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_unknown_artist">אמן לא ידוע</string>
+    <string name="songs_sorting_mode_by_artist">אמן</string>
+    <string name="songs_sorting_mode_by_title">שם</string>
+    <string name="songs_empty_title">הספרייה ריקה</string>
+    <string name="songs_empty_hint">אפשר ליצור שיר, להדביק שיר מהלוח, לייבא שירים, מסמכי PDF או Word וארכיוני zip, או להוסיף את ספריית ההדגמה.</string>
+    <string name="songs_create_song">יצירת שיר</string>
+    <string name="songs_paste_from_clipboard">הדבקה מהלוח</string>
+    <string name="add_songs_hint_title">הוספת שירים משלכם</string>
+    <string name="add_songs_tip_paste_title">העתקת שיר מכל אתר</string>
+    <string name="add_songs_tip_paste_hint">העתיקו את המילים והאקורדים של שיר מכל דף אינטרנט, מבולגן ככל שיהיה, והדביקו אותם כאן. Campfire יסדר אותם לשיר שאפשר לשמור.</string>
+    <string name="add_songs_tip_import_title">העברת השירים מאפליקציה אחרת</string>
+    <string name="add_songs_tip_import_hint">ייצאו את השירים מאפליקציית שירים אחרת, רצוי כארכיון zip או כגיבוי, וייבאו אותם כאן. גם קובצי ChordPro, PDF, Word וטקסט עובדים.</string>
+    <string name="songs_paste_converted">הומר מאקורדים שנכתבו מעל המילים. בדקו את השם ואת האמן, ואז שמרו.</string>
+    <string name="songs_paste_chordpro">נשמר כ־ChordPro, כפי שנכתב. בדקו את השם ואת האמן, ואז שמרו.</string>
+    <string name="songs_paste_no_chords">לא נמצאו אקורדים, ולכן זה שיר עם מילים בלבד. בדקו את השם ואת האמן, ואז שמרו.</string>
+    <string name="songs_paste_notation_without_chords">לא נמצאו אקורדים, ולכן התווים נשמרים כפי שנכתבו. בדקו את השם ואת האמן, ואז שמרו.</string>
+    <string name="new_song_placeholder_title">שיר חדש</string>
+    <string name="new_song_placeholder_artist">אמן לא ידוע</string>
+    <string name="paste_clipboard_empty">אין בלוח טקסט להדבקה.</string>
+    <string name="paste_only_links">קישור הוא לא שיר, ו־Campfire לא פותח דפים. העתיקו את האקורדים ואת המילים עצמם.</string>
+    <string name="paste_too_large">הטקסט ארוך מ־8 MB, המגבלה של ייבוא אחד.</string>
+    <string name="shared_link_not_imported">Campfire לא פותח דפי אינטרנט. סמנו את הטקסט של דף האקורדים ושתפו אותו במקום.</string>
+    <string name="shared_link_from_newer_version">הקישור הזה נוצר בגרסה חדשה יותר של Campfire. כדי לפתוח אותו, עדכנו את Campfire.</string>
+    <string name="clipboard_not_campfire_link">זה לא קישור של Campfire.</string>
+    <string name="paste_refused_ios">ל־Campfire אין הרשאה להדביק. ההגדרה “הדבקה מאפליקציות אחרות”, תחת Campfire באפליקציית ההגדרות, קובעת זאת.</string>
+    <string name="paste_refused_web">הדפדפן לא איפשר ל־Campfire לקרוא את הלוח. במקום זאת, הקישו Ctrl+V (או Cmd+V ב־Mac) ברשימת השירים.</string>
+    <string name="songs_new_song">שיר חדש</string>
+    <string name="optional_field_label">%1$s (לא חובה)</string>
+    <string name="songs_new_song_title">שם</string>
+    <string name="songs_new_song_artist">אמן</string>
+    <string name="songs_artist_and_title">%1$s - %2$s</string>
+    <string name="songs_actions">פעולות לשיר</string>
+    <string name="songs_edit_song">עריכת קובץ השיר</string>
+    <string name="songs_choose_setlists">בחירת סט־ליסטים</string>
+    <string name="songs_update_file_name">עדכון שם הקובץ</string>
+    <string name="songs_duplicate_song">שכפול השיר</string>
+    <string name="songs_update_file_name_partly">שם הקובץ שונה, אבל סט־ליסט או הטרנספוזיציה השמורה עדיין מפנים לשם הישן</string>
+    <string name="songs_delete_song_partly">השיר נמחק, אבל סט־ליסט או הטרנספוזיציה השמורה עדיין מזכירים אותו</string>
+    <string name="songs_delete_song">מחיקת השיר</string>
+    <string name="songs_share_song">שיתוף השיר</string>
+    <string name="songs_delete_song_confirmation">למחוק את “%1$s”? הקובץ יוסר מהספרייה ומכל הסט־ליסטים.</string>
+    <string name="songs_delete_song_confirmation_shared">למחוק את “%1$s”? הקובץ יוסר מהספרייה ומכל הסט־ליסטים, וקישור השיתוף שלו יפסיק לעבוד.</string>
+    <string name="songs_select_multiple">בחירה מרובה</string>
+    <string name="songs_selection_actions">פעולות לבחירה</string>
+    <string name="songs_share_songs">שיתוף השירים</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">סיום, נבחר שיר אחד</item>
+        <item quantity="two">סיום, נבחרו שני שירים</item>
+        <item quantity="other">סיום, נבחרו %1$d שירים</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">שיר אחד</item>
+        <item quantity="two">שני שירים</item>
+        <item quantity="other">%1$d שירים</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">שיר אחד עודכן</item>
+        <item quantity="two">שני שירים עודכנו</item>
+        <item quantity="other">%1$d שירים עודכנו</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">לא ניתן היה לעדכן שיר אחד</item>
+        <item quantity="two">לא ניתן היה לעדכן שני שירים</item>
+        <item quantity="other">לא ניתן היה לעדכן %1$d שירים</item>
+    </plurals>
+    <string name="songs_all_hidden">כל השירים מוסתרים</string>
+    <string name="songs_all_hidden_hint">המסננים מסתירים את כל הספרייה.</string>
+    <string name="songs_no_search_results">אין שירים תואמים</string>
+    <string name="songs_no_search_results_hint">שום דבר בספרייה לא תואם לחיפוש הזה.</string>
+    <string name="songs_lyrics_only">מילים בלבד</string>
+    <string name="songs_key">טונליות: %1$s</string>
+    <!-- A song card's tempo and the time signature it is counted in, which the metronome mark in front of them stands for. -->
+    <string name="songs_tempo_and_time">%1$s BPM %2$s</string>
+    <string name="songs_tags">תגיות</string>
+    <string name="songs_filters_show_all">הצגת כל ה־%1$d</string>
+    <string name="songs_filters_show_less">הצגת פחות</string>
+    <string name="songs_tags_search">חיפוש תגית</string>
+    <string name="songs_tags_no_search_results">אין תגית שתואמת לחיפוש.</string>
+    <string name="songs_tags_clear">ניקוי הבחירה</string>
+    <string name="songs_tags_match_mode">השיר צריך לכלול</string>
+    <string name="songs_tags_match_mode_any">תגית אחת לפחות</string>
+    <string name="songs_tags_match_mode_all">את כל התגיות</string>
+    <string name="songs_languages">שפות</string>
+    <string name="songs_languages_unknown">לא ידועה</string>
+    <string name="songs_languages_search">חיפוש שפה</string>
+    <string name="songs_languages_no_search_results">אין שפה שתואמת לחיפוש.</string>
+    <string name="songs_languages_clear">ניקוי הבחירה</string>
+    <string name="songs_languages_match_mode">השיר צריך להיות</string>
+    <string name="songs_languages_match_mode_any">באחת השפות</string>
+    <string name="songs_languages_match_mode_all">בכל השפות</string>
+    <string name="songs_labels_sorted_by_usage">ממוין לפי שימוש</string>
+    <string name="songs_labels_sorted_alphabetically">ממוין לפי א״ב</string>
+    <string name="songs_filters_reset">איפוס</string>
+
+    <!-- Setlists screen -->
+    <string name="setlists">סט־ליסטים</string>
+    <string name="setlists_no_data">עדיין אין סט־ליסטים</string>
+    <string name="setlists_no_data_hint">אפשר ליצור סט־ליסט ולבחור את השירים שייכנסו אליו, או לייבא סט־ליסטים מקבצים.</string>
+    <string name="setlists_create_setlist">יצירת סט־ליסט</string>
+    <string name="setlists_new_setlist">סט־ליסט חדש</string>
+    <string name="setlists_new_setlist_title">שם הסט־ליסט</string>
+    <string name="setlists_remove_song">הסרה מהסט־ליסט</string>
+    <string name="setlists_remove_song_confirmation">להסיר את “%1$s” מהסט־ליסט הזה? השיר יישאר בספרייה ובסט־ליסטים האחרים.</string>
+    <string name="setlists_reorder">סידור השירים</string>
+    <string name="setlists_done_reordering">סיום הסידור</string>
+    <string name="setlists_move_up">העברה למעלה</string>
+    <string name="setlists_move_down">העברה למטה</string>
+    <string name="setlists_actions">פעולות על הסט־ליסט</string>
+    <string name="setlists_edit_details">עריכת הסט־ליסט</string>
+    <string name="setlists_choose_songs">בחירת שירים</string>
+    <string name="checklist_selected">%1$d נבחרו</string>
+    <string name="setlists_description">תיאור (לא חובה)</string>
+    <string name="setlists_date">תאריך</string>
+    <string name="setlists_date_value">%3$s.%2$s.%1$s</string>
+    <string name="setlists_pick_date">בחירת תאריך</string>
+    <string name="setlists_countdown">ספירה לאחור</string>
+    <string name="setlists_countdown_today">היום</string>
+    <string name="setlists_countdown_tomorrow">מחר</string>
+    <string name="setlists_countdown_yesterday">אתמול</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">בעוד יום</item>
+        <item quantity="two">בעוד יומיים</item>
+        <item quantity="other">בעוד %1$d ימים</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">לפני יום</item>
+        <item quantity="two">לפני יומיים</item>
+        <item quantity="other">לפני %1$d ימים</item>
+    </plurals>
+    <!-- A setlist's total duration, as a show's length is named: how long its songs take to play. -->
+    <string name="setlists_total_duration">משך ההופעה: %1$s</string>
+    <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
+    <string name="setlists_total_duration_minimum">%1$s+</string>
+    <string name="setlists_duplicate_setlist">שכפול הסט־ליסט</string>
+    <string name="setlists_duplicate_title">%1$s (עותק)</string>
+    <string name="setlists_archive">העברה לארכיון</string>
+    <string name="setlists_unarchive">הוצאה מהארכיון</string>
+    <string name="setlists_archived">בארכיון</string>
+    <string name="setlists_share">שיתוף הסט־ליסט</string>
+    <string name="setlists_missing_song">הקובץ לא נמצא</string>
+    <string name="setlists_delete_setlist">מחיקת הסט־ליסט</string>
+    <string name="setlists_delete_setlist_confirmation">למחוק את הסט־ליסט “%1$s”? השירים יישארו בספרייה.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">למחוק את הסט־ליסט “%1$s”? השירים יישארו בספרייה. קישור השיתוף שלו יפסיק לעבוד.</string>
+    <string name="setlists_search">חיפוש בסט־ליסטים</string>
+    <string name="setlists_no_search_results">אין סט־ליסטים תואמים</string>
+    <string name="setlists_no_search_results_hint">אין סט־ליסט שתואם לחיפוש, לא בשמו ולא בשירים שבו.</string>
+    <string name="setlists_sort">מיון הסט־ליסטים</string>
+    <string name="setlists_sorting_mode_by_date">תאריך</string>
+    <string name="setlists_sorting_mode_by_title">שם</string>
+    <string name="setlists_show_archived">הצגת סט־ליסטים בארכיון</string>
+    <string name="setlists_all_hidden">כל הסט־ליסטים בארכיון</string>
+    <string name="setlists_all_hidden_hint">כדי לראות אותם, הפעילו את “הצגת סט־ליסטים בארכיון”.</string>
+
+    <!-- Settings screen -->
+    <string name="settings">הגדרות</string>
+    <string name="settings_library">ספרייה</string>
+    <string name="settings_library_summary">שירים: %1$d · סט־ליסטים: %2$d</string>
+    <string name="settings_library_size">%1$s בדיסק</string>
+    <string name="settings_library_size_bytes">%1$s B</string>
+    <string name="settings_library_size_kilobytes">%1$s KB</string>
+    <string name="settings_library_size_megabytes">%1$s MB</string>
+    <string name="settings_library_size_gigabytes">%1$s GB</string>
+    <string name="settings_library_size_decimal_separator">.</string>
+    <string name="settings_library_cover_art_cache">מטמון תמונות העטיפה</string>
+    <string name="settings_library_cover_art_cache_clear">ניקוי מטמון תמונות העטיפה</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">תמונות העטיפה שנשמרו במכשיר הזה יימחקו. כל אחת תורד מחדש בפעם הבאה שהיא מוצגת.</string>
+    <string name="settings_library_cover_art_cache_clear_action">ניקוי</string>
+    <string name="settings_library_delete">מחיקת הספרייה</string>
+    <string name="settings_library_delete_confirmation">כל השירים והסט־ליסטים במכשיר הזה יימחקו. אי אפשר לבטל את הפעולה.</string>
+    <string name="settings_library_delete_confirmation_shared">כל קישורי השיתוף יפסיקו לעבוד.</string>
+    <string name="settings_library_delete_confirmation_sync">הסנכרון עם Dropbox יתחיל מיד אחרי המחיקה, וימחק אותם גם מתיקיית ה־Dropbox וגם מכל מכשיר שמסונכרן איתה.</string>
+    <string name="settings_library_delete_prompt">לאישור, הקלידו %1$s</string>
+    <string name="settings_library_storage">אחסון</string>
+    <string name="settings_library_storage_granted">הדפדפן הסכים לשמור את הספרייה עד שנתוני האתר הזה יימחקו.</string>
+    <string name="settings_library_storage_best_effort">הדפדפן שומר את הספרייה, אבל עדיין לא התחייב לשמור עליה אם ייגמר המקום במכשיר. הוספת הדף הזה לסימניות או שימוש קבוע בו בדרך כלל מקנים את ההתחייבות הזו; עד אז, ייצוא או סנכרון שומרים עותק במקום אחר.</string>
+    <string name="settings_library_storage_offline_granted">Campfire נפתח בדפדפן הזה גם בלי חיבור. הדפדפן הסכים לשמור אותו ואת הספרייה עד שנתוני האתר הזה יימחקו.</string>
+    <string name="settings_library_storage_offline_best_effort">Campfire נפתח בדפדפן הזה גם בלי חיבור. הדפדפן שומר אותו ואת הספרייה, אבל עדיין לא התחייב לשמור עליהם אם ייגמר המקום במכשיר. הוספת הדף הזה לסימניות או שימוש קבוע בו בדרך כלל מקנים את ההתחייבות הזו; עד אז, ייצוא או סנכרון שומרים עותק של הספרייה במקום אחר.</string>
+    <string name="settings_library_storage_online_only">לא ניתן היה לשמור את Campfire בדפדפן הזה, ולכן פתיחתו דורשת חיבור.</string>
+    <string name="settings_import">ייבוא שירים, מסמכים או ארכיוני zip…</string>
+    <string name="settings_export_all">ייצוא הספרייה כ־zip</string>
+    <string name="settings_preferences">העדפות</string>
+    <string name="settings_features">תכונות</string>
+    <string name="settings_group_performance">הופעה</string>
+    <string name="settings_read_only_mode">קריאה בלבד</string>
+    <string name="settings_read_only_mode_description">נועל את האפליקציה בזמן הנגינה: עריכה, מחיקה, סידור והעברת טונליות מוסתרים, כך ששום דבר לא ישתנה בטעות</string>
+    <string name="settings_read_only_mode_description_without_setlists">נועל את האפליקציה בזמן הנגינה: עריכה, מחיקה והעברת טונליות מוסתרות, כך ששום דבר לא ישתנה בטעות</string>
+    <string name="settings_songs_description">הלשוניות “שירים” ו“סט־ליסטים”. כיבוי שלהן משאיר את Campfire רק כמטרונום, טיונר ומדריך לאקורדים ולסולמות: השירים רק מוסתרים, אף אחד מהם לא נמחק.</string>
+    <string name="settings_songs_description_without_setlists">הלשונית “שירים”. כיבוי שלה משאיר את Campfire רק כמטרונום, טיונר ומדריך לאקורדים ולסולמות: השירים רק מוסתרים, אף אחד מהם לא נמחק.</string>
+    <string name="settings_everything_off">הכול כבוי, אז Campfire הוא עכשיו אפליקציה לשינוי ההגדרות של Campfire. הפעילו משהו מחדש כדי שיהיה בו שוב תועלת.</string>
+    <string name="settings_chords">אקורדים</string>
+    <string name="settings_chords_description">הצגת האקורדים לצד המילים, יחד עם הטונליות, העברת הטונליות והקאפו. כשהאפשרות כבויה, כל שיר מוצג עם מילים בלבד.</string>
+    <string name="settings_chord_diagrams">דיאגרמות אקורדים</string>
+    <string name="settings_chord_diagrams_description">הצגת אופן הנגינה של כל אקורד בשיר, בראש השיר.</string>
+    <string name="settings_chord_degrees">דרגות האקורדים</string>
+    <string name="settings_chord_degrees_description">ציון הדרגה בטונליות של השיר שעליה עומד כל אקורד בדיאגרמה, למשל V7 ליד G7.</string>
+    <string name="settings_metronome_description">הלשונית “מטרונום” והקליק במסך השיר, יחד עם הטמפו והמשקל של כל שיר</string>
+    <string name="settings_tuner_description">הלשונית “טיונר”, והמיקרופון שדרכו הוא מאזין</string>
+    <string name="settings_scales_description">הלשונית “סולמות”: כל הסולמות והמודוסים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
+    <string name="settings_chord_library_description">הלשונית “אקורדים”: כל האקורדים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
+    <string name="settings_scale_suggestions">הצעות לסולמות</string>
+    <string name="settings_scale_suggestions_description">הצגת הסולמות שאפשר לנגן מעל כל חלק בשיר, אחרי האקורדים שלו, ואת הסולמות של אקורד בדף שלו.</string>
+    <string name="settings_setlists_description">הלשונית “סט־ליסטים” והוספת שירים לסט־ליסטים. כשהאפשרות כבויה הם רק מוסתרים: אף סט־ליסט לא נמחק.</string>
+    <string name="settings_song_details_lookup">פרטי שיר מהרשת</string>
+    <string name="settings_song_details_lookup_description">הצעה לחפש ב־MusicBrainz וב־iTunes את האמן, האלבום, השנה והכותבים של שיר בזמן עריכת הפרטים שלו</string>
+    <string name="settings_cover_art">תמונות עטיפה</string>
+    <string name="settings_cover_art_description">הצגת עטיפת האלבום ששיר מציין לצידו, בהורדה חד־פעמית ושמירת עותק במכשיר הזה</string>
+    <string name="settings_group_song_page">עמוד השיר</string>
+    <string name="settings_group_lists">רשימות</string>
+    <string name="settings_group_chords">אקורדים</string>
+    <string name="settings_group_setup">הגדרה</string>
+    <string name="settings_group_appearance">מראה</string>
+    <string name="settings_group_playing">נגינה</string>
+    <string name="settings_group_online">ברשת</string>
+    <string name="settings_group_sync">סנכרון</string>
+    <string name="settings_group_import_export">ייבוא וייצוא</string>
+    <string name="settings_group_on_this_device">במכשיר הזה</string>
+    <string name="settings_group_campfire">Campfire</string>
+    <string name="settings_group_help">עזרה</string>
+    <string name="settings_group_legal">משפטי</string>
+    <string name="settings_number_sections">מספור קטעים</string>
+    <string name="settings_number_sections_description">הבחנה בין קטעים חוזרים שאין להם שם משלהם, כמו בית 1 ובית 2</string>
+    <string name="settings_song_layout">פריסה</string>
+    <string name="settings_song_layout_description">“עמודים” מציג על המסך כמה שיותר מהשיר בבת אחת. “רציף” הוא טור אחד שיכול לגלול מעצמו בקצב של השיר.</string>
+    <string name="settings_song_cards">כרטיסי שירים</string>
+    <string name="settings_song_cards_description">מה מוצג ברשימות מתחת לאמן של כל שיר.</string>
+    <string name="card_detail_key">טונליות</string>
+    <string name="card_detail_tempo">טמפו</string>
+    <string name="card_detail_duration">משך</string>
+    <string name="settings_notation">כתיב אקורדים</string>
+    <string name="settings_notation_description">איך האקורדים כתובים בזמן קריאה ועריכה של שירים. השירים תמיד נשמרים בכתיב הרגיל, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
+    <string name="settings_notation_choose">בחירת כתיב</string>
+    <string name="settings_notation_standard">רגיל</string>
+    <string name="settings_notation_standard_description">C D E F G A B</string>
+    <string name="settings_notation_german">גרמני</string>
+    <string name="settings_notation_german_description">H במקום B, ו־B במקום B במול, כמו בדפי אקורדים במרכז אירופה ובסקנדינביה</string>
+    <string name="settings_notation_latin">לטיני</string>
+    <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, כמו בדפי אקורדים בדרום אירופה ובאמריקה הלטינית</string>
+    <string name="settings_notation_nashville">מספרי נאשוויל</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, נספרים מהטונליות של השיר, ושיר במינור מהטוניקה שלו. שיר בלי טונליות נשאר באותיות, והעורך תמיד באותיות.</string>
+    <string name="settings_notation_roman">ספרות רומיות</string>
+    <string name="settings_notation_roman_description">I IV V vi, נספרות מהטונליות של השיר: אותיות גדולות לאקורדי מז׳ור, קטנות למינור. שיר בלי טונליות נשאר באותיות, והעורך תמיד באותיות.</string>
+    <string name="settings_accidentals">סימני היתק</string>
+    <string name="settings_accidentals_description">האם אקורד על קליד שחור נכתב כבמול (%1$s) או כדיאז (%2$s). כשהוא נשאר כפי שנכתב, Campfire בוחר את מה שמתאים לטונליות של השיר.</string>
+    <string name="settings_accidentals_original">כפי שנכתב</string>
+    <string name="settings_accidentals_flats">במולים (♭)</string>
+    <string name="settings_accidentals_sharps">דיאזים (♯)</string>
+    <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
+    <string name="instrument_choose">בחירת כלי</string>
+    <string name="instrument_tuning_standard">רגיל</string>
+    <string name="instrument_tuning_choose">בחירת כיוון</string>
+    <string name="instrument_guitar">גיטרה</string>
+    <string name="instrument_guitar_strings">גיטרה עם %1$d מיתרים</string>
+    <string name="instrument_bass">בס</string>
+    <string name="instrument_bass_strings">בס עם %1$d מיתרים</string>
+    <string name="instrument_ukulele">יוקלילי</string>
+    <string name="instrument_banjo">בנג׳ו</string>
+    <string name="instrument_mandolin">מנדולינה</string>
+    <string name="instrument_violin">כינור</string>
+    <string name="instrument_keyboard">קלידים</string>
+    <string name="instrument_other">אחר</string>
+    <string name="instrument_strings_four">ארבעה מיתרים</string>
+    <string name="instrument_strings_five">חמישה מיתרים</string>
+    <string name="instrument_strings_banjo">חמישה מיתרים, אחד מהם קצר</string>
+    <string name="instrument_strings_six">שישה מיתרים</string>
+    <string name="instrument_strings_seven">שבעה מיתרים</string>
+    <string name="instrument_strings_eight">שמונה מיתרים</string>
+    <string name="instrument_strings_pairs">ארבעה זוגות מיתרים</string>
+    <string name="instrument_strings_six_pairs">שישה זוגות מיתרים</string>
+    <string name="instrument_no_chord_diagrams">%1$s · בלי דיאגרמות אקורדים</string>
+    <string name="instrument_keyboard_description">התווים של כל אקורד, כשהקאפו נכלל בהעברת הטונליות</string>
+    <string name="instrument_other_description">בלי מיתרים, בלי דיאגרמות אקורדים</string>
+    <string name="settings_general">כללי</string>
+    <string name="settings_onboarding">הגדרת Campfire מחדש</string>
+    <string name="settings_onboarding_description">בחירה מחדש של המראה, הכלי והתכונות, צעד אחר צעד</string>
+    <string name="settings_user_interface_theme">ערכת נושא</string>
+    <string name="settings_user_interface_theme_system_default">מערכת</string>
+    <string name="settings_user_interface_theme_dark">כהה</string>
+    <string name="settings_user_interface_theme_light">בהירה</string>
+    <string name="settings_user_interface_theme_color">צבע</string>
+    <string name="settings_background_warmth">ספיה</string>
+    <string name="settings_background_warmth_description">מטה את הרקע לגוון החם של נייר ישן, שיכול להיות נעים יותר לעיניים. הניגודיות נשארת זהה בכל שלב.</string>
+    <string name="settings_app_icon_launcher">צביעת סמל המשגר</string>
+    <string name="settings_app_icon_launcher_description">הסמל במסך הבית מקבל את הצבע שלמעלה. השינוי הראשון נכנס לתוקף אחרי היציאה מ־Campfire, וחלק מהמשגרים מסירים את הסמל ממסך הבית כשהוא משתנה.</string>
+    <string name="settings_app_icon_home_screen">צביעת סמל האפליקציה</string>
+    <string name="settings_app_icon_home_screen_description">הסמל במסך הבית מקבל את הצבע שלמעלה. iOS מאשר כל שינוי בהודעה.</string>
+    <string name="settings_app_icon_window">צביעת סמל החלון</string>
+    <string name="settings_app_icon_window_description">סמל החלון מקבל את הצבע שלמעלה כל עוד Campfire פתוח</string>
+    <string name="settings_app_icon_browser_tab">צביעת סמל הלשונית</string>
+    <string name="settings_app_icon_browser_tab_description">הסמל של לשונית הדפדפן מקבל את הצבע שלמעלה</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">אפור</string>
+    <string name="settings_user_interface_theme_color_system">מערכת</string>
+    <string name="settings_user_interface_theme_color_red">אדום</string>
+    <string name="settings_user_interface_theme_color_orange">כתום</string>
+    <string name="settings_user_interface_theme_color_yellow">צהוב</string>
+    <string name="settings_user_interface_theme_color_green">ירוק</string>
+    <string name="settings_user_interface_theme_color_teal">טורקיז</string>
+    <string name="settings_user_interface_theme_color_blue">כחול</string>
+    <string name="settings_user_interface_theme_color_purple">סגול</string>
+    <string name="settings_user_interface_theme_color_pink">ורוד</string>
+    <string name="settings_user_interface_language">שפה</string>
+    <string name="settings_user_interface_language_system_default">מערכת</string>
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
+    <string name="settings_user_interface_language_english">אנגלית</string>
+    <string name="settings_user_interface_language_hungarian">הונגרית</string>
+    <string name="settings_user_interface_language_romanian">רומנית</string>
+    <string name="settings_user_interface_language_german">גרמנית</string>
+    <string name="settings_user_interface_language_spanish">ספרדית</string>
+    <string name="settings_user_interface_language_french">צרפתית</string>
+    <string name="settings_user_interface_language_italian">איטלקית</string>
+    <string name="settings_user_interface_language_hebrew">עברית</string>
+    <string name="settings_distributions_all">כל הגרסאות של Campfire</string>
+    <string name="settings_distributions_all_description">ב־campfire-songbook.com</string>
+    <string name="settings_distribution_play_store">Google Play</string>
+    <string name="settings_distribution_app_store">App Store</string>
+    <string name="settings_distribution_mac_app_store">Mac App Store</string>
+    <string name="settings_distribution_microsoft_store">Microsoft Store</string>
+    <string name="settings_rate">דירוג Campfire</string>
+    <string name="settings_rate_description">כתיבת ביקורת ב־%1$s</string>
+    <string name="settings_share_app">שיתוף Campfire</string>
+    <string name="settings_share_app_description">שליחת קישור לאפליקציה לחברים</string>
+    <string name="settings_about">אודות</string>
+    <string name="settings_git_hub">Campfire ב־GitHub</string>
+    <string name="settings_git_hub_description">קוד המקור ומעקב הבאגים</string>
+    <string name="settings_log_email">שליחת יומן האפליקציה במייל</string>
+    <string name="settings_log_share">שיתוף יומן האפליקציה</string>
+    <string name="settings_log_save">שמירת יומן האפליקציה</string>
+    <string name="settings_log_description">עוזר למפתח לגלות מה השתבש</string>
+    <string name="log_dialog_text">היומן מראה מה Campfire עשה לאחרונה: המסכים שנפתחו, שמות השירים וכל שגיאה. אין בו שום מידע אחר עליכם, ורק מי שתשלחו לו יוכל לקרוא אותו.</string>
+    <string name="log_dialog_send_to">נא לשלוח אותו אל %1$s.</string>
+    <string name="log_dialog_email">מייל</string>
+    <string name="log_dialog_share">שיתוף</string>
+    <string name="log_dialog_copy_address">העתקת הכתובת</string>
+    <string name="log_dialog_address_copied">הכתובת הועתקה</string>
+    <string name="crash_report_title">Campfire נסגר באופן לא צפוי</string>
+    <string name="crash_report_text">Campfire הפסיק לעבוד בפעם האחרונה שהשתמשתם בו. שליחת היומן שלו למפתח תעזור לתקן את זה.</string>
+    <string name="crash_report_not_now">לא עכשיו</string>
+    <string name="settings_help">עזרה ותמיכה</string>
+    <string name="settings_help_description">שאלות נפוצות, ואיך לדווח על בעיה</string>
+    <string name="settings_privacy_policy">מדיניות פרטיות</string>
+    <string name="settings_privacy_policy_description">מה האפליקציה עושה עם הנתונים שלכם</string>
+    <string name="settings_open_source_licenses">רישיונות קוד פתוח</string>
+    <string name="settings_open_source_licenses_description">הספריות, הגופנים ותבניות האקורדים ש־Campfire בנוי מהם, והרישיונות שלהם</string>
+    <string name="open_source_licenses_intro">Campfire הוא קוד פתוח, והוא בנוי על עבודתם של אחרים. בחרו פריט כדי לקרוא את הרישיון שלו.</string>
+    <string name="open_source_licenses_show">הצגת הרישיון</string>
+    <string name="open_source_licenses_project">דף הפרויקט</string>
+    <string name="open_source_licenses_license">רישיון</string>
+    <string name="settings_support">קנו לי קפה</string>
+    <string name="settings_support_description">תמיכה בפיתוח האפליקציה</string>
+    <string name="settings_version">גרסה %1$s</string>
+    <string name="settings_created_by">נוצר על ידי Péter Pandula</string>
+
+    <!-- Metronome screen -->
+    <string name="metronome">מטרונום</string>
+    <string name="metronome_start">התחלה</string>
+    <string name="metronome_stop">עצירה</string>
+    <string name="metronome_tempo_slider">טמפו בפעמות לדקה</string>
+    <string name="metronome_tap_description">הקשת הטמפו</string>
+    <string name="metronome_group_rhythm">קצב</string>
+    <string name="metronome_group_playback">ניגון</string>
+    <string name="metronome_time_signature">משקל</string>
+    <string name="metronome_accent_hint">בחרו פעמה בתיבה שלמעלה כדי להדגיש או להשתיק אותה.</string>
+    <string name="metronome_beats_decrease">פחות פעמות</string>
+    <string name="metronome_beats_increase">יותר פעמות</string>
+    <string name="metronome_beat_unit_decrease">תו ארוך יותר</string>
+    <string name="metronome_beat_unit_increase">תו קצר יותר</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">פעמה %1$d</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">שינוי ההדגשה</string>
+    <string name="metronome_level_accent">מודגשת</string>
+    <string name="metronome_level_normal">רגילה</string>
+    <string name="metronome_level_muted">מושתקת</string>
+    <string name="metronome_subdivision">חלוקה</string>
+    <string name="metronome_subdivision_description">קליקים בכל פעמה</string>
+    <string name="metronome_sound">צליל</string>
+    <string name="metronome_sound_click">קליק</string>
+    <string name="metronome_sound_woodblock">וודבלוק</string>
+    <string name="metronome_sound_beep">ביפ</string>
+    <string name="metronome_sound_hi_hat">הַיי-האט</string>
+    <string name="metronome_sound_cowbell">קאובל</string>
+    <string name="metronome_volume">עוצמת קול</string>
+    <string name="metronome_animate">הנפשה על הפעמה</string>
+    <string name="metronome_vibrate">רטט על הפעמה</string>
+    <string name="metronome_audio_unavailable">אין פלט קול, ולכן הפעמה מוצגת בלבד.</string>
+    <string name="metronome_audio_waiting">בחרו משהו בעמוד או הקישו על מקש כלשהו כדי לאפשר לדפדפן להשמיע את הצליל.</string>
+    <string name="metronome_stopped_refused">המטרונום לא הצליח להשמיע צליל כרגע, אולי בגלל שיחה.</string>
+    <string name="metronome_stopped_interrupted">המטרונום נעצר בגלל שיחה או אפליקציה אחרת.</string>
+    <string name="metronome_stopped_disconnected">המטרונום נעצר כי התקן השמע נותק.</string>
+    <string name="metronome_stopped_failed">המטרונום נעצר כי פלט הקול נכשל.</string>
+    <string name="metronome_stopped_silent">המטרונום נעצר כש־Campfire יצא מהמסך, כי עם עוצמת קול אפס או כשכל הפעמות מושתקות לא היה מה לשמוע.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">מטרונום</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">טיונר</string>
+    <string name="tuner_play_a_note">נגנו צליל</string>
+    <string name="tuner_reference_tone">צליל ייחוס</string>
+    <!-- The display as a screen reader reads it while a reference tone sounds, e.g. "Reference tone, A4". -->
+    <string name="tuner_reading_tone">צליל ייחוס, %1$s</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">יעד %1$s Hz</string>
+    <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
+    <plurals name="tuner_cents">
+        <item quantity="one">%1$s סנט</item>
+        <item quantity="other">%1$s סנטים</item>
+    </plurals>
+    <string name="tuner_in_tune">מכוון</string>
+    <string name="tuner_flat">נמוך</string>
+    <string name="tuner_sharp">גבוה</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, נמוך בסנט אחד</item>
+        <item quantity="two">%1$s, נמוך בשני סנטים</item>
+        <item quantity="other">%1$s, נמוך ב־%2$d סנטים</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, גבוה בסנט אחד</item>
+        <item quantity="two">%1$s, גבוה בשני סנטים</item>
+        <item quantity="other">%1$s, גבוה ב־%2$d סנטים</item>
+    </plurals>
+    <string name="tuner_reading_in_tune">%1$s, מכוון</string>
+    <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
+    <string name="tuner_reading_far_flat">%1$s, נמוך מאוד</string>
+    <string name="tuner_reading_coarse_flat">%1$s, נמוך</string>
+    <string name="tuner_reading_coarse_sharp">%1$s, גבוה</string>
+    <string name="tuner_reading_far_sharp">%1$s, גבוה מאוד</string>
+    <string name="tuner_tuning_standard">סטנדרטי</string>
+    <string name="tuner_tuning_half_step_down">חצי טון למטה</string>
+    <string name="tuner_tuning_full_step_down">טון שלם למטה</string>
+    <string name="tuner_tuning_baritone">בריטון</string>
+    <string name="tuner_tuning_drop">דרופ %1$s</string>
+    <string name="tuner_tuning_double_drop">דאבל דרופ %1$s</string>
+    <string name="tuner_tuning_open">אופן %1$s</string>
+    <string name="tuner_tuning_high">%1$s גבוה</string>
+    <string name="tuner_tuning_low">%1$s נמוך</string>
+    <string name="tuner_tuning_double">%1$s כפול</string>
+    <string name="tuner_tuning_key">כיוון %1$s</string>
+    <string name="tuner_tuning_modal">%1$s מודאלי</string>
+    <string name="tuner_strings">מיתרים</string>
+    <string name="tuner_mode_chromatic">כרומטי</string>
+    <string name="tuner_strings_description">בחרו מיתר כדי לשמוע את הצליל שלו, ושוב כדי לעצור אותו.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">מיתר %1$d, %2$s</string>
+    <string name="tuner_string_pair">זוג מיתרים %1$d, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$s דיאז</string>
+    <string name="tuner_note_sharp_syllable">%1$s דיאז</string>
+    <!-- How a screen reader reads the unlabeled reference pitch pill, e.g. "Reference pitch (A4), 440 Hz". -->
+    <string name="tuner_reference_pitch">גובה ייחוס (%1$s), %2$d Hz</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">הנמכת גובה הייחוס</string>
+    <string name="tuner_reference_pitch_increase">הגבהת גובה הייחוס</string>
+    <string name="tuner_reference_pitch_reset">איפוס גובה הייחוס ל־440 Hz</string>
+    <string name="tuner_play_reference">השמעת צליל הייחוס %1$s</string>
+    <string name="tuner_notice_not_asked">Campfire מקשיב דרך המיקרופון כדי לשמוע את הכלי. הצליל מנותח במכשיר הזה, ואף פעם לא מוקלט או נשלח לשום מקום.</string>
+    <string name="tuner_notice_refused">המיקרופון כבוי עבור Campfire. עדיין אפשר להשמיע את הצלילים שלמטה.</string>
+    <string name="tuner_notice_refused_web">המיקרופון כבוי עבור Campfire. אפשר להתיר אותו בהגדרות האתר של הדפדפן, ליד הכתובת. עדיין אפשר להשמיע את הצלילים שלמטה.</string>
+    <string name="tuner_notice_refused_no_strings">המיקרופון כבוי עבור Campfire.</string>
+    <string name="tuner_notice_refused_web_no_strings">המיקרופון כבוי עבור Campfire. אפשר להתיר אותו בהגדרות האתר של הדפדפן, ליד הכתובת.</string>
+    <string name="tuner_notice_no_microphone">לא נמצא מיקרופון.</string>
+    <string name="tuner_notice_busy">המיקרופון בשימוש של שיחה או של אפליקציה אחרת.</string>
+    <string name="tuner_notice_not_supported">הדפדפן הזה לא מאפשר לעמוד להשתמש במיקרופון.</string>
+    <string name="tuner_notice_failed">לא ניתן היה לפתוח את המיקרופון.</string>
+    <string name="tuner_notice_silent">עדיין לא נשמע כלום. אם מיתר מנגן, בדקו שהמיקרופון לא מושתק או מונמך עד הסוף, ושמותר ל־Campfire להשתמש בו.</string>
+    <string name="tuner_notice_waiting">בחרו משהו בעמוד או הקישו על מקש כלשהו כדי לאפשר לדפדפן להקשיב.</string>
+    <string name="tuner_use_microphone">שימוש במיקרופון</string>
+    <string name="tuner_notice_silent_enhancements">בדקו שהמיקרופון לא מושתק ושמותר ל־Campfire להשתמש בו. Windows עלול גם להסיר צליל מתמשך כרעש: כבו את שיפורי השמע (Audio enhancements) של המיקרופון הזה בהגדרות הקול.</string>
+    <string name="tuner_open_settings">פתיחת ההגדרות</string>
+    <string name="tuner_open_sound_settings">פתיחת הגדרות הקול</string>
+    <string name="tuner_ask_again">בקשה חוזרת</string>
+    <string name="tuner_try_again">ניסיון חוזר</string>
+
+    <!-- Chords screen, and the Tools item of a navigation bar with no room for every screen, which holds it with the
+         Metronome and the Tuner -->
+    <string name="chords">אקורדים</string>
+    <string name="tools">כלים</string>
+    <!-- The two buttons of the pill beside the search stepping the key the chords and scales are listed in. -->
+    <string name="library_key_down">טונליות חצי טון למטה</string>
+    <string name="library_key_up">טונליות חצי טון למעלה</string>
+    <string name="chords_search">חיפוש כל אקורד</string>
+    <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
+    <string name="chords_common">אקורדים נפוצים בטונליות %1$s</string>
+    <!-- Over the chords of the picked key a search found, e.g. "Chords matching “m7” in C". -->
+    <string name="chords_search_heading">אקורדים שתואמים ל“%1$s” בטונליות %2$s</string>
+    <string name="chords_instrument_other">בחרו כלי כדי לראות איך מנגנים בו את האקורדים.</string>
+    <string name="chords_instrument_without_diagrams">%1$s: אין דיאגרמות אקורד. בחרו כלי אחר כדי לראות איך מנגנים בו את האקורדים.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">אין אקורד בטונליות הזו שתואם ל“%1$s”.</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">סולמות</string>
+    <string name="scales_instrument_other">מוצג על מקלדת. בחרו כלי כדי לראות את הסולמות על המיתרים שלו.</string>
+    <string name="scales_search">חיפוש סולם או מודוס</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">סולמות שתואמים ל“%1$s” בטונליות %2$s</string>
+    <string name="scales_search_no_scale">אין סולם שתואם ל“%1$s”.</string>
+    <string name="scale_family_common">נפוצים</string>
+    <string name="scale_family_major_modes">מודוסים של מז׳ור</string>
+    <string name="scale_family_harmonic_minor_modes">מודוסים של מינור הרמוני</string>
+    <string name="scale_family_melodic_minor_modes">מודוסים של מינור מלודי</string>
+    <string name="scale_family_minor_and_harmonic">הרמוניים אחרים</string>
+    <string name="scale_family_pentatonic">פנטטוניים</string>
+    <string name="scale_family_blues_and_hexatonic">בלוז והקסטוניים</string>
+    <string name="scale_family_symmetric">סימטריים</string>
+    <string name="scale_family_bebop">ביבופ</string>
+    <string name="scale_family_world">מרחבי העולם</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">דרגות</string>
+    <string name="scales_labels_notes">צלילים</string>
+    <string name="scales_labels_show_notes">הצגת שמות הצלילים</string>
+    <string name="scales_labels_show_degrees">הצגת הדרגות</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
+    <string name="scales_steps_whole">1</string>
+    <string name="scales_steps_half">½</string>
+    <string name="scales_steps_augmented">1½</string>
+    <string name="scales_play">השמעת הסולם</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
+    <string name="scales_mode_of">מודוס %1$s של %2$s</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">נקרא גם %1$s</string>
+    <string name="scales_relative_minor">מינור מקביל: %1$s</string>
+    <string name="scales_chords">אקורדים בסולם הזה</string>
+    <string name="scales_sevenths">אקורדי ספטים</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">סולמות לאקורד הזה</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">שאר השיר</string>
+    <!-- Over the scales of the parts of a song without a heading, where several such groups are told apart by the first words they sing. -->
+    <string name="song_details_scales_from">מ“%1$s”</string>
+    <!-- Over the scales of one named part of a song that also hold its parts without a heading, e.g. "Chorus and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed">%1$s והקטעים ללא כותרת</string>
+    <!-- The same over a list of several named parts, e.g. "Verse, Chorus, and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed_several">%1$s והקטעים ללא כותרת</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">מעל %1$s</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">מעל %1$s ו־%2$s</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">מעל %1$s ו־%2$s</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">אף סולם שלמעלה לא מכיל את האקורדים האלה</string>
+    <string name="scale_major">מז׳ור</string>
+    <string name="scale_dorian">דורי</string>
+    <string name="scale_phrygian">פריגי</string>
+    <string name="scale_lydian">לידי</string>
+    <string name="scale_mixolydian">מיקסולידי</string>
+    <string name="scale_natural_minor">מינור טבעי</string>
+    <string name="scale_locrian">לוקרי</string>
+    <string name="scale_harmonic_minor">מינור הרמוני</string>
+    <string name="scale_locrian_natural_6">לוקרי ♮6</string>
+    <string name="scale_ionian_sharp_5">יוני ♯5</string>
+    <string name="scale_dorian_sharp_4">דורי ♯4</string>
+    <string name="scale_phrygian_dominant">פריגי דומיננטי</string>
+    <string name="scale_lydian_sharp_2">לידי ♯2</string>
+    <string name="scale_ultralocrian">אולטרה-לוקרי</string>
+    <string name="scale_melodic_minor">מינור מלודי</string>
+    <string name="scale_dorian_flat_2">דורי ♭2</string>
+    <string name="scale_lydian_augmented">לידי מוגדל</string>
+    <string name="scale_lydian_dominant">לידי דומיננטי</string>
+    <string name="scale_mixolydian_flat_6">מיקסולידי ♭6</string>
+    <string name="scale_locrian_natural_2">לוקרי ♮2</string>
+    <string name="scale_altered">אלטרד</string>
+    <string name="scale_harmonic_major">מז׳ור הרמוני</string>
+    <string name="scale_double_harmonic">הרמוני כפול</string>
+    <string name="scale_hungarian_minor">מינור הונגרי</string>
+    <string name="scale_hungarian_major">מז׳ור הונגרי</string>
+    <string name="scale_neapolitan_major">מז׳ור נפוליטני</string>
+    <string name="scale_neapolitan_minor">מינור נפוליטני</string>
+    <string name="scale_major_pentatonic">פנטטונית מז׳ור</string>
+    <string name="scale_minor_pentatonic">פנטטונית מינור</string>
+    <string name="scale_minor_6_pentatonic">פנטטונית מינור 6</string>
+    <string name="scale_dominant_pentatonic">פנטטונית דומיננטית</string>
+    <string name="scale_egyptian">מצרי</string>
+    <string name="scale_man_gong">מאן גונג</string>
+    <string name="scale_ritusen">ריטוסן</string>
+    <string name="scale_hirajoshi">היראג׳ושי</string>
+    <string name="scale_in">אִין</string>
+    <string name="scale_insen">אינסן</string>
+    <string name="scale_iwato">איוואטו</string>
+    <string name="scale_kumoi">קומוי</string>
+    <string name="scale_chinese">סיני</string>
+    <string name="scale_blues">בלוז</string>
+    <string name="scale_major_blues">בלוז מז׳ור</string>
+    <string name="scale_major_hexatonic">הקסטונית מז׳ור</string>
+    <string name="scale_minor_hexatonic">הקסטונית מינור</string>
+    <string name="scale_prometheus">פרומתאוס</string>
+    <string name="scale_tritone">טריטון</string>
+    <string name="scale_whole_tone">טונים שלמים</string>
+    <string name="scale_augmented">מוגדל</string>
+    <string name="scale_diminished">מוקטן (טון–חצי)</string>
+    <string name="scale_dominant_diminished">מוקטן דומיננטי (חצי–טון)</string>
+    <string name="scale_chromatic">כרומטי</string>
+    <string name="scale_bebop_dominant">ביבופ דומיננטי</string>
+    <string name="scale_bebop_major">ביבופ מז׳ור</string>
+    <string name="scale_bebop_dorian">ביבופ דורי</string>
+    <string name="scale_bebop_melodic_minor">ביבופ מינור מלודי</string>
+    <string name="scale_bebop_harmonic_minor">ביבופ מינור הרמוני</string>
+    <string name="scale_persian">פרסי</string>
+    <string name="scale_enigmatic">אניגמטי</string>
+    <string name="scale_oriental">אוריינטלי</string>
+    <string name="scale_major_locrian">לוקרי מז׳ור</string>
+    <string name="scale_lydian_minor">לידי מינור</string>
+    <string name="scale_leading_whole_tone">טונים שלמים מוביל</string>
+    <string name="scale_flamenco">פלמנקו</string>
+    <string name="scale_spanish_eight_tone">ספרדי שמונה-צלילי</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">יוני</string>
+    <string name="scale_aliases_mixolydian">סולם דומיננטי</string>
+    <string name="scale_aliases_natural_minor">איאולי</string>
+    <string name="scale_aliases_ionian_sharp_5">מז׳ור מוגדל</string>
+    <string name="scale_aliases_dorian_sharp_4">מינור רומני, דורי אוקראיני</string>
+    <string name="scale_aliases_phrygian_dominant">פריגי ספרדי, פריגי מז׳ור, חיג׳אז, פריגיש, אהבה רבה</string>
+    <string name="scale_aliases_ultralocrian">סופר לוקרי ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">מינור ג׳אז</string>
+    <string name="scale_aliases_dorian_flat_2">פריגי ♮6</string>
+    <string name="scale_aliases_lydian_dominant">אקוסטי, סולם העליונים, לידי ♭7, מיקסולידי ♯4</string>
+    <string name="scale_aliases_mixolydian_flat_6">איאולי דומיננטי, הינדי</string>
+    <string name="scale_aliases_locrian_natural_2">חצי מוקטן</string>
+    <string name="scale_aliases_altered">סופר לוקרי, טון שלם מוקטן</string>
+    <string name="scale_aliases_double_harmonic">ביזנטי, חיג׳אז כאר, ערבי, מז׳ור צועני</string>
+    <string name="scale_aliases_hungarian_minor">מינור צועני, מינור הרמוני כפול</string>
+    <string name="scale_aliases_egyptian">פנטטונית מושהית</string>
+    <string name="scale_aliases_man_gong">פנטטונית בלוז מינורית</string>
+    <string name="scale_aliases_minor_6_pentatonic">פנטטונית מינור סקסטה, פנטטונית דורית</string>
+    <string name="scale_aliases_dominant_pentatonic">פנטטונית מיקסולידית, פנטטונית ספטימה דומיננטית</string>
+    <string name="scale_aliases_ritusen">יו, פנטטונית בלוז מז׳ורית</string>
+    <string name="scale_aliases_in">סאקורה</string>
+    <string name="scale_aliases_blues">בלוז מינורי</string>
+    <string name="scale_aliases_prometheus">מיסטי</string>
+    <string name="scale_aliases_tritone">פטרושקה</string>
+    <string name="scale_aliases_augmented">הקסטוני</string>
+    <string name="scale_aliases_diminished">אוקטטוני</string>
+
+    <!-- Song editor screen -->
+    <string name="song_editor_edit">עריכה</string>
+    <string name="song_editor_preview">תצוגה מקדימה</string>
+    <string name="song_editor_split">מפוצל</string>
+    <string name="song_editor_undo">ביטול פעולה</string>
+    <string name="song_editor_redo">ביצוע מחדש</string>
+    <string name="song_editor_shortcuts">קיצורים</string>
+    <string name="song_editor_show_shortcuts">הצגת קיצורים</string>
+    <string name="song_editor_hide_shortcuts">הסתרת קיצורים</string>
+    <string name="song_editor_insert_chord">אקורד</string>
+    <string name="song_editor_insert_annotation">הערה מעל השורה</string>
+    <string name="song_editor_format_bold">מודגש</string>
+    <string name="song_editor_format_italic">נטוי</string>
+    <string name="song_editor_format_underline">קו תחתון</string>
+    <string name="song_editor_section_intro">פתיחה</string>
+    <string name="song_editor_section_verse">בית</string>
+    <string name="song_editor_section_pre_chorus">טרום־פזמון</string>
+    <string name="song_editor_section_chorus">פזמון</string>
+    <string name="song_editor_section_bridge">גשר</string>
+    <string name="song_editor_section_solo">סולו</string>
+    <string name="song_editor_section_outro">סיום</string>
+    <string name="song_editor_section_tab">טאב</string>
+    <string name="song_editor_tab_any_instrument">כל כלי</string>
+    <string name="song_editor_section_grid">גריד</string>
+    <string name="song_editor_section_abc">תווים</string>
+    <string name="song_editor_insert_chorus_recall">חזרה על הפזמון</string>
+    <string name="song_editor_insert_comment">הערה</string>
+    <string name="song_editor_insert_comment_italic">הערה נטויה</string>
+    <string name="song_editor_insert_comment_box">הערה במסגרת</string>
+    <string name="song_editor_insert_key_change">שינוי טונליות</string>
+    <string name="song_editor_insert_title">כותרת</string>
+    <string name="song_editor_insert_subtitle">כותרת משנה</string>
+    <string name="song_editor_insert_artist">אמן</string>
+    <string name="song_editor_insert_composer">מלחין</string>
+    <string name="song_editor_insert_lyricist">כותב המילים</string>
+    <string name="song_editor_insert_more_details">פרטים נוספים</string>
+    <string name="song_editor_insert_album">אלבום</string>
+    <string name="song_editor_insert_cover_art">תמונת עטיפה</string>
+    <string name="song_editor_insert_year">שנה</string>
+    <string name="song_editor_insert_key">טונליות</string>
+    <string name="song_editor_insert_capo">קאפו</string>
+    <string name="song_editor_insert_tempo">טמפו</string>
+    <string name="song_editor_insert_time">משקל</string>
+    <string name="song_editor_insert_duration">משך</string>
+    <string name="song_editor_insert_tag">תגית</string>
+    <string name="song_editor_insert_language">שפה</string>
+    <string name="song_editor_insert_link">קישור</string>
+    <string name="song_editor_insert_chord_shape">צורת אקורד</string>
+    <string name="song_editor_transpose_text_up">העלאת הטונליות בטקסט</string>
+    <string name="song_editor_transpose_text_down">הורדת הטונליות בטקסט</string>
+    <string name="song_editor_prettify">סידור ה־ChordPro</string>
+    <string name="song_editor_revert">ביטול כל השינויים</string>
+    <string name="song_editor_chordpro_reference">מדריך ChordPro</string>
+    <string name="song_editor_find">חיפוש</string>
+    <string name="song_editor_find_and_replace">חיפוש והחלפה</string>
+    <string name="song_editor_find_query">טקסט לחיפוש</string>
+    <string name="song_editor_find_replacement">החלפה ב־</string>
+    <string name="song_editor_find_match_count">%1$d מתוך %2$d</string>
+    <string name="song_editor_find_no_matches">אין התאמות</string>
+    <string name="song_editor_find_match_case">התאמת אותיות רישיות</string>
+    <string name="song_editor_find_previous">ההתאמה הקודמת</string>
+    <string name="song_editor_find_next">ההתאמה הבאה</string>
+    <string name="song_editor_replace">החלפה</string>
+    <string name="song_editor_replace_all">החלפת הכול</string>
+    <string name="song_editor_revert_confirmation">לחזור לגרסה השמורה האחרונה של השיר? כל מה שנכתב מאז יאבד.</string>
+    <string name="song_editor_unsaved_changes">שינויים שלא נשמרו</string>
+    <string name="song_editor_unsaved_changes_confirmation">לשמור את מה שנכתב לפני היציאה מהעורך?</string>
+    <string name="song_editor_discard">התעלמות</string>
+    <string name="song_editor_save_failed">לא ניתן היה לשמור את השיר</string>
+    <string name="song_editor_draft_lost">לא ניתן היה לשחזר את השינויים שלא נשמרו</string>
+    <string name="song_editor_draft_restored">השינויים שלא נשמרו שוחזרו</string>
+    <string name="song_editor_file_gone">הקובץ של השיר הזה כבר לא נמצא בספרייה. שמירה תחזיר אותו.</string>
+    <string name="song_editor_untitled">כדי לשמור, יש לתת לשיר כותרת</string>
+
+    <!-- Song details screen -->
+    <string name="song_details_previous_song">השיר הקודם</string>
+    <string name="song_details_next_song">השיר הבא</string>
+    <string name="song_details_previous_page">העמוד הקודם</string>
+    <string name="song_details_next_page">העמוד הבא</string>
+    <string name="song_details_previous_section">הקטע הקודם</string>
+    <string name="song_details_next_section">הקטע הבא</string>
+    <string name="song_details_step_progress_page">עמוד %1$d מתוך %2$d</string>
+    <string name="song_details_step_progress_section">קטע %1$d מתוך %2$d</string>
+    <string name="song_details_scroll_up">גלילה למעלה</string>
+    <string name="song_details_scroll_down">גלילה למטה</string>
+    <string name="song_details_auto_scroll_play">התחלת גלילה</string>
+    <string name="song_details_auto_scroll_pause">עצירת גלילה</string>
+    <string name="song_details_auto_scroll_speed">מהירות גלילה</string>
+    <string name="song_layout_title">איך קוראים שירים?</string>
+    <string name="song_layout_message">אפשר לשנות את זה בכל עת בהעדפות של שיר.</string>
+    <string name="song_layout_pages">עמודים</string>
+    <string name="song_layout_pages_description">כמה שיותר מהשיר על המסך בבת אחת, בעמודות שמתחלפות עמוד אחר עמוד</string>
+    <string name="song_layout_continuous">רציף</string>
+    <string name="song_layout_continuous_description">עמודה אחת שנגללת מעצמה בקצב של השיר, במהירות שנקבעת לכל שיר בנפרד</string>
+    <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_transposition">טרנספוזיציה</string>
+    <string name="song_details_transpose_up">העלאת טונליות</string>
+    <string name="song_details_transpose_down">הורדת טונליות</string>
+    <string name="song_details_transpose_reset">איפוס הטרנספוזיציה</string>
+    <string name="song_details_tempo_decrease">לאט יותר</string>
+    <string name="song_details_tempo_increase">מהר יותר</string>
+    <string name="song_details_tempo_reset">איפוס הטמפו</string>
+    <string name="song_details_capo_decrease">הורדת הקאפו</string>
+    <string name="song_details_capo_increase">העלאת הקאפו</string>
+    <string name="song_details_capo_reset">איפוס הקאפו</string>
+    <string name="song_details_playing_edit">עריכת ברירות המחדל של השיר</string>
+    <string name="song_details_playing_description_setlist">הערכים האלה נשמרים בקובץ השיר, ומהם השיר מתחיל בכל מקום. הפקדים שעל השיר משנים אותם לסט־ליסט הזה בלבד, בלי לשנות את הקובץ. שדה ריק משתמש בברירת המחדל.</string>
+    <string name="song_details_playing_description_library">הערכים האלה נשמרים בקובץ השיר, ומהם השיר מתחיל בכל מקום. הפקדים שעל השיר משנים אותם כשהוא נפתח מהספרייה, בלי לשנות את הקובץ או סט־ליסט כלשהו. שדה ריק משתמש בברירת המחדל.</string>
+    <string name="song_details_playing_override_setlist">מותאם לסט־ליסט הזה</string>
+    <string name="song_details_playing_override_library">מותאם בספרייה</string>
+    <string name="song_details_playing_override_transposition">טרנספוזיציה %1$s</string>
+    <string name="song_details_playing_override_reset">איפוס</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">הטונליות שבה כתובים האקורדים. הקובץ מזיז אותם ב־%1$s חצי טון כשהשיר מוצג.</item>
+        <item quantity="other">הטונליות שבה כתובים האקורדים. הקובץ מזיז אותם ב־%1$s חצאי טונים כשהשיר מוצג.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">טמפו (BPM)</string>
+    <string name="song_details_playing_range">%1$d עד %2$d</string>
+    <string name="song_details_metronome_show">הצגת המטרונום</string>
+    <string name="song_details_metronome_hide">הסתרת המטרונום</string>
+    <string name="song_details_scroll_to_top">גלילה להתחלה</string>
+    <string name="song_details_text_size_increase">הגדלת הטקסט</string>
+    <string name="song_details_text_size_decrease">הקטנת הטקסט</string>
+    <string name="song_details_text_size_reset">איפוס גודל הטקסט</string>
+    <string name="song_details_text_size">גודל טקסט</string>
+    <string name="song_details_section_chorus">פזמון</string>
+    <string name="song_details_section_bridge">גשר</string>
+    <string name="song_details_section_tab">טאב</string>
+    <string name="song_details_section_grid">גריד</string>
+    <string name="song_details_section_abc">תווים</string>
+    <string name="song_details_sheet_music_chords">אקורדים: %1$s</string>
+    <string name="song_details_sheet_music_words">מילים: %1$s</string>
+    <string name="song_details_section_lilypond">LilyPond</string>
+    <string name="song_details_section_svg">SVG</string>
+    <string name="song_details_tab_expand">הצגת הטאב</string>
+    <string name="song_details_tab_collapse">הסתרת הטאב</string>
+    <string name="song_details_grid_expand">הצגת הגריד</string>
+    <string name="song_details_grid_collapse">הסתרת הגריד</string>
+    <string name="song_details_section_expand">הצגת הקטע</string>
+    <string name="song_details_section_collapse">הסתרת הקטע</string>
+    <string name="song_details_section_expand_starting">הצגת הקטע שמתחיל ב־“%1$s”</string>
+    <string name="song_details_section_collapse_starting">הסתרת הקטע שמתחיל ב־“%1$s”</string>
+    <string name="song_details_tags_manage">ניהול תגיות</string>
+    <string name="song_details_tags_add">הוספת תגיות</string>
+    <string name="song_details_tags_search">חיפוש או יצירה של תגית</string>
+    <string name="song_details_tag_create">יצירת התגית “%1$s”</string>
+    <string name="song_details_tag_color">הצבע של התגית “%1$s”</string>
+    <string name="song_details_tag_color_none">ללא צבע</string>
+    <string name="song_details_tag_color_lime">ליים</string>
+    <string name="song_details_tag_color_cyan">ציאן</string>
+    <string name="song_details_tag_color_indigo">אינדיגו</string>
+    <string name="song_details_tag_color_brown">חום</string>
+    <string name="song_details_tag_color_black">שחור</string>
+    <string name="song_details_metadata_edit">עריכת פרטי השיר</string>
+    <string name="song_details_song_info">על השיר</string>
+    <string name="song_details_info_tags">תגיות</string>
+    <string name="song_details_info_languages">שפות</string>
+    <string name="song_details_info_links">קישורים</string>
+    <string name="song_details_links_edit">ניהול קישורים</string>
+    <string name="song_details_links_add">הוספת קישורים</string>
+    <string name="song_details_link_name">שם (לא חובה)</string>
+    <string name="song_details_link_duplicate">הכתובת הזו כבר ברשימה</string>
+    <string name="song_details_languages_edit">ניהול שפות</string>
+    <string name="song_details_languages_add">הוספת שפות</string>
+    <string name="song_details_remove_cover_art_confirmation">להסיר את תמונת העטיפה מ־%1$s?</string>
+    <string name="song_details_link_add">הוספת קישור</string>
+    <string name="song_details_link_remove">הסרת הקישור אל %1$s</string>
+    <string name="song_details_link_move_up">העברת הקישור אל %1$s למעלה</string>
+    <string name="song_details_link_move_down">העברת הקישור אל %1$s למטה</string>
+    <string name="song_details_link_address">כתובת אינטרנט</string>
+    <string name="song_details_link_address_hint">סרטון, הקלטה, טאב או כל עמוד אחר על השיר</string>
+    <string name="song_details_language_search">חיפוש שפה</string>
+    <string name="song_details_language_no_search_results">אין שפה שמתאימה לחיפוש הזה. הקוד בן שתיים או שלוש האותיות שלה ימצא אותה גם כשאין לה שם.</string>
+    <string name="song_details_set_cover_art">הוספת תמונת עטיפה</string>
+    <string name="song_details_change_cover_art">החלפת תמונת העטיפה</string>
+    <string name="cover_art_search">חיפוש</string>
+    <string name="cover_art_search_hint">שם האלבום, או של השיר לבדו, כדי למצוא את התקליטים שבהם יצא</string>
+    <string name="cover_art_search_loading">מחפשים ב־MusicBrainz וב־iTunes…</string>
+    <string name="cover_art_search_busy">MusicBrainz עמוס, מנסים שוב בעוד רגע…</string>
+    <string name="cover_art_search_no_results">לא נמצא תקליט עם עטיפה. נסו את שם האלבום, או פחות מילים.</string>
+    <string name="cover_art_search_failed">לא ניתן היה להשלים את החיפוש.</string>
+    <string name="cover_art_search_remove">הסרת העטיפה</string>
+    <string name="cover_art_search_attribution">תקליטים מ־MusicBrainz ומ־iTunes, עטיפות מ־Cover Art Archive ומ־Apple</string>
+    <string name="cover_art_address_mode">כתובת אינטרנט</string>
+    <string name="cover_art_address">כתובת התמונה</string>
+    <string name="cover_art_address_hint">הדביקו כתובת של תמונה ברשת</string>
+    <string name="cover_art_address_failed">לא ניתן היה לטעון תמונה מהכתובת הזו</string>
+    <string name="song_details_lookup">חיפוש פרטי השיר ברשת</string>
+    <string name="song_details_lookup_fill_in">מילוי</string>
+    <string name="song_details_lookup_hint">שם השיר, ושם האמן אם ידוע, כדי למצוא את ההקלטות שמתאימות לו</string>
+    <string name="song_details_lookup_no_results">לא נמצאה הקלטה של השיר הזה. נסו פחות מילים, או בלי האלבום.</string>
+    <string name="song_details_lookup_now">כעת: %1$s</string>
+    <string name="song_details_lookup_credits_loading">מבקשים מ־MusicBrainz את כותבי השיר…</string>
+    <string name="song_details_lookup_credits_none">ב־MusicBrainz אין כותבי שיר להקלטה הזו</string>
+    <string name="song_details_lookup_credits_failed">לא ניתן היה למצוא את כותבי השיר</string>
+    <string name="song_details_lookup_nothing_new">אין בהקלטה הזו שום דבר שלא כתוב כבר בטופס</string>
+    <string name="song_details_lookup_attribution">נתונים מ־MusicBrainz ומ־iTunes.</string>
+    <string name="song_details_capo">קאפו %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_time_signature">משקל: %1$s</string>
+    <string name="song_details_key_change">טונליות: %1$s</string>
+    <string name="tab_notice_octave_up">הועבר אוקטבה למעלה כדי להישאר על הצוואר</string>
+    <string name="tab_notice_octave_down">הועבר אוקטבה למטה כדי להישאר על הצוואר</string>
+    <string name="tab_notice_other_instrument">טאב ל־%1$s, הועבר לכלי שלך</string>
+    <string name="tab_notice_not_moved">מוצג כפי שנכתב: אי אפשר להעביר אותו לכיוון שלך</string>
+    <string name="tab_notice_not_moved_instrument">טאב ל־%1$s, מוצג כפי שנכתב: אי אפשר להעביר אותו לכלי שלך</string>
+    <string name="tab_notice_hidden">הטאב מוסתר</string>
+    <string name="tab_notice_hidden_instrument">טאב ל־%1$s מוסתר</string>
+    <string name="song_details_chords">אקורדים</string>
+    <string name="song_details_chord_tuning">כיוון: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">מוגדר בשיר הזה לכיוון סטנדרטי</string>
+    <string name="song_details_chord_defined_standard_tuning_show">הצגת הצורה מהשיר</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">הצגת הצורות לכיוון שלך</string>
+    <string name="song_details_chord_diagram">%1$s: %2$s</string>
+    <string name="song_details_chord_diagram_none">%1$s: אין דיאגרמה</string>
+    <string name="song_details_chord_letters">%1$s, כלומר %2$s</string>
+    <string name="song_details_chord_degree">%1$s, דרגה %2$s</string>
+    <string name="song_details_chord_shape_choose">בחירת צורת אקורד - %1$s</string>
+    <string name="song_details_chord_shape_capo">צורת %1$s, קאפו %2$s</string>
+    <string name="song_details_chord_defined">מוגדר בשיר הזה</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">מוגדר בשיר הזה, הוזז בסריג אחד</item>
+        <item quantity="two">מוגדר בשיר הזה, הוזז בשני סריגים</item>
+        <item quantity="other">מוגדר בשיר הזה, הוזז ב־%1$d סריגים</item>
+    </plurals>
+    <string name="song_details_timing">מכאן: %1$s</string>
+    <string name="song_details_composer">מלחין</string>
+    <string name="song_details_lyricist">כותב המילים</string>
+    <string name="song_details_album">אלבום</string>
+    <string name="song_details_year">שנה</string>
+    <string name="song_details_duration">משך</string>
+    <string name="song_details_empty">אין עדיין תוכן בקובץ הזה.</string>
+    <string name="song_details_cut">השיר הזה ארוך מכדי להציג אותו כאן במלואו, ולכן הוא נעצר בנקודה הזו. הקובץ עצמו שלם, והעורך מציג את כולו.</string>
+    <string name="song_details_no_data">לא ניתן היה לטעון את השיר הזה</string>
+    <string name="song_details_no_data_hint">לא ניתן היה לקרוא את הקובץ.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync_unavailable">גרסה זו של Campfire נבנתה בלי פרטי גישה לסנכרון, כך שאין למה להתחבר.</string>
+    <string name="settings_sync_description">הספרייה נשארת זהה בכל מכשיר דרך תיקיית ענן בבעלותכם, יחד עם הטרנספוזיציה, הקאפו והטמפו של כל שיר. ל-Campfire אין שרת: הקבצים עוברים ישירות בין המכשירים שלכם לאחסון שלכם.</string>
+    <string name="settings_sync_connect_dropbox">חיבור Dropbox</string>
+    <string name="settings_sync_connecting">מתחבר…</string>
+    <string name="settings_sync_connection_failed_network">אין גישה לשירות. בדקו את החיבור לאינטרנט ונסו שוב.</string>
+    <string name="settings_sync_connection_failed_authorization">Dropbox דחה את החיבור.</string>
+    <string name="settings_sync_connection_failed_unknown">החיבור לא הצליח.</string>
+    <string name="settings_sync_connection_failed_storage">Campfire לא הצליח לקרוא או לשמור את החיבור במכשיר הזה. הוא ינסה שוב בהפעלה הבאה.</string>
+    <string name="settings_sync_connected_as">מחובר בתור %1$s</string>
+    <string name="settings_sync_disconnect">ניתוק</string>
+    <string name="settings_sync_disconnect_confirmation">לנתק את %1$s? Campfire ישכח את החשבון ויפסיק לסנכרן. שום דבר לא יוסר מהספרייה או מתיקיית הענן.</string>
+    <string name="settings_sync_now">סנכרון עכשיו</string>
+    <string name="settings_sync_never">עדיין לא סונכרן</string>
+    <string name="settings_sync_last_synced_moments_ago">הסנכרון האחרון הצליח לפני רגע</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">הסנכרון האחרון הצליח לפני דקה</item>
+        <item quantity="two">הסנכרון האחרון הצליח לפני שתי דקות</item>
+        <item quantity="other">הסנכרון האחרון הצליח לפני %1$d דקות</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">הסנכרון האחרון הצליח לפני שעה</item>
+        <item quantity="two">הסנכרון האחרון הצליח לפני שעתיים</item>
+        <item quantity="other">הסנכרון האחרון הצליח לפני %1$d שעות</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">הסנכרון האחרון הצליח אתמול</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">הסנכרון האחרון הצליח לפני יום</item>
+        <item quantity="two">הסנכרון האחרון הצליח לפני יומיים</item>
+        <item quantity="other">הסנכרון האחרון הצליח לפני %1$d ימים</item>
+    </plurals>
+    <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
+    <string name="settings_sync_failed_network">אין גישה לשירות. Campfire ינסה שוב בפעם הבאה.</string>
+    <string name="settings_sync_failed_authorization">החיבור נדחה. חברו את החשבון מחדש.</string>
+    <string name="settings_sync_failed_storage">לא ניתן היה לקרוא או לכתוב את הספרייה.</string>
+    <string name="settings_sync_failed_unknown">הסנכרון לא הושלם.</string>
+    <string name="settings_sync_failed_remote_full">תיקיית הענן מלאה, ולכן אי אפשר להעלות אליה עוד. פנו בה מקום וסנכרנו שוב.</string>
+    <plurals name="settings_sync_files_failed">
+        <item quantity="one">קובץ אחד לא סונכרן: %2$s</item>
+        <item quantity="two">שני קבצים לא סונכרנו. ביניהם: %2$s</item>
+        <item quantity="other">%1$d קבצים לא סונכרנו. ביניהם: %2$s</item>
+    </plurals>
+    <string name="settings_sync_preferences_failed">הגדרות השירים (טרנספוזיציה, קאפו וטמפו) לא סונכרנו. Campfire ינסה שוב בפעם הבאה.</string>
+    <plurals name="settings_sync_conflicts">
+        <item quantity="one">נשמרו שתי הגרסאות של קובץ שהשתנה בשני מקומות: %2$s</item>
+        <item quantity="two">נשמרו שתי הגרסאות של שני קבצים שהשתנו בשני מקומות. ביניהם: %2$s</item>
+        <item quantity="other">נשמרו שתי הגרסאות של %1$d קבצים שהשתנו בשני מקומות. ביניהם: %2$s</item>
+    </plurals>
+
+    <string name="settings_sync_cancel">עצירת הסנכרון</string>
+    <string name="settings_sync_progress">מסנכרן {completed} מתוך {total}…</string>
+    <string name="settings_sync_preparing">מחפש שינויים…</string>
+    <string name="settings_sync_interrupted">הסנכרון האחרון נעצר לפני שהסתיים. כל מה שכבר הועבר נשמר.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">הקובץ שסונכרן נעלם מתיקיית הענן. למחוק אותו גם כאן, או לשמור אותו ולהעלות אותו שוב?</item>
+        <item quantity="two">שניים מתוך %2$d הקבצים שסונכרנו נעלמו מתיקיית הענן. למחוק אותם גם כאן, או לשמור אותם ולהעלות אותם שוב?</item>
+        <item quantity="other">%1$d מתוך %2$d הקבצים שסונכרנו נעלמו מתיקיית הענן. למחוק אותם גם כאן, או לשמור אותם ולהעלות אותם שוב?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">למחוק גם כאן</string>
+    <string name="settings_sync_keep_and_upload">לשמור ולהעלות</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">הקובץ שסונכרן נעלם מהמכשיר הזה. למחוק אותו גם מתיקיית הענן, או לשמור אותו ולהוריד אותו שוב?</item>
+        <item quantity="two">שניים מתוך %2$d הקבצים שסונכרנו נעלמו מהמכשיר הזה. למחוק אותם גם מתיקיית הענן, או לשמור אותם ולהוריד אותם שוב?</item>
+        <item quantity="other">%1$d מתוך %2$d הקבצים שסונכרנו נעלמו מהמכשיר הזה. למחוק אותם גם מתיקיית הענן, או לשמור אותם ולהוריד אותם שוב?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">למחוק גם מהענן</string>
+    <string name="settings_sync_keep_and_download">לשמור ולהוריד</string>
+    <string name="settings_sync_notification_channel">סנכרון</string>
+    <string name="settings_sync_notification_title">מסנכרן את הספרייה</string>
+    <string name="settings_sync_redirect_page_title">חזרה ל-Campfire</string>
+    <string name="settings_sync_redirect_page_message">אפשר לסגור את הכרטיסייה הזו ולחזור לאפליקציה.</string>
+
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">מה חדש ב-Campfire %1$s</string>
+    <string name="whats_new_message">• **הפריסה הרציפה נגללת מעצמה** בחרו “רציפה” כדי לקרוא שיר בעמודה אחת שנגללת בקצב משלה, במהירות שקובעים לכל שיר.\n• **תווים לשירי ABC** שירי ABC מוצגים כתווים על חמשה במסך וב-PDF, עוברים יחד עם הטרנספוזיציה, ונוצרים מכפתור “תווים” בעורך, והכול בזכות abc2svg של Jean-François Moine.\n• **עוד חמש שפות** Campfire מדבר עכשיו גם גרמנית, ספרדית, צרפתית, איטלקית ורומנית, לצד אנגלית והונגרית; אפשר לבחור שפה בהגדרות.\n• **דיאגרמות האקורדים עוקבות אחרי שינויי טונליות** דיאגרמות האקורדים של שיר שמחליף טונליות מקובצות לפי כל טונליות, הדרגות נספרות ממנה, והסולם שלה מוצע.\n• **ייבוא PDF משופר** דפי אקורדים ב-PDF נכנסים בלי כותרות עליונות ותחתונות, עם צורות האקורדים, סימני החזרה ופרטי השיר, כולל קובצי PDF מאפליקציית ChordPro.\n• **מילים נקיות יותר ממקורות אחרים** מילים והערות כבר לא מציגות כפי שהוקלדו תגיות סימון אחרות או קודים כמו &amp;amp;, וקטעי span מעוצבים מוצגים כמודגשים, נטויים או עם קו תחתון.</string>
+
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">דילוג</string>
+    <string name="onboarding_next">הבא</string>
+    <string name="onboarding_start_playing">בואו ננגן</string>
+    <string name="onboarding_welcome_title">ברוכים הבאים ל-Campfire!</string>
+    <string name="onboarding_welcome_message">כמה שאלות קצרות כדי להתאים את האפליקציה אליכם.\nקודם כול, ודאו שהן מוצגות בשפה שלכם.</string>
+    <string name="onboarding_language">שפה: %1$s</string>
+    <string name="onboarding_settings_note">כל בחירה בשלבים האלה אפשר לשנות אחר כך בהגדרות.</string>
+    <string name="onboarding_look_title">בחירת מראה</string>
+    <string name="onboarding_look_message">ערכת נושא כהה לא תסנוור על במה חשוכה, ועמוד בגוון חם יותר נוח לעיניים לאורך הופעה ארוכה.</string>
+    <string name="onboarding_features_title">מה צריך?</string>
+    <string name="onboarding_features_message">משאירים רק את מה שמשתמשים בו, כך שהאפליקציה נשארת נקייה ומתאימה לדרך שבה מנגנים.</string>
+    <string name="onboarding_chord_diagram_description">איך מנגנים %1$s</string>
+    <string name="onboarding_progress">שלב %1$d מתוך %2$d</string>
+    <string name="onboarding_instrument_title">על מה מנגנים?</string>
+    <string name="onboarding_instrument_message">דיאגרמות האקורדים והטיונר מותאמים לבחירה.</string>
+    <string name="onboarding_instrument_strings">הטיונר יקשיב למיתרים %1$s</string>
+    <string name="onboarding_notation_title">איך כותבים אקורדים?</string>
+    <string name="onboarding_notation_message">בחרו איך יוצגו האקורדים. השירים תמיד נשמרים בכתיב הסטנדרטי, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
+    <string name="onboarding_song_layout_message">מעבירים עמודים בעצמכם, או נותנים לשיר להיגלל בקצב משלו בזמן הנגינה.</string>
+    <string name="onboarding_feature_chords_description">אקורדים מעל המילים, בכל טונליות, עם דיאגרמות לכלי שלכם. רק שרים? בטלו את הסימון כדי להציג מילים בלבד.</string>
+    <string name="onboarding_feature_metronome_description">שומר על הקצב בטמפו של כל שיר, בתוך השירים ובמסך משלו</string>
+    <string name="onboarding_feature_tuner_description">מכוון את הכלי דרך המיקרופון, בתוך השירים ובמסך משלו</string>
+    <string name="onboarding_feature_scales_description">כל סולם ומודוס מצוירים לכלי שלכם, וגם אלה שמתאימים לכל שיר</string>
+    <string name="onboarding_sync_title">השירים שלכם, בכל מקום</string>
+    <string name="onboarding_sync_message">חברו את Dropbox כדי לשמור על אותה ספרייה בכל המכשירים. אין שרת באמצע: הקבצים עוברים ישירות לאחסון שלכם.</string>
+    <string name="onboarding_clipboard_link_question">מישהו שלח לכם שיר או סט־ליסט?</string>
+    <string name="onboarding_clipboard_link_open">פתיחה</string>
+    <string name="welcome_get_started">בואו נתחיל</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">יש עדכון זמין</string>
+    <string name="app_update_available_hint">גרסה חדשה יותר של Campfire מוכנה להורדה. היא יורדת ברקע, כך שאפשר להמשיך בינתיים.</string>
+    <string name="app_update_update">עדכון</string>
+    <string name="app_update_continue_offline">המשך במצב לא מקוון</string>
+    <string name="app_update_later">אחר כך</string>
+    <string name="app_update_downloaded">העדכון הורד</string>
+    <string name="app_update_downloaded_hint">Campfire צריך להפעיל את עצמו מחדש כדי להשלים את ההתקנה.</string>
+    <string name="app_update_restart">הפעלה מחדש</string>
+    <string name="app_update_required">נדרש עדכון</string>
+    <string name="app_update_required_hint">לא ניתן עוד להשתמש בגרסה זו של Campfire. הספרייה שלכם נשארת בדיוק במקומה. העדכון דורש חיבור לאינטרנט.</string>
+
+    <!-- Export -->
+    <string name="print_save">שמירה</string>
+    <string name="print_share">שיתוף</string>
+    <string name="print_format">שיתוף בתור</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">Zip</string>
+    <string name="print_format_pdf_description">הכי טוב להדפסה, ולמי שאין לו אפליקציית שירים</string>
+    <string name="print_format_chordpro_description">פורמט קובץ סטנדרטי שעובד עם רוב אפליקציות השירים</string>
+    <string name="print_format_zip_description">קובצי ChordPro בארכיון אחד, לרוב אפליקציות השירים</string>
+    <string name="print_files_song_description">מילים ואקורדים כטקסט פשוט שנשאר ניתן לעריכה ולהעברת טונליות, לכל אפליקציה שקוראת ChordPro, כולל Campfire.</string>
+    <plurals name="print_files_setlist_description">
+        <item quantity="one">השיר היחיד בסט־ליסט כקובץ ChordPro לכל אפליקציית שירים, עם סדר ההופעה ש-Campfire קורא בחזרה כסט־ליסט.</item>
+        <item quantity="two">שני השירים בסט־ליסט כקובצי ChordPro לכל אפליקציית שירים, עם סדר ההופעה ש-Campfire קורא בחזרה כסט־ליסט.</item>
+        <item quantity="other">%1$d השירים בסט־ליסט כקובצי ChordPro לכל אפליקציית שירים, עם סדר ההופעה ש-Campfire קורא בחזרה כסט־ליסט.</item>
+    </plurals>
+    <plurals name="print_files_songs_description">
+        <item quantity="one">שיר אחד כקובץ ChordPro, לכל אפליקציה שקוראת ChordPro, כולל Campfire.</item>
+        <item quantity="two">שני שירים כקובצי ChordPro, לכל אפליקציה שקוראת ChordPro, כולל Campfire.</item>
+        <item quantity="other">%1$d שירים כקובצי ChordPro, לכל אפליקציה שקוראת ChordPro, כולל Campfire.</item>
+    </plurals>
+    <plurals name="print_files_missing">
+        <item quantity="one">שיר אחד חסר או לא קריא, ולכן הושמט.</item>
+        <item quantity="two">שני שירים חסרים או לא קריאים, ולכן הושמטו.</item>
+        <item quantity="other">%1$d שירים חסרים או לא קריאים, ולכן הושמטו.</item>
+    </plurals>
+    <string name="print_section_page">עמוד</string>
+    <string name="print_a4">A4</string>
+    <string name="print_letter">Letter</string>
+    <string name="print_portrait">לאורך</string>
+    <string name="print_landscape">לרוחב</string>
+    <string name="print_font_size">%1$d נק׳</string>
+    <string name="print_margins">שוליים</string>
+    <string name="print_margin">%1$d מ״מ</string>
+    <string name="print_margin_decrease">הקטנת השוליים</string>
+    <string name="print_margin_increase">הגדלת השוליים</string>
+    <string name="print_columns">עמודות</string>
+    <string name="print_columns_decrease">פחות עמודות</string>
+    <string name="print_columns_increase">יותר עמודות</string>
+    <string name="print_chords">אקורדים ודיאגרמות</string>
+    <string name="print_tabs">טאבים</string>
+    <string name="print_sheet_music">תווים</string>
+    <string name="print_comments">הערות</string>
+    <string name="print_key">טונליות, טרנספוזיציה וקאפו</string>
+    <string name="print_tempo">טמפו ומשקל</string>
+    <string name="print_metadata">אמן</string>
+    <string name="print_page_numbers">מספרי עמודים</string>
+    <string name="print_overview">הוספת סדר ההופעה</string>
+    <string name="print_overview_details">תאריך, תיאור ואמנים</string>
+    <string name="print_running_order">סדר ההופעה</string>
+    <string name="print_song_sheets">דפי שירים</string>
+    <string name="print_song_sheets_include">הוספת דפי השירים</string>
+    <string name="print_song_sheet">דף שיר</string>
+    <string name="print_new_page">כל שיר בעמוד חדש</string>
+    <string name="print_missing">קובץ השיר חסר או לא קריא</string>
+    <string name="print_load_failed">לא ניתן היה להכין את ה-PDF.</string>
+    <string name="print_setlist_empty">בסט־ליסט הזה עדיין אין שירים.</string>
+    <string name="print_page">עמוד %1$d מתוך %2$d</string>
+    <string name="print_previous">הקודם</string>
+    <string name="print_next">הבא</string>
+    <string name="print_time">משקל</string>
+    <string name="print_label_value">%1$s: %2$s</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">קישור</string>
+    <string name="print_format_link_description">מומלץ למשתמשי Campfire של היום ושל המחר</string>
+    <string name="share_not_connected">שתפו קישור שנפתח ישירות ב-Campfire, או בדפדפן בלי להתקין כלום. הקישורים נוצרים ב-Dropbox שלכם, אז קודם חברו אותו; כך גם כל הספרייה שלכם תסונכרן בכל המכשירים.</string>
+    <string name="share_connect_again">חיבור מחדש</string>
+    <string name="share_create">יצירת קישור</string>
+    <string name="share_try_again">ניסיון נוסף</string>
+    <string name="share_copy">העתקת הקישור</string>
+    <string name="share_send">שליחת הקישור</string>
+    <string name="share_not_shared_song">כל מי שיש לו את הקישור יכול לפתוח את השיר ישירות ב-Campfire, או בדפדפן בלי להתקין כלום. הקישור עוקב אחרי השינויים שלכם: פתיחה חוזרת מביאה את הגרסה העדכנית, ועותקים שכבר יובאו נשארים כמו שהם.</string>
+    <string name="share_not_shared_setlist">כל מי שיש לו את הקישור יכול לפתוח את הסט־ליסט ואת השירים שבו ישירות ב-Campfire, או בדפדפן בלי להתקין כלום. הקישור עוקב אחרי השינויים שלכם: פתיחה חוזרת מביאה את הגרסה העדכנית, ועותקים שכבר יובאו נשארים כמו שהם.</string>
+    <string name="share_shared_on">שותף בתאריך %1$s</string>
+    <string name="share_too_large_to_update">הגרסה העדכנית גדולה מדי לשיתוף; הקישור מביא את הגרסה האחרונה שנכנסה במגבלה.</string>
+    <string name="share_scope_missing">חברו את Dropbox מחדש כדי לאפשר ל-Campfire ליצור קישורים.</string>
+    <string name="share_authorization">Dropbox כבר לא מקבל את החיבור. חברו מחדש כדי ליצור קישורים.</string>
+    <string name="share_too_large">גדול מדי לשיתוף כקישור (יותר מ-%1$d MB).</string>
+    <string name="share_not_public">חשבון ה-Dropbox שלכם לא מאפשר קישורים ציבוריים.</string>
+    <string name="share_network">אין גישה ל-Dropbox. בדקו את החיבור ונסו שוב.</string>
+    <string name="share_remote_full">ה-Dropbox שלכם מלא.</string>
+    <string name="share_newer_version">גרסה חדשה יותר של Campfire שינתה לאחרונה את הקישורים בחשבון ה-Dropbox הזה. עדכנו את Campfire כדי לשתף מכאן.</string>
+    <string name="share_missing">הפריט הזה כבר לא נמצא בספרייה שלכם.</string>
+    <string name="share_copy_missing">הקישור הזה כבר לא עובד: העותק שלו הוסר מה-Dropbox שלכם. צרו קישור חדש כדי לשתף שוב.</string>
+    <string name="share_failed">לא ניתן היה ליצור את הקישור. נסו שוב בעוד רגע.</string>
+    <string name="share_qr_code">קוד QR של הקישור</string>
+    <string name="share_save_qr_code">שמירת קוד QR</string>
+    <string name="share_stop">הפסקת השיתוף</string>
+    <string name="share_stop_confirmation">להפסיק לשתף את “%1$s”? הקישור יפסיק לעבוד לכולם. עותקים שאנשים כבר ייבאו נשארים אצלם.</string>
+    <string name="share_link_copied">הקישור הועתק</string>
+    <string name="share_qr_code_saved">קוד ה-QR נשמר</string>
+    <string name="share_stop_failed">לא ניתן היה להפסיק את השיתוף. הקישור עדיין עובד.</string>
+    <string name="share_stop_failed_network">הפסקת שיתוף דורשת חיבור ל-Dropbox. הקישור עדיין עובד.</string>
+
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">יוצר קישור…</string>
+    <string name="share_stopping">מפסיק את השיתוף…</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">שיתוף</string>
+    <string name="settings_group_shared_links">קישורי שיתוף</string>
+    <string name="settings_group_all_links">כל הקישורים</string>
+    <string name="settings_sharing_description">שתפו שיר או סט־ליסט כקישור שכל אחד יכול לפתוח, שנוצר מה-Dropbox שלכם. חיבור Dropbox גם שומר את כל הספרייה שלכם מסונכרנת איתו בכל המכשירים.</string>
+    <string name="settings_sharing_nothing_shared">עדיין לא שותף כלום. בחרו “קישור” כשמשתפים שיר או סט־ליסט.</string>
+    <string name="settings_sharing_stale">לא ניתן היה לקרוא את הקישורים מ-Dropbox. הרשימה הזו היא מה שהמכשיר ראה לאחרונה.</string>
+    <string name="settings_sharing_orphaned">כבר לא בספרייה שלכם</string>
+    <string name="settings_sharing_copy_missing">הקישור כבר לא עובד</string>
+    <string name="settings_sharing_too_large">גדול מדי לעדכון</string>
+    <string name="settings_sharing_actions">פעולות שיתוף</string>
+    <string name="settings_sharing_show_qr_code">הצגת קוד QR</string>
+    <string name="settings_sharing_stop_all">הפסקת השיתוף של הכול</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">להפסיק לשתף פריט אחד? הקישור שלו יפסיק לעבוד לכולם, וכך גם קישורים שנשארו משיתופים שנכשלו. עותקים שאנשים כבר ייבאו נשארים אצלם.</item>
+        <item quantity="two">להפסיק לשתף את שני הפריטים? הקישורים שלהם יפסיקו לעבוד לכולם, וכך גם קישורים שנשארו משיתופים שנכשלו. עותקים שאנשים כבר ייבאו נשארים אצלם.</item>
+        <item quantity="other">להפסיק לשתף את כל %1$d הפריטים? הקישורים שלהם יפסיקו לעבוד לכולם, וכך גם קישורים שנשארו משיתופים שנכשלו. עותקים שאנשים כבר ייבאו נשארים אצלם.</item>
+    </plurals>
+    <string name="share_stop_all_failed">לא ניתן היה להפסיק את כל השיתופים. הקישורים שעדיין ברשימה עדיין עובדים.</string>
+    <string name="share_stop_all_failed_network">הפסקת שיתופים דורשת חיבור ל-Dropbox. הקישורים שעדיין ברשימה עדיין עובדים.</string>
+    <string name="settings_sync_disconnect_shared_links">קישורי השיתוף ממשיכים לעבוד. חברו שוב את אותו חשבון כדי לנהל אותם.</string>
+    <string name="settings_sync_disconnect_pending_stops">חלק מהשירים או הסט־ליסטים שנמחקו במכשיר הזה עדיין לא סונכרנו. אם אחד מהם משותף, הקישור שלו ימשיך לעבוד אלא אם מסנכרנים לפני הניתוק.</string>
+    <!-- Settings screen: sync, a reconnect that did not go through -->
+    <string name="settings_sync_reconnect_failed">לא ניתן היה לחבר מחדש את Dropbox. החיבור הקודם עדיין עובד.</string>
+</resources>

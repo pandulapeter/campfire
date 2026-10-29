@@ -71,8 +71,8 @@ set holds the app's UI tests.
 `./gradlew :tools:screenshots:test` (`src/test`), run by `tests.yml`. Each test starts the whole app with `runAppTest`
 (`AppTest.kt`) — real view model, use cases, repositories, and files in a temporary home — and drives it like a user,
 through Compose's `SkikoComposeUiTest` at a density of one, so a `TestWindow` is in dp. `TestAppearance` sets the
-language, theme, and system text size. The layout's direction is the language's, in a shot too; `TestAppearance`'s
-`layoutDirection` overrides it (through `CampfireAppHost`), for right-to-left tests while no app language needs it.
+language, theme, and system text size. The layout's direction is the language's, in a shot too: a right-to-left test
+runs in Hebrew.
 
 - **Assert what a user sees or what lands on disk**: semantics found by text read from the resources (`string`,
   `pluralString`, never typed English) or the library folder (`songsFolder`), or pixels where semantics cannot tell

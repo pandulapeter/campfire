@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalPlatformWindowInsets
 import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -118,9 +117,6 @@ internal class CampfireAppHost(
      * [onViewModel]) as soon as this is composed, but the app is composed only once [isPrepared], so a state a screen
      * reads as it is first composed can be set before. [keyboardHeight] is the on-screen keyboard's, reported to the app
      * as the platform would while it is up.
-     *
-     * The app is laid out in its language's direction unless [layoutDirection] says otherwise: a test of a right-to-left
-     * layout passes one while no language of the app is written from the right.
      */
     @OptIn(InternalComposeUiApi::class)
     @Composable
@@ -128,7 +124,6 @@ internal class CampfireAppHost(
         filePicker: FilePicker,
         isPrepared: Boolean,
         keyboardHeight: Dp,
-        layoutDirection: LayoutDirection?,
         onViewModel: (CampfireViewModel) -> Unit,
         onAppReady: () -> Unit,
     ) = CompositionLocalProvider(
@@ -145,7 +140,6 @@ internal class CampfireAppHost(
                 viewModel = viewModel,
                 urlOpener = {},
                 onAppReady = onAppReady,
-                layoutDirection = layoutDirection,
             )
         }
     }

@@ -92,7 +92,7 @@ Import, export, partage et synchronisation
 • Thèmes clair et sombre, un curseur sépia qui réchauffe le fond, et dix palettes de couleurs
 • L'icône de la barre des tâches suit la couleur que tu choisis
 • Désactive le métronome, l'accordeur, les gammes, les setlists, les accords ou les pochettes si tu ne t'en sers jamais
-• Anglais, hongrois, roumain, allemand, espagnol, français et italien, au choix dans l'application
+• Anglais, hongrois, roumain, allemand, espagnol, français, italien et hébreu, au choix dans l'application
 
 Tes chansons t'appartiennent
 Ta bibliothèque est un dossier de simples fichiers texte ChordPro sur ton appareil. Campfire fonctionne hors ligne, ne demande aucun compte et ne collecte aucune donnée : ni statistiques, ni pistage, ni publicité. Il ne se connecte que pour ce que tu lui demandes : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, et récupérer des pochettes et des infos sur les chansons. Tu peux tout exporter à tout moment.

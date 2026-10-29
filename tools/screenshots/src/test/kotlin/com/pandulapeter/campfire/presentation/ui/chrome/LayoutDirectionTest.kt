@@ -14,8 +14,11 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.unit.LayoutDirection
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import com.pandulapeter.campfire.presentation.localization.AppLocale
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.songs
@@ -23,6 +26,7 @@ import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.RISING_SUN_TITLE
 import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.runAppTest
+import com.pandulapeter.campfire.screenshots.tap
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -36,10 +40,20 @@ internal class LayoutDirectionTest {
     }
 
     @Test
-    fun `the navigation bar starts from the right in a right-to-left layout`() = runAppTest(
-        appearance = TestAppearance(layoutDirection = LayoutDirection.Rtl),
+    fun `the navigation bar starts from the right in Hebrew`() = runAppTest(
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
         assertTrue(navigationItemLeft(string(Res.string.songs)) > navigationItemLeft(string(Res.string.settings)))
+    }
+
+    @Test
+    fun `choosing a language written from the right in Settings turns the layout at once`() = runAppTest {
+        tap(hasText(string(Res.string.settings)) and hasClickAction())
+        onNode(hasText(HEBREW_OWN_NAME, substring = true) and hasClickAction()).performScrollTo().performTouchInput { click() }
+        waitForIdle()
+        val songs = LocalizedStrings.get(Res.string.songs, AppLocale.HE)
+        val settings = LocalizedStrings.get(Res.string.settings, AppLocale.HE)
+        assertTrue(navigationItemLeft(songs) > navigationItemLeft(settings))
     }
 
     @Test
@@ -49,8 +63,8 @@ internal class LayoutDirectionTest {
     }
 
     @Test
-    fun `a song opened in a right-to-left layout is dealt in from the left`() = runAppTest(
-        appearance = TestAppearance(layoutDirection = LayoutDirection.Rtl),
+    fun `a song opened in Hebrew is dealt in from the left`() = runAppTest(
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
         val (moving, settled) = songTitleLeftWhileOpening()
         assertTrue(moving < settled, "The song was at $moving while opening and settled at $settled.")
@@ -83,6 +97,9 @@ internal class LayoutDirectionTest {
         .maxBy { it.boundsInRoot.top }
         .boundsInRoot.left
 }
+
+/** What the language picker calls Hebrew in every language, beside its name in the language the app is in. */
+private const val HEBREW_OWN_NAME = "עברית"
 
 /** Frames into the slide of a song being opened: under way, still far from where it lands. */
 private const val SLIDE_SAMPLE_FRAMES = 5

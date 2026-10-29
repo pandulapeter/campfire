@@ -24,6 +24,7 @@ enum class AppLanguage(val id: String, val layoutDirection: Direction) {
     SPANISH("es", Direction.LEFT_TO_RIGHT),
     FRENCH("fr", Direction.LEFT_TO_RIGHT),
     ITALIAN("it", Direction.LEFT_TO_RIGHT),
+    HEBREW("he", Direction.RIGHT_TO_LEFT),
     SYSTEM_DEFAULT("system_default", Direction.LEFT_TO_RIGHT),
     ;
 

@@ -83,7 +83,7 @@ A tu manera
 • Temas claro y oscuro, un control de sepia y diez paletas de colores
 • El icono del Dock sigue el color que elijas
 • Desactiva cualquier función que no uses
-• En inglés, húngaro, rumano, alemán, español, francés e italiano, a elegir en la app
+• En inglés, húngaro, rumano, alemán, español, francés, italiano y hebreo, a elegir en la app
 
 Tus canciones son tuyas
 Tu biblioteca es una carpeta de archivos de texto ChordPro en tu dispositivo. Campfire funciona sin conexión, no necesita cuenta y no recopila datos: sin analíticas, sin rastreo y sin anuncios. Solo se conecta para lo que le pides: sincronizar y compartir con tu propio Dropbox, sin servidores intermedios, abrir un enlace compartido y descargar portadas y datos de canciones. Puedes exportarlo todo cuando quieras.

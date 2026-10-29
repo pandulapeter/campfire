@@ -16,7 +16,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.unit.LayoutDirection
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -47,7 +47,7 @@ internal class SongArrowKeysTest {
     @Test
     fun `Right turns to the previous song in a right-to-left layout`() = runAppTest(
         setlists = listOf(TWO_SONGS_SETLIST),
-        appearance = TestAppearance(layoutDirection = LayoutDirection.Rtl),
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
         openRisingSunFromSetlist()
         onRoot().performKeyInput { pressKey(Key.DirectionLeft) }

@@ -27,7 +27,6 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,8 +82,6 @@ import com.pandulapeter.campfire.presentation.ui.notation.WarmNotationEngine
  * @param onBackgroundColorChanged Called with the theme's background color whenever it changes, every frame of a
  *   cross fade included, for the shells whose window shows a color of its own where the app has not drawn yet: the
  *   desktop's, when it is resized faster than the app is laid out again.
- * @param layoutDirection The direction to lay the app out in instead of its language's, for the screenshot tool to draw
- *   a right-to-left layout before any language that needs one has strings of its own. Every shell leaves it null.
  */
 @Composable
 fun CampfireApp(
@@ -95,7 +92,6 @@ fun CampfireApp(
     shareLinks: Flow<SharedLink> = emptyFlow(),
     onAppReady: () -> Unit = {},
     onBackgroundColorChanged: (Color) -> Unit = {},
-    layoutDirection: LayoutDirection? = null,
 ) {
     ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
     val showSyncNotification = rememberSyncNotifications(viewModel)
@@ -122,7 +118,7 @@ fun CampfireApp(
     // Menus are counted into the view model's own overlay state rather than a global, so the key handlers and the web
     // build's history that read it read the one this app is composed with.
     CompositionLocalProvider(
-        LocalLayoutDirection provides (layoutDirection ?: currentLanguage.value.layoutDirection),
+        LocalLayoutDirection provides currentLanguage.value.layoutDirection,
         LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
