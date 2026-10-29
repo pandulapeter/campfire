@@ -163,7 +163,7 @@ Offline is működik, fiók, hirdetések és követés nélkül
 Nyílt forráskódú, a Mozilla Public License 2.0 alatt
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, gitár akkordok, dalszöveg, daloskönyv, gitárhangoló, metronóm, setlist

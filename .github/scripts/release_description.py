@@ -10,22 +10,26 @@
 Reads what a release's description tells the stores, for publish-all.yml.
 
 The instructions are HTML comments the rendered release page hides (the format is in publish-all.yml's header), and
-every one of them has a default that is the stronger action: a store is submitted to, the notes are the visible
-description. So a comment this script cannot read is never taken as absent - a store name it does not know, a submit
-value other than true or false, a priority outside 0-5 stop the release, and so does a comment that looks like one of
-them but is not written the way one is read, since reading any of them as the default would submit what was meant to
-wait, or leave to Play's schedule what was meant to block the old version. The notes are held against every store's
-limit here too, whatever that store's submit value is, because the store scripts check it before they look at whether
-they were asked to submit, and they run after the builds: an over-long note found there fails the release at the very
-end, with a build already uploaded.
+every one of them has a default that is the stronger action: a store is submitted to and its listing written, the notes
+are the visible description. So a comment this script cannot read is never taken as absent - a store name it does not
+know, a submit or listings value other than true or false, a priority outside 0-5, a whats-new block in a language the
+app does not have stop the release, and so does a comment that looks like one of them but is not written the way one is
+read, since reading any of them as the default would submit what was meant to wait, or leave to Play's schedule what
+was meant to block the old version. The notes of every language are held against every store's limit here too,
+whatever that store's submit value is, because the store scripts check them before they look at whether they were
+asked to submit, and they run after the builds: an over-long note found there fails the release at the very end, with
+a build already uploaded.
 
 Run with the description in RELEASE_BODY; writes the outputs publish-all.yml hands to the six workflows into the file
 GITHUB_OUTPUT names.
 """
 
+import json
 import os
 import re
 import sys
+
+from store_listings import app_languages
 
 STORES = ["play-store", "app-store", "mac-app-store", "microsoft-store"]
 
@@ -43,7 +47,8 @@ DEFAULT_NOTES = "Bug fixes and improvements."
 # the whats-new block has.
 WHATS_NEW = re.compile(r"<!--[ \t]*whats-new[ \t]+(\S+)[ \t]*\n.*-->", re.S | re.I)
 PRIORITY = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+update-priority:[ \t]*([^\n]*?)\s*-->")
-SUBMIT = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+submit:[ \t]*([^\n]*?)\s*-->")
+SWITCH = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+(submit|listings):[ \t]*([^\n]*?)\s*-->")
+SWITCHES = ["submit", "listings"]
 
 
 class ReleaseDescriptionError(Exception):
@@ -68,29 +73,37 @@ def unreadable_instructions(body):
                 language = re.split(r"[-_]", tag)[0]
                 messages.append(f"The release has a \"whats-new {tag}\" block; it is named by the language alone, \"whats-new {language}\".")
             continue
-        if PRIORITY.fullmatch(text) or SUBMIT.fullmatch(text):
+        if PRIORITY.fullmatch(text) or SWITCH.fullmatch(text):
             continue
         inner = text[4:-3].strip().lower().replace("_", "-")
         first = inner.split()[0].rstrip(":") if inner.split() else ""
-        if first in STORES or first in {"whats-new", "whatsnew"} or "submit" in inner or "priority" in inner:
+        if first in STORES or first in {"whats-new", "whatsnew"} or "submit" in inner or "listings" in inner \
+                or "priority" in inner:
             messages.append(f"The release has a comment I cannot read: \"{text}\". The format is in publish-all.yml's header.")
     return messages
 
 
-def read(body):
+def read(body, languages=None):
     """
-    The notes, the update priority and each store's submit value the description asks for, with the warnings about it.
+    The notes, in English and per language of the app (`languages`, the app's own by default), the update priority, and
+    each store's submit and listings values the description asks for, with the warnings about it.
 
     Raises ReleaseDescriptionError naming every problem at once, so that one edit of the release fixes all of them.
     """
     body = body.replace("\r\n", "\n")
+    languages = app_languages() if languages is None else languages
     errors = []
     warnings = []
 
-    # A case slip in the header still reads: whats-new is a word nobody means anything else by. A block in any other
-    # language is left alone until the store scripts write the notes per language.
-    match = re.search(r"<!--[ \t]*whats-new[ \t]+en[ \t]*\n(.*?)-->", body, re.S | re.I)
-    notes = match.group(1).strip() if match else ""
+    # A case slip in the header still reads: whats-new is a word nobody means anything else by. The first block of a
+    # language wins, and one in a language the app lacks would be written into no listing at all.
+    blocks = {}
+    for match in re.finditer(r"<!--[ \t]*whats-new[ \t]+([a-z]{2,3})[ \t]*\n(.*?)-->", body, re.S | re.I):
+        code = match.group(1).lower()
+        if code not in languages:
+            errors.append(f"The release has a \"whats-new {code}\" block, and the app has no such language ({', '.join(languages)}).")
+        blocks.setdefault(code, match.group(2).strip())
+    notes = blocks.get("en", "")
     if not notes:
         visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
         visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
@@ -110,32 +123,46 @@ def read(body):
         elif not priority_found:
             priority, priority_found = value, True
 
-    submit = {store: "true" for store in STORES}
+    # A language without a block, or with an empty one, gets the English notes.
+    by_language = {code: blocks.get(code) or notes for code in languages}
+
+    # Listings off writes only the notes into that store, for a release made while a listing is reworked in its console.
+    switches = {switch: {store: "true" for store in STORES} for switch in SWITCHES}
     seen = set()
-    for store, value in SUBMIT.findall(body):
+    for store, switch, value in SWITCH.findall(body):
         if store not in STORES:
-            errors.append(f"The release names a store I do not know: \"{store} submit: {value}\". It knows {', '.join(STORES)}.")
+            errors.append(f"The release names a store I do not know: \"{store} {switch}: {value}\". It knows {', '.join(STORES)}.")
         elif value.lower() not in {"true", "false"}:
-            errors.append(f"The release says \"{store} submit: {value}\"; it takes true or false.")
-        elif store not in seen:
-            submit[store] = value.lower()
-            seen.add(store)
+            errors.append(f"The release says \"{store} {switch}: {value}\"; it takes true or false.")
+        elif (store, switch) not in seen:
+            switches[switch][store] = value.lower()
+            seen.add((store, switch))
 
     # Characters, not bytes, which is how every one of the stores counts.
-    length = len(notes)
-    for store in ["app-store", "mac-app-store"]:
-        if length > APP_STORE_CONNECT_LIMIT:
-            errors.append(f"The release notes are {length} characters long, and App Store Connect takes {APP_STORE_CONNECT_LIMIT} ({store}).")
-    if length > PARTNER_CENTER_LIMIT:
-        errors.append(f"The release notes are {length} characters long, and Partner Center takes {PARTNER_CENTER_LIMIT} (microsoft-store).")
-    if length > PLAY_LIMIT:
-        warnings.append(f"The release notes are {length} characters long; Play takes {PLAY_LIMIT}, and gets the lines that fit (play-store).")
+    for code in ["en"] + [code for code in languages if code != "en"]:
+        text = notes if code == "en" else by_language[code]
+        if code != "en" and text == notes:
+            continue
+        name = "The release notes" if code == "en" else f"The {code} release notes"
+        length = len(text)
+        for store in ["app-store", "mac-app-store"]:
+            if length > APP_STORE_CONNECT_LIMIT:
+                errors.append(f"{name} are {length} characters long, and App Store Connect takes {APP_STORE_CONNECT_LIMIT} ({store}).")
+        if length > PARTNER_CENTER_LIMIT:
+            errors.append(f"{name} are {length} characters long, and Partner Center takes {PARTNER_CENTER_LIMIT} (microsoft-store).")
+        if length > PLAY_LIMIT:
+            warnings.append(f"{name} are {length} characters long; Play takes {PLAY_LIMIT}, and gets the lines that fit (play-store).")
 
     if errors:
         raise ReleaseDescriptionError(errors)
-    outputs = {"release_notes": notes, "update_priority": priority}
-    for store in STORES:
-        outputs[store.replace("-", "_") + "_submit"] = submit[store]
+    outputs = {
+        "release_notes": notes,
+        "release_notes_by_language": json.dumps(by_language, ensure_ascii=False),
+        "update_priority": priority,
+    }
+    for switch in SWITCHES:
+        for store in STORES:
+            outputs[f"{store.replace('-', '_')}_{switch}"] = switches[switch][store]
     return {"outputs": outputs, "warnings": warnings}
 
 

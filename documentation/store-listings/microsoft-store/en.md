@@ -161,7 +161,7 @@ Works offline, with no account, no ads, and no tracking
 Open source under the Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, chords, lyrics, setlist, guitar tuner, metronome, songbook

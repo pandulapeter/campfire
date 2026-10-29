@@ -44,19 +44,37 @@ The workflows that test and publish Campfire, and the scripts and actions they s
 `publish-all.yml` reads hidden comments in the release description with `.github/scripts/release_description.py`
 (format in `publish-all.yml`'s header): the `whats-new` notes for every store (one block per app language, named by
 the language alone, `whats-new en`: a country in the tag stops the release, since each store's locales are filled in
-from the language), Play's `update-priority`, and a `submit` switch for `play-store`, `app-store`, `mac-app-store`, and
-`microsoft-store` (`false` leaves that store a draft).
+from the language), Play's `update-priority`, and a `submit` and a `listings` switch for `play-store`, `app-store`,
+`mac-app-store`, and `microsoft-store` (`submit: false` leaves that store a draft, `listings: false` leaves its
+listing text as it is in the console and writes only the notes).
 
 - Anything unreadable is not taken as absent, since every default is the stronger action: an unknown store, a `submit`
-  other than `true`/`false`, a priority outside 0–5, or notes over App Store Connect's 4 000 or Partner Center's 1 500
-  characters (whatever `submit` says) stop the release before any build. Over Play's 500 is a warning (Play gets the
-  lines that fit).
+  or `listings` other than `true`/`false`, a priority outside 0–5, a `whats-new` block in a language the app lacks, or
+  notes in any language over App Store Connect's 4 000 or Partner Center's 1 500 characters (whatever `submit` says)
+  stop the release before any build. Over Play's 500 is a warning (Play gets the lines that fit).
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown, then "Bug fixes and improvements.", or (hand dispatch with
-  nothing given) the commit log since the previous tag. Only the `en` block is read so far, written into every
-  language's listing; the listings themselves are pasted by hand from
-  `documentation/store-listings/<store>/<language>.md`.
+  nothing given) the commit log since the previous tag. A language without a block, and every language of a hand
+  dispatch, gets the English notes. The workflows get the notes per language as `release_notes_by_language` (JSON).
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
+
+### Store listings are written by the release
+
+- Every store's listing text comes from `documentation/store-listings/<store>/<language>.md`, written by each store's
+  script with every release (`.github/scripts/store_listings.py` reads the files; its `FIELDS` maps each heading to
+  the API's field, `MANUAL` lists what stays by hand). The files are the only source of truth: text edited in a console
+  is overwritten by the next release.
+- **Keyed by language, locales from the store**: each script lists the store's locales and writes a language into
+  every locale of it (`fr-FR` and `fr-CA` alike), so a regional copy added in a console is filled with no code change;
+  a store locale of a language the app lacks is left alone with a warning. A store code that is not the ISO 639-1 code
+  needs an entry in `ALIASES`.
+- **A language's first listing is added by hand**, once, in every console, with its screenshots. A store without one
+  of the app's languages fails the run before anything is written (unless `listings: false`); nothing is ever created.
+- **Never touched**: every image (screenshots, icon, feature graphic), the Microsoft title and "Developed by", and the
+  Mac's App Sandbox Information (not in the API). Apple's copyright, URLs, and review notes come from `en.md`.
+- Each script prints per locale which fields changed, with old and new lengths, not the text.
+- `store_listings.py --check` (`tests.yml` and the pre-commit hook): every store folder holds the app's languages,
+  every heading is in `FIELDS` or `MANUAL`, every written field is in every file that needs it.
 
 ## The workflows
 
@@ -83,13 +101,19 @@ Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-we
   `.github/scripts/microsoft_store_submission.py`. Unsigned: the Store signs it. Nothing is attached to the release.
 - The script finds the app by package identity name (no Store ID kept) and builds on the last published submission.
   Green means submitted, not certified.
-- **A draft the script made whose commit failed** is reused: only package and "What's new" replaced, the rest (publish
-  mode included) kept.
+- Writes "What's new" and the listing fields (short description, description, product features, search terms,
+  copyright) into every language's `baseListing` of the copied submission; the rest, images and title included, goes
+  back as it came. It logs the listings' locales and field names every run, and warns where a field it writes was not
+  in the copy (the API may have renamed it).
+- **A draft the script made whose commit failed** is reused: only package, "What's new", and listing text replaced,
+  the rest (publish mode included) kept.
 - **A draft started in Partner Center stops the run**, untouched: the API cannot change a submission it did not create.
   Finish it there with the run's `.msix` artifact, or delete it.
-- **New screenshots or a newly declared language: dispatch by hand with `submit` off.** The run writes the notes into its own draft without touching
-  the package (Partner Center only takes an API-uploaded package when the API commits). Then, in Partner Center, replace
-  the package with the run's artifact, add the screenshots or the new language's listing, and submit; the run ends green with a warning saying so.
+- **New screenshots or a newly declared language: dispatch by hand with `submit` off** (and `listings` off for a new
+  language, whose missing listing would otherwise fail the run). The run writes its own draft without touching the
+  package (Partner Center only takes an API-uploaded package when the API commits). Then, in Partner Center, replace
+  the package with the run's artifact, add the screenshots or the new language's listing, and submit; the run ends
+  green with a warning saying so.
 - A committed submission with this version is left alone (reruns succeed); one with another version stops the run (one
   in progress per product).
 - Auth: Microsoft Entra application with the Manager role (`MICROSOFT_STORE_TENANT_ID`, `_CLIENT_ID`) and **no secret** —
@@ -116,10 +140,15 @@ registered in the developer portal by hand, once; a profile made through the API
 ### Apple submission (both Apple workflows)
 
 - `.github/scripts/app_store_submission.py` puts the build and "What's New" (not on a platform's first version) on the
-  version for `campfire.versionName` and submits; with `submit` off it stops before submitting, for screenshots to be
-  added in App Store Connect.
+  version for `campfire.versionName`, writes the listing, and submits; with `submit` off it stops before submitting,
+  for screenshots to be added in App Store Connect.
+- The listing: each version localization's description, keywords, promotional text (and on iOS the URLs), the
+  version's copyright (iOS) and App Review notes, and on iOS only each app info localization's name and subtitle (the
+  Mac shares the app record). A name another app holds fails the run before submitting, with Apple's message; with no
+  editable app info (a version in review) the name and subtitle wait for the next version, with a warning.
 - An existing **draft** (prepared with new screenshots, in a review submission or not, or rejected) is used as is: only
-  build and "What's New" replaced, release option kept, submitted in its existing review submission.
+  build, "What's New", and listing text replaced, release option and screenshots kept, submitted in its existing review
+  submission.
 - Already in review with this build: left alone (reruns succeed). Another version still waiting for Apple (in review,
   or approved and unreleased): the build is not submitted, stays in TestFlight, and the run ends green with a warning;
   submit by hand later or let the next release replace it.
@@ -143,8 +172,11 @@ registered in the developer portal by hand, once; a profile made through the API
 
 ### `publish-android.yml`
 
-- Builds `assembleRelease` with the `ANDROID_*` secrets and uploads it and its mapping file to the production track (a
-  draft with `submit` off).
+- Builds `assembleRelease` with the `ANDROID_*` secrets, then `.github/scripts/play_store_release.py` does everything in
+  one Play edit, one review: the APK and its mapping file onto the production track (a draft with `submit` off), the
+  update priority, the notes per locale (cut to 500 at a line boundary), each listing's title and short and full
+  description (images are kept apart by Play and never touched), and the commit. Signs in with
+  `PLAY_SERVICE_ACCOUNT_JSON`, the JWT signed by `openssl`, standard library only.
 - **An APK, not a bundle**: the Play listing predates the bundle requirement and was never migrated; `bundleRelease`
   would be rejected.
 - Notes come from the `release_notes` input, which `publish-all.yml` fills from the release description.

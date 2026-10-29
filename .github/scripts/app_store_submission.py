@@ -9,19 +9,29 @@
 """
 Submits an uploaded build for App Review, which is everything a release used to need App Store Connect open for.
 
-    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> <release notes file> [--prepare]
+    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> <release notes file>
+        [--prepare] [--no-listings]
 
 It waits for App Store Connect to finish processing the build (processing is also where a build is refused, with the
 reason mailed; this fails with the state instead of waiting forever), takes the platform's version for the release -
 the one that already carries that version string, or else the editable one, renamed, or else a new one, set to be
-released as soon as it is approved - attaches the build, writes the release notes as its "What's New" and submits it.
-With --prepare it stops before the submission, leaving the version ready in App Store Connect for somebody to add the
+released as soon as it is approved - attaches the build, writes the release notes as its "What's New" and the listing
+text of documentation/store-listings/<app-store | mac-app-store> into it, and submits it. With --prepare it stops before the submission, leaving the version ready in App Store Connect for somebody to add the
 release's screenshots to and submit it there; a later run with the same build submits it as it is.
 
 A draft that is already there - a version prepared in App Store Connect for this release, with its new screenshots,
 whether or not it has been added to a review submission, or one that was rejected - is used as it is: the build is
 attached to it and its "What's New" replaced with the notes, everything else in it is kept exactly as it is, the release
 option included, and it is submitted, in the review submission it is already in where there is one.
+
+The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any
+language it does not name. The listing is written by language (store_listings.py): every version localization gets its
+language's description, keywords, promotional text, and, for iOS, the URLs (fr-FR and fr-CA alike), the version its
+copyright and App Review notes, and on iOS each app info localization its name and subtitle, which the Mac shares with
+iOS and never writes. An app language with no localization fails the run before anything is written, since a
+language's first listing is added by hand in App Store Connect, with its screenshots; a name another app holds fails it
+with Apple's message, before the submission. When no app info is editable (a version in review) the name and subtitle
+wait for the next version, with a warning. With --no-listings only the notes are written.
 
 A version that is already waiting for review or further along with this very build is left as it is, so a run that is
 repeated does not fail on its own success. Where another build is waiting for Apple - under review, or approved
@@ -36,6 +46,7 @@ Uses the App Store Connect API the way app_store_signing.py does, and the same e
 import sys
 import time
 
+import store_listings
 from app_store_signing import request
 from store_http import fail
 
@@ -57,6 +68,12 @@ PROCESSING_TIMEOUT_SECONDS = 90 * 60
 POLL_INTERVAL_SECONDS = 60
 # The most App Store Connect takes for "What's New".
 WHATS_NEW_LIMIT = 4000
+# Where App Store Connect keeps each field of store_listings.FIELDS: the version localization, the app info
+# localization, the version, and its review detail.
+LOCALIZATION_FIELDS = {"description", "keywords", "promotionalText", "supportUrl", "marketingUrl"}
+APP_INFO_FIELDS = {"name", "subtitle"}
+VERSION_FIELDS = {"copyright"}
+REVIEW_FIELDS = {"notes"}
 
 
 def awaiting_versions(app_id, platform):
@@ -139,16 +156,102 @@ def attached_build_number(version):
     return ((build or {}).get("data") or {}).get("attributes", {}).get("version")
 
 
-def write_whats_new(version, notes):
-    localizations = request("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]
-    if not localizations:
-        fail("The version has no localizations to write the release notes into.")
-    # The listing is in English only; any other localization it gains gets the same text rather than an old one.
-    for localization in localizations:
-        request("PATCH", f"/appStoreVersionLocalizations/{localization['id']}", {"data": {
-            "type": "appStoreVersionLocalizations", "id": localization["id"], "attributes": {"whatsNew": notes},
+def localized(items, write_listings, where):
+    """
+    [(item, the app's language)] of App Store Connect's localizations, failing where an app language has none and the
+    listing is written; a localization of a language the app lacks is left alone.
+    """
+    if not items:
+        fail(f"The {where} has no localizations to write into.")
+    by_locale = {item["attributes"]["locale"]: item for item in items}
+    matched, missing, unknown = store_listings.match_locales(list(by_locale), store_listings.app_languages())
+    if missing and write_listings:
+        fail(store_listings.missing_listing_message(f"App Store Connect's {where}", missing))
+    for locale in unknown:
+        print(f"::warning::The {where}'s {locale} localization is in a language the app does not have, so it is left as it is.")
+    return [(by_locale[locale], code) for locale, code in matched.items()]
+
+
+def editable_app_info(app_id):
+    """The app info a new version can change, or None while every one is in review or live."""
+    infos = request("GET", f"/apps/{app_id}/appInfos")["data"]
+    return next((
+        info for info in infos
+        if (info["attributes"].get("state") or info["attributes"].get("appStoreState")) in EDITABLE_STATES
+    ), None)
+
+
+def write_localizations(path, kind, localizations, attributes_of):
+    for localization, code in localizations:
+        attributes = attributes_of(code)
+        print(store_listings.changes(localization["attributes"]["locale"], localization["attributes"], attributes))
+        request("PATCH", f"/{path}/{localization['id']}", {"data": {
+            "type": kind, "id": localization["id"], "attributes": attributes,
         }})
-        print(f"Wrote the release notes for {localization['attributes']['locale']}.")
+
+
+def write_review_notes(version, notes):
+    detail = (request("GET", f"/appStoreVersions/{version['id']}/appStoreReviewDetail", missing_ok=True) or {}).get("data")
+    if detail is None:
+        request("POST", "/appStoreReviewDetails", {"data": {
+            "type": "appStoreReviewDetails", "attributes": {"notes": notes},
+            "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version["id"]}}},
+        }})
+        print(f"Wrote the App Review notes ({len(notes)} characters).")
+    elif detail["attributes"].get("notes") != notes:
+        request("PATCH", f"/appStoreReviewDetails/{detail['id']}", {"data": {
+            "type": "appStoreReviewDetails", "id": detail["id"], "attributes": {"notes": notes},
+        }})
+        print(f"Wrote the App Review notes ({len(detail['attributes'].get('notes') or '')} -> {len(notes)} characters).")
+
+
+def write_listing(app_id, platform, version, notes, has_earlier, write_listings):
+    """
+    Writes "What's New" and, unless write_listings is off, the listing text into the version, every localization
+    checked before any is written.
+    """
+    if not (write_listings or has_earlier):
+        return
+    listings = store_listings.read("app-store" if platform == "IOS" else "mac-app-store")
+
+    def fields(code, names):
+        return {field: text for field, text in listings[code].items() if field in names}
+
+    localizations = localized(
+        request("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"], write_listings, "version",
+    )
+    info_localizations = []
+    if write_listings and platform == "IOS":
+        info = editable_app_info(app_id)
+        if info is None:
+            print("::warning::No app info can be changed now (a version is in review or live), so the name and the "
+                  "subtitle are left for the next version.")
+        else:
+            info_localizations = localized(request("GET", f"/appInfos/{info['id']}/appInfoLocalizations")["data"], True, "app info")
+
+    # The first version of a platform has nothing to say "new" about, and App Store Connect refuses the field there.
+    def attributes_of(code):
+        attributes = fields(code, LOCALIZATION_FIELDS) if write_listings else {}
+        if has_earlier:
+            attributes["whatsNew"] = notes(code)
+        return attributes
+
+    write_localizations("appStoreVersionLocalizations", "appStoreVersionLocalizations", localizations, attributes_of)
+    if not write_listings:
+        return
+    # A name another app holds is refused here with Apple's message, which fails the run before the submission.
+    write_localizations("appInfoLocalizations", "appInfoLocalizations", info_localizations,
+                        lambda code: fields(code, APP_INFO_FIELDS))
+    version_attributes = fields("en", VERSION_FIELDS)
+    if version_attributes:
+        current = request("GET", f"/appStoreVersions/{version['id']}?fields[appStoreVersions]=copyright")["data"]
+        print(store_listings.changes("version", current["attributes"], version_attributes))
+        request("PATCH", f"/appStoreVersions/{version['id']}", {"data": {
+            "type": "appStoreVersions", "id": version["id"], "attributes": version_attributes,
+        }})
+    review = fields("en", REVIEW_FIELDS)
+    if review:
+        write_review_notes(version, review["notes"])
 
 
 def submit(app_id, platform, version):
@@ -181,11 +284,13 @@ def submit(app_id, platform, version):
     }})
 
 
-def main(bundle_identifier, platform, version, build_number, notes_file, prepare_only):
-    with open(notes_file) as file:
-        notes = file.read().strip()
-    if len(notes) > WHATS_NEW_LIMIT:
-        fail(f"The release notes are {len(notes)} characters long, and App Store Connect takes {WHATS_NEW_LIMIT}.")
+def main(bundle_identifier, platform, version, build_number, notes_file, prepare_only, write_listings):
+    with open(notes_file, encoding="utf-8") as file:
+        english = file.read().strip()
+    notes = store_listings.notes_by_language(english)
+    for code in store_listings.app_languages():
+        if len(notes(code)) > WHATS_NEW_LIMIT:
+            fail(f"The {code} release notes are {len(notes(code))} characters long, and App Store Connect takes {WHATS_NEW_LIMIT}.")
     app = find_app(bundle_identifier)
     awaiting = awaiting_versions(app["id"], platform)
     if awaiting:
@@ -212,11 +317,9 @@ def main(bundle_identifier, platform, version, build_number, notes_file, prepare
         "data": {"type": "builds", "id": build["id"]},
     })
     print(f"Attached build {build_number} to the {platform} version {version}.")
-    # The first version of a platform has nothing to say "new" about, and App Store Connect refuses the field there.
-    if has_earlier:
-        if not notes:
-            fail("An update needs release notes for its \"What's New\", and there are none.")
-        write_whats_new(store_version, notes)
+    if has_earlier and not english:
+        fail("An update needs release notes for its \"What's New\", and there are none.")
+    write_listing(app["id"], platform, store_version, notes, has_earlier, write_listings)
     if prepare_only:
         print(f"Prepared the {platform} version {version} ({build_number}) without submitting it: add the screenshots in "
               "App Store Connect and submit it there.")
@@ -227,7 +330,8 @@ def main(bundle_identifier, platform, version, build_number, notes_file, prepare
 
 if __name__ == "__main__":
     arguments = sys.argv[1:]
-    prepare = arguments[5:] == ["--prepare"]
-    if len(arguments) != (6 if prepare else 5) or arguments[1] not in {"IOS", "MAC_OS"}:
+    flags = arguments[5:]
+    if len(arguments) < 5 or arguments[1] not in {"IOS", "MAC_OS"} \
+            or not set(flags) <= {"--prepare", "--no-listings"} or len(set(flags)) != len(flags):
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*arguments[:5], prepare)
+    main(*arguments[:5], "--prepare" in flags, "--no-listings" not in flags)

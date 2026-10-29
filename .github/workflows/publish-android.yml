@@ -6,11 +6,15 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the signed release APK and uploads it to the production track of the Play Console. Nothing is attached to the
+# Builds the signed release APK and publishes it to the production track of the Play Console, with the release notes and
+# the listing text of documentation/store-listings/google-play in every language, in one edit
+# (.github/scripts/play_store_release.py). Nothing is attached to the
 # GitHub release: Play is where the Android build is had, and a release only carries what no official channel offers.
 # Called by publish-all.yml for every release; dispatched by hand to publish without one, or to repeat the Android half of a
 # release that went wrong. With "submit" off - the box of a hand dispatch, or a release whose description says
 # <!-- play-store submit: false --> - the release is left as a draft in the Play Console, to be rolled out from there.
+# With "listings" off - the box, or <!-- play-store listings: false --> - the listing text is left as it is in the Play
+# Console and only the notes are written.
 
 name: 'Publish Android'
 
@@ -30,6 +34,12 @@ on:
       submit:
         type: boolean
         default: true
+      release_notes_by_language:
+        type: string
+        required: false
+      listings:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       update_priority:
@@ -47,6 +57,10 @@ on:
         required: false
       submit:
         description: 'Send the release for review (off: leave it as a draft in the Play Console, to change the listing first)'
+        type: boolean
+        default: true
+      listings:
+        description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
         default: true
 
@@ -101,7 +115,6 @@ jobs:
           # the dispatch form has no way to type a real line break, so only there are escapes expanded.
           EXPAND_ESCAPES: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          mkdir -p whatsnew
           if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
             if [ "$EXPAND_ESCAPES" = 'true' ]; then
               printf '%b\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
@@ -122,32 +135,8 @@ jobs:
           if [ ! -s release_notes.txt ]; then
             printf -- '- Version %s\n' "${{ steps.version.outputs.name }}" > release_notes.txt
           fi
-          # The Play Store rejects the whole release when the notes are over its 500 character limit, so they are cut
-          # at a line boundary rather than mid-sentence. Characters, not bytes: awk on the runner is mawk, whose
-          # length() counts bytes, and would cut a text with accented letters short of what fits.
-          python3 - release_notes.txt whatsnew/whatsnew-en-US <<'PYTHON'
-          import sys
-
-          LIMIT = 500
-          lines = open(sys.argv[1], encoding="utf-8").read().splitlines()
-          kept, total = [], 0
-          for line in lines:
-              total += len(line) + 1
-              if total > LIMIT:
-                  break
-              kept.append(line)
-          if not kept and lines:
-              # A first line over the limit on its own, which a paragraph of the visible description can be, is cut at
-              # the last word that fits rather than leaving the listing with nothing to say.
-              first = lines[0][:LIMIT - 1]
-              kept = [first.rsplit(" ", 1)[0] if " " in first else first]
-          if len(kept) < len(lines):
-              print(f"::warning::{sys.argv[2]} was cut to {LIMIT} characters.")
-          with open(sys.argv[2], "w", encoding="utf-8") as output:
-              output.write("\n".join(kept) + "\n")
-          PYTHON
           echo "Generated release notes:"
-          cat whatsnew/whatsnew-en-US
+          cat release_notes.txt
       - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -170,19 +159,25 @@ jobs:
             campfire.android.keystoreFile=:release.keystore \
             campfire.android.keystorePassword=ANDROID_KEYSTORE_PASSWORD
           ./gradlew :app:android:assembleRelease
-      - name: Upload the APK to the Play Console
-        uses: r0adkll/upload-google-play@v1.1.5
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.pandulapeter.campfire
-          releaseFiles: app/android/build/outputs/apk/release/*.apk
-          mappingFile: app/android/build/outputs/mapping/release/mapping.txt
-          releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
-          tracks: production
-          # A draft is rolled out from the Play Console once whatever the release needs there has been done by hand.
-          status: ${{ inputs.submit && 'completed' || 'draft' }}
-          # What the in-app update gate in :presentation reads; see the Updates section of CLAUDE.md for the
-          # thresholds. Left at 0 a release is simply one Play installs on its own schedule, and the app says nothing.
-          inAppUpdatePriority: ${{ inputs.update_priority }}
-          changesNotSentForReview: false
-          whatsNewDirectory: whatsnew
+      # Uploads the APK and its mapping file, puts it on the production track with the notes in every language (each cut to
+      # Play's 500 characters at a line boundary), writes every listing's text, and commits all of it as one edit, so it
+      # goes to review as one change (.github/scripts/play_store_release.py).
+      - name: Publish to the Play Console
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
+          SUBMIT: ${{ inputs.submit }}
+          LISTINGS: ${{ inputs.listings }}
+        run: |
+          FLAGS=()
+          [ "$SUBMIT" = true ] || FLAGS+=(--draft)
+          [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
+          APK=$(find app/android/build/outputs/apk/release -maxdepth 1 -name '*.apk' | head -n 1)
+          if [ -z "$APK" ]; then
+            echo "::error::No release APK was built." >&2
+            exit 1
+          fi
+          python3 .github/scripts/play_store_release.py com.pandulapeter.campfire "$APK" \
+            app/android/build/outputs/mapping/release/mapping.txt \
+            "${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})" "${{ inputs.update_priority }}" \
+            release_notes.txt "${FLAGS[@]}"

@@ -18,26 +18,38 @@
 #   <!-- whats-new en
 #   - Up to 500 characters of plain text
 #   -->
+#   <!-- whats-new de
+#   - The same notes in German, and a block like it for every other language of the app
+#   -->
 #   <!-- play-store update-priority: 0 -->
 #   <!-- play-store submit: true -->
 #   <!-- app-store submit: true -->
 #   <!-- mac-app-store submit: true -->
 #   <!-- microsoft-store submit: true -->
+#   <!-- play-store listings: true -->
+#   <!-- app-store listings: true -->
+#   <!-- mac-app-store listings: true -->
+#   <!-- microsoft-store listings: true -->
 #
-# The notes are written for every store that shows them: Play gets them as its release notes, the App Store and the
-# Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review, and the Microsoft Store as
-# the "What's new in this version" of the submission the Windows job makes; the priority is Play's alone (see the
-# Updates section of CLAUDE.md for what the number decides). A store's "submit: false" is its workflow's submit input
-# turned off: the release is uploaded and left there as a draft - a draft Play release, a version prepared in App Store
-# Connect, an uncommitted Partner Center submission (which still holds the last release's package, for the run's
-# .msix artifact to be uploaded into by hand) - for whatever it needs by hand, new screenshots say, and is sent
-# from there. All of them are optional. Without the notes the visible description stands in for them, with its
-# markdown taken out, and where that is empty too, "Bug fixes and improvements.", without the priority it is 0, and
-# without a store's submit it is true. What is there has to be readable, though (.github/scripts/release_description.py):
-# a store name it does not know, a submit other than true or false and a priority outside 0-5 stop the release, and so
-# does a comment that looks like one of them but is not written the way one is read, and so do notes longer than App
-# Store Connect's 4000 characters or Partner Center's 1500, whatever those stores' submit says; over Play's 500 is a
-# warning, since Play gets the lines that fit.
+# The notes are written for every store that shows them, each language's into every locale of that language the store
+# has (fr-FR and fr-CA alike; a block is named by the language alone): Play gets them as its release notes, the App
+# Store and the Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review, and the
+# Microsoft Store as the "What's new in this version" of the submission the Windows job makes. A language without a
+# block gets the English. The priority is Play's alone (see the Updates section of CLAUDE.md for what the number
+# decides). A store's "submit: false" is its workflow's submit input turned off: the release is uploaded and left there
+# as a draft - a draft Play release, a version prepared in App Store Connect, an uncommitted Partner Center submission
+# (which still holds the last release's package, for the run's .msix artifact to be uploaded into by hand) - for
+# whatever it needs by hand, new screenshots say, and is sent from there. Every store's listing text is written from
+# documentation/store-listings/<store>/<language>.md by its workflow (.github/scripts/store_listings.py); a store's
+# "listings: false" leaves that store's listing text as it is in its console and writes only the notes. All of them
+# are optional. Without the English notes the visible description stands in for them, with its markdown taken out, and
+# where that is empty too, "Bug fixes and improvements.", without the priority it is 0, and without a store's submit or
+# listings it is true. What is there has to be readable, though (.github/scripts/release_description.py): a store name
+# it does not know, a submit or listings other than true or false, a priority outside 0-5, and a whats-new block in a
+# language the app does not have stop the release, and so does a comment that looks like one of them but is not
+# written the way one is read, and so do notes in any language longer than App Store Connect's 4000 characters or
+# Partner Center's 1500, whatever those stores' submit says; over Play's 500 is a warning, since Play gets the lines
+# that fit.
 
 name: 'Publish all'
 
@@ -60,6 +72,11 @@ jobs:
       app_store_submit: ${{ steps.notes.outputs.app_store_submit }}
       mac_app_store_submit: ${{ steps.notes.outputs.mac_app_store_submit }}
       microsoft_store_submit: ${{ steps.notes.outputs.microsoft_store_submit }}
+      release_notes_by_language: ${{ steps.notes.outputs.release_notes_by_language }}
+      play_store_listings: ${{ steps.notes.outputs.play_store_listings }}
+      app_store_listings: ${{ steps.notes.outputs.app_store_listings }}
+      mac_app_store_listings: ${{ steps.notes.outputs.mac_app_store_listings }}
+      microsoft_store_listings: ${{ steps.notes.outputs.microsoft_store_listings }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -135,6 +152,8 @@ jobs:
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       release_tag: ${{ github.event.release.tag_name }}
       submit: ${{ needs.prepare.outputs.play_store_submit == 'true' }}
+      release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
+      listings: ${{ needs.prepare.outputs.play_store_listings == 'true' }}
     secrets: inherit
 
   web:
@@ -164,6 +183,8 @@ jobs:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       submit: ${{ needs.prepare.outputs.microsoft_store_submit == 'true' }}
+      release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
+      listings: ${{ needs.prepare.outputs.microsoft_store_listings == 'true' }}
     secrets: inherit
 
   ios:
@@ -176,6 +197,8 @@ jobs:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       submit: ${{ needs.prepare.outputs.app_store_submit == 'true' }}
+      release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
+      listings: ${{ needs.prepare.outputs.app_store_listings == 'true' }}
     secrets: inherit
 
   macos:
@@ -188,4 +211,6 @@ jobs:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       submit: ${{ needs.prepare.outputs.mac_app_store_submit == 'true' }}
+      release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
+      listings: ${{ needs.prepare.outputs.mac_app_store_listings == 'true' }}
     secrets: inherit

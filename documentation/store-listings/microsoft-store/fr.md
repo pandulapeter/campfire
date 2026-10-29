@@ -163,7 +163,7 @@ Fonctionne hors ligne, sans compte, sans publicité et sans pistage
 Open source, sous licence Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, accords, paroles, setlist, accordeur guitare, métronome, chansonnier

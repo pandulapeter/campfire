@@ -7,8 +7,8 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-The HTTP layer of the three store scripts (app_store_signing.py, app_store_submission.py and
-microsoft_store_submission.py): one JSON call of a store's API, asked again where the service or the network failed a
+The HTTP layer of the store scripts (app_store_signing.py, app_store_submission.py, microsoft_store_submission.py, and
+play_store_release.py): one JSON call of a store's API, asked again where the service or the network failed a
 GET, and a run's failure reported the way GitHub Actions shows it.
 """
 

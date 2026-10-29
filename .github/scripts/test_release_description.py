@@ -6,6 +6,7 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
+import json
 import unittest
 
 from release_description import ReleaseDescriptionError, read
@@ -34,9 +35,32 @@ class ReadTest(unittest.TestCase):
             body = f"Visible.\n<!-- whats-new {header}\n- **Bold** stays\n-->\n"
             self.assertEqual(read(body)["outputs"]["release_notes"], "- **Bold** stays")
 
-    def test_whats_new_in_another_language_is_left_alone(self):
-        body = "Visible.\n<!-- whats-new hu\n- Magyar\n-->\n"
-        self.assertEqual(read(body)["outputs"]["release_notes"], "Visible.")
+    def test_whats_new_in_another_language_is_that_languages_notes(self):
+        body = "Visible.\n<!-- whats-new hu\n- Magyar\n-->\n<!-- whats-new DE\n-->\n"
+        outputs = read(body, ["de", "en", "hu"])["outputs"]
+        self.assertEqual(outputs["release_notes"], "Visible.")
+        self.assertEqual(json.loads(outputs["release_notes_by_language"]), {"de": "Visible.", "en": "Visible.", "hu": "- Magyar"})
+
+    def test_whats_new_in_a_language_the_app_lacks_stops_the_release(self):
+        with self.assertRaises(ReleaseDescriptionError) as context:
+            read("<!-- whats-new en\n- n\n-->\n<!-- whats-new pt\n- n\n-->", ["en", "hu"])
+        self.assertIn("\"whats-new pt\"", context.exception.messages[0])
+
+    def test_every_languages_notes_are_held_against_the_limits(self):
+        with self.assertRaises(ReleaseDescriptionError) as context:
+            read(notes_of(10) + f"<!-- whats-new de\n{'x' * 1501}\n-->", ["de", "en"])
+        self.assertEqual(["The de release notes are 1501 characters long, and Partner Center takes 1500 (microsoft-store)."],
+                         context.exception.messages)
+        self.assertEqual(1, len(read(notes_of(10) + f"<!-- whats-new de\n{'x' * 501}\n-->", ["de", "en"])["warnings"]))
+
+    def test_listings_values(self):
+        outputs = read("<!-- microsoft-store listings: false -->")["outputs"]
+        self.assertEqual(outputs["microsoft_store_listings"], "false")
+        self.assertEqual(outputs["microsoft_store_submit"], "true")
+        self.assertEqual(outputs["play_store_listings"], "true")
+        for body in ["<!-- app-store listings: no -->", "<!-- app-store listing: false -->", "<!-- appstore listings: false -->"]:
+            with self.assertRaises(ReleaseDescriptionError):
+                read(body)
 
     def test_a_whats_new_naming_a_country_stops_the_release(self):
         for tag in ["en-US", "en_GB", "hu-HU", "ro-RO", "pt-BR"]:

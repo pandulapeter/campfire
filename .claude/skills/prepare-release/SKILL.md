@@ -140,9 +140,10 @@ them. If a change has no effect a user could notice, it is not in the notes.
 
 9. **Update the store listings, only where the release changed what they say.** `documentation/store-listings/` holds
    a folder per store (`google-play/`, `app-store/`, `mac-app-store/`, `microsoft-store/`) with a file per language of
-   the app (`en.md`, `de.md`, …): the source of truth for every field the user pastes into that store's console, one
-   fenced block per field. Work out the English files (`<store>/en.md`) first: read each whole, rules note first, and
-   check every claim against the feature clusters of step 3:
+   the app (`en.md`, `de.md`, …): the source of truth for every field of that store's listing, one fenced block per
+   field, which the release itself writes into every store's console (`.github/scripts/store_listings.py` reads them,
+   each store's workflow writes them). Work out the English files (`<store>/en.md`) first: read each whole, rules note
+   first, and check every claim against the feature clusters of step 3:
    - **Edit only what the release made untrue or incomplete**: a new feature worth a line, a removed or renamed one, a
      changed count (instruments, sounds, colors, languages), a new platform behavior. A release that changes nothing a
      listing describes leaves the file untouched; never reword for its own sake.
@@ -171,8 +172,11 @@ them. If a change has no effect a user could notice, it is not in the notes.
      `.github/scripts/check_store_listings.py` and fix every failure.
 
    Keep the four descriptions saying the same thing in each platform's words. Apple's fields other than the
-   promotional text change only with a version submitted for review; the listings are pasted by hand, never by the
-   pipeline.
+   promotional text change only with a version submitted for review. What the files say is what ships: the release
+   overwrites every listing's text in the consoles, so an edit made in a console is lost unless it is in the files
+   too. Images (screenshots, the icon, the feature graphic) and the fields `store_listings.py` lists as `MANUAL` (the
+   Microsoft title and "Developed by", the Mac's App Sandbox Information) stay by hand. Run
+   `.github/scripts/store_listings.py --check` too.
 
 10. **Always regenerate Android baseline profiles, started at the end of step 8**, never before the changelog is
    approved and the in-app message is written in every language, so the recording builds the app as it ships. Every
@@ -203,8 +207,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    user, briefly:
    - whether the in-app message was updated or cleared, and whether both Android profiles were regenerated;
    - each `whats-new` block's character count;
-   - which store listing files changed and what to paste where (each edited field, with its count), or that none
-     needed a change;
+   - which store listing files changed (each edited field, with its count), or that none needed a change, and that
+     the release writes them into every store; that `<!-- <store> listings: false -->` leaves a store's listing as it
+     is in its console (only the notes are written then), for a listing being reworked there;
    - the path, and that the file is a throwaway to delete after pasting;
    - to paste **all of it** into the description of a new release tagged `<version>` on the commit
      that carries that `campfire.versionName` (`publish-all.yml` refuses a tag that disagrees with it), with
@@ -314,6 +319,10 @@ all of them are always written:
 <!-- app-store submit: true -->
 <!-- mac-app-store submit: true -->
 <!-- microsoft-store submit: true -->
+<!-- play-store listings: true -->
+<!-- app-store listings: true -->
+<!-- mac-app-store listings: true -->
+<!-- microsoft-store listings: true -->
 ```
 
 - **`whats-new en`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
@@ -333,8 +342,8 @@ all of them are always written:
   language's own punctuation (French puts a space before the colon). Every rule of this section holds for each block,
   the 500 characters included: languages run longer than English, so tighten the wording (never drop a bullet the
   English block keeps) and count each block with a real interpreter. The blocks are shown with their counts in step
-  11's report. Until `documentation/plans/store-listings-sync.md` lands, `release_description.py` reads only
-  `whats-new en` and leaves the others alone, so the blocks go out unread and harmless.
+  11's report. `release_description.py` stops a release with a block in a language the app does not have, and a
+  language without a block gets the English.
 - **500 characters at most**, newlines included — Play's limit, the tightest of the stores. Check it with
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.

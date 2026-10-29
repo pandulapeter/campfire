@@ -15,8 +15,9 @@ since a translation runs longer than its English.
 A field is a `## <name> (<limit>)` heading and the fenced blocks under it, up to the next `## ` heading. Three limits
 are understood: `(N characters max)`, one block of at most N characters as Python's len() counts them; `(N bytes max)`,
 one block of at most N UTF-8 bytes (Apple's keywords); and `(K max, N characters each)`, at most K blocks of at most N
-characters each (Microsoft's product features). Any other heading is not a field with a limit and is skipped; a field
-with a limit and no block is an error.
+characters each (Microsoft's product features); and `(K max, N characters each, W words in all)`, one block of at most
+K comma-separated terms of at most N characters each and W words in all (Microsoft's search terms). Any other heading
+is not a field with a limit and is skipped; a field with a limit and no block is an error.
 
 The listings are few and short and are never meant to be over, so the whole folder is judged rather than the change:
 no exception list, nothing to update. Run by .githooks/pre-commit before every commit, by tests.yml, and by the
@@ -28,26 +29,20 @@ import re
 import sys
 from pathlib import Path
 
+from store_listings import BLOCK, sections
+
 LISTINGS = Path(__file__).resolve().parents[2] / "documentation/store-listings"
 
 HEADING = re.compile(r"^## (.+?)\s*\(([^)]*)\)\s*$")
 CHARACTERS = re.compile(r"^([\d,]+) characters max$")
 BYTES = re.compile(r"^([\d,]+) bytes max$")
 ITEMS = re.compile(r"^([\d,]+) max, ([\d,]+) characters each$")
-BLOCK = re.compile(r"^```[^\n]*\n(.*?)\n?^```", re.M | re.S)
+TERMS = re.compile(r"^([\d,]+) max, ([\d,]+) characters each, ([\d,]+) words in all$")
 
 
 def number(text):
     return int(text.replace(",", ""))
 
-
-def sections(text):
-    """Every `## ` heading of the text with what lies between it and the next one."""
-    parts = re.split(r"^(?=## )", text, flags=re.M)
-    for part in parts:
-        if part.startswith("## "):
-            heading, _, body = part.partition("\n")
-            yield heading, body
 
 
 def field_errors(name, text):
@@ -59,8 +54,8 @@ def field_errors(name, text):
             continue
         field, limit = match.group(1), match.group(2)
         blocks = BLOCK.findall(body)
-        characters, size, items = CHARACTERS.match(limit), BYTES.match(limit), ITEMS.match(limit)
-        if not (characters or size or items):
+        characters, size, items, terms = CHARACTERS.match(limit), BYTES.match(limit), ITEMS.match(limit), TERMS.match(limit)
+        if not (characters or size or items or terms):
             continue
         if not blocks:
             errors.append(f"{name}: {field} has no text under its heading")
@@ -77,6 +72,19 @@ def field_errors(name, text):
             length = len(blocks[0].encode("utf-8"))
             if length > maximum:
                 errors.append(f"{name}: {field} is {length} bytes, {maximum} at most")
+        elif terms:
+            if len(blocks) > 1:
+                errors.append(f"{name}: {field} has {len(blocks)} blocks, 1 at most")
+            count, maximum, words = (number(group) for group in terms.groups())
+            listed = [term.strip() for term in blocks[0].split(",") if term.strip()]
+            if len(listed) > count:
+                errors.append(f"{name}: {field} has {len(listed)} terms, {count} at most")
+            for term in listed:
+                if len(term) > maximum:
+                    errors.append(f"{name}: {field} term \"{term}\" is {len(term)} characters, {maximum} at most")
+            total = sum(len(term.split()) for term in listed)
+            if total > words:
+                errors.append(f"{name}: {field} has {total} words, {words} at most")
         else:
             count, maximum = number(items.group(1)), number(items.group(2))
             if len(blocks) > count:

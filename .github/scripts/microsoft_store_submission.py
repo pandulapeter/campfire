@@ -10,25 +10,35 @@
 Submits a new .msix to the Microsoft Store for certification, which is everything an update used to need Partner Center
 open for.
 
-    microsoft_store_submission.py <package identity name> <package version> <.msix file> <release notes file> [--prepare]
+    microsoft_store_submission.py <package identity name> <package version> <.msix file> <release notes file>
+        [--prepare] [--no-listings]
 
 The app is found by its package identity name (campfire.windows.identityName), so no Store ID has to be kept anywhere.
 A new submission is a copy of the last published one: this replaces its package with the new one, writes the release
-notes as its "What's new in this version", sets it to be published as soon as it passes certification, uploads the
-package and commits it, then waits until Partner Center has accepted the commit (which is where a package that does
-not match the product's identity is refused). A green run means submitted, not certified: certification answers by
-email, usually within a few days. With --prepare it writes the release notes and the publish mode and leaves the
-packages alone, leaving the submission as a draft in Partner Center for somebody to add the release's screenshots to,
-replace the package by hand with the one the run keeps, and submit it there. The package is not uploaded then, because
-Partner Center only takes in a package uploaded through the API when the API commits the submission: one sent from
-Partner Center's own Submit button goes out with whatever package Partner Center shows, which for a copy is the last
-release's. A draft that nobody has changed in Partner Center can still be taken up and committed by a later run.
+notes as its "What's new in this version" and the listing text from documentation/store-listings/microsoft-store into
+every language's listing (store_listings.py; the images, the title, and every other field are sent back as they came),
+sets it to be published as soon as it passes certification, uploads the package and commits it, then waits until
+Partner Center has accepted the commit (which is where a package that does not match the product's identity is
+refused). A green run means submitted, not certified: certification answers by email, usually within a few days.
+
+The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any
+language it does not name, and every listing is written by its language (fr-fr and fr-ca alike). An app language with
+no listing in Partner Center fails the run before anything is changed, since a language's first listing is added there
+by hand, with its screenshots. With --no-listings only the notes are written, and a missing listing is no failure.
+
+With --prepare it writes the release notes, the listings, and the publish mode and leaves the packages alone, leaving
+the submission as a draft in Partner Center for somebody to add the release's screenshots to, replace the package by
+hand with the one the run keeps, and submit it there. The package is not uploaded then, because Partner Center only
+takes in a package uploaded through the API when the API commits the submission: one sent from Partner Center's own
+Submit button goes out with whatever package Partner Center shows, which for a copy is the last release's. A draft
+that nobody has changed in Partner Center can still be taken up and committed by a later run.
 
 A draft this script made and did not get through - one whose commit failed - is used instead of a new copy: its package
-is replaced with the new one and its "What's new in this version" with the notes, everything else in it is kept exactly
-as it is, the publish mode included, and it is committed. A draft started in Partner Center cannot be: the API refuses
-to change a submission it did not create, and hands out no upload address for one, so the run stops and says so - that
-draft is finished in Partner Center with the package this run keeps, or deleted so that the run can make its own.
+is replaced with the new one, its "What's new in this version" with the notes, and its listing text with the files',
+everything else in it is kept exactly as it is, the publish mode included, and it is committed. A draft started in
+Partner Center cannot be: the API refuses to change a submission it did not create, and hands out no upload address for
+one, so the run stops and says so - that draft is finished in Partner Center with the package this run keeps, or
+deleted so that the run can make its own.
 A submission that is already past its commit with this very package version is left as it is, so a run that is repeated
 does not fail on its own success. One past its commit with anything else - the previous release still in certification
 - stops the run instead of being deleted, since the product can only have one submission in progress at a time.
@@ -55,6 +65,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+import store_listings
 from store_http import REQUEST_TIMEOUT_SECONDS, fail, request_json
 
 API = "https://manage.devcenter.microsoft.com/v1.0/my"
@@ -165,15 +176,44 @@ def replace_package(submission, package_name):
     submission["applicationPackages"] = packages
 
 
-def write_release_notes(submission, notes):
+def matched_locales(submission, write_listings):
+    """
+    {Partner Center locale: the app's language} of the submission's listings. An app language without one fails where
+    the listings are written, since its text would go nowhere; a locale of a language the app lacks is left alone.
+    """
     listings = submission.get("listings", {})
     if not listings:
         fail("The submission has no Store listing to write the release notes into.")
-    # The release notes are written in English only, so every language's listing gets the same text rather than keeping
-    # the last release's.
-    for language, listing in listings.items():
-        listing.setdefault("baseListing", {})["releaseNotes"] = notes
-        print(f"Wrote the release notes for {language}.")
+    matched, missing, unknown = store_listings.match_locales(list(listings), store_listings.app_languages())
+    if missing and write_listings:
+        fail(store_listings.missing_listing_message("Partner Center", missing)
+             + " Partner Center offers a listing in the languages AppxManifest.xml declares.")
+    for locale in unknown:
+        print(f"::warning::The {locale} listing is in a language the app does not have, so it is left as it is.")
+    # Read once, so the next release's step 0 of a field rename shows in the log.
+    first = next(iter(listings.values()), {}).get("baseListing", {})
+    print(f"Partner Center's listings: {', '.join(listings)}; their fields: {', '.join(sorted(first))}.")
+    return matched
+
+
+def write_release_notes(submission, locales, notes):
+    """Every listing of a language the app has gets that language's notes rather than keeping the last release's."""
+    for locale, code in locales.items():
+        submission["listings"][locale].setdefault("baseListing", {})["releaseNotes"] = notes(code)
+        print(f"Wrote the release notes for {locale}.")
+
+
+def write_listings(submission, locales, listings):
+    """Writes each language's fields into its listings, leaving every field the files do not name as it came."""
+    for locale, code in locales.items():
+        base = submission["listings"][locale].setdefault("baseListing", {})
+        fields = listings[code]
+        for field in fields:
+            if field not in base:
+                print(f"::warning::Partner Center's {locale} listing has no field {field}; it is written anyway, but "
+                      "check in Partner Center that the API still calls it that.")
+        print(store_listings.changes(locale, base, fields))
+        base.update(fields)
 
 
 def upload(upload_url, package):
@@ -243,13 +283,15 @@ def wait_for_commit(app_id, submission_id):
         time.sleep(POLL_INTERVAL_SECONDS)
 
 
-def main(identity_name, version, package, notes_file, prepare_only):
+def main(identity_name, version, package, notes_file, prepare_only, write_listing_text):
     with open(notes_file, encoding="utf-8") as file:
-        notes = file.read().strip()
-    if len(notes) > RELEASE_NOTES_LIMIT:
-        fail(f"The release notes are {len(notes)} characters long, and Partner Center takes {RELEASE_NOTES_LIMIT}.")
-    if not notes:
-        fail("An update needs release notes for its \"What's new in this version\", and there are none.")
+        notes = store_listings.notes_by_language(file.read().strip())
+    for code in store_listings.app_languages():
+        if len(notes(code)) > RELEASE_NOTES_LIMIT:
+            fail(f"The {code} release notes are {len(notes(code))} characters long, and Partner Center takes {RELEASE_NOTES_LIMIT}.")
+        if not notes(code):
+            fail("An update needs release notes for its \"What's new in this version\", and there are none.")
+    listings = store_listings.read("microsoft-store")
     if not os.path.isfile(package):
         fail(f"There is no package at {package}.")
     app = find_app(identity_name)
@@ -262,8 +304,9 @@ def main(identity_name, version, package, notes_file, prepare_only):
         # release; what a release starts goes out as soon as it passes.
         submission["targetPublishMode"] = "Immediate"
     elif submission.get("status") in DRAFT_STATES:
-        # A draft is work on the listing for this release, so only the package and the release notes are replaced and
-        # everything else, the publish mode included, is sent back as it came. The whole submission has to be sent, since a PUT replaces it rather than merging.
+        # A draft is work on the listing for this release, so only the package, the release notes, and the listing text
+        # are replaced and everything else, the screenshots and the publish mode included, is sent back as it came. The
+        # whole submission has to be sent, since a PUT replaces it rather than merging.
         print(f"Amending the draft submission {submission['id']} of {name} ({submission.get('status')}, with "
               f"{', '.join(sorted(package_versions(submission))) or 'no package'}).")
     elif submission.get("status") in SUBMITTED_STATES and version in package_versions(submission):
@@ -282,7 +325,11 @@ def main(identity_name, version, package, notes_file, prepare_only):
              "submission it did not create. Either finish it there - upload the package this run keeps as its "
              f"campfire-msix artifact ({os.path.basename(package)}), write the release notes and submit it - or delete "
              "it there and run this again, which submits a copy of the last published submission instead.")
-    write_release_notes(submission, notes)
+    # Before the package, so that a refused listing fails before the upload.
+    locales = matched_locales(submission, write_listing_text)
+    write_release_notes(submission, locales, notes)
+    if write_listing_text:
+        write_listings(submission, locales, listings)
     if prepare_only:
         # The package is left as it is: an upload is only taken in by the API's own commit, so Partner Center would show
         # the last release's package next to a new one that never arrives.
@@ -302,7 +349,7 @@ def main(identity_name, version, package, notes_file, prepare_only):
 
 if __name__ == "__main__":
     arguments = sys.argv[1:]
-    prepare = arguments[4:] == ["--prepare"]
-    if len(arguments) != (5 if prepare else 4):
+    flags = arguments[4:]
+    if len(arguments) < 4 or not set(flags) <= {"--prepare", "--no-listings"} or len(set(flags)) != len(flags):
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*arguments[:4], prepare)
+    main(*arguments[:4], "--prepare" in flags, "--no-listings" not in flags)

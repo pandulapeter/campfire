@@ -14,6 +14,7 @@ set -e
 python3 .github/scripts/check_license_headers.py
 python3 .github/scripts/check_sizes.py
 python3 .github/scripts/check_store_listings.py
+python3 .github/scripts/store_listings.py --check
 python3 .github/scripts/check_doc_names.py --staged
 python3 .github/scripts/check_regexes.py
 # Spotless needs Gradle, a few seconds with a warm daemon, so it runs only when Kotlin is staged. It checks the working

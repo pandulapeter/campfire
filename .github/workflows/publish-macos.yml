@@ -13,6 +13,9 @@
 # run ends with a warning instead. With "submit" off - the box of a hand dispatch, or a release whose description says
 # <!-- mac-app-store submit: false --> - it stops short of the submission and leaves the version prepared in App Store
 # Connect, for the release's screenshots to be added to and the version submitted from there.
+# The listing text of documentation/store-listings/mac-app-store is written into every language's localization of the
+# version before the submission, with each language's notes; with "listings" off - the box, or
+# <!-- mac-app-store listings: false --> - only the notes are written.
 #
 # The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
 # arm64-only Mac app from macOS 12 on. Asking for the .pkg is what signs and sandboxes it; the donation link is left
@@ -42,6 +45,12 @@ on:
       submit:
         type: boolean
         default: true
+      release_notes_by_language:
+        type: string
+        required: false
+      listings:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       release_tag:
@@ -58,6 +67,10 @@ on:
         required: false
       submit:
         description: 'Submit for review (off: leave the version prepared in App Store Connect, to add screenshots to)'
+        type: boolean
+        default: true
+      listings:
+        description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
         default: true
 
@@ -250,10 +263,13 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
           SUBMIT: ${{ inputs.submit }}
+          RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
+          LISTINGS: ${{ inputs.listings }}
         run: |
           # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
-          PREPARE=()
-          [ "$SUBMIT" = true ] || PREPARE=(--prepare)
+          FLAGS=()
+          [ "$SUBMIT" = true ] || FLAGS+=(--prepare)
+          [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
           # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
@@ -262,7 +278,7 @@ jobs:
             printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
           fi
           python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire MAC_OS \
-            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt" "${PREPARE[@]}"
+            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt" "${FLAGS[@]}"
       - name: Clean up credentials
         if: always()
         run: |

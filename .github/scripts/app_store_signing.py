@@ -93,13 +93,15 @@ def error_details(error):
     return details
 
 
-def request(method, path, body=None, conflict_ok=False):
+def request(method, path, body=None, missing_ok=False, conflict_ok=False):
     """
     One call of the API. A GET is asked again where the service or the network failed it, since one bad answer among
     the polls that follow an upload would otherwise fail a job that cannot simply be run again: App Store Connect
-    refuses the build number it has already seen.
+    refuses the build number it has already seen. missing_ok answers a 404 with None, conflict_ok a 409.
     """
     answers = {}
+    if missing_ok:
+        answers[404] = None
     if conflict_ok:
         answers[409] = None
     return request_json(method, API + path, token, body, error_details=error_details, answers=answers, label=path)

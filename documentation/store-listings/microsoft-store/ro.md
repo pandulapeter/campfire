@@ -163,7 +163,7 @@ Funcționează offline, fără cont, fără reclame și fără urmărire
 Open source, sub licența Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, acorduri chitară, versuri, setlist, acordor, metronom, carte de cântece

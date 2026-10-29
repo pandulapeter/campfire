@@ -89,7 +89,8 @@ Each item is checked by `wiring` in step 7.
    which step 5's store listings provide.
 
 Nothing else per platform: Android needs no locale config (the language is chosen in the app), the desktop runtime
-already carries every locale (`jdk.localedata`), and only English release notes are published so far (`whats-new en`).
+already carries every locale (`jdk.localedata`). The release notes in the language come from its own `whats-new <code>`
+block, which prepare-release writes for every `values-*` folder.
 
 ## 4. Docs that list the languages
 
@@ -121,7 +122,8 @@ Rewrap any line pushed past ~120 columns.
 6. The store listings: one subagent (`model: "opus"`) writes `documentation/store-listings/<store>/<code>.md` for each
    of the four stores, translated from `<store>/en.md` the way the other languages' files are (read one first: which
    fields each holds, the English headings and rules note, the locales line, keywords researched rather than
-   translated, the app's own words from the new `strings.xml`), and runs `.github/scripts/check_store_listings.py`.
+   translated, the app's own words from the new `strings.xml`), and runs `.github/scripts/check_store_listings.py` and
+   `.github/scripts/store_listings.py --check` (every field the release writes is there).
    Its Play title and App Store name become the website's title in the language: if the website already has the
    language (`i18n/<code>.json` of the CampfireWebsite repository), set its `Campfire: Songbook &amp; Chords` entry to
    that name and run its `stamp.py`; if not, say in the report that the website's translation should use it.
@@ -204,4 +206,9 @@ If this run had to touch a place `wiring` does not check, add it to `check_wirin
 
 Tell the user, in a few lines: the language added and its own name in the picker; what was wired (code, iOS, web,
 docs); the test and check results; the translation choices worth a native speaker's look (address, key terms, the
-agents' doubts you kept); every preflight `NOTE` as a known limitation; and that nothing was committed.
+agents' doubts you kept); every preflight `NOTE` as a known limitation; and that nothing was committed. Also tell them to
+add the language's listing by hand, once, in every console (Play Console, App Store Connect for iOS and for the Mac, and
+Partner Center), with its screenshots, before the next release: the release writes every listing's text from the files
+but creates none, so a store without the language fails the release on the missing listing. If the store spells the
+language other than by its ISO 639-1 code (Play's `iw` for Hebrew) or splits it by script (`zh-CN`, `zh-TW`), it needs
+an alias in `.github/scripts/store_listings.py`'s `ALIASES`, and a line in `test_store_listings.py`'s `STORE_LOCALES`.

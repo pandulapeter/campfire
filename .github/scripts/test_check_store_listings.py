@@ -43,6 +43,18 @@ class CheckStoreListingsTest(unittest.TestCase):
             field_errors("store.md", over),
         )
 
+    def test_search_terms_are_counted_as_terms_of_one_block(self):
+        heading = "## Search terms (3 max, 8 characters each, 4 words in all)\n\n"
+        self.assertEqual([], field_errors("store.md", heading + block("chords, lyrics, capo tab")))
+        self.assertEqual(
+            [
+                "store.md: Search terms has 4 terms, 3 at most",
+                "store.md: Search terms term \"metronome\" is 9 characters, 8 at most",
+                "store.md: Search terms has 5 words, 4 at most",
+            ],
+            field_errors("store.md", heading + block("a b, c, d, metronome")),
+        )
+
     def test_a_heading_without_a_limit_is_ignored(self):
         listing = "## Support URL\n\n" + block("a" * 5000) + "\n## Search terms (7 max)\n\n" + block("a" * 5000)
         self.assertEqual([], field_errors("store.md", listing))

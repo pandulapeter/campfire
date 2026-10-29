@@ -163,7 +163,7 @@ Funktioniert offline, ohne Konto, ohne Werbung und ohne Tracking
 Open Source unter der Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, Akkorde, Songtexte, Setlist, Gitarre stimmen, Metronom, Liederbuch

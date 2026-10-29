@@ -163,7 +163,7 @@ Funciona sin conexión, sin cuenta, sin anuncios y sin rastreo
 De código abierto, con licencia Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, acordes, letras de canciones, repertorio, afinador de guitarra, metrónomo, cancionero

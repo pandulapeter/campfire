@@ -163,7 +163,7 @@ Funziona offline, senza account, senza pubblicità e senza tracciamento
 Open source con licenza Mozilla Public License 2.0
 ```
 
-## Search terms (7 max)
+## Search terms (7 max, 30 characters each, 21 words in all)
 
 ```
 chordpro, accordi, testi canzoni, scaletta, accordatore chitarra, metronomo, canzoniere
