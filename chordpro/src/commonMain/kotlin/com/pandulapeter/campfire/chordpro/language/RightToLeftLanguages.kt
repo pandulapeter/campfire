@@ -13,8 +13,7 @@ package com.pandulapeter.campfire.chordpro.language
  * The languages written from the right, by the code a song files its language under (see
  * `ChordProMetaItems.languageCode`): CLDR's right-to-left languages that have a code of their own, Arabic, Aramaic,
  * Central Kurdish, Divehi, Persian, Hebrew, Kashmiri, Pashto, Sindhi, Syriac, Uyghur, Urdu, and Yiddish. The
- * `add-language` skill's `language.py` holds the same list (with the retired `iw` and `ji`, which it does not fold),
- * and the two are kept alike.
+ * `add-language` skill's `language.py` reads this list, so a language added there is laid out from the right too.
  */
 public object RightToLeftLanguages {
 

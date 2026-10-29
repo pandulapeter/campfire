@@ -411,6 +411,10 @@
             transform-origin: left center;
         }
 
+        [dir="rtl"] #splash-bar {
+            transform-origin: right center;
+        }
+
         #splash-message {
             max-width: 280px;
             margin: 0 24px;
@@ -531,8 +535,10 @@
         };
         var language = (/^(hu|ro|de|es|fr|it)\b/i.exec(navigator.language || '') || [])[1];
         var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
+        // A language written from the right says so in its block, and the page turns with it: the bar fills from the right.
         if (language) {
             document.documentElement.lang = language.toLowerCase();
+            document.documentElement.dir = text.dir || 'ltr';
         }
         retry.textContent = text.retry;
 

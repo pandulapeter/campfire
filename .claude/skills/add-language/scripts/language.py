@@ -16,9 +16,11 @@ that the model doing the translation only has to translate.
     python3 .claude/skills/add-language/scripts/language.py strings <code>
     python3 .claude/skills/add-language/scripts/language.py wiring <code> <EnglishName>
 
-`preflight` exits 2 when the language needs groundwork the skill cannot do (another script, right to left, a plural
-system the localization plugin cannot pick, a code the platforms disagree on). `strings` and `wiring` exit 1 on an
-error. Standard library only: the bundled fonts' character maps are read directly.
+`preflight` exits 2 when the language needs groundwork the skill cannot do (a script no bundled face covers, a plural
+rule the app does not know, a regional variant). A language written from the right is no blocker: it is a checklist,
+which `preflight` prints and `wiring` checks. `strings` and `wiring` exit 1 on an error. Standard library only: the
+bundled fonts' character maps are read directly, and the tables this script follows (the script faces, the plural
+rules, the right-to-left languages, the retired codes) are read from the Kotlin that holds them.
 """
 
 import re
@@ -32,37 +34,69 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 RESOURCES = ROOT / "presentation/src/commonMain/composeResources"
 ENGLISH = RESOURCES / "values/strings.xml"
-FONTS = sorted((RESOURCES / "font").glob("*.ttf"))
+FONTS = sorted(p for p in (RESOURCES / "font").glob("*.ttf") if p.name.startswith(("inter_", "jetbrains_mono_")))
 
-# The same list as :chordpro's RightToLeftLanguages, which folds the retired iw and ji before asking; keep them alike.
-RIGHT_TO_LEFT = {"ar", "arc", "ckb", "dv", "fa", "he", "iw", "ji", "ks", "ps", "sd", "syr", "ug", "ur", "yi"}
+PRESENTATION = ROOT / "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation"
+SCRIPT_FACES = PRESENTATION / "ui/theme/ScriptFaces.kt"
+PLURAL_RULES = PRESENTATION / "localization/PluralRules.kt"
+LANGUAGES = ROOT / "chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/language"
+APP_LANGUAGE = "data/model/src/commonMain/kotlin/com/pandulapeter/campfire/data/model/preferences/AppLanguage.kt"
+STORE_LISTINGS = ROOT / ".github/scripts/store_listings.py"
+CATEGORIES = ("zero", "one", "two", "few", "many", "other")
 
-# Codes the platforms report differently: older JDKs and every Android report the legacy one as Locale.language, and
-# AppLocale.findByCode matches the code exactly, so "System" would never find the strings on some platforms.
-LEGACY_CODES = {"id": "in", "he": "iw", "yi": "ji", "in": "id", "iw": "he", "ji": "yi"}
 
-# The generated LocalizedStrings.getPlural picks `one` for 1 and `other` for every other count (`zero`, `two`, and
-# `many` only if the item exists, `many` then for every count above 2; `few` never). A language whose counts 2 to 10
-# need more than one form cannot be written with that.
-PLURALS_BLOCKED = {
-    "ar", "be", "br", "bs", "cs", "cy", "ga", "gd", "gv", "he", "hr", "iu", "kw", "lt", "lv", "mt", "pl", "ru", "se",
-    "sh", "sk", "sl", "sma", "smi", "smj", "smn", "sms", "sr", "tl", "fil", "uk",
-}
-PLURALS_NOTES = {
-    "fr": "0 takes the singular in French: give a `zero` item to each plural that can show 0 (see values-fr).",
-    "pt": "Portuguese (pt-PT) is fine; Brazilian 0 takes the singular, given `other` here.",
-    "ro": "20 and up need \"de\" (\"20 de cântece\"); write `other` in the 2-19 form, and 20+ reads without it.",
-    "is": "21, 31, ... take the singular in Icelandic; the plugin gives them `other`.",
-    "mk": "21, 31, ... take the singular in Macedonian; the plugin gives them `other`.",
-    "hy": "0 takes the singular in Armenian: give a `zero` item to each plural that can show 0 (see values-fr).",
-}
-PLURALS_FINE = {
-    "af", "az", "bg", "ca", "da", "de", "el", "en", "es", "et", "eu", "fi", "fo", "fy", "gl", "hu", "it", "ka", "kk",
-    "ky", "lb", "ms", "nb", "nl", "nn", "no", "sq", "sv", "sw", "tr", "uz", "vi",
-} | set(PLURALS_NOTES)
-# Languages whose 0 takes the singular. getPlural reads a `zero` item for 0 when there is one, so these add it to the
-# plurals that can show 0 (values-fr has them), each on a line of its own that the English lacks.
-ZERO_IS_SINGULAR = {"fr", "hy"}
+def retired_codes():
+    """{retired code: current code}, from :chordpro's LanguageCodes, which every code the app compares goes through."""
+    return dict(re.findall(r'"([a-z]+)" to "([a-z]+)"', (LANGUAGES / "LanguageCodes.kt").read_text()))
+
+
+def right_to_left_codes():
+    """The languages written from the right, from :chordpro's RightToLeftLanguages, which decides a song's direction."""
+    return set(re.findall(r'"([a-z]+)"', re.search(r"setOf\((.*?)\)", (LANGUAGES / "RightToLeftLanguages.kt").read_text()).group(1)))
+
+
+def is_right_to_left(code):
+    return retired_codes().get(code, code) in right_to_left_codes()
+
+
+def script_faces():
+    """Every row of the script-face table as (script, code point ranges, languages, font file), read as
+    tools/fonts/script_faces.py reads it."""
+    for row in re.findall(r"ScriptFace\((.*?)\n    \)", SCRIPT_FACES.read_text(), re.DOTALL):
+        script = re.search(r'script = "([^"]+)"', row).group(1)
+        ranges = [(int(a, 16), int(b, 16)) for a, b in re.findall(r"0x([0-9A-Fa-f]+)\.\.0x([0-9A-Fa-f]+)", row)]
+        languages = set(re.findall(r'"([a-z]+)"', re.search(r"languages = setOf\((.*?)\)", row, re.DOTALL).group(1)))
+        font = RESOURCES / "font" / (re.search(r"Res\.font\.(\w+)", row).group(1) + ".ttf")
+        yield script, ranges, languages, font
+
+
+def face_covering(character):
+    """The row of the script-face table that draws [character], or None."""
+    point = ord(character)
+    for face in script_faces():
+        if any(start <= point <= end for start, end in face[1]) and point in font_map(face[3]):
+            return face
+    return None
+
+
+def plural_categories(code):
+    """
+    The categories the language's row of PluralRules.kt can give a count, `other` always among them, or None for a
+    language with no row. Read from the row's own text and that of the private functions it calls.
+    """
+    text = PLURAL_RULES.read_text()
+    table = text[text.index("PLURAL_RULES"):]
+    table = table[:table.index("\n)\n")]
+    rows = dict(re.findall(r'\n    "([a-z]+)" to (.*?)(?=\n    "[a-z]+" to |\Z)', table, re.DOTALL))
+    retired = retired_codes()
+    row = rows.get(retired.get(code, code))
+    if row is None:
+        return None
+    for function in re.findall(r"(\w+)\(n\)", row):
+        found = re.search(rf"fun {function}\(.*", text)
+        row += found.group(0) if found else ""
+    return [category for category in CATEGORIES if category == "other" or re.search(rf"\b{category.upper()}\b", row)]
+
 
 CASING_NOTES = {
     "tr": "Kotlin's lowercase()/titlecase() are locale-insensitive: a scale name or section label starting with i/ı/İ "
@@ -100,9 +134,24 @@ def font_map(path):
 
 
 def missing_glyphs(text):
-    """Characters of [text] some bundled font cannot draw, by font. The app never falls back to a system font."""
+    """
+    Characters of [text] Inter or JetBrains Mono cannot draw and no row of the script-face table covers either, by font.
+    The app draws only its bundled faces where the platform has none of its own (the web, Linux), so these would be
+    boxes there.
+    """
     characters = {c for c in text if not c.isspace() and unicodedata.category(c)[0] != "C"}
+    characters = {c for c in characters if face_covering(c) is None}
     return {path.name: sorted(c for c in characters if ord(c) not in font_map(path)) for path in FONTS if any(ord(c) not in font_map(path) for c in characters)}
+
+
+def faces_for(text):
+    """The rows of the script-face table that draw some character of [text]."""
+    faces = {}
+    for character in set(text):
+        face = face_covering(character) if ord(character) > 0x7F else None
+        if face is not None:
+            faces[face[0]] = face
+    return list(faces.values())
 
 
 def right_to_left(text):
@@ -115,30 +164,38 @@ def preflight(code, sample):
         blockers.append(f"\"{code}\" is not a plain ISO 639 language code. Regional or script variants (pt-BR, zh-Hans, "
                         "sr-Latn) need groundwork: AppLocale.findByCode matches Locale.current.language alone, and the "
                         "localization plugin's handling of values-xx-rYY folders is untested here.")
+    if code in retired_codes():
+        blockers.append(f"\"{code}\" is a retired code; add the language as \"{retired_codes()[code]}\", which "
+                        "LanguageCodes folds it to on every platform.")
     if (RESOURCES / f"values-{code}").exists():
         blockers.append(f"values-{code} already exists: the language is already supported.")
-    if code in RIGHT_TO_LEFT or right_to_left(sample):
-        blockers.append("The language is written right to left. The app has never been laid out or tested in RTL "
-                        "(chord rows over lyrics, the editor, pagers, the PDF), and the bundled fonts have no RTL script.")
-    if code in LEGACY_CODES:
-        blockers.append(f"Platforms report this language as either \"{code}\" or \"{LEGACY_CODES[code]}\"; "
-                        "ApplyLanguagePreference needs to map both before \"System\" can find it everywhere.")
-    if code in PLURALS_BLOCKED:
-        blockers.append("Its plurals need more than one form for the counts 2 to 10 (few/many), which the generated "
-                        "LocalizedStrings.getPlural never picks; the plural selection needs replacing first.")
-    elif code in PLURALS_NOTES:
-        notes.append("Plurals: " + PLURALS_NOTES[code])
-    elif code not in PLURALS_FINE:
-        notes.append("Plurals: not in this script's table. Write the word \"song\" for 0-10, 21, 22, 25, and 100 in the "
-                     "language: if the counts 2 to 10 need more than one form, stop (groundwork needed).")
+    if is_right_to_left(code) or right_to_left(sample):
+        notes.append("Right to left: the app lays itself out from the language's AppLanguage.layoutDirection, so the "
+                     "checklist is: the entry with Direction.RIGHT_TO_LEFT, its index.html TEXTS block with "
+                     "dir: 'rtl', and each store's own code for the language (step 8). `wiring` checks the first two.")
+        if not is_right_to_left(code):
+            blockers.append("The sample is written from the right but :chordpro's RightToLeftLanguages does not list "
+                            f"\"{code}\"; add it there (CLDR's list) first, so a song in the language reads from the right.")
+    categories = plural_categories(code)
+    if categories is None:
+        blockers.append("PluralRules.kt has no row for the language: add its CLDR cardinal rule to PLURAL_RULES (with a "
+                        "test of the counts that pick each category) first, or every count would read like English.")
+    else:
+        notes.append(f"Plurals: the language's rule picks {', '.join(categories)}; give every <plurals> an item for each "
+                     "(only `one` and `other` are required: a missing category reads `other`), and a `zero` item where "
+                     "0 reads apart (\"No songs\").")
     if code in CASING_NOTES:
         notes.append("Casing: " + CASING_NOTES[code])
+    for script, _, languages, font in faces_for(sample):
+        notes.append(f"Fonts: the {script} row of ScriptFaces.kt ({font.name}, Regular only; Android, Apple, and Windows "
+                     "draw their own face) draws the script." +
+                     ("" if code in languages else f" Add \"{code}\" to its languages, so the web loads it before any text."))
     missing = missing_glyphs(sample)
     if missing:
-        blockers.append("The bundled fonts (Inter, JetBrains Mono: Latin, Greek, Cyrillic only) cannot draw: " +
+        blockers.append("No bundled face can draw: " +
                         "; ".join(f"{font}: {' '.join(chars)}" for font, chars in missing.items()) +
-                        ". The app never uses system fonts, so these would be missing glyphs; a font for the script "
-                        "has to be bundled and credited first.")
+                        ". Inter and JetBrains Mono hold Latin, Greek, and Cyrillic; another script needs a row in "
+                        "ScriptFaces.kt, a run of tools/fonts/script_faces.py, and the face credited first.")
     for note in notes:
         print("NOTE  " + note)
     for blocker in blockers:
@@ -204,9 +261,10 @@ def entries(path):
 def check_strings(code):
     target = RESOURCES / f"values-{code}/strings.xml"
     english, translated = entries(ENGLISH), entries(target)
-    zeros = {key: text for key, text in translated.items() if key.endswith(":zero")}
-    if code in ZERO_IS_SINGULAR:
-        translated = {key: text for key, text in translated.items() if key not in zeros}
+    categories = plural_categories(code) or ["one", "other"]
+    # Plural items the English lacks (a `zero`, or a category of the language's own) are the only lines it may add.
+    added = {key: text for key, text in translated.items() if ":" in key and key not in english}
+    translated = {key: text for key, text in translated.items() if key not in added}
     errors, warnings = [], []
     if list(english) != list(translated):
         missing = [k for k in english if k not in translated]
@@ -220,24 +278,36 @@ def check_strings(code):
         if sorted(SPECIFIER.findall(source)) != sorted(SPECIFIER.findall(text)):
             message = f"{key}: placeholders {SPECIFIER.findall(source)} became {SPECIFIER.findall(text)}"
             (warnings if key.endswith(":one") and not SPECIFIER.findall(text) else errors).append(message)
-        if ":" in key and key.split(":")[1] not in ("one", "other"):
-            errors.append(f"{key}: only `one` and `other` items; the plugin never picks the others correctly.")
         if text == source and len(source) > 12:
             warnings.append(f"{key}: identical to English ({source[:50]!r}); fine only for names and symbols.")
-        if right_to_left(text):
-            errors.append(f"{key}: right-to-left characters.")
-    missing = missing_glyphs("".join(translated.values()))
-    if missing:
-        errors.append("Characters no bundled font has: " + "; ".join(f"{f}: {' '.join(c)}" for f, c in missing.items()))
-    for key, text in zeros.items() if code in ZERO_IS_SINGULAR else ():
-        other = english.get(key.replace(":zero", ":other"))
+        if right_to_left(text) and not is_right_to_left(code):
+            errors.append(f"{key}: right-to-left characters in a language written from the left.")
+    for key, text in added.items():
+        name, quantity = key.split(":")
+        other = english.get(f"{name}:other")
         if other is None:
-            errors.append(f"{key}: a `zero` item in a key that is not a plural.")
+            errors.append(f"{key}: a plural item in a key that is not a plural.")
+        elif quantity != "zero" and quantity not in categories:
+            errors.append(f"{key}: the language's plural rule never picks `{quantity}` (it picks {', '.join(categories)}).")
         elif not set(SPECIFIER.findall(text)) <= set(SPECIFIER.findall(other)):
             errors.append(f"{key}: placeholders {SPECIFIER.findall(text)} that `other` lacks.")
-    zero_lines = len(zeros) if code in ZERO_IS_SINGULAR else 0
-    if ENGLISH.read_text().count("\n") != target.read_text().count("\n") - zero_lines:
-        errors.append("Line count differs from English: the file must mirror it line for line.")
+    for category in categories:
+        if category not in ("one", "other"):
+            plurals = {key.split(":")[0] for key in english if ":" in key}
+            lacking = sorted(name for name in plurals if f"{name}:{category}" not in added)
+            if lacking:
+                warnings.append(f"{len(lacking)} plurals have no `{category}` item ({', '.join(lacking[:5])}, ...): fine "
+                                f"only where `other` reads the counts the rule calls {category}.")
+    everything = "".join(translated.values()) + "".join(added.values())
+    missing = missing_glyphs(everything)
+    if missing:
+        errors.append("Characters no bundled face has: " + "; ".join(f"{f}: {' '.join(c)}" for f, c in missing.items()))
+    for script, _, languages, _ in faces_for(everything):
+        if code not in languages:
+            errors.append(f"ScriptFaces.kt: the {script} row draws the strings but does not list \"{code}\" among its "
+                          "languages, so the web would draw the interface before loading it.")
+    if ENGLISH.read_text().count("\n") != target.read_text().count("\n") - len(added):
+        errors.append("Line count differs from English: the file must mirror it line for line, plural items aside.")
     report(errors, warnings)
 
 
@@ -245,10 +315,9 @@ def check_wiring(code, english_name):
     enum = english_name.upper().replace(" ", "_")
     key = "settings_user_interface_language_" + english_name.lower().replace(" ", "_")
     strings_object = "Strings" + code.capitalize()
-    presentation = "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/components/preferences"
+    presentation = str((PRESENTATION / "ui/components/preferences").relative_to(ROOT))
     ios = "app/ios/iosApp"
     checks = [
-        ("data/model/src/commonMain/kotlin/com/pandulapeter/campfire/data/model/preferences/AppLanguage.kt", rf'\b{enum}\("{code}"\),'),
         (f"{presentation}/AppLanguageNames.kt", rf"import com\.pandulapeter\.campfire\.presentation\.resources\.{key}\n"),
         (f"{presentation}/AppLanguageNames.kt", rf"AppLanguage\.{enum} -> Res\.string\.{key}\n"),
         ("tools/screenshots/src/main/kotlin/com/pandulapeter/campfire/screenshots/Shot.kt", rf"import com\.pandulapeter\.campfire\.presentation\.localization\.{strings_object}\n"),
@@ -272,6 +341,12 @@ def check_wiring(code, english_name):
     checks += [(f"documentation/store-listings/{store}/en.md", rf"\b{english_name}\b[^\n]*, switchable inside the app") for store in stores]
     checks += [(f"documentation/store-listings/{store}/{code}.md", r"(?m)^## ") for store in stores]
     checks += [("app/desktop/AppxManifest.xml", rf'<Resource Language="{code}-[a-z]+" />')]
+    checks += [(str((PRESENTATION / "localization/PluralTables.kt").relative_to(ROOT)), rf"AppLocale\.{code.upper()} -> {strings_object}\.plurals")]
+    direction = "RIGHT_TO_LEFT" if is_right_to_left(code) else "LEFT_TO_RIGHT"
+    checks += [(APP_LANGUAGE, rf'\b{enum}\("{code}", Direction\.{direction}\),')]
+    if direction == "RIGHT_TO_LEFT":
+        checks += [("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{\n                dir: 'rtl',")]
+    checks += [(str(STORE_LISTINGS.relative_to(ROOT)), rf'"{old}": "{code}"') for old, new in retired_codes().items() if new == code]
     checks += [(str(p.relative_to(ROOT)), rf'<string name="{key}">[^<]+</string>') for p in sorted(RESOURCES.glob("values*/strings.xml"))]
     errors = []
     for relative, pattern in checks:

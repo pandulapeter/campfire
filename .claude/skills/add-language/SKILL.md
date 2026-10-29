@@ -1,6 +1,6 @@
 ---
 name: add-language
-description: Add a new UI language to Campfire and translate the whole app into it — the strings, the language picker, the iOS share extension and microphone prompt, the iOS project, the web loading screen, and the docs that list the languages. Asks for one target language, checks first whether it can be supported at all (fonts, right to left, plurals, language code) and stops if it needs groundwork. Invoke this skill WHENEVER the user asks to add, support, or translate the app into a language, or to add a locale or a translation. Not for editing or fixing strings in an existing language (that is the code-style skill).
+description: Add a new UI language to Campfire and translate the whole app into it — the strings, the language picker, the iOS share extension and microphone prompt, the iOS project, the web loading screen, and the docs that list the languages. Asks for one target language, checks first whether it can be supported at all (fonts, plurals, language code) and stops if it needs groundwork; a language written from the right is a checklist, not a blocker. Invoke this skill WHENEVER the user asks to add, support, or translate the app into a language, or to add a locale or a translation. Not for editing or fixing strings in an existing language (that is the code-style skill).
 ---
 
 # Adding a language to Campfire
@@ -42,23 +42,26 @@ python3 $L preflight <code> --sample "<sample>"
 
 - **Exit 2 (`ABORT` lines): stop.** Make no changes. Tell the user that `<Language>` needs groundwork before it can be
   added, quoting each `ABORT` line, and what that groundwork is:
-  - *fonts*: the app is set only in its bundled Inter and JetBrains Mono (Latin, Greek, Cyrillic); another script needs
-    a font bundled for every platform, credited (root `CLAUDE.md` → Build), and chosen per language in `ui/theme`.
-  - *right to left*: the layout, chord rows over lyrics, the editor, pagers, and the PDF have never run RTL.
-  - *plurals*: the generated `LocalizedStrings.getPlural` picks only `one` (for 1) and `other`, so few/many languages
-    (Russian, Polish, Czech, …) need Campfire's own plural selection first.
-  - *code*: a regional variant, or a language the platforms name two ways (`id`/`in`, `he`/`iw`), needs
-    `ApplyLanguagePreference` / `AppLocale.findByCode` taught to map it.
-- **`NOTE` lines**: carry on, keep them for step 5's brief and the final report. If the note says the plural table
-  does not know the language, apply its rule yourself and stop if it fails.
+  - *fonts*: Inter and JetBrains Mono hold Latin, Greek, and Cyrillic, and `ui/theme/ScriptFaces.kt` one row per other
+    script (Hebrew so far). A script no row covers needs a row there, its face subset by `tools/fonts/script_faces.py`,
+    and credited (root `CLAUDE.md` → Build).
+  - *plurals*: `localization/PluralRules.kt` has no row for the language; its CLDR cardinal rule goes there first,
+    with a test.
+  - *code*: a regional variant, or a retired code (`iw`): the language is added under the code `LanguageCodes` folds
+    to, which also maps what Android reports.
+- **`NOTE` lines**: carry on, keep them for step 5's brief and the final report. A language written from the right
+  gets a `NOTE` with its checklist (the `AppLanguage` direction in step 3, `dir` in step 3's web block, the stores'
+  codes in step 8); everything else about RTL (layout, songs, the editor, the PDF) follows from the direction.
 - **Exit 0**: carry on.
 
 ## 3. Wire the language into the app
 
 Each item is checked by `wiring` in step 7.
 
-1. `data/model/.../preferences/AppLanguage.kt`: add `<ENUM>("<code>"),` after the last language, before
-   `SYSTEM_DEFAULT`.
+1. `data/model/.../preferences/AppLanguage.kt`: add `<ENUM>("<code>", Direction.LEFT_TO_RIGHT),` after the last
+   language, before `SYSTEM_DEFAULT`: `RIGHT_TO_LEFT` for a language written from the right, which is all the
+   interface needs to be laid out from the right. If the preflight's font `NOTE` says so, add the code to its row's
+   `languages` in `ScriptFaces.kt`.
 2. Nothing in `presentation/.../ui/components/preferences/LanguageChoice.kt`: it lists every `AppLanguage`, sorted by
    code.
 3. `.../preferences/AppLanguageNames.kt`: import `…presentation.resources.settings_user_interface_language_<suffix>` and
@@ -82,9 +85,11 @@ Each item is checked by `wiring` in step 7.
      `knownRegions`. New IDs: the same 24 hex digits as the neighbours with a new ending; `grep -c <ID>` must be 0 first.
      Afterwards `plutil -lint` the project, both plists, and both new `.strings` files.
 7. Web, `app/web/src/wasmJsMain/resources/index.html`: add a `<code>: { … }` block to `TEXTS` with every key the
-   `en` block has, translated, and the code to the `navigator.language` alternation (`/^(hu|ro|<code>)\b/i`).
+   `en` block has, translated, and the code to the `navigator.language` alternation (`/^(hu|ro|<code>)\b/i`). A
+   language written from the right starts its block with `dir: 'rtl',`, which the page sets on `<html>`.
+8. `localization/PluralTables.kt`: `AppLocale.<CODE> -> Strings<Xx>.plurals` in the `when` (it does not build without).
 
-8. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>-<region>" />` (lowercase, the region the
+9. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>-<region>" />` (lowercase, the region the
    language's main Partner Center locale has, `de-de`) after the last one. Partner Center then asks for a listing in it,
    which step 5's store listings provide.
 
@@ -127,8 +132,8 @@ Rewrap any line pushed past ~120 columns.
    Its Play title and App Store name become the website's title in the language: if the website already has the
    language (`i18n/<code>.json` of the CampfireWebsite repository), set its `Campfire: Songbook &amp; Chords` entry to
    that name and run its `stamp.py`; if not, say in the report that the website's translation should use it.
-7. If the preflight noted that 0 takes the singular, give each plural that `values-fr` gives a `zero` item one too, on
-   a line of its own after `<plurals>`: the plurals a count of 0 can reach ("Aucune chanson").
+7. Plural items the English lacks are the only lines a translation adds: `strings` checks that each is a category
+   the language's rule picks (or `zero`), and warns about a category most plurals lack.
 
 ### Glossary to fill in
 
@@ -158,9 +163,10 @@ Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, harmonic, melodic, penta
 > Structure (a script checks this): the same lines, keys, order, and blank lines; every XML comment exactly as it is,
 > in English. Keep every placeholder (`%1$s`, `%2$d`, `{completed}`), which you may reorder, and `\n`, `<b>`/`<i>`/`<u>`,
 > ChordPro syntax (`{title}`, `[Am]`), file names, shortcuts (Ctrl+V, ⌘V), and URLs. Quotes: use the language's own
-> quotation marks. Plurals: only the `one` and `other` items the English has; the app picks `one` for 1 and `other`
-> for every other count (0, 2, 5, 20, 100), so write `other` in the form the small counts 2-10 take. Never add `few`,
-> `many`, `zero`, or `two`. <the preflight's plural NOTE, if any>
+> quotation marks. Plurals: the app picks the item by <Language>'s CLDR rule, whose categories are <the preflight's
+> plural NOTE>; write the `one` and `other` items the English has, and add an item of another of those categories
+> (on a line of its own, after `one`) only where it reads differently from `other`. A category without an item reads
+> `other`. A `zero` item, allowed in any language, reads 0 where the sentence is worded apart ("No songs").
 >
 > Language: natural, modern <Language> as a native app localizer writes it, never word for word, with correct
 > diacritics. Address the user <register, with an example sentence>. Buttons and menu items are short imperatives or
@@ -183,7 +189,8 @@ python3 $L strings <code>
 
 Fix every `ERROR`. Read every `WARN`: an English-identical string is fine only for names and symbols, and a `one` item
 without its count is fine only where "1" reads badly. The script checks the keys, their order, comments, placeholders,
-plural items, characters no bundled font can draw, and right-to-left text.
+plural items against the language's rule, characters no bundled face can draw, and right-to-left text in a
+language written from the left.
 
 ## 7. Build and verify
 
@@ -211,4 +218,5 @@ add the language's listing by hand, once, in every console (Play Console, App St
 Partner Center), with its screenshots, before the next release: the release writes every listing's text from the files
 but creates none, so a store without the language fails the release on the missing listing. If the store spells the
 language other than by its ISO 639-1 code (Play's `iw` for Hebrew) or splits it by script (`zh-CN`, `zh-TW`), it needs
-an alias in `.github/scripts/store_listings.py`'s `ALIASES`, and a line in `test_store_listings.py`'s `STORE_LOCALES`.
+an alias in `.github/scripts/store_listings.py`'s `ALIASES` (`wiring` checks it for a retired code), and a line in
+`test_store_listings.py`'s `STORE_LOCALES`. Name each store's code for the language in the report.

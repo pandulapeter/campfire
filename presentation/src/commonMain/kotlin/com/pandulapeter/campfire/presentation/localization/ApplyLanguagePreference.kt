@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.localization
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.intl.Locale
 import com.pandulapeter.campfire.chordpro.language.LanguageCodes
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
@@ -18,13 +17,16 @@ import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 /**
  * Keeps the language of the generated string tables in sync with the user preference. The tables are switched at
  * runtime on every platform, so no restart is needed.
+ *
+ * The switch is made as this is composed rather than in an effect, so everything composed after it in the same pass
+ * (the layout direction `CampfireApp` provides from it, and every string) already reads the new language: an effect runs
+ * after the frame is drawn, and the first frame with the preferences loaded would show the system's language, and an
+ * interface written from the right would be drawn from the left once.
  */
 @Composable
 internal fun ApplyLanguagePreference(language: AppLanguage?) {
-    val systemLanguage = Locale.current.language
-    LaunchedEffect(language, systemLanguage) {
-        currentLanguage.value = resolvedAppLocale(language = language, systemLanguage = systemLanguage)
-    }
+    val resolved = resolvedAppLocale(language = language, systemLanguage = Locale.current.language)
+    if (currentLanguage.value != resolved) currentLanguage.value = resolved
 }
 
 /**

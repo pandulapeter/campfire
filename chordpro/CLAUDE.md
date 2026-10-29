@@ -41,7 +41,7 @@ test are not repeated here. Each package's rules are in its own `CLAUDE.md` (`ch
   code (`iw`) as its replacement, and `isStrongRtl` is the one test of whether a character reads from the right.
   `BidiOrder` is the one bidi reordering (a line's levels, drawn and reading order) and `writingDirectionOf` the one
   vote of a text's letters. `ChordProSong.textDirection` is a song's one direction: right to left where every language
-  it declares is in `RightToLeftLanguages` (the `add-language` skill's `language.py` holds the same list), else by a
+  it declares is in `RightToLeftLanguages` (which the `add-language` skill's `language.py` reads), else by a
   vote of its lyrics' strong letters, a tie left to right.
 
 ## Model and parser
