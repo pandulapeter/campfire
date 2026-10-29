@@ -34,7 +34,7 @@ class PlainTextRoundTripTest {
         val lyrics = song.blocks.filterIsInstance<ChordProBlock.Section>().filter { it.lines.all { line -> line is ChordProLine.Lyrics } }
             .flatMap { it.lines }.filterIsInstance<ChordProLine.Lyrics>()
             .filter { line -> line.chords.isNotEmpty() && line.chords.none { it.isAnnotation || it.isMark } && line.text.firstOrNull()?.isLetter() == true }
-            .filter { line -> fits(line) && line.chords.first().position < line.text.length }
+            .filter { line -> fits(line) && line.chords.first().position < line.text.length && (!isRightToLeft || rightToLeftRows(line) != null) }
         // A row of one chord is as likely a sung word until another row shows the sheet has chords (ChordSheetConverterTest).
         if (lyrics.none { it.chords.size > 1 }) return@forEach
         val sheet = buildString {
@@ -74,9 +74,10 @@ class PlainTextRoundTripTest {
     /**
      * The chord row and the lyric of [line] as a right-to-left display draws them flush right, with each chord over the
      * first letter of its word: ending at a right-to-left letter's right edge, starting at a left-to-right one's left.
-     * Columns are counted from the right edge, so that lines of any length line up.
+     * Columns are counted from the right edge, so that lines of any length line up. Null where a chord would stand past
+     * the right edge, which a plain text cannot show, two chords would touch, or a chord could hang from two letters.
      */
-    private fun rightToLeftRows(line: ChordProLine.Lyrics): String {
+    private fun rightToLeftRows(line: ChordProLine.Lyrics): String? {
         val units = units(line.text)
         val bidi = Bidi(line.text, Bidi.DIRECTION_RIGHT_TO_LEFT)
         val levels = units.map { (start, _) -> bidi.getLevelAt(start).toByte() }.toByteArray()
@@ -91,7 +92,14 @@ class PlainTextRoundTripTest {
             val isRtlLetter = levels[unit] % 2 == 1
             // A right-to-left letter's chord ends at its right edge, a left-to-right one's starts at its left.
             val rightmost = if (isRtlLetter) fromRight[unit] else fromRight[unit] - chord.name.length + 1
-            chord.name.forEachIndexed { offset, character -> cells[rightmost + chord.name.length - 1 - offset] = character }
+            val cellsOfChord = chord.name.indices.map { offset -> rightmost + chord.name.length - 1 - offset }
+            // A chord starting at a letter of one direction and ending at the right edge of one of the other could hang
+            // from either, which no column can tell: such a line says nothing about the converter.
+            val other = if (isRtlLetter) units.indices.filter { levels[it] % 2 == 0 } else units.indices.filter { levels[it] % 2 == 1 }
+            if (other.any { units[it].let { (start, _) -> !line.text[start].isWhitespace() } && fromRight[it] == if (isRtlLetter) cellsOfChord.max() else rightmost }) return null
+            // A chord needs a free column on either side to be read as one.
+            if (cellsOfChord.min() < 0 || (cellsOfChord.min() - 1..cellsOfChord.max() + 1).any { it in cells }) return null
+            chord.name.forEachIndexed { offset, character -> cells[cellsOfChord[offset]] = character }
         }
         // A row's leading spaces are drawn at its right in a right-to-left display, its chords as one left-to-right run.
         val lead = cells.keys.min()

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
 -->
-# Read a Campfire PDF's heading before a second column that starts beside it
+# Read a Campfire PDF's heading before a second column that starts beside it, and a page of one column as one
 
 **Kind:** bug  ·  **Severity:** medium  ·  **Platforms:** all
 **Files:** `data/formats/src/commonMain/kotlin/com/pandulapeter/campfire/data/formats/document/PdfLineLayout.kt`,
@@ -31,6 +31,20 @@ at all. In portrait two columns the same song reads back correctly. `PdfLineLayo
 row it takes for one crossing the gutter (`spanning`) and reads only the bands between those by columns; a band at the
 top seems to be read whole (`rows`) or the heading's rows are taken as spanning. Confirm which before fixing.
 
+The same layout splits a one-column page that has no second column: in this short Hebrew song, the only long line's
+last chord (`G` at x 403, every other line ending right of x 460) is read as a column of its own, extracted before the
+title, and imported as a first line `[G]לילה ומה` while the song loses its title and that chord:
+
+```
+{title: לילה ומה}
+{key: Am}
+{start_of_verse}
+ton[Em]ight עכשיו. הַמַּעֲלוֹת טו[G]ב,
+[G]לילה [C]שִׁיר ומה
+[E7]2 נעים לילה
+{end_of_verse}
+```
+
 ## Fix
 
 Find which rows land in `spanning` for this page (print them in a test). If a heading row is taken for spanning by its
@@ -39,6 +53,8 @@ into the band; if the top band is read by `rows`, make sure a band holding text 
 into columns. Keep a real title set across both columns (a songbook's) read first, which `spanning` exists for.
 
 ## Tests
+
+- Add the song above to `chordpro/src/desktopTest/resources/corpus/` as `60-generated-rtl-10.cho`.
 
 - A `data:formats` test laying out glyphs as above (a 22 pt title and 13 pt rows on the left, two short rows at the top
   of the right column) expects the left column's lines first.
