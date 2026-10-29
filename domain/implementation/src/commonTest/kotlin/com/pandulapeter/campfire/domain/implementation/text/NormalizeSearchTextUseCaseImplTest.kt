@@ -33,6 +33,13 @@ internal class NormalizeSearchTextUseCaseImplTest {
     }
 
     @Test
+    fun `an arabic query finds a word stretched by tatweel or carrying the small marks of a religious text`() {
+        assertEquals(normalizeSearchText("\u0633\u0644\u0627\u0645"), normalizeSearchText("\u0633\u0640\u0644\u0640\u0627\u0645"))
+        assertEquals(normalizeSearchText("\u0645\u062d\u0645\u062f"), normalizeSearchText("\u0645\u062d\u0645\u062f\u0610"))
+        assertEquals(normalizeSearchText("\u0627\u0644\u0644\u0647"), normalizeSearchText("\u0627\u0644\u0644\u0651\u0670\u0647\u06e1"))
+    }
+
+    @Test
     fun `an unpointed hebrew query finds the pointed word`() {
         assertTrue(normalizeSearchText("שָׁלוֹם עֲלֵיכֶם").contains(normalizeSearchText("שלום")))
     }

@@ -28,7 +28,7 @@ internal class NormalizeTextUseCaseImpl : NormalizeTextUseCase {
         var builder: StringBuilder? = null
         for (index in lowercase.indices) {
             val character = lowercase[index]
-            val isCombiningMark = character.isCombiningMark() || character.isFoldableMark()
+            val isCombiningMark = character.isCombiningMark() || character.isFoldableMark() || character.isFoldableFiller()
             val replacement = character.withoutAccent().withBaseLetterForm()
             if (replacement == character && !isCombiningMark) {
                 builder?.append(character)
