@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner_mode_chromatic
 import com.pandulapeter.campfire.presentation.resources.tuner_strings
+import com.pandulapeter.campfire.presentation.ui.components.controls.segmentShape
 
 /**
  * Whether the tuner reads against the instrument's strings or every note: a small segmented row, on the tab under the
@@ -69,7 +70,7 @@ internal fun TunerModeToggle(
                 onClick = { onModeSelected(value) },
                 enabled = isEnabled,
                 colors = colors,
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                shape = segmentShape(index = index, count = options.size),
                 icon = {},
                 contentPadding = TUNER_MODE_TOGGLE_PADDING,
                 label = {

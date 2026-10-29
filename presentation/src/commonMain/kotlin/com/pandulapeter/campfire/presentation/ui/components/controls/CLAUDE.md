@@ -17,6 +17,9 @@ Steppers, choices, chips, and the other small controls the screens and sheets sh
   mark where labels wouldn't fit beside it (judged at the labels' full size); a label shrinks to 75% before it is cut
   (`ShrinkToFit`); `isInline` for the editor's panes. Constraint: "Keyboard", "Sharps (#)", and
   "Előnézet" must be whole at 360dp.
+- **Every segmented button takes `segmentShape`**, never Material's `itemShape` directly: a border keeps its outline
+  until its shape changes, and Compose does not tell it of a new layout direction, so a language switched between
+  left-to-right and right-to-left would leave the end segments' borders rounded on the wrong side.
 - `ColorChoice`: discs that wrap rather than scroll; app's own first, then system's, then hues, gray last. The selection
   is a ring in its own color, since an icon in the middle would read as the color's identity.
 

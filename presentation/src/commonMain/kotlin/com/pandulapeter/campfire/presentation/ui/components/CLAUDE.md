@@ -56,8 +56,9 @@ are cut.
 
 - `Modifier.animatePlacement`: a child of a wrapping row (chips, color discs) travels to where its parent now places it
   instead of jumping, as a resized window or a wider neighbour sends it to another line. Only moves inside the parent
-  travel, so a start-aligned row follows a dragged window edge frame by frame. First in the child's modifiers; never in
-  lazy list items, whose reused nodes would travel from the previous item's places.
+  travel, so a start-aligned row follows a dragged window edge frame by frame; a new layout direction places them at
+  once, as the rest of the screen mirrors. First in the child's modifiers; never in lazy list items, whose reused nodes
+  would travel from the previous item's places.
 
 ### Scrolling performance
 

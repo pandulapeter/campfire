@@ -123,7 +123,7 @@ private fun <T> SegmentedRow(
             selected = value == selected,
             onClick = { onSelected(value) },
             enabled = isEnabled,
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+            shape = segmentShape(index = index, count = options.size),
             icon = if (showsCheckMarks) ({ SegmentedButtonDefaults.Icon(value == selected) }) else ({}),
             contentPadding = contentPadding,
             label = {

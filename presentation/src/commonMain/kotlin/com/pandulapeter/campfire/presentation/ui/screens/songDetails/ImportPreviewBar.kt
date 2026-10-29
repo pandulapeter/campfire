@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_name_take
 import com.pandulapeter.campfire.presentation.resources.import_preview_name_taken_choice
 import com.pandulapeter.campfire.presentation.resources.import_preview_shared_update
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
+import com.pandulapeter.campfire.presentation.ui.components.controls.segmentShape
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
@@ -443,7 +444,7 @@ private fun ResolutionChoice(
         SegmentedButton(
             selected = value == resolution,
             onClick = { onResolutionSelected(value) },
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+            shape = segmentShape(index = index, count = options.size),
             colors = SegmentedButtonDefaults.colors(
                 activeContainerColor = MaterialTheme.colorScheme.primary,
                 activeContentColor = MaterialTheme.colorScheme.onPrimary,

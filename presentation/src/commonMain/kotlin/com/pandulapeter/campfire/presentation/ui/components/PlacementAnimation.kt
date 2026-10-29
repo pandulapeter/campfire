@@ -23,6 +23,7 @@ import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.round
 import kotlinx.coroutines.launch
 
@@ -55,8 +56,16 @@ private class PlacementAnimationNode(
 
     private var position: Animatable<IntOffset, AnimationVector2D>? = null
 
+    private var placedLayoutDirection: LayoutDirection? = null
+
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
         val placeable = measurable.measure(constraints)
+        // A new layout direction (the app's language switched between one written from the left and one written from the
+        // right) mirrors the whole screen at once, so the children of a row are placed where it puts them, not sent across it.
+        if (layoutDirection != placedLayoutDirection) {
+            placedLayoutDirection = layoutDirection
+            position = null
+        }
         // The lookahead pass is where the layout is headed, so it is placed there at once.
         val isLookingAhead = isLookingAhead
         return layout(placeable.width, placeable.height) {

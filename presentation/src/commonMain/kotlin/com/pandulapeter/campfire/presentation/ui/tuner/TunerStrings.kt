@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_sound
 import com.pandulapeter.campfire.presentation.resources.tuner_in_tune
 import com.pandulapeter.campfire.presentation.resources.tuner_string
 import com.pandulapeter.campfire.presentation.resources.tuner_string_pair
+import com.pandulapeter.campfire.presentation.ui.components.controls.segmentShape
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -142,7 +143,7 @@ private fun StringRow(
             },
             selected = isSelected,
             onClick = { onToggleTone(note) },
-            shape = SegmentedButtonDefaults.itemShape(index = index, count = notes.size),
+            shape = segmentShape(index = index, count = notes.size),
             icon = {},
             contentPadding = STRING_CONTENT_PADDING,
         ) {
