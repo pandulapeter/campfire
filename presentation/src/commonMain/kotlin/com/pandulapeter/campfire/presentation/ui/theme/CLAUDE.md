@@ -60,8 +60,9 @@ minimum accounts for it (see `app/desktop`).
 
 ## Icons
 
-Directional icons (back, previous/next song, undo/redo) carry `android:autoMirrored`, which Compose honors on every
-platform for RTL.
+Directional icons (back, previous/next song, undo/redo, sort, sound, log, manage search, open in new, prettify) carry
+`android:autoMirrored`, which Compose honors on every platform for RTL: exactly those whose Material counterpart Material mirrors itself (its
+AutoMirrored icons), so the tag, checklist, and playlist remove icons stay as drawn.
 
 ## Fonts
 
