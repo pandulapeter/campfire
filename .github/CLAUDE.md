@@ -79,13 +79,6 @@ listing text as it is in the console and writes only the notes).
 
 ## The workflows
 
-### `execute-review-plans.yml`
-
-One-time, dispatched by hand: Claude Code (`ANTHROPIC_API_KEY`, capped by the `budget` input) follows
-`documentation/issues/EXECUTION.md` unattended; the workflow then pushes the commits onto `master` (a branch if
-`master` moved meanwhile) and dispatches `tests.yml` on them. The workflow's token cannot push a change under
-`.github/workflows/`, so such a plan is left for a normal checkout. Delete it once the plans have landed.
-
 ### `publish-web.yml`
 
 Builds the distribution and `rsync --delete`s it over `app/` of the `campfire-website` repository
