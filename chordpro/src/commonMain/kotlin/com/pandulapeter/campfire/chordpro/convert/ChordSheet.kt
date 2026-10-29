@@ -35,29 +35,12 @@ public data class ChordSheet(val pages: List<Page>, val originalText: String? = 
     )
 
     public companion object {
+        /**
+         * [text] laid out in character columns, as a monospace display shows it; one whose letters mostly read from the
+         * right as a right-to-left display shows it ([ChordSheetPlainText]).
+         */
         public fun ofPlainText(text: String): ChordSheet = ChordSheet(
-            pages = listOf(Page(text.replace("\r\n", "\n").replace('\r', '\n').split('\n').map { line ->
-                var column = 0
-                val spans = mutableListOf<Span>()
-                var run = StringBuilder()
-                var start = 0
-                fun flush() {
-                    if (run.isNotEmpty()) spans += Span(run.toString(), start.toDouble(), column.toDouble(), isMonospace = true)
-                    run = StringBuilder()
-                }
-                for (character in line) {
-                    if (character.isWhitespace() || character == '\u00a0') {
-                        flush()
-                        column = if (character == '\t') (column / 8 + 1) * 8 else column + 1
-                    } else {
-                        if (run.isEmpty()) start = column
-                        run.append(character)
-                        column++
-                    }
-                }
-                flush()
-                Line(spans)
-            })),
+            pages = listOf(Page(ChordSheetPlainText.lines(text))),
             originalText = text,
         )
     }

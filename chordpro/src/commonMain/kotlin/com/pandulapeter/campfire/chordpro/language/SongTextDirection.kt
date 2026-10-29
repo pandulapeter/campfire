@@ -39,10 +39,17 @@ public val ChordProSong.textDirection: WritingDirection
     }
 
 /**
+ * The direction most of [text]'s strong letters are read in, a tie (no letters among them) left to right: how a line or
+ * a page of text whose direction nobody declared is read, a PDF's or a plain-text chord sheet's.
+ */
+public fun writingDirectionOf(text: CharSequence): WritingDirection =
+    if (strongLetterBalanceOf(text) > 0) WritingDirection.RIGHT_TO_LEFT else WritingDirection.LEFT_TO_RIGHT
+
+/**
  * How many more strong right-to-left characters [text] holds than letters read from the left. A letter outside the
  * right-to-left blocks is a left-to-right one (Latin, Greek, Cyrillic, CJK); marks, digits, and punctuation are neither.
  */
-private fun strongLetterBalanceOf(text: String): Int {
+private fun strongLetterBalanceOf(text: CharSequence): Int {
     var balance = 0
     var index = 0
     while (index < text.length) {

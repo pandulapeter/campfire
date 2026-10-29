@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.chordpro.language.isStrongRtl
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -38,7 +40,8 @@ internal object PdfLineLayout {
             val (left, right) = items.partition { it.span.start < gutter }
             if (left.isEmpty() || right.isEmpty()) return rows(items, charge)
             // A page of right-to-left text is read from its right column, as Campfire's export fills a Hebrew song's.
-            val (first, second) = if (isMostlyRightToLeft(items)) right to left else left to right
+            val isRightToLeft = writingDirectionOf(items.joinToString("") { it.span.text }) == WritingDirection.RIGHT_TO_LEFT
+            val (first, second) = if (isRightToLeft) right to left else left to right
             return buildLines(first, charge) + buildLines(second, charge)
         }
         // The rows are cut out of one sorted pass rather than by filtering every glyph again for each of them, which is the
@@ -57,32 +60,21 @@ internal object PdfLineLayout {
         return result
     }
 
-    /** Whether more of the letters of [items] read from the right than from the left. */
-    private fun isMostlyRightToLeft(items: List<Positioned>): Boolean {
-        var balance = 0
-        items.forEach { item ->
-            item.span.text.forEach { character ->
-                when {
-                    isStrongRtl(character.code) -> balance++
-                    character.isLetter() -> balance--
-                }
-            }
-        }
-        return balance > 0
-    }
-
     /**
      * [items] set into lines by their baselines alone, with no column searched for: how a header or a footer reads, its
-     * parts at both margins on one line.
+     * parts at both margins on one line. A line holding right-to-left text is put into reading order ([PdfBidi]), in the
+     * direction the side it is aligned to among [items] says, else the one most letters of their lines that are not chord
+     * rows read in: a Hebrew sheet's chord names would otherwise outvote its lyrics.
      */
     fun rows(items: List<Positioned>, charge: (Int) -> Unit): List<Line> {
+        if (items.isEmpty()) return emptyList()
         val groups = mutableListOf<MutableList<Positioned>>()
         for (glyph in items.sortedBy { it.y }) {
             val group = groups.lastOrNull()
             if (group == null || abs(group.first().y - glyph.y) > minOf(group.first().span.size, glyph.span.size) * 0.22) groups += mutableListOf(glyph)
             else group += glyph
         }
-        return groups.map { group ->
+        val lines = groups.map { group ->
             val spans = mutableListOf<ExtractedDocument.Span>()
             for (glyph in group.sortedBy { it.span.start }) {
                 val previous = spans.lastOrNull()
@@ -99,6 +91,12 @@ internal object PdfLineLayout {
             }
             Line(spans, group.first().y)
         }
+        val column = PdfBidi.Column(
+            left = items.minOf { it.span.start },
+            right = items.maxOf { it.span.end },
+            direction = writingDirectionOf(lines.map { it.text }.filterNot(ChordSheetConverter::isChordLine).joinToString("\n")),
+        )
+        return lines.map { line -> line.copy(spans = PdfBidi.readingOrder(line.spans, column)) }
     }
 
     /**

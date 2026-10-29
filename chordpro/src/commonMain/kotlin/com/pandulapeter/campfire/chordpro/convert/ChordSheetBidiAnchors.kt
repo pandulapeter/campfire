@@ -13,11 +13,12 @@ import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import kotlin.math.abs
 
 /**
- * Where each character of a row of Campfire's own export that holds right-to-left text is drawn. The export writes such
- * a row as one text in its reading order ([ChordSheet.Span.pieces] being its glyphs), which runs leftwards and, around a
- * Latin word, rightwards again, so its characters' positions no longer grow with their index: a chord is set on the
- * character it hangs from as the export hangs it, a right-to-left letter's chord ending at the letter's right edge and a
- * left-to-right one's starting at its left.
+ * Where each character of a row that holds right-to-left text is drawn. Campfire's export writes such a row as one text
+ * in its reading order, and the import puts another producer's glyphs, or a plain text's columns, into that order too
+ * ([ChordSheet.Span.pieces] being its glyphs), which runs leftwards and, around a Latin word, rightwards again, so its
+ * characters' positions no longer grow with their index: a chord is set on the character it hangs from as the export
+ * hangs it, a right-to-left letter's chord ending at the letter's right edge and a left-to-right one's starting at its
+ * left.
  */
 internal class ChordSheetBidiAnchors private constructor(
     private val left: DoubleArray,
@@ -94,22 +95,38 @@ internal class ChordSheetBidiAnchors private constructor(
         }
     }
 
-    private companion object {
+    internal companion object {
+        /**
+         * Where each character of [rendered], what [span] renders as, starts where the span is written in reading order
+         * over its glyphs ([ChordSheet.Span.pieces]), so that a chord row or a lyric so written is placed by them; null
+         * where the span has no pieces or they no longer map onto what it renders.
+         */
+        fun starts(span: ChordSheet.Span, rendered: String): DoubleArray? {
+            if (span.pieces.isEmpty() || span.pieces.sumOf { it.text.length } != rendered.length) return null
+            val starts = DoubleArray(rendered.length)
+            var index = 0
+            span.pieces.forEach { piece ->
+                val width = (piece.end - piece.start) / piece.text.length.coerceAtLeast(1)
+                repeat(piece.text.length) { starts[index++] = piece.start + it * width }
+            }
+            return starts
+        }
+
         /**
          * Which edge a chord on [character] may hang from: a right-to-left letter's right, a left-to-right one's left
          * (a digit's too), and either for a space or a mark, which takes the direction of what is around it.
          */
-        fun classOf(character: Char) = when {
+        private fun classOf(character: Char) = when {
             isStrongRtl(character.code) -> RIGHT_TO_LEFT
             character.isLetterOrDigit() -> LEFT_TO_RIGHT
             else -> NEUTRAL
         }
 
         /** How far short of its edge the export's rounded width leaves a chord hanging leftwards, at most. */
-        const val ROUNDING = 1.0
+        private const val ROUNDING = 1.0
 
-        const val NEUTRAL = 0
-        const val LEFT_TO_RIGHT = 1
-        const val RIGHT_TO_LEFT = 2
+        private const val NEUTRAL = 0
+        private const val LEFT_TO_RIGHT = 1
+        private const val RIGHT_TO_LEFT = 2
     }
 }

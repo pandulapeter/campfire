@@ -163,7 +163,7 @@ public object ChordSheetConverter {
         /** What the layout of Campfire's own export says the line is, where the sheet is one ([isCampfire]). */
         val role: ChordSheetCampfireLayout.Role? = null,
         val isCampfire: Boolean = false,
-        /** Where the chords over a row of Campfire's own export holding right-to-left text hang from. */
+        /** Where the chords over a row holding right-to-left text in reading order hang from. */
         val bidi: ChordSheetBidiAnchors? = null,
     )
     private data class Token(val text: String, val index: Int)
@@ -201,7 +201,7 @@ public object ChordSheetConverter {
     private fun render(line: ChordSheet.Line, normalize: (String) -> String, dropsPadding: Boolean = false): Rendered {
         val text = StringBuilder()
         val positions = Positions(line.spans.sumOf { it.text.length })
-        val bidi = if (dropsPadding) ChordSheetBidiAnchors.Builder() else null
+        val bidi = if (line.spans.any { it.pieces.isNotEmpty() }) ChordSheetBidiAnchors.Builder() else null
         var previous: ChordSheet.Span? = null
         for (span in line.spans) {
             val value = normalize(clean(if (dropsPadding) span.text.filterNot { it == ChordSheetCampfireLayout.PADDING } else span.text))
@@ -223,8 +223,10 @@ public object ChordSheetConverter {
                     }
                 }
             }
-            value.forEachIndexed { index, c -> text.append(c); positions.add(span.start + index * width) }
-            bidi?.span(span, { if (it == ChordSheetCampfireLayout.PADDING) "" else clean(it.toString()) }, value, width)
+            // A span written in reading order over glyphs drawn otherwise has its characters where its glyphs are.
+            val drawn = ChordSheetBidiAnchors.starts(span, value)
+            value.forEachIndexed { index, c -> text.append(c); positions.add(drawn?.get(index) ?: (span.start + index * width)) }
+            bidi?.span(span, { if (dropsPadding && it == ChordSheetCampfireLayout.PADDING) "" else clean(it.toString()) }, value, width)
             previous = span
         }
         val result = text.toString().trimEnd()
@@ -908,6 +910,9 @@ public object ChordSheetConverter {
         // Campfire's own export sets a chord exactly over the character it is sung on, or right after the line's last one,
         // so where it stands is read as it is rather than moved to the nearest word.
         val lyricsEnd = lyrics.source.spans.lastOrNull { it.text.isNotBlank() }?.end
+        // Another producer than Campfire hangs a chord from its syllable by eye, or by the columns of a plain text, so
+        // the edge it hangs from is looked for within an em of the lyric's type rather than at the export's exact point.
+        val bidiTolerance = if (lyrics.isCampfire) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
         var isAttachedAtEnd = false
         for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) } + notes).sortedBy { it.index }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
@@ -915,8 +920,7 @@ public object ChordSheetConverter {
             val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
             // order they are read off the chord row, which is left to right.
-            val bidi = lyrics.bidi?.takeIf { lyrics.isCampfire }
-                ?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = EXACT_POSITION)
+            val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
             if (bidi != null) {
                 at = bidi
                 if (at == lyrics.text.length) isAttachedAtEnd = true

@@ -466,6 +466,23 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a right-to-left plain text sets each chord where a right-to-left display shows it, not at its character's index`() {
+        // "הנה מה טוב ומה נעים" under "Dm         Am": shown from the right, the chords and the spaces between them are one
+        // left-to-right run, so Am stands over the first word and Dm over the fourth, the other way round from their
+        // indices in the row.
+        val lyric = "\u05d4\u05e0\u05d4 \u05de\u05d4 \u05d8\u05d5\u05d1 \u05d5\u05de\u05d4 \u05e0\u05e2\u05d9\u05dd"
+        val result = convert("Dm         Am\n$lyric")
+        assertTrue("[Am]\u05d4\u05e0\u05d4 \u05de\u05d4 \u05d8\u05d5\u05d1 [Dm]\u05d5\u05de\u05d4" in result, result)
+    }
+
+    @Test
+    fun `a Latin word's chord in a right-to-left plain text stands at the word's left edge`() {
+        // "שבת אחים (Psalm 133)" shown from the right: "(Psalm 133)" left of the Hebrew words, E typed over its P.
+        val result = convert("E                Am\n\u05e9\u05d1\u05ea \u05d0\u05d7\u05d9\u05dd (Psalm 133)")
+        assertTrue("[Am]\u05e9\u05d1\u05ea \u05d0\u05d7\u05d9\u05dd ([E]Psalm 133)" in result, result)
+    }
+
+    @Test
     fun `derives plain title and expands tabs`() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))

@@ -46,6 +46,22 @@ class DocumentGoldenTest {
     }
 
     @Test
+    fun `other producers' right-to-left lines drawn from the left import in reading order with their chords`() = runBlocking {
+        for (name in listOf("reportlab-hebrew.pdf", "chrome-hebrew.pdf")) {
+            val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(name, resource(name))), name)
+            val result = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
+            assertEquals(resource("${name.substringBeforeLast('.')}.cho").decodeToString(), result.joinToString("{new_song}\n"), name)
+        }
+    }
+
+    @Test
+    fun `a right-to-left plain-text sheet sets its chords where a right-to-left display shows them, as its PDF does`() {
+        val text = resource("chrome-hebrew.txt").decodeToString()
+        val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(text), String::normalizedToNfc)
+        assertEquals(resource("chrome-hebrew.cho").decodeToString(), result.joinToString("{new_song}\n"))
+    }
+
+    @Test
     fun `campfire export imports both columns as one song in reading order`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns.pdf", resource("campfire-columns.pdf"))))
         val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +

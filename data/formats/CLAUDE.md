@@ -45,6 +45,12 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   logical order. The glyphs stay on the span as its `pieces` where they spell its text in order, as Campfire's do, so
   the converter can still tell where each character is drawn. One spanning several baselines (a hyphenated word) is
   ignored.
+- Other producers draw right-to-left text from the left, glyph by glyph, so `PdfBidi` puts a line holding it back
+  into reading order (a subset of UAX #9, `:chordpro`'s `BidiOrder`, runs found by `isStrongRtl`, so any right-to-left
+  script): the line becomes one span over its glyphs as `pieces`, as an `ActualText` does, and a line that has one is
+  left alone. A line's direction is the side of its column it is aligned to, else its column's letters, chord rows
+  left out. A mirrored bracket is read either as the glyph drawn (ReportLab) or as the character it stands for
+  (Chrome), whichever pairs the line's brackets up; a mark goes with the letter it is drawn over.
 - Page, operator, and work yields keep the web build responsive.
 
 ## `zip/`

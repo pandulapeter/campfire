@@ -9,8 +9,8 @@
 -->
 # Document regression fixtures
 
-The text is the opening line of John Newton's public-domain Amazing Grace, with deliberately simple chord
-positions. Fixtures are actual independent-producer files, not the test-only Kotlin PDF writer. Adjacent `.cho`
+The text is the opening line of John Newton's public-domain Amazing Grace (the Hebrew fixtures: Psalm 133:1, also in
+the public domain), with deliberately simple chord positions. Fixtures are actual independent-producer files, not the test-only Kotlin PDF writer. Adjacent `.cho`
 files pin the conversion; `DocumentGoldenTest` reads the bytes and also checks deterministic repeat conversion.
 The test does not regenerate them or require any producer application.
 
@@ -28,6 +28,8 @@ The test does not regenerate them or require any producer application.
 | `campfire-columns.pdf` | Campfire `PrintRendererTest`, thirty numbered lyric/chord pairs flowing through both columns; song reading order and no page footer in the imported lyrics |
 | `campfire-columns-3-landscape.pdf`, `campfire-columns-4.pdf`, `campfire-columns-4-landscape.pdf` | Campfire `PrintRendererTest`, short numbered pairs through three and four columns, the last holding only a few (one in the three); every column in reading order |
 | `campfire-columns-dense.pdf` | Campfire `PrintRendererTest`, four portrait columns of 20-point text wrapped to their edges over three pages, so that the gutter is barely wider than the importer's band; reading order and every single bold chord over its syllable, a wrapped line being imported as the lines it was printed as |
+| `reportlab-hebrew.pdf` | ReportLab with embedded Arial, a Hebrew sheet (Psalm 133:1, public domain) drawn in visual order with no `ActualText`, brackets mirrored as glyphs, a Latin line left-aligned among right-aligned Hebrew ones |
+| `chrome-hebrew.pdf`, `chrome-hebrew.txt` | Chrome headless print of `chrome-hebrew.html`, the same sheet as plain text in a `<pre dir="rtl">`, laid out by Chrome's own bidi engine (visual order under `ReversedChars`, brackets named by the character); the `.txt` is that plain text, which converts to the same golden |
 | `campfire-hebrew.pdf`, `campfire-hebrew-columns.pdf` | Campfire `PrintRendererTest`, a Hebrew song laid out from the right, its rows written in reading order under `ActualText`, a Latin word's chord among the Hebrew ones; and thirty Hebrew pairs through two columns filled from the right |
 
 `generate_fixtures.py` creates the python-docx, ReportLab and pypdf files using those Python libraries. It sets
@@ -41,7 +43,10 @@ soffice --headless --convert-to docx --outdir /tmp/campfire-word python-docx.doc
 soffice --headless --convert-to pdf --outdir /tmp/campfire-pdf python-docx.docx
 ```
 
-Name the actual resulting exports `libreoffice.docx` and `libreoffice.pdf`. Chrome uses the checked-in HTML:
+Name the actual resulting exports `libreoffice.docx` and `libreoffice.pdf`. `generate_hebrew_fixtures.py` (ReportLab,
+macOS's supplemental Arial) writes `reportlab-hebrew.pdf`, `chrome-hebrew.txt`, and `chrome-hebrew.html`; no freely
+licensed Hebrew chord sheet from another app was found, so these stand in for one. Chrome uses the checked-in HTML
+(`chrome-hebrew.html` likewise, into `chrome-hebrew.pdf`):
 
 ```sh
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \

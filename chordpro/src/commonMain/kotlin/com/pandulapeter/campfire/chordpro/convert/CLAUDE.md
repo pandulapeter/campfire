@@ -21,6 +21,14 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   are told by the test the export engraves by. A row holding right-to-left text arrives as one span in reading order
   over its glyphs (`ChordSheet.Span.pieces`), and its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`): a
   Hebrew letter's chord ends at its right edge, a Latin one's starts at its left. A wrapped tab system comes back as the system it was printed as.
+- Any row with `pieces` is matched by those edges (another producer's PDF, put into reading order by `:data:formats`),
+  within an em of the lyric rather than the export's exact point.
+- **A plain text whose letters mostly read from the right is laid out as a right-to-left display shows it**
+  (`ChordSheetPlainText`, chord rows left out of the vote): every line flush right, a line not shown in reading order
+  written over its columns as `pieces`, so its chords are matched like a PDF's. Its chord rows align visually, not
+  logically: a row of two chords or more is one left-to-right run in that display, drawn from its left end, so read by
+  index its chords would land in the opposite order. `chrome-hebrew` in `:data:source:local:implementation`'s document
+  fixtures shows it: Chrome's print of the sheet in a `<pre dir="rtl">` and the plain text give the same song.
 - A document is cut into songs by `ChordSheetPageSplit`: a later page opens a song only with a title in the type of
   the document's first one (a bold title of the body's size not followed by more bold lyrics, which is a chorus), and
   a page repeating the current song's title continues it, the repetition left out where it is marked (`(cont.)`, a

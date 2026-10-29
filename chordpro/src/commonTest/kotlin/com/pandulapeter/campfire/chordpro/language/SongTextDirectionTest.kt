@@ -75,4 +75,11 @@ class SongTextDirectionTest {
         }
         listOf("en", "hu", "ro", "id", "in", "tr", "ku").forEach { assertFalse(RightToLeftLanguages.contains(it), it) }
     }
+
+    @Test
+    fun `a text's direction is that of most of its letters`() {
+        assertEquals(WritingDirection.RIGHT_TO_LEFT, writingDirectionOf("Am  G\nשבת אחים גם יחד (Psalm 133)"))
+        assertEquals(WritingDirection.LEFT_TO_RIGHT, writingDirectionOf("Hine ma tov (מה טוב)"))
+        assertEquals(WritingDirection.LEFT_TO_RIGHT, writingDirectionOf("12:30"))
+    }
 }
