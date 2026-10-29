@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -40,7 +41,8 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * [composition] drawn at a density of its scale, so that a dp is a pixel of it as laid out: its background, then its
  * elements back to front, a screen showing the render of its slot in [screens] in a light frame where [lightSlots] has
- * its slot, and a caption its text in [texts], the image's language's.
+ * its slot, and a caption its text in [texts], the image's language's, set from the right where [isRightToLeft]. The
+ * layout is never mirrored, since every element is placed by its offset from the left.
  */
 @Composable
 internal fun CompositionImage(
@@ -48,6 +50,7 @@ internal fun CompositionImage(
     screens: Map<Int, ImageBitmap>,
     lightSlots: Set<Int>,
     texts: Map<String, ListingText>,
+    isRightToLeft: Boolean,
 ) = Box(modifier = Modifier.fillMaxSize().drawBehind { drawRect(composition.background.brush(size.width, size.height)) }) {
     composition.elements.forEach { element ->
         Box(
@@ -85,6 +88,7 @@ internal fun CompositionImage(
                         fontSize = with(LocalDensity.current) { element.size.dp.toSp() },
                         letterSpacing = (-0.05).em,
                         textAlign = TextAlign.Center,
+                        textDirection = if (isRightToLeft) TextDirection.Rtl else TextDirection.Ltr,
                     ),
                 )
             }

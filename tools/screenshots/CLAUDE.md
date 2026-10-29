@@ -40,7 +40,10 @@ set holds the app's UI tests.
 - Fonts: the app is drawn in the fonts it bundles, as on every platform. Only the system chrome around it takes the
   platform's: Roboto (Android, ChromeOS), Open Sans (Windows; Segoe UI's license keeps it on Windows), the Mac's own SF
   (Apple). The build downloads the two into `build/fonts`, each pinned to a commit and checked against its SHA-256 in
-  `build.gradle.kts` — updating one means a new commit address and a new checksum.
+  `build.gradle.kts` — updating one means a new commit address and a new checksum. The framing's scenes are not the
+  app's, so they run `ProvideScriptFaces` themselves (Inter has no Hebrew) and set a right-to-left language's texts
+  from the right (`TextDirection`), never its layout: every element is placed by its offset from the left, and the
+  chips stay at their corners, only a chip's own row is mirrored.
 - **Nothing reaches outside** (`Fakes.kt`): sync shows a connected account and runs nothing, the metronome is silent and
   lights only the beat a shot asks for, the tuner (`ScriptedTuner`) hears only scripted readings, the file picker
   writes nothing. Covers come from the copied cache.

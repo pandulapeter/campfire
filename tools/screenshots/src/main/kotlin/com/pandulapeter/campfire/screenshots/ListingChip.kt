@@ -19,15 +19,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.em
 import com.pandulapeter.campfire.presentation.ui.theme.interFontFamily
 import org.jetbrains.compose.resources.DrawableResource
@@ -56,7 +61,8 @@ internal class ListingChip(
 }
 
 /**
- * [chip] drawn with its text [fontSize] high, the measure everything else in it is a share of, light or dark ([isLight]).
+ * [chip] drawn with its text [fontSize] high, the measure everything else in it is a share of, light or dark ([isLight]),
+ * its icon ahead of its text from the right where [isRightToLeft].
  */
 @Composable
 internal fun ListingChipPill(
@@ -64,12 +70,29 @@ internal fun ListingChipPill(
     chip: ListingChip,
     fontSize: Dp,
     isLight: Boolean,
+    isRightToLeft: Boolean,
 ) {
     val accent = when (chip.accent) {
         ListingChip.Accent.ORANGE -> if (isLight) Color(0xFFD9650B) else Color(0xFFFE851E)
         ListingChip.Accent.LILAC -> if (isLight) Color(0xFF6750A4) else Color(0xFFD0BCFF)
     }
     val shape = RoundedCornerShape(fontSize * 0.92f)
+    // Only the pill's own row is mirrored: the chips are placed at absolute corners, whatever the language.
+    CompositionLocalProvider(LocalLayoutDirection provides if (isRightToLeft) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+        ListingChipRow(modifier = modifier, chip = chip, fontSize = fontSize, isLight = isLight, isRightToLeft = isRightToLeft, accent = accent, shape = shape)
+    }
+}
+
+@Composable
+private fun ListingChipRow(
+    modifier: Modifier,
+    chip: ListingChip,
+    fontSize: Dp,
+    isLight: Boolean,
+    isRightToLeft: Boolean,
+    accent: Color,
+    shape: Shape,
+) {
     Row(
         modifier = modifier
             .rotate(if (chip.corner.isStart == chip.corner.isTop) -2f else 2f)
@@ -94,6 +117,8 @@ internal fun ListingChipPill(
                 fontSize = with(LocalDensity.current) { fontSize.toSp() },
                 letterSpacing = (-0.02).em,
                 lineHeight = 1.15.em,
+                // A Hebrew chip that starts with a Latin word ("Campfire …") would otherwise take its base direction from it.
+                textDirection = if (isRightToLeft) TextDirection.Rtl else TextDirection.Ltr,
             ),
         )
     }

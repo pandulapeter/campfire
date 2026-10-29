@@ -12,9 +12,12 @@ package com.pandulapeter.campfire.screenshots
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.Density
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.theme.ProvideScriptFaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.skia.Image
 import java.io.File
 
@@ -41,7 +44,7 @@ internal suspend fun frameListing(renders: File, texts: File, output: File): Int
                 }
                 val file = File(output, "${canvas.store}/$language/${canvas.name}-${index + 1}.png")
                 file.parentFile.mkdirs()
-                file.writeBytes(encodeImage(image = frame(canvas = canvas, shot = shot, text = text, screen = Image.makeFromEncoded(source.readBytes())), extension = "png"))
+                file.writeBytes(encodeImage(image = frame(canvas = canvas, shot = shot, text = text, language = language, screen = Image.makeFromEncoded(source.readBytes())), extension = "png"))
             }
             println("framed ${device.folder} / $language")
         }
@@ -49,24 +52,31 @@ internal suspend fun frameListing(renders: File, texts: File, output: File): Int
     return missing
 }
 
-/** One listing image of [shot] on [canvas], with [text]'s headline and chips around [screen]. */
-private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, screen: Image): Image {
+/**
+ * One listing image of [shot] on [canvas], with [text]'s headline and chips around [screen], in [language] (its id). The
+ * bundled script faces are registered as the app's own renders register them, since Inter has no Hebrew.
+ */
+private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, language: String, screen: Image): Image {
     val styles = listingChipStyles[shot.id].orEmpty()
     require(styles.size == text.chips.size) { "${shot.id} has ${text.chips.size} chip texts for ${styles.size} chips." }
     val bitmap = screen.toComposeImageBitmap()
+    val isRightToLeft = isRightToLeft(language)
     val scene = ImageComposeScene(
         width = canvas.widthPx,
         height = canvas.heightPx,
         density = Density(1f),
         coroutineContext = Dispatchers.Main,
     ) {
-        ListingImage(
-            headline = if (canvas.isLandscape) text.headline.replace('\n', ' ') else text.headline,
-            frame = canvas.frame,
-            screen = bitmap,
-            isLight = shot.uiMode == UserPreferences.UiMode.LIGHT,
-            chips = text.chips.zip(styles) { chip, style -> ListingChip(chip, style.icon, style.accent, style.corner) },
-        )
+        ProvideScriptFaces(neededScriptFaces = emptyFlow()) {
+            ListingImage(
+                headline = if (canvas.isLandscape) text.headline.replace('\n', ' ') else text.headline,
+                frame = canvas.frame,
+                screen = bitmap,
+                isLight = shot.uiMode == UserPreferences.UiMode.LIGHT,
+                chips = text.chips.zip(styles) { chip, style -> ListingChip(chip, style.icon, style.accent, style.corner) },
+                isRightToLeft = isRightToLeft,
+            )
+        }
     }
     // The bundled fonts and icons load after the first frame.
     var time = 0L
@@ -81,5 +91,9 @@ private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, 
         scene.close()
     }
 }
+
+/** Whether the language whose id is [language] is set from the right. */
+internal fun isRightToLeft(language: String) =
+    AppLanguage.entries.first { it.id == language }.layoutDirection == AppLanguage.Direction.RIGHT_TO_LEFT
 
 private const val LOADING_FRAMES = 30

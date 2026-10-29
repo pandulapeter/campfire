@@ -24,7 +24,8 @@ import kotlin.math.roundToInt
  * bottom, covering nothing. Elsewhere it sits across the frame's top or bottom edge, half outside it, its outer end as
  * near the canvas's side as the inset allows, so that it covers as little of the screen as it can. A chip alone on its
  * edge may take nearly all of it; two on one edge keep their natural widths where both fit, and where they do not, the
- * shorter keeps its own up to half the edge and the longer wraps in what is left.
+ * shorter keeps its own up to half the edge and the longer wraps in what is left. The corners are the same in every
+ * language, [isRightToLeft] only sets the chips' text from the right.
  */
 @Composable
 internal fun ListingChips(
@@ -34,9 +35,10 @@ internal fun ListingChips(
     frame: DpRect,
     inset: Dp,
     isLight: Boolean,
+    isRightToLeft: Boolean,
 ) = Layout(
     modifier = modifier,
-    content = { chips.forEach { ListingChipPill(chip = it, fontSize = fontSize, isLight = isLight) } },
+    content = { chips.forEach { ListingChipPill(chip = it, fontSize = fontSize, isLight = isLight, isRightToLeft = isRightToLeft) } },
 ) { measurables, constraints ->
     val insetPx = inset.roundToPx()
     val left = frame.left.roundToPx()

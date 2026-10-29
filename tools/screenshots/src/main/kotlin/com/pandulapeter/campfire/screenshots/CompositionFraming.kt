@@ -14,8 +14,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.Density
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.theme.ProvideScriptFaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.skia.Image
 import org.jetbrains.skia.Rect
 import org.jetbrains.skia.Surface
@@ -49,6 +51,7 @@ internal suspend fun frameCompositions(renders: File, texts: File, output: File,
                 screens = sources.mapValues { (_, file) -> Image.makeFromEncoded(file.readBytes()).toComposeImageBitmap() },
                 lightSlots = slots.filter { banner?.slots?.get(it)?.second?.uiMode == UserPreferences.UiMode.LIGHT }.toSet(),
                 texts = byLanguage[language].orEmpty(),
+                isRightToLeft = isRightToLeft(language),
             )
             val partWidth = image.width / composition.outputs.size
             composition.outputs.forEachIndexed { index, target ->
@@ -62,14 +65,23 @@ internal suspend fun frameCompositions(renders: File, texts: File, output: File,
     return missing
 }
 
-private suspend fun draw(composition: Composition, screens: Map<Int, ImageBitmap>, lightSlots: Set<Int>, texts: Map<String, ListingText>): Image {
+/** [composition]'s image, with the bundled script faces registered as the app's own renders register them, since Inter has no Hebrew. */
+private suspend fun draw(
+    composition: Composition,
+    screens: Map<Int, ImageBitmap>,
+    lightSlots: Set<Int>,
+    texts: Map<String, ListingText>,
+    isRightToLeft: Boolean,
+): Image {
     val scene = ImageComposeScene(
         width = (composition.widthPx * composition.scale).roundToInt(),
         height = (composition.heightPx * composition.scale).roundToInt(),
         density = Density(composition.scale),
         coroutineContext = Dispatchers.Main,
     ) {
-        CompositionImage(composition = composition, screens = screens, lightSlots = lightSlots, texts = texts)
+        ProvideScriptFaces(neededScriptFaces = emptyFlow()) {
+            CompositionImage(composition = composition, screens = screens, lightSlots = lightSlots, texts = texts, isRightToLeft = isRightToLeft)
+        }
     }
     // The bundled fonts and the mark load after the first frame.
     var time = 0L

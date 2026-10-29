@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.em
@@ -45,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.interFontFamily
  * what the screen shows ([ListingChips]), at 80% of the headline's size on every canvas, so that both read as the same
  * size from one device's images to the next. Room for half of a chip of two lines is kept above and below the frame
  * whether a shot has chips there or not, so that every image of a row has its device at the same size and place.
+ * Where [isRightToLeft], the texts are set from the right; the layout itself is never mirrored.
  */
 @Composable
 internal fun ListingImage(
@@ -53,6 +55,7 @@ internal fun ListingImage(
     screen: ImageBitmap,
     isLight: Boolean,
     chips: List<ListingChip>,
+    isRightToLeft: Boolean,
 ) = BoxWithConstraints(
     modifier = Modifier
         .fillMaxSize()
@@ -94,6 +97,7 @@ internal fun ListingImage(
                 lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
                 lineBreak = LineBreak.Heading,
                 textAlign = TextAlign.Center,
+                textDirection = if (isRightToLeft) TextDirection.Rtl else TextDirection.Ltr,
             ),
         )
     }
@@ -112,6 +116,7 @@ internal fun ListingImage(
         inset = margin * 0.3f,
         // The chips take the other theme than the screen's, so that they stand apart from the app's own controls.
         isLight = !isLight,
+        isRightToLeft = isRightToLeft,
     )
 }
 
