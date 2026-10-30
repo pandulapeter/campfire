@@ -170,6 +170,7 @@ internal class PrintRenderer(
             if (!item.isSelectable) continue
             val layout = pageLayouts[run]
             val padding = item.text.paddingRuns()
+            var isContinuationMarked = !item.isContinuation
             var offset = 0
             while (offset < item.text.length) {
                 if (++characters % 256 == 0) yield()
@@ -191,13 +192,17 @@ internal class PrintRenderer(
                 // spaces they are, and only the padding as the no-break spaces it is, which the import leaves out of the
                 // words it reads back.
                 val value = buildString {
+                    if (!isContinuationMarked) append(CONTINUATION_MARK)
                     for (index in start until offset) when (val character = item.text[index]) {
                         '\u200B', '\u200E', '\u200F', '\u2066', '\u2067', '\u2068', '\u2069', PADDING_MARK -> Unit
                         PADDING -> append(if (padding[index]) PADDING else ' ')
                         else -> append(character)
                     }
                 }
-                if (value.isNotEmpty()) add(PrintPdfText(value, item.x + box.left, item.y + box.top,
+                // A cluster of nothing but the chord layout's marks is left out, and a continuation's mark waits for the next.
+                if (value.isEmpty() || value.length == 1 && value[0] == CONTINUATION_MARK) continue
+                isContinuationMarked = true
+                add(PrintPdfText(value, item.x + box.left, item.y + box.top,
                     box.width.coerceAtLeast(0.001f), box.height.coerceAtLeast(0.001f), item.style, run,
                     isRtl = layout.getBidiRunDirection(start) == ResolvedTextDirection.Rtl))
             }
@@ -272,6 +277,9 @@ internal fun printGray(argb: Int): Int {
     val blue = argb and 255
     return (299 * red + 587 * green + 114 * blue) / 1000
 }
+
+/** What the selectable text of a lyric row continuing the one above opens with ([PrintText.isContinuation]): a word joiner. */
+private const val CONTINUATION_MARK = '\u2060'
 
 /** Which characters of a padded lyric are padding: the no-break spaces after a [PADDING_MARK]. */
 private fun String.paddingRuns() = BooleanArray(length).also { runs ->

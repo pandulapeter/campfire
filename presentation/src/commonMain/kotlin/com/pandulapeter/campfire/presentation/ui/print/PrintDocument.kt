@@ -194,6 +194,9 @@ internal data class PrintStyle(
  *   bold word that is a chord name back as a chord.
  * @property isDrawn False for a text that is only in the selectable text: engraved tablature is drawn as figures and
  *   rules, and its lines reach the text layer as the file has them, under the drawing.
+ * @property isContinuation True for the rest of a lyric the column was too narrow for, wrapped onto a row of its own at a
+ *   space: its selectable text opens with a word joiner, which no reader shows, so that the import joins it back to the
+ *   line it continues rather than reading a line break the song never had.
  */
 internal data class PrintText(
     val text: String,
@@ -203,6 +206,7 @@ internal data class PrintText(
     val isSelectable: Boolean = true,
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
     val isDrawn: Boolean = true,
+    val isContinuation: Boolean = false,
 )
 
 /** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */

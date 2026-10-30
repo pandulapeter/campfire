@@ -53,7 +53,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   name would become a chord.
 - Lyrics are padded under wide chords with marked runs (`padLyricsToFitChords`' `marksPadding`): the text layer writes
   the padding as no-break spaces and the words' own spaces as spaces, so the import leaves the padding out, and drops
-  the direction marks closing in a piece read against its line.
+  the direction marks closing in a piece read against its line. A lyric wrapped at a space onto another row opens that
+  row's selectable text, and its chord row's, with a word joiner (`PrintText.isContinuation`), by which the import
+  joins it back into one line.
 - Tablature is engraved as on screen (`PrintTabEngraver`, see `ui/songView`): figures and rules, none of it
   selectable; each line reaches the text layer as the file has it, an invisible monospaced text (`isDrawn` false) sized
   to the columns and on the string's baseline, so it reads back as a tab. A tab run's chord line prints bold, written

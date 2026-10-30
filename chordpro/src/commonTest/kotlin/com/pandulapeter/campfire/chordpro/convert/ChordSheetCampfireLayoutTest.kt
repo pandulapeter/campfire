@@ -102,6 +102,16 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a lyric row marked as the continuation of the one above is joined back to it, with the chords over it`() {
+        val annotation = text("\u2060Riff", italic = true)
+        assertEquals(
+            "{title: A song}\n\n[G]Headed down south to the land of the [*Riff]pines\n",
+            convert(chords("G" to 0), text("Headed down south to the land of the "), annotation, text("\u2060pines")),
+        )
+        assertEquals("{title: A song}\n\nHeaded down south\nto the pines\n", convert(text("Headed down south"), text("to the pines")))
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

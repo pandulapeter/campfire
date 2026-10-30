@@ -179,7 +179,7 @@ private class PrintLayouter(
             } else {
                 margin + column * (columnWidth + gutter)
             }
-            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting, part.isDrawn)) }
+            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting, part.isDrawn, part.isContinuation)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             row.notations.forEach { notation -> pages.last().notations.add(notation.copy(x = x + notation.x, y = y + notation.y)) }

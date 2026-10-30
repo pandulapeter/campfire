@@ -43,7 +43,7 @@ internal object ChordSheetCampfireLayout {
                 spans.isEmpty() || start == null || end == null -> null
                 spans.all { it.isBold && it.isMonospace } -> Role.GRID
                 spans.all { it.isBold && !it.isMonospace && it.size < bodySize - LABEL_SIZE_STEP / 2 } -> Role.LABEL
-                spans.all { it.isItalic } -> Role.COMMENT.takeUnless { isItalicLyric(lines, isChordRow, roles, index) }
+                spans.all { it.isItalic } && !isChordRow[index] -> Role.COMMENT.takeUnless { isItalicLyric(lines, isChordRow, roles, index) }
                 !line.isPlain() -> null
                 isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end) }
                 isBoxed(song.mapNotNull { starts[it] }, start) -> Role.BOX_COMMENT
@@ -135,6 +135,12 @@ internal object ChordSheetCampfireLayout {
 
     /** The no-break spaces the export pads a lyric with under a chord wider than its syllable, which are not its words. */
     const val PADDING = '\u00A0'
+
+    /**
+     * The word joiner that opens the text of a lyric row the export wrapped onto a row of its own at a space, which joins
+     * it back to the line it continues: printed, the two rows look like two lines.
+     */
+    const val CONTINUATION = '\u2060'
 
     private val customTypes = setOf("intro", "outro", "solo", "interlude", "instrumental", "coda", "tag", "ending", "break", "riff")
 

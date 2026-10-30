@@ -409,7 +409,10 @@ internal class PrintRows(
     }
 }
 
-/** A text of a [Row], placed relative to its top left corner, with [PrintText.formatting]'s markup, drawn as [PrintText.isDrawn] says. */
+/**
+ * A text of a [Row], placed relative to its top left corner, with [PrintText.formatting]'s markup, drawn as
+ * [PrintText.isDrawn] says, and marked as [PrintText.isContinuation] says.
+ */
 internal data class Part(
     val text: String,
     val x: Float = 0f,
@@ -418,6 +421,7 @@ internal data class Part(
     val isSelectable: Boolean = true,
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
     val isDrawn: Boolean = true,
+    val isContinuation: Boolean = false,
 )
 
 /**

@@ -186,6 +186,17 @@ internal class PrintLayoutTest {
         assertTrue(chord.y < lyrics.y)
     }
 
+    @Test fun `a lyric wider than its column marks the rows it is wrapped onto as its continuation, and their chords`() = runTest {
+        val words = (1..40).joinToString(" ") { "word$it" }
+        val line = ChordProLine.Lyrics(words, listOf(ChordProLine.Lyrics.Chord(0, "Am", false), ChordProLine.Lyrics.Chord(words.lastIndexOf("word"), "G", false)))
+        val texts = layout(source(song(listOf(line)))).pages.single().texts
+        val lyricRows = texts.filter { it.text.contains("word") }
+
+        assertTrue(lyricRows.size > 1)
+        assertEquals(listOf(false) + List(lyricRows.size - 1) { true }, lyricRows.map { it.isContinuation })
+        assertEquals(listOf(false, true), texts.filter { it.text == "Am" || it.text == "G" }.map { it.isContinuation })
+    }
+
     @Test fun `a key change is printed where it stands and only with the chords`() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),

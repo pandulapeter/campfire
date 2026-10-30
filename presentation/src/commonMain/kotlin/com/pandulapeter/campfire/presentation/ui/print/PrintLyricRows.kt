@@ -115,6 +115,10 @@ internal class PrintLyricRows(
                 val lyricX = if (isRightToLeft) lineWidth - layout.width else 0f
                 // Chords anchored at the same character are kept beside each other; if the chord run is wider than the
                 // column, extra chord-only rows keep every symbol readable.
+                // A row the lyric was wrapped onto at a space is marked for the import to join back to the one before, and
+                // so is its chord row, which may hold nothing but an annotation that no chord row would be taken for.
+                val isContinuation = fragmentIndex > 0 && !fragment.isPrintBlank() &&
+                    (fragments[fragmentIndex - 1].trimEnd('\u200B').lastOrNull()?.isWhitespace() == true || fragment.firstOrNull()?.isWhitespace() == true)
                 val parts = mutableListOf<Part>()
                 var previousChordEdge = if (isRightToLeft) lineWidth else 0f
                 var chordY = 0f
@@ -147,7 +151,7 @@ internal class PrintLyricRows(
                         } else if (isRightToLeft && names.size > 1) {
                             x = lineWidth - measure(name, style)
                         }
-                        parts += Part(name, x = x, y = chordY, style = style)
+                        parts += Part(name, x = x, y = chordY, style = style, isContinuation = isContinuation && parts.isEmpty())
                     }
                     val lastWidth = if (names.size == 1) chordWidth else measure(names.last(), style)
                     previousChordEdge = if (isRightToLeft) x - measure(" ", lyricStyle) else x + lastWidth + measure(" ", lyricStyle)
@@ -156,7 +160,7 @@ internal class PrintLyricRows(
                 // a blank fragment without chords is an empty line the song asked for.
                 val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
                 val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
-                if (!isChordsOnly) parts += Part(fragment, x = lyricX, y = lyricY, style = lyricStyle, formatting = formatting)
+                if (!isChordsOnly) parts += Part(fragment, x = lyricX, y = lyricY, style = lyricStyle, formatting = formatting, isContinuation = isContinuation)
                 val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
                 if (rowHeight <= capacity) {
                     add(Row(parts, rowHeight))
