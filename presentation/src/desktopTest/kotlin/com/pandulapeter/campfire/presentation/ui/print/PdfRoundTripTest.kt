@@ -61,11 +61,11 @@ class PdfRoundTripTest {
     @Test
     fun `a song printed to a PDF and imported back keeps its title, sections, lyrics, and chords`() = runBlocking {
         val failures = corpus.flatMap { (name, text) ->
-            listOf(PrintSettings(), PrintSettings(columns = 2, fontSize = 9)).mapNotNull { settings ->
+            listOf(PrintSettings(), PrintSettings(columns = 2, fontSize = 9), PrintSettings(columns = 2, isLandscape = true)).mapNotNull { settings ->
                 val original = songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
                 val expected = summary(original)
                 val actual = summary(roundTrip(original, settings))
-                if (expected == actual) null else "$name in ${settings.columns} columns:\n  expected $expected\n  actual   $actual"
+                if (expected == actual) null else "$name in ${settings.columns} columns${if (settings.isLandscape) " landscape" else ""}:\n  expected $expected\n  actual   $actual"
             }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n\n"))

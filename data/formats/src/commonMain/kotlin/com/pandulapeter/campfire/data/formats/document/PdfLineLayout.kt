@@ -102,10 +102,13 @@ internal object PdfLineLayout {
     /**
      * The right edge of the whitespace band between two columns, if [glyphs] have one: a band [band] wide in the middle
      * half of their width that hardly any line crosses — a title over both columns may — with a fair share of the text
-     * on either side. A band no line crosses at all is a gutter with less than that on one side, as long as the text
-     * right of it reads like a column, a few lines starting at one edge: it is the last column of a page that ends early. Every
-     * position is tried, not a sample of them, since a column filled to its edge leaves a gap barely wider than the
-     * band; a line blocks the positions its ink, merged across gaps too narrow to hold the band, would put in the band.
+     * on either side, counted in characters, since a span carrying a whole line (Campfire's right-to-left runs) is as
+     * much text as its letters. A band no line crosses at all is a gutter with less than that on one side, as long as the
+     * text right of it reads like a column, most of its lines starting at one edge: it is the last column of a page that ends
+     * early. Such a band wins over one a few lines cross, which a heading wider than the first column's lyrics leaves
+     * inside that column when the second one is too short for a fair share. Every position is tried, not a sample of
+     * them, since a column filled to its edge leaves a gap barely wider than the band; a line blocks the positions its
+     * ink, merged across gaps too narrow to hold the band, would put in the band.
      */
     private fun gutter(glyphs: List<Positioned>, band: Double): Double? {
         val left = glyphs.minOf { it.span.start }
@@ -128,8 +131,13 @@ internal object PdfLineLayout {
             }
             block()
         }
-        val ends = glyphs.map { it.span.end }.sorted()
-        val starts = glyphs.map { it.span.start }.sorted()
+        val byEnd = glyphs.sortedBy { it.span.end }
+        val ends = byEnd.map { it.span.end }
+        val charactersByEnd = byEnd.runningFold(0) { total, glyph -> total + glyph.span.text.length.coerceAtLeast(1) }
+        val byStart = glyphs.sortedBy { it.span.start }
+        val starts = byStart.map { it.span.start }
+        val charactersByStart = byStart.runningFold(0) { total, glyph -> total + glyph.span.text.length.coerceAtLeast(1) }
+        val characters = charactersByEnd.last()
         val normalEnds = glyphs.filter { it.span.size <= size * 1.2 }.map { it.span.end }.sorted()
         val rowEnds = rows.map { row -> row.minOf { it.span.end } }.sorted()
         val rowStarts = rows.map { row -> row.maxOf { it.span.start } }.sorted()
@@ -137,8 +145,8 @@ internal object PdfLineLayout {
         fun gap(x: Double) = x - (normalEnds.getOrNull(normalEnds.countAtMost(x) - 1) ?: left)
         fun isColumn(x: Double): Boolean {
             val firsts = rows.mapNotNull { row -> row.firstOrNull { it.span.start >= x }?.span?.start }
-            val edge = firsts.minOrNull() ?: return false
-            return firsts.count { it - edge < 1.0 } * 2 >= firsts.size
+            // The most common start rather than the leftmost, since a page number centred under the columns starts left of them.
+            return firsts.maxOfOrNull { edge -> firsts.count { abs(it - edge) < 1.0 } }?.let { it * 2 >= firsts.size } ?: false
         }
         var crossing = 0
         var best: Double? = null
@@ -148,15 +156,15 @@ internal object PdfLineLayout {
             crossing += blocked[index]
             val x = left + index * step
             if (x <= left + (right - left) * 0.25 || x >= left + (right - left) * 0.75) continue
-            val leftCount = ends.countAtMost(x - band)
-            val rightCount = starts.size - starts.countBelow(x)
-            if (leftCount > glyphs.size / 5 && rightCount > glyphs.size / 5 && crossing <= rows.size / 5) {
+            val leftCount = charactersByEnd[ends.countAtMost(x - band)]
+            val rightCount = characters - charactersByStart[starts.countBelow(x)]
+            if (leftCount > characters / 5 && rightCount > characters / 5 && crossing <= rows.size / 5) {
                 if (best == null || crossing < bestCrossing || crossing == bestCrossing && gap(x) > gap(best)) { best = x; bestCrossing = crossing }
             } else if (crossing == 0 && rowEnds.countAtMost(x - band) >= 2 && rowStarts.size - rowStarts.countBelow(x) >= 2) {
                 if (fallback == null || gap(x) > gap(fallback)) fallback = x
             }
         }
-        return best ?: fallback?.takeIf(::isColumn)
+        return best?.takeIf { bestCrossing == 0 } ?: fallback?.takeIf(::isColumn) ?: best
     }
 
     private fun List<Double>.countAtMost(value: Double): Int {
