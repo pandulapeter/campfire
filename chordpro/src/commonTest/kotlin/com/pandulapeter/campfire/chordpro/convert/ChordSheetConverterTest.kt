@@ -503,6 +503,32 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a chord ending short of a right-to-left word's first letter where a space starts is the letter's`() {
+        val glyphs = listOf(
+            span("\u05e9", 92.0, 100.0), span("\u05dc", 86.0, 92.0), span("\u05d5", 83.0, 86.0), span("\u05dd", 77.0, 83.0),
+            span(" ", 74.0, 77.0), span("\u05e2", 66.0, 74.0), span("\u05d5", 63.0, 66.0), span("\u05dc", 57.0, 63.0), span("\u05dd", 51.0, 57.0),
+        )
+        val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 51.0, 100.0).copy(pieces = glyphs)))
+        val chords = ChordSheet.Line(listOf(span("F#m", 74.0, 99.4, bold = true)))
+        val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue("[F#m]\u05e9\u05dc\u05d5\u05dd \u05e2" in result, result)
+    }
+
+    @Test
+    fun `a row of no right-to-left letter drawn out of its order takes its chord at the character it hangs from`() {
+        // "2 2 tonight" as a right-to-left paragraph lays it out: the first number at the right edge, the word at the left,
+        // and padding right of the number, which moves its chord off the column's edge.
+        val glyphs = listOf(span("\u00a0", 100.0, 104.0), span("2", 92.0, 100.0), span(" ", 89.0, 92.0), span("2", 81.0, 89.0), span(" ", 78.0, 81.0)) +
+            "tonight".mapIndexed { index, character -> span(character.toString(), 43.0 + index * 5.0, 48.0 + index * 5.0) }
+        val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 43.0, 104.0).copy(pieces = glyphs)))
+        val chords = ChordSheet.Line(listOf(span("D", 92.0, 100.0, bold = true)))
+        val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue("[D]2 2 tonight" in result, result)
+    }
+
+    @Test
     fun `a chord of a pointed right-to-left row never splits a letter from its points, which share the next letter's glyph`() {
         // "הַמַּעֲלוֹת" as a PDF groups it: each letter's points drawn within the next letter's glyph, and so in its piece.
         val glyphs = listOf(

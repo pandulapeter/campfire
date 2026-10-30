@@ -77,6 +77,10 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - A lyric row that is right to left or holds such text takes its chords' anchors from the renderer's layout
   (`PrintRenderer.lyricLayout`, as `SongLineWithChords` finds them) and places them with `printChordLeft`; every other
   row is measured by its widths. An overflowing chord starts the next chord line at the row's starting edge.
+- A right-to-left row is laid out again while `printChordLeft` would move a chord off its edge (past the right margin,
+  or into the chord before it), with the missing room added as marked padding where it opens on the chord's side
+  (`PrintLyricRows`): the import reads Campfire's chords by the exact edge they hang from, and a moved one lands a
+  letter or a word off.
 - "Key: Am" and the other values are put after their labels by a string (`print_label_value`), which a language may
   space or order otherwise.
 

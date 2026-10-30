@@ -31,12 +31,21 @@ internal class ChordSheetBidiAnchors private constructor(
      * (the row's end) for a chord after its last one, which in a right-to-left row ends where the row starts on the left;
      * null where no character is within [tolerance]. A chord's right edge is allowed a point more: the export sets a chord
      * hanging leftwards by its width in whole points, so its glyphs end up to a point short of the edge it hangs from.
+     * A space is taken only where no letter is: a chord hanging leftwards from a word's first letter often ends right
+     * where a space after the word starts.
      */
     fun indexOf(chordStart: Double, chordEnd: Double, length: Int, tolerance: Double): Int? {
         var best: Int? = null
         var bestDistance = Double.MAX_VALUE
+        var bestSpace: Int? = null
+        var bestSpaceDistance = Double.MAX_VALUE
         fun consider(index: Int, distance: Double) {
-            if (distance < bestDistance) {
+            if (index < classes.size && classes[index] == NEUTRAL) {
+                if (distance < bestSpaceDistance) {
+                    bestSpace = index
+                    bestSpaceDistance = distance
+                }
+            } else if (distance < bestDistance) {
                 best = index
                 bestDistance = distance
             }
@@ -47,7 +56,7 @@ internal class ChordSheetBidiAnchors private constructor(
             if (classes[index] != RIGHT_TO_LEFT) abs(chordStart - left[index]).takeIf { it <= tolerance }?.let { consider(index, it) }
         }
         abs(rowStart - chordEnd).takeIf { it <= tolerance + ROUNDING }?.let { consider(length, it) }
-        return best
+        return best ?: bestSpace
     }
 
     /** The characters of a row, a span at a time, in the order the converter renders them. */
@@ -82,12 +91,18 @@ internal class ChordSheetBidiAnchors private constructor(
                 span.text.forEach { character -> (span.start + count * width).let { add(character, it, it + width) } }
             } else {
                 span.pieces.forEach { piece -> piece.text.forEach { add(it, piece.start, piece.end) } }
-                if (span.text.any { isStrongRtl(it.code) }) rowStart = minOf(rowStart, span.start)
+                // A row of no right-to-left letter is drawn out of its order too where a right-to-left paragraph lays it
+                // out (`2 2 tonight` in a Hebrew song, its number at the right).
+                val isOutOfOrder = span.pieces.zipWithNext().any { (before, after) -> after.start < before.start - OUT_OF_ORDER }
+                if (isOutOfOrder || span.text.any { isStrongRtl(it.code) }) rowStart = minOf(rowStart, span.start)
             }
             if (count != rendered.length) isLost = true
         }
 
-        /** The row's anchors, or null for a row with no right-to-left text written in its order, read by its positions. */
+        /**
+         * The row's anchors, or null for a row with no right-to-left text or glyphs out of order written in its order,
+         * read by its positions.
+         */
         fun build() = if (rowStart != Double.MAX_VALUE && !isLost) {
             ChordSheetBidiAnchors(left.toDoubleArray(), right.toDoubleArray(), classes.toIntArray(), rowStart)
         } else {
@@ -124,6 +139,9 @@ internal class ChordSheetBidiAnchors private constructor(
             character.isLetterOrDigit() -> LEFT_TO_RIGHT
             else -> NEUTRAL
         }
+
+        /** How far, in the sheet's units, a glyph may start left of the one before it and still follow it. */
+        private const val OUT_OF_ORDER = 0.01
 
         /** How far short of its edge the export's rounded width leaves a chord hanging leftwards, at most. */
         private const val ROUNDING = 1.0

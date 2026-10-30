@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
+import kotlin.math.ceil
 
 /**
  * The rows of a line of lyrics with its chords, at most [capacity] tall each, laid out in its paragraph direction (its
@@ -22,6 +23,13 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
  * wrapped leftwards, an overflowing one starting the next chord line at the right edge. A row that mixes directions
  * takes its chords' places from the renderer's layout ([measureLyric]); one that reads one way only is measured by its
  * widths, which is all a left-to-right one ever needed.
+ *
+ * A right-to-left row is laid out again, up to [MAX_PADDING_PASSES] times, while a chord would have to move off the edge
+ * it hangs from, past the column's right edge or into the chord before it: the padding fitted piece by piece cannot
+ * tell where a layout that mixes directions draws each piece. The room missing is added as more marked padding where it
+ * opens on the chord's side: before the chord's own piece, or for a chord hanging rightwards from a Latin word or a
+ * number, before that run, which is drawn as a whole with its start at the right. Every chord then stands on its letter,
+ * where the import finds it.
  */
 internal class PrintLyricRows(
     private val options: PrintSettings,
@@ -40,23 +48,54 @@ internal class PrintLyricRows(
         val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation && !it.isMark) options.showComments else options.showChords })
         // Hiding a chord-only line must also remove the empty lyric row beneath it.
         if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isPrintBlank()) return emptyList()
-        val isRightToLeft = lyricStyle.isRightToLeft
-        // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded to a column at
-        // most rather than to its full width.
-        val lyrics = if (visible.chords.isNotEmpty()) {
-            visible.padLyricsToFitChords(
-                chordWidths = visible.chords.map { chord ->
-                    minOf(measure(chord.name, if (chord.isAnnotation) annotationStyle else chordStyle), lineWidth)
-                },
-                gap = measure(" ", lyricStyle),
-                paddingWidth = measure(" ", lyricStyle),
-                measureWidth = { measure(it, lyricStyle) },
-                paragraphDirection = lyricStyle.direction ?: WritingDirection.LEFT_TO_RIGHT,
-                marksPadding = true,
-            )
-        } else {
-            visible
+        if (visible.chords.isEmpty()) return layOut(visible, visible, lineWidth, lyricStyle, chordStyle, annotationStyle, missingPadding = null)
+        val extraPadding = mutableMapOf<Int, Int>()
+        repeat(if (lyricStyle.isRightToLeft) MAX_PADDING_PASSES else 0) {
+            val missingPadding = mutableMapOf<Int, Int>()
+            val rows = layOut(padded(visible, lineWidth, lyricStyle, chordStyle, annotationStyle, extraPadding), visible, lineWidth, lyricStyle, chordStyle, annotationStyle, missingPadding)
+            if (missingPadding.isEmpty()) return rows
+            missingPadding.forEach { (index, count) -> extraPadding[index] = (extraPadding[index] ?: 0) + count }
         }
+        return layOut(padded(visible, lineWidth, lyricStyle, chordStyle, annotationStyle, extraPadding), visible, lineWidth, lyricStyle, chordStyle, annotationStyle, missingPadding = null)
+    }
+
+    /**
+     * [visible] padded to fit its chords. A chord wider than the column is wrapped onto rows of its own, so the lyrics
+     * under it are padded to a column at most rather than to its full width.
+     */
+    private fun padded(
+        visible: ChordProLine.Lyrics,
+        lineWidth: Float,
+        lyricStyle: PrintStyle,
+        chordStyle: PrintStyle,
+        annotationStyle: PrintStyle,
+        extraPadding: Map<Int, Int>,
+    ) = visible.padLyricsToFitChords(
+        chordWidths = visible.chords.map { chord ->
+            minOf(measure(chord.name, if (chord.isAnnotation) annotationStyle else chordStyle), lineWidth)
+        },
+        gap = measure(" ", lyricStyle),
+        paddingWidth = measure(" ", lyricStyle),
+        measureWidth = { measure(it, lyricStyle) },
+        paragraphDirection = lyricStyle.direction ?: WritingDirection.LEFT_TO_RIGHT,
+        marksPadding = true,
+        extraPadding = extraPadding,
+    )
+
+    /**
+     * The rows of [lyrics], [original] padded. Where [missingPadding] is given, the first chord of each row that has to
+     * move off its edge records there the padding it lacks, by the offset of [original]'s text it goes before.
+     */
+    private fun layOut(
+        lyrics: ChordProLine.Lyrics,
+        original: ChordProLine.Lyrics,
+        lineWidth: Float,
+        lyricStyle: PrintStyle,
+        chordStyle: PrintStyle,
+        annotationStyle: PrintStyle,
+        missingPadding: MutableMap<Int, Int>?,
+    ): List<Row> {
+        val isRightToLeft = lyricStyle.isRightToLeft
         val chordLineHeight = options.fontSize * 1.3f
         val wrappingStyle = lyrics.formatting.wrappingStyle(lyricStyle)
         val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, wrappingStyle) }
@@ -65,7 +104,8 @@ internal class PrintLyricRows(
             fragments.forEachIndexed { fragmentIndex, fragment ->
                 val end = start + fragment.length
                 val formatting = lyrics.formatting.clippedTo(start, fragment)
-                val chords = lyrics.chords.filter { it.position >= start && (it.position < end || fragmentIndex == fragments.lastIndex) }
+                val chordIndices = lyrics.chords.indices.filter { lyrics.chords[it].position >= start && (lyrics.chords[it].position < end || fragmentIndex == fragments.lastIndex) }
+                val chords = chordIndices.map { lyrics.chords[it] }
                 val offsets = chords.map { (it.position - start).coerceIn(0, fragment.length) }
                 val layout = if (measureLyric != null && (isRightToLeft || fragment.any { isStrongRtl(it.code) })) {
                     measureLyric(fragment, lyricStyle, formatting, offsets)
@@ -78,11 +118,22 @@ internal class PrintLyricRows(
                 val parts = mutableListOf<Part>()
                 var previousChordEdge = if (isRightToLeft) lineWidth else 0f
                 var chordY = 0f
+                var isMissingPaddingFound = false
                 chords.forEachIndexed { index, chord ->
                     val anchor = layout.anchors[index]
                     // An annotation is an instruction rather than a chord, so it is set apart from the chords.
                     val style = if (chord.isAnnotation) annotationStyle else chordStyle
                     val chordWidth = measure(chord.name, style)
+                    if (missingPadding != null && !isMissingPaddingFound && chordWidth < lineWidth) {
+                        val wanted = lyricX + anchor.x - if (anchor.isRightToLeft) chordWidth else 0f
+                        val overlap = wanted + chordWidth - minOf(previousChordEdge, lineWidth)
+                        if (overlap > PADDING_TOLERANCE) {
+                            isMissingPaddingFound = true
+                            val position = original.chords[chordIndices[index]].position
+                            val before = if (anchor.isRightToLeft) position else original.text.leftToRightRunStart(position)
+                            missingPadding[before] = ceil(overlap / measure(" ", lyricStyle)).toInt()
+                        }
+                    }
                     var x = printChordLeft(lyricX + anchor.x, chordWidth, lineWidth, previousChordEdge, anchor.isRightToLeft, isRightToLeft)
                         ?: run {
                             chordY += chordLineHeight
@@ -129,3 +180,16 @@ internal class PrintLyricRows(
  * closing in a piece read against its line) is disregarded too.
  */
 internal fun String.isPrintBlank() = all { it.isWhitespace() || it == ' ' || it == '​' || it == '‎' || it == '‏' || it == PADDING_MARK }
+
+/** Where the word holding [offset] starts, or the part of it after its last right-to-left letter. */
+private fun String.leftToRightRunStart(offset: Int): Int {
+    var start = offset.coerceAtMost(length)
+    while (start > 0 && !this[start - 1].isWhitespace() && !isStrongRtl(this[start - 1].code)) start--
+    return start
+}
+
+/** How many times a right-to-left row is laid out again for the room its chords still lack. */
+private const val MAX_PADDING_PASSES = 6
+
+/** How far, in points, a chord may stand off its edge: the import reads Campfire's own chords to within 0.75 points. */
+private const val PADDING_TOLERANCE = 0.5f

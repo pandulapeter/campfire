@@ -22,7 +22,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, and staff lines are told by
   the test the export engraves by. A row holding right-to-left text arrives as one span in reading order
   over its glyphs (`ChordSheet.Span.pieces`), and its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`): a
-  Hebrew letter's chord ends at its right edge, a Latin one's starts at its left. A wrapped tab system comes back as the system it was printed as.
+  Hebrew letter's chord ends at its right edge, a Latin one's starts at its left, a space only where no letter fits; a
+  row of no right-to-left letter whose glyphs are drawn out of its order (`2 2 tonight` in a Hebrew song) is read the
+  same way. A wrapped tab system comes back as the system it was printed as.
 - An export's label opens the kind its leading heading word names, in every language the app prints labels in,
   whatever follows it (`Chorus (twice)`); a pre-chorus is the editor's `pre-chorus`, never a site's bridge.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands.

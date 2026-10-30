@@ -57,6 +57,29 @@ class ChordPaddingTest {
     }
 
     @Test
+    fun `extra padding goes before the offsets asked for, the chords and formatting moving with the text`() {
+        val line = lyrics("lo[Em]ve and [C]more").copy(
+            formatting = listOf(
+                ChordProLine.Lyrics.Formatting(0, 4, ChordProLine.Lyrics.Formatting.Style.BOLD),
+                ChordProLine.Lyrics.Formatting(9, 13, ChordProLine.Lyrics.Formatting.Style.ITALIC),
+            ),
+        )
+        val padded = line.padLyricsToFitChords(
+            chordWidths = listOf(10f, 10f),
+            gap = 0f,
+            paddingWidth = 10f,
+            measureWidth = { it.length * 10f },
+            paragraphDirection = null,
+            marksPadding = true,
+            extraPadding = mapOf(0 to 2, 5 to 1, 9 to 1),
+        )
+
+        assertEquals("\u2060\u00A0\u00A0love \u2060\u00A0and \u200B\u2060\u00A0more", padded.text)
+        assertEquals(listOf('v', 'm'), padded.chords.map { padded.text[it.position] })
+        assertEquals(listOf("love", "more"), padded.formatting.map { padded.text.substring(it.start, it.end) })
+    }
+
+    @Test
     fun `a chord only line breaks between its chords and nowhere else`() {
         val padded = lyrics("[C] [G] [Am] [F]").padded()
         assertFalse(' ' in padded.text)
