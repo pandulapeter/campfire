@@ -13,10 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Find a solution for storing the library used for screenshot generation in the cloud
-- **Support more languages**: Hebrew has landed, laid out right to left (every step of
-  [rtl-support.md](plans/rtl-support.md)); its first listing in each store's console is added by hand before the next
-  release.
+- Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
 ## Short-term
 
