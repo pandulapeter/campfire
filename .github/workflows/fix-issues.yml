@@ -1,0 +1,148 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# An unattended fix of the plans in documentation/issues/: Claude Code lands them one commit each, in the order its
+# README gives (or EXECUTION.md, when the plans come with one), working alone in the checkout to keep the cost down. The
+# workflow pushes the result onto master and dispatches tests.yml on it (a push made with the workflow's token starts
+# no workflow by itself). A plan that changes .github/workflows is left for a normal checkout, since the workflow's
+# token cannot push such a change. Dispatched by hand only.
+
+name: 'Fix the issues'
+
+on:
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: 'The most the run may spend on the Anthropic API, in US dollars'
+        default: '20'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fix-issues
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    name: Fix the issues
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    env:
+      BUDGET: ${{ inputs.budget }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check that there is something to fix
+        run: |
+          if ! ls documentation/issues/[0-9]*.md > /dev/null 2>&1; then
+            echo "::error::documentation/issues/ holds no plan."
+            exit 1
+          fi
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Set up git and the pre-commit hook
+        run: |
+          git config user.name 'Pandula Péter'
+          git config user.email 'pandulapeter@gmail.com'
+          git config core.hooksPath .githooks
+          echo "START=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+      - name: Fix the issues
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUMMARY: ${{ runner.temp }}/summary.md
+        run: |
+          cat > "$RUNNER_TEMP/prompt.md" <<'PROMPT'
+          Land the plans in `documentation/issues/`: follow `documentation/issues/EXECUTION.md` if there is one, else
+          the execution section of the codebase-review skill, in the merge order the plans' README.md gives.
+
+          You are running unattended in a GitHub Actions job (Ubuntu, 4 cores, 16 GB, no display, no device, no Xcode,
+          no Dropbox account). Nobody can answer a question until the run is over: never use AskUserQuestion and never
+          wait for an answer. These overrides of EXECUTION.md and the codebase-review skill hold for this run:
+          - The user has said to carry out every plan: its preconditions (the challenge, the decisions) count as met,
+            and each open decision takes its recommended default.
+          - There is no memory directory here; skip memory reads and writes.
+          - Hard cap: $BUDGET US dollars for this whole run (enforced by --max-budget-usd; past it the run stops
+            mid-work). Do the work yourself, plan by plan, in the main checkout: no lanes, no worktrees, no subagents.
+            Read only what a plan names and what its fix needs. Commit each plan as soon as it is verified, so a run cut
+            short keeps every landed plan; take the plans in the merge order, so the cheapest to lose come last.
+          - You run in print mode: ending your turn ends the run. Never end it before the report is written.
+          - Gradle: one build at a time. While iterating, run only the touched modules' tests
+            (`:<module>:desktopTest --tests ...`); before each commit, every touched module's full desktopTest and a
+            compile of each platform the change touches. After the last plan, run `./gradlew desktopTest`.
+          - iOS cannot be compiled here: skip `:app:ios:linkDebugFrameworkIosSimulatorArm64`. The workflow runs
+            tests.yml on master afterwards, which compiles iOS. A plan touching an `iosMain` source set or `app/ios`
+            beyond a comment is skipped and left for a normal checkout.
+          - A plan changing `.github/workflows/`, which this job's token cannot push, is skipped and left for a normal
+            checkout. Never commit anything under `.github/workflows/`.
+          - A plan that turns out wrong or impossible is skipped as the skill says: revert, leave its file, note why.
+          - The pre-commit hook is installed and must pass; never bypass it with --no-verify.
+          - Load the `code-style` skill before the first edit and the `commit-messages` skill before the first commit.
+          - Do not branch or push; the workflow pushes master after you finish. The one-commit-per-plan rule, the
+            commit checks, and the finish (deleting the folder once no plan file is left, else trimming the README to
+            the skipped ones) hold as written.
+
+          Finally, write a short Markdown report to the file named by the SUMMARY environment variable: the commits
+          landed (short hash and message each), the plans skipped with why, and the final test results. Use the Oxford
+          comma in every list of three or more.
+          PROMPT
+          prompt="$(sed "s/\$BUDGET/$BUDGET/g" "$RUNNER_TEMP/prompt.md")"
+          claude -p "$prompt" \
+            --model claude-opus-5-5 \
+            --dangerously-skip-permissions \
+            --max-budget-usd "$BUDGET" \
+            --output-format stream-json \
+            --verbose \
+            | tee "$RUNNER_TEMP/fix.jsonl" \
+            | jq -r --unbuffered 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' || true
+      # The commits, before any push, so nothing is lost if the push is refused.
+      - name: Bundle the commits
+        if: ${{ always() }}
+        run: |
+          if [ "$(git rev-list --count "$START..HEAD")" != "0" ]; then
+            git branch --force fixes HEAD
+            git bundle create "$RUNNER_TEMP/fixes.bundle" "$START..fixes"
+          fi
+      - name: Keep the transcript, the report, and the commits
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: fix-issues
+          path: |
+            ${{ runner.temp }}/fix.jsonl
+            ${{ runner.temp }}/summary.md
+            ${{ runner.temp }}/fixes.bundle
+          if-no-files-found: ignore
+          retention-days: 30
+      # Even after a failure or the budget running out: every landed plan is worth keeping. If master moved meanwhile,
+      # the commits go to a branch instead, never forced over it.
+      - name: Push to master and run the tests
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(git rev-list --count "$START..HEAD")" = "0" ]; then
+            echo "The run committed nothing."
+            exit 0
+          fi
+          if [ -s "$RUNNER_TEMP/summary.md" ]; then
+            cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if git push origin HEAD:master; then
+            gh workflow run tests.yml --ref master
+          else
+            branch="fix-issues-${{ github.run_id }}"
+            git push origin "HEAD:refs/heads/$branch"
+            echo "::warning::master moved during the run; the commits are on $branch instead."
+            gh workflow run tests.yml --ref "$branch"
+          fi

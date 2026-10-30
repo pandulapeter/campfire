@@ -79,12 +79,12 @@ listing text as it is in the console and writes only the notes).
 
 ## The workflows
 
-### `pre-release-hunt.yml`
+### `fix-issues.yml`
 
-One-time, dispatched by hand: Claude Code (`ANTHROPIC_API_KEY`, capped by the `budget` input) round-trips a corpus of
-songs through every format and loads files written by the last release's code, unattended on a branch of its own,
-committing each failure as a test with its fix or plan; the workflow then pushes it, opens the pull request, and
-dispatches `tests.yml` on it. Delete it once that pull request is settled.
+Dispatched by hand: Claude Code (`ANTHROPIC_API_KEY`, capped by the `budget` input) lands the plans in
+`documentation/issues/` alone in the checkout, one commit each in the README's merge order (or by `EXECUTION.md` when
+there is one), skipping a plan that needs iOS or changes `.github/workflows/`; the workflow then pushes master (a
+branch if master moved), keeps the transcript, report, and commits as an artifact, and dispatches `tests.yml`.
 
 ### `publish-web.yml`
 
