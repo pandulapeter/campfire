@@ -32,7 +32,7 @@ Chansonnier et setlists
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.2 : des chansons qui défilent seules à leur rythme, les airs ABC en partition, des diagrammes qui suivent les modulations et cinq langues de plus.
+Nouveau en 5.2.1 : des tablatures dessinées en partition, les chiffres de Nashville et romains pour les chansons sans tonalité, Campfire en hébreu et l'import de ses PDF.
 ```
 
 ## Description (4,000 characters max)

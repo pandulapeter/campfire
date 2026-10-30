@@ -33,7 +33,7 @@ Letras, acordes y repertorios
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.2: canciones que avanzan solas a su ritmo, melodías ABC como partitura, diagramas de acordes que siguen los cambios de tonalidad y cinco idiomas más.
+Novedad en 5.2.1: tablaturas dibujadas como partitura, números de Nashville y romanos para canciones sin tonalidad, Campfire en hebreo y mejor importación de sus PDF.
 ```
 
 ## Description (4,000 characters max)

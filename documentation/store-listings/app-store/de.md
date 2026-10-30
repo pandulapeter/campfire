@@ -33,7 +33,7 @@ Songtexte, Akkorde, Setlists
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.2: Songs, die in ihrem eigenen Tempo von selbst scrollen, ABC-Melodien als Noten, Akkorddiagramme, die Tonartwechseln folgen, und fünf weitere Sprachen.
+Neu in 5.2.1: Tabulaturen wie Noten gezeichnet, Nashville- und römische Zahlen für Songs ohne Tonart, Campfire auf Hebräisch und bessere Importe eigener PDFs.
 ```
 
 ## Description (4,000 characters max)

@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-חדש ב־5.2: שירים שנגללים מעצמם בקצב שלהם, שירי ABC שמוצגים כתווים, דיאגרמות אקורדים שעוקבות אחרי שינויי טונליות ועוד חמש שפות.
+חדש ב־5.2.1: טאבים שמצוירים כמו תווים, מספרי נאשוויל וספרות רומיות לשירים בלי טונליות כתובה, Campfire בעברית וייבוא משופר של קובצי ה-PDF שלו.
 ```
 
 ## Description (4,000 characters max)

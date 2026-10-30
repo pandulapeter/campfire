@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.2: songs that scroll by themselves at their own pace, ABC tunes drawn as sheet music, chord diagrams that follow key changes, and five more languages.
+New in 5.2.1: tabs drawn like sheet music, Nashville and Roman numbers for songs with no written key, Campfire in Hebrew, and better imports of its own PDFs.
 ```
 
 ## Description (4,000 characters max)
@@ -105,12 +105,11 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
 
-New in 5.2.0, and where to find it:
-- Continuous layout: Settings → Preferences → Song page → Layout (also under Preferences in a song's three-dot menu) switches between Pages and Continuous; the app also asks once, over the first song opened. In Continuous, the play button above the bottom step button starts the scroll, and a Scroll speed slider appears while it plays.
-- Sheet music: the demo song Home on the Range has a Sheet music section, drawn as staff notation from its ABC text on the device by abc2svg, an engraving library bundled with the app and run in its embedded JavaScript engine (no code or content is downloaded). The editor's toolbar has a Sheet music button beside Tab and Grid, and "Share or export" has a Sheet music switch for the PDF.
-- Languages: German, Spanish, French, Italian, and Romanian, picked in Settings → General → Language or followed from the system.
-- Key changes: in a song whose key changes partway through, the chord diagrams at the top of the song are grouped under a heading for each key, and its Scales section suggests a scale for the part in the new key.
-- PDF import: PDFs imported through Import files in the New button's menu on the Songs screen leave out page headers and footers and keep listed chord shapes, repeat signs, and labelled song details.
+New in 5.2.1, and where to find it:
+- Tabs: the demo song House of the Rising Sun has picking patterns as tabs, now drawn with ruled strings and bold fret numbers, on screen and in the PDF ("Share or export" in a song's three-dot menu).
+- Chord notation: with Settings → Preferences → Chords → Chord notation set to Nashville numbers or Roman numerals (also under Preferences in a song's three-dot menu), a song whose file names no key is numbered from the key its chords suggest; removing the {key} line of a demo song in the editor shows it.
+- Hebrew: picked in Settings → General → Language or followed from the system, laid out right to left. Songs written right to left, in any language of the app, are shown, edited, and printed from the right.
+- PDF import: a PDF exported by Campfire and imported through Import files in the New button's menu on the Songs screen keeps more of its sections, tab and grid labels, comments, and chord positions.
 ```
 
 ## App Sandbox Information

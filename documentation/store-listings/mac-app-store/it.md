@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.2: canzoni che scorrono da sole al loro ritmo, melodie ABC come spartito, diagrammi che seguono i cambi di tonalità e cinque nuove lingue.
+Novità della 5.2.1: intavolature disegnate come spartito, numeri Nashville e romani per canzoni senza tonalità, Campfire in ebraico e import migliore dei suoi PDF.
 ```
 
 ## Description (4,000 characters max)

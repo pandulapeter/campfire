@@ -32,7 +32,7 @@ Akkordok, dalszövegek, listák
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.2-es verzióban: magától, a saját tempójukban gördülő dalok, ABC-dallamok kottaként, a hangnemváltást követő akkordábrák és öt új nyelv.
+Újdonságok az 5.2.1-es verzióban: kottaként rajzolt tabulatúrák, Nashville- és római számok hangnem nélküli dalokhoz, héber nyelv és jobb import a saját PDF-ekből.
 ```
 
 ## Description (4,000 characters max)

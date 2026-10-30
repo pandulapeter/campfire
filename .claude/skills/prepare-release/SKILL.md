@@ -231,11 +231,23 @@ them longer). These rules apply to all three.
 **Six bullets at most**, however big the release. A patch has one to three. When there are more than six
 candidates, merge the related ones (one bullet per area, not per commit) and drop the least important rather than
 squeezing them in; a fix that is not worth its own bullet goes into the bullet of the feature it touches, or
-nowhere. Never pad a small release up to six.
+nowhere. Never pad a small release up to six: six is a ceiling, not a budget to fill. A minor convenience (one
+more Settings row, a sharing option) or a change only one platform's few users meet (a Linux package format) gets no
+bullet, even with room left; four strong bullets beat six where the last two dilute them.
 
 **Each bullet is a headline and one sentence.**
 - The **headline** names the change in at most six words, the way the app names it (a Settings row, a menu
-  entry, a screen): `Export a setlist as a zip`, not `Better sharing`.
+  entry, a screen): `Export a setlist as a zip`, not `Better sharing`. A change to how something looks is
+  named by the thing in words any user knows (`Improved tab appearance`), and the description says what it looks
+  like now (`Tabs are drawn like sheet music, with ruled strings and bold fret numbers.`), not by a craft term
+  (`engraved`) or a comparison the user must decode (`Tabs drawn like sheet music`).
+- **Lead with what most users notice.** When a cluster holds several changes, the headline and the start of the
+  description are the one an average user meets (chords numbered from the key a song's chords suggest), never a
+  side detail (a preference's new default). A changed default that existing users will not notice (a minor
+  switch, off for those who never asked for it) is left out entirely rather than headlined.
+- **An area that improved in many small ways is named as the area** (`PDF import improvements`), and its
+  description names what now comes through, without words that promise completeness (`whole`, `intact`,
+  `exactly`, `as it was`): a round trip that is better but not lossless must not read as lossless.
 - The **description** is one sentence of **at most 25 words** (about 160 characters): what is different now,
   then what that lets the user do or spares them — the concrete benefit, not an adjective. Add where to find it
   only when it is not obvious from the headline, and only if it fits the limit. Count the words of every

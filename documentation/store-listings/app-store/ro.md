@@ -32,7 +32,7 @@ Versuri, acorduri și liste
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.2: cântece care se derulează singure în ritmul lor, melodii ABC ca partitură, diagrame de acorduri care urmează schimbările de tonalitate și cinci limbi noi.
+Nou în 5.2.1: tabulaturi desenate ca o partitură, numere Nashville și cifre romane pentru cântece fără tonalitate, Campfire în ebraică și importul mai bun al PDF-urilor.
 ```
 
 ## Description (4,000 characters max)
