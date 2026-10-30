@@ -37,16 +37,17 @@
     </Dependencies>
 
     <!-- The languages of the app, which the Store shows as the package's. Partner Center asks for a store listing in every
-         one declared here: documentation/store-listings/microsoft-store holds one for each, so a language added here needs its listing. -->
+         one declared here: documentation/store-listings/microsoft-store holds one for each, so a language added here needs its listing.
+         Each is the bare language, never a regional code (es-es), so that its one listing reaches every country where it is spoken. -->
     <Resources>
-        <Resource Language="en-us" />
-        <Resource Language="hu-hu" />
-        <Resource Language="ro-ro" />
-        <Resource Language="de-de" />
-        <Resource Language="es-es" />
-        <Resource Language="fr-fr" />
-        <Resource Language="it-it" />
-        <Resource Language="he-il" />
+        <Resource Language="en" />
+        <Resource Language="hu" />
+        <Resource Language="ro" />
+        <Resource Language="de" />
+        <Resource Language="es" />
+        <Resource Language="fr" />
+        <Resource Language="it" />
+        <Resource Language="he" />
     </Resources>
 
     <Applications>

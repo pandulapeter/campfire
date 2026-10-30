@@ -96,7 +96,8 @@ abstract class PackageMsix : DefaultTask() {
             .replace("@VERSION@", packageVersion.get())
         resources.resolve("AppxManifest.xml").writeText(manifestText)
         val priConfig = temporaryDir.resolve("priconfig.xml")
-        execOperations.exec { commandLine(makePri, "createconfig", "/cf", priConfig, "/dq", "en-US", "/o") }
+        // The default qualifier is the manifest's first language, which the Store expects to find among the declared ones.
+        execOperations.exec { commandLine(makePri, "createconfig", "/cf", priConfig, "/dq", "en", "/o") }
         execOperations.exec {
             commandLine(makePri, "new", "/pr", resources, "/cf", priConfig, "/mn", resources.resolve("AppxManifest.xml"), "/of", root.resolve("resources.pri"), "/o")
         }

@@ -21,7 +21,8 @@ from store_listings import app_languages, changes, check, language, match_locale
 STORE_LOCALES = {
     "google-play": ["en-US", "en-GB", "de-DE", "es-ES", "es-419", "es-US", "fr-FR", "fr-CA", "hu-HU", "it-IT", "ro", "iw-IL"],
     "app-store": ["en-US", "en-GB", "de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "hu", "it", "ro", "he"],
-    "microsoft-store": ["en-us", "en-gb", "de-de", "es-es", "es-mx", "fr-fr", "fr-ca", "hu-hu", "it-it", "ro-ro", "he-il"],
+    "microsoft-store": ["en", "en-us", "en-gb", "de", "de-de", "es", "es-es", "es-mx", "fr", "fr-fr", "fr-ca", "hu",
+                        "hu-hu", "it", "it-it", "ro", "ro-ro", "he", "he-il"],
 }
 
 

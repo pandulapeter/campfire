@@ -89,9 +89,9 @@ Each item is checked by `wiring` in step 7.
    language written from the right starts its block with `dir: 'rtl',`, which the page sets on `<html>`.
 8. `localization/PluralTables.kt`: `AppLocale.<CODE> -> Strings<Xx>.plurals` in the `when` (it does not build without).
 
-9. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>-<region>" />` (lowercase, the region the
-   language's main Partner Center locale has, `de-de`) after the last one. Partner Center then asks for a listing in it,
-   which step 5's store listings provide.
+9. Windows, `app/desktop/AppxManifest.xml`: add `<Resource Language="<code>" />` (the bare language, never a region, so
+   its one listing reaches every country) after the last one. Partner Center then asks for a listing in it, which step
+   5's store listings provide.
 
 Nothing else per platform: Android needs no locale config (the language is chosen in the app), the desktop runtime
 already carries every locale (`jdk.localedata`). The release notes in the language come from its own `whats-new <code>`

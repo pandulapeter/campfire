@@ -352,7 +352,7 @@ def check_wiring(code, english_name):
     # The screenshots' texts are the one folder that is no store's listing, with no description to name the languages in.
     checks += [(f"documentation/store-listings/{store}/en.md", rf"\b{english_name}\b[^\n]*, switchable inside the app") for store in stores if store != "screenshot-texts"]
     checks += [(f"documentation/store-listings/{store}/{code}.md", r"(?m)^## ") for store in stores]
-    checks += [("app/desktop/AppxManifest.xml", rf'<Resource Language="{code}-[a-z]+" />')]
+    checks += [("app/desktop/AppxManifest.xml", rf'<Resource Language="{code}" />')]
     checks += [(str((PRESENTATION / "localization/PluralTables.kt").relative_to(ROOT)), rf"AppLocale\.{code.upper()} -> {strings_object}\.plurals")]
     direction = "RIGHT_TO_LEFT" if is_right_to_left(code) else "LEFT_TO_RIGHT"
     checks += [(APP_LANGUAGE, rf'\b{enum}\("{code}", Direction\.{direction}\),')]

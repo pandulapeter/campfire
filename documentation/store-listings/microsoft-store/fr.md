@@ -15,7 +15,7 @@ product features of 200 characters each; up to 7 search terms (each 30 character
 The app is the Windows desktop build, so the text names a click, the keyboard, and the taskbar, never a touch screen or
 the platforms' share sheets.
 
-Paste into Partner Center's French listing: fr-fr. Developed by stays as in the English listing.
+Paste into Partner Center's French listing: fr. Developed by stays as in the English listing.
 
 ## Title
 
