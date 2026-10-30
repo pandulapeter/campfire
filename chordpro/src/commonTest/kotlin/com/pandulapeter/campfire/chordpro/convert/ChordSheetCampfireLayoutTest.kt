@@ -96,6 +96,12 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `an annotation printed in italics among a row's chords keeps the row a chord row and comes back as an annotation`() {
+        val row = ChordSheet.Line(chords("G" to 0, "C" to 5).spans + text("twice", x = MARGIN + 8 * GLYPH, italic = true).spans)
+        assertEquals("{title: A song}\n\n[G]Sing [C]it [*twice]\n", convert(row, text("Sing it")))
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

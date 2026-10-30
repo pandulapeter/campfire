@@ -47,7 +47,7 @@ public object ChordSheetConverter {
             }.sorted()
                 .let { it.getOrNull(it.size / 2) ?: 1.0 }
             rendered.map { page ->
-                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, page.map { it.text.isNotBlank() && isChordRow(it.text) }, bodySize)
+                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, page.map { it.text.isNotBlank() && chordRow(it, isCampfire = true) != null }, bodySize)
                 page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true) }
             }
         }
@@ -281,12 +281,25 @@ public object ChordSheetConverter {
      */
     private class ChordRow(val tokens: List<Token>, val annotation: String?, val notes: List<Token>)
 
-    private fun chordRow(line: Rendered): ChordRow? = chordRow(line.text)
+    /**
+     * Campfire's export ([isCampfire]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
+     * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
+     * is all notes, so it is never taken for chords.
+     */
+    private fun chordRow(line: Rendered, isCampfire: Boolean = line.isCampfire): ChordRow? = chordRow(
+        text = line.text,
+        isNote = if (!isCampfire) null else { word ->
+            word.text.indices.all { offset ->
+                val x = line.positions.getOrNull(word.index + offset)
+                x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
+            }
+        },
+    )
 
     /** Whether [text] is a row of chords, the notes a songbook prints among them included. */
     internal fun isChordRow(text: String) = chordRow(text) != null
 
-    private fun chordRow(text: String): ChordRow? {
+    private fun chordRow(text: String, isNote: ((Token) -> Boolean)? = null): ChordRow? {
         val words = tokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
@@ -296,7 +309,9 @@ public object ChordSheetConverter {
         var index = 0
         while (index < start) {
             val word = words[index]
-            val end = if (word.text.startsWith('(') && !rowChord(word.text)) {
+            val end = if (isNote?.invoke(word) == true) {
+                (index until start).takeWhile { isNote(words[it]) }.last()
+            } else if (word.text.startsWith('(') && !rowChord(word.text)) {
                 (index until minOf(start, index + 4)).firstOrNull { words[it].text.endsWith(')') }
                     ?.takeIf { end -> (index..end).none { rowChord(words[it].text) } }
             } else null

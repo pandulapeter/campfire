@@ -51,12 +51,11 @@ class PdfRoundTripTest {
 
     /**
      * [text] without what the export prints but the import does not read back as it was: a text block, whose prose comes
-     * back as lyrics, and the annotations set among the chords (`[*Riff]`, a bracket naming no chord), which a chord row
-     * holding them is not taken for.
+     * back as lyrics, and a bracket naming no chord (`[x]`), which is printed in bold like a chord but not taken for one.
      */
     private fun printable(text: String) = text
         .replace(Regex("\\{start_of_textblock\\}.*?\\{end_of_textblock\\}\n", RegexOption.DOT_MATCHES_ALL), "")
-        .replace(Regex("\\[(\\*[^\\]]*|x)]"), "")
+        .replace("[x]", "")
 
     @Test
     fun `a song printed to a PDF and imported back keeps its title, sections, lyrics, and chords`() = runBlocking {
