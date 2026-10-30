@@ -163,7 +163,9 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 },
             ),
         ),
-        Triple("tablet-song", Device.IPAD, song("tablet-song", "jonathan_coulton-still_alive.cho", fontScale = 1.1f)),
+        // Amazing Grace, short enough for all of it to fit the first page: chords over the lyrics, its tune as staff notation,
+        // and a picking pattern's arpeggios as a tab.
+        Triple("tablet-song", Device.IPAD, song("tablet-song", "john_newton-amazing_grace.cho", fontScale = AMAZING_GRACE_FONT_SCALE)),
         // Uptown Girl with the metronome panel open under its title, playing, as the tuner shot shows it under its sheet
         // (which stops the click).
         *playing(
@@ -179,7 +181,7 @@ internal val websiteShots: List<Triple<String, Device, Shot>> by lazy {
                 id = "tablet-export",
                 uiMode = UserPreferences.UiMode.DARK,
                 preferences = { mapOf("printSettings" to printSettings(isLandscape = false)) },
-                drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song("barenaked_ladies-big_bang_theory_theme.cho"))) },
+                drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song("jonathan_coulton-still_alive.cho"))) },
             ),
         ),
         Triple("laptop-import", Device.LAPTOP, editor("laptop-import", "ed_sheeran-thinking_out_loud.cho", scroll = EDITOR_SCROLL)),
@@ -232,6 +234,9 @@ private const val FIVE_HUNDRED_MILES = "the_proclaimers-im_gonna_be_500_miles.ch
 /** The text size at which the iPad's first page of Uptown Girl, its metronome panel open, ends where a section ends. */
 private const val UPTOWN_GIRL_FONT_SCALE = 1f
 
+/** The text size at which the whole of Amazing Grace fills the iPad's first page. */
+private const val AMAZING_GRACE_FONT_SCALE = 1.1f
+
 /** The text size at which the iPad's first page of I'm Gonna Be (500 Miles) ends where a section ends. */
 private const val FIVE_HUNDRED_MILES_FONT_SCALE = 1.1f
 
@@ -276,7 +281,7 @@ private fun metronome(isSongPanelShown: Boolean): Map<String, JsonElement> = map
 
 /**
  * A song from the library at [fontScale], chosen per song so that its first page on the device ends where a section
- * ends (for Still Alive, after Verse 3), since sections are cut across columns and pages wherever a column ends; a
+ * ends (for Uptown Girl, after Verse 3), since sections are cut across columns and pages wherever a column ends; a
  * change to the song, the device or the layout calls for looking again.
  * The Chords section is never folded to make room.
  */
