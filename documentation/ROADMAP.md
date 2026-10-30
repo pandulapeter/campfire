@@ -15,6 +15,7 @@ What's planned for Campfire, grouped by area.
 
 - Settings -> Shared links should be clickable
 - Onboarding celebration animation is missing for people who open the app for the first time from a deep link
+- Improve the chord library based on [Chorducate](https://www.chorducate.com/discover/guitar/chords/)
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
 ## Short-term
