@@ -97,13 +97,13 @@ class PdfRoundTripTest {
     @Test
     fun `a capo song printed with either chord names comes back sounding as printed in every language and column count`() = runBlocking {
         val verse = "{start_of_verse}\n%s\n{end_of_verse}\n"
-        val shapes = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[Em]Hello [Am]world"))
-        val sounding = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[F#m]Hello [Bm]world"))
+        val shapes = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[Em]Hello [Am]world [Em]and [D]more [Em]here"))
+        val sounding = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[F#m]Hello [Bm]world [F#m]and [E]more [F#m]here"))
         val german = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.GERMAN)
         val latin = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.LATIN)
         val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
-        // A narrow column wraps the capo's value, the sounding marker of every language in four of them; the verse is
-        // one short enough a line for every column, so that only the details row is wrapped.
+        // A narrow column wraps the capo's value, the sounding marker of every language in four of them, and the verse's
+        // line, whose chord row leaves a gap wider than a gutter beside the lyric and the capo's value crossing it.
         val prints = folders.flatMap { folder ->
             val labels = printLabelsOf(folder)
             (1..PrintSettings.MAX_COLUMNS).flatMap { columns ->
@@ -128,7 +128,7 @@ class PdfRoundTripTest {
             val lyrics = moved.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
             val heard = lyrics.firstNotNullOfOrNull { it.chords.firstOrNull()?.name }
             val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }
-            if (capo == 2 && heard == "F#m" && words == listOf("Hello world")) null else "$name: capo $capo, sounds $heard, lyrics $words"
+            if (capo == 2 && heard == "F#m" && words == listOf("Hello world and more here")) null else "$name: capo $capo, sounds $heard, lyrics $words"
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }

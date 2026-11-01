@@ -51,6 +51,28 @@ class PdfLineLayoutTest {
     }
 
     @Test
+    fun `a chord row with a wide gap is one line when only the lines crossing that gap have text right of it`() = runTest {
+        val placed = listOf(
+            Placed(40, 740, "Song"),
+            Placed(40, 724, "Key: F#m"),
+            Placed(40, 708, "Capo: 2, chords as they"),
+            Placed(40, 694, "sound"),
+            Placed(40, 670, "Verse"),
+            Placed(40, 654, "F#m Bm"),
+            Placed(120, 654, "F#m E"),
+            Placed(40, 640, "Hello world and more"),
+            Placed(40, 624, "F#m"),
+            Placed(40, 610, "here"),
+            Placed(290, 40, "1 / 1"),
+        )
+
+        assertEquals(
+            listOf("Song", "Key: F#m", "Capo: 2, chords as they", "sound", "Verse", "F#m Bm F#m E", "Hello world and more", "F#m", "here"),
+            lines(placed).map { it.replace(Regex(" +"), " ") }.filter { it != "1 / 1" },
+        )
+    }
+
+    @Test
     fun `a heading wider than the first column's lyrics is read before a short second column that starts beside it`() = runTest {
         val heading = listOf(
             Placed(40, 740, "Everything At Once", size = 22),

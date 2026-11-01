@@ -33,7 +33,8 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
 - Must stay linear: `PdfStreamEnds` finds every `endstream` once per file, and at most 1 KiB of whitespace is walked
   past a declared `/Length`.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, with a fifth of the characters
-  on each side, **found at every half point, not sampled**, since Campfire's own export leaves only 18 points between
+  on each side, counting no line that crosses it (a narrow column's lyric beside the gap in its chord row is no second
+  column), **found at every half point, not sampled**, since Campfire's own export leaves only 18 points between
   20-point text. A band no line crosses that opens a column beats one a heading crosses, so a short second column
   beside a wide heading is not cut inside the first. Each side is searched again
   (three and four columns). A page whose letters mostly read from the right is read from its right column.

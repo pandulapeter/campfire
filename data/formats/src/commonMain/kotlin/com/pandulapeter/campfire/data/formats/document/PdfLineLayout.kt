@@ -103,9 +103,11 @@ internal object PdfLineLayout {
      * The right edge of the whitespace band between two columns, if [glyphs] have one: a band [band] wide in the middle
      * half of their width that hardly any line crosses — a title over both columns may — with a fair share of the text
      * on either side, counted in characters, since a span carrying a whole line (Campfire's right-to-left runs) is as
-     * much text as its letters. A band no line crosses at all is a gutter with less than that on one side, as long as the
-     * text right of it reads like a column, most of its lines starting at one edge: it is the last column of a page that ends
-     * early. Such a band wins over one a few lines cross, which a heading wider than the first column's lyrics leaves
+     * much text as its letters, and only from ink clear of the band: a line crossing it belongs to neither column, and
+     * its two halves would let a narrow column's lyric and capo note, both wider than the gap in the chord row between
+     * them, pass for a second column beside that gap. A band no line crosses at all is a gutter with less than that on
+     * one side, as long as the text right of it reads like a column, most of its lines starting at one edge: it is the
+     * last column of a page that ends early. Such a band wins over one a few lines cross, which a heading wider than the first column's lyrics leaves
      * inside that column when the second one is too short for a fair share. Every position is tried, not a sample of
      * them, since a column filled to its edge leaves a gap barely wider than the band; a line blocks the positions its
      * ink, merged across gaps too narrow to hold the band, would put in the band.
@@ -118,25 +120,30 @@ internal object PdfLineLayout {
         val count = ((right - left) / step).toInt() + 1
         val rows = glyphs.groupBy { (it.y / 3).roundToInt() }.values.map { row -> row.sortedBy { it.span.start } }
         val blocked = IntArray(count + 1)
+        val segments = mutableListOf<Segment>()
         for (row in rows) {
             var start = row.first().span.start
             var end = row.first().span.end
+            var characters = 0
             fun block() {
                 val from = (floor((start - left) / step) + 1).toInt().coerceAtLeast(0)
                 val to = (ceil((end + band - left) / step) - 1).toInt().coerceAtMost(count - 1)
                 if (from <= to) { blocked[from]++; blocked[to + 1]-- }
+                segments += Segment(start, end, characters)
             }
-            for (glyph in row.drop(1)) {
-                if (glyph.span.start - end < band) end = maxOf(end, glyph.span.end) else { block(); start = glyph.span.start; end = glyph.span.end }
+            for (glyph in row) {
+                if (characters > 0 && glyph.span.start - end >= band) { block(); start = glyph.span.start; characters = 0 }
+                end = maxOf(end, glyph.span.end)
+                characters += glyph.span.text.length.coerceAtLeast(1)
             }
             block()
         }
-        val byEnd = glyphs.sortedBy { it.span.end }
-        val ends = byEnd.map { it.span.end }
-        val charactersByEnd = byEnd.runningFold(0) { total, glyph -> total + glyph.span.text.length.coerceAtLeast(1) }
-        val byStart = glyphs.sortedBy { it.span.start }
-        val starts = byStart.map { it.span.start }
-        val charactersByStart = byStart.runningFold(0) { total, glyph -> total + glyph.span.text.length.coerceAtLeast(1) }
+        val byEnd = segments.sortedBy { it.end }
+        val ends = byEnd.map { it.end }
+        val charactersByEnd = byEnd.runningFold(0) { total, segment -> total + segment.characters }
+        val byStart = segments.sortedBy { it.start }
+        val starts = byStart.map { it.start }
+        val charactersByStart = byStart.runningFold(0) { total, segment -> total + segment.characters }
         val characters = charactersByEnd.last()
         val normalEnds = glyphs.filter { it.span.size <= size * 1.2 }.map { it.span.end }.sorted()
         val rowEnds = rows.map { row -> row.minOf { it.span.end } }.sorted()
@@ -166,6 +173,9 @@ internal object PdfLineLayout {
         }
         return best?.takeIf { bestCrossing == 0 } ?: fallback?.takeIf(::isColumn) ?: best
     }
+
+    /** A run of a row's ink merged across gaps too narrow to hold the gutter band: it lies on one side of a gutter or crosses it. */
+    private data class Segment(val start: Double, val end: Double, val characters: Int)
 
     private fun List<Double>.countAtMost(value: Double): Int {
         var low = 0
