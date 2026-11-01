@@ -45,8 +45,10 @@ kept: drop D stays drop D).
 - Every step has a dot, shown or not, so dots shrink out / grow in between neighbours. The pill follows the pager
   position (`pagerSelection`), so swipes and predictive back move it continuously.
 - No summary page. Last page's Next is Start playing (Done from Settings), or Next while an import waits
-  (`isImportWaiting`), whose screen is pushed as the onboarding leaves.
-- **Finishing is celebrated** (Start playing, Done): `Navigator.isOnboardingFinishCelebrated` zooms the
+  (`isImportWaiting`, a first run opened from a link or a file), whose screen takes the onboarding's place in the same
+  back stack change (`ImportReportState.screenAfterOnboarding`), so the celebration zooms it in rather than a push cutting
+  the zoom short; so does the song a first run opened with one song file opens (`songAfterOnboarding`).
+- **Finishing is celebrated** (Start playing, Done, that Next): `Navigator.isOnboardingFinishCelebrated` zooms the
   onboarding away (`onboardingFinishTransition`) under rising embers (`OnboardingCelebration`); other ways out slide.
 - The way out (Skip on a first run, Close from Settings) is only in the first page's footer, in Back's slot. Back and the
   way out share a slot so the dots and Next never move. Slots are as wide as their widest label on any page; dots are

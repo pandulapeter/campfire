@@ -13,10 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Fix the [capo handling issues](https://github.com/pandulapeter/campfire/issues/10)
 - Random sorting mode
-- Onboarding celebration animation is missing for people who open the app for the first time from a deep link
-- Improve the chord library based on [Chorducate](https://www.chorducate.com/discover/guitar/chords/)
 - Add an option to pin chord diagrams
 - Settings → About should contain a more straightforward link to the website
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots

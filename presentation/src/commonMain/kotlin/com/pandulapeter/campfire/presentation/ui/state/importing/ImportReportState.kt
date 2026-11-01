@@ -190,6 +190,24 @@ internal class ImportReportState(
         }.first { it }
     }
 
+    /**
+     * The file name of the song an import opens once the onboarding has left (a first run opened with one song file), set
+     * by `ImportController` for as long as it waits for that, so that [screenAfterOnboarding] can hand over to it.
+     */
+    var songAfterOnboarding: String? = null
+
+    /**
+     * The import's screen, or else [songAfterOnboarding]'s, for a finishing onboarding to hand over to (see
+     * `Navigator.showNextOnboardingStep`), or null where there is none to show or [show] would still wait for something
+     * other than the onboarding.
+     */
+    fun screenAfterOnboarding(): CampfireDestination? {
+        val isEditorInTheWay = hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }
+        if (isOnBackStack || dialogHost.visibleDialog.value != null || isEditorInTheWay) return null
+        _importReport.value?.let { return screenOf(it) }
+        return songAfterOnboarding?.let { CampfireDestination.SongDetails(songFileNames = listOf(it), setlistFileName = null, initialIndex = 0) }
+    }
+
     /** Takes the import's screen off the back stack, with whatever is on top of it, see `ImportController.onImportReportLeft`. */
     fun close() {
         val index = backStack.indexOfFirst { it == CampfireDestination.ImportReport || it.isSongPreview }

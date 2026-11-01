@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -85,6 +86,20 @@ class ImportReportStateTest {
         dialogHost.dismissDialog()
         settle()
         assertEquals(1, reportCount)
+    }
+
+    @Test
+    fun `a finishing onboarding hands over to the waiting report, else to the song an import opens after it`() = runTest {
+        startState()
+        backStack += CampfireDestination.Onboarding(isOpenedFromSettings = false)
+        assertNull(state.screenAfterOnboarding())
+        state.songAfterOnboarding = "artist-title.cho"
+        assertEquals(listOf("artist-title.cho"), (state.screenAfterOnboarding() as CampfireDestination.SongDetails).songFileNames)
+        state.show(ImportReport.Importing)
+        settle()
+        assertEquals(CampfireDestination.ImportReport, state.screenAfterOnboarding())
+        dialogHost.showDialog(DialogType.WhatsNew)
+        assertNull(state.screenAfterOnboarding())
     }
 
     @Test

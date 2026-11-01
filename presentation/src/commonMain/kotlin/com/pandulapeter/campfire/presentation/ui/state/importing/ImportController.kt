@@ -696,10 +696,7 @@ internal class ImportController(
                     // Let go of first, since a report that still says it is being written outlives its screen.
                     if (isReported) reportState.report = null
                     if (isReportShown) reportState.close()
-                    // A first run opens the onboarding over a file the app was opened with; the song follows it, as an
-                    // import screen would, rather than going on top of its pages.
                     scope.launch {
-                        snapshotFlow { backStack.none { it is CampfireDestination.Onboarding } }.first { it }
                         // The details screen closes itself over a song the lookup does not hold once the library has been
                         // read, and the lookup is indexed again off the main thread after this write, so a screen pushed now
                         // could find the library read and its song not in it yet. One pushed before the library is read
@@ -708,6 +705,16 @@ internal class ImportController(
                         withTimeoutOrNull(SONG_LOOKUP_TIMEOUT) {
                             songLookup.first { !it.isLibraryRead || songToOpen in it.songsByFileName }
                         } ?: return@launch
+                        // A first run opens the onboarding over a file the app was opened with; the song follows it, as an
+                        // import screen would, rather than going on top of its pages. Finishing the onboarding puts it in
+                        // the onboarding's place itself (see `ImportReportState.screenAfterOnboarding`), which leaves
+                        // nothing to open here; any other way out leaves it to this.
+                        reportState.songAfterOnboarding = songToOpen
+                        try {
+                            snapshotFlow { backStack.none { it is CampfireDestination.Onboarding } }.first { it }
+                        } finally {
+                            reportState.songAfterOnboarding = null
+                        }
                         openImportedSong(songToOpen)
                     }
                     if (request.shouldAnnounceResult) {

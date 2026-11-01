@@ -413,15 +413,20 @@ internal class Navigator(
     }
 
     /**
-     * Moves the onboarding on to its next page, or finishes it on its last one, celebrated there if [isFinishCelebrated]:
-     * not when the button still reads Next because an import waits behind the onboarding, whose screen is what comes next.
+     * Moves the onboarding on to its next page, or finishes it, celebrated, on its last one. [screenAfter] is the screen
+     * of an import that waits behind the onboarding (a first run opened from a link or a file): it takes the onboarding's
+     * place in the same back stack change, so that it is what the celebration zooms in. Pushed a frame later, it would
+     * interrupt the zoom with a slide.
      */
-    fun showNextOnboardingStep(isFinishCelebrated: Boolean) {
+    fun showNextOnboardingStep(screenAfter: CampfireDestination?) {
         if (backStack.lastOrNull() !is CampfireDestination.Onboarding) return
         val next = nextOnboardingStep(onboardingStep, onboardingSteps())
         if (next != null) return showOnboardingStep(next)
-        isOnboardingFinishCelebrated = isFinishCelebrated
-        closeOnboarding()
+        isOnboardingFinishCelebrated = true
+        updateBackStack {
+            removeAll { it is CampfireDestination.Onboarding }
+            screenAfter?.let(::add)
+        }
     }
 
     /**
@@ -488,10 +493,6 @@ internal class Navigator(
     }
 
     private fun isEnabled(destination: CampfireDestination) = CampfireDestination.isEnabled(destination, FeatureSwitches.of(userPreferences()))
-
-    private fun List<CampfireDestination>.songDetailsIds() = mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id }
-
-    private fun List<CampfireDestination>.lastTool() = (lastOrNull() as? CampfireDestination.TopLevel)?.takeIf { it in CampfireDestination.TopLevel.tools }
 
     private companion object {
         const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.

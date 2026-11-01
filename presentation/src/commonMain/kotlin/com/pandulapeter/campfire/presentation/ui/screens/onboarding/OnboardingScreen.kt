@@ -187,7 +187,7 @@ internal fun OnboardingScreen(
                 sideMargin = sideMargin,
                 onBack = viewModel.navigator::navigateBack,
                 onClose = viewModel.navigator::closeOnboarding,
-                onNext = { viewModel.navigator.showNextOnboardingStep(isFinishCelebrated = importReport == null) },
+                onNext = { viewModel.navigator.showNextOnboardingStep(screenAfter = viewModel.importReportState.screenAfterOnboarding()) },
             )
         }
     }
