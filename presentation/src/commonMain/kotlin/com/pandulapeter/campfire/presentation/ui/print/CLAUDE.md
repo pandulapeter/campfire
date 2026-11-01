@@ -90,7 +90,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 ### Renderer
 
 `PrintRenderer` draws the preview and the file and measures for the layout, with the same fonts: the file is the
-preview at 216 dpi. Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts
+preview at 216 dpi. **The layout measures the advance a text is drawn with** (`PrintRenderer.width`), never the
+layout's size, which is rounded up to a whole point: the rounding of each padding space adds up, and a chord after a
+padded lyric would hang a letter late. Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts
 are cached by page (`PrintPageCache`, the 8 pages drawn last, matched by identity), never by text: a frame's pages
 always fit, while a frame drawing more texts than a per-text bound misses every one of them.
 `selectableText` takes each cluster's rectangle from the same `TextLayoutResult` (surrogate pairs and combining marks

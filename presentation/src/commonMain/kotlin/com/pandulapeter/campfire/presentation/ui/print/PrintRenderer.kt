@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
+import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
@@ -91,8 +92,25 @@ internal class PrintRenderer(
     /**
      * The width of [value] in PDF points, which the layout measures by. Not cached: the wrapping measures many
      * intermediate substrings, and keeping all of them alive for the life of a large setlist would cost more than it saves.
+     *
+     * The advance the glyphs are drawn with, not the layout's size, which is rounded up to a whole point: a lyric padded
+     * under a wide chord adds the rounding of every padding space it measures, and comes out a space short of where the
+     * chord row, measuring the chord and its gap, puts the next chord - which then hangs a letter late, on the page and
+     * for the import. A text holding right-to-left letters may not end where its caret does, so it spans its glyphs.
      */
-    fun width(value: String, style: PrintStyle): Float = text(value, style).size.width.toFloat()
+    fun width(value: String, style: PrintStyle): Float {
+        if (value.isEmpty()) return 0f
+        val layout = text(value, style)
+        if (!style.isRightToLeft && value.none { isStrongRtl(it.code) }) return layout.getHorizontalPosition(value.length, usePrimaryDirection = true)
+        var left = Float.MAX_VALUE
+        var right = -Float.MAX_VALUE
+        for (offset in value.indices) {
+            val box = layout.getBoundingBox(offset)
+            left = minOf(left, box.left)
+            right = maxOf(right, box.right)
+        }
+        return right - left
+    }
 
     /**
      * A lyric row laid out as it is drawn, and where the chords at [offsets] hang from, found as the screen's

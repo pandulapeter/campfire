@@ -10,7 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.createFontFamilyResolver
+import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -36,7 +39,11 @@ import kotlin.test.assertEquals
  */
 class PdfRoundTripTest {
 
-    private val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+    private val renderer = PrintRenderer(
+        measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr),
+        monospaceFontFamily = bundledFontFamily("jetbrains_mono_regular" to FontWeight.Normal, "jetbrains_mono_bold" to FontWeight.Bold),
+        textFontFamily = bundledFontFamily("inter_regular" to FontWeight.Normal, "inter_medium" to FontWeight.Medium, "inter_bold" to FontWeight.Bold),
+    )
     private val songRenderer = testSongRenderer()
     private val labels = PrintLabels(
         "Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing",
@@ -115,4 +122,12 @@ class PdfRoundTripTest {
 
     private fun ExtractedDocument.Span.toChordSheetSpan(): ChordSheet.Span =
         ChordSheet.Span(text, start, end, size, isBold, isMonospace, isRaised, isItalic, pieces.map { it.toChordSheetSpan() })
+
+    /**
+     * The faces the export prints in, read from the files the app bundles: the system's own faces, which a renderer
+     * built without them falls back on, differ from one operating system to the next, and so would what is tested.
+     */
+    private fun bundledFontFamily(vararg faces: Pair<String, FontWeight>) = FontFamily(
+        faces.map { (name, weight) -> Font(identity = name, data = File("src/commonMain/composeResources/font/$name.ttf").readBytes(), weight = weight) },
+    )
 }
