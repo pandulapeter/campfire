@@ -1106,7 +1106,7 @@ public object ChordSheetConverter {
 
         private fun words(text: String) = text.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }.joinToString(" ")
 
-        /** A chorus no heading names, set apart by its type alone, which a change of type ends. */
+        /** A chorus no heading names, set apart by its type alone, which a return to plain type ends. */
         fun openChorus() {
             if (environment != null || inTab || inGrid) return
             if (output.lastOrNull()?.isNotBlank() == true) output += ""
@@ -1125,12 +1125,14 @@ public object ChordSheetConverter {
 
         /**
          * A lyric of [look]: a section set apart from the verses ends where the lyrics return to their look. With no verse
-         * before it to compare with, only a change of type ends it, since lines of a centred sheet each start somewhere
-         * else.
+         * before it to compare with, only a return from bold or italic to plain type ends it, since lines of a centred
+         * sheet each start somewhere else and a line in another type inside it is a backing vocal or an aside.
          */
         fun follow(look: ChordSheetLook, text: String) {
             if (environment != null && sectionLooks.isNotEmpty()) {
-                val ends = if (sectionVerses.isEmpty()) sectionLooks.first().differsInType(look) else {
+                val opened = sectionLooks.first()
+                // With no verse to compare with, plain type is the one look known to be the verses'.
+                val ends = if (sectionVerses.isEmpty()) (opened.isBold || opened.isItalic) && !look.isBold && !look.isItalic else {
                     isSetApart(sectionVerses, sectionLooks) && returnsToVerses(look, sectionVerses)
                 }
                 if (ends) {

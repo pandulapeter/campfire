@@ -651,6 +651,33 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a backing vocal in italic inside a chorus of a song that heads every section stays in the chorus`() {
+        fun line(text: String, italic: Boolean = false, size: Double = 10.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isItalic = italic) })
+        val lines = listOf(
+            line("Song", size = 16.0),
+            line("Verse 1:"),
+            line("Somebody told me"),
+            line("We were born to sing"),
+            ChordSheet.Line(emptyList()),
+            line("Chorus:"),
+            line("Hey now you're a star"),
+            line("(hey now, hey now)", italic = true),
+            line("Get your game on, go play"),
+            line("Hey now you're a rock star"),
+            ChordSheet.Line(emptyList()),
+            line("Verse 2:"),
+            line("It's a cool place"),
+        )
+        assertEquals(
+            "{title: Song}\n\n{start_of_verse: Verse 1}\nSomebody told me\nWe were born to sing\n\n{end_of_verse}\n{start_of_chorus: Chorus}\n" +
+                "Hey now you're a star\n(hey now, hey now)\nGet your game on, go play\nHey now you're a rock star\n\n{end_of_chorus}\n" +
+                "{start_of_verse: Verse 2}\nIt's a cool place\n{end_of_verse}\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(
