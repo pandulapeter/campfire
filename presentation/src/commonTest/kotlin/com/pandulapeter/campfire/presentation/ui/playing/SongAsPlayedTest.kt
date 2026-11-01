@@ -69,8 +69,18 @@ class SongAsPlayedTest {
     }
 
     @Test
-    fun `a keyboard player who keeps the key writes the chords as they sound, with no capo`() =
-        assertEquals("{title: Song}\n{key: A}\n[A]One [D]two\n", asPlayed(playback(capo = 4, capoKeepsKey = true), keyboard))
+    fun `a keyboard player who keeps the key and changes nothing shown rewrites nothing`() {
+        assertNull(songAsPlayedOf(playback(capo = 2, capoKeepsKey = true), keyboard))
+        assertNull(songAsPlayedOf(playback(capo = 4, capoKeepsKey = true), keyboard))
+        assertNull(songAsPlayedOf(playback(capo = 4, capoKeepsKey = true).copy(capo = EffectiveCapo(fret = 4, songFret = 0)), keyboard))
+    }
+
+    @Test
+    fun `a keyboard player who keeps the key moves the chords by the transposition alone, the file's capo staying`() {
+        val asPlayed = assertNotNull(songAsPlayedOf(playback(transposition = 2, capo = 4, capoKeepsKey = true), keyboard))
+        assertNull(asPlayed.capo)
+        assertEquals("{title: Song}\n{key: A}\n{capo: 2}\n[A]One [D]two\n", asPlayed.applyTo(capoChart))
+    }
 
     @Test
     fun `a tempo alone is written, the chords keeping their spelling`() {

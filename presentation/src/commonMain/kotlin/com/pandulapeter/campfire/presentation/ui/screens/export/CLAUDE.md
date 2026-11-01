@@ -36,12 +36,12 @@ pipeline is in `ui/print/CLAUDE.md`.
   offer opens it on PDF (`withFormatIn`), the preference kept.
 - **The library's own files go out as played** (`PrintSettings.exportsAsPlayed`, on by default and remembered, the
   switch `AsPlayedOption` under the files' preview): a song's `.cho` and a zip of selected songs are rewritten
-  (`SongAsPlayed`, `ui/playing`) into valid ChordPro of what the reader plays, its chords, `{key}`, `{define}`s, and tabs
-  the shapes above the capo shown, `{capo}` that capo, `{tempo}` the one played, its later changes scaled as the page
-  plays them, so any app sounds as Campfire does under either capo reading, leaving out what a switch hides (the chords
-  and capo with chords off, the tempo with the metronome off). Offered only where a file would change (`isAsPlayedOffered`), never for a setlist, whose
-  manifest already carries how each song is played (both would apply twice on a reimport). A link shares the file as
-  stored.
+  (`SongAsPlayed`, `ui/playing`) into valid ChordPro of what the reader plays, its chords, `{key}`, `{define}`s, and
+  tabs the shapes above the capo shown, `{capo}` that capo (the file's own where none is shown), `{tempo}` the one
+  played, its later changes scaled as the page plays them, so any app sounds as Campfire does under either capo reading,
+  leaving out what a switch hides (the chords and capo with chords off, the tempo with the metronome off). Offered only
+  where a file would change (`isAsPlayedOffered`), never for a setlist, whose manifest already carries how each song is
+  played (both would apply twice on a reimport). A link shares the file as stored.
 - **Every song goes out**: no song ticks and no choice of the setlist's content, which only cluttered the screen. A
   setlist's PDF is its song sheets, after its running order where Include running order is on, or the running order
   alone where Include song sheets is off (never both off: each box is disabled while the other is unticked); its zip

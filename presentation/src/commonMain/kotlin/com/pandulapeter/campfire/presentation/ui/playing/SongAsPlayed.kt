@@ -71,14 +71,16 @@ internal data class SongAsPlayed(
 
 /**
  * How [playback] would be written into its song's file, or null where the file already says it all. The capo written is
- * the one shown ([isCapoShownFor]), none for a keyboard player who keeps the key, whose chords are then written as they
- * sound: what sounds here is the file's chords moved by [soundingTransposition], so the shapes above a capo of `c` are
- * those chords moved down by `c`. What a switch hides is not written, as it is neither named nor reset: the chords and
- * the capo stay as the file has them with the chords switched off, and the tempo with the metronome switched off.
+ * the one shown ([isCapoShownFor]): what sounds here is the file's chords moved by [soundingTransposition], so the shapes
+ * above a capo of `c` are those chords moved down by `c`. Where no capo is shown, for a keyboard player who keeps the
+ * key, the file's own capo is taken as the one played, so its chords move by the reader's transposition alone and its
+ * `{capo}` stays, for the guitarist the file goes to: a capo override nobody is shown is not written. What a switch
+ * hides is not written either, as it is neither named nor reset: the chords and the capo stay as the file has them with
+ * the chords switched off, and the tempo with the metronome switched off.
  */
 internal fun songAsPlayedOf(playback: SongPlayback, preferences: UserPreferences?): SongAsPlayed? {
     val areChordsShown = preferences?.areChordsEnabled != false
-    val capo = if (playback.isCapoShownFor(preferences)) playback.capo.fret else 0
+    val capo = if (playback.isCapoShownFor(preferences)) playback.capo.fret else playback.capo.songFret
     val semitones = if (areChordsShown) wrapTransposition(playback.soundingTransposition - capo) else 0
     val writtenCapo = capo.takeIf { areChordsShown && it != playback.capo.songFret }
     val tempo = playback.tempo.takeUnless { it.isDefault || preferences?.isMetronomeEnabled == false }?.bpm
