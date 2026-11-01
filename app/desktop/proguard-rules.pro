@@ -38,6 +38,10 @@
 # class unoptimized does. Starting the app does not reach the class, so only opening such a song shows the break.
 -keep,allowshrinking,allowobfuscation class com.pandulapeter.campfire.presentation.ui.songView.SongChordsSectionKt { *; }
 
+# The chord sheet converter (which reads pasted, shared, and PDF chord sheets) breaks the same way: once optimized, the
+# JVM refuses it with "Instruction type does not match stack map", and every such import fails on the desktop.
+-keep,allowshrinking,allowobfuscation class com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter { *; }
+
 # The single instance lock is held by keeping its FileLock in a field that nothing ever reads, since holding it is the
 # whole of its job. ProGuard removes a field that is only written, the lock and its channel are then unreachable, and
 # the first garbage collection closes the channel and releases the lock: every file opened in Explorer after that
