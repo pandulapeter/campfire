@@ -260,6 +260,33 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a song of choruses is read from its left, its details row no box`() {
+        val chorus = MARGIN + 8.0
+        val song = convert(
+            text("Tonalit\u00e0: C", size = LABEL, width = (chorus + 10 * GLYPH - 5.0 - MARGIN) / 11),
+            text("Ritornello", x = chorus, size = LABEL, bold = true),
+            ChordSheet.Line(text("C", x = chorus, bold = true).spans + text("F", x = chorus + 8 * GLYPH, bold = true).spans),
+            text("Love is all around", x = chorus),
+            text("Ritornello", x = chorus, size = LABEL, bold = true),
+            ChordSheet.Line(text("D", x = chorus, bold = true).spans + text("G", x = chorus + 8 * GLYPH, bold = true).spans),
+            text("Love is all around", x = chorus),
+        )
+        assertTrue("{key: C}" in song, song)
+        assertFalse("comment_box" in song, song)
+    }
+
+    @Test
+    fun `a details row ending past a right-to-left column's edge leaves its lyrics unboxed`() {
+        val lines = listOf(
+            text("Tonalitate: G", x = RIGHT + 0.97 - 13 * GLYPH, size = LABEL),
+            ChordSheet.Line(text("C", x = RIGHT - 16 * GLYPH - 5.0, bold = true).spans + text("G", x = RIGHT - GLYPH, bold = true).spans),
+            ChordSheet.Line(listOf(ChordSheet.Span("\u05e9\u05dc\u05d5\u05dd Hello world", RIGHT - 16 * GLYPH, RIGHT, BODY))),
+            ChordSheet.Line(listOf(ChordSheet.Span("Rock and roll \u05e9\u05e8\u05d9\u05dd", RIGHT - 18 * GLYPH, RIGHT, BODY))),
+        )
+        assertEquals(listOf(null, null, null, null), ChordSheetCampfireLayout.roles(lines, listOf(false, true, false, false), BODY))
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

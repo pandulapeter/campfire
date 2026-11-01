@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
+import kotlin.math.abs
 
 /**
  * What the layout of Campfire's own PDF export ([ChordSheet.isCampfireExport]) says about a line, which is read rather
@@ -98,8 +99,8 @@ internal object ChordSheetCampfireLayout {
     /**
      * Whether the song holding the line at [index] is printed flush right. The export sets every row of a right-to-left
      * song from the right, an English comment or lyric in it too, so the side is the song's, never the line's own
-     * letters: more of its plain lines end at its right edge than start at its left one, and a tie (one line, lines of
-     * one width) goes to the letters of those lines. Only the lines beside the candidate count, so that each column of
+     * letters: more of its plain lines end at the edge most of them share than start at the one most of them share,
+     * and a tie (one line, lines of one width) goes to the letters of those lines. Only the lines beside the candidate count, so that each column of
      * a two-column page is judged by its own edges.
      */
     private fun isFlushRight(lines: List<ChordSheet.Line>, starts: List<Double?>, ends: List<Double?>, song: IntRange, index: Int): Boolean {
@@ -110,10 +111,13 @@ internal object ChordSheetCampfireLayout {
             val otherEnd = ends[other]
             if (otherStart != null && otherEnd != null && lines[other].isPlain() && otherStart < until && otherEnd > from) Triple(other, otherStart, otherEnd) else null
         }
-        val left = column.minOf { it.second }
-        val right = column.maxOf { it.third }
-        val flushLeft = column.count { it.second - left <= TOLERANCE }
-        val flushRight = column.count { right - it.third <= TOLERANCE }
+        // The edge the most lines share: a line of left-to-right text set from the right may end past it, and a song of
+        // choruses has a details row alone at the margin.
+        fun shared(edges: List<Double>) = edges.maxBy { edge -> edges.count { abs(it - edge) <= TOLERANCE } }
+        val left = shared(column.map { it.second })
+        val right = shared(column.map { it.third })
+        val flushLeft = column.count { abs(it.second - left) <= TOLERANCE }
+        val flushRight = column.count { abs(right - it.third) <= TOLERANCE }
         return if (flushRight != flushLeft) flushRight > flushLeft else {
             writingDirectionOf(column.joinToString(" ") { (other) -> lines[other].spans.joinToString("") { it.text } }) == WritingDirection.RIGHT_TO_LEFT
         }

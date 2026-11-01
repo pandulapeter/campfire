@@ -158,6 +158,26 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a song's side is told by the edge most of its lines share`() = runBlocking {
+        val choruses = ChordProParser.parse(
+            "{title: Truck Driver Change}\n{key: C}\n{start_of_chorus}\n[C]Love is [F]all a[G]round\n{end_of_chorus}\n" +
+                "{start_of_chorus}\n[D]Love is [G]all a[A]round\n{end_of_chorus}\n",
+        )
+        // The details row alone stands at the margin, beside lyrics set behind the chorus bar under the Italian label.
+        val italian = printLabelsOf(File("src/commonMain/composeResources/values-it")).let { it.copy(sections = it.sections.copy(chorus = "Ritornello")) }
+        val hebrew = songRenderer.transposedSong(corpus.getValue("17-hebrew-mixed.cho"), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
+        val romanian = printLabelsOf(File("src/commonMain/composeResources/values-ro"))
+        val prints = (1..PrintSettings.MAX_COLUMNS).map { columns -> Triple("Truck Driver Change in $columns columns", choruses, roundTrip(choruses, PrintSettings(columns = columns), italian)) } +
+            Triple("17-hebrew-mixed", hebrew, roundTrip(hebrew, PrintSettings(columns = PrintSettings.MAX_COLUMNS), romanian))
+        val failures = prints.mapNotNull { (name, song, imported) ->
+            val expected = summary(song)
+            val actual = summary(imported)
+            if (expected == actual) null else "$name:\n  expected $expected\n  actual   $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",
