@@ -23,8 +23,10 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -62,6 +64,12 @@ class PdfRoundTripTest {
     private val corpus = File(requireNotNull(javaClass.getResource("/corpus")).toURI()).listFiles().orEmpty()
         .filter { it.extension == "cho" }.sortedBy { it.name }.associate { it.name to printable(it.readText().removePrefix("\uFEFF")) }
 
+    /** Sizes across the export's range, where a rounding or a fallback font's taller line box may cross a threshold. */
+    private val fontSizes = listOf(8, 11, 15, 20)
+
+    /** Every column count at each of [fontSizes]. */
+    private val sizedPrints = (1..PrintSettings.MAX_COLUMNS).flatMap { columns -> fontSizes.map { PrintSettings(columns = columns, fontSize = it) } }
+
     /**
      * [text] without what the export prints but the import does not read back as it was: a text block, whose prose comes
      * back as lyrics, and a bracket naming no chord (`[x]`), which is printed in bold like a chord but not taken for one.
@@ -76,8 +84,9 @@ class PdfRoundTripTest {
         val failures = corpus.flatMap { (name, text) ->
             prints.mapNotNull { settings ->
                 val original = songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
-                val expected = summary(original)
-                val actual = summary(roundTrip(original, settings))
+                val expected = summary(original) + keyChangesOf(original)
+                val imported = roundTripText(original, settings)
+                val actual = summary(ChordProParser.parse(imported)) + keyChangesOf(imported)
                 if (expected == actual) null else "$name in ${settings.columns} columns${if (settings.isLandscape) " landscape" else ""}:\n  expected $expected\n  actual   $actual"
             }
         }
@@ -97,7 +106,7 @@ class PdfRoundTripTest {
     @Test
     fun `a title and a lyric whose words are chord names by their text alone come back as they were`() = runBlocking {
         val song = ChordProParser.parse("{title: A}\n{start_of_verse}\n[C]Hello a b c d\na b c d\n{end_of_verse}\n")
-        assertEquals(summary(song), summary(roundTrip(song, PrintSettings())))
+        fontSizes.forEach { fontSize -> assertEquals(summary(song), summary(roundTrip(song, PrintSettings(fontSize = fontSize))), "$fontSize points") }
     }
 
     @Test
@@ -107,10 +116,10 @@ class PdfRoundTripTest {
             "[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world",
         ).map { ChordProParser.parse("{title: Song}\n{start_of_verse}\n$it\n{end_of_verse}\n") }
         val failures = songs.flatMap { song ->
-            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+            sizedPrints.mapNotNull { settings ->
                 val expected = summary(song)
-                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
-                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+                val actual = summary(roundTrip(song, settings))
+                if (expected == actual) null else "${settings.columns} columns at ${settings.fontSize} points:\n  expected $expected\n  actual   $actual"
             }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
@@ -124,10 +133,10 @@ class PdfRoundTripTest {
             "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[G] [C]\n\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n",
         ).map(ChordProParser::parse)
         val failures = songs.flatMap { song ->
-            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+            sizedPrints.mapNotNull { settings ->
                 val expected = summary(song)
-                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
-                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+                val actual = summary(roundTrip(song, settings))
+                if (expected == actual) null else "${settings.columns} columns at ${settings.fontSize} points:\n  expected $expected\n  actual   $actual"
             }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
@@ -141,10 +150,10 @@ class PdfRoundTripTest {
             "{title: A rather long title}\nHi there\nAnd [C]more of it here\n",
         ).map(ChordProParser::parse)
         val failures = songs.flatMap { song ->
-            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+            sizedPrints.mapNotNull { settings ->
                 val expected = summary(song)
-                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
-                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+                val actual = summary(roundTrip(song, settings))
+                if (expected == actual) null else "${settings.columns} columns at ${settings.fontSize} points:\n  expected $expected\n  actual   $actual"
             }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
@@ -153,22 +162,24 @@ class PdfRoundTripTest {
     @Test
     fun `a chord row opening with an annotation comes back over its lyric in every column count`() = runBlocking {
         val song = ChordProParser.parse("{title: Song}\n{start_of_chorus}\n[*Everybody] [D7]Home, [G]home on the [C]range\n{end_of_chorus}\n")
-        val failures = (1..PrintSettings.MAX_COLUMNS).flatMap { columns -> listOf(PrintSettings(columns = columns), PrintSettings(columns = columns, isLandscape = true)) }
+        val failures = sizedPrints.flatMap { listOf(it, it.copy(isLandscape = true)) }
             .mapNotNull { settings ->
                 val expected = summary(song)
                 val actual = summary(roundTrip(song, settings))
-                if (expected == actual) null else "${settings.columns} columns${if (settings.isLandscape) " landscape" else ""}: $actual"
+                if (expected == actual) null else "${settings.columns} columns${if (settings.isLandscape) " landscape" else ""} at ${settings.fontSize} points: $actual"
             }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }
 
     @Test
     fun `a right-to-left song wrapped by a narrow column comes back with each chord on its letter and each line whole`() = runBlocking {
-        val failures = listOf("60-generated-rtl-10.cho", "60-generated-rtl-15.cho").mapNotNull { name ->
+        val failures = listOf("60-generated-rtl-10.cho", "60-generated-rtl-15.cho").flatMap { name ->
             val original = songRenderer.transposedSong(corpus.getValue(name), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
-            val expected = summary(original)
-            val actual = summary(roundTrip(original, PrintSettings(columns = PrintSettings.MAX_COLUMNS)))
-            if (expected == actual) null else "$name:\n  expected $expected\n  actual   $actual"
+            fontSizes.mapNotNull { fontSize ->
+                val expected = summary(original)
+                val actual = summary(roundTrip(original, PrintSettings(columns = PrintSettings.MAX_COLUMNS, fontSize = fontSize)))
+                if (expected == actual) null else "$name at $fontSize points:\n  expected $expected\n  actual   $actual"
+            }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
     }
@@ -178,10 +189,10 @@ class PdfRoundTripTest {
         val song = ChordProParser.parse(
             "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\n\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n",
         )
-        val failures = (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+        val failures = sizedPrints.mapNotNull { settings ->
             val expected = summary(song)
-            val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
-            if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+            val actual = summary(roundTrip(song, settings))
+            if (expected == actual) null else "${settings.columns} columns at ${settings.fontSize} points:\n  expected $expected\n  actual   $actual"
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }
@@ -209,7 +220,7 @@ class PdfRoundTripTest {
             "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[C]\u05e9\u05dc\u05d5\u05dd [G]\u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n" +
                 "{start_of_verse}\n[C] [G] [Am]\n{end_of_verse}\n",
         )
-        assertEquals(summary(song), summary(roundTrip(song, PrintSettings())))
+        fontSizes.forEach { fontSize -> assertEquals(summary(song), summary(roundTrip(song, PrintSettings(fontSize = fontSize))), "$fontSize points") }
     }
 
     @Test
@@ -412,20 +423,37 @@ class PdfRoundTripTest {
     }
 
     /**
-     * What the round trip promises to keep: the title, the artist, how the song is played, and each section's kind with its lyrics and their chords, written
-     * inline. A section of no lyrics (a tab, a grid, a tune) is left out, and so is the spacing around a chord past a
-     * line's end and after a chord, which the export's padding leaves undecided.
+     * What the round trip promises to keep: the title, the artist, how the song is played, and in their order each
+     * section's kind with its lyrics and their chords, written inline, whether it holds a tab or a grid, and each comment
+     * with whether it is boxed (a plain and an italic comment print alike). Comments of one kind printed one under another
+     * are one text, since the export does not mark the rows of a comment wrapped at a space, which the import joins. A section of no lyrics, tab, or grid (a tune)
+     * is left out, and so is the spacing around a chord past a line's end and after a chord, which the export's padding
+     * leaves undecided. Key changes are [keyChangesOf]'s, since the import writes them as `{key}` lines, which the parser
+     * reads past.
      */
     private fun summary(song: ChordProSong) = with(song.metadata) {
         listOf(title, artist, key, capo?.toString(), tempo, time).map { it?.replace('\u00A0', ' ') }
-    } + song.blocks.flatMap { block ->
-        when (block) {
-            is ChordProBlock.Section -> listOf(block)
-            is ChordProBlock.ChorusRecall -> block.blocks.filterIsInstance<ChordProBlock.Section>()
-            else -> emptyList()
-        }
-    }.filter { section -> section.lines.any { it is ChordProLine.Lyrics } }.map { section ->
-        section.type.toString().replace('_', '-') + ": " + section.lines.filterIsInstance<ChordProLine.Lyrics>().joinToString(" / ") { line ->
+    } + song.blocks.flatMap(::summaryOf).fold(emptyList<String>()) { summary, item ->
+        val last = summary.lastOrNull()
+        val kind = item.substringBefore(": ", "")
+        if (kind in commentKinds && last?.substringBefore(": ", "") == kind) summary.dropLast(1) + "$last ${item.substringAfter(": ")}" else summary + item
+    }
+
+    private val commentKinds = setOf("comment", "box")
+
+    private fun summaryOf(block: ChordProBlock): List<String> = when (block) {
+        is ChordProBlock.Section -> listOfNotNull(
+            lyricsOf(block),
+            "tab".takeIf { block.lines.any { it is ChordProLine.Tab } },
+            "grid".takeIf { block.lines.any { it is ChordProLine.Grid } },
+        )
+        is ChordProBlock.ChorusRecall -> block.blocks.flatMap(::summaryOf)
+        is ChordProBlock.Comment -> listOf((if (block.style == CommentStyle.BOX) "box: " else "comment: ") + ChordProMarkup.strip(block.text).text.trim())
+        else -> emptyList()
+    }
+
+    private fun lyricsOf(section: ChordProBlock.Section) = section.lines.filterIsInstance<ChordProLine.Lyrics>().takeIf { it.isNotEmpty() }?.let { lines ->
+        section.type.toString().replace('_', '-') + ": " + lines.joinToString(" / ") { line ->
             buildString {
                 var at = 0
                 line.chords.forEach { chord ->
@@ -437,6 +465,22 @@ class PdfRoundTripTest {
             }.replace('\u00A0', ' ').replace(Regex(" +"), " ").replace(Regex(" (\\[[^\\]]*\\])$"), "$1").replace("] ", "]").trim()
         }
     }
+
+    /** The keys [song] changes to further down, the key in force named again left out, as the export prints them. */
+    private fun keyChangesOf(song: ChordProSong): List<String> {
+        var inForce = song.metadata.key
+        return song.blocks.filterIsInstance<ChordProBlock.Transpose>().mapNotNull { change ->
+            change.key?.takeIf { it.isNotBlank() && it != inForce }?.also { inForce = it }
+        }
+    }
+
+    /** The keys an imported [text] changes to further down: its `{key}` lines after the header's. */
+    private fun keyChangesOf(text: String): List<String> {
+        val body = text.lines().dropWhile { !it.startsWith("{start_of_") && !it.startsWith("{chorus") && !it.startsWith("{comment") }
+        return body.mapNotNull { line -> keyLine.matchEntire(line)?.groupValues?.get(1) }
+    }
+
+    private val keyLine = Regex("\\{key: (.*)\\}")
 
     private fun ExtractedDocument.toChordSheet() = ChordSheet(
         pages = pages.map { page -> ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { it.toChordSheetSpan() }, line.isHeading, line.baseline) }) },
