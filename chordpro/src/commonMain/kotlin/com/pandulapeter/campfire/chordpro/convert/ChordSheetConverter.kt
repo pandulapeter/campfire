@@ -44,13 +44,22 @@ public object ChordSheetConverter {
             }
         }
         val pages = if (!sheet.isCampfireExport) rendered else {
-            // The lyrics' size, which the labels are set a point under: the plain text, not the many glyphs of a tab.
-            val bodySize = rendered.flatten().flatMap { line ->
+            // The lyrics' size, which the labels are set a point under: that of the lines right under a chord row, a lyric
+            // under its chords being always at the body's size. The plain text at large, not the many glyphs of a tab, is
+            // only the fallback for a document of no chords: the details row is plain too, a point smaller, and outvotes
+            // the lyrics wherever it has more letters, right-to-left lyrics arriving as one span a line.
+            val plainSizes = rendered.flatten().flatMap { line ->
                 line.source.spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }.map { it.size }
             }.sorted()
-                .let { it.getOrNull(it.size / 2) ?: 1.0 }
-            rendered.map { page ->
-                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, page.map { it.text.isNotBlank() && chordRow(it, isCampfire = true) != null }, bodySize)
+            val isChordRowLine = rendered.map { page -> page.map { it.text.isNotBlank() && chordRow(it, isCampfire = true) != null } }
+            val lyricSizes = rendered.flatMapIndexed { pageIndex, page ->
+                page.indices.filter { it > 0 && isChordRowLine[pageIndex][it - 1] }.mapNotNull { index ->
+                    page[index].source.spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }.maxOfOrNull { it.size }
+                }
+            }.sorted()
+            val bodySize = lyricSizes.getOrNull(lyricSizes.size / 2) ?: plainSizes.getOrNull(plainSizes.size / 2) ?: 1.0
+            rendered.mapIndexed { pageIndex, page ->
+                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], bodySize)
                 page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true) }
             }
         }

@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
@@ -36,6 +37,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Every song of :chordpro's corpus printed as the export prints it, and its PDF read back as the import reads it: the
@@ -79,6 +81,16 @@ class PdfRoundTripTest {
             }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
+    }
+
+    @Test
+    fun `a grid's label comes back as its label under a details row longer than the lyrics`() = runBlocking {
+        val original = songRenderer.transposedSong(corpus.getValue("05-grid.cho"), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
+        val imported = roundTrip(original, PrintSettings(), printLabelsOf(File("src/commonMain/composeResources/values-de")))
+        val sections = imported.blocks.filterIsInstance<ChordProBlock.Section>()
+        val text = sections.flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>().map { it.text } }
+        assertEquals(emptyList(), text.filter { "4x4" in it }, imported.toString())
+        assertTrue(sections.none { it.type == SectionType.Paragraph }, imported.toString())
     }
 
     @Test

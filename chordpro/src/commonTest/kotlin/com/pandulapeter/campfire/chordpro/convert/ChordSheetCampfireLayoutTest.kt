@@ -123,6 +123,19 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a details row longer than the lyrics leaves the labels labels`() {
+        val song = convert(
+            text("Tonart: A   Taktart: 4/4", size = LABEL),
+            text("4x4", size = LABEL, bold = true),
+            text("| A7 . . . | D7 . . . |", bold = true, mono = true),
+            text("Strophe", size = LABEL, bold = true),
+            chords("A7" to 0, "D7" to 13),
+            text("Woke up this morning"),
+        )
+        assertTrue("{start_of_verse: 4x4}\n{start_of_grid}" in song, song)
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

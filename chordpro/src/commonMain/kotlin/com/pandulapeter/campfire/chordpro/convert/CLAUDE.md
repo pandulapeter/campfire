@@ -16,7 +16,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   as likely sung (a single chord, `La La La`, "Time after time") is a chord or a field only with corroborating evidence.
 - It reads back Campfire's own PDF export (the heading row, wrapped chord lines, narrow-column titles). A sheet flagged
   as one (`ChordSheet.isCampfireExport`) is read by the type each line is printed in (`ChordSheetCampfireLayout`):
-  labels open sections (a label over a tab is the tab's), grids, italic comments, and boxed comments come back as
+  labels open sections (a point under the lyrics' size, read from the lines under its chord rows; a label over a
+  tab is the tab's), grids, italic comments, and boxed comments come back as
   written (an italic lyric is told from a comment by its distance under the chord row above,
   `ChordSheet.Line.baseline`), the padding under wide chords is left out, a chord is set on the character it stands
   over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
