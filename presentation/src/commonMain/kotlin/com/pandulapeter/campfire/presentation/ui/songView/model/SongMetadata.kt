@@ -25,8 +25,8 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  *
  * @param shouldShowChords False with the chords switched off, which leaves out the key and the capo along with the
  * chords: they are what is played, and say nothing to somebody who is only singing.
- * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition the key already counts in, so
- * that a capo said on the page would be counted twice.
+ * @param shapesKey The key of the shapes the page names its chords by under the capo, which the line of text names after
+ * the capo (`ShapeNames`), the key it names being the one that sounds; null where the chords are named as they sound.
  * @param shouldShowTempo False with the metronome switched off, which leaves out the tempo and the time signature: they
  * are what the click plays, and say nothing without one.
  * @param isSongInfoShown Whether the card of what the song is belongs to the section: it does in the editor's preview,
@@ -48,7 +48,7 @@ internal fun withMetadataSection(
     sections: List<RenderSection>,
     metadata: ChordProMetadata,
     shouldShowChords: Boolean,
-    shouldShowCapo: Boolean = true,
+    shapesKey: String? = null,
     shouldShowTempo: Boolean = true,
     isSongInfoShown: Boolean,
     isSongInfoEditable: Boolean = false,
@@ -64,7 +64,7 @@ internal fun withMetadataSection(
     val shownMetadata = metadata.copy(
         key = metadata.key.takeIf { shouldShowChords },
         capo = when {
-            !shouldShowChords || !shouldShowCapo -> null
+            !shouldShowChords -> null
             readsBoth -> (metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
             else -> metadata.capo?.coerceIn(Song.CAPO_RANGE)
         },
@@ -83,6 +83,7 @@ internal fun withMetadataSection(
             metadata = shownMetadata,
             hasPlayingControls = hasControls,
             readsDefaults = readsBoth,
+            shapesKey = shapesKey?.takeIf { shownMetadata.capo.let { it != null && it != 0 } },
             hasTuner = hasTuner,
             hasMetronome = hasMetronome,
         )

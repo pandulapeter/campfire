@@ -81,6 +81,7 @@ internal fun SongSectionItem(
             playingControls = playingControls,
             playingTools = playingTools,
             readsDefaults = section.readsDefaults,
+            shapesKey = section.shapesKey,
             animatesControls = animatesRows,
             titleStyle = headerStyle,
             lyricsStyle = sentenceStyle,

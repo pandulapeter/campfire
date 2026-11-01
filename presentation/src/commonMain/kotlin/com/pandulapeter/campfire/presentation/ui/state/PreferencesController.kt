@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
@@ -234,6 +235,8 @@ internal class PreferencesController(
     fun setLanguage(value: AppLanguage) = changeUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
+
+    fun setChordNames(value: ChordNames) = changeUserPreferences { copy(chordNames = value) }
 
     fun setNotation(notation: UserPreferences.Notation) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(notation = notation)) }
 

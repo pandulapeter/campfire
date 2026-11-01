@@ -112,6 +112,8 @@ data class UserPreferences(
      * its Chords section, and a scale's, in the scale sheet's chords.
      */
     val areChordDegreesEnabled: Boolean = false,
+    /** How a song's chords are named under a capo. Never exported or synced: it is how one reader reads. */
+    val chordNames: ChordNames = ChordNames.SHAPES,
     /**
      * Whether the app has a chord library: the Chords tab, and the chords a scale sheet lists. It follows neither
      * [areChordsEnabled] nor [areChordDiagramsEnabled], which are about how a song is read.

@@ -456,6 +456,10 @@
     <string name="settings_chord_diagrams_description">הצגת אופן הנגינה של כל אקורד בשיר, בראש השיר.</string>
     <string name="settings_chord_degrees">דרגות האקורדים</string>
     <string name="settings_chord_degrees_description">ציון הדרגה בטונליות של השיר שעליה עומד כל אקורד בדיאגרמה, למשל V7 ליד G7.</string>
+    <string name="settings_chord_names">שמות האקורדים</string>
+    <string name="settings_chord_names_description">עם קאפו, האקורדים של שיר נקראים לפי הצורות שנלחצות מעליו או לפי איך שהם נשמעים. הטונליות של השיר תמיד אומרת איך הוא נשמע, ובקלידים גם האקורדים.</string>
+    <string name="settings_chord_names_shapes">צורות</string>
+    <string name="settings_chord_names_sounding">צליל</string>
     <string name="settings_metronome_description">הלשונית “מטרונום” והקליק במסך השיר, יחד עם הטמפו והמשקל של כל שיר</string>
     <string name="settings_tuner_description">הלשונית “טיונר”, והמיקרופון שדרכו הוא מאזין</string>
     <string name="settings_scales_description">הלשונית “סולמות”: כל הסולמות והמודוסים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
@@ -1122,6 +1126,9 @@
     <string name="song_details_chord_degree">%1$s, דרגה %2$s</string>
     <string name="song_details_chord_shape_choose">בחירת צורת אקורד - %1$s</string>
     <string name="song_details_chord_shape_capo">צורת %1$s, קאפו %2$s</string>
+    <string name="song_details_chord_sounding_capo">נשמע כ־%1$s, קאפו %2$s</string>
+    <string name="song_details_shapes_capo">צורות, קאפו</string>
+    <string name="song_details_capo_shapes">%1$s (צורות %2$s)</string>
     <string name="song_details_chord_defined">מוגדר בשיר הזה</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">מוגדר בשיר הזה, הוזז בסריג אחד</item>

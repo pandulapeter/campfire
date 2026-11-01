@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.playing
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /** Every override of how a song is played, as one value the screens that read all three collect once. */
@@ -40,9 +41,20 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
  * The semitones that take the file's chords to the ones that sound where the song is opened: the reader's transposition
  * and the effective capo, wrapped around the octave as the stepper wraps. The file's chords are the shapes fingered above
  * a capo, the file's own `{capo}` or the one the setlist or the device puts on instead, so every capo keeps the shapes
- * ([shapeCapoFor]) and raises the pitch: every instrument names the chords, the key, and the scales that sound.
+ * ([shapeCapoFor]) and raises the pitch. The key, the cards, and the scales name what sounds on every instrument; a song's
+ * chords are named [nameCapoFor] lower ([namingTransposition]).
  */
 internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, capo.fret)
+
+/**
+ * The semitones below the chords that sound that a song's chords are named at, over the lyrics, in its comments, in its
+ * Chords section, its key changes, and the PDF: the effective capo where the reader names the shapes fingered above it
+ * ([namesShapes]), so that a capo moves no name there and only the transposition does; none where they name what sounds.
+ */
+internal fun SongPlayback.nameCapoFor(preferences: UserPreferences?) = if (preferences.namesShapes) capo.fret else 0
+
+/** The semitones that take the file's chords to the ones a song's page names, see [nameCapoFor]. */
+internal fun SongPlayback.namingTransposition(preferences: UserPreferences?) = soundingTransposition - nameCapoFor(preferences)
 
 /**
  * The semitones of [soundingTransposition] a tab's frets are not moved by: a tab is counted from the capo it is played
@@ -59,10 +71,17 @@ internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTr
 internal fun SongPlayback.shapeCapoFor(preferences: UserPreferences?) = if (preferences.playsWithoutCapo) 0 else capo.fret
 
 /**
- * Whether the player's instrument takes no capo: the keyboard, which has no capo stepper or capo line, and whose diagrams
- * are the sounding chords themselves, the effective capo counted in as for every instrument.
+ * Whether the player's instrument takes no capo: the keyboard, whose diagrams and names are the sounding chords
+ * themselves, the effective capo counted in as for every instrument. It still shows the capo and its stepper, since a
+ * capo the band plays with raises the pitch for the pianist too.
  */
 internal val UserPreferences?.playsWithoutCapo get() = this?.instrument == UserPreferences.Instrument.KEYBOARD
+
+/**
+ * Whether a song's chords are named by the shapes fingered above the capo ([ChordNames.SHAPES], the default, also before
+ * the preferences are read) rather than by what sounds: never on the keyboard ([playsWithoutCapo]), fingered as it sounds.
+ */
+internal val UserPreferences?.namesShapes get() = !playsWithoutCapo && (this?.chordNames ?: ChordNames.SHAPES) == ChordNames.SHAPES
 
 /** The transposition that takes a song played at [transposition] and capoed at [capo] to the chords that sound. */
 internal fun soundingTransposition(transposition: Int, capo: Int) = wrapTransposition(transposition + capo)

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
@@ -259,6 +260,15 @@ internal class UserPreferencesMappersTest {
         val unreadable = UserPreferencesDocument(songLayout = "sideways", autoScrollSpeeds = mapOf("a.cho" to 0, "b.cho" to 80)).toModel()
         assertEquals(SongLayout.PAGES, unreadable.songLayout)
         assertEquals(mapOf("b.cho" to 80), unreadable.autoScrollSpeeds)
+    }
+
+    @Test
+    fun `the chord names default to the shapes and survive a round trip, an unknown one read as the shapes`() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(ChordNames.SHAPES, defaults.chordNames)
+        val sounding = defaults.copy(chordNames = ChordNames.SOUNDING)
+        assertEquals(sounding, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(sounding.toDocument())).document.toModel())
+        assertEquals(ChordNames.SHAPES, UserPreferencesDocument(chordNames = "whistled").toModel().chordNames)
     }
 
     @Test

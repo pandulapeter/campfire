@@ -10,6 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.songView.firstSection
 
 import com.pandulapeter.campfire.presentation.ui.songView.PlacementMotion
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.MaterialTheme
@@ -55,10 +59,16 @@ internal fun PlayingControl(
     Layout(
         modifier = modifier,
         content = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            )
+            // A label can change while the page is read (the capo's, once its key names shapes), so it fades and resizes.
+            AnimatedContent(
+                targetState = label,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) { shownLabel ->
+                Text(
+                    text = shownLabel,
+                    style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 control()
                 trailing()

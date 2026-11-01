@@ -31,8 +31,10 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.chords.hasSongChords
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.groupedByKey
+import com.pandulapeter.campfire.presentation.ui.chords.namedAsShapes
 import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
+import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +52,8 @@ import kotlinx.coroutines.withContext
  * heads the song's first section then ([RenderSection.Metadata.instrumentPill]), since it is what brings the diagrams
  * back.
  * @param notationChords How the chords over the lyrics are named, which an engraved ABC tune's chord symbols follow.
+ * @param shapesKey The key of the shapes the page names its chords by under a capo, which the line of values names after
+ * the capo ("Capo 2, Em shapes"); null where the chords are named as they sound (see `ShapeNames`).
  * @param textDirection The one direction the song's body is laid out in, whatever the interface's (see
  * `ChordProSong.textDirection`): a walk over its lyrics, so made with the model, off the main thread, rather than per frame.
  */
@@ -65,6 +69,7 @@ internal class SongLyricsModel(
     val scaleGroups: List<SongScaleGroup> = emptyList(),
     val notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
     val textDirection: WritingDirection = song.textDirection,
+    val shapesKey: String? = null,
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -86,6 +91,7 @@ internal class SongLyricsModel(
         scaleGroups = scaleGroups,
         notationChords = notationChords,
         textDirection = textDirection,
+        shapesKey = shapesKey,
     )
 }
 
@@ -107,6 +113,13 @@ internal class SongLyricsModel(
  * the frame of its chords: what a numbering counts them from (`ChordProNotation.toNotation`'s `fallbackKey`), so that the
  * Chords and Scales sections name a chord as the page does.
  * @param shapeCapo The fret the Chords section's shapes are fingered above, see [songChordsOf]'s `capo`.
+ * @param namedSong [standardSong] as the page names its chords where that is [nameCapo] semitones below what sounds (the
+ * shapes fingered above the capo, `SongPlayback.nameCapoFor`), which the Chords section's names are then read from
+ * ([namedAsShapes]); everything else of a chord, its notes, its shape, and its degree, and the Scales section stay the
+ * sounding song's.
+ * @param namedInferredKey [inferredKey] in the frame of [namedSong].
+ * @param shapesKey The key of the shapes the page names, which the line of values names after the capo, see
+ * [SongLyricsModel.shapesKey].
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
@@ -129,6 +142,10 @@ internal fun prepareSongLyrics(
     suggestsScales: Boolean = false,
     showsDegrees: Boolean = false,
     shapeCapo: Int = 0,
+    namedSong: ChordProSong = standardSong,
+    nameCapo: Int = 0,
+    namedInferredKey: String? = inferredKey,
+    shapesKey: String? = null,
     notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
@@ -142,8 +159,8 @@ internal fun prepareSongLyrics(
     // once; the grouping needs it whether or not degrees are shown, since a song naming no key has no home without it.
     val analysis = if (shouldShowChords && !isSongbook && (suggestsScales || collected.isNotEmpty())) songScaleAnalysisOf(standardSong, labels) else null
     val keys = if (collected.isNotEmpty()) chordKeysOf(standardSong, analysis, isSongbook) else null
-    val grouped = collected.groupedByKey(keys, notation)
-    val chords = if (degreesShown) grouped.withDegrees(keys, notation) else grouped
+    val grouped = collected.groupedByKey(keys, notation, nameCapo)
+    val chords = (if (degreesShown) grouped.withDegrees(keys, notation) else grouped).namedAsShapes(namedSong, notation, nameCapo, namedInferredKey)
     SongLyricsModel(
         song = song,
         sections = sections.withoutEmptyTimings(),
@@ -158,6 +175,7 @@ internal fun prepareSongLyrics(
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation, inferredKey)),
         scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis, inferredKey) else emptyList(),
         notationChords = notationChords,
+        shapesKey = shapesKey,
     )
 }
 
@@ -222,6 +240,7 @@ internal data class SongLyricsInputs(
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
     val shapeCapo: Int = 0,
+    val shapeNames: ShapeNames? = null,
     val inferredChordsKey: String? = null,
     val inferredKey: String? = null,
     val showsTiming: Boolean = true,

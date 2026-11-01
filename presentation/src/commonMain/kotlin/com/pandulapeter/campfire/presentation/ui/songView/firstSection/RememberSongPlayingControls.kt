@@ -22,7 +22,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
-import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
+import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.namingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.SEMITONES_PER_OCTAVE
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionValue
@@ -34,8 +35,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
  * values are read rather than set.
  *
  * @param playback Passed in rather than read here, since the screen already holds it for the page.
- * @param userPreferences The reader's: on the keyboard, which takes no capo (`playsWithoutCapo`), there is no capo
- *   stepper.
+ * @param userPreferences The reader's, which say whether the chords, and the key the transposition reads, are named by
+ *   the shapes fingered above the capo or by what sounds (`SongPlayback.nameCapoFor`).
  * @param shouldShowChords False with the chords switched off, which takes the transposition and the capo with them.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature with it.
  * @param inferredKey The key the song's chords were found in, see `InferredSongKeys`, for a file that names none.
@@ -56,16 +57,17 @@ internal fun rememberSongPlayingControls(
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
     val canTranspose = shouldShowChords && song.hasChords
-    val playsWithoutCapo = userPreferences.playsWithoutCapo
-    // The key the page's chords sound in, the capo played counted in: it keeps the shapes and raises the pitch. The
-    // stepper itself reads the reader's own semitones, which it steps.
+    // The key the page's chords are in: the one they sound in, the capo played counted in, or where they are named as the
+    // shapes fingered above it, the shapes' key, which only the transposition moves. The stepper itself reads the reader's
+    // own semitones, which it steps.
     val capoFret = capo.fret
-    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.soundingTransposition, spelling = chordSpelling, inferredKey = inferredKey) else null
-    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, capoFret, inferredKey) {
+    val nameCapo = playback.nameCapoFor(userPreferences)
+    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
+    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, capoFret, nameCapo, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, capoFret), spelling = chordSpelling, inferredKey = inferredKey)
+            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, capoFret) - nameCapo, spelling = chordSpelling, inferredKey = inferredKey)
             transpositionValue(transposition, shownKey)
         }
     }
@@ -80,7 +82,7 @@ internal fun rememberSongPlayingControls(
         canTranspose,
         shouldShowChords,
         shouldShowTempo,
-        playsWithoutCapo,
+        nameCapo,
         transposition,
         key,
         capo,
@@ -101,9 +103,10 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            capo = if (shouldShowChords && !playsWithoutCapo) {
+            capo = if (shouldShowChords) {
                 SongCapoControl(
                     capo = capo,
+                    namesShapes = nameCapo != 0 && key != null,
                     onStep = { viewModel.overrides.stepCapo(fileName, setlistFileName, it) },
                     onReset = { viewModel.overrides.resetCapo(fileName, setlistFileName) },
                 )

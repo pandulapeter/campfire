@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.playing
 
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -117,6 +118,38 @@ class SongPlaybackTest {
         val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
         assertEquals(-4, playback.soundingTransposition)
         assertEquals(0, playback.shapeCapoFor(keyboard))
+    }
+
+    @Test
+    fun `a reader naming shapes reads the chords above the capo, whichever capo, moved by the transposition alone`() {
+        val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
+        // The file's own capo 2: its chords are the shapes, as written.
+        val own = songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot())
+        assertEquals(2, own.nameCapoFor(guitar))
+        assertEquals(0, own.namingTransposition(guitar))
+        assertEquals(2, own.soundingTransposition)
+        // A capo of 5 put on instead raises what sounds, and still names the written shapes, the transposition aside.
+        val library = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
+        assertEquals(5, library.nameCapoFor(guitar))
+        assertEquals(3, library.namingTransposition(guitar).mod(12))
+        assertEquals(8, library.soundingTransposition.mod(12))
+        // Taken off, what sounds is what is named.
+        val takenOff = songPlaybackOf(song, setlistFileName = SETLIST, overrides = PlayingOverridesSnapshot(capos = Capos().with(setlist, 0)))
+        assertEquals(0, takenOff.nameCapoFor(guitar))
+        assertEquals(0, takenOff.namingTransposition(guitar))
+    }
+
+    @Test
+    fun `a reader naming what sounds, and the keyboard whatever it is set to, read the chords with the capo counted in`() {
+        val sounding = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR, chordNames = ChordNames.SOUNDING)
+        val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD, chordNames = ChordNames.SHAPES)
+        val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
+        listOf(sounding, keyboard).forEach { preferences ->
+            assertEquals(0, playback.nameCapoFor(preferences))
+            assertEquals(playback.soundingTransposition, playback.namingTransposition(preferences))
+        }
+        assertFalse(keyboard.namesShapes)
+        assertTrue(null.namesShapes)
     }
 
     @Test

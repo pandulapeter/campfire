@@ -19,7 +19,7 @@ What a song page draws, built from the parsed song (pure): `SongLyricsModel`, `R
   Comments opening or ending a section join it (`Comment.placement`), so every comment inside a section folds with it;
   one between sections is a unit of its own that never folds. A chorus recall is the one cut not joined.
 - A later `{transpose}` leaves a "Key: A" line (`RenderSection.KeyChange`) in the reader's transposition and notation,
-  the sounding key as the Transposition control names it; omitted where the song has no `{key}` or the chords are off.
+  the key of the page's chords as the Transposition control names it; omitted where the song has no `{key}` or the chords are off.
 - Lyrics-only mode drops tab, grid, and verbatim lines (ABC, LilyPond, SVG; comments inside a tab or grid,
   `isInTabOrGrid`, too), a section left empty whole, and the info section's key, capo, tempo, and time line (the
   section itself where nothing else is, `withMetadataSection`).

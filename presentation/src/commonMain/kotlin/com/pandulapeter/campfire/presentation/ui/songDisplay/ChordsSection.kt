@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.songDisplay
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -20,6 +21,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_des
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
+import com.pandulapeter.campfire.presentation.resources.settings_chord_names
+import com.pandulapeter.campfire.presentation.resources.settings_chord_names_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
+import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
 import com.pandulapeter.campfire.presentation.resources.settings_group_chords
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
@@ -35,14 +40,16 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * How the chords are written, in the Preferences tab and first in the song display sheet. The instrument is not here: it
- * is picked where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
+ * How the chords are written, in the Preferences tab and first in the song display sheet: their notation, their
+ * accidentals, and whether a song's chords name the shapes fingered above its capo or what sounds. The instrument is not
+ * here: it is picked where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
  */
 @Composable
 internal fun ChordsSection(
     userPreferences: UserPreferences?,
     onNotationClicked: () -> Unit,
     onAccidentalsSelected: (UserPreferences.Accidentals) -> Unit,
+    onChordNamesSelected: (ChordNames) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_chords)) {
     // The notation and the accidentals only decide how a chord or a key is written, so with nothing on that names one
     // they have nothing to say. They stay in the section rather than disappearing from it: what they are set to is still
@@ -74,6 +81,25 @@ internal fun ChordsSection(
             selected = userPreferences?.chordSpelling?.accidentals,
             isEnabled = isEnabled,
             onSelected = onAccidentalsSelected,
+        )
+    }
+    // Only a song's chords are named by their shapes, so it says nothing with the songs' chords off, and nothing on the
+    // keyboard, which is fingered as it sounds and always reads what sounds, as its description says.
+    val canNameShapes = userPreferences?.areSongsEnabled != false && userPreferences?.areChordsEnabled != false &&
+        userPreferences?.instrument != UserPreferences.Instrument.KEYBOARD
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_chord_names),
+        description = stringResource(Res.string.settings_chord_names_description),
+        isEnabled = canNameShapes,
+    ) {
+        SegmentedChoice(
+            options = listOf(
+                ChordNames.SHAPES to stringResource(Res.string.settings_chord_names_shapes),
+                ChordNames.SOUNDING to stringResource(Res.string.settings_chord_names_sounding),
+            ),
+            selected = userPreferences?.chordNames,
+            isEnabled = canNameShapes,
+            onSelected = onChordNamesSelected,
         )
     }
 }

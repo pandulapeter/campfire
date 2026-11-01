@@ -21,8 +21,9 @@ eight-string guitars, basses, violin, and Other draw none, as if the Chord diagr
 pill heads the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
 be brought back (`RenderSection.Metadata.instrumentPill`).
 
-**A chord is named as it sounds and drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the
-sounding chord (its name, notes, and scales), `shapeChord` the shape played above `capo` (`songChordsOf`'s `capo`), which
+**A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the
+sounding chord (its notes, degree, and scales), named as it sounds or, where the reader names shapes, as its shape
+(`namedAsShapes`, `SongChord.nameCapo`, matched by notes from the song moved down by the capo; key headings too), `shapeChord` the shape played above `capo` (`songChordsOf`'s `capo`), which
 a shape is looked up, picked, and stored by. A `{define}` is moved down by the capo as a transposition moves one, so a
 file's shape comes back to where it was written under any capo, moved by the reader's transposition alone. `ChordDiagramGeometry`
 draws the shape where it is played, frets numbered from the nut, the capo a muted bar across the window's first row
@@ -103,8 +104,8 @@ is gone.
 - Shapes are searched before the sheet opens, so it slides up whole; a stored shape the app doesn't list goes first.
 - A tap writes the player's choice at once; picking the app's first shape removes the entry. No reset button.
 - A chord the song defines shows its definition alone, not pickable.
-- Under a capo the title names the sounding chord, a line under it the shape and the capo (`G shape, capo 2`, the capo
-  alone in a numbering), and every shape is drawn above the capo; a pick is the player's shape for the shape's chord.
+- Under a capo the title names the chord as the page does, a line under it the shape and the capo (`G shape, capo 2`),
+  or what it sounds as where the title names the shape (`Sounds as A, capo 2`), the capo alone in a numbering, and every shape is drawn above the capo; a pick is the player's shape for the shape's chord.
   Its scales open the scale sheet with the capo. The Chords tab's sheet (`ChordReferenceSheet`) does the same under the
   tabs' capo (`capoLine`, shared).
 - Both chord sheets end in the scales built on the chord's root that hold its tones (`ScaleChipRow`), root

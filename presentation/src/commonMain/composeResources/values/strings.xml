@@ -422,6 +422,10 @@
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song.</string>
     <string name="settings_chord_degrees">Chord degrees</string>
     <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
+    <string name="settings_chord_names">Chord names</string>
+    <string name="settings_chord_names_description">With a capo on, a song\'s chords are named by the shapes fingered above it, or by how they sound. The song\'s key always says how it sounds, and on a keyboard the chords do too.</string>
+    <string name="settings_chord_names_shapes">Shapes</string>
+    <string name="settings_chord_names_sounding">Sounding</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_scales_description">The Scales tab: every scale and mode the app knows, drawn on your instrument</string>
@@ -1086,6 +1090,9 @@
     <string name="song_details_chord_degree">%1$s, degree %2$s</string>
     <string name="song_details_chord_shape_choose">Choose chord shape - %1$s</string>
     <string name="song_details_chord_shape_capo">%1$s shape, capo %2$s</string>
+    <string name="song_details_chord_sounding_capo">Sounds as %1$s, capo %2$s</string>
+    <string name="song_details_shapes_capo">shapes, capo</string>
+    <string name="song_details_capo_shapes">%1$s (%2$s shapes)</string>
     <string name="song_details_chord_defined">Defined in this song</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Defined in this song, moved by %1$d fret</item>

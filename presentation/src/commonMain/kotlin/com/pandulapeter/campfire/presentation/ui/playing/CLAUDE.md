@@ -56,14 +56,22 @@ The values a song is played with and where each is kept.
 - **Every capo keeps the shapes and raises the pitch**, the file's `{capo}` and one a setlist or the device puts on
   alike: the file's chords are the shapes fingered above the capo played, so the shapes are the written chords moved by
   the transposition alone, and a capo change never moves a shape, a `{define}`, or a tab's fret.
-- **The page names what sounds** (`SongPlayback.soundingTransposition`): the file's chords moved by the transposition and
-  the effective capo. Chords, comments' chords, the chord sheet, the Transposition control's key, key-change lines, the
-  header, the cards, the scales, and the PDF all read it. A `{capo: 2}` file in Em reads F#m, at capo 3 Gm; a setlist's
-  capo 0 plays it open, two semitones lower. Saved overrides changed meaning with this; nothing was migrated.
+- **What sounds** (`SongPlayback.soundingTransposition`) is the file's chords moved by the transposition and the
+  effective capo: the header's key, the cards and rows, the scales, and the Chords section's notes and degrees read it.
+  A `{capo: 2}` file in Em sounds in F#m, at capo 3 in Gm; a setlist's capo 0 plays it open, two semitones lower.
+- **A song's chords are named by the reader's choice** (`UserPreferences.chordNames`, Settings → Preferences → Chords):
+  `SHAPES` (the default) names them the shapes fingered above the capo, `SOUNDING` what sounds; the keyboard always
+  sounds (`namesShapes`). `nameCapoFor` is how far the names sit below what sounds (the capo, else 0) and
+  `namingTransposition` what the page's chords, comments' chords, key-change lines, the Transposition control's key, the
+  Chords section's names, the chord sheet's title, and the PDF are moved by: under `SHAPES` a capo renames none of them,
+  only the transposition does. `ShapeNames` carries the rest: the page reads the song twice (once sounding, for the
+  Chords and Scales sections), and the key line names the sounding key and then the shapes' ("Capo 2 (Em shapes)", the
+  capo's label "shapes, capo" after the stepper's key; the PDF's capo value the same, so the importer still reads it).
 - **The diagrams are the shapes**: the sounding chords moved down by the effective capo (`shapeCapoFor`); none on the
-  keyboard (`playsWithoutCapo`), which plays what sounds, the effective capo counted in, so a device override set on
-  another instrument still raises its pitch (the playing overrides card names it and takes it back).
+  keyboard (`playsWithoutCapo`), which plays what sounds, the effective capo counted in. Since a capo raises the pitch for
+  everybody, the keyboard has the capo stepper, the capo in the read only line and the PDF, and Song defaults too, so a
+  pianist sees why the key moved and can set or reset the band's capo.
 - **Tabs move with the shapes**: counted from the capo they are played above, they move by the transposition alone
   (`tabCapoFor`, `ChordProTransposer`'s `capo`).
 - The scales read the song with the file's capo line, which says how its `{key}` is meant (`SongKeys`); the page's capo
-  line is the effective one (`withCapo`), and `withoutCapo` takes it off the keyboard's PDF.
+  line is the effective one (`withCapo`), on every instrument.

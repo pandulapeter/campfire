@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
@@ -52,6 +53,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     ),
     areChordDiagramsEnabled = areChordDiagramsEnabled,
     areChordDegreesEnabled = areChordDegreesEnabled,
+    chordNames = ChordNames.entries.firstOrNull { it.id == chordNames } ?: ChordNames.SHAPES,
     isChordLibraryEnabled = isChordLibraryEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
@@ -115,6 +117,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     notation = chordSpelling.notation.id,
     areChordDiagramsEnabled = areChordDiagramsEnabled,
     areChordDegreesEnabled = areChordDegreesEnabled,
+    chordNames = chordNames.id,
     isChordLibraryEnabled = isChordLibraryEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,

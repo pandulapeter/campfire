@@ -62,8 +62,9 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   regular the same way.
 - The playing row (`playingDetails`) **follows the reader's settings as the screen does**: transposition, capo, and
   tempo are the setlist's, else the reader's own, else the file's. The sounding key (the inferred one where the file
-  names none, as on screen), the reader's transposition, and non-zero capo with `showKey` (none on the keyboard, as on
-  screen; diagrams drawn above the printed capo); tempo and time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the
+  names none, as on screen), the reader's transposition, and non-zero capo with `showKey` (the keyboard's too, as on
+  screen; "2 (Em shapes)" where the chords are named by the shapes, `PrintLabels.capoWithShapes`; diagrams drawn above
+  the printed capo); tempo and time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one. `showMetadata` is the
   song sheets' artist; the running order has its own: `showOverviewDetails` (the setlist's date and description and its
   songs' artists, read as `showMetadata` from a file older than it) and `overviewColumns`, its song list flowing in them
   under a heading that spans the page.

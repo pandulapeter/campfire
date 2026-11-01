@@ -71,6 +71,7 @@ internal fun SettingsTabPage(
                     userPreferences = userPreferences,
                     onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
                     onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
+                    onChordNamesSelected = viewModel.preferencesController::setChordNames,
                 )
                 // The chords are written the same way in the Chords and Scales tabs, while a song page is about songs.
                 AnimatedVisibility(

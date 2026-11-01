@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_shapes_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_time_signature
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.ui.components.scaled
@@ -157,7 +158,8 @@ private fun ChordControls(
                 .layoutId(PlayingControlId.CAPO)
                 .leavingWith(change, isLeaving)
                 .then(if (key == null) Modifier.padding(start = HEADER_HORIZONTAL_PADDING) else Modifier),
-            label = stringResource(Res.string.song_editor_insert_capo),
+            // After a key naming the shapes, the label says so, the header above naming the key the song sounds in.
+            label = stringResource(if (capo.namesShapes && key != null) Res.string.song_details_shapes_capo else Res.string.song_editor_insert_capo),
             fontScale = fontScale,
             isAnimated = isAnimated,
             trailing = { toolButtons(PlayingToolPlace.AFTER_CHORD_VALUES, groupEnd) },

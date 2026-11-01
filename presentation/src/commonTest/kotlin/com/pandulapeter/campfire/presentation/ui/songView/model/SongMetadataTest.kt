@@ -143,22 +143,15 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `the keyboard names no capo, not even in read only mode`() {
+    fun `the line names the key of the shapes after a capo, and nothing of them without one`() {
         val body = listOf(verse)
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A", tempo = "120", time = "6/8"), readsDefaults = true), verse),
-            withMetadataSection(
-                body,
-                ChordProMetadata(key = "A", capo = 3, time = "6/8"),
-                shouldShowChords = true,
-                shouldShowCapo = false,
-                isSongInfoShown = false,
-                readsDefaults = true,
-            ),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "F#m", capo = 2), shapesKey = "Em"), verse),
+            withMetadataSection(body, ChordProMetadata(key = "F#m", capo = 2), shouldShowChords = true, isSongInfoShown = false, shapesKey = "Em"),
         )
         assertEquals(
-            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "A")), verse),
-            withMetadataSection(body, ChordProMetadata(key = "A", capo = 3), shouldShowChords = true, shouldShowCapo = false, isSongInfoShown = false),
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "Em", capo = 0, tempo = "120", time = "4/4"), readsDefaults = true), verse),
+            withMetadataSection(body, ChordProMetadata(key = "Em"), shouldShowChords = true, isSongInfoShown = false, readsDefaults = true, shapesKey = "Em"),
         )
     }
 

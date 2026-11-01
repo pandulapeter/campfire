@@ -59,6 +59,7 @@ internal fun SongDisplaySheet(
                 // Over this sheet rather than in its place, so that picking one comes back here (DialogStack).
                 onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
                 onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
+                onChordNamesSelected = viewModel.preferencesController::setChordNames,
             )
             SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
         }

@@ -39,7 +39,6 @@ internal fun rememberShownSections(
     isSongInfoEditable: Boolean,
     hasPlayingControls: Boolean,
     readsDefaults: Boolean,
-    shouldShowCapo: Boolean,
     hasTuner: Boolean,
     hasMetronome: Boolean,
 ): List<RenderSection> = remember(
@@ -51,7 +50,7 @@ internal fun rememberShownSections(
         isSongInfoEditable,
         hasPlayingControls,
         readsDefaults,
-        shouldShowCapo,
+        model.shapesKey,
         hasTuner,
         hasMetronome,
     ) {
@@ -59,7 +58,7 @@ internal fun rememberShownSections(
             sections = model.sections,
             metadata = model.song.metadata,
             shouldShowChords = model.shouldShowChords,
-            shouldShowCapo = shouldShowCapo,
+            shapesKey = model.shapesKey,
             shouldShowTempo = shouldShowTempo,
             isSongInfoShown = isSongInfoShown,
             isSongInfoEditable = isSongInfoEditable,

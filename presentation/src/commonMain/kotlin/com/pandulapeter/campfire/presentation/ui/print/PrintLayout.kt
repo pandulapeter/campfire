@@ -400,12 +400,16 @@ private class PrintLayouter(
      * How [song] is played, in the key it is printed in: the key, the transposition that took it there and the capo
      * where there is one, then the tempo and the time signature — each only where the song names it, since a value the
      * file never gave would come back from an import as the song's own. The transposition is named rather than undone,
-     * so that a band reading from the page knows the chords are not the ones the song was written in.
+     * so that a band reading from the page knows the chords are not the ones the song was written in, and the key of the
+     * shapes after the capo where the chords are named by them, so that it knows they are not the ones that sound.
      */
     private fun playingDetails(entry: PrintSong, song: ChordProSong): List<String> = listOfNotNull(
         song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { labels.labelled(labels.key, it) },
         entry.transposition.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.transposition, if (it > 0) "+$it" else "$it") },
-        song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.capo, "$it") },
+        song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { capo ->
+            // Where the chords are the shapes fingered above it, the key before it being the one that sounds, it says so.
+            labels.labelled(labels.capo, entry.shapesKey?.let { labels.capoWithShapes("$capo", it) } ?: "$capo")
+        },
     ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time))
 
     /**

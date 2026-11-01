@@ -422,6 +422,10 @@
     <string name="settings_chord_diagrams_description">Mostra come si suona ogni accordo di una canzone, in cima alla canzone.</string>
     <string name="settings_chord_degrees">Gradi degli accordi</string>
     <string name="settings_chord_degrees_description">Indica il grado della tonalità della canzone su cui poggia ogni diagramma, ad esempio V7 accanto a G7.</string>
+    <string name="settings_chord_names">Nomi degli accordi</string>
+    <string name="settings_chord_names_description">Con il capotasto, gli accordi di un brano prendono il nome dalle diteggiature suonate sopra di esso o da come suonano. La tonalità del brano dice sempre come suona, e alla tastiera anche gli accordi.</string>
+    <string name="settings_chord_names_shapes">Diteggiature</string>
+    <string name="settings_chord_names_sounding">Come suonano</string>
     <string name="settings_metronome_description">La scheda Metronomo e il clic nella schermata di una canzone, insieme al tempo e all\'indicazione di tempo di ogni canzone</string>
     <string name="settings_tuner_description">La scheda Accordatore e il microfono con cui ascolta</string>
     <string name="settings_scales_description">La scheda Scale: tutte le scale e i modi che l\'app conosce, disegnati sul tuo strumento</string>
@@ -1086,6 +1090,9 @@
     <string name="song_details_chord_degree">%1$s, grado %2$s</string>
     <string name="song_details_chord_shape_choose">Scegli la diteggiatura - %1$s</string>
     <string name="song_details_chord_shape_capo">Diteggiatura di %1$s, capotasto %2$s</string>
+    <string name="song_details_chord_sounding_capo">Suona come %1$s, capotasto %2$s</string>
+    <string name="song_details_shapes_capo">diteggiature, capotasto</string>
+    <string name="song_details_capo_shapes">%1$s (diteggiature di %2$s)</string>
     <string name="song_details_chord_defined">Definito in questa canzone</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Definito in questa canzone, spostato di %1$d tasto</item>

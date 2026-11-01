@@ -422,6 +422,10 @@
     <string name="settings_chord_diagrams_description">Zeigt oben im Song, wie jeder seiner Akkorde gegriffen wird.</string>
     <string name="settings_chord_degrees">Akkordstufen</string>
     <string name="settings_chord_degrees_description">Nennt die Stufe der Tonart des Songs, auf der jedes Akkorddiagramm steht, etwa V7 neben G7.</string>
+    <string name="settings_chord_names">Akkordnamen</string>
+    <string name="settings_chord_names_description">Mit Capo heißen die Akkorde eines Songs nach den Griffen darüber oder nach ihrem Klang. Die Tonart des Songs nennt immer den Klang, und auf dem Keyboard tun es auch die Akkorde.</string>
+    <string name="settings_chord_names_shapes">Griffe</string>
+    <string name="settings_chord_names_sounding">Klang</string>
     <string name="settings_metronome_description">Der Tab „Metronom“ und der Klick auf der Seite eines Songs, dazu Tempo und Taktart jedes Songs</string>
     <string name="settings_tuner_description">Der Tab „Stimmgerät“ und das Mikrofon, über das es zuhört</string>
     <string name="settings_scales_description">Der Tab „Tonleitern“: alle Tonleitern und Modi, die die App kennt, auf deinem Instrument dargestellt</string>
@@ -1086,6 +1090,9 @@
     <string name="song_details_chord_degree">%1$s, Stufe %2$s</string>
     <string name="song_details_chord_shape_choose">Griffbild wählen – %1$s</string>
     <string name="song_details_chord_shape_capo">%1$s-Griff, Capo %2$s</string>
+    <string name="song_details_chord_sounding_capo">Klingt als %1$s, Capo %2$s</string>
+    <string name="song_details_shapes_capo">Griffe, Capo</string>
+    <string name="song_details_capo_shapes">%1$s (%2$s-Griffe)</string>
     <string name="song_details_chord_defined">In diesem Song definiert</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">In diesem Song definiert, um %1$d Bund verschoben</item>

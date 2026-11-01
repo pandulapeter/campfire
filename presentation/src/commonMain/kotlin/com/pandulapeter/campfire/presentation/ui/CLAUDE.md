@@ -118,7 +118,7 @@ The view model facade, the composition root, and the product rules every screen 
 ### How a song is played is set in the song itself
 
 - Transposition, capo, tempo, and time signature are the first section of the song details grid, after the instrument
-  pill (the unlabelled transposition stepper names the sounding key it takes the chords to; the tempo stepper ends in Tap,
+  pill (the unlabelled transposition stepper names the key it takes the page's chords to, see `ui/playing`; the tempo stepper ends in Tap,
   followed only by a time signature other than 4/4). Layout: `songView/firstSection`. They scale with the text, hence the floor
   `UserPreferences.MIN_FONT_SCALE`.
 - Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
@@ -171,13 +171,16 @@ The view model facade, the composition root, and the product rules every screen 
   - **Chords** (`areChordsEnabled`): takes a song's chords, key, transposition, and capo; the chord spelling rows are
     disabled only once neither songs nor the Chords and Scales tabs name a chord.
   - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in
-    the PDF too; chosen shapes kept. The instrument pill stays (keyboard's missing capo, tuner).
+    the PDF too; chosen shapes kept. The instrument pill stays (the tuner, the keyboard's sounding names).
   - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like
     the notation gone wrong; disabled while no diagram it labels is drawn (a song's, in neither
     numbering, which already names its chords by degree, or a scale sheet's chords, which need the Scales and Chords
     tabs); takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion
     is read off the chords; takes the song's Scales section and the chord sheets' scales.
+  - **Chord names** (`chordNames`, in the Chords section after the accidentals): a song's chords named by the shapes
+    fingered above the capo (default) or by what sounds (`ui/playing/CLAUDE.md`); disabled with songs or chords off and
+    on the keyboard, which always reads what sounds, as its description says.
   - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
     at the song's pace, asked once by the onboarding or over the first song (`screens/songDetails/autoScroll`). The one
     choice here that rearranges rather than hides.

@@ -422,6 +422,10 @@
     <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de una canción, al principio de la canción.</string>
     <string name="settings_chord_degrees">Grados de los acordes</string>
     <string name="settings_chord_degrees_description">Indica el grado de la tonalidad de la canción sobre el que está cada diagrama de acorde, como V7 junto a G7.</string>
+    <string name="settings_chord_names">Nombres de los acordes</string>
+    <string name="settings_chord_names_description">Con capo, los acordes de una canción se nombran por las formas que se pisan sobre él o por cómo suenan. La tonalidad de la canción siempre dice cómo suena, y en un teclado también los acordes.</string>
+    <string name="settings_chord_names_shapes">Formas</string>
+    <string name="settings_chord_names_sounding">Cómo suenan</string>
     <string name="settings_metronome_description">La pestaña Metrónomo y el clic en la pantalla de una canción, además del tempo y el compás de cada canción</string>
     <string name="settings_tuner_description">La pestaña Afinador y el micrófono con el que escucha</string>
     <string name="settings_scales_description">La pestaña Escalas: todas las escalas y modos que conoce la app, dibujados en tu instrumento</string>
@@ -1086,6 +1090,9 @@
     <string name="song_details_chord_degree">%1$s, grado %2$s</string>
     <string name="song_details_chord_shape_choose">Elegir forma de acorde - %1$s</string>
     <string name="song_details_chord_shape_capo">Forma de %1$s, capo %2$s</string>
+    <string name="song_details_chord_sounding_capo">Suena como %1$s, capo %2$s</string>
+    <string name="song_details_shapes_capo">formas, capo</string>
+    <string name="song_details_capo_shapes">%1$s (formas de %2$s)</string>
     <string name="song_details_chord_defined">Definido en esta canción</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Definido en esta canción, movido %1$d traste</item>

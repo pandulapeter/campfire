@@ -457,6 +457,10 @@
     <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al unui cântec, la începutul cântecului.</string>
     <string name="settings_chord_degrees">Treptele acordurilor</string>
     <string name="settings_chord_degrees_description">Numește treapta din tonalitatea cântecului pe care stă fiecare diagramă de acord, de exemplu V7 lângă G7.</string>
+    <string name="settings_chord_names">Numele acordurilor</string>
+    <string name="settings_chord_names_description">Cu capodastru, acordurile unui cântec sunt numite după pozițiile luate deasupra lui sau după cum sună. Tonalitatea cântecului spune mereu cum sună acesta, iar la claviatură și acordurile.</string>
+    <string name="settings_chord_names_shapes">Poziții</string>
+    <string name="settings_chord_names_sounding">Cum sună</string>
     <string name="settings_metronome_description">Fila Metronom și clicul de pe ecranul unui cântec, împreună cu tempoul și măsura fiecărui cântec</string>
     <string name="settings_tuner_description">Fila Acordor și microfonul prin care ascultă</string>
     <string name="settings_scales_description">Fila Game: toate gamele și modurile cunoscute de aplicație, desenate pe instrumentul tău</string>
@@ -1125,6 +1129,9 @@
     <string name="song_details_chord_degree">%1$s, treapta %2$s</string>
     <string name="song_details_chord_shape_choose">Alege poziția acordului - %1$s</string>
     <string name="song_details_chord_shape_capo">Poziție %1$s, capodastru %2$s</string>
+    <string name="song_details_chord_sounding_capo">Sună ca %1$s, capodastru %2$s</string>
+    <string name="song_details_shapes_capo">poziții, capodastru</string>
+    <string name="song_details_capo_shapes">%1$s (poziții de %2$s)</string>
     <string name="song_details_chord_defined">Definit în acest cântec</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Definit în acest cântec, mutat cu %1$d tastă</item>

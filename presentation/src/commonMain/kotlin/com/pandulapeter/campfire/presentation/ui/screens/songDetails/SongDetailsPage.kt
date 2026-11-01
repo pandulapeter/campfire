@@ -79,6 +79,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
+import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -104,12 +105,15 @@ import org.jetbrains.compose.resources.painterResource
  * @param tempoOverride The tempo the song plays at here where that is not its own, which the tempo line then shows,
  *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
  * @param transposition The semitones the file's chords are moved by to the ones that sound, the capo played counted
- *   in (`SongPlayback.soundingTransposition`): the page names what the band hears on every instrument.
+ *   in (`SongPlayback.soundingTransposition`): what the Chords and Scales sections are read from, and the page's names
+ *   too unless [shapeNames] names the shapes instead.
  * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the
  *   same way as [tempoOverride].
  * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
+ * @param shapeNames How the page names its chords where they are the shapes fingered above the capo, see [ShapeNames];
+ *   null where it names what sounds.
  * @param inferredChordsKey The key the song's chords were found in (`InferredSongKeys`) for a file that names none, in the
  *   standard notation and in the frame of the chords [transposeSong] gives (`SongRenderer.movedKey`): what a numbering
  *   counts them from, its diagrams' and its Scales section's names included.
@@ -118,8 +122,6 @@ import org.jetbrains.compose.resources.painterResource
  * @param playingControls What sets the key, the capo, the tempo and the time signature from the song's own first
  *   section, null in read only mode, see [SongPlayingControls].
  * @param playingTools The tuner and metronome buttons of that section, in read only mode too, see [SongPlayingTools].
- * @param shouldShowCapo False on the keyboard, which takes no capo (`playsWithoutCapo`): neither the page nor its read
- *   only line names a capo then, the file's own included.
  * @param shouldShowTempo False with the metronome switched off, which takes the tempo and the time signature off the page,
  *   the changes of them further down included.
  * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
@@ -150,12 +152,12 @@ internal fun SongDetailsPage(
     tempoOverride: Int?,
     capoOverride: Int?,
     shapeCapo: Int,
+    shapeNames: ShapeNames?,
     inferredChordsKey: String?,
     inferredKey: String?,
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
     shouldShowChords: Boolean,
-    shouldShowCapo: Boolean,
     shouldShowTempo: Boolean,
     shouldNumberSections: Boolean,
     fontScale: () -> Float,
@@ -210,6 +212,7 @@ internal fun SongDetailsPage(
             tempoOverride = tempoOverride,
             capoOverride = capoOverride,
             shapeCapo = shapeCapo,
+            shapeNames = shapeNames,
             inferredChordsKey = inferredChordsKey,
             inferredKey = inferredKey,
             showsTiming = shouldShowTempo,
@@ -225,11 +228,22 @@ internal fun SongDetailsPage(
             // The scales are read from the song as its file capos it, the capo saying only which shapes the file is written
             // in; the page names the capo it is played at.
             val transposed = transposeSong(inputs.text, inputs.transposition, inputs.tabCapo, inputs.spelling, inputs.tabs)
+            // Where the page names the shapes, it is read a second time, moved down by the capo with its tabs' frets left
+            // where they are: moving the song that sounds instead would apply its own key changes twice.
+            val shapes = inputs.shapeNames
+            val named = shapes?.let { transposeSong(inputs.text, inputs.transposition - it.capo, inputs.tabCapo - it.capo, inputs.spelling, inputs.tabs) } ?: transposed
+            val namedInferredKey = if (shapes == null) inputs.inferredChordsKey else shapes.inferredChordsKey
             prepareSongLyrics(
-                song = notateSong(transposed.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling, inputs.inferredChordsKey).let { song ->
-                    inputs.inferredKey?.takeIf { song.metadata.key.isNullOrBlank() }?.let { song.copy(metadata = song.metadata.copy(key = it)) } ?: song
+                song = notateSong(named.withTempo(inputs.tempoOverride).withCapo(inputs.capoOverride), inputs.spelling, namedInferredKey).let { song ->
+                    // The song is played in the key that sounds, whatever its chords are named by.
+                    val key = shapes?.soundingKey ?: inputs.inferredKey?.takeIf { song.metadata.key.isNullOrBlank() }
+                    key?.let { song.copy(metadata = song.metadata.copy(key = it)) } ?: song
                 },
                 standardSong = transposed,
+                namedSong = named,
+                nameCapo = shapes?.capo ?: 0,
+                namedInferredKey = namedInferredKey,
+                shapesKey = shapes?.shapesKey,
                 inferredKey = inputs.inferredChordsKey,
                 shapeCapo = inputs.shapeCapo,
                 shouldShowChords = inputs.shouldShowChords,
@@ -241,7 +255,7 @@ internal fun SongDetailsPage(
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
                 notationChords = NotationChordSpelling(
-                    semitones = transposed.metadata.transpose + inputs.transposition,
+                    semitones = named.metadata.transpose + inputs.transposition - (shapes?.capo ?: 0),
                     preferFlats = inputs.spelling.accidentals.toPreferFlats(),
                     notation = inputs.spelling.notation.toChordNotation(),
                 ),
@@ -386,7 +400,6 @@ internal fun SongDetailsPage(
                     // Read only, the page is the one place left that says how the song is played, so a capo of none and the
                     // tempo and the time the click starts at are said rather than left to be guessed from nothing.
                     readsDefaults = frame.playingControls == null,
-                    shouldShowCapo = shouldShowCapo,
                     shouldShowTempo = frame.shouldShowTempo,
                     // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                     // its position plus the padding above it - all but the first, which is read at the top of the song.

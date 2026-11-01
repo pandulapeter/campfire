@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.voicings.ChordProDefinitions
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
@@ -24,7 +25,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
 /**
  * A chord of a song as its Chords section lists it.
  *
- * @property name The chord as the page names it, transposed and in the reader's notation: the chord that sounds.
+ * @property name The chord as the page names it, transposed and in the reader's notation: the chord that sounds, or the
+ *   shape fingered above the capo where the page names the shapes ([nameCapo], see [namedAsShapes]).
  * @property chord The notes the page's name stands for, the chord that sounds, which its sheet's notes and scales are of.
  * @property shapeChord The chord the diagram's shape is fingered as above the [capo]: [chord] moved down by it (an A
  *   is a G shape at the second fret), the one a shape is looked up, picked, and stored for.
@@ -44,6 +46,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordVoicing
  *   ([ChordTuning.drawsDefinitions]): a standard tuning shape, which the chord's sheet says is there and offers to show.
  * @property isShapePending The default shape has not been looked for yet, see [songChordsOf]'s `searchesShapes`; drawn
  *   as the empty frame until it has.
+ * @property nameCapo The semitones [name], [letterName], and [keyName] are below [chord]: the capo where the page names
+ *   the shapes fingered above it (`SongPlayback.nameCapoFor`), else 0.
  */
 @Immutable
 internal data class SongChord(
@@ -59,6 +63,7 @@ internal data class SongChord(
     val definition: ChordDefinition? = null,
     val undrawnDefinition: ChordDefinition? = null,
     val isShapePending: Boolean = false,
+    val nameCapo: Int = 0,
 )
 
 /**
@@ -128,12 +133,39 @@ internal fun songChordsOf(
     }
 }
 
+/**
+ * [this], collected from the song that sounds, named as the page names its chords where those are the shapes fingered
+ * above a capo of [nameCapo] frets: each by the name [namedSong] (the same song moved down by [nameCapo], still in the
+ * standard notation) first writes its shape with, in [notation], a numbering counting from [inferredKey] where the song
+ * names no key. Everything else stays the sounding chord's: its notes, its shape, its degree, and the scales its sheet
+ * offers, so only the names move. Unchanged where [nameCapo] is 0.
+ */
+internal fun List<SongChord>.namedAsShapes(namedSong: ChordProSong, notation: ChordNotation, nameCapo: Int, inferredKey: String? = null): List<SongChord> {
+    if (nameCapo == 0 || isEmpty()) return this
+    val shownNames = ChordProNotation.shownNames(namedSong, notation, fallbackKey = inferredKey)
+    // Matched by the notes rather than by the spelling, which the move down may well have changed (A# and Bb).
+    val spellings = shownNames.keys.mapNotNull { name -> ChordProChords.parse(name)?.let { it to name } }.distinctBy { it.first }.toMap()
+    return map { chord ->
+        val spelling = spellings[chord.chord.movedBy(-nameCapo)] ?: return@map chord
+        val shownName = shownNames.getValue(spelling)
+        chord.copy(
+            name = ChordProNotation.withAccidentalSigns(shownName),
+            letterName = spelling.takeIf { notation.isNumbering && shownName != spelling }?.let(ChordProNotation::withAccidentalSigns),
+            nameCapo = nameCapo,
+        )
+    }
+}
+
 /** [this] with the shapes [songChordsOf] left to be looked for filled in: the search, so never on the main thread. */
 internal fun List<SongChord>.withSearchedShapes(tuning: ChordTuning) = if (none { it.isShapePending }) {
     this
 } else {
     map { if (it.isShapePending) it.copy(defaultShape = ChordVoicings.default(it.shapeChord, tuning), isShapePending = false) else it }
 }
+
+/** The chord or key [this] spells, in the standard notation, moved down by [semitones]: the shape a capo of that many frets plays it with. */
+internal fun String.movedDownBy(semitones: Int) =
+    if (semitones == 0) this else ChordProTransposer.transposeText("[$this]", -semitones).removeSurrounding("[", "]")
 
 /** [this] moved by [semitones], its root and bass with it: what a capo makes of a chord's shape. */
 internal fun Chord.movedBy(semitones: Int) = if (semitones.mod(12) == 0) {
@@ -161,16 +193,17 @@ internal fun List<SongChord>.withDegrees(keys: ChordKeys?, notation: ChordNotati
  * [this] grouped by the key each chord is first played in ([keys]): the home key's first, then each other key in the
  * order the song reaches it, every chord named by its key ([SongChord.keyName], in [notation]), so that the Chords
  * section heads every group with its key, the home's too. Within a group the chords keep the order they are first played
- * in. Unchanged where the chords are all in one key, which needs no heading.
+ * in. Unchanged where the chords are all in one key, which needs no heading. Where the page names the shapes fingered
+ * above a capo ([nameCapo], see [namedAsShapes]), each key is named as the key its shapes are in, as the page's key change
+ * lines name it.
  */
-internal fun List<SongChord>.groupedByKey(keys: ChordKeys?, notation: ChordNotation): List<SongChord> {
+internal fun List<SongChord>.groupedByKey(keys: ChordKeys?, notation: ChordNotation, nameCapo: Int = 0): List<SongChord> {
     if (keys == null) return this
     val keyOfChord = map { chord -> chord.spelling?.let(keys::of) ?: keys.home }
     if (keyOfChord.distinct().size < 2) return this
-    val named = mapIndexed { index, chord ->
-        chord.copy(keyName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(keyOfChord[index], notation)))
-    }
-    val homeName = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(keys.home, notation))
+    fun nameOf(key: String) = ChordProNotation.withAccidentalSigns(ChordProNotation.shownName(key.movedDownBy(nameCapo), notation))
+    val named = mapIndexed { index, chord -> chord.copy(keyName = nameOf(keyOfChord[index])) }
+    val homeName = nameOf(keys.home)
     return named.filter { it.keyName == homeName } + named.filter { it.keyName != homeName }.groupBy { it.keyName }.values.flatten()
 }
 

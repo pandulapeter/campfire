@@ -125,7 +125,6 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * are set there or read; null where it holds none, which is the editor's preview.
  * @param readsDefaults Whether that line names the capo, the tempo and the time signature where the file names none,
  * which read only mode on the song details screen asks for, see [withMetadataSection].
- * @param shouldShowCapo False on the keyboard, which reads the capo as a transposition, see [withMetadataSection].
  * @param shouldShowTempo False with the metronome switched off, which leaves the tempo and the time signature out of
  * the song's first section, see [withMetadataSection]. The chords' own switch is the model's, since it shapes the lyrics.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
@@ -172,7 +171,6 @@ internal fun SongLyrics(
     playingControls: SongPlayingControls? = null,
     playingTools: SongPlayingTools? = null,
     readsDefaults: Boolean = false,
-    shouldShowCapo: Boolean = true,
     shouldShowTempo: Boolean = true,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: () -> Dp = { Dp.Unspecified },
@@ -216,7 +214,6 @@ internal fun SongLyrics(
         isSongInfoEditable = isSongInfoEditable,
         hasPlayingControls = shownPlayingControls != null,
         readsDefaults = readsDefaults,
-        shouldShowCapo = shouldShowCapo,
         hasTuner = hasTuner,
         hasMetronome = hasMetronome,
     )

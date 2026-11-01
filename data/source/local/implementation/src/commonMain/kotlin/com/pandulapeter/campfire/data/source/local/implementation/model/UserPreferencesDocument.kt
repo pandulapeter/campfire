@@ -47,6 +47,7 @@ internal data class UserPreferencesDocument(
     val isGermanNotationEnabled: Boolean = false,
     val areChordDiagramsEnabled: Boolean = true,
     val areChordDegreesEnabled: Boolean = false,
+    val chordNames: String = "",
     val isChordLibraryEnabled: Boolean = true,
     val areScalesEnabled: Boolean = true,
     val areScaleSuggestionsEnabled: Boolean = true,

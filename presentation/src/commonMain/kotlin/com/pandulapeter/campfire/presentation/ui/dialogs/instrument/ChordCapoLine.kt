@@ -11,23 +11,28 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_chord_sounding_capo
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.chords.movedDownBy
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 
 /**
  * The shape [chord] is fingered as and the capo it is played above, named under the title where there is a capo: the
  * shape by its chord's name in the reader's notation, and the capo alone in a numbering, where a step names no shape.
+ * Where the title already names the shape ([SongChord.nameCapo]), the line names the chord it sounds as instead.
  */
 @Composable
 internal fun capoLine(chord: SongChord, notation: ChordNotation): String? {
     if (chord.capo == 0) return null
     val spelling = chord.spelling?.takeUnless { notation.isNumbering } ?: return stringResource(Res.string.song_details_capo, chord.capo)
-    val shapeName = ChordProTransposer.transposeText("[$spelling]", -chord.capo).removeSurrounding("[", "]")
-    return textResource(Res.string.song_details_chord_shape_capo, shownChordName(shapeName, notation), chord.capo.toString())
+    return if (chord.nameCapo != 0) {
+        textResource(Res.string.song_details_chord_sounding_capo, shownChordName(spelling, notation), chord.capo.toString())
+    } else {
+        textResource(Res.string.song_details_chord_shape_capo, shownChordName(spelling.movedDownBy(chord.capo), notation), chord.capo.toString())
+    }
 }

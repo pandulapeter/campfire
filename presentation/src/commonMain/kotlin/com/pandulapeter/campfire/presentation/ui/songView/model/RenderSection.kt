@@ -83,6 +83,8 @@ internal sealed interface RenderSection {
      * @param hasMetronome Whether the metronome's button is drawn among them, part of the content for the same reason.
      * @param instrumentPill What the instrument and tuning pill at its top names, null where it has none, part of the
      * content for the same reason, see [withChordsSection].
+     * @param shapesKey The key of the shapes the chords are named by, which the line of text names after a capo, see
+     * [withMetadataSection].
      */
     @Immutable
     data class Metadata(
@@ -92,6 +94,7 @@ internal sealed interface RenderSection {
         val hasTuner: Boolean = false,
         val hasMetronome: Boolean = false,
         val instrumentPill: InstrumentPillContent? = null,
+        val shapesKey: String? = null,
     ) : RenderSection
 
     /**

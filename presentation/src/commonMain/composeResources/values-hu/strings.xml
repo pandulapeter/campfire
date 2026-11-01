@@ -422,6 +422,10 @@
     <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
     <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
+    <string name="settings_chord_names">Akkordnevek</string>
+    <string name="settings_chord_names_description">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kapják a nevüket. A dal hangneme mindig azt mondja meg, hogyan szól, és billentyűn az akkordok is.</string>
+    <string name="settings_chord_names_shapes">Fogások</string>
+    <string name="settings_chord_names_sounding">Hangzás</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
@@ -1085,6 +1089,9 @@
     <string name="song_details_chord_degree">%1$s, fok: %2$s</string>
     <string name="song_details_chord_shape_choose">Akkordfogás kiválasztása - %1$s</string>
     <string name="song_details_chord_shape_capo">%1$s fogás, capo %2$s</string>
+    <string name="song_details_chord_sounding_capo">%1$s szól, capo %2$s</string>
+    <string name="song_details_shapes_capo">fogások, capo</string>
+    <string name="song_details_capo_shapes">%1$s (%2$s fogások)</string>
     <string name="song_details_chord_defined">A dal határozza meg</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">A dal határozza meg, %1$d bunddal eltolva</item>

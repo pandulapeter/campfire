@@ -426,6 +426,10 @@
     <string name="settings_chord_diagrams_description">Montre comment se joue chaque accord d\'une chanson, en haut de la chanson.</string>
     <string name="settings_chord_degrees">Degrés des accords</string>
     <string name="settings_chord_degrees_description">Indique le degré de la tonalité de la chanson sur lequel repose chaque diagramme d\'accord, comme V7 à côté de G7.</string>
+    <string name="settings_chord_names">Noms des accords</string>
+    <string name="settings_chord_names_description">Avec un capo, les accords d\'un morceau sont nommés d\'après les doigtés joués au-dessus ou d\'après leur son. La tonalité du morceau dit toujours comment il sonne, et au clavier les accords aussi.</string>
+    <string name="settings_chord_names_shapes">Doigtés</string>
+    <string name="settings_chord_names_sounding">Son réel</string>
     <string name="settings_metronome_description">L\'onglet Métronome et le clic sur l\'écran d\'une chanson, ainsi que le tempo et la mesure de chaque chanson</string>
     <string name="settings_tuner_description">L\'onglet Accordeur, et le micro par lequel il écoute</string>
     <string name="settings_scales_description">L\'onglet Gammes : toutes les gammes et tous les modes que l\'app connaît, dessinés sur ton instrument</string>
@@ -1091,6 +1095,9 @@
     <string name="song_details_chord_degree">%1$s, degré %2$s</string>
     <string name="song_details_chord_shape_choose">Choisir le doigté - %1$s</string>
     <string name="song_details_chord_shape_capo">Doigté de %1$s, capo %2$s</string>
+    <string name="song_details_chord_sounding_capo">Sonne comme %1$s, capo %2$s</string>
+    <string name="song_details_shapes_capo">doigtés, capo</string>
+    <string name="song_details_capo_shapes">%1$s (doigtés de %2$s)</string>
     <string name="song_details_chord_defined">Défini dans cette chanson</string>
     <plurals name="song_details_chord_defined_moved">
         <item quantity="one">Défini dans cette chanson, décalé de %1$d case</item>

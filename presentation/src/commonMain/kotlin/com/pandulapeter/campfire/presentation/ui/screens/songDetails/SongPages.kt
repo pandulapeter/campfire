@@ -53,8 +53,8 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.fontScaleGestures
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.tabCapoFor
@@ -174,7 +174,6 @@ internal fun SongPages(
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
         val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
-        val playsWithoutCapo = userPreferences.playsWithoutCapo
         val shapeCapo = playback.shapeCapoFor(userPreferences)
         val tempo = playback.tempo
         val capo = playback.capo
@@ -201,8 +200,16 @@ internal fun SongPages(
             transposition = playback.soundingTransposition,
             tabCapo = playback.tabCapoFor(userPreferences),
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
-            capoOverride = capo.takeUnless { it.isDefault || playsWithoutCapo }?.fret,
+            // The keyboard names the capo too: it raises the pitch for every instrument, so a pianist reads why the key moved.
+            capoOverride = capo.takeUnless { it.isDefault }?.fret,
             shapeCapo = shapeCapo,
+            shapeNames = viewModel.songRenderer.shapeNamesOf(
+                song = song,
+                playback = playback,
+                preferences = userPreferences,
+                spelling = chordSpelling,
+                inferredKey = inferredKeys[song.fileName],
+            ),
             // A numbering counts a song naming no key from it.
             inferredChordsKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
                 viewModel.songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
@@ -242,7 +249,6 @@ internal fun SongPages(
                 isBeatFlashEnabled = isBeatFlashEnabled,
             ).takeIf { importPreview == null },
             shouldShowChords = shouldShowChords,
-            shouldShowCapo = !playsWithoutCapo,
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
             fontScale = if (isFollowingGesture) {

@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.chords.chordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.emptyChordDiagramGeometryOf
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.chords.namedAsShapes
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.ui.chords.groupedByKey
 import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
@@ -56,7 +57,9 @@ internal data class PrintSource(
 /**
  * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and
  * [transposition] the semitones the reader moves it by, printed beside its key; [song] is already rendered in the chords
- * that sound, the capo played counted in as on the screen (`SongPlayback.soundingTransposition`).
+ * the screen names, what sounds (`SongPlayback.soundingTransposition`) or the shapes fingered above the capo, its key the
+ * one it sounds in either way, and [shapesKey] the key of those shapes, printed after the capo; null where the chords
+ * are named as they sound.
  */
 internal data class PrintSong(
     val fileName: String,
@@ -64,6 +67,7 @@ internal data class PrintSong(
     val artist: String?,
     val index: Int? = null,
     val transposition: Int = 0,
+    val shapesKey: String? = null,
     /** Null for an unreadable or missing file; its place remains visible in the running order. */
     val song: ChordProSong?,
     /** The file as it is stored, which the library's own files are written from, and null when it could not be read. */
@@ -115,7 +119,8 @@ internal data class PrintChord(
  * are first played in as the screen groups them ([groupedByKey], [chordKeysOf], from [analysis]). With [showsDegrees],
  * each is labelled with its step of that key. Under a [capo] each is the shape fingered above it, drawn where it is
  * played with the capo across it, as on the screen. A numbering counts a song naming no key from [inferredKey], as the
- * page does.
+ * page does. Where the page names the shapes fingered above the capo ([nameCapo]), the names are read from [namedSong],
+ * counted from [namedInferredKey], as on the screen (`namedAsShapes`).
  */
 internal fun printChordsOf(
     song: ChordProSong,
@@ -126,9 +131,14 @@ internal fun printChordsOf(
     analysis: SongScaleAnalysis? = null,
     capo: Int = 0,
     inferredKey: String? = null,
+    namedSong: ChordProSong = song,
+    nameCapo: Int = 0,
+    namedInferredKey: String? = inferredKey,
 ): List<PrintChord> = songChordsOf(song, notation, tuning, capo = capo, inferredKey = inferredKey).let { chords ->
     val keys = if (chords.isNotEmpty()) chordKeysOf(song, analysis, song.isSongbook) else null
-    chords.groupedByKey(keys, notation).let { grouped -> if (showsDegrees) grouped.withDegrees(keys, notation) else grouped }
+    chords.groupedByKey(keys, notation, nameCapo)
+        .let { grouped -> if (showsDegrees) grouped.withDegrees(keys, notation) else grouped }
+        .namedAsShapes(namedSong, notation, nameCapo, namedInferredKey)
 }.map { chord ->
     PrintChord(
         name = chord.name,
@@ -283,9 +293,18 @@ internal data class PrintLabels(
      * since where the colon goes and how it is spaced is the language's to say.
      */
     val labelledValue: String = "$LABELLED_LABEL: $LABELLED_VALUE",
+    /**
+     * A capo followed by the key of the shapes a song's chords are named by above it ("2 (Em shapes)"), [LABELLED_VALUE]
+     * standing for the capo and [SHAPES_KEY] for the key: one value, so that an import reading the page back still finds
+     * the capo in it.
+     */
+    val capoWithShapes: String = "$LABELLED_VALUE ($SHAPES_KEY shapes)",
 ) {
     /** [value] after [label], as [labelledValue] puts it. */
     fun labelled(label: String, value: String) = labelledValue.replace(LABELLED_LABEL, label).replace(LABELLED_VALUE, value)
+
+    /** [capo] followed by the key of the shapes played above it, as [capoWithShapes] puts it. */
+    fun capoWithShapes(capo: String, key: String) = capoWithShapes.replace(LABELLED_VALUE, capo).replace(SHAPES_KEY, key)
 }
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */
@@ -296,3 +315,6 @@ internal const val LABELLED_LABEL = "\u0002"
 
 /** What [PrintLabels.labelledValue] holds in place of the value. */
 internal const val LABELLED_VALUE = "\u0003"
+
+/** What [PrintLabels.capoWithShapes] holds in place of the key of the shapes. */
+internal const val SHAPES_KEY = "\u0004"

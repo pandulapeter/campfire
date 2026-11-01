@@ -191,4 +191,40 @@ class SongChordsTest {
         assertEquals(listOf("C", "Am"), chords.map { it.letterName })
         assertTrue(hasSongChords(ChordProParser.parse("[C]la [Am]la"), ChordNotation.NASHVILLE, inferredKey = "C"))
     }
+
+    @Test
+    fun `named as shapes, a capoed chord keeps its shape's name and everything else of the chord that sounds`() {
+        // The reporter's song: written in Em at capo 2, so it sounds in F#m.
+        val text = "{key: Em}\n{capo: 2}\n[Em]la [C]la [D]la [Bm]la"
+        val sounding = ChordProTransposer.transpose(ChordProParser.parse(text), 2)
+        val named = ChordProParser.parse(text)
+        val chords = songChordsOf(sounding, ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2).namedAsShapes(named, ChordNotation.STANDARD, nameCapo = 2)
+        assertEquals(listOf("Em", "C", "D", "Bm"), chords.map { it.name })
+        assertEquals(listOf("F#m", "D", "E", "C#m").map(ChordProChords::parse), chords.map { it.chord })
+        assertEquals(listOf("Em", "C", "D", "Bm").map(ChordProChords::parse), chords.map { it.shapeChord })
+        assertEquals(listOf(2, 2, 2, 2), chords.map { it.nameCapo })
+        val german = songChordsOf(sounding, ChordNotation.GERMAN, ChordTuning.GUITAR, capo = 2).namedAsShapes(named, ChordNotation.GERMAN, nameCapo = 2)
+        assertEquals("Hm", german.last().name)
+    }
+
+    @Test
+    fun `named as shapes under a numbering, a chord keeps its step and spells its shape`() {
+        val text = "{key: Em}\n[Em]la [C]la"
+        val chords = songChordsOf(ChordProTransposer.transpose(ChordProParser.parse(text), 2), ChordNotation.NASHVILLE, ChordTuning.GUITAR, capo = 2)
+            .namedAsShapes(ChordProParser.parse(text), ChordNotation.NASHVILLE, nameCapo = 2)
+        assertEquals(listOf("1-", "♭6"), chords.map { it.name })
+        assertEquals(listOf("Em", "C"), chords.map { it.letterName })
+    }
+
+    @Test
+    fun `named as what sounds, nothing is renamed`() {
+        val sounding = songChordsOf(ChordProParser.parse("[A]la"), ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2)
+        assertEquals(sounding, sounding.namedAsShapes(ChordProParser.parse("[G]la"), ChordNotation.STANDARD, nameCapo = 0))
+    }
+
+    @Test
+    fun `a key named for the shapes is the key moved down by the capo`() {
+        assertEquals("Em", "F#m".movedDownBy(2))
+        assertEquals("F#m", "F#m".movedDownBy(0))
+    }
 }

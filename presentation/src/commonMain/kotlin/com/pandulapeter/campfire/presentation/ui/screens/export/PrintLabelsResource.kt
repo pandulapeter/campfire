@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.scales
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
+import com.pandulapeter.campfire.presentation.resources.song_details_capo_shapes
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.print.LABELLED_LABEL
 import com.pandulapeter.campfire.presentation.ui.print.LABELLED_VALUE
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
+import com.pandulapeter.campfire.presentation.ui.print.SHAPES_KEY
 import com.pandulapeter.campfire.presentation.ui.print.TEMPO_VALUE
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 
@@ -51,6 +53,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val missing = stringResource(Res.string.print_missing)
     val labelledValue = plainTextResource(Res.string.print_label_value, LABELLED_LABEL, LABELLED_VALUE)
     val scales = stringResource(Res.string.scales)
+    val capoWithShapes = plainTextResource(Res.string.song_details_capo_shapes, LABELLED_VALUE, SHAPES_KEY)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->
         preferences.chordTuning()?.let { tuning ->
@@ -64,7 +67,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             ).joinToString(" · ").ifEmpty { null }
         }
     }
-    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue) {
+    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue, capoWithShapes) {
         PrintLabels(
             key = key,
             transposition = transposition,
@@ -77,6 +80,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             chordTuning = chordTuning,
             scales = scales,
             labelledValue = labelledValue,
+            capoWithShapes = capoWithShapes,
         )
     }
 }

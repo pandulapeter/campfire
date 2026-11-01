@@ -63,7 +63,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ### The app bar
 
-- **The subtitle (`SongHeaderNote`) names the sounding key**, as the page and the Transposition control do (the
+- **The subtitle (`SongHeaderNote`) names the sounding key**, whatever the chords are named by (the
   transposition and the capo played applied, `{key}` read by `SongKeys`, via `Song.chordsKey`), after a 16dp dot (the cards' 24dp would grow the bar and shrink the lyrics' room). Worked out for the song
   its crossfaded content was composed for, since a page change draws two. Chords off drop the key. No tempo (the first
   section says it) and no duration.

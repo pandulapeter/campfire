@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
+import com.pandulapeter.campfire.presentation.ui.chords.namedAsShapes
 import com.pandulapeter.campfire.presentation.ui.chords.songChordsOf
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -57,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ScaleChipRow
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import kotlinx.coroutines.Dispatchers
@@ -106,10 +108,16 @@ internal fun ChordShapeSheet(
     val inferredKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
         viewModel.songRenderer.movedKey(inferredKey = it, transposition = transposition, spelling = spelling)
     }
-    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning, inferredKey) {
+    // Named as the page names them, the shapes where it does (see `namedAsShapes`), since the page's name is what was tapped.
+    val shapeNames = viewModel.songRenderer.shapeNamesOf(song, playback, userPreferences, spelling, inferredKeys[song.fileName])
+    val chords by produceState<List<SongChord>?>(null, text, transposition, capo, spelling, tuning, inferredKey, shapeNames) {
         value = text?.let {
             withContext(Dispatchers.Default) {
-                songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo, inferredKey = inferredKey)
+                val sounding = songChordsOf(viewModel.songRenderer.transposedSong(it, transposition, spelling), notation, tuning, capo = capo, inferredKey = inferredKey)
+                shapeNames?.let { names ->
+                    val named = viewModel.songRenderer.transposedSong(it, transposition - names.capo, spelling)
+                    sounding.namedAsShapes(named, notation, names.capo, names.inferredChordsKey)
+                } ?: sounding
             }
         }
     }

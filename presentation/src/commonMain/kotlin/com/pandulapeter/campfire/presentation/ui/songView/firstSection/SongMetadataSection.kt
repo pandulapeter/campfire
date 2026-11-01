@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_capo_shapes
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -56,6 +57,8 @@ import com.pandulapeter.campfire.presentation.localization.textResource
  * @param playingTools The tuner and metronome buttons, which the song details screen hands down in read only mode too,
  * see [SongPlayingTools]; null in the editor's preview, which plays nothing.
  * @param readsDefaults Whether the line of text names a capo of none, and the default tempo and time signature, too, see
+ * [withMetadataSection].
+ * @param shapesKey The key of the shapes the chords are named by, which that line names after the capo, see
  * [withMetadataSection].
  * @param animatesControls Whether the controls travel to the places a new layout gives them, which the song's own
  * sections decide (see `SectionMotion`), and a window edge being dragged too, which leaves their sizes alone: never while
@@ -79,6 +82,7 @@ internal fun SongMetadataSection(
     playingControls: SongPlayingControls?,
     playingTools: SongPlayingTools?,
     readsDefaults: Boolean,
+    shapesKey: String?,
     animatesControls: Boolean,
     titleStyle: TextStyle,
     lyricsStyle: TextStyle,
@@ -132,6 +136,7 @@ internal fun SongMetadataSection(
             metadata = metadata,
             tools = playingTools,
             readsDefaults = readsDefaults,
+            shapesKey = shapesKey,
             isAnimated = animatesControls,
             style = lyricsStyle,
             toolHeight = toolHeight,
@@ -192,6 +197,7 @@ private fun SongPlayingMetadata(
     metadata: ChordProMetadata,
     tools: SongPlayingTools?,
     readsDefaults: Boolean,
+    shapesKey: String?,
     isAnimated: Boolean,
     style: TextStyle,
     toolHeight: Dp,
@@ -201,7 +207,11 @@ private fun SongPlayingMetadata(
 ) {
     val chordValues = listOfNotNull(
         metadata.key?.takeIf { it.isNotBlank() }?.let { it to true },
-        metadata.capo?.takeIf { readsDefaults || it != 0 }?.let { stringResource(Res.string.song_details_capo, it) to false },
+        metadata.capo?.takeIf { readsDefaults || it != 0 }?.let { capo ->
+            // The key before it sounds, so the shapes the chords are named by are said with the capo they are played above.
+            val capoText = stringResource(Res.string.song_details_capo, capo)
+            (shapesKey?.let { textResource(Res.string.song_details_capo_shapes, capoText, it) } ?: capoText) to false
+        },
     )
     val clickValues = listOfNotNull(
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) to false },

@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 internal class SongPlayingControls(
     /** Null for a song with nothing to transpose, whose key is then only read, and with the chords switched off. */
     val key: SongKeyControl?,
-    /** Null with the chords switched off, and on the keyboard, which reads the capo as a transposition. */
+    /** Null with the chords switched off; on the keyboard too, since a capo raises the pitch for everybody. */
     val capo: SongCapoControl?,
     /** Null with the metronome switched off. */
     val tempo: SongTempoControl?,
@@ -56,9 +56,16 @@ internal class SongKeyControl(
     val onReset: () -> Unit,
 )
 
+/**
+ * The capo, which the song is fingered above.
+ *
+ * @param namesShapes Whether the page names the shapes fingered above it, the transposition's key included, which its
+ *   label then says ("Em shapes, capo 2"), the song's own header naming the key it sounds in.
+ */
 @Immutable
 internal class SongCapoControl(
     val capo: EffectiveCapo,
+    val namesShapes: Boolean,
     val onStep: (frets: Int) -> Unit,
     val onReset: () -> Unit,
 )
