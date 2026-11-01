@@ -13,9 +13,14 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Settings -> Shared links should be clickable
+- Fix the [capo handling issues](https://github.com/pandulapeter/campfire/issues/10)
+- Implement basic syntax highlighting for abcnotation (chords should use the expected font)
+- Settings → Shared links should be clickable
+- Setlists should import songs with their overridden tempos
 - Onboarding celebration animation is missing for people who open the app for the first time from a deep link
 - Improve the chord library based on [Chorducate](https://www.chorducate.com/discover/guitar/chords/)
+- Add an option to pin chord diagrams
+- Settings → About should contain a more straightforward link to the website
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
 ## Short-term
