@@ -961,6 +961,8 @@ public object ChordSheetConverter {
         changes: Map<Int, List<String>>,
         convertParentheses: Boolean,
     ): List<String> = with(BodyWriter()) {
+        fun look(at: Int) = lines[at].let { ChordSheetLook.of(it.source, it.positions.getOrNull(it.text.indexOfFirst { c -> !c.isWhitespace() })) }
+        fun follow(at: Int) { if (!lines[at].isContinuation) look(at)?.let { follow(it, lines[at].text) } }
         var index = 0
         while (index < lines.size) {
             changes[index]?.let { pendingChanges += it }
@@ -984,7 +986,7 @@ public object ChordSheetConverter {
                     } else {
                         val type = ChordSheetCampfireLayout.sectionType(label)
                         output += "{start_of_$type: $label}"
-                        environment = type
+                        open(type)
                     }
                 }
                 Kind.COMMENT -> {
@@ -1006,8 +1008,12 @@ public object ChordSheetConverter {
                     val label = headerValue(headingLabel(line.text))
                     val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else ChordSheetHeadings.parse(line.text)?.type
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
-                    if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION)) output += "{chorus}"
-                    else if (type != null) { output += "{start_of_$type: $label}"; environment = type }
+                    // Under a chorus heading, lines neither set the way the song set its chorus apart nor singing its words
+                    // are sung after it.
+                    val lyric = ((index + 1)..lines.lastIndex).takeWhile { kinds[it] != Kind.SECTION }.firstOrNull { kinds[it] == Kind.LYRIC && it !in omitted }
+                    val isRecall = type != null && lyric != null && isRecall(type, look(lyric), lines[lyric].text)
+                    if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION || isRecall)) output += "{chorus}"
+                    else if (type != null) { output += "{start_of_$type: $label}"; open(type) }
                     else {
                         // A heading the parser does not take for a section ends the lyrics before it only after a blank
                         // line; without one it would be a comment inside them, and what follows their continuation.
@@ -1023,11 +1029,15 @@ public object ChordSheetConverter {
                     if (line.isContinuation && !isUnderMarkedLyric) {
                         addLyric(bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight), continues = true, isHardCut = false)
                     } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
+                        follow(index + 1)
                         addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
                         index++
                     } else output += bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight)
                 }
-                Kind.LYRIC -> addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
+                Kind.LYRIC -> {
+                    follow(index)
+                    addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
+                }
                 Kind.BLANK -> output += ""
                 Kind.METADATA -> Unit
             }
@@ -1060,7 +1070,64 @@ public object ChordSheetConverter {
         val pendingChanges = mutableListOf<String>()
         fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
         fun closeGrid() { if (inGrid) { output += "{end_of_grid}"; inGrid = false } }
-        fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
+
+        /** The look of the last lyric outside a section, the verses' look a section may be set apart from. */
+        private var bodyLook: ChordSheetLook? = null
+
+        /** The look of the open section's first lyric, and the verses' look where it opened. */
+        private var sectionLook: ChordSheetLook? = null
+        private var sectionBody: ChordSheetLook? = null
+
+        /** The look each kind of section was first set apart from the verses in, and the words of its lines. */
+        private val setApart = mutableMapOf<String, Pair<ChordSheetLook, Set<String>>>()
+        private val sectionWords = mutableSetOf<String>()
+
+        /**
+         * Whether a heading of [type] whose first lyric is [text] set in [look] recalls the section: the song set that
+         * section apart before, and the lyric is neither set that way nor one of its lines written out again.
+         */
+        fun isRecall(type: String, look: ChordSheetLook?, text: String) = setApart[type]?.let { (setLook, words) ->
+            look != null && setLook.isSetApartFrom(look) && words(text) !in words
+        } == true
+
+        private fun words(text: String) = text.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }.joinToString(" ")
+
+        fun open(type: String) {
+            environment = type
+            sectionLook = null
+            sectionBody = bodyLook
+            sectionWords.clear()
+        }
+
+        /**
+         * A lyric of [look]: a section set apart from the verses ends where the lyrics return to their look, before the
+         * blank lines that end its last stanza. With no verse before it to compare with, only a change of type ends it,
+         * since lines of a centred sheet each start somewhere else.
+         */
+        fun follow(look: ChordSheetLook, text: String) {
+            val opened = sectionLook
+            if (environment != null && opened == null) sectionLook = look
+            else if (environment != null && opened != null) {
+                val body = sectionBody
+                val ends = if (body == null) opened.differsInType(look) else opened.isSetApartFrom(body) && !look.isSetApartFrom(body)
+                if (ends) {
+                    val blanks = output.takeLastWhile { it.isBlank() }.size
+                    repeat(blanks) { output.removeAt(output.lastIndex) }
+                    closeSection()
+                    repeat(blanks) { output += "" }
+                }
+            }
+            if (environment == null) bodyLook = look else sectionWords += words(text)
+        }
+
+        fun closeSection() {
+            val type = environment
+            val opened = sectionLook
+            if (type != null && opened != null && sectionBody?.let { opened.isSetApartFrom(it) } != false) setApart.getOrPut(type) { opened to sectionWords.toSet() }
+            type?.let { output += "{end_of_$it}" }
+            environment = null
+            sectionLook = null
+        }
         fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }
 

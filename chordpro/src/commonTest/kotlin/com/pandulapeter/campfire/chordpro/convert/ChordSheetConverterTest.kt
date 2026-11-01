@@ -564,6 +564,44 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a chorus set apart in bold ends where the lyrics return to the verses' type, and a chorus heading over a verse recalls it`() {
+        fun line(text: String, bold: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> span(c.toString(), index * 6.0, (index + 1) * 6.0, bold = bold) })
+        val lines = listOf(
+            line("Song", bold = true),
+            line("G       C", bold = true),
+            line("Somebody told me"),
+            line("CHORUS:", bold = true),
+            line("G       C", bold = true),
+            line("Hey now you're a star", bold = true),
+            line("It's a cool place"),
+            line("CHORUS"),
+            line("Somebody once asked"),
+            line("CHORUS"),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]Somebody [C]told me\n{start_of_chorus: CHORUS}\n[G]Hey now [C]you're a star\n{end_of_chorus}\nIt's a cool place\n" +
+                "{chorus}\nSomebody once asked\n{chorus}\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun `a chorus set apart by an inset ends where the lyrics return to the verses' edge`() {
+        val result = convert("Somebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star\n    Get your game on\nIt's a cool place\nAnd it gets colder\n\nChorus")
+        assertEquals(
+            "Somebody told me\nWe were born to sing\n\n{start_of_chorus: Chorus}\nHey now you're a star\nGet your game on\n" +
+                "{end_of_chorus}\nIt's a cool place\nAnd it gets colder\n\n{chorus}\n",
+            result,
+        )
+    }
+
+    @Test
+    fun `a chorus heading over the chorus's own words is that chorus written out, however it is set`() {
+        val result = convert("Somebody told me\n\nChorus:\n    Hey now you're a star\n    Get your game on\nIt's a cool place\n\nChorus:\nHey now you're a star\nGet the show on")
+        assertTrue(result.endsWith("{start_of_chorus: Chorus}\nHey now you're a star\nGet the show on\n{end_of_chorus}\n"), result)
+    }
+
+    @Test
     fun `the numbers a songbook counts its songs by are left out of their titles, a title that only starts with one keeping it`() {
         fun book(vararg titles: String) = ChordSheet(
             listOf(ChordSheet.Page(ChordSheet.ofPlainText("100 songs\nContents\n" + titles.joinToString("\n")).pages.single().lines)) +
