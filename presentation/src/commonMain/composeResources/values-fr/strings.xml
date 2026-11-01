@@ -964,7 +964,7 @@
     <string name="song_details_auto_scroll_pause">Arrêter le défilement</string>
     <string name="song_details_auto_scroll_speed">Vitesse de défilement</string>
     <string name="song_layout_title">Comment lis-tu les chansons ?</string>
-    <string name="song_layout_message">Tu peux changer ça à tout moment dans les Préférences d\'une chanson.</string>
+    <string name="song_preference_change_hint">Cela vaut pour toutes les chansons. Tu peux le changer à tout moment dans les Préférences, depuis les Réglages ou le menu de n\'importe quelle chanson.</string>
     <string name="song_layout_pages">Pages</string>
     <string name="song_layout_pages_description">Le plus de la chanson à l\'écran à la fois, en colonnes tournées page par page</string>
     <string name="song_layout_continuous">Continu</string>

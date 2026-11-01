@@ -959,7 +959,7 @@
     <string name="song_details_auto_scroll_pause">Stop scrolling</string>
     <string name="song_details_auto_scroll_speed">Scroll speed</string>
     <string name="song_layout_title">How do you read songs?</string>
-    <string name="song_layout_message">You can change this any time in a song\'s Preferences.</string>
+    <string name="song_preference_change_hint">This applies to every song. You can change it any time in Preferences, from Settings or any song\'s menu.</string>
     <string name="song_layout_pages">Pages</string>
     <string name="song_layout_pages_description">The most of the song on the screen at once, in columns turned a page at a time</string>
     <string name="song_layout_continuous">Continuous</string>

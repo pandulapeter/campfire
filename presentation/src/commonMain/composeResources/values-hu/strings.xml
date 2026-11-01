@@ -958,7 +958,7 @@
     <string name="song_details_auto_scroll_pause">Görgetés leállítása</string>
     <string name="song_details_auto_scroll_speed">Görgetési sebesség</string>
     <string name="song_layout_title">Hogyan olvasod a dalokat?</string>
-    <string name="song_layout_message">Ezt bármikor módosíthatod egy dal Preferenciáiban.</string>
+    <string name="song_preference_change_hint">Ez minden dalra érvényes. Bármikor módosíthatod a Preferenciákban, a Beállításokból vagy bármelyik dal menüjéből.</string>
     <string name="song_layout_pages">Oldalak</string>
     <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
     <string name="song_layout_continuous">Folyamatos</string>

@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.chord_names_sounding_des
 import com.pandulapeter.campfire.presentation.resources.chord_names_title
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
-import com.pandulapeter.campfire.presentation.resources.song_layout_message
+import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -100,7 +100,7 @@ private fun ChordNamesMessage(
             textResource(Res.string.chord_names_example, dialog.capo.toString(), example.first, example.second)
         },
     )
-    MessageText(text = stringResource(Res.string.song_layout_message))
+    MessageText(text = stringResource(Res.string.song_preference_change_hint))
 }
 
 @Composable

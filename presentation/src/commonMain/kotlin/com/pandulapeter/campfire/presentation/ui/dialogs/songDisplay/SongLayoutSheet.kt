@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_layout_message
+import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.resources.song_layout_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -60,7 +60,7 @@ internal fun SongLayoutSheet(
         ) {
             Text(
                 modifier = Modifier.padding(bottom = 16.dp),
-                text = stringResource(Res.string.song_layout_message),
+                text = stringResource(Res.string.song_preference_change_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
