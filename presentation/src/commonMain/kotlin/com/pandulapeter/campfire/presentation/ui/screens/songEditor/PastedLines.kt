@@ -18,12 +18,19 @@ internal data class PastedLines(val start: Int, val text: String)
 
 /**
  * What one change of an edit really put into the field, and where: [inserted] starting at [start], over [replaced],
- * with what the two begin and end with alike taken off. The web's text input reports a typed character as the whole
- * text replaced by the whole text with the character in it, which would read as a paste of every line of the song; a
- * paste or a keystroke elsewhere already arrives as only what it inserted, and is answered unchanged. The ends never
- * stop between the two halves of a surrogate pair.
+ * with what the two begin and end with alike taken off when the change [isWholeText], the whole text replaced by the
+ * whole text. The web's text input reports a typed character that way, which would read as a paste of every line of the
+ * song. Any other change is answered unchanged: a paste over a selection is what the user pasted, and the lines it
+ * shares with the selection at either end are still part of it (a chord row over its lyric, a closing line break). The
+ * ends never stop between the two halves of a surrogate pair.
  */
-internal fun narrowedInsertion(start: Int, replaced: CharSequence, inserted: CharSequence): Pair<Int, CharSequence> {
+internal fun narrowedInsertion(
+    start: Int,
+    replaced: CharSequence,
+    inserted: CharSequence,
+    isWholeText: Boolean,
+): Pair<Int, CharSequence> {
+    if (!isWholeText) return start to inserted
     var prefix = 0
     val shorter = minOf(replaced.length, inserted.length)
     while (prefix < shorter && replaced[prefix] == inserted[prefix]) prefix++

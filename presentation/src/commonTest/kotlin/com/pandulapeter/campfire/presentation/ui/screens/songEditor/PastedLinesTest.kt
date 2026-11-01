@@ -28,7 +28,7 @@ class PastedLinesTest {
     fun `a character typed as the whole text replaced is narrowed to that character`() {
         val before = "{title: Song}\n{meta: language en}\n\n[C]Hello\n"
         val after = "{title: Song}\n{meta: language en}\n{\n[C]Hello\n"
-        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = after)
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = after, isWholeText = true)
         assertEquals(before.indexOf("\n\n") + 1, start)
         assertEquals("{", inserted.toString())
         assertNull(pastedLinesOf(listOf(start to inserted)))
@@ -38,20 +38,28 @@ class PastedLinesTest {
     fun `a paste reported as the whole text replaced is narrowed to the paste`() {
         val before = "{title: Song}\n"
         val paste = "Am  C\nHello world\n"
-        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = before + paste)
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = before + paste, isWholeText = true)
         assertEquals(PastedLines(start = before.length, text = paste), pastedLinesOf(listOf(start to inserted)))
     }
 
     @Test
     fun `an insertion with nothing replaced is left as it is`() {
-        val (start, inserted) = narrowedInsertion(start = 7, replaced = "", inserted = "Am  C\nHello world")
+        val (start, inserted) = narrowedInsertion(start = 7, replaced = "", inserted = "Am  C\nHello world", isWholeText = false)
         assertEquals(7, start)
         assertEquals("Am  C\nHello world", inserted.toString())
     }
 
     @Test
+    fun `a paste over a selection keeps the lines it shares with the selection`() {
+        val selected = "Hello world\nSecond line\n"
+        val paste = "C     G\nHello world\nAm\nSecond line\n"
+        val (start, inserted) = narrowedInsertion(start = 4, replaced = selected, inserted = paste, isWholeText = false)
+        assertEquals(PastedLines(start = 4, text = paste), pastedLinesOf(listOf(start to inserted)))
+    }
+
+    @Test
     fun `a narrowed insertion never splits a surrogate pair`() {
-        val (start, inserted) = narrowedInsertion(start = 0, replaced = "a🎸b", inserted = "a🎹b")
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = "a🎸b", inserted = "a🎹b", isWholeText = true)
         assertEquals(1, start)
         assertEquals("🎹", inserted.toString())
     }

@@ -33,6 +33,7 @@ internal object PastedTextFormatting : InputTransformation {
                 start = range.start,
                 replaced = originalText.subSequence(originalRange.start, originalRange.end),
                 inserted = asCharSequence().subSequence(range.start, range.end),
+                isWholeText = originalRange.length == originalText.length && range.length == length,
             )
         }
         val paste = pastedLinesOf(insertions) ?: return
