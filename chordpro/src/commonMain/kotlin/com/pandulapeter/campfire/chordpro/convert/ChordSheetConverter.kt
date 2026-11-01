@@ -1130,7 +1130,6 @@ public object ChordSheetConverter {
         "capo", "capotraste", "cejilla", "kapodaster", "capodastre", "kapo", "capodastru", "capotasto", "\u05e7\u05d0\u05e4\u05d5",
     )
 
-    /** The time signature labels of the app's languages besides English and Hungarian, all words a lyric may open with too. */
     /**
      * The words Campfire's PDF puts in parentheses after a capo whose chords are named as they sound, in every language
      * the app prints them in (`print_capo_sounding`), lowercase.
