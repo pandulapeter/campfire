@@ -28,6 +28,15 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
 
     companion object {
         /**
+         * The left edge [looks] share within half a character; null where they start in different places, as a centred
+         * or right-aligned sheet's lines do.
+         */
+        fun sharedEdge(looks: List<ChordSheetLook>): Double? {
+            val first = looks.firstOrNull() ?: return null
+            return first.left.takeIf { looks.all { abs(it.left - first.left) <= maxOf(it.size, first.size) * 0.5 } }
+        }
+
+        /**
          * The first lines of the runs of a stanza's lyrics set apart from the song's plain verses, two lines at least in the verses' size,
          * which open a chorus no heading names: bold or italic where the song has plain lyrics (a song set wholly in one
          * has nothing to set apart). An inset alone does not, with no heading to say what it sets apart: a second

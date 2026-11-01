@@ -1084,12 +1084,13 @@ public object ChordSheetConverter {
         fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
         fun closeGrid() { if (inGrid) { output += "{end_of_grid}"; inGrid = false } }
 
-        /** The look of the last lyric outside a section, the verses' look a section may be set apart from. */
-        private var bodyLook: ChordSheetLook? = null
+        /** The lyrics outside a section since one last closed: the verses a section may be set apart from. */
+        private val verseLooks = mutableListOf<ChordSheetLook>()
+        private var isVerseInterrupted = false
 
-        /** The look of the open section's first lyric, and the verses' look where it opened. */
-        private var sectionLook: ChordSheetLook? = null
-        private var sectionBody: ChordSheetLook? = null
+        /** The open section's lyrics so far, and the verses where it opened. */
+        private val sectionLooks = mutableListOf<ChordSheetLook>()
+        private var sectionVerses: List<ChordSheetLook> = emptyList()
 
         /** The look each kind of section was first set apart from the verses in, and the words of its lines. */
         private val setApart = mutableMapOf<String, Pair<ChordSheetLook, Set<String>>>()
@@ -1111,13 +1112,14 @@ public object ChordSheetConverter {
             if (output.lastOrNull()?.isNotBlank() == true) output += ""
             output += "{start_of_chorus}"
             open("chorus")
-            sectionBody = null
+            sectionVerses = emptyList()
         }
 
         fun open(type: String) {
             environment = type
-            sectionLook = null
-            sectionBody = bodyLook
+            sectionLooks.clear()
+            sectionVerses = verseLooks.toList()
+            isVerseInterrupted = true
             sectionWords.clear()
         }
 
@@ -1127,11 +1129,10 @@ public object ChordSheetConverter {
          * else.
          */
         fun follow(look: ChordSheetLook, text: String) {
-            val opened = sectionLook
-            if (environment != null && opened == null) sectionLook = look
-            else if (environment != null && opened != null) {
-                val body = sectionBody
-                val ends = if (body == null) opened.differsInType(look) else opened.isSetApartFrom(body) && !look.isSetApartFrom(body)
+            if (environment != null && sectionLooks.isNotEmpty()) {
+                val ends = if (sectionVerses.isEmpty()) sectionLooks.first().differsInType(look) else {
+                    isSetApart(sectionVerses, sectionLooks) && returnsToVerses(look, sectionVerses)
+                }
                 if (ends) {
                     // A section ending mid-song ends with its last stanza, before the blank lines parting it from the next.
                     val blanks = output.takeLastWhile { it.isBlank() }.size
@@ -1140,16 +1141,49 @@ public object ChordSheetConverter {
                     repeat(blanks) { output += "" }
                 }
             }
-            if (environment == null) bodyLook = look else sectionWords += words(text)
+            if (environment == null) {
+                if (isVerseInterrupted) {
+                    verseLooks.clear()
+                    isVerseInterrupted = false
+                }
+                verseLooks += look
+            } else {
+                sectionLooks += look
+                sectionWords += words(text)
+            }
+        }
+
+        /**
+         * Whether [section] is set apart from [verses]: its first lyric in another type, or two lyrics or more all starting
+         * further in (or out) than the edge the verses share. A lyric alone shows no edge, so one indented by accident
+         * sets nothing apart, and a centred sheet's verses share none.
+         */
+        private fun isSetApart(verses: List<ChordSheetLook>, section: List<ChordSheetLook>): Boolean {
+            val verse = verses.last()
+            if (section.first().differsInType(verse)) return true
+            val edge = ChordSheetLook.sharedEdge(verses) ?: return false
+            if (section.size < 2) return false
+            val margin = maxOf(section.maxOf { it.size }, verse.size) * 1.5
+            val insets = section.map { it.left - edge }
+            return insets.all { it > margin } || insets.all { it < -margin }
+        }
+
+        /** Whether [look] is back in the verses' type and, where they share an edge, at it. */
+        private fun returnsToVerses(look: ChordSheetLook, verses: List<ChordSheetLook>): Boolean {
+            val verse = verses.last()
+            if (look.differsInType(verse)) return false
+            val edge = ChordSheetLook.sharedEdge(verses) ?: return true
+            return abs(look.left - edge) <= maxOf(look.size, verse.size) * 1.5
         }
 
         fun closeSection() {
             val type = environment
-            val opened = sectionLook
-            if (type != null && opened != null && sectionBody?.let { opened.isSetApartFrom(it) } != false) setApart.getOrPut(type) { opened to sectionWords.toSet() }
+            if (type != null && sectionLooks.isNotEmpty() && (sectionVerses.isEmpty() || isSetApart(sectionVerses, sectionLooks))) {
+                setApart.getOrPut(type) { sectionLooks.first() to sectionWords.toSet() }
+            }
             type?.let { output += "{end_of_$it}" }
             environment = null
-            sectionLook = null
+            sectionLooks.clear()
         }
         fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }

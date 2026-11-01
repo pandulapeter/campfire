@@ -596,6 +596,61 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a chorus whose first lyric alone starts further in is not set apart by an inset and keeps its lines`() {
+        assertEquals(
+            "Somebody told me\nWe were born to sing\n\n{start_of_chorus: Chorus}\n[G]Hey now [C]you're a star\nGet your game on, go play\n" +
+                "Hey now you're a rock star\n\n{end_of_chorus}\n{start_of_verse: Verse 2}\nIt's a cool place\n{end_of_verse}\n",
+            convert(
+                "Somebody told me\nWe were born to sing\n\nChorus:\n   G       C\n   Hey now you're a star\nGet your game on, go play\n" +
+                    "Hey now you're a rock star\n\nVerse 2:\nIt's a cool place",
+            ),
+        )
+    }
+
+    @Test
+    fun `a centred sheet's chorus is not cut where a line happens to start where the last verse line did`() {
+        fun centred(text: String, size: Double = 10.0) = ChordSheet.Line(
+            text.mapIndexed { index, c ->
+                ChordSheet.Span(c.toString(), 300.0 - text.length * 3.0 + index * 6.0, 300.0 - text.length * 3.0 + (index + 1) * 6.0, size)
+            },
+        )
+        val lines = listOf(
+            centred("Song", size = 16.0),
+            centred("Somebody once told me the world is gonna roll me"),
+            centred("I ain't the sharpest tool in the shed"),
+            centred("She was looking kind of dumb"),
+            ChordSheet.Line(emptyList()),
+            centred("Chorus:"),
+            centred("Hey now, you're an all star, get your game on"),
+            centred("Go play, hey now you're a star"),
+            centred("Hey now, you're a rock star, get the show on"),
+            centred("Get paid, and all that glitters is gold"),
+            centred("Only shooting stars break the mold"),
+        )
+        assertEquals(
+            "{title: Song}\n\nSomebody once told me the world is gonna roll me\nI ain't the sharpest tool in the shed\nShe was looking kind of dumb\n\n" +
+                "{start_of_chorus: Chorus}\nHey now, you're an all star, get your game on\nGo play, hey now you're a star\n" +
+                "Hey now, you're a rock star, get the show on\nGet paid, and all that glitters is gold\nOnly shooting stars break the mold\n{end_of_chorus}\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun `an inset chorus with a wrapped line hanging further in, or typed a space unevenly, still ends where the verses' edge returns`() {
+        val expected = "{end_of_chorus}\nIt's a cool place\nAnd it gets colder\n\n{chorus}\n"
+        val wrapped = convert(
+            "Somebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star, get your game on\n        go play\n" +
+                "    Hey now you're a rock star\nIt's a cool place\nAnd it gets colder\n\nChorus",
+        )
+        assertTrue(wrapped.endsWith("Hey now you're a rock star\n$expected"), wrapped)
+        val uneven = convert(
+            "Somebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star\n     Get your game on\n" +
+                "    Hey now you're a rock star\nIt's a cool place\nAnd it gets colder\n\nChorus",
+        )
+        assertTrue(uneven.endsWith("Hey now you're a rock star\n$expected"), uneven)
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(
