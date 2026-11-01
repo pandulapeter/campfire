@@ -242,6 +242,16 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a row of chords alone over the next row's chordless lyric stays over it, and a lyric under its chords takes them`() {
+        // A lyric is 1.3 font sizes under its chords, the next row 1.45 under a row of chords alone.
+        val song = convert(
+            row(0.0, chords("G" to 0, "C" to 4)), row(1.45, text("Hello world")),
+            row(2.9, chords("C" to 0, "G" to 6)), row(4.2, text("Hello world")),
+        )
+        assertTrue("\n[G] [C]\nHello world\n[C]Hello [G]world\n" in song, song)
+    }
+
+    @Test
     fun `a comment the column cut inside a word comes back as one comment`() {
         val cut = marked(text("bilities", italic = true), marks = 2)
         val song = convert(
@@ -417,6 +427,12 @@ class ChordSheetCampfireLayoutTest {
     /** [line] with its text [rows] body sizes under the page's first line, the way the export spaces its rows. */
     private fun at(rows: Double, line: ChordSheet.Line) = line.copy(baseline = TOP + rows * BODY)
 
+    /**
+     * [line] with its text [fontSizes] font sizes under the page's first line, where the export lays its rows out: it
+     * writes each text at the height of its line box, 1.21 times its font size, so that is what [BODY] is.
+     */
+    private fun row(fontSizes: Double, line: ChordSheet.Line) = at(fontSizes / 1.21, line)
+
     /** The roles of [lines], those holding only bold chords taken for chord rows, as the converter's test says. */
     private fun roles(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(
         lines.toList(),
@@ -460,10 +476,11 @@ class ChordSheetCampfireLayoutTest {
             {comment: x2}
             """.trimIndent() + "\n",
             convert(
-                at(0.0, chords("Am" to 0, "G" to 8)),
-                at(1.3, text("Ooh ooh baby", italic = true)),
-                at(2.75, chords("Am" to 0, "G" to 3)),
-                at(4.2, text("x2", italic = true)),
+                row(0.0, chords("Am" to 0, "G" to 8)),
+                row(1.3, text("Ooh ooh baby", italic = true)),
+                row(2.75, chords("Am" to 0, "G" to 3)),
+                // A comment is spaced from the row above by more than a row's height.
+                row(4.85, text("x2", italic = true)),
             ),
         )
     }

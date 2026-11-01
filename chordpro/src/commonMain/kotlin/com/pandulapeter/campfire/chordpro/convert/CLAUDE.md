@@ -23,7 +23,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   written (an italic lyric is told from a comment by its distance under the chord row above,
   `ChordSheet.Line.baseline`), the padding under wide chords is left out, the lyric-type rows right under the title,
   before the heading's gap, are the artist, however many, a chord is set on the character it stands
-  over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
+  over (only in the lyric printed under it as its own, which starts 1.3 font sizes under the chords' text rather than
+  the next row's 1.45, `ChordSheetCampfireLayout.isLyricOf`, so a line of chords alone over a line of none comes back
+  as the two lines), an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
   a word joiner (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the lyric above, wrapped by a narrow column,
   and joined back to it (its chord row too is marked, and may hold notes alone; a marked chord row with no marked
   lyric under it is the rest of the line above; a row of notes alone is a chord row only over a marked row in the

@@ -55,8 +55,10 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   the padding as no-break spaces and the words' own spaces as spaces, so the import leaves the padding out, and drops
   the direction marks closing in a piece read against its line. A lyric wrapped onto another row opens that row's
   selectable text, and its chord row's, with a word joiner (`PrintText.isContinuation`), by which the import joins it
-  back into one line. A row cut inside a word (a lyric's, a title's, a comment's, or a labelled value's; never a tab's
-  or a grid's) opens with two (`PrintText.isHardCut`), joined back with no space; `isCutAtSpace` tells the two cuts
+  back into one line. A lyric's text starts 1.3 font sizes under its chords' and the next row 1.45 under a row of
+  chords alone (`PrintLyricRows`), by which the import tells a line of chords alone over a chordless line from one
+  line: keep the two apart. A row cut inside a word (a lyric's, a title's, a comment's, or a labelled value's; never a
+  tab's or a grid's) opens with two (`PrintText.isHardCut`), joined back with no space; `isCutAtSpace` tells the two cuts
   apart, looking past the chord layout's marks at both ends.
 - Tablature is engraved as on screen (`PrintTabEngraver`, see `ui/songView`): figures and rules, none of it
   selectable; each line reaches the text layer as the file has it, an invisible monospaced text (`isDrawn` false) sized

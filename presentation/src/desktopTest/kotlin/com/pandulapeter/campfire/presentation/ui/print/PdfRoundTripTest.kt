@@ -101,14 +101,29 @@ class PdfRoundTripTest {
 
     @Test
     fun `chords a narrow column overflows onto rows of their own come back on their line in every column count`() = runBlocking {
-        // Where the chord-only line fits a row of its own (one or two columns), it is a chord row over an unmarked lyric,
-        // which the import merges into that lyric: nothing tells the two apart, so only the overflowing prints are compared.
         val songs = listOf(
-            "I [Cmaj7(#11)] [Bbmaj9/D] [Gm7b5]" to 1..PrintSettings.MAX_COLUMNS,
-            "[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world" to 3..PrintSettings.MAX_COLUMNS,
-        ).map { (text, columns) -> ChordProParser.parse("{title: Song}\n{start_of_verse}\n$text\n{end_of_verse}\n") to columns }
-        val failures = songs.flatMap { (song, columnCounts) ->
-            columnCounts.mapNotNull { columns ->
+            "I [Cmaj7(#11)] [Bbmaj9/D] [Gm7b5]",
+            "[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world",
+        ).map { ChordProParser.parse("{title: Song}\n{start_of_verse}\n$it\n{end_of_verse}\n") }
+        val failures = songs.flatMap { song ->
+            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+                val expected = summary(song)
+                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
+                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+            }
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
+    fun `a line of chords alone over a line of no chords comes back as the two lines in every column count`() = runBlocking {
+        val songs = listOf(
+            "{title: Song}\n{start_of_verse}\n[G] [C]\nHello world\n{end_of_verse}\n",
+            "{title: Song}\n{start_of_verse}\n[G]\nHello world\n[C]Sing [G]along\n{end_of_verse}\n",
+            "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[G] [C]\n\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n",
+        ).map(ChordProParser::parse)
+        val failures = songs.flatMap { song ->
+            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
                 val expected = summary(song)
                 val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
                 if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
@@ -159,11 +174,10 @@ class PdfRoundTripTest {
 
     @Test
     fun `a right-to-left song's chords a narrow column overflows onto rows of their own come back on their line`() = runBlocking {
-        // As in a left-to-right song, only the prints where the chords overflow are compared.
         val song = ChordProParser.parse(
             "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\n\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n",
         )
-        val failures = (3..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+        val failures = (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
             val expected = summary(song)
             val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
             if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
