@@ -21,7 +21,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   labels open sections (a point under the lyrics' size, read from the lines under its chord rows; a label over a
   tab is the tab's), grids, italic comments, and boxed comments come back as
   written (an italic lyric is told from a comment by its distance under the chord row above,
-  `ChordSheet.Line.baseline`), the padding under wide chords is left out, a chord is set on the character it stands
+  `ChordSheet.Line.baseline`), the padding under wide chords is left out, the lyric-type rows right under the title,
+  before the heading's gap, are the artist, however many, a chord is set on the character it stands
   over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
   a word joiner (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the lyric above, wrapped by a narrow column,
   and joined back to it (its chord row too is marked, and may hold notes alone; a marked chord row with no marked

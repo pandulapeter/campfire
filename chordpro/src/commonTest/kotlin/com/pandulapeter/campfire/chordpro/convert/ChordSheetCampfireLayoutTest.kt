@@ -181,6 +181,31 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `the rows right under an export's title, before the heading's gap, are its artist, however many and however long`() {
+        fun page(vararg lines: ChordSheet.Line) =
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines.toList())), isCampfireExport = true)).single()
+        val longer = page(
+            at(0.0, text("Song", size = 19.0, bold = true)), at(1.35, text("The Chords")),
+            at(3.3, text("Verse", size = LABEL, bold = true)), at(4.8, chords("C" to 0, "G" to 6)), at(6.1, text("Hello world")),
+        )
+        assertTrue("{artist: The Chords}" in longer, longer)
+        val wrapped = page(
+            at(0.0, text("Wagon", size = 19.0, bold = true)), at(2.3, text("Wheel", size = 19.0, bold = true)),
+            at(3.65, text("Old Crow Medicine")), at(4.85, text("Show")), at(6.8, text("Verse", size = LABEL, bold = true)),
+            at(8.3, chords("A" to 0, "E" to 12)), at(9.6, text("Headed down south")),
+        )
+        assertTrue("{artist: Old Crow Medicine Show}" in wrapped, wrapped)
+        val paragraph = page(at(0.0, text("Song", size = 19.0, bold = true)), at(2.6, text("Hello world, a paragraph")), at(3.8, text("And more of it")))
+        assertFalse("{artist" in paragraph, paragraph)
+        // A first lyric shorter than the title, a heading gap down, is no artist either.
+        val short = page(
+            at(0.0, text("A rather long title", size = 19.0, bold = true)), at(2.25, text("Hi there")),
+            at(3.45, text("And more of it")), at(4.65, chords("C" to 0)), at(5.95, text("Hello world")),
+        )
+        assertFalse("{artist" in short, short)
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

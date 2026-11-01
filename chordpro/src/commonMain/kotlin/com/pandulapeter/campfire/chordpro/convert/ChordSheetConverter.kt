@@ -814,10 +814,27 @@ public object ChordSheetConverter {
         addTitle(header, name, named)
         omitted += first..last
         val artist = last + 1
+        // Campfire's export sets the artist in the lyrics' type right under the title, at the heading's spacing, wrapped
+        // onto as many rows as it takes, and its first block a heading gap further down: the rows at that spacing are the
+        // artist, however many and however long, and nothing else is, not even a short first lyric under a long title.
+        if (named == null && lines.getOrNull(artist)?.isCampfire == true && lines[artist].source.baseline != null) {
+            val rows = generateSequence(artist) { it + 1 }.takeWhile { index ->
+                val line = lines.getOrNull(index)
+                val below = line?.source?.baseline
+                val above = lines[index - 1].source.baseline
+                kinds.getOrNull(index) == Kind.LYRIC && below != null && above != null &&
+                    below - above < (line.source.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.size } ?: 0.0) * HEADING_ROW
+            }.toList()
+            if (rows.isNotEmpty()) {
+                header += "{artist: ${headerValue(joinRows(lines, rows.first(), rows.last()))}}"
+                omitted += rows
+            }
+            return
+        }
         // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
         val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
-        // Campfire's export sets the artist in the lyrics' type, between the title and the row of the song's key, tempo,
-        // and time, where no lyric ever stands, so there a name longer than the title is the artist all the same.
+        // Read without baselines, an export's artist is still told by the row of the song's key, tempo, and time under it,
+        // where no lyric ever stands, so there a name longer than the title is the artist all the same.
         val isCampfireArtist = lines.getOrNull(artist)?.isCampfire == true && kinds.getOrNull(artist + 1) == Kind.METADATA
         if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || isCampfireArtist || lines[artist].text.length < title.length &&
                 lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
@@ -1203,6 +1220,13 @@ public object ChordSheetConverter {
         for (line in lines) if (line.isNotBlank() || result.lastOrNull()?.isNotBlank() == true) result += line.trimEnd()
         return result.joinToString("\n").trim() + "\n"
     }
+
+    /**
+     * How far under the row above, in its own size, a row of Campfire's heading stands at most: the heading's rows are
+     * 1.45 times the font size apart, about 1.2 to 1.35 of a span's size, and the gap before the first block adds 0.8
+     * times the font size.
+     */
+    private const val HEADING_ROW = 1.6
 
     /** How close to a character a chord of Campfire's own export stands to be set on it, in points. */
     private const val EXACT_POSITION = 0.75

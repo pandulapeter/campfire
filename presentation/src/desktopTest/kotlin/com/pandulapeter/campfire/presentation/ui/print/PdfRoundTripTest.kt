@@ -118,6 +118,23 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `an artist comes back whole however long and however wrapped, and a first lyric is never taken for one`() = runBlocking {
+        val songs = listOf(
+            "{title: Wagon Wheel}\n{artist: Old Crow Medicine Show}\n{start_of_verse}\n[A]Headed down [E]south\n{end_of_verse}\n",
+            "{title: Song}\n{artist: The Chords}\n{start_of_verse}\n[C]Hello [G]world\n{end_of_verse}\n",
+            "{title: A rather long title}\nHi there\nAnd [C]more of it here\n",
+        ).map(ChordProParser::parse)
+        val failures = songs.flatMap { song ->
+            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+                val expected = summary(song)
+                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
+                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+            }
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",
