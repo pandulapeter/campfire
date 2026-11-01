@@ -136,8 +136,9 @@ internal object ChordSheetCampfireLayout {
     /**
      * Whether a line wholly in italics is a lyric set in `<i>` rather than a comment, which differs from it only by a
      * gray the text layer does not keep. The two are told apart by the line before: a lyric under its chords is one row
-     * of the export, its text 1.3 times its size under them, while a comment after a row of chords alone (an intro's,
-     * then `x2`) is the next row, 1.45 times its size under. A lyric wrapped onto the next row is a lyric too; a comment
+     * of the export, its text 1.3 font sizes under them, while a comment after a row of chords alone (an intro's, then
+     * `x2`) is a part of its own, a row of 1.45 font sizes and the gap of 0.65 between parts under. A lyric wrapped onto
+     * the next row, 1.45 font sizes under, is a lyric too; a comment
      * printed right under an all-italic lyric is then read as one more of its lines, the rarer of the two to meet. A
      * line whose position is unknown, or one higher on the page than the line before (the next column), stays a
      * comment.
@@ -149,7 +150,7 @@ internal object ChordSheetCampfireLayout {
         val size = lines[index].spans.filter { it.text.isNotBlank() }.maxOf { it.size }
         return when {
             gap <= 0.0 -> false
-            isChordRow[previous] -> gap < size * LYRIC_UNDER_CHORDS
+            isChordRow[previous] -> gap < size * ITALIC_LYRIC_UNDER_CHORDS
             roles[previous] == null && lines[previous].spans.filter { it.text.isNotBlank() }.all { it.isItalic } -> gap < size * WRAPPED_ROW
             else -> false
         }
@@ -280,15 +281,20 @@ internal object ChordSheetCampfireLayout {
     private const val LAYOUT_ROUNDING = 1.0
 
     /**
-     * Between a lyric's distance under its chords (1.3 times its size, `PrintLyricRows`) and the next row's (1.45 times,
-     * `PrintRows`).
+     * How far an italic line's baseline may stand under the chord row above, in its own line box, and still be the lyric
+     * of that row or of the next: a lyric's stands 1.3 font sizes under its chords' (about 1.07 of an Inter line box), the
+     * next row's 1.45 under a row of chords alone (1.2), and a comment's after a row of chords alone 2.1 (1.74).
      */
-    private const val LYRIC_UNDER_CHORDS = 1.375
+    private const val ITALIC_LYRIC_UNDER_CHORDS = 1.375
 
     /** The height of the bundled Inter's line box, in its font size. */
     private const val INTER_LINE_BOX = 1.21
 
-    /** Just over the distance between rows (`PrintRows`, 1.45 times the size), which a wrapped lyric continues at. */
+    /**
+     * How far a line's baseline may stand under an italic lyric's, in its own line box, and still be the row that lyric
+     * wraps onto: the next row stands 1.45 font sizes under (about 1.2 of an Inter line box), a comment after the lyric
+     * 2.1 (1.74; 1.54 in a fallback font's taller line box of about 1.36 font sizes).
+     */
     private const val WRAPPED_ROW = 1.5
 
     /**

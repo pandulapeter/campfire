@@ -1280,9 +1280,10 @@ public object ChordSheetConverter {
     }
 
     /**
-     * How far under the row above, in its own size, a row of Campfire's heading stands at most: the heading's rows are
-     * 1.45 times the font size apart, about 1.2 to 1.35 of a span's size, and the gap before the first block adds 0.8
-     * times the font size.
+     * How far a row's baseline may stand under the baseline of the row above, in its own line box, and still be a row of
+     * Campfire's heading: the artist's rows are 1.45 font sizes apart (about 1.2 of an Inter line box) and the first one
+     * about 1.6 under the title's, while the first block stands 2.25 under the heading's last row (1.86; 1.65 where both
+     * are drawn in a fallback font's line box of about 1.36 font sizes, the narrowest margin).
      */
     private const val HEADING_ROW = 1.6
 

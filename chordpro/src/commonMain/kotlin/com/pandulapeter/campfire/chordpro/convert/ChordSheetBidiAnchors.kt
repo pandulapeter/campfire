@@ -30,8 +30,7 @@ internal class ChordSheetBidiAnchors private constructor(
      * (the row's end) for a chord right after its last one, which in a right-to-left row ends where the row's [length]
      * characters start on the left, and `length + 1` for one further left, over the spaces and padding the export draws
      * past the end, which is sung after the line and a space; null where no character is within [tolerance]. A chord's
-     * right edge is allowed a point more: the export sets a chord hanging leftwards by its width in whole points, so its
-     * glyphs end up to a point short of the edge it hangs from.
+     * right edge is allowed a point more ([ROUNDING]) for a PDF of 5.2 or older.
      * A space is taken only where no letter is: a chord hanging leftwards from a word's first letter often ends right
      * where a space after the word starts.
      */
@@ -147,7 +146,11 @@ internal class ChordSheetBidiAnchors private constructor(
         /** How far, in the sheet's units, a glyph may start left of the one before it and still follow it. */
         private const val OUT_OF_ORDER = 0.01
 
-        /** How far short of its edge the export's rounded width leaves a chord hanging leftwards, at most. */
+        /**
+         * How far short of its edge a chord hanging leftwards may end: an export of 5.2 or older set it by its width
+         * rounded up to a whole point, leaving its glyphs up to a point short, where the export now sets it by the
+         * advance it is drawn with and ends it on the edge.
+         */
         private const val ROUNDING = 1.0
 
         private const val NEUTRAL = 0
