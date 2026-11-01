@@ -972,6 +972,7 @@ public object ChordSheetConverter {
                 if (kinds[at] != Kind.LYRIC || at in omitted || !isSung(at)) null else look(at)
             },
             breaks = kinds.map { it == Kind.BLANK || it == Kind.SECTION || it == Kind.COMMENT || it == Kind.TAB || it == Kind.GRID },
+            rows = kinds.map { it == Kind.CHORD },
         )
         fun openUnlabelled(at: Int) { if (at in unlabelled) openChorus() }
         var index = 0

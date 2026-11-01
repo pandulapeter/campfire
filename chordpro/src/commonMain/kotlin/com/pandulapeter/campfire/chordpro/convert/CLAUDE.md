@@ -85,8 +85,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   once the song showed that look apart: against verses outside any section, or by the lyrics returning from it (in a
   song that heads every section, lyrics under a chorus heading are that chorus).
 - With no heading, a stanza's run of two lyrics or more set in bold or italic at the size of the song's plain verses is
-  a chorus, ended where the lyrics return to plain type; an inset alone is not one (a second column or a bridge starts further in too),
-  and a line with no word (a tab's string, a stray accidental) neither belongs to such a run nor ends it.
+  a chorus, ended where the lyrics return to plain type; an inset alone is not one (a second column or a bridge starts
+  further in too), and a line with no word (a tab's string, a stray accidental) neither belongs to such a run nor ends
+  it. A run right under the title, before any blank line, heading, chord row, or plain lyric, is the header's (a
+  credit, an album), not a chorus.
 - Chord shapes listed one a line (`Bb(#11)/A = x03330`) become `{define}` lines in the header
   (`ChordSheetDefinitions`), except a chord listed both plain and starred (`Bb`, `Bb*`): the star is dropped where the
   chord is played, so one definition would stand for both.

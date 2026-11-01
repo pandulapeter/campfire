@@ -722,6 +722,49 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `bold lines under the title before anything sung are its credits, not a chorus`() {
+        fun line(text: String, bold: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> span(c.toString(), index * 6.0, (index + 1) * 6.0, bold = bold) })
+        val chords = line("G       C", bold = true)
+        val lines = listOf(
+            line("Song Title", bold = true),
+            line("Bob Dylan and The Band", bold = true),
+            line("From the album Blonde on Blonde", bold = true),
+            chords,
+            line("Somebody told me"),
+            chords,
+            line("We were born to sing"),
+        )
+        assertEquals(
+            "{title: Song Title}\n\nBob Dylan and The Band\nFrom the album Blonde on Blonde\n[G]Somebody [C]told me\n[G]We were [C]born to sing\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun `a lyric sheet opening with its chorus in bold after a gap under the title keeps the chorus`() {
+        fun line(text: String, bold: Boolean = false, size: Double = 10.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isBold = bold) })
+        val blank = ChordSheet.Line(emptyList())
+        val lines = listOf(
+            line("Song", size = 16.0),
+            blank,
+            line("Hey now you're a star", bold = true),
+            line("Get your game on", bold = true),
+            blank,
+            line("Somebody told me"),
+            line("We were born to sing"),
+            blank,
+            line("It's a cool place"),
+            line("And it gets colder"),
+        )
+        assertEquals(
+            "{title: Song}\n\n{start_of_chorus}\nHey now you're a star\nGet your game on\n{end_of_chorus}\n\nSomebody told me\n" +
+                "We were born to sing\n\nIt's a cool place\nAnd it gets colder\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(

@@ -40,25 +40,34 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
          * The first lines of the runs of a stanza's lyrics set apart from the song's plain verses, two lines at least in the verses' size,
          * which open a chorus no heading names: bold or italic where the song has plain lyrics (a song set wholly in one
          * has nothing to set apart). An inset alone does not, with no heading to say what it sets apart: a second
-         * column, a bridge, and a centred stanza all start further in. [looks] holds a lyric's look and null for any
-         * other line, [breaks] whether a line ends a stanza; a chord row does not.
+         * column, a bridge, and a centred stanza all start further in. The lines right under the title, before any stanza
+         * break, chord row, or plain lyric, are the header's (a credit, an album), so a run there opens nothing. [looks]
+         * holds a lyric's look and null for any other line, [breaks] whether a line ends a stanza (a chord row does not),
+         * and [rows] whether it is a chord row.
          */
-        fun unlabelled(looks: List<ChordSheetLook?>, breaks: List<Boolean>): Set<Int> {
+        fun unlabelled(looks: List<ChordSheetLook?>, breaks: List<Boolean>, rows: List<Boolean>): Set<Int> {
             val plain = looks.filterNotNull().filter { !it.isBold && !it.isItalic }.takeIf { it.isNotEmpty() } ?: return emptySet()
             val size = plain.map { it.size }.sorted()[plain.size / 2]
             val starts = mutableSetOf<Int>()
             val run = mutableListOf<Int>()
+            var hasStarted = false
+            var runStarted = false
             fun finish() {
-                if (run.size >= 2) starts += run.first()
+                if (run.size >= 2 && runStarted) starts += run.first()
                 run.clear()
             }
             looks.forEachIndexed { index, look ->
                 if (breaks[index]) finish()
+                if (breaks[index] || rows[index]) hasStarted = true
                 if (look == null) return@forEachIndexed
                 // A chorus is sung in the verses' size; smaller print set apart is notes, diagrams, or credits.
                 val isApart = abs(look.size - size) < size * 0.05 && (look.isBold || look.isItalic)
+                if (!look.isBold && !look.isItalic) hasStarted = true
                 if (!isApart || run.isNotEmpty() && looks[run.first()]!!.differsInType(look)) finish()
-                if (isApart) run += index
+                if (isApart) {
+                    if (run.isEmpty()) runStarted = hasStarted
+                    run += index
+                }
             }
             finish()
             return starts
