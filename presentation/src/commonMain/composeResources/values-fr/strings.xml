@@ -239,7 +239,7 @@
     <string name="songs_unknown_artist">Artiste inconnu</string>
     <string name="songs_random_picks">Sélection au hasard</string>
     <string name="songs_random_picks_refresh">Nouvelle sélection</string>
-    <string name="random_picks_question_title">Garder la sélection au hasard ?</string>
+    <string name="random_picks_question_title">Garder la sélection au hasard ?</string>
     <string name="random_picks_question_text">Cinq chansons de ta bibliothèque, tirées à nouveau chaque heure ou dès que tu en demandes d\'autres. Tu peux l\'activer ou la désactiver à tout moment dans les Réglages, sous Fonctionnalités.</string>
     <string name="random_picks_question_keep">Garder</string>
     <string name="random_picks_question_turn_off">Désactiver</string>
@@ -976,8 +976,8 @@
     <string name="song_layout_pages_description">Le plus de la chanson à l\'écran à la fois, en colonnes tournées page par page</string>
     <string name="song_layout_continuous">Continu</string>
     <string name="song_layout_continuous_description">Une seule colonne qui défile toute seule au rythme de la chanson, à une vitesse réglée pour chaque chanson</string>
-    <string name="chord_names_title">Comment lis-tu les accords avec un capo ?</string>
-    <string name="chord_names_example">Cette chanson a un capo à la case %1$s : d\'après les doigtés que tu joues, elle est en %2$s ; d\'après le son, en %3$s.</string>
+    <string name="chord_names_title">Comment lis-tu les accords avec un capo ?</string>
+    <string name="chord_names_example">Cette chanson a un capo à la case %1$s : d\'après les doigtés que tu joues, elle est en %2$s ; d\'après le son, en %3$s.</string>
     <string name="chord_names_explanation">Avec un capo, les accords d\'une chanson peuvent être nommés d\'après les doigtés joués au-dessus ou d\'après leur son.</string>
     <string name="chord_names_shapes_description">Les accords que tu doigtes au-dessus du capo, comme les grilles pour capo les écrivent</string>
     <string name="chord_names_sounding_description">Les accords qu\'on entend, pour jouer avec les autres sans capo</string>
