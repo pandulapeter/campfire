@@ -91,21 +91,25 @@ public object ChordProTransposer {
      * Transposes raw ChordPro text in place, keeping its formatting and original notation. The tunes of an `abc` block
      * keep their notes and chord symbols as written and are moved by a `%%transpose` line of their own, which abc2svg
      * adds to the reader's transposition ([AbcTranspositions]).
+     *
+     * @param capo How many of [semitones] a tab's frets are not moved by, as [transpose]'s: every chord name, a tab's
+     *   included, and the key move by all of [semitones].
      */
-    public fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
-        if (semitones == 0 && preferFlats == null) return text
+    public fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null, capo: Int = 0): String {
+        if (semitones == 0 && capo == 0 && preferFlats == null) return text
         val written = ChordProNotation.withLowercaseMinorsExpanded(ChordProParser.parseAsWritten(text))
         val isGermanNotated = ChordProNotation.isGermanNotated(written)
         val song = if (isGermanNotated) ChordProNotation.fromGerman(written) else written
         val flats = preferFlats ?: prefersFlats(song, semitones)
         val transposeName = { name: String -> transposeChord(name, semitones, flats) }
-        if (!isGermanNotated) return rewriteText(text, semitones, keepingLowercaseMinors(transposeName))
+        if (!isGermanNotated) return rewriteText(text, semitones, capo, keepingLowercaseMinors(transposeName))
         val staysGermanNotated = anyWrittenChordName(song) { name ->
             ChordProNotation.isGermanName(ChordProNotation.toGerman(transposeName(name)))
         }
         return rewriteText(
             text,
             semitones,
+            capo,
             keepingLowercaseMinors { name ->
                 val transposedName = transposeName(ChordProNotation.fromGerman(name))
                 if (staysGermanNotated) ChordProNotation.toGerman(transposedName) else transposedName
@@ -139,11 +143,14 @@ public object ChordProTransposer {
      */
     public fun transposedOffset(before: String, after: String, offset: Int): Int = ChordProOffsetMapping.transposedOffset(before, after, offset)
 
-    /** [text] with its chords renamed by [rename] and its ABC tunes moved by [semitones], see [AbcTranspositions.moved]. */
-    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) = AbcTranspositions.moved(
+    /**
+     * [text] with its chords renamed by [rename], its tabs' frets moved by [semitones] less [capo], and its ABC tunes
+     * moved by [semitones], see [AbcTranspositions.moved].
+     */
+    private fun rewriteText(text: String, semitones: Int, capo: Int, rename: (String) -> String) = AbcTranspositions.moved(
         text = rewriteChordNamesInText(
             text = text,
-            rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
+            rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones - capo, rename) },
             rename = rename,
             rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename, semitones) },
         ),

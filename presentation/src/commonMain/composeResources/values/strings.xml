@@ -1291,6 +1291,7 @@
     <string name="print_next">Next</string>
     <string name="print_time">Time</string>
     <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (chords as they sound)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Link</string>

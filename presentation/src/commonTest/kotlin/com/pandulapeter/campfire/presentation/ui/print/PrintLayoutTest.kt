@@ -1022,6 +1022,15 @@ internal class PrintLayoutTest {
         assertTrue(layout(source(entry.copy(transposition = 0, song = entry.song!!.copy(metadata = ChordProMetadata(capo = 0))))).pages.single().texts.none { it.style == PrintStyle(11f, gray = 90, direction = WritingDirection.LEFT_TO_RIGHT) })
     }
 
+    @Test fun `a capo says how the chords under it are named`() = runTest {
+        val entry = PrintSong("song.cho", "A song", null, song = ChordProSong(
+            ChordProMetadata(key = "F#m", capo = 2), listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)))))
+        suspend fun row(entry: PrintSong) = layout(source(entry)).pages.single().texts.single { it.text.startsWith("Key:") }.text
+        assertEquals("Key: F#m   Capo: 2 (chords as they sound)", row(entry.copy(areChordsSounding = true)))
+        assertEquals("Key: F#m   Capo: 2 (Em shapes)", row(entry.copy(shapesKey = "Em")))
+        assertEquals("Key: F#m   Capo: 2", row(entry))
+    }
+
     @Test fun `the feature switches leave out what they take away whatever the options say`() {
         val chosen = PrintSettings(showChords = true, showTabs = true, showChordDiagrams = true, showScales = true, showKey = true, showTempo = true)
         assertEquals(

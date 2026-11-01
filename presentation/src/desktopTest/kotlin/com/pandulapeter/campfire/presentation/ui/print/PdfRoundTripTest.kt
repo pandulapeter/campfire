@@ -17,6 +17,7 @@ import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
@@ -93,6 +94,38 @@ class PdfRoundTripTest {
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }
 
+    @Test
+    fun `a capo song printed with either chord names comes back sounding as printed in every language`() = runBlocking {
+        val verse = "{start_of_verse}\n%s\n{end_of_verse}\n"
+        val shapes = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[Em]Hello [Am]world [Em]and [D]more [Em]here"))
+        val sounding = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[F#m]Hello [Bm]world [F#m]and [E]more [F#m]here"))
+        val german = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.GERMAN)
+        val latin = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.LATIN)
+        val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+        val prints = folders.flatMap { folder ->
+            val labels = printLabelsOf(folder)
+            listOf(
+                "${folder.name} shapes" to roundTrip(shapes, PrintSettings(), labels, shapesKey = "Em"),
+                "${folder.name} sounding" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true),
+            ) + when (folder.name) {
+                "values-es" -> listOf("${folder.name} sounding in Latin" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true, spelling = latin))
+                "values-de" -> listOf("${folder.name} sounding in German" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true, spelling = german))
+                else -> emptyList()
+            }
+        }
+        // What sounds is told by the chords and the capo alone: the shapes print keeps the key that sounds over its shapes,
+        // which SongKeys may read either way, so the chords' first one, moved up by the capo, is what is compared.
+        val failures = prints.mapNotNull { (name, imported) ->
+            val capo = imported.metadata.capo ?: 0
+            val moved = ChordProTransposer.transpose(imported, capo, preferFlats = false)
+            val heard = moved.blocks.filterIsInstance<ChordProBlock.Section>().firstNotNullOfOrNull { section ->
+                section.lines.filterIsInstance<ChordProLine.Lyrics>().firstNotNullOfOrNull { it.chords.firstOrNull()?.name }
+            }
+            if (capo == 2 && heard == "F#m") null else "$name: capo $capo, sounds $heard"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
     /** The labels the export prints in the language of the `values*` [folder], read from its `strings.xml` as the app reads them. */
     private fun printLabelsOf(folder: File): PrintLabels {
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(folder, "strings.xml"))
@@ -106,14 +139,28 @@ class PdfRoundTripTest {
             tempoValue = strings.getValue("song_details_tempo").replace("%1\$s", TEMPO_VALUE),
             time = strings.getValue("print_time"),
             labelledValue = strings.getValue("print_label_value").replace("%1\$s", LABELLED_LABEL).replace("%2\$s", LABELLED_VALUE),
+            capoWithShapes = strings.getValue("song_details_capo_shapes").replace("%1\$s", LABELLED_VALUE).replace("%2\$s", SHAPES_KEY),
+            capoSounding = strings.getValue("print_capo_sounding").replace("%1\$s", LABELLED_VALUE),
         )
     }
 
-    private suspend fun roundTrip(song: ChordProSong, settings: PrintSettings, labels: PrintLabels = this.labels, transposition: Int = 0): ChordProSong {
-        val printed = songRenderer.notatedSong(song, UserPreferences.ChordSpelling.Default)
+    private suspend fun roundTrip(
+        song: ChordProSong,
+        settings: PrintSettings,
+        labels: PrintLabels = this.labels,
+        transposition: Int = 0,
+        shapesKey: String? = null,
+        areChordsSounding: Boolean = false,
+        spelling: UserPreferences.ChordSpelling = UserPreferences.ChordSpelling.Default,
+    ): ChordProSong {
+        val printed = songRenderer.notatedSong(song, spelling)
         val title = song.metadata.title.orEmpty()
+        val entry = PrintSong(
+            "song.cho", title, song.metadata.artist, transposition = transposition, shapesKey = shapesKey, areChordsSounding = areChordsSounding,
+            song = printed,
+        )
         val document = layoutPrintDocument(
-            PrintSource(title, songs = listOf(PrintSong("song.cho", title, song.metadata.artist, transposition = transposition, song = printed))),
+            PrintSource(title, songs = listOf(entry)),
             settings, labels, renderer::width, measureLyric = renderer::lyricLayout,
         )
         val extracted = PdfTextExtractor.extract(renderer.pdf(document, title))

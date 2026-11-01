@@ -1290,6 +1290,7 @@
     <string name="print_next">Következő</string>
     <string name="print_time">Ütemmutató</string>
     <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (hangzó akkordok)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Link</string>

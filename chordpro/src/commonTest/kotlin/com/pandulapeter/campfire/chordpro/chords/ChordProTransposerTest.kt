@@ -438,6 +438,17 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a text moved with a capo moves a tab's chord names but not its frets`() {
+        val text = "{key: Am}\n[Am]la\n{start_of_tab}\nAm      G\ne|-0-----3-|\n{end_of_tab}"
+
+        assertEquals(
+            "{key: Bm}\n[Bm]la\n{start_of_tab}\nBm      A\ne|-0-----3-|\n{end_of_tab}",
+            ChordProTransposer.transposeText(text, 2, preferFlats = false, capo = 2),
+        )
+        assertEquals(ChordProTransposer.transposeText(text, 2, preferFlats = false), ChordProTransposer.transposeText(text, 2, preferFlats = false, capo = 0))
+    }
+
+    @Test
     fun `an abc tune is moved by a transpose line of its own`() {
         val text = "{start_of_abc}\nX:1\nK:C\n[CEG]2\n{end_of_abc}\n[C]la"
 

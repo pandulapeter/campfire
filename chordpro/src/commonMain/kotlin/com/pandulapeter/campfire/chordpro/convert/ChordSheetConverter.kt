@@ -9,7 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
+import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
@@ -388,7 +391,7 @@ public object ChordSheetConverter {
             }
             val value = match.groupValues[2].trim()
             // A tempo is a number of beats, which Campfire's PDF prints with its unit: "96 BPM".
-            return name to when (name) {
+            return (if (name == "capo" && isSoundingCapo(value)) CAPO_SOUNDING else name) to when (name) {
                 "capo" -> capo(value.replace(capoPreposition, ""))
                 "tempo" -> Regex("^[0-9]+").find(value)?.value ?: value.takeIf { label in setOf("tempo", "temp\u00f3", "bpm") }.orEmpty()
                 // A time signature label of another language is as ordinary a word ("Metro", "Mesure"), so it is read
@@ -423,13 +426,16 @@ public object ChordSheetConverter {
                     "tempo" -> value.firstOrNull()?.isDigit() == true
                     "time" -> timeSignature.matches(value)
                     "key" -> isHeader && isChordOrLatinName(ascii(value))
-                    "capo" -> isHeader && value.isNotEmpty()
+                    "capo", CAPO_SOUNDING -> isHeader && value.isNotEmpty()
                     TRANSPOSITION -> isHeader
                     else -> false
                 }
             }
         }
     }
+
+    /** Whether a capo [value] is Campfire's PDF saying the chords under it are named as they sound (`2 (chords as they sound)`). */
+    private fun isSoundingCapo(value: String) = parentheses.find(value)?.groupValues?.get(1)?.trim()?.lowercase() in soundingCapoMarkers
 
     /** The fret a capo value names, in digits or in the Roman numerals many sites write it in; blank where it names none. */
     private fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
@@ -514,7 +520,7 @@ public object ChordSheetConverter {
         }
         val header = mutableListOf<String>()
         val omitted = mutableSetOf<Int>()
-        val changes = extractHeader(lines, kinds, header, omitted)
+        val (changes, soundingCapo) = extractHeader(lines, kinds, header, omitted)
         if (guessesTitle) extractTitle(lines, kinds, header, omitted)
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },
@@ -527,7 +533,19 @@ public object ChordSheetConverter {
         val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
         // A credit printed both under the title and as a labelled line names the song once.
         val distinct = header.distinct()
-        return collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output)
+        return asCapoChart(collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output), soundingCapo)
+    }
+
+    /**
+     * [song] as the capo chart it was printed from, where its chords are named as they sound over a [capo]: a Campfire
+     * file's chords under a `{capo}` are the shapes played above it, so they and the key move down by the capo, while a
+     * tab's frets, printed counted from the capo, stay. The move reads only the standard notation (a Latin name is no
+     * chord to it), so the text is brought into it first, as the import would bring it afterwards.
+     */
+    private fun asCapoChart(song: String, capo: Int) = if (capo == 0) {
+        song
+    } else {
+        ChordProTransposer.transposeText(ChordProNotation.convertText(song, ChordNotation.STANDARD, ChordNotation.STANDARD), -capo, capo = -capo)
     }
 
     /**
@@ -628,17 +646,21 @@ public object ChordSheetConverter {
         }
     }
 
-    /** Takes the metadata lines into [header] and [omitted], and returns the changes of tempo and time, by the line they stand at. */
+    /**
+     * Takes the metadata lines into [header] and [omitted], and returns the changes of tempo and time, by the line they
+     * stand at, and the capo of a sheet whose chords are named as they sound over it ([CAPO_SOUNDING]), 0 for any other.
+     */
     private fun extractHeader(
         lines: List<Rendered>,
         kinds: List<Kind>,
         header: MutableList<String>,
         omitted: MutableSet<Int>,
-    ): Map<Int, List<String>> {
+    ): Pair<Map<Int, List<String>>, Int> {
         // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
         // written there, as Campfire's own PDF prints one.
         val changes = mutableMapOf<Int, List<String>>()
         val declared = mutableSetOf<String>()
+        var soundingCapo = 0
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
             (labelledRow(lines[index].text, isHeader = index < 15) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
                 when {
@@ -656,6 +678,10 @@ public object ChordSheetConverter {
                             }
                         }
                     }
+                    name == CAPO_SOUNDING -> {
+                        header += "{capo: $value}"
+                        soundingCapo = value.toInt()
+                    }
                     // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
                     name == ChordProVocabulary.KEY -> header += "{$name: ${headerValue(ascii(value))}}"
                     else -> header += "{$name: ${headerValue(value)}}"
@@ -663,7 +689,7 @@ public object ChordSheetConverter {
             }
             omitted += index
         } }
-        return changes
+        return changes to soundingCapo
     }
 
     /** Takes the title the song opens with, and the credit under it, into [header] and [omitted]. */
@@ -1083,6 +1109,22 @@ public object ChordSheetConverter {
     )
 
     /** The time signature labels of the app's languages besides English and Hungarian, all words a lyric may open with too. */
+    /**
+     * The words Campfire's PDF puts in parentheses after a capo whose chords are named as they sound, in every language
+     * the app prints them in (`print_capo_sounding`), lowercase.
+     */
+    private val soundingCapoMarkers = setOf(
+        "chords as they sound",
+        "hangz\u00f3 akkordok",
+        "acorduri cum sun\u0103",
+        "klingende akkorde",
+        "acordes como suenan",
+        "accords en son r\u00e9el",
+        "accordi come suonano",
+        "\u05d0\u05e7\u05d5\u05e8\u05d3\u05d9\u05dd \u05e9\u05e0\u05e9\u05de\u05e2\u05d9\u05dd",
+    )
+
+    /** The time signature labels of the app's languages besides English and Hungarian, all words a lyric may open with too. */
     private val foreignTimeLabels = setOf("m\u0103sur\u0103", "taktart", "comp\u00e1s", "mesure", "metro", "\u05de\u05e9\u05e7\u05dc")
     private val metadata = Regex(
         "^(Capo|Capotraste|Cejilla|Kapodaster|Capodastre|Kapo|Capodastru|Capotasto|\u05e7\u05d0\u05e4\u05d5|" +
@@ -1124,6 +1166,9 @@ public object ChordSheetConverter {
 
     /** What [metadata] names a line saying the song is played without a capo, which is the default and is written as nothing. */
     private const val NO_CAPO = "no capo"
+
+    /** What [metadata] names a capo marked as one the chords are named as they sound over, `2 (chords as they sound)`. */
+    private const val CAPO_SOUNDING = "capo sounding"
 
     /** What [metadata] names a credit (`By:`, `Words and music by:`), whose value may end in the year of the song. */
     private const val CREDIT = "credit"

@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.print_capo_sounding
 import com.pandulapeter.campfire.presentation.resources.print_label_value
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.resources.print_time
@@ -54,6 +55,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val labelledValue = plainTextResource(Res.string.print_label_value, LABELLED_LABEL, LABELLED_VALUE)
     val scales = stringResource(Res.string.scales)
     val capoWithShapes = plainTextResource(Res.string.song_details_capo_shapes, LABELLED_VALUE, SHAPES_KEY)
+    val capoSounding = plainTextResource(Res.string.print_capo_sounding, LABELLED_VALUE)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->
         preferences.chordTuning()?.let { tuning ->
@@ -67,7 +69,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             ).joinToString(" · ").ifEmpty { null }
         }
     }
-    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue, capoWithShapes) {
+    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue, capoWithShapes, capoSounding) {
         PrintLabels(
             key = key,
             transposition = transposition,
@@ -81,6 +83,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             scales = scales,
             labelledValue = labelledValue,
             capoWithShapes = capoWithShapes,
+            capoSounding = capoSounding,
         )
     }
 }

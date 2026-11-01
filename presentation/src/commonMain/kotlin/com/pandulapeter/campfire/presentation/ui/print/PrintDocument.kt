@@ -59,7 +59,7 @@ internal data class PrintSource(
  * [transposition] the semitones the reader moves it by, printed beside its key; [song] is already rendered in the chords
  * the screen names, what sounds (`SongPlayback.soundingTransposition`) or the shapes fingered above the capo, its key the
  * one it sounds in either way, and [shapesKey] the key of those shapes, printed after the capo; null where the chords
- * are named as they sound.
+ * are named as they sound, which [areChordsSounding] says, so that the capo printed over them says it too.
  */
 internal data class PrintSong(
     val fileName: String,
@@ -68,6 +68,7 @@ internal data class PrintSong(
     val index: Int? = null,
     val transposition: Int = 0,
     val shapesKey: String? = null,
+    val areChordsSounding: Boolean = false,
     /** Null for an unreadable or missing file; its place remains visible in the running order. */
     val song: ChordProSong?,
     /** The file as it is stored, which the library's own files are written from, and null when it could not be read. */
@@ -305,12 +306,21 @@ internal data class PrintLabels(
      * the capo in it.
      */
     val capoWithShapes: String = "$LABELLED_VALUE ($SHAPES_KEY shapes)",
+    /**
+     * A capo over chords named as they sound ("2 (chords as they sound)"), [LABELLED_VALUE] standing for the capo: one
+     * value, so that an import reading the page back still finds the capo in it, and reads the chords as the shapes
+     * played above it.
+     */
+    val capoSounding: String = "$LABELLED_VALUE (chords as they sound)",
 ) {
     /** [value] after [label], as [labelledValue] puts it. */
     fun labelled(label: String, value: String) = labelledValue.replace(LABELLED_LABEL, label).replace(LABELLED_VALUE, value)
 
     /** [capo] followed by the key of the shapes played above it, as [capoWithShapes] puts it. */
     fun capoWithShapes(capo: String, key: String) = capoWithShapes.replace(LABELLED_VALUE, capo).replace(SHAPES_KEY, key)
+
+    /** [capo] over chords named as they sound, as [capoSounding] puts it. */
+    fun capoSounding(capo: String) = capoSounding.replace(LABELLED_VALUE, capo)
 }
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */

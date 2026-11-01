@@ -252,6 +252,8 @@ internal class ExportController(
                 index = if (setlist == null) null else index + 1, transposition = playedTransposition, song = rendered, text = content?.text, chords = chords,
                 scaleGroups = scaleGroups,
                 shapesKey = shapeNames?.shapesKey,
+                // A capo printed over chords that have no shape names is one they are named as they sound over.
+                areChordsSounding = shapeNames == null,
                 notationChords = NotationChordSpelling(
                     semitones = (named?.metadata?.transpose ?: 0) + transposition,
                     preferFlats = spelling.accidentals.toPreferFlats(),

@@ -150,6 +150,41 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a capo marked as sounding is read as the capo chart it was printed from`() {
+        val sounding = convert("Song\nSomeone\nKey: F#m   Capo: 2 (chords as they sound)\nVerse 1\nF#m   D\nHello world\n\ne|-0-----3-|\nB|-------1-|")
+        assertTrue(sounding.contains("{key: Em}\n{capo: 2}\n"), sounding)
+        assertTrue(sounding.contains("[Em]Hello [C]world"), sounding)
+        assertTrue(sounding.contains("e|-0-----3-|\nB|-------1-|"), sounding)
+        val shapes = convert("Song\nSomeone\nKey: F#m   Capo: 2 (Em shapes)\nVerse 1\nEm    C\nHello world")
+        assertTrue(shapes.contains("{key: F#m}\n{capo: 2}\n") && shapes.contains("[Em]Hello [C]world"), shapes)
+        val other = convert("Song\nSomeone\nCapo: 2 (optional)\nVerse 1\nF#m   D\nHello world")
+        assertTrue(other.contains("{capo: 2}\n") && other.contains("[F#m]Hello [D]world"), other)
+    }
+
+    @Test
+    fun `a sounding capo is told in every language the app prints it in`() {
+        // The capo labels and markers as each language's strings.xml has them.
+        val languages = listOf(
+            "Capo" to "chords as they sound",
+            "Capo" to "hangz\u00f3 akkordok",
+            "Capodastru" to "acorduri cum sun\u0103",
+            "Kapodaster" to "klingende Akkorde",
+            "Capo" to "acordes como suenan",
+            "Capo" to "accords en son r\u00e9el",
+            "Capotasto" to "accordi come suonano",
+            "\u05e7\u05d0\u05e4\u05d5" to "\u05d0\u05e7\u05d5\u05e8\u05d3\u05d9\u05dd \u05e9\u05e0\u05e9\u05de\u05e2\u05d9\u05dd",
+        )
+        for ((label, marker) in languages) {
+            val result = convert("Song\nSomeone\n$label: 2 ($marker)\nVerse 1\nF#m   D\nHello world")
+            assertTrue(result.contains("{capo: 2}\n") && result.contains("[Em]Hello [C]world"), result)
+        }
+        val latin = convert("Song\nSomeone\nTonalidad: Fa#m   Capo: 2 (acordes como suenan)\nVerse 1\nFa#m  Re\nHello world")
+        assertTrue(latin.contains("{key: Em}\n{capo: 2}\n") && latin.contains("[Em]Hello [C]world"), latin)
+        val german = convert("Song\nSomeone\nKapodaster: 2 (klingende Akkorde)\nVerse 1\nH     E\nHello world")
+        assertTrue(german.contains("{capo: 2}\n") && german.contains("[A]Hello [D]world"), german)
+    }
+
+    @Test
     fun `a time label that is an ordinary word is read only with a time signature`() {
         for (lyric in listOf("Metro dopo metro", "Mesure par mesure", "Metro: dopo metro", "Mesure : par mesure")) {
             val result = convert("Song\nSomeone\n$lyric\nVerse 1\nEm C\nHello world")

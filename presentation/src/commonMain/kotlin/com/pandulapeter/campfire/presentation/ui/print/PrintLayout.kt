@@ -407,8 +407,14 @@ private class PrintLayouter(
         song.metadata.key?.takeIf { options.showKey && it.isNotBlank() }?.let { labels.labelled(labels.key, it) },
         entry.transposition.takeIf { options.showKey && it != 0 }?.let { labels.labelled(labels.transposition, if (it > 0) "+$it" else "$it") },
         song.metadata.capo?.takeIf { options.showKey && it != 0 }?.let { capo ->
-            // Where the chords are the shapes fingered above it, the key before it being the one that sounds, it says so.
-            labels.labelled(labels.capo, entry.shapesKey?.let { labels.capoWithShapes("$capo", it) } ?: "$capo")
+            // Where the chords are the shapes fingered above it, the key before it being the one that sounds, it says so,
+            // and where they are named as they sound it says that, since an import reads a bare capo's chords as shapes.
+            val value = when {
+                entry.shapesKey != null -> labels.capoWithShapes("$capo", entry.shapesKey)
+                entry.areChordsSounding -> labels.capoSounding("$capo")
+                else -> "$capo"
+            }
+            labels.labelled(labels.capo, value)
         },
     ).plus(printRows.tempoDetails(song.metadata.tempo, song.metadata.time))
 

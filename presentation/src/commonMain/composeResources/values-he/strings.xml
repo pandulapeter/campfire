@@ -1338,6 +1338,7 @@
     <string name="print_next">הבא</string>
     <string name="print_time">משקל</string>
     <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (אקורדים שנשמעים)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">קישור</string>

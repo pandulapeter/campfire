@@ -1341,6 +1341,7 @@
     <string name="print_next">Următoarea</string>
     <string name="print_time">Măsură</string>
     <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (acorduri cum sună)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Link</string>

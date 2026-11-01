@@ -1298,6 +1298,7 @@
     <string name="print_next">Page suivante</string>
     <string name="print_time">Mesure</string>
     <string name="print_label_value">%1$s : %2$s</string>
+    <string name="print_capo_sounding">%1$s (accords en son réel)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Lien</string>

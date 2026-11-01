@@ -1291,6 +1291,7 @@
     <string name="print_next">Siguiente</string>
     <string name="print_time">Compás</string>
     <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (acordes como suenan)</string>
 
     <!-- Export: link -->
     <string name="print_format_link">Enlace</string>
