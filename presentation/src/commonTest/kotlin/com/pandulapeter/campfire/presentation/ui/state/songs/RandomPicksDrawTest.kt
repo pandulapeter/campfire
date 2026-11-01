@@ -23,7 +23,8 @@ import kotlin.time.Instant
 class RandomPicksDrawTest {
 
     private val clock = FakeClock()
-    private val draw = RandomPicksDraw(clock = clock, random = Random(seed = 42))
+    private val persisted = mutableListOf<RandomPicksDraw.SavedDraw>()
+    private val draw = RandomPicksDraw(clock = clock, random = Random(seed = 42), restored = null, persist = { persisted += it })
 
     @Test
     fun `opening the list within the hour keeps the picks, and after it draws new ones`() {
@@ -100,6 +101,47 @@ class RandomPicksDrawTest {
         draw.onAppStarted(isSongsOnTop = true)
         assertEquals(first, draw.seed.value)
     }
+
+    @Test
+    fun `a restored process keeps the picks and the hour they were drawn in`() {
+        val first = draw.seed.value
+        val restored = restore()
+        assertEquals(first, restored.seed.value)
+        clock += 59.minutes
+        restored.catchUp()
+        assertEquals(first, restored.seed.value)
+        clock += 1.minutes
+        restored.catchUp()
+        assertNotEquals(first, restored.seed.value)
+    }
+
+    @Test
+    fun `a restored process judges its first start as a return`() {
+        val first = draw.seed.value
+        clock += 1.hours
+        draw.onAppStopped()
+        val saved = persisted.last()
+        clock += 10.seconds
+        restore(saved).run {
+            onAppStarted(isSongsOnTop = true)
+            assertEquals(first, seed.value)
+        }
+        clock += 6.minutes
+        restore(saved).run {
+            onAppStarted(isSongsOnTop = true)
+            assertNotEquals(first, seed.value)
+        }
+    }
+
+    @Test
+    fun `a refresh is persisted`() {
+        draw.reshuffle()
+        assertEquals(draw.seed.value, persisted.last().seed)
+    }
+
+    /** A draw as a restored process builds it, from what [draw] saved, with a different random to tell the two apart. */
+    private fun restore(saved: RandomPicksDraw.SavedDraw = persisted.last()) =
+        RandomPicksDraw(clock = clock, random = Random(seed = 7), restored = saved, persist = {})
 
     private class FakeClock : Clock {
         private var now = Instant.fromEpochSeconds(1_800_000_000)

@@ -29,9 +29,10 @@ The songs screen.
   Selection has. Gone while a search is open (`withoutSectionHeaders`) and in selection mode (`withSelectionLeading`),
   and with the Settings → Features switch (`isRandomPicksEnabled`). Drawn only from a library read whole, never from a
   first read's partial batches, which would swap them under the reader; the launch screen waits for the read meanwhile.
-- `RandomPicksDraw` holds a device-local seed, never synced or kept: new picks once an hour has gone by on the wall clock,
-  taken only as the screen is opened (the app returning to the front on it after at least five minutes away, or another
-  tab left for it), never under a reader; the header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
+- `RandomPicksDraw` holds a device-local seed, never synced or kept beyond a restored process (`SavedStateStore`, with
+  its draw and stop times, so a restored process judges its first start as a return): new picks once an hour has gone
+  by on the wall clock, taken only as the screen is opened (the app returning to the front on it after at least five
+  minutes away, or another tab left for it), never under a reader; the header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
 - Under the first picks shown, `RandomPicksQuestionCard` asks whether to keep them, saying the switch is in Settings;
   either answer, or the switch flipped, sets `isRandomPicksQuestionAnswered` for good.
 - A sort picked from the menu over the very top of the list glides down to the first section once the new order

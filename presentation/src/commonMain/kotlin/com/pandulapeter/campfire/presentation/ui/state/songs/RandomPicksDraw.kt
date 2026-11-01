@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.songs
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
@@ -26,17 +27,26 @@ import kotlin.time.Instant
  * while the device sleeps, and a phone put down for hours would count minutes. A clock set back reads as negative
  * time and draws nothing until it catches up; one set forward at worst draws once early.
  *
- * The seed is this device's own and kept nowhere: two devices of one synced library pick differently, and a launch is a
- * new draw.
+ * The seed is this device's own, never synced or written to disk, and kept only in the saved state of a process the
+ * system may restore ([restored], [persist]): two devices of one synced library pick differently, and a launch is still
+ * a new draw, but a process killed in the background while the user was away in a file picker comes back with the same
+ * picks. The time the app stopped is kept with it, so that a restored process's first start is judged as a return
+ * ([onAppStarted]) like any other.
  */
 internal class RandomPicksDraw(
     private val clock: Clock,
     private val random: Random,
+    restored: SavedDraw?,
+    private val persist: (SavedDraw) -> Unit,
 ) {
-    private var drawnAt = clock.now()
-    private var stoppedAt: Instant? = null
-    private val _seed = MutableStateFlow(random.nextLong())
+    private var drawnAt = restored?.let { Instant.fromEpochMilliseconds(it.drawnAtMillis) } ?: clock.now()
+    private var stoppedAt: Instant? = restored?.stoppedAtMillis?.let(Instant::fromEpochMilliseconds)
+    private val _seed = MutableStateFlow(restored?.seed ?: random.nextLong())
     val seed = _seed.asStateFlow()
+
+    init {
+        save()
+    }
 
     /** For the songs screen being opened: the app coming back to the front on it, or another tab left for it. */
     fun catchUp() {
@@ -45,6 +55,7 @@ internal class RandomPicksDraw(
 
     fun onAppStopped() {
         stoppedAt = clock.now()
+        save()
     }
 
     /**
@@ -55,13 +66,27 @@ internal class RandomPicksDraw(
     fun onAppStarted(isSongsOnTop: Boolean) {
         val stoppedAt = stoppedAt ?: return
         this.stoppedAt = null
+        save()
         if (isSongsOnTop && clock.now() - stoppedAt >= RETURN_AWAY) catchUp()
     }
 
     fun reshuffle() {
         drawnAt = clock.now()
         _seed.value = random.nextLong()
+        save()
     }
+
+    private fun save() = persist(
+        SavedDraw(seed = _seed.value, drawnAtMillis = drawnAt.toEpochMilliseconds(), stoppedAtMillis = stoppedAt?.toEpochMilliseconds()),
+    )
+
+    /** What a restored process starts from, the times on the wall clock in epoch milliseconds. */
+    @Serializable
+    data class SavedDraw(
+        val seed: Long,
+        val drawnAtMillis: Long,
+        val stoppedAtMillis: Long?,
+    )
 
     private companion object {
         val REDRAW_INTERVAL = 1.hours

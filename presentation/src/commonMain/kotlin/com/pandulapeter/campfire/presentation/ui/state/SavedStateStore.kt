@@ -23,8 +23,8 @@ import kotlinx.serialization.json.Json
 
 /**
  * What survives the system killing the process while the app is in the background, which Android does whenever it
- * needs the memory: the back stack and the onboarding's page, the song filter, the two searches and the form sheet
- * that was up, kept in [savedStateHandle] as JSON. Empty on every real start, and on the platforms that have no such
+ * needs the memory: the back stack and the onboarding's page, the song filter, the two searches, the random picks'
+ * draw, and the form sheet that was up, kept in [savedStateHandle] as JSON. Empty on every real start, and on the platforms that have no such
  * thing as a process being restored.
  */
 internal class SavedStateStore(
@@ -108,5 +108,6 @@ internal class SavedStateStore(
         const val VISIBLE_DIALOG_KEY = "visibleDialog"
         const val ONBOARDING_STEP_KEY = "onboardingStep"
         const val IMPORT_UNFINISHED_KEY = "importUnfinished"
+        const val RANDOM_PICKS_KEY = "randomPicks"
     }
 }

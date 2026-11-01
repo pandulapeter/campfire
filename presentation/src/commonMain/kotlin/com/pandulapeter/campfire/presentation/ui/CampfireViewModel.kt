@@ -148,6 +148,7 @@ import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SelectionEditing
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.RANDOM_PICKS_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
@@ -261,7 +262,12 @@ class CampfireViewModel(
             ?: SongFilter()
     )
 
-    internal val randomPicksDraw = RandomPicksDraw(clock = Clock.System, random = Random.Default)
+    internal val randomPicksDraw = RandomPicksDraw(
+        clock = Clock.System,
+        random = Random.Default,
+        restored = savedStateStore.restore<RandomPicksDraw.SavedDraw>(RANDOM_PICKS_KEY),
+        persist = { savedStateStore.persist(RANDOM_PICKS_KEY, it) },
+    )
 
     internal val libraryState: LibraryState = LibraryState(
         scope = viewModelScope,
