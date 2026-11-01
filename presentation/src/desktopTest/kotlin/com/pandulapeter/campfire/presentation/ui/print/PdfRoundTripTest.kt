@@ -147,6 +147,17 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a right-to-left song wrapped by a narrow column comes back with each chord on its letter and each line whole`() = runBlocking {
+        val failures = listOf("60-generated-rtl-10.cho", "60-generated-rtl-15.cho").mapNotNull { name ->
+            val original = songRenderer.transposedSong(corpus.getValue(name), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
+            val expected = summary(original)
+            val actual = summary(roundTrip(original, PrintSettings(columns = PrintSettings.MAX_COLUMNS)))
+            if (expected == actual) null else "$name:\n  expected $expected\n  actual   $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",

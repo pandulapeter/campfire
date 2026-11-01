@@ -1195,7 +1195,9 @@ public object ChordSheetConverter {
         val last = (word.index + word.text.length - 1).coerceAtMost(chords.positions.lastIndex)
         val position = chords.positions.getOrNull(last) ?: return 0.0
         val span = chords.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end + 0.01 }
-        return position + (span?.let { (it.end - it.start) / clean(it.text).length.coerceAtLeast(1) } ?: 0.0)
+        // The span's width is shared by the characters render keeps of it, the export's fillers left out.
+        val kept = { span: ChordSheet.Span -> clean(if (chords.isCampfire) span.text.filterNot(::isExportFiller) else span.text) }
+        return position + (span?.let { (it.end - it.start) / kept(it).length.coerceAtLeast(1) } ?: 0.0)
     }
 
     /** An insertion or replacement must leave a supplementary character whole. */

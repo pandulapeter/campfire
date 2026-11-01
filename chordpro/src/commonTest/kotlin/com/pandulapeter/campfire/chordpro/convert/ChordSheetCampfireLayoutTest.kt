@@ -222,6 +222,44 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a wrapped right-to-left row's chord hangs from the letter its right edge meets`() {
+        val sheet = ChordSheet(
+            listOf(
+                ChordSheet.Page(
+                    listOf(
+                        ChordSheet.Line(listOf(ChordSheet.Span("Am", RIGHT - 12.0, RIGHT, BODY, isBold = true))),
+                        ChordSheet.Line(
+                            listOf(
+                                ChordSheet.Span(
+                                    "\u05e9\u05dc\u05d5\u05dd", RIGHT - 24.0, RIGHT, BODY,
+                                    pieces = listOf(
+                                        ChordSheet.Span("\u05e9", RIGHT - 6.0, RIGHT, BODY), ChordSheet.Span("\u05dc", RIGHT - 12.0, RIGHT - 6.0, BODY),
+                                        ChordSheet.Span("\u05d5", RIGHT - 18.0, RIGHT - 12.0, BODY), ChordSheet.Span("\u05dd", RIGHT - 24.0, RIGHT - 18.0, BODY),
+                                    ),
+                                ),
+                            ),
+                        ),
+                        ChordSheet.Line(listOf(ChordSheet.Span("\u2060G", RIGHT - 18.0, RIGHT - 12.0, BODY, isBold = true))),
+                        ChordSheet.Line(
+                            listOf(
+                                ChordSheet.Span(
+                                    "\u2060\u05d8\u05d5\u05d1", RIGHT - 18.0, RIGHT, BODY,
+                                    pieces = listOf(
+                                        ChordSheet.Span("\u2060\u05d8", RIGHT - 6.0, RIGHT, BODY), ChordSheet.Span("\u05d5", RIGHT - 12.0, RIGHT - 6.0, BODY),
+                                        ChordSheet.Span("\u05d1", RIGHT - 18.0, RIGHT - 12.0, BODY),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            isCampfireExport = true,
+        )
+        assertEquals("[Am]\u05e9\u05dc\u05d5\u05dd \u05d8\u05d5[G]\u05d1", ChordSheetConverter.convert(sheet).single().trim())
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))
