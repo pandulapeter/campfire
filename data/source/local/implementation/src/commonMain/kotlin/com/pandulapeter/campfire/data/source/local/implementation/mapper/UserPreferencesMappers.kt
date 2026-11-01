@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.Metronom
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
@@ -58,12 +59,12 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     isChordLibraryEnabled = isChordLibraryEnabled,
     areScalesEnabled = areScalesEnabled,
     areScaleSuggestionsEnabled = areScaleSuggestionsEnabled,
-    songCardDetails = UserPreferences.CardDetails(
+    songCardDetails = CardDetails(
         isKeyShown = isKeyShown,
         isTempoShown = tempoOnSongCards ?: false.takeIf { !isTempoShown },
         isDurationShown = isDurationShownOnSongCards,
     ),
-    setlistCardDetails = UserPreferences.CardDetails(
+    setlistCardDetails = CardDetails(
         isKeyShown = isKeyShownOnSetlistCards ?: isKeyShown,
         isTempoShown = tempoOnSetlistCards ?: false.takeIf { !(isTempoShownOnSetlistCards ?: isTempoShown) },
         isDurationShown = isDurationShownOnSetlistCards,

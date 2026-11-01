@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.songCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 
@@ -30,7 +31,7 @@ internal data class SongCardOptions(
     val chordSpelling: UserPreferences.ChordSpelling,
 ) {
     companion object {
-        fun of(userPreferences: UserPreferences?, details: UserPreferences.CardDetails) = SongCardOptions(
+        fun of(userPreferences: UserPreferences?, details: CardDetails) = SongCardOptions(
             shouldShowChords = userPreferences?.areChordsEnabled != false,
             isKeyShown = details.isKeyShown,
             isTempoShown = details.isTempoShown(isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false),

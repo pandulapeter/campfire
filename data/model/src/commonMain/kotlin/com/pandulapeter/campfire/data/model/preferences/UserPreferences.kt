@@ -403,29 +403,6 @@ data class UserPreferences(
     }
 
     /**
-     * What a song card says after the artist, chosen for each list on its own: a setlist's cards are where a set is
-     * timed, the library's where a song is found. The key is only ever shown with the chords switched on, whatever
-     * [isKeyShown] says, so that what it is set to is kept for when they come back. The tempo is a song's whether it is
-     * clicked or not, so it can be shown without the metronome, but it is what the click plays: [isTempoShown] is null
-     * until the reader picks it, and is then the metronome switch ([isTempoShown] with an argument), so that switching
-     * the metronome off takes the tempo off the cards without writing a thing.
-     */
-    data class CardDetails(
-        val isKeyShown: Boolean,
-        val isTempoShown: Boolean?,
-        val isDurationShown: Boolean,
-    ) {
-
-        /** Whether the tempo is on the cards, given the metronome switch, see [isTempoShown]. */
-        fun isTempoShown(isMetronomeEnabled: Boolean) = isTempoShown ?: isMetronomeEnabled
-
-        companion object {
-            val SongsDefault = CardDetails(isKeyShown = true, isTempoShown = null, isDurationShown = false)
-            val SetlistsDefault = CardDetails(isKeyShown = true, isTempoShown = null, isDurationShown = true)
-        }
-    }
-
-    /**
      * The names the chords are written with. [GERMAN] writes the note [STANDARD] calls `B` as `H`, and its `Bb` as `B`,
      * which is what a reader in Central Europe or Scandinavia grew up with, and [LATIN] names the notes `Do Re Mi Fa Sol
      * La Si`, as Southern Europe and Latin America do. [NASHVILLE] and [ROMAN] count the chords from the song's key

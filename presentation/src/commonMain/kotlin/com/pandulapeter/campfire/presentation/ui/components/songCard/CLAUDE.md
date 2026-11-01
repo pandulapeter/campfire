@@ -12,7 +12,7 @@
 The song card the song lists and setlists draw (`SongListItem`).
 
 - Beside the cover stand three lines: the title, the artist, and the details (key, tempo, and duration, each as the
-  list's `UserPreferences.CardDetails` picks) in `labelMedium`; a missing artist or no details closes its line up.
+  list's `CardDetails` picks) in `labelMedium`; a missing artist or no details closes its line up.
   Labels go under all of it. With all three the title takes `bodyMedium`'s line height (its own leaves a wider gap under
   it than between the others) and the cover is 56dp; with two (under an artist header, typically) the cover is 44dp and
   the card lower. Both animate (`isThreeLine`).

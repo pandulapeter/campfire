@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.SongContent
@@ -180,8 +181,8 @@ class UpgradeFrom520Test {
             isChordLibraryEnabled = false,
             areScalesEnabled = false,
             areScaleSuggestionsEnabled = false,
-            songCardDetails = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = true, isDurationShown = true),
-            setlistCardDetails = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false),
+            songCardDetails = CardDetails(isKeyShown = false, isTempoShown = true, isDurationShown = true),
+            setlistCardDetails = CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false),
             instrument = UserPreferences.Instrument.UKULELE,
             tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone"),
             toolCapo = 3,

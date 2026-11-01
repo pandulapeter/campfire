@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.tagKey
@@ -214,9 +215,9 @@ internal class PreferencesController(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }
 
-    fun setSongCardDetails(value: UserPreferences.CardDetails) = changeUserPreferences { copy(songCardDetails = value) }
+    fun setSongCardDetails(value: CardDetails) = changeUserPreferences { copy(songCardDetails = value) }
 
-    fun setSetlistCardDetails(value: UserPreferences.CardDetails) = changeUserPreferences { copy(setlistCardDetails = value) }
+    fun setSetlistCardDetails(value: CardDetails) = changeUserPreferences { copy(setlistCardDetails = value) }
 
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.Metronom
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocumentFormat
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 import kotlin.test.Test
@@ -337,8 +338,8 @@ internal class UserPreferencesMappersTest {
     @Test
     fun `a document from before the setlist cards had switches of their own shows on them what it showed on every card`() {
         val model = UserPreferencesDocument(isKeyShown = false, isTempoShown = false).toModel()
-        assertEquals(UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false), model.songCardDetails)
-        assertEquals(UserPreferences.CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = true), model.setlistCardDetails)
+        assertEquals(CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = false), model.songCardDetails)
+        assertEquals(CardDetails(isKeyShown = false, isTempoShown = false, isDurationShown = true), model.setlistCardDetails)
     }
 
     @Test
@@ -351,8 +352,8 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun `the cards of each list keep their own details through saving and reloading`() {
-        val songCards = UserPreferences.CardDetails(isKeyShown = false, isTempoShown = true, isDurationShown = true)
-        val setlistCards = UserPreferences.CardDetails(isKeyShown = true, isTempoShown = false, isDurationShown = false)
+        val songCards = CardDetails(isKeyShown = false, isTempoShown = true, isDurationShown = true)
+        val setlistCards = CardDetails(isKeyShown = true, isTempoShown = false, isDurationShown = false)
         val reloaded = UserPreferencesDocument().toModel().copy(songCardDetails = songCards, setlistCardDetails = setlistCards).toDocument().toModel()
         assertEquals(songCards, reloaded.songCardDetails)
         assertEquals(setlistCards, reloaded.setlistCardDetails)

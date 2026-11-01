@@ -20,7 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.card_detail_duration
@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.card_detail_tempo
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * What one list's song cards say after the artist ([UserPreferences.CardDetails]), as a row of chips any of which can be
+ * What one list's song cards say after the artist ([CardDetails]), as a row of chips any of which can be
  * on: the key, the tempo, and the duration. The key goes with the chords, so with them off its chip is left out, what
  * it is set to kept for when they come back. The tempo can be shown without the metronome, so its chip stays, ticked as
  * the metronome is until it is tapped. [isEnabled] is false for a list the app does not have, the setlists switched off.
@@ -38,11 +38,11 @@ import org.jetbrains.compose.resources.StringResource
 @Composable
 internal fun CardDetailsChoice(
     modifier: Modifier = Modifier,
-    details: UserPreferences.CardDetails,
+    details: CardDetails,
     areChordsEnabled: Boolean,
     isMetronomeEnabled: Boolean,
     isEnabled: Boolean = true,
-    onDetailsChanged: (UserPreferences.CardDetails) -> Unit,
+    onDetailsChanged: (CardDetails) -> Unit,
 ) = FlowRow(
     modifier = modifier,
     horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
@@ -74,5 +74,5 @@ private class CardDetailOption(
     val label: StringResource,
     val isShown: Boolean,
     val isAvailable: Boolean,
-    val withShown: (Boolean) -> UserPreferences.CardDetails,
+    val withShown: (Boolean) -> CardDetails,
 )

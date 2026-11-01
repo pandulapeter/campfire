@@ -45,7 +45,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
@@ -172,7 +172,7 @@ internal fun SetlistList(
             onReorderingSetlistChanged(null)
         }
     }
-    val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault)
+    val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.setlistCardDetails ?: CardDetails.SetlistsDefault)
     val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = viewModel.setlistsController::reorderSetlist)
     val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()

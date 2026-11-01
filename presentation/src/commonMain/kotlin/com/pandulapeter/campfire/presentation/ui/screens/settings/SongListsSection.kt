@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -54,7 +55,7 @@ internal fun SongListsSection(
     ) {
         CardDetailsRow(label = stringResource(Res.string.songs)) {
             CardDetailsChoice(
-                details = userPreferences?.songCardDetails ?: UserPreferences.CardDetails.SongsDefault,
+                details = userPreferences?.songCardDetails ?: CardDetails.SongsDefault,
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
                 onDetailsChanged = viewModel.preferencesController::setSongCardDetails,
@@ -66,7 +67,7 @@ internal fun SongListsSection(
             isEnabled = areSetlistsEnabled,
         ) {
             CardDetailsChoice(
-                details = userPreferences?.setlistCardDetails ?: UserPreferences.CardDetails.SetlistsDefault,
+                details = userPreferences?.setlistCardDetails ?: CardDetails.SetlistsDefault,
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
                 isEnabled = areSetlistsEnabled,
