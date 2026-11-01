@@ -107,6 +107,8 @@ def read(body, languages=None):
     if not notes:
         visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
         visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
+        # The store badges closing every release are HTML no store shows as text.
+        visible = re.sub(r"<[^>]+>", "", visible)
         notes = re.sub(r"\*\*|`", "", visible).strip()
     if not notes:
         notes = DEFAULT_NOTES

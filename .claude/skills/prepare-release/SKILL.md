@@ -374,7 +374,7 @@ all of them are always written:
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.
 - **An empty block is allowed** for a small release with no notes, but then every store gets the visible release notes
-  with their markdown stripped, or "Bug fixes and improvements." where there are none (`release_description.py`'s
+  with their markdown and HTML (the store badges) stripped, or "Bug fixes and improvements." where there are none (`release_description.py`'s
   fallback); say so when reporting back.
 - **No markdown**: no links, no bold, no backticks. Plain `-` bullets and plain text only. Nothing in the
   block may contain `-->`.

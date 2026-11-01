@@ -30,6 +30,11 @@ class ReadTest(unittest.TestCase):
             self.assertEqual(read(body)["outputs"]["release_notes"], "Bug fixes and improvements.")
         self.assertEqual(read("<!-- whats-new en\n-->\nVisible.")["outputs"]["release_notes"], "Visible.")
 
+    def test_the_store_badges_are_left_out_of_the_visible_text(self):
+        badge = '<a href="https://example.com"><img src="https://example.com/badge.png" alt="Badge" height="32px" /></a>'
+        self.assertEqual(read(f"<!-- whats-new en\n-->\n{badge}\n{badge}\n")["outputs"]["release_notes"], "Bug fixes and improvements.")
+        self.assertEqual(read(f"- Fix\n\n{badge}\n")["outputs"]["release_notes"], "- Fix")
+
     def test_whats_new_is_read_in_either_case(self):
         for header in ["en", "EN"]:
             body = f"Visible.\n<!-- whats-new {header}\n- **Bold** stays\n-->\n"
