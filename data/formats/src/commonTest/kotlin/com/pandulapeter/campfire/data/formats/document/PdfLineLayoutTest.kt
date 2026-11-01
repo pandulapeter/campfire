@@ -124,6 +124,20 @@ class PdfLineLayoutTest {
         assertEquals((listOf(title) + left + right).map { it.text }, lines(listOf(title) + left + right))
     }
 
+    @Test
+    fun `a page count above the bottom margin band is still left out`() = runTest {
+        val placed = (1..6).map { Placed(50, 700 - it * 14, "Lyric line $it") } + Placed(290, 80, "1 / 1", size = 9)
+
+        assertEquals((1..6).map { "Lyric line $it" }, lines(placed))
+    }
+
+    @Test
+    fun `a time signature as the lowest line above the bottom margin band stays`() = runTest {
+        val placed = (1..6).map { Placed(50, 700 - it * 14, "Lyric line $it") } + Placed(290, 80, "3/4")
+
+        assertEquals((1..6).map { "Lyric line $it" } + "3/4", lines(placed))
+    }
+
     /**
      * A string shown in Courier, 0.6 of its [size] a glyph, with its baseline starting at [x], [y]; one [isWhole] is
      * carried by an `ActualText`, which makes it one span, as Campfire's export writes a right-to-left run.

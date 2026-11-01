@@ -142,8 +142,12 @@ object PdfTextExtractor {
                 text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
             }
             val running = page.edges.filter { it.text.isNotBlank() && isRunning(it) }
+            // A wide margin lifts a page number above the bottom band, so the page's lowest line is also dropped wherever in
+            // the lower half it stands when it counts this page among the document's; a time signature never reads so.
+            val lowest = page.lines.maxByOrNull { it.y }
             val lines = page.lines.filterNot { line ->
-                isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 })
+                isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 }) ||
+                    line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size)
             }
             val paragraphs = mutableListOf<ExtractedDocument.Line>()
             lines.forEachIndexed { index, line ->

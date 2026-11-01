@@ -45,7 +45,9 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   page's header matches. A dropped margin line takes every line on its baseline with it. A number in a running line is
   the same on every page or counts the pages, so a heading that happens to open two pages (`Verse 2`, `Verse 6`) stays,
   or the line is a page count of its own (`Page 1 of 2`, a songbook counting each song's pages), never a bare `1/2`,
-  which a time signature at the top of each song reads as too.
+  which a time signature at the top of each song reads as too. A page's lowest line that counts this page among the
+  document's (`2 / 3`) is dropped wherever in the lower half it stands, since a wide margin lifts the page number out
+  of the band.
 - A PDF whose `/Producer` is Campfire is flagged (`ExtractedDocument.isCampfireExport`) for the converter to read by
   its layout; a span is italic by its font's name or its italic flag, and a line carries its baseline.
 - An `ActualText` over glyphs on one baseline replaces them; this is how Campfire's export carries right-to-left runs in
