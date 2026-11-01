@@ -91,7 +91,7 @@ class DocumentGoldenTest {
 
     @Test
     fun `independent generator fixtures match their ChordPro golden files`() = runBlocking {
-        for (name in listOf("python-docx.docx", "libreoffice.docx", "reportlab.pdf", "libreoffice.pdf", "chrome.pdf", "reportlab-unicode.pdf", "two-column.pdf", "songbook.pdf")) {
+        for (name in listOf("python-docx.docx", "libreoffice.docx", "reportlab.pdf", "libreoffice.pdf", "chrome.pdf", "reportlab-unicode.pdf", "two-column.pdf", "songbook.pdf", "songbook-numbered.pdf", "songbook-styled.pdf")) {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(name, resource(name))), name)
             val result = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
             assertEquals(resource("${name.substringBeforeLast('.')}.cho").decodeToString(), result.joinToString("{new_song}\n"), name)

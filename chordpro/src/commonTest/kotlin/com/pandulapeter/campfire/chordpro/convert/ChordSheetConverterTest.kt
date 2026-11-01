@@ -524,6 +524,58 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a cover set in a type of its own leaves the split to the type the song titles share`() {
+        fun title(text: String, size: Double) = ChordSheet.Line(listOf(span(text, 0.0, text.length * size, size = size)))
+        fun page(title: String, words: String) = ChordSheet.Page(listOf(title(title, 2.0)) + ChordSheet.ofPlainText("Am    C\n$words").pages.single().lines)
+        val cover = ChordSheet.Page(listOf(title("Songbook", 3.0), title("Compiled by friends", 1.0)))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(cover, page("First", "Hello world"), page("Second", "Other words"))))
+        assertEquals(3, result.size)
+        assertTrue(result[1].startsWith("{title: First}"), result[1])
+        assertTrue(result[2].startsWith("{title: Second}"), result[2])
+    }
+
+    @Test
+    fun `a title set larger than the body opens a song anywhere on a page, a title wrapped in its type staying one`() {
+        fun title(text: String) = ChordSheet.Line(listOf(span(text, 0.0, text.length * 2.0, size = 2.0, bold = true)))
+        val lines = listOf(title("First")) + ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines +
+            listOf(title("A song with"), title("a long title")) + ChordSheet.ofPlainText("G     F\nOther words").pages.single().lines
+        val third = ChordSheet.Page(listOf(title("Third")) + ChordSheet.ofPlainText("Am    C\nLast words").pages.single().lines)
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines), third)))
+        assertEquals(
+            listOf("{title: First}\n\n[Am]Hello [C]world\n", "{title: A song with a long title}\n\n[G]Other [F]words\n", "{title: Third}\n\n[Am]Last [C]words\n"),
+            result,
+        )
+    }
+
+    @Test
+    fun `a songbook in one type is split where its contents list a title, not where a lyric sings one`() {
+        val pages = listOf(
+            "Songs to sing",
+            "Contents\nAlpha\nBeta\nGamma",
+            "Alpha\nAm    C\nHello world\nG     F\nBeta",
+            "Beta\nAm    C\nOther words",
+            "Gamma\nAm    C\nLast words",
+        ).map { ChordSheet.Page(ChordSheet.ofPlainText(it).pages.single().lines) }
+        val result = ChordSheetConverter.convert(ChordSheet(pages))
+        assertEquals(5, result.size, result.joinToString("{new_song}\n"))
+        assertEquals("{title: Alpha}\n\n[Am]Hello [C]world\n[G]Beta [F]\n", result[2])
+        assertTrue(result[3].startsWith("{title: Beta}"), result[3])
+        assertTrue(result[4].startsWith("{title: Gamma}"), result[4])
+    }
+
+    @Test
+    fun `the numbers a songbook counts its songs by are left out of their titles, a title that only starts with one keeping it`() {
+        fun book(vararg titles: String) = ChordSheet(
+            listOf(ChordSheet.Page(ChordSheet.ofPlainText("100 songs\nContents\n" + titles.joinToString("\n")).pages.single().lines)) +
+                titles.map { ChordSheet.Page(ChordSheet.ofPlainText("$it\nAm    C\nHello world").pages.single().lines) },
+        )
+        val counted = ChordSheetConverter.convert(book("1. Alpha", "2. Beta", "3. Gamma"))
+        assertEquals(listOf("Alpha", "Beta", "Gamma"), counted.drop(1).map { ChordProParser.parse(it).metadata.title })
+        val named = ChordSheetConverter.convert(book("99 Red Balloons", "Alpha", "Beta"))
+        assertEquals(listOf("99 Red Balloons", "Alpha", "Beta"), named.drop(1).map { ChordProParser.parse(it).metadata.title })
+    }
+
+    @Test
     fun `a bold chord over plain lyrics of its size is a chord where no line holds two`() {
         fun sheet(vararg lines: ChordSheet.Line) = ChordSheet(listOf(ChordSheet.Page(lines.toList())))
         val wrapped = sheet(

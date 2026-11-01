@@ -9,8 +9,8 @@
 -->
 # Document regression fixtures
 
-The text is the opening line of John Newton's public-domain Amazing Grace (the Hebrew fixtures: Psalm 133:1, also in
-the public domain), with deliberately simple chord positions. Fixtures are actual independent-producer files, not the test-only Kotlin PDF writer. Adjacent `.cho`
+The text is the opening line of John Newton's public-domain Amazing Grace (the songbooks add Oh! Susanna, Home on the
+Range, and Shenandoah, all in the public domain; the Hebrew fixtures: Psalm 133:1, also in the public domain), with deliberately simple chord positions. Fixtures are actual independent-producer files, not the test-only Kotlin PDF writer. Adjacent `.cho`
 files pin the conversion; `DocumentGoldenTest` reads the bytes and also checks deterministic repeat conversion.
 The test does not regenerate them or require any producer application.
 
@@ -23,6 +23,8 @@ The test does not regenerate them or require any producer application.
 | `reportlab-unicode.pdf` | ReportLab with embedded Arial: Hungarian double accents, Greek and Cyrillic |
 | `two-column.pdf` | ReportLab, two verses side by side below a title |
 | `songbook.pdf` | ReportLab, two separately titled song pages |
+| `songbook-numbered.pdf` | ReportLab, a word processor's songbook: a cover in a larger type, a contents page, numbered titles and chords in bold at the lyrics' size, one song a page, one running onto the next and one whose title has a bold label under it, as a chorus does; the cover leaves the split to the titles' type, the contents confirm the title the type cannot, and the numbers leave the titles |
+| `songbook-styled.pdf` | ReportLab, a typeset songbook: a large bold title type shared by an index page, songs following each other on a page, a title wrapped onto a second line of its type, and a song running onto the next page |
 | `protected.pdf` | pypdf encryption of the ReportLab sheet with an empty password; must be unreadable |
 | `campfire.pdf` | Campfire `PrintRendererTest`, page image plus invisible glyphless Type 3 text; Hungarian accents, styled title and proportional chord placement |
 | `campfire-columns.pdf` | Campfire `PrintRendererTest`, thirty numbered lyric/chord pairs flowing through both columns; song reading order and no page footer in the imported lyrics |

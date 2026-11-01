@@ -64,10 +64,17 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   logically: a row of two chords or more is one left-to-right run in that display, drawn from its left end, so read by
   index its chords would land in the opposite order. `chrome-hebrew` in `:data:source:local:implementation`'s document
   fixtures shows it: Chrome's print of the sheet in a `<pre dir="rtl">` and the plain text give the same song.
-- A document is cut into songs by `ChordSheetPageSplit`: a later page opens a song only with a title in the type of
-  the document's first one (a bold title of the body's size not followed by more bold lyrics, which is a chorus), and
-  a page repeating the current song's title continues it, the repetition left out where it is marked (`(cont.)`, a
-  page number) or set in the title's type.
+- A document is cut into songs by `ChordSheetSongSplit`. The titles' type is the first one opening two songs of
+  different titles, else the document's first title's, so a cover in a type of its own does not stop the split. A
+  page opens a song with a title in that type (a bold title of the body's size not followed by more bold lyrics, which
+  is a chorus); a type larger than the body opens one on any line of a page, a line under one in its type being the
+  title wrapped. A page repeating the current song's title continues it, the repetition left out where it is marked
+  (`(cont.)`, a page number) or set in the title's type.
+- A contents page (`ChordSheetIndexTitles`: most of its lines, at least three, found again on three other pages or
+  more) also opens a song at each line it lists, where it stands under no chord row and, in a book with a title type,
+  in that type (an index of artists lists the credits too) and not wrapped; a book in one type is split by its
+  contents alone. Numbers counting the songs (the openings after the front matter, rising mostly by one) are left out
+  of the titles.
 - Chord shapes listed one a line (`Bb(#11)/A = x03330`) become `{define}` lines in the header
   (`ChordSheetDefinitions`), except a chord listed both plain and starred (`Bb`, `Bb*`): the star is dropped where the
   chord is played, so one definition would stand for both.

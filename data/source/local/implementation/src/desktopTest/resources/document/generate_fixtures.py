@@ -6,13 +6,14 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-"""Independent generator fixtures, using the public-domain song Amazing Grace.
+"""Independent generator fixtures, using public-domain songs (Amazing Grace, and in the songbooks three more).
 
 Run once with python-docx, ReportLab and pypdf; the generated files are committed,
 not rebuilt by tests. LibreOffice and Chrome exports are separate manual commands
 documented in README.md so their actual producers remain visible.
 """
 
+import re
 from pathlib import Path
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
@@ -93,11 +94,142 @@ def pdfs():
     pdf.drawString(50, 750, "Amazing Grace Second Sheet")
     sheet(pdf, section="Verse 2", title=False)
     pdf.save()
+    songbooks()
     reader = PdfReader(ROOT / "reportlab.pdf")
     writer = PdfWriter()
     writer.append(reader)
     writer.encrypt("")
     writer.write(ROOT / "protected.pdf")
+
+
+SONGS = [
+    ("Amazing Grace", "John Newton", [
+        "[G]Amazing grace how [C]sweet the [G]sound",
+        "That saved a [D]wretch like me",
+    ]),
+    ("Oh! Susanna", "Stephen Foster", [
+        "[F]Oh! Susanna, oh [C]don't you cry for me",
+        "For I come from Alabama with my [G]banjo on my [C]knee",
+        "I [C]come from Alabama with my banjo on my [G]knee",
+        "I'm going to Louisiana, my true love [G]for to [C]see",
+    ]),
+    ("Home on the Range", "Brewster Higley", [
+        "Oh [G]give me a home where the [C]buffalo roam",
+        "Where the [G]deer and the antelope [D]play",
+    ]),
+    ("Shenandoah", None, [
+        "Oh [C]Shenandoah, I [F]long to [C]see you",
+        "[Am]Away, you [F]rolling [C]river",
+    ]),
+]
+
+
+def song_lines(pdf, rows, x, y, chord_font, lyric_font):
+    """Draws ChordPro-like rows, each chord over the character it stands before, measured in the lyric's own font."""
+    for row in rows:
+        font = lyric_font
+        lyric = re.sub(r"\[[^]]*]", "", row)
+        offset = 0
+        pdf.setFont(*chord_font)
+        for match in re.finditer(r"\[([^]]*)]", row):
+            position = match.start() - offset
+            pdf.drawString(x + pdfmetrics.stringWidth(lyric[:position], *font), y, match.group(1))
+            offset += len(match.group())
+        pdf.setFont(*font)
+        pdf.drawString(x, y - 12, lyric)
+        y -= 30
+    return y
+
+
+def numbered_songbook():
+    """A word processor's songbook: numbered titles and chords in bold at the lyrics' size, one song a page, a cover in
+    a larger type, a contents page, and a song whose title has a bold label under it, as a chorus does, which only the
+    contents tells from one."""
+    pdf = canvas.Canvas(str(ROOT / "songbook-numbered.pdf"), pagesize=(612, 792), pageCompression=1, invariant=1)
+    page = 1
+    bold, plain = ("Helvetica-Bold", 10), ("Helvetica", 10)
+
+    def finish():
+        nonlocal page
+        pdf.setFont(*plain)
+        pdf.drawCentredString(306, 40, str(page))
+        pdf.showPage()
+        page += 1
+
+    def heading(index, title, artist):
+        return f"{index + 1}. {title}" + (f" ({artist})" if artist else "")
+
+    pdf.setFont("Helvetica", 20)
+    pdf.drawString(72, 700, "Songs for Singing Along")
+    pdf.setFont(*plain)
+    pdf.drawString(72, 676, "Compiled by friends")
+    finish()
+    pdf.setFont(*plain)
+    pdf.drawString(72, 720, "Contents")
+    for index, (title, artist, _) in enumerate(SONGS):
+        pdf.drawString(72, 700 - index * 14, heading(index, title, artist))
+    finish()
+    for index, (title, artist, rows) in enumerate(SONGS):
+        pdf.setFont(*bold)
+        pdf.drawString(72, 720, heading(index, title, artist))
+        if len(rows) > 2:
+            # The chorus first, under a bold label, and the verse on the next page.
+            pdf.drawString(72, 700, "CHORUS:")
+            song_lines(pdf, rows[:2], 72, 680, bold, plain)
+            finish()
+            pdf.setFont(*bold)
+            pdf.drawString(72, 720, "VERSE:")
+            song_lines(pdf, rows[2:], 72, 700, bold, plain)
+        else:
+            song_lines(pdf, rows, 72, 690, bold, plain)
+        finish()
+    pdf.save()
+
+
+def styled_songbook():
+    """A typeset songbook: a large bold title type, songs following each other on a page, a title wrapped in two."""
+    pdf = canvas.Canvas(str(ROOT / "songbook-styled.pdf"), pagesize=(612, 792), pageCompression=1, invariant=1)
+    chord_font, lyric_font = ("Helvetica-Oblique", 9), ("Helvetica", 10)
+
+    def title(lines, artist, y):
+        pdf.setFont("Helvetica-Bold", 17)
+        for line in lines:
+            pdf.drawString(72, y, line)
+            y -= 20
+        if artist:
+            pdf.setFont("Helvetica-Bold", 10)
+            pdf.drawString(72, y, artist)
+            y -= 14
+        return y - 16
+
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(72, 700, "Guitar Songbook")
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(72, 670, "Folk songs")
+    pdf.showPage()
+    pdf.setFont("Helvetica-Bold", 17)
+    pdf.drawString(72, 720, "Songs Index")
+    pdf.setFont("Helvetica-Bold", 10)
+    for index, (name, _, _) in enumerate(SONGS):
+        pdf.drawString(72, 690 - index * 14, name + " " + "." * (60 - len(name)) + f" {index + 1}")
+    pdf.showPage()
+    y = title(["1 Amazing Grace"], "John Newton", 720)
+    y = song_lines(pdf, SONGS[0][2], 72, y, chord_font, lyric_font)
+    y = title(["2 Oh! Susanna, oh don't", "you cry for me"], "Stephen Foster", y - 20)
+    song_lines(pdf, SONGS[1][2][2:], 72, y, chord_font, lyric_font)
+    pdf.showPage()
+    y = song_lines(pdf, SONGS[1][2][:2], 72, 720, chord_font, lyric_font)
+    y = title(["3 Home on the Range"], "Brewster Higley", y - 20)
+    y = song_lines(pdf, SONGS[2][2], 72, y, chord_font, lyric_font)
+    y = title(["4 Shenandoah"], None, y - 20)
+    song_lines(pdf, SONGS[3][2], 72, y, chord_font, lyric_font)
+    pdf.showPage()
+    pdf.save()
+
+
+def songbooks():
+    numbered_songbook()
+    styled_songbook()
 
 
 if __name__ == "__main__":

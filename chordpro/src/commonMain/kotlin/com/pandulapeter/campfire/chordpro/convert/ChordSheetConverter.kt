@@ -61,12 +61,14 @@ public object ChordSheetConverter {
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
         if (isChordPro(original)) return listOf(original)
         val sizes = all.flatMap { line -> line.source.spans.filter { it.text.isNotBlank() }.map { it.size } }.sorted()
-        val starts = ChordSheetPageSplit.starts(pages.map(::lead), sizes.getOrNull(sizes.size / 2) ?: 1.0)
+        val cuts = ChordSheetSongSplit.cuts(pages.map(::splitLines), sizes.getOrNull(sizes.size / 2) ?: 1.0)
         val groups = mutableListOf<MutableList<Rendered>>()
-        pages.forEachIndexed { index, page ->
-            if (starts[index] == ChordSheetPageSplit.Start.SONG) groups += mutableListOf<Rendered>()
-            val lead = page.indexOfFirst { it.text.isNotBlank() }
-            groups.last().addAll(if (starts[index] == ChordSheetPageSplit.Start.CONTINUATION) page.drop(lead + 1) else page)
+        pages.forEachIndexed { pageIndex, page ->
+            page.forEachIndexed { lineIndex, line ->
+                val place = ChordSheetSongSplit.Place(pageIndex, lineIndex)
+                if (groups.isEmpty() || place in cuts.opens) groups += mutableListOf<Rendered>()
+                if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
+            }
         }
         return groups.map { normalize(convertSong(expandLabels(joinWrappedDetails(withoutInjections(singleSpaced(it)))), guessesTitle)) }.filter { it.isNotBlank() }
     }
@@ -560,16 +562,21 @@ public object ChordSheetConverter {
         if (chordTokens(rest) != null) listOf(line.copy(text = line.text.substring(0, end), positions = line.positions.copyOf(end)), rest) else listOf(line)
     }
 
-    private fun lead(page: List<Rendered>): ChordSheetPageSplit.Lead? {
-        val index = page.indexOfFirst { it.text.isNotBlank() }.takeIf { it >= 0 } ?: return null
-        val line = page[index]
-        val next = page.drop(index + 1).firstOrNull { it.text.isNotBlank() && chordTokens(it) == null }
-        return ChordSheetPageSplit.Lead(
-            text = line.text.trim(),
-            line = line.source,
-            isTitle = isTitle(line, page),
-            isFollowedByBold = next?.source?.spans?.filter { it.text.isNotBlank() }?.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } == true,
-        )
+    /** The [line] without the [length] characters after its leading blanks that number its song in a songbook. */
+    private fun withoutNumber(line: Rendered, length: Int): Rendered {
+        val start = line.text.indexOfFirst { !it.isWhitespace() }
+        val end = start + length
+        return line.copy(text = line.text.substring(0, start) + line.text.substring(end), positions = line.positions.copyOf(start) + line.positions.copyOfRange(end, line.positions.size), bidi = null)
+    }
+
+    /** The [page]'s lines for [ChordSheetSongSplit], which asks whether a line is a title by its type only of the page's first. */
+    private fun splitLines(page: List<Rendered>): List<ChordSheetSongSplit.Line> {
+        val lead = page.indexOfFirst { it.text.isNotBlank() }
+        return page.mapIndexed { index, line ->
+            val isChordRow = line.text.isNotBlank() && chordTokens(line) != null
+            val isTitleShaped = line.text.isNotBlank() && !isChordRow && !line.isMarginLabel && !isHeading(line.text) && metadata(line.text) == null
+            ChordSheetSongSplit.Line(line.text.trim(), line.source, isChordRow, isTitleShaped, isTitleShaped && index == lead && isTitle(line, page))
+        }
     }
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
@@ -577,7 +584,7 @@ public object ChordSheetConverter {
         val bodySizes = lines.filter { it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
         val median = bodySizes.getOrNull(bodySizes.size / 2) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
         return line.source.isHeading || line.source.spans.any { it.size > median * 1.2 } ||
-            line.source.spans.isNotEmpty() && line.source.spans.all { it.isBold } && lines.any { chordTokens(it) != null }
+            line.source.spans.filter { it.text.isNotBlank() }.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } && lines.any { chordTokens(it) != null }
     }
 
     /**
