@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
@@ -41,7 +42,7 @@ internal class PrintRows(
     private val columnWidth: Float,
     private val capacity: Float,
     private val measureText: (text: String, style: PrintStyle) -> Float,
-    measureLyric: PrintLyricMeasure?,
+    private val measureLyric: PrintLyricMeasure?,
 ) {
     /**
      * The direction of the song being laid out (`ChordProSong.textDirection`), which its own texts are set in and its
@@ -315,7 +316,7 @@ internal class PrintRows(
         val fragments = wrapPrintText(stripped.text, width) { measure(it, wrappingStyle) }
         return fragments.mapIndexed { index, fragment ->
             val formatting = stripped.formatting.clippedTo(start, fragment)
-            val x = if (style.isRightToLeft) width - styledPieces(formatting, 0, fragment, style).widthUntil(fragment.length, ::measure) else 0f
+            val x = if (style.isRightToLeft) width - drawnWidth(fragment, style, formatting) { styledPieces(formatting, 0, fragment, style).widthUntil(fragment.length, ::measure) } else 0f
             val isHardCut = isHardCut(fragments, index, style)
             val part = Part(fragment, x = x, style = style, formatting = formatting, isContinuation = isHardCut, isHardCut = isHardCut)
             start += fragment.length
@@ -358,11 +359,19 @@ internal class PrintRows(
     ): List<Row> = text.lines().flatMap { line ->
         val fragments = wrapPrintText(line, width) { measure(it, style) }
         fragments.mapIndexed { index, fragment ->
-            val x = if (style.isRightToLeft) width - measure(fragment, style) else 0f
+            val x = if (style.isRightToLeft) width - drawnWidth(fragment, style, emptyList()) { measure(fragment, style) } else 0f
             val isHardCut = isHardCut(fragments, index, style)
             Row(listOf(Part(fragment, x = x, style = style, isSelectable = isSelectable, isContinuation = isHardCut, isHardCut = isHardCut)), style.size * 1.45f)
         }
     }
+
+    /**
+     * How wide a right-to-left text is drawn: its layout, which is a whole number of points wide and holds its glyphs at
+     * its right, as a lyric's does (`PrintLyricRows`). Set from its advance ([fallback], all a test measures) it would end
+     * up to a point past the column's edge, and a boxed comment's text less than its inset from the lines around it.
+     */
+    private fun drawnWidth(text: String, style: PrintStyle, formatting: List<Formatting>, fallback: () -> Float) =
+        measureLyric?.invoke(text, style, formatting, emptyList())?.width ?: fallback()
 
     /**
      * Whether the row of [fragments] at [index] continues a word the column cut. Never in a monospaced [style]: a tab's or

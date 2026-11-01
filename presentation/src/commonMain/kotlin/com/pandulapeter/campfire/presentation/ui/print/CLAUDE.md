@@ -84,6 +84,10 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   order's in none. A right-to-left song is laid out from the right: its texts end at the column's right edge, its
   columns fill from the right (a song turning the direction starts a page when there are columns), its chorus is
   indented and barred on the right, and its diagrams are listed from the right.
+- A right-to-left text other than a lyric (a title, a label, a details row, a comment, a box's text) starts its
+  layout's width before its edge, as a lyric does (`PrintRows.drawnWidth`), never its advance: the layout is a whole number of points
+  wide and holds its glyphs at its right, so set by its advance a text ends up to a point past the edge, and a boxed
+  comment's text less than its 5 points in, by which the import finds the box.
 - Music keeps reading left to right: tab systems, grids, and preformatted runs move to the right edge as one block, an
   engraved tune too, and degrees and chord names are never set right to left.
 - A lyric row that is right to left or holds such text takes its chords' anchors from the renderer's layout

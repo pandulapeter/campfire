@@ -224,6 +224,23 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a boxed comment and a comment come back as they were in either direction at every text size`() = runBlocking {
+        val songs = listOf(
+            "{title: Song}\n{start_of_verse}\n[C]Hello world\n{comment_box: Slowly}\n[G]Sing along\n{comment: x2}\n{end_of_verse}\n",
+            "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[Am]\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{comment_box: \u05dc\u05d0\u05d8}\n" +
+                "[G]\u05d0\u05d1\u05d2\n{comment: x2}\n{end_of_verse}\n",
+        ).map(ChordProParser::parse)
+        val failures = songs.flatMap { song ->
+            (8..20).mapNotNull { fontSize ->
+                val expected = summary(song)
+                val actual = summary(roundTrip(song, PrintSettings(fontSize = fontSize)))
+                if (expected == actual) null else "$fontSize points:\n  expected $expected\n  actual   $actual"
+            }
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `a song's side is told by the edge most of its lines share`() = runBlocking {
         val choruses = ChordProParser.parse(
             "{title: Truck Driver Change}\n{key: C}\n{start_of_chorus}\n[C]Love is [F]all a[G]round\n{end_of_chorus}\n" +

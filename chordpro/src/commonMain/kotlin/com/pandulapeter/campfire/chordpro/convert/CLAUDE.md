@@ -23,7 +23,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   fallback font of a taller line box, so no size is compared with one in another font; a label over a tab is the
   tab's), grids, italic comments, and boxed comments come back as
   written (an italic lyric is told from a comment by its distance under the chord row above,
-  `ChordSheet.Line.baseline`), the padding under wide chords is left out, the lyric-type rows right under the title,
+  `ChordSheet.Line.baseline`; a right-to-left box's text is found up to a point further out than its inset, where 5.2
+  drew it), the padding under wide chords is left out, the lyric-type rows right under the title,
   before the heading's gap, are the artist, however many, a chord is set on the character it stands
   over (only in the lyric printed under it as its own, which starts 1.3 font sizes under the chords' text rather than
   the next row's 1.45, `ChordSheetCampfireLayout.isLyricOf`, so a line of chords alone over a line of none comes back

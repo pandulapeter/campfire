@@ -448,6 +448,12 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a boxed comment of a song printed from the right up to a point past its inset is one`() {
+        // An export of 5.2 drew such a box's text by its advance in a layout rounded up to a whole point.
+        assertEquals(listOf(1), boxes(rtl("שלום עולם ומלואו"), rtl("לאט לאט", inset = 4.05), rtl("שלום עולם")))
+    }
+
+    @Test
     fun `a chorus of a song printed from the right is no box, and a box inside it is one`() {
         assertEquals(
             listOf(3),

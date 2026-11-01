@@ -105,7 +105,7 @@ internal object ChordSheetCampfireLayout {
                 spans.all { it.isBold && !it.isMonospace && it.size < sizes.bodyOf(line) - LABEL_SIZE_STEP / 2 } -> Role.LABEL
                 spans.all { it.isItalic } && !isChordRow[index] -> Role.COMMENT.takeUnless { isItalicLyric(lines, isChordRow, roles, index) }
                 !line.isPlain() -> null
-                isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end) }
+                isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end, LAYOUT_ROUNDING) }
                 isBoxed(song.mapNotNull { starts[it] }, start) -> Role.BOX_COMMENT
                 else -> null
             }
@@ -181,10 +181,12 @@ internal object ChordSheetCampfireLayout {
     /**
      * Whether a line's [edge] sits 5 points in from some other line's and none lies between the two: the box against the
      * lines around it rather than the column, which also finds a box inside a chorus, whose lines are indented by more.
-     * The edges of a song printed from the right are passed negated, so that "in" is always the larger value.
+     * The edges of a song printed from the right are passed negated, so that "in" is always the larger value, with the
+     * [rounding] the box's text may stand further out by.
      */
-    private fun isBoxed(edges: List<Double>, edge: Double) = edges.any { other -> edge - other in BOX_INSET - TOLERANCE..BOX_INSET + TOLERANCE } &&
-        edges.none { other -> edge - other in TOLERANCE..BOX_INSET - TOLERANCE }
+    private fun isBoxed(edges: List<Double>, edge: Double, rounding: Double = 0.0) =
+        edges.any { other -> edge - other in BOX_INSET - TOLERANCE - rounding..BOX_INSET + TOLERANCE } &&
+            edges.none { other -> edge - other in TOLERANCE..BOX_INSET - TOLERANCE - rounding }
 
     /**
      * The lines of each song on the page, cut at the titles, since one page may end a song printed from the left and
@@ -268,6 +270,12 @@ internal object ChordSheetCampfireLayout {
     /** How far in from its frame a boxed comment's text starts (`PrintRows.boxedRows`), in points. */
     private const val BOX_INSET = 5.0
     private const val TOLERANCE = 0.75
+
+    /**
+     * How much further right than its inset an export of 5.2 or older drew a right-to-left boxed comment's text, at most:
+     * it set the text by its advance in a layout a whole number of points wide, which holds its glyphs at its right.
+     */
+    private const val LAYOUT_ROUNDING = 1.0
 
     /**
      * Between a lyric's distance under its chords (1.3 times its size, `PrintLyricRows`) and the next row's (1.45 times,
