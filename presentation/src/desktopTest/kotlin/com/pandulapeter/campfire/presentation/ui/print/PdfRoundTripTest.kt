@@ -195,8 +195,7 @@ class PdfRoundTripTest {
             val imported = roundTripText(song, settings, printLabelsOf(folder))
             val lyrics = ChordProParser.parse(imported).blocks.filterIsInstance<ChordProBlock.Section>()
                 .flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
-            // The page count is left out, as in the details row's test: a wide margin's is the PDF text extraction's.
-            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }.filterNot { Regex("[0-9]+ / [0-9]+").matches(it) }
+            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }
             val isInPlace = Regex("\\{key: Db\\}\\n+\\{start_of_chorus").containsMatchIn(imported)
             if (isInPlace && words == listOf("Hello world", "Sing along")) null else "${folder.name}: $imported"
         }
@@ -291,9 +290,7 @@ class PdfRoundTripTest {
         val failures = folders.mapNotNull { folder ->
             val imported = roundTrip(song, settings, printLabelsOf(folder), transposition = 2, shapesKey = "Em")
             val lyrics = imported.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
-            // The page count is left out of what is compared: whether a wide margin keeps it out of the lyrics is the PDF
-            // text extraction's to tell, and this is about the details row alone.
-            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }.filterNot { Regex("[0-9]+ / [0-9]+").matches(it) }
+            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }
             val actual = listOf(imported.metadata.key, imported.metadata.capo?.toString()) + words
             if (actual == listOf("Em", "2", "Hello world and more here")) null else "${folder.name}: $actual"
         }
