@@ -283,6 +283,13 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a comment cut inside a word by a narrow column comes back whole`() = runBlocking {
+        val song = ChordProParser.parse("{title: Song}\n{start_of_verse}\n[C]Hello\n{comment: Play incomprehensibilities extraordinarily}\n[G]World\n{end_of_verse}\n")
+        val imported = roundTripText(song, PrintSettings(columns = PrintSettings.MAX_COLUMNS))
+        assertTrue("{comment: Play incomprehensibilities extraordinarily}\n[G]World" in imported, imported)
+    }
+
+    @Test
     fun `a playing details row cut inside a label by a narrow column comes back in every language`() = runBlocking {
         val song = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n{start_of_verse}\n[Em]Hello [Am]world [Em]and [D]more [Em]here\n{end_of_verse}\n")
         val settings = PrintSettings(columns = PrintSettings.MAX_COLUMNS, fontSize = 20, marginMm = 25)

@@ -222,6 +222,18 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a comment the column cut inside a word comes back as one comment`() {
+        // The export writes the marks into the text of the row's first glyph.
+        val cut = text("bilities", italic = true).let { line -> line.copy(spans = line.spans.mapIndexed { index, span -> if (index == 0) span.copy(text = "\u2060\u2060" + span.text) else span }) }
+        val song = convert(
+            chords("C" to 0), text("Hello"),
+            text("Play incomprehensi", italic = true), cut, text("extraordinarily", italic = true),
+            chords("G" to 0), text("World"),
+        )
+        assertTrue("{comment: Play incomprehensibilities extraordinarily}\n[G]World" in song, song)
+    }
+
+    @Test
     fun `a wrapped right-to-left row's chord hangs from the letter its right edge meets`() {
         val sheet = ChordSheet(
             listOf(

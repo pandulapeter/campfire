@@ -44,7 +44,7 @@ public object ChordSheetConverter {
             val placedLines = if (sheet.isCampfireExport) page.lines.map { PlacedLine(it) } else ChordSheetHeaderParts.split(page.lines)
             ChordSheetMarginLabels.split(placedLines).map { placed ->
                 render(placed.line, normalize, dropsPadding = sheet.isCampfireExport).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
-            }
+            }.let { lines -> if (sheet.isCampfireExport) markRowsContinuedBelow(lines) else lines }
         }
         val pages = if (!sheet.isCampfireExport) rendered else {
             // The lyrics' size, which the labels are set a point under: that of the lines right under a chord row, a lyric
@@ -190,6 +190,11 @@ public object ChordSheetConverter {
         val bodySize: Double = 0.0,
         val isContinuation: Boolean = false,
         val isHardCut: Boolean = false,
+        /**
+         * Whether the row under this one in Campfire's export continues its line in the chords' or the lyrics' type, which
+         * makes a row of notes alone the chord row of that line.
+         */
+        val isContinuedBelow: Boolean = false,
     ) {
         /** What goes between the row this one continues and its text. */
         val joint get() = if (isHardCut) "" else " "
@@ -265,6 +270,16 @@ public object ChordSheetConverter {
         return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), isContinuation = isContinuation, isHardCut = isHardCut)
     }
 
+    /**
+     * [page] of Campfire's export with each row marked whose line the row under it continues in the chords' or the lyrics'
+     * type ([Rendered.isContinuedBelow]). A marked row set wholly in italics is the rest of a comment or of an italic
+     * lyric, which says nothing of the row above being a chord row.
+     */
+    private fun markRowsContinuedBelow(page: List<Rendered>) = page.mapIndexed { index, line ->
+        val next = page.getOrNull(index + 1)
+        line.copy(isContinuedBelow = next != null && next.isContinuation && !next.source.spans.filter { it.text.isNotBlank() }.all { it.isItalic })
+    }
+
     private fun isExportFiller(character: Char) = character == ChordSheetCampfireLayout.PADDING || character == ChordSheetCampfireLayout.CONTINUATION
 
     /**
@@ -318,13 +333,14 @@ public object ChordSheetConverter {
      * Campfire's export ([isCampfire]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
      * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
      * is all notes, so it is never taken for chords, unless it is the chord row of a lyric's continuation, which the
-     * export marks ([Rendered.isContinuation]). There a word is a chord only where it is printed in the chords' type, bold
-     * under the title's size, or in a tab's monospaced chord line, so that a lyric `a b c d` and a title `A` stay what they
-     * are; where the lyrics' size is unknown, the text alone decides.
+     * export marks ([Rendered.isContinuation]) with the lyric under it ([Rendered.isContinuedBelow]). There a word is a
+     * chord only where it is printed in the chords' type, bold under the title's size, or in a tab's monospaced chord
+     * line, so that a lyric `a b c d` and a title `A` stay what they are; where the lyrics' size is unknown, the text
+     * alone decides.
      */
     private fun chordRow(line: Rendered, isCampfire: Boolean = line.isCampfire): ChordRow? = chordRow(
         text = line.text,
-        allowsNotesOnly = isCampfire && line.isContinuation,
+        allowsNotesOnly = isCampfire && line.isContinuation && line.isContinuedBelow,
         isNote = if (!isCampfire) null else { word ->
             word.text.indices.all { offset ->
                 val x = line.positions.getOrNull(word.index + offset)
