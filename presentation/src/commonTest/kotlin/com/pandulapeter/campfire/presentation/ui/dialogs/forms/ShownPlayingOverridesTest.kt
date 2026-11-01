@@ -20,13 +20,20 @@ class ShownPlayingOverridesTest {
     private val capoOverride = EffectiveCapo(fret = 3, songFret = 0)
     private val tempoOverride = EffectiveTempo(bpm = 100, source = EffectiveTempo.Source.SETLIST, songBpm = 96)
 
-    private fun shown(hasChords: Boolean = true, capo: EffectiveCapo = capoOverride, areChordsEnabled: Boolean = true, isMetronomeEnabled: Boolean = true) =
+    private fun shown(
+        hasChords: Boolean = true,
+        capo: EffectiveCapo = capoOverride,
+        areChordsEnabled: Boolean = true,
+        isCapoShown: Boolean = true,
+        isMetronomeEnabled: Boolean = true,
+    ) =
         shownPlayingOverrides(
             song = song(hasChords),
             transposition = 2,
             capo = capo,
             tempo = tempoOverride,
             areChordsEnabled = areChordsEnabled,
+            isCapoShown = isCapoShown,
             isMetronomeEnabled = isMetronomeEnabled,
         )
 
@@ -37,6 +44,10 @@ class ShownPlayingOverridesTest {
     @Test
     fun `chords off hide the transposition and the capo`() =
         assertEquals(ShownPlayingOverrides(transposition = 0, capo = null, tempo = tempoOverride), shown(areChordsEnabled = false))
+
+    @Test
+    fun `a capo not shown at all is not named either`() =
+        assertEquals(ShownPlayingOverrides(transposition = 2, capo = null, tempo = tempoOverride), shown(isCapoShown = false))
 
     @Test
     fun `the metronome off hides the tempo`() =
@@ -59,6 +70,7 @@ class ShownPlayingOverridesTest {
             capo = capoOverride,
             tempo = EffectiveTempo(bpm = 96, source = EffectiveTempo.Source.FILE, songBpm = 96),
             areChordsEnabled = true,
+            isCapoShown = true,
             isMetronomeEnabled = true,
         ).tempo,
     )

@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.fontScale.fontScaleGestures
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -200,8 +201,10 @@ internal fun SongPages(
             transposition = playback.soundingTransposition,
             tabCapo = playback.tabCapoFor(userPreferences),
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
-            // The keyboard names the capo too: it raises the pitch for every instrument, so a pianist reads why the key moved.
+            // The keyboard names the capo too where it raises the pitch for every instrument, so a pianist reads why the key
+            // moved; where the reader keeps the key it moves nothing, and is left out.
             capoOverride = capo.takeUnless { it.isDefault }?.fret,
+            isCapoShown = playback.isCapoShownFor(userPreferences),
             shapeCapo = shapeCapo,
             shapeNames = viewModel.songRenderer.shapeNamesOf(
                 song = song,

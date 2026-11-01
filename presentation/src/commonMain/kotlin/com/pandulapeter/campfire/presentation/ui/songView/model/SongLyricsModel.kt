@@ -54,6 +54,7 @@ import kotlinx.coroutines.withContext
  * @param notationChords How the chords over the lyrics are named, which an engraved ABC tune's chord symbols follow.
  * @param shapesKey The key of the shapes the page names its chords by under a capo, which the line of values names after
  * the capo ("Capo 2, Em shapes"); null where the chords are named as they sound (see `ShapeNames`).
+ * @param isCapoShown False where the line of values leaves the capo out, see `SongPlayback.isCapoShownFor`.
  * @param textDirection The one direction the song's body is laid out in, whatever the interface's (see
  * `ChordProSong.textDirection`): a walk over its lyrics, so made with the model, off the main thread, rather than per frame.
  */
@@ -70,6 +71,7 @@ internal class SongLyricsModel(
     val notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
     val textDirection: WritingDirection = song.textDirection,
     val shapesKey: String? = null,
+    val isCapoShown: Boolean = true,
 ) {
 
     /** Whether some chord's shape is still to be looked for, see [withSearchedShapes]. */
@@ -92,6 +94,7 @@ internal class SongLyricsModel(
         notationChords = notationChords,
         textDirection = textDirection,
         shapesKey = shapesKey,
+        isCapoShown = isCapoShown,
     )
 }
 
@@ -120,6 +123,7 @@ internal class SongLyricsModel(
  * @param namedInferredKey [inferredKey] in the frame of [namedSong].
  * @param shapesKey The key of the shapes the page names, which the line of values names after the capo, see
  * [SongLyricsModel.shapesKey].
+ * @param isCapoShown See [SongLyricsModel.isCapoShown].
  * @param searchesShapes False to leave the shapes only the search finds for [SongLyricsModel.withSearchedShapes], for a
  * model built on the main thread.
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
@@ -147,6 +151,7 @@ internal fun prepareSongLyrics(
     namedInferredKey: String? = inferredKey,
     shapesKey: String? = null,
     notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
+    isCapoShown: Boolean = true,
 ) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo, inferredKey = inferredKey)
@@ -185,6 +190,7 @@ internal fun prepareSongLyrics(
         ) else emptyList(),
         notationChords = notationChords,
         shapesKey = shapesKey,
+        isCapoShown = isCapoShown,
     )
 }
 
@@ -248,6 +254,7 @@ internal data class SongLyricsInputs(
     val tabCapo: Int = 0,
     val tempoOverride: Int? = null,
     val capoOverride: Int? = null,
+    val isCapoShown: Boolean = true,
     val shapeCapo: Int = 0,
     val shapeNames: ShapeNames? = null,
     val inferredChordsKey: String? = null,

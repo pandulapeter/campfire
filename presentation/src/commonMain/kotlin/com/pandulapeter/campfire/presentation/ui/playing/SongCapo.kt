@@ -43,5 +43,12 @@ internal fun effectiveCapo(song: Song?, setlistFileName: String?, capos: Capos, 
     return EffectiveCapo(fret = override ?: songFret, songFret = songFret)
 }
 
-/** The song with its capo line reading [fret], where there is one: what the page and the PDF show for an override. */
-internal fun ChordProSong.withCapo(fret: Int?) = if (fret == null) this else copy(metadata = metadata.copy(capo = fret))
+/**
+ * The song with its capo line reading [fret], where there is one: what the page and the PDF show for an override. With
+ * [isShown] false it has no capo line at all, for a reader the capo is not shown to (`SongPlayback.isCapoShownFor`).
+ */
+internal fun ChordProSong.withCapo(fret: Int?, isShown: Boolean = true) = when {
+    !isShown -> copy(metadata = metadata.copy(capo = null))
+    fret == null -> this
+    else -> copy(metadata = metadata.copy(capo = fret))
+}

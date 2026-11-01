@@ -89,6 +89,12 @@ internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTr
 internal fun SongPlayback.shapeCapoFor(preferences: UserPreferences?) = if (preferences.playsWithoutCapo) 0 else capo.fret
 
 /**
+ * Whether the capo is shown at all, its stepper, its line, and its value in the PDF: always but on an instrument without
+ * a capo ([playsWithoutCapo]) whose reader keeps the key, where a capo put on changes nothing the player hears or plays.
+ */
+internal fun SongPlayback.isCapoShownFor(preferences: UserPreferences?) = !capoKeepsKey || !preferences.playsWithoutCapo
+
+/**
  * Whether the player's instrument takes no capo: the keyboard, whose diagrams and names are the sounding chords
  * themselves, the effective capo counted in as for every instrument. It still shows the capo and its stepper, since a
  * capo the band plays with raises the pitch for the pianist too.

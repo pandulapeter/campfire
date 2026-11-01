@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
+import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.pitchCapo
 import com.pandulapeter.campfire.presentation.ui.playing.namingTransposition
@@ -62,6 +63,7 @@ internal fun rememberSongPlayingControls(
     // where they are named as the shapes fingered above it, the shapes' key. The stepper itself reads the reader's own
     // semitones, which it steps.
     val pitchCapo = playback.pitchCapo
+    val isCapoShown = playback.isCapoShownFor(userPreferences)
     val nameCapo = playback.nameCapoFor(userPreferences)
     val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
     val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, pitchCapo, nameCapo, inferredKey) {
@@ -84,6 +86,7 @@ internal fun rememberSongPlayingControls(
         shouldShowChords,
         shouldShowTempo,
         nameCapo,
+        isCapoShown,
         transposition,
         key,
         capo,
@@ -104,7 +107,7 @@ internal fun rememberSongPlayingControls(
             } else {
                 null
             },
-            capo = if (shouldShowChords) {
+            capo = if (shouldShowChords && isCapoShown) {
                 SongCapoControl(
                     capo = capo,
                     namesShapes = nameCapo != 0 && key != null,

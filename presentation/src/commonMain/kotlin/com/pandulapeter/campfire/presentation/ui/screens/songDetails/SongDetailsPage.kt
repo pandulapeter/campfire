@@ -110,6 +110,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the
  *   same way as [tempoOverride].
+ * @param isCapoShown False where the line of values leaves the capo out (`SongPlayback.isCapoShownFor`).
  * @param shapeCapo The fret the Chords section's shapes are fingered above (`SongPlayback.shapeCapoFor`), none on the
  *   keyboard.
  * @param shapeNames How the page names its chords where they are the shapes fingered above the capo, see [ShapeNames];
@@ -151,6 +152,7 @@ internal fun SongDetailsPage(
     tabCapo: Int,
     tempoOverride: Int?,
     capoOverride: Int?,
+    isCapoShown: Boolean,
     shapeCapo: Int,
     shapeNames: ShapeNames?,
     inferredChordsKey: String?,
@@ -211,6 +213,7 @@ internal fun SongDetailsPage(
             labels = labels,
             tempoOverride = tempoOverride,
             capoOverride = capoOverride,
+            isCapoShown = isCapoShown,
             shapeCapo = shapeCapo,
             shapeNames = shapeNames,
             inferredChordsKey = inferredChordsKey,
@@ -247,6 +250,7 @@ internal fun SongDetailsPage(
                 inferredKey = inputs.inferredChordsKey,
                 shapeCapo = inputs.shapeCapo,
                 shouldShowChords = inputs.shouldShowChords,
+                isCapoShown = inputs.isCapoShown,
                 labels = inputs.labels,
                 showsTiming = inputs.showsTiming,
                 chordTuning = inputs.chordTuning,

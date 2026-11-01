@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
+import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -206,7 +207,7 @@ internal class ExportController(
             val named = shapeNames?.let { names ->
                 content?.let { withContext(Dispatchers.Default) { songRenderer.transposedSong(it.text, transposition - names.capo, spelling, tabs = tabs, capo = tabCapo - names.capo) } }
             } ?: transposed
-            val printed = named?.withTempo(tempo)?.withCapo(capo)
+            val printed = named?.withTempo(tempo)?.withCapo(capo, isShown = playback.isCapoShownFor(preferences))
             val inferredKey = if (song != null && inferred != null) songRenderer.renderKey(song = song, transposition = transposition, spelling = spelling, inferredKey = inferred) else null
             // A numbering counts the chords of a song naming no key from that key, in the frame of the printed chords.
             val inferredChordsKey = inferred?.let { songRenderer.movedKey(inferredKey = it, transposition = transposition, spelling = spelling) }

@@ -25,7 +25,8 @@ internal data class ShownPlayingOverrides(
 
 /**
  * Which of [song]'s overrides are shown: the transposition and the capo go with the chords ([areChordsEnabled]), and
- * the transposition with a song that has some, the tempo with the metronome ([isMetronomeEnabled]).
+ * the transposition with a song that has some, the capo only where it is shown at all ([isCapoShown],
+ * `SongPlayback.isCapoShownFor`), the tempo with the metronome ([isMetronomeEnabled]).
  */
 internal fun shownPlayingOverrides(
     song: Song,
@@ -33,9 +34,10 @@ internal fun shownPlayingOverrides(
     capo: EffectiveCapo,
     tempo: EffectiveTempo,
     areChordsEnabled: Boolean,
+    isCapoShown: Boolean,
     isMetronomeEnabled: Boolean,
 ) = ShownPlayingOverrides(
     transposition = transposition.takeIf { areChordsEnabled && song.hasChords } ?: 0,
-    capo = capo.takeIf { areChordsEnabled && !it.isDefault },
+    capo = capo.takeIf { areChordsEnabled && isCapoShown && !it.isDefault },
     tempo = tempo.takeIf { isMetronomeEnabled && !it.isDefault },
 )

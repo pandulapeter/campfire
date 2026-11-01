@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
  *
  * @param shouldShowChords False with the chords switched off, which leaves out the key and the capo along with the
  * chords: they are what is played, and say nothing to somebody who is only singing.
+ * @param isCapoShown False to leave the capo alone out, see `SongPlayback.isCapoShownFor`.
  * @param shapesKey The key of the shapes the page names its chords by under the capo, which the line of text names after
  * the capo (`ShapeNames`), the key it names being the one that sounds; null where the chords are named as they sound.
  * @param shouldShowTempo False with the metronome switched off, which leaves out the tempo and the time signature: they
@@ -48,6 +49,7 @@ internal fun withMetadataSection(
     sections: List<RenderSection>,
     metadata: ChordProMetadata,
     shouldShowChords: Boolean,
+    isCapoShown: Boolean = true,
     shapesKey: String? = null,
     shouldShowTempo: Boolean = true,
     isSongInfoShown: Boolean,
@@ -64,7 +66,7 @@ internal fun withMetadataSection(
     val shownMetadata = metadata.copy(
         key = metadata.key.takeIf { shouldShowChords },
         capo = when {
-            !shouldShowChords -> null
+            !shouldShowChords || !isCapoShown -> null
             readsBoth -> (metadata.capo ?: 0).coerceIn(Song.CAPO_RANGE)
             else -> metadata.capo?.coerceIn(Song.CAPO_RANGE)
         },

@@ -180,6 +180,17 @@ class SongPlaybackTest {
     }
 
     @Test
+    fun `the capo is hidden only from a keyboard player who keeps the key, for whom it changes nothing`() {
+        val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
+        val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
+        val raising = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
+        val keeping = songPlaybackOf(song, setlistFileName = null, overrides = overrides.copy(capoKeepsKey = true))
+        assertTrue(raising.isCapoShownFor(keyboard))
+        assertTrue(keeping.isCapoShownFor(guitar))
+        assertFalse(keeping.isCapoShownFor(keyboard))
+    }
+
+    @Test
     fun `only the keyboard plays without a capo`() {
         assertTrue(testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD).playsWithoutCapo)
         UserPreferences.Instrument.entries.filter { it != UserPreferences.Instrument.KEYBOARD }.forEach {

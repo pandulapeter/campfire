@@ -143,6 +143,15 @@ class SongMetadataTest {
     }
 
     @Test
+    fun `a capo not shown is left out of the line, read only mode's capo of none too`() {
+        val body = listOf(verse)
+        assertEquals(
+            listOf(RenderSection.Metadata(metadata = ChordProMetadata(tempo = "96", time = "4/4"), readsDefaults = true), verse),
+            withMetadataSection(body, ChordProMetadata(capo = 3, tempo = "96"), shouldShowChords = true, isCapoShown = false, isSongInfoShown = false, readsDefaults = true),
+        )
+    }
+
+    @Test
     fun `the line names the key of the shapes after a capo, and nothing of them without one`() {
         val body = listOf(verse)
         assertEquals(

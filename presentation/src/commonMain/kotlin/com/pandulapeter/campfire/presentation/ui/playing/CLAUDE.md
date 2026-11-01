@@ -71,7 +71,9 @@ The values a song is played with and where each is kept.
 - **The diagrams are the shapes**: the sounding chords moved down by the effective capo (`shapeCapoFor`); none on the
   keyboard (`playsWithoutCapo`), which plays what sounds, the effective capo counted in. Since a capo raises the pitch for
   everybody, the keyboard has the capo stepper, the capo in the read only line and the PDF, and Song defaults too, so a
-  pianist sees why the key moved and can set or reset the band's capo.
+  pianist sees why the key moved and can set or reset the band's capo. Where the reader keeps the key, a capo changes
+  nothing for a pianist, so all but Song defaults (the file's `{capo}`, which is still pitch) leave it out, the overrides
+  card's reset included (`isCapoShownFor`).
 - **Capo keeps the key** (`UserPreferences.capoKeepsKey`, carried by `PlayingOverridesSnapshot` into `SongPlayback`):
   the reverse reading, for players who want a capo to change only the fingering. The pitch counts the file's `{capo}`
   alone (`pitchCapo`), so a capo a setlist or the device puts on keeps what sounds, and the shapes, `{define}`s (held

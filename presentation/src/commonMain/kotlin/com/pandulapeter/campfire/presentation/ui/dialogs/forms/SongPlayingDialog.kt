@@ -78,6 +78,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
+import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import kotlin.math.absoluteValue
@@ -254,6 +255,7 @@ internal fun songPlayingOverrides(
         capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos),
         tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos),
         areChordsEnabled = userPreferences?.areChordsEnabled != false,
+        isCapoShown = userPreferences?.capoKeepsKey != true || !userPreferences.playsWithoutCapo,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
     )
     val labels = listOfNotNull(
