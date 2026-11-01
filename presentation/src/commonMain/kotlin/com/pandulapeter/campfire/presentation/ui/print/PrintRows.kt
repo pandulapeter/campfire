@@ -270,9 +270,12 @@ internal class PrintRows(
         if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
     }
 
-    /** The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its first. */
+    /**
+     * The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its
+     * first, wrapped as [detailRows] wraps a value too wide for its row.
+     */
     private fun keyChangeRows(keyChange: ChordProBlock.Transpose, width: Float): List<Row> =
-        keyChange.key?.takeIf { options.showKey && it.isNotBlank() }?.let { wrapped(labels.labelled(labels.key, it), detailStyle, width) }.orEmpty()
+        keyChange.key?.takeIf { options.showKey && it.isNotBlank() }?.let { detailRows(listOf(labels.labelled(labels.key, it)), width) }.orEmpty()
 
     /**
      * How the song is played from a `{tempo}` or a `{time}` further down on, in the words and the type the heading names

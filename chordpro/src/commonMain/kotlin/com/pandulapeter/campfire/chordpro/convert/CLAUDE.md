@@ -42,6 +42,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   (`joinWrappedDetails`). A capo marked as sounding (`print_capo_sounding`) is imported as the capo chart: the chords
   and key moved down by the capo in the standard notation, tab frets kept. A capo marked with its shapes' key
   (`song_details_capo_shapes`, in any of the app's languages, from any sheet) writes that key as the song's `{key}`.
+  In an export, a key printed further down is the key change it stands for, written where it stands (nothing where it
+  names the key in force), and a sounding capo chart is moved part by part, each spelled by its own key.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands.
 - Any row with `pieces` is matched by those edges (another producer's PDF, put into reading order by `:data:formats`),
   within an em of the lyric rather than the export's exact point.

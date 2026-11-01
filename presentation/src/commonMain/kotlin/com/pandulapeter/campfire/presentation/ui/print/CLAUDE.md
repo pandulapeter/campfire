@@ -69,7 +69,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
   reads back as the song's; "2 (chords as they
   sound)" where they are named as they sound, `PrintLabels.capoSounding`, which the import reads back as the shapes
   over the same capo; diagrams drawn above the printed capo); tempo and time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one.
-  A value too wide for a row of its own wraps (a sounding capo in three or four columns), its rest marked as a wrapped
+  A value too wide for a row of its own wraps (a sounding capo in three or four columns, or a key change, which prints
+  through the same `detailRows`), its rest marked as a wrapped
   lyric's is (`PrintText.isContinuation`), by which the import joins it back into the value. `showMetadata` is the
   song sheets' artist; the running order has its own: `showOverviewDetails` (the setlist's date and description and its
   songs' artists, read as `showMetadata` from a file older than it) and `overviewColumns`, its song list flowing in them

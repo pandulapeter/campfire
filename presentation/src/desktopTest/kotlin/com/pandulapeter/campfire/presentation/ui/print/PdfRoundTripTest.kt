@@ -178,6 +178,32 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a sounding capo chart changing key comes back with each part spelled by its own key`() = runBlocking {
+        val text = corpus.getValue("09-capo-transpose.cho")
+        val sounding = songRenderer.transposedSong(text, transposition = 5, spelling = UserPreferences.ChordSpelling.Default)
+        val expected = summary(songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default))
+        assertEquals(expected, summary(roundTrip(sounding, PrintSettings(), areChordsSounding = true)))
+    }
+
+    @Test
+    fun `a key change comes back where it stands in every language, wrapped or not`() = runBlocking {
+        val text = "{title: Song}\n{key: C}\n{start_of_verse}\n[C]Hello [G]world\n{end_of_verse}\n{transpose: 1}\n{start_of_chorus}\n[C]Sing [G]along\n{end_of_chorus}\n"
+        val song = songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
+        val settings = PrintSettings(columns = PrintSettings.MAX_COLUMNS, fontSize = 20, marginMm = 25)
+        val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+        val failures = folders.mapNotNull { folder ->
+            val imported = roundTripText(song, settings, printLabelsOf(folder))
+            val lyrics = ChordProParser.parse(imported).blocks.filterIsInstance<ChordProBlock.Section>()
+                .flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
+            // The page count is left out, as in the details row's test: a wide margin's is the PDF text extraction's.
+            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }.filterNot { Regex("[0-9]+ / [0-9]+").matches(it) }
+            val isInPlace = Regex("\\{key: Db\\}\\n+\\{start_of_chorus").containsMatchIn(imported)
+            if (isInPlace && words == listOf("Hello world", "Sing along")) null else "${folder.name}: $imported"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",
@@ -300,7 +326,18 @@ class PdfRoundTripTest {
         shapesKey: String? = null,
         areChordsSounding: Boolean = false,
         spelling: UserPreferences.ChordSpelling = UserPreferences.ChordSpelling.Default,
-    ): ChordProSong {
+    ): ChordProSong = ChordProParser.parse(roundTripText(song, settings, labels, transposition, shapesKey, areChordsSounding, spelling))
+
+    /** [song] printed as the export prints it and read back as the import reads it, as the file it imports. */
+    private suspend fun roundTripText(
+        song: ChordProSong,
+        settings: PrintSettings,
+        labels: PrintLabels = this.labels,
+        transposition: Int = 0,
+        shapesKey: String? = null,
+        areChordsSounding: Boolean = false,
+        spelling: UserPreferences.ChordSpelling = UserPreferences.ChordSpelling.Default,
+    ): String {
         val printed = songRenderer.notatedSong(song, spelling)
         val title = song.metadata.title.orEmpty()
         val entry = PrintSong(
@@ -312,7 +349,7 @@ class PdfRoundTripTest {
             settings, labels, renderer::width, measureLyric = renderer::lyricLayout,
         )
         val extracted = PdfTextExtractor.extract(renderer.pdf(document, title))
-        return ChordProParser.parse(ChordSheetConverter.convert(extracted.toChordSheet()).single())
+        return ChordSheetConverter.convert(extracted.toChordSheet()).single()
     }
 
     /**

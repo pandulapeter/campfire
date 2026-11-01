@@ -477,6 +477,13 @@ public object ChordSheetConverter {
         }
     }
 
+    /**
+     * Whether [text] is a key alone on its row of Campfire's export ([line] one of it), which the export prints only as
+     * a key change, so that it is metadata anywhere in the song, not only among the heading's rows.
+     */
+    private fun isKeyChange(line: Rendered, text: String) =
+        line.isCampfire && labelledRow(text, isHeader = true)?.singleOrNull()?.first == ChordProVocabulary.KEY
+
     /** Whether a capo [value] is Campfire's PDF saying the chords under it are named as they sound (`2 (chords as they sound)`). */
     private fun isSoundingCapo(value: String) = parentheses.find(value)?.groupValues?.get(1)?.trim()?.lowercase() in soundingCapoMarkers
 
@@ -513,7 +520,7 @@ public object ChordSheetConverter {
         val isHeader = joined.size <= 15
         val indent = line.text.length - line.text.trimStart().length
         val text = previous?.let { "${it.text}${line.joint}${line.text.substring(indent)}" }
-        if (line.isContinuation && previous != null && text != null && labelledRow(text, isHeader) != null) {
+        if (line.isContinuation && previous != null && text != null && (labelledRow(text, isHeader) != null || isKeyChange(line, text))) {
             val space = if (line.isHardCut) DoubleArray(0) else doubleArrayOf(previous.positions.lastOrNull() ?: 0.0)
             val positions = previous.positions + space + line.positions.copyOfRange(indent, line.positions.size)
             joined[joined.lastIndex] = previous.copy(text = text, positions = positions, bidi = null)
@@ -614,19 +621,26 @@ public object ChordSheetConverter {
         val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
         // A credit printed both under the title and as a labelled line names the song once.
         val distinct = header.distinct()
-        return asCapoChart(collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output), soundingCapo)
+        val keyChanges = output.count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
+        return asCapoChart(collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output), soundingCapo, keyChanges)
     }
 
     /**
      * [song] as the capo chart it was printed from, where its chords are named as they sound over a [capo]: a Campfire
      * file's chords under a `{capo}` are the shapes played above it, so they and the key move down by the capo, while a
      * tab's frets, printed counted from the capo, stay. The move reads only the standard notation (a Latin name is no
-     * chord to it), so the text is brought into it first, as the import would bring it afterwards.
+     * chord to it), so the text is brought into it first, as the import would bring it afterwards. The song's last
+     * [keyChanges] `{key}` lines are the key changes written in its body, and each part from one on is moved apart, spelled
+     * by its own key moved down, which the move reads off the part's opening `{key}`: one move of the whole would spell
+     * a flat key's chorus by the sharp key the song starts in.
      */
-    private fun asCapoChart(song: String, capo: Int) = if (capo == 0) {
-        song
-    } else {
-        ChordProTransposer.transposeText(ChordProNotation.convertText(song, ChordNotation.STANDARD, ChordNotation.STANDARD), -capo, capo = -capo)
+    private fun asCapoChart(song: String, capo: Int, keyChanges: Int): String {
+        if (capo == 0) return song
+        val lines = ChordProNotation.convertText(song, ChordNotation.STANDARD, ChordNotation.STANDARD).split('\n')
+        val cuts = lines.indices.filter { lines[it].startsWith("{${ChordProVocabulary.KEY}: ") }.takeLast(keyChanges).filter { it > 0 }
+        return (listOf(0) + cuts + lines.size).zipWithNext { from, until ->
+            ChordProTransposer.transposeText(lines.subList(from, until).joinToString("\n"), -capo, capo = -capo)
+        }.joinToString("\n")
     }
 
     /**
@@ -712,7 +726,7 @@ public object ChordSheetConverter {
                 headings[index] || line.isMarginLabel -> Kind.SECTION
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     metadata(line.text)?.first == "copyright" ||
-                    labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
+                    labelledRow(line.text, isHeader = false) != null || isKeyChange(line, line.text) -> Kind.METADATA
                 // A row of notes alone is a candidate only as the chord row of a lyric's continuation, which it stands over.
                 // A row of chords the export marks as the rest of a line is one whatever follows, and so is the row its
                 // chords overflowed from; only an export's chords in their own type are candidates, so a wrapped lyric's
@@ -745,9 +759,12 @@ public object ChordSheetConverter {
         omitted: MutableSet<Int>,
     ): Pair<Map<Int, List<String>>, Int> {
         // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
-        // written there, as Campfire's own PDF prints one.
+        // written there, as Campfire's own PDF prints one. So is a later key of Campfire's export, which prints one only
+        // as a key change, unless it names the key already in force; another sheet's second key row stays in the
+        // header, more likely a repetition or a second notation than a change.
         val changes = mutableMapOf<Int, List<String>>()
         val declared = mutableSetOf<String>()
+        var keyInForce: String? = null
         var soundingCapo = 0
         var shapesKey: String? = null
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
@@ -755,6 +772,11 @@ public object ChordSheetConverter {
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
+                    name == ChordProVocabulary.KEY && lines[index].isCampfire && !declared.add(name) -> {
+                        val key = headerValue(ascii(value))
+                        if (key != keyInForce) changes[index] = changes[index].orEmpty() + "{$name: $key}"
+                        keyInForce = key
+                    }
                     name == CREDIT || name == "artist" -> {
                         // An artist's name may end in a number (`The 1975`), so only a comma sets a year off it.
                         val split = (if (name == CREDIT) creditYear else commaYear).matchEntire(value)
@@ -777,7 +799,10 @@ public object ChordSheetConverter {
                         soundingCapo = value.toIntOrNull() ?: 0
                     }
                     // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
-                    name == ChordProVocabulary.KEY -> header += "{$name: ${headerValue(ascii(value))}}"
+                    name == ChordProVocabulary.KEY -> {
+                        keyInForce = headerValue(ascii(value))
+                        header += "{$name: $keyInForce}"
+                    }
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
             }

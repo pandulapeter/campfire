@@ -629,6 +629,40 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a key Campfire's own export prints further down is written as the key change where it stands`() {
+        fun glyphs(text: String, size: Double, bold: Boolean = false, isContinuation: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character ->
+                span((if (index == 0 && isContinuation) "\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
+            },
+        )
+        fun sheet(vararg lines: ChordSheet.Line) = ChordSheetConverter.convert(
+            ChordSheet(listOf(ChordSheet.Page(listOf(glyphs("Song", 19.0, bold = true), glyphs("Someone", 12.0)) + lines)), isCampfireExport = true),
+        ).single()
+        fun sounding(change: String) = sheet(
+            glyphs("Key: A   Capo: 5 (chords as they sound)", 11.0), glyphs("Verse 1", 11.0, bold = true),
+            glyphs("A     E", 12.0, bold = true), glyphs("Hello world", 12.0), glyphs(change, 11.0), glyphs("Chorus", 11.0, bold = true),
+            glyphs("F\u266f        C\u266f", 12.0, bold = true), glyphs("After the change", 12.0),
+        )
+        val changed = sounding("Key: F\u266f")
+        val header = changed.substringBefore("{start_of_verse")
+        assertEquals(listOf("{key: E}"), Regex("\\{key: [^}]*\\}").findAll(header).map { it.value }.toList(), changed)
+        assertTrue(Regex("\\{key: Db\\}\\n+\\{start_of_chorus").containsMatchIn(changed), changed)
+        assertTrue("[Db]After the [Ab]change" in changed, changed)
+        val unchanged = sounding("Key: A")
+        assertEquals(1, Regex("\\{key:").findAll(unchanged).count(), unchanged)
+        val verse = (1..20).flatMap { listOf(glyphs("C", 12.0, bold = true), glyphs("Line $it", 12.0)) }.toTypedArray()
+        val chorus = arrayOf(glyphs("Chorus", 11.0, bold = true), glyphs("A\u266d", 12.0, bold = true), glyphs("Sing", 12.0))
+        for (change in listOf(arrayOf(glyphs("Key: A\u266d", 11.0)), arrayOf(glyphs("Key:", 11.0), glyphs("A\u266d", 11.0, isContinuation = true)))) {
+            val late = sheet(glyphs("Key: C", 11.0), glyphs("Verse 1", 11.0, bold = true), *verse, *change, *chorus)
+            assertTrue(Regex("\\{key: Ab\\}\\n+\\{start_of_chorus").containsMatchIn(late), late)
+            assertFalse("Key:" in late || "A\u266d" in late, late)
+        }
+        val plain = convert("Song\nSomeone\nKey: A\nKey: G\nVerse 1\nA     E\nHello world")
+        assertTrue("{key: A}" in plain.substringBefore("{start_of") && "{key: G}" in plain.substringBefore("{start_of"), plain)
+        assertFalse("{key" in plain.substringAfter("{start_of"), plain)
+    }
+
+    @Test
     fun `a word joiner in a pasted text is left out of the song`() {
         val result = convert("Song\nSomeone\nVerse 1\nHello\u2060\u2060 world")
         assertFalse('\u2060' in result, result)
