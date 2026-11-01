@@ -17,6 +17,24 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 internal data class PastedLines(val start: Int, val text: String)
 
 /**
+ * What one change of an edit really put into the field, and where: [inserted] starting at [start], over [replaced],
+ * with what the two begin and end with alike taken off. The web's text input reports a typed character as the whole
+ * text replaced by the whole text with the character in it, which would read as a paste of every line of the song; a
+ * paste or a keystroke elsewhere already arrives as only what it inserted, and is answered unchanged. The ends never
+ * stop between the two halves of a surrogate pair.
+ */
+internal fun narrowedInsertion(start: Int, replaced: CharSequence, inserted: CharSequence): Pair<Int, CharSequence> {
+    var prefix = 0
+    val shorter = minOf(replaced.length, inserted.length)
+    while (prefix < shorter && replaced[prefix] == inserted[prefix]) prefix++
+    if (prefix > 0 && inserted[prefix - 1].isHighSurrogate()) prefix--
+    var suffix = 0
+    while (suffix < shorter - prefix && replaced[replaced.length - 1 - suffix] == inserted[inserted.length - 1 - suffix]) suffix++
+    if (suffix > 0 && inserted[inserted.length - suffix].isLowSurrogate()) suffix--
+    return start + prefix to inserted.subSequence(prefix, inserted.length - suffix)
+}
+
+/**
  * The paste among the [insertions] of one edit (where each inserted text starts, and the text) worth formatting for:
  * the last one that brought two lines or more with something on them. A typed character, a typed line
  * break and a paste of one line are none; a paste over a selection is where the selection started.

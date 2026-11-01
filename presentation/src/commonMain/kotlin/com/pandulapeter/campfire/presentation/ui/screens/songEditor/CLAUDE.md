@@ -63,6 +63,8 @@ numbers nothing to count from.
   grid, or delegated notation (`ChordProLiteralLines`), then the whole song is prettified as
   the menu's Prettify does, caret kept by `prettifiedOffset` (`formattedAfterPaste`, tested). One undo step with the
   paste; never the editor's own `edit`s; nothing past `LONG_DOCUMENT_LENGTH`.
+- Each change is first narrowed to what differs (`narrowedInsertion`): the web reports a typed character as the whole
+  text replaced, which would otherwise read as a paste of the song, prettify it, and put the caret at its end.
 
 ## Overflow menu
 

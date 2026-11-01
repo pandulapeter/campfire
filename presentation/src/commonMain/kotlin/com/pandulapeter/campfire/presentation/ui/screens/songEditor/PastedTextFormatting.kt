@@ -28,7 +28,12 @@ internal object PastedTextFormatting : InputTransformation {
     override fun TextFieldBuffer.transformInput() {
         val insertions = (0 until changes.changeCount).map { index ->
             val range = changes.getRange(index)
-            range.start to asCharSequence().subSequence(range.start, range.end)
+            val originalRange = changes.getOriginalRange(index)
+            narrowedInsertion(
+                start = range.start,
+                replaced = originalText.subSequence(originalRange.start, originalRange.end),
+                inserted = asCharSequence().subSequence(range.start, range.end),
+            )
         }
         val paste = pastedLinesOf(insertions) ?: return
         val (formatted, caret) = formattedAfterPaste(text = asCharSequence().toString(), paste = paste) ?: return

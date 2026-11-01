@@ -25,6 +25,38 @@ class PastedLinesTest {
     }
 
     @Test
+    fun `a character typed as the whole text replaced is narrowed to that character`() {
+        val before = "{title: Song}\n{meta: language en}\n\n[C]Hello\n"
+        val after = "{title: Song}\n{meta: language en}\n{\n[C]Hello\n"
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = after)
+        assertEquals(before.indexOf("\n\n") + 1, start)
+        assertEquals("{", inserted.toString())
+        assertNull(pastedLinesOf(listOf(start to inserted)))
+    }
+
+    @Test
+    fun `a paste reported as the whole text replaced is narrowed to the paste`() {
+        val before = "{title: Song}\n"
+        val paste = "Am  C\nHello world\n"
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = before, inserted = before + paste)
+        assertEquals(PastedLines(start = before.length, text = paste), pastedLinesOf(listOf(start to inserted)))
+    }
+
+    @Test
+    fun `an insertion with nothing replaced is left as it is`() {
+        val (start, inserted) = narrowedInsertion(start = 7, replaced = "", inserted = "Am  C\nHello world")
+        assertEquals(7, start)
+        assertEquals("Am  C\nHello world", inserted.toString())
+    }
+
+    @Test
+    fun `a narrowed insertion never splits a surrogate pair`() {
+        val (start, inserted) = narrowedInsertion(start = 0, replaced = "a🎸b", inserted = "a🎹b")
+        assertEquals(1, start)
+        assertEquals("🎹", inserted.toString())
+    }
+
+    @Test
     fun `a paste of two lines or more is recorded where it starts`() {
         assertEquals(PastedLines(start = 7, text = "Am  C\nHello world"), pastedLinesOf(listOf(7 to "Am  C\nHello world")))
     }
