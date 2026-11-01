@@ -10,27 +10,28 @@
 package com.pandulapeter.campfire.presentation.ui.state.setlists
 
 import androidx.compose.ui.state.ToggleableState
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 /**
  * The setlist with [songFileName] ticked in or out, as one tick of the song picker asks: a song ticked in goes to the
- * end, unless the setlist already names it; ticked out, its entry goes, with its slot and its overrides. Everything
+ * end with the library's overrides ([newSetlistEntry]), unless the setlist already names it; ticked out, its entry goes, with its slot and its overrides. Everything
  * else is the setlist as it is now, whatever another device or a rescan did to it while the picker was open.
  */
-internal fun Setlist.withSongTicked(songFileName: String, isTicked: Boolean): Setlist = when {
-    isTicked && entries.none { it.songFileName == songFileName } -> copy(entries = entries + Setlist.Entry(songFileName = songFileName))
+internal fun Setlist.withSongTicked(songFileName: String, isTicked: Boolean, preferences: UserPreferences?): Setlist = when {
+    isTicked && entries.none { it.songFileName == songFileName } -> copy(entries = entries + newSetlistEntry(songFileName, preferences))
     isTicked -> this
     else -> copy(entries = entries.filterNot { it.songFileName == songFileName })
 }
 
 /**
- * The setlist with every one of [songFileNames] it does not name yet added to its end, in the order given, as one write
- * of the selection's Choose setlists sheet. The songs it names already keep their places and their overrides.
+ * The setlist with every one of [songFileNames] it does not name yet added to its end, in the order given and with the
+ * library's overrides ([newSetlistEntry]), as one write of the selection's Choose setlists sheet. The songs it names already keep their places and their overrides.
  */
-internal fun Setlist.withSongsAdded(songFileNames: List<String>): Setlist {
+internal fun Setlist.withSongsAdded(songFileNames: List<String>, preferences: UserPreferences?): Setlist {
     val named = entries.mapTo(hashSetOf()) { it.songFileName }
     val added = songFileNames.distinct().filterNot { it in named }
-    return if (added.isEmpty()) this else copy(entries = entries + added.map { Setlist.Entry(songFileName = it) })
+    return if (added.isEmpty()) this else copy(entries = entries + added.map { newSetlistEntry(it, preferences) })
 }
 
 /** The setlist without the entries of [songFileNames], which is how the selection's sheet takes back what it added. */

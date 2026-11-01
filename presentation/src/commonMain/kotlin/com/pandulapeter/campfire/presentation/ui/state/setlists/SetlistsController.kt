@@ -70,7 +70,7 @@ internal class SetlistsController(
     private val scope: CoroutineScope,
     savedStateStore: SavedStateStore,
     private val backStack: List<CampfireDestination>,
-    userPreferences: StateFlow<UserPreferences?>,
+    private val userPreferences: StateFlow<UserPreferences?>,
     private val setlists: StateFlow<List<Setlist>>,
     private val allSongs: StateFlow<List<Song>>,
     indexedSongs: StateFlow<LibraryState.IndexedSongs>,
@@ -196,7 +196,7 @@ internal class SetlistsController(
             withContext(NonCancellable) {
                 saveSetlist(
                     createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
-                        .copy(entries = songFileNames.distinct().map { Setlist.Entry(songFileName = it) }),
+                        .copy(entries = songFileNames.distinct().map { newSetlistEntry(it, userPreferences.value) }),
                 )
             }
         }
@@ -206,7 +206,7 @@ internal class SetlistsController(
      * setlists sheet, ticking a setlist for the songs. The ones it names already keep their places and their keys.
      */
     fun addSongsToSetlist(songFileNames: List<String>, setlistFileName: String) = messageSink.launchLibraryChange("add ${songFileNames.size} songs to a setlist") {
-        updateEditableSetlist(setlistFileName) { it.withSongsAdded(songFileNames) } ?: messageSink.sendMessage(Message.OperationFailed)
+        updateEditableSetlist(setlistFileName) { it.withSongsAdded(songFileNames, userPreferences.value) } ?: messageSink.sendMessage(Message.OperationFailed)
     }
 
     /** Takes back what the selection's sheet added to the setlist, and nothing else, see [addSongsToSetlist]. */
@@ -217,7 +217,7 @@ internal class SetlistsController(
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = messageSink.launchLibraryChange("add a song to a setlist") {
         updateEditableSetlist(setlistFileName) { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
-                setlist.copy(entries = setlist.entries + Setlist.Entry(songFileName = songFileName))
+                setlist.copy(entries = setlist.entries + newSetlistEntry(songFileName, userPreferences.value))
             } else {
                 setlist
             }
@@ -238,7 +238,7 @@ internal class SetlistsController(
      * recreates a setlist by changing it.
      */
     fun setSetlistSong(setlistFileName: String, songFileName: String, isTicked: Boolean) = messageSink.launchLibraryChange(if (isTicked) "tick a song in a setlist" else "untick a song in a setlist") {
-        updateEditableSetlist(setlistFileName) { it.withSongTicked(songFileName, isTicked) } ?: messageSink.sendMessage(Message.OperationFailed)
+        updateEditableSetlist(setlistFileName) { it.withSongTicked(songFileName, isTicked, userPreferences.value) } ?: messageSink.sendMessage(Message.OperationFailed)
     }
 
     /**
