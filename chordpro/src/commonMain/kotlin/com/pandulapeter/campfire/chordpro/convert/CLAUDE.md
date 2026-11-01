@@ -33,7 +33,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   space, and the importer's `clean` drops the word joiner from any text; and staff lines are told by the test
   the export engraves by. A row holding right-to-left text arrives as one span in reading order
   over its glyphs (`ChordSheet.Span.pieces`), and its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`): a
-  Hebrew letter's chord ends at its right edge, a Latin one's starts at its left, a space only where no letter fits; a
+  Hebrew letter's chord ends at its right edge, a Latin one's starts at its left, a space only where no letter fits, and
+  one left of the row's last letter, over the spaces and padding drawn past it, is after the line's end, chords sharing
+  a place written in the order a row set from the right reads them; a
   row of no right-to-left letter whose glyphs are drawn out of its order (`2 2 tonight` in a Hebrew song) is read the
   same way. A row of chords alone in a song set from the right (`ChordSheetCampfireLayout.isSetFromRight`, the song's
   side) is read from its right end, where the export starts it, and its word joiner opens that end's chord, which is not

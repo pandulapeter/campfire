@@ -24,13 +24,14 @@ internal class ChordSheetBidiAnchors private constructor(
     private val left: DoubleArray,
     private val right: DoubleArray,
     private val classes: IntArray,
-    private val rowStart: Double,
 ) {
     /**
      * The character a chord whose left edge is at [chordStart] and whose right edge is at [chordEnd] hangs from, [length]
-     * (the row's end) for a chord after its last one, which in a right-to-left row ends where the row starts on the left;
-     * null where no character is within [tolerance]. A chord's right edge is allowed a point more: the export sets a chord
-     * hanging leftwards by its width in whole points, so its glyphs end up to a point short of the edge it hangs from.
+     * (the row's end) for a chord right after its last one, which in a right-to-left row ends where the row's [length]
+     * characters start on the left, and `length + 1` for one further left, over the spaces and padding the export draws
+     * past the end, which is sung after the line and a space; null where no character is within [tolerance]. A chord's
+     * right edge is allowed a point more: the export sets a chord hanging leftwards by its width in whole points, so its
+     * glyphs end up to a point short of the edge it hangs from.
      * A space is taken only where no letter is: a chord hanging leftwards from a word's first letter often ends right
      * where a space after the word starts.
      */
@@ -55,7 +56,10 @@ internal class ChordSheetBidiAnchors private constructor(
             if (classes[index] != LEFT_TO_RIGHT) abs(right[index] - chordEnd).takeIf { it <= tolerance + ROUNDING }?.let { consider(index, it) }
             if (classes[index] != RIGHT_TO_LEFT) abs(chordStart - left[index]).takeIf { it <= tolerance }?.let { consider(index, it) }
         }
-        abs(rowStart - chordEnd).takeIf { it <= tolerance + ROUNDING }?.let { consider(length, it) }
+        val rowStart = (0 until minOf(length, classes.size)).filterNot { left[it].isNaN() }.minOfOrNull { left[it] }
+        if (rowStart != null && best == null && bestSpace == null && chordEnd <= rowStart + tolerance + ROUNDING) {
+            return if (rowStart - chordEnd <= tolerance + ROUNDING) length else length + 1
+        }
         return best ?: bestSpace
     }
 
@@ -64,7 +68,7 @@ internal class ChordSheetBidiAnchors private constructor(
         private val left = mutableListOf<Double>()
         private val right = mutableListOf<Double>()
         private val classes = mutableListOf<Int>()
-        private var rowStart = Double.MAX_VALUE
+        private var isReordered = false
         private var isLost = false
 
         /** A space the converter puts between two spans, which no chord hangs from. */
@@ -94,7 +98,7 @@ internal class ChordSheetBidiAnchors private constructor(
                 // A row of no right-to-left letter is drawn out of its order too where a right-to-left paragraph lays it
                 // out (`2 2 tonight` in a Hebrew song, its number at the right).
                 val isOutOfOrder = span.pieces.zipWithNext().any { (before, after) -> after.start < before.start - OUT_OF_ORDER }
-                if (isOutOfOrder || span.text.any { isStrongRtl(it.code) }) rowStart = minOf(rowStart, span.start)
+                if (isOutOfOrder || span.text.any { isStrongRtl(it.code) }) isReordered = true
             }
             if (count != rendered.length) isLost = true
         }
@@ -103,8 +107,8 @@ internal class ChordSheetBidiAnchors private constructor(
          * The row's anchors, or null for a row with no right-to-left text or glyphs out of order written in its order,
          * read by its positions.
          */
-        fun build() = if (rowStart != Double.MAX_VALUE && !isLost) {
-            ChordSheetBidiAnchors(left.toDoubleArray(), right.toDoubleArray(), classes.toIntArray(), rowStart)
+        fun build() = if (isReordered && !isLost) {
+            ChordSheetBidiAnchors(left.toDoubleArray(), right.toDoubleArray(), classes.toIntArray())
         } else {
             null
         }

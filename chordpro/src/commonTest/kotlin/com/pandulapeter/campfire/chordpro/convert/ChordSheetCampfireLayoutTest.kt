@@ -311,6 +311,21 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `chords after a right-to-left lyric's end hang after it in their order, over the padding drawn past it`() {
+        val letters = "\u05e9\u05dc\u05d5\u05dd"
+        val padding = "\u00a0".repeat(6)
+        // The lyric's glyphs from the right, then the padding further left that the chords past its end hang over.
+        val pieces = (letters + padding).mapIndexed { index, character ->
+            ChordSheet.Span(character.toString(), RIGHT - (index + 1) * GLYPH, RIGHT - index * GLYPH, BODY)
+        }
+        val song = convert(
+            ChordSheet.Line(text("G", x = RIGHT - 9 * GLYPH, bold = true).spans + text("C", x = RIGHT - 6 * GLYPH, bold = true).spans),
+            ChordSheet.Line(listOf(ChordSheet.Span(letters + padding, RIGHT - 10 * GLYPH, RIGHT, BODY, pieces = pieces))),
+        )
+        assertTrue("\n$letters [C] [G]\n" in song, song)
+    }
+
+    @Test
     fun `a song of choruses is read from its left, its details row no box`() {
         val chorus = MARGIN + 8.0
         val song = convert(

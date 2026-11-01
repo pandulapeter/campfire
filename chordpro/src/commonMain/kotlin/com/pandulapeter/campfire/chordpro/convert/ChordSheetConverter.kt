@@ -1169,7 +1169,10 @@ public object ChordSheetConverter {
         val bidiTolerance = if (lyrics.isCampfire) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
         var isAttachedAtEnd = false
         // Bar lines and repeat counts mean nothing over a lyric, but "no chord" says where the playing stops.
-        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { it.index }) {
+        // Chords set on one character, the line's end above all, are written in the order they are read, which in a row
+        // set from the right runs from its right end.
+        val readsFromRight = chords.isSetFromRight && lyrics.bidi != null
+        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { if (readsFromRight) -it.index else it.index }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
@@ -1177,8 +1180,8 @@ public object ChordSheetConverter {
             // order they are read off the chord row, which is left to right.
             val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
             if (bidi != null) {
-                at = bidi
-                if (at == lyrics.text.length) isAttachedAtEnd = true
+                at = bidi.coerceAtMost(lyrics.text.length)
+                if (bidi == lyrics.text.length) isAttachedAtEnd = true
             } else if (exact != null) at = exact
             else if (lyrics.isCampfire && lyricsEnd != null && abs(lyricsEnd - x) <= EXACT_POSITION) {
                 at = lyrics.text.length
