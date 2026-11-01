@@ -711,7 +711,12 @@ public object ChordSheetConverter {
                     metadata(line.text)?.first == "copyright" ||
                     labelledRow(line.text, isHeader = false) != null -> Kind.METADATA
                 // A row of notes alone is a candidate only as the chord row of a lyric's continuation, which it stands over.
+                // A row of chords the export marks as the rest of a line is one whatever follows, and so is the row its
+                // chords overflowed from; only an export's chords in their own type are candidates, so a wrapped lyric's
+                // marked rest that reads as chord names (`a b`) is never taken for one.
                 candidate != null && (candidate.isEmpty() && lines.getOrNull(index + 1)?.isContinuation == true ||
+                    candidate.isNotEmpty() && line.isContinuation ||
+                    candidate.isNotEmpty() && lines.getOrNull(index + 1)?.let { it.isContinuation && candidates.getOrNull(index + 1) != null } == true ||
                     candidate.count { rowChord(it.text) } > 1 ||
                     candidate.count { rowChord(it.text) } == 1 &&
                     candidate.filter { rowChord(it.text) }.all { it.text.first().isUpperCase() } &&
@@ -943,7 +948,12 @@ public object ChordSheetConverter {
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
-                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
+                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && lines[index + 1].isContinuation
+                    // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
+                    // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
+                    if (line.isContinuation && !isUnderMarkedLyric) {
+                        addLyric(bracketed(candidates[index]!!, chordRow(line)), continues = true, isHardCut = false)
+                    } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
                         index++
                     } else output += bracketed(candidates[index]!!, chordRow(line))

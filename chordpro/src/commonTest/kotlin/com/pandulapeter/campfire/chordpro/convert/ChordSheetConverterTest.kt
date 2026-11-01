@@ -608,6 +608,27 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `the chord rows of Campfire's own export a line's chords overflow onto are joined back to it`() {
+        fun glyphs(text: String, size: Double, bold: Boolean = false, isContinuation: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character ->
+                span((if (index == 0 && isContinuation) "\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
+            },
+        )
+        fun sheet(vararg lines: ChordSheet.Line) = ChordSheetConverter.convert(
+            ChordSheet(listOf(ChordSheet.Page(listOf(glyphs("A song", 19.0, bold = true), glyphs("Verse", 11.0, bold = true)) + lines)), isCampfireExport = true),
+        ).single()
+        val stacked = sheet(
+            glyphs("Cmaj7(\u266f11)", 12.0, bold = true),
+            glyphs("Bbmaj9/D Gm7\u266d5", 12.0, bold = true, isContinuation = true),
+            glyphs("Am7add11", 12.0, bold = true, isContinuation = true),
+            glyphs("Hello world", 12.0),
+        )
+        assertTrue("\n[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world\n" in stacked, stacked)
+        val wrapped = sheet(glyphs("C", 12.0, bold = true), glyphs("Hello world", 12.0), glyphs("a b", 12.0, isContinuation = true))
+        assertTrue("\n[C]Hello world a b\n" in wrapped, wrapped)
+    }
+
+    @Test
     fun `a word joiner in a pasted text is left out of the song`() {
         val result = convert("Song\nSomeone\nVerse 1\nHello\u2060\u2060 world")
         assertFalse('\u2060' in result, result)

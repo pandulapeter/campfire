@@ -100,6 +100,24 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `chords a narrow column overflows onto rows of their own come back on their line in every column count`() = runBlocking {
+        // Where the chord-only line fits a row of its own (one or two columns), it is a chord row over an unmarked lyric,
+        // which the import merges into that lyric: nothing tells the two apart, so only the overflowing prints are compared.
+        val songs = listOf(
+            "I [Cmaj7(#11)] [Bbmaj9/D] [Gm7b5]" to 1..PrintSettings.MAX_COLUMNS,
+            "[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world" to 3..PrintSettings.MAX_COLUMNS,
+        ).map { (text, columns) -> ChordProParser.parse("{title: Song}\n{start_of_verse}\n$text\n{end_of_verse}\n") to columns }
+        val failures = songs.flatMap { (song, columnCounts) ->
+            columnCounts.mapNotNull { columns ->
+                val expected = summary(song)
+                val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
+                if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+            }
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",

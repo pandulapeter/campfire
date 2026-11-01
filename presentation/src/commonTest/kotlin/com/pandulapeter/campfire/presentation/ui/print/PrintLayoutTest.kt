@@ -218,6 +218,29 @@ internal class PrintLayoutTest {
         assertTrue(wrapped.drop(1).all { it.isContinuation && !it.isHardCut }, wrapped.toString())
     }
 
+    @Test fun `a row of chords alone marks each chord line its chords overflow onto, and a lyric's chord lines stay unmarked`() = runTest {
+        val names = listOf("Cmaj7(#11)", "Bbmaj9/D", "Gm7b5", "Am7add11")
+        val settings = PrintSettings(columns = 4)
+        suspend fun chordLines(line: ChordProLine.Lyrics) = layout(source(song(listOf(line))), settings).pages.single().texts
+            .filter { it.text in names }.groupBy { it.y }.values.toList()
+        val chordsOnly = chordLines(ChordProLine.Lyrics("", names.map { ChordProLine.Lyrics.Chord(0, it, false) }))
+        assertTrue(chordsOnly.size > 1, chordsOnly.toString())
+        chordsOnly.forEachIndexed { index, parts ->
+            assertEquals(listOf(index > 0) + List(parts.size - 1) { false }, parts.map { it.isContinuation }, chordsOnly.toString())
+        }
+        // A chord name wider than the column is wrapped onto chord lines of its own, over the lyric it hangs from.
+        val longName = "Cmaj7(#11)(b13)/G#"
+        val underLyric = layout(source(song(listOf(ChordProLine.Lyrics("Hello world", listOf(ChordProLine.Lyrics.Chord(0, longName, false)))))), settings)
+            .pages.single().texts.filter { it.text.isNotBlank() && it.text in longName }
+        assertTrue(underLyric.size > 1 && underLyric.none { it.isContinuation }, underLyric.toString())
+        val ending = ChordProParser.parse("{start_of_verse}\nI [Cmaj7(#11)] [Bbmaj9/D] [Gm7b5]\n{end_of_verse}\n").blocks
+            .filterIsInstance<ChordProBlock.Section>().single().lines.filterIsInstance<ChordProLine.Lyrics>().single()
+        val trailing = layout(source(song(listOf(ending))), PrintSettings(columns = 3)).pages.single().texts
+        val lyricY = trailing.single { it.text.startsWith("I") }.y
+        val after = trailing.filter { it.text in names && it.y > lyricY }
+        assertTrue(after.isNotEmpty() && after.first().isContinuation, trailing.toString())
+    }
+
     @Test fun `a key change is printed where it stands and only with the chords`() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),

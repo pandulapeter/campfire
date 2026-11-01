@@ -120,6 +120,13 @@ internal class PrintLyricRows(
                 // inside a word is marked as such too, so that the import joins it back with no space.
                 val isContinuation = fragmentIndex > 0 && !fragment.isPrintBlank()
                 val isHardCut = isContinuation && !isCutAtSpace(fragments[fragmentIndex - 1], fragment)
+                // A fragment of chords over nothing but padding is one row of chords, not chords over an empty lyric row;
+                // a blank fragment without chords is an empty line the song asked for.
+                val isChordsOnly = chords.isNotEmpty() && fragment.isPrintBlank()
+                // In a row of chords alone, each chord line the chords overflow onto is marked as the rest of the line,
+                // and so is such a row a wrapped lyric ends in. Under a lyric they stay unmarked: the import sets the last
+                // chord line onto the lyric by its chords' places, which a mark would take it off.
+                var marksNextPart = isContinuation || isChordsOnly && fragmentIndex > 0
                 val parts = mutableListOf<Part>()
                 var previousChordEdge = if (isRightToLeft) lineWidth else 0f
                 var chordY = 0f
@@ -142,24 +149,24 @@ internal class PrintLyricRows(
                     var x = printChordLeft(lyricX + anchor.x, chordWidth, lineWidth, previousChordEdge, anchor.isRightToLeft, isRightToLeft)
                         ?: run {
                             chordY += chordLineHeight
+                            if (isChordsOnly) marksNextPart = true
                             if (isRightToLeft) lineWidth - chordWidth else 0f
                         }
                     val names = wrapPrintText(chord.name, lineWidth) { measure(it, style) }
                     names.forEachIndexed { nameIndex, name ->
                         if (nameIndex > 0) {
                             chordY += chordLineHeight
+                            if (isChordsOnly) marksNextPart = true
                             x = if (isRightToLeft) lineWidth - measure(name, style) else 0f
                         } else if (isRightToLeft && names.size > 1) {
                             x = lineWidth - measure(name, style)
                         }
-                        parts += Part(name, x = x, y = chordY, style = style, isContinuation = isContinuation && parts.isEmpty())
+                        parts += Part(name, x = x, y = chordY, style = style, isContinuation = marksNextPart)
+                        marksNextPart = false
                     }
                     val lastWidth = if (names.size == 1) chordWidth else measure(names.last(), style)
                     previousChordEdge = if (isRightToLeft) x - measure(" ", lyricStyle) else x + lastWidth + measure(" ", lyricStyle)
                 }
-                // A fragment of chords over nothing but padding is one row of chords, not chords over an empty lyric row;
-                // a blank fragment without chords is an empty line the song asked for.
-                val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
                 val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
                 if (!isChordsOnly) parts += Part(fragment, x = lyricX, y = lyricY, style = lyricStyle, formatting = formatting, isContinuation = isContinuation, isHardCut = isHardCut)
                 val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f

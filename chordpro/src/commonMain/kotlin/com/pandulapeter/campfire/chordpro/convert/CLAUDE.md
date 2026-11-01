@@ -24,7 +24,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   `ChordSheet.Line.baseline`), the padding under wide chords is left out, a chord is set on the character it stands
   over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
   a word joiner (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the lyric above, wrapped by a narrow column,
-  and joined back to it (its chord row too is marked, and may hold notes alone); two word joiners open a row that
+  and joined back to it (its chord row too is marked, and may hold notes alone; a marked chord row with no marked
+  lyric under it is the rest of the line above); two word joiners open a row that
   continues a word the column cut (a lyric's, a title's, a comment's, or a labelled value's), joined back with no
   space, and the importer's `clean` drops the word joiner from any text; and staff lines are told by the test
   the export engraves by. A row holding right-to-left text arrives as one span in reading order
