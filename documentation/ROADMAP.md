@@ -14,6 +14,7 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Add an option to pin chord diagrams
+- Consider adding an option to the chordpro export to include the overrides.
 - Settings → About should contain a more straightforward link to the website
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
