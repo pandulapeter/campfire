@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.2.1: intavolature disegnate come spartito, numeri Nashville e romani per canzoni senza tonalità, Campfire in ebraico e import migliore dei suoi PDF.
+Novità della 5.2.2: accordi con capotasto per diteggiatura o per suono, cinque canzoni a caso, diagrammi in ogni tonalità per più strumenti e import PDF migliore.
 ```
 
 ## Description (4,000 characters max)

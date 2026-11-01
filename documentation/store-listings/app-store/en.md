@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.2.1: tabs drawn like sheet music, Nashville and Roman numbers for songs with no written key, Campfire in Hebrew, and better imports of its own PDFs.
+New in 5.2.2: chords named by shape or by sound with a capo, five random picks from your library, chord diagrams in every key on more instruments, and better PDF imports.
 ```
 
 ## Description (4,000 characters max)
@@ -128,11 +128,12 @@ https://campfire-songbook.com/
 ```
 Campfire has no account and nothing to sign in to. Two public-domain demo songs and a setlist are loaded on first launch, so every feature can be reviewed without adding content. The first launch also opens a short onboarding, which can be skipped.
 
-New in 5.2.1, and where to find it:
-- Tabs: the demo song House of the Rising Sun has picking patterns as tabs, now drawn with ruled strings and bold fret numbers, on screen and in the PDF ("Share or export" in a song's three-dot menu).
-- Chord notation: with Settings → Preferences → Chords → Chord notation set to Nashville numbers or Roman numerals (also under Preferences in a song's three-dot menu), a song whose file names no key is numbered from the key its chords suggest; removing the {key} line of a demo song in the editor shows it.
-- Hebrew: picked in Settings → General → Language or followed from the system, laid out right to left. Songs written right to left, in any language of the app, are shown, edited, and printed from the right.
-- PDF import: a PDF exported by Campfire and imported through Import files in the New button's menu on the Songs screen keeps more of its sections, tab and grid labels, comments, and chord positions.
+New in 5.2.2, and where to find it:
+- Capo: a capo now keeps the chord shapes and raises the pitch. The first time a song with a capo is opened (the demo song Home on the Range has capo 2), Campfire asks once whether to name its chords by the shapes played or by how they sound, or to keep the key; the same choices are under Settings → Preferences → Chords → Chord names and Capo keeps the key (also under Preferences in a song's three-dot menu).
+- Random picks: with more than 20 songs, the Songs screen starts with five random songs, drawn again every hour or with Draw new picks; Settings → Features → Random picks turns them off. The demo library has two songs, so importing more shows them.
+- Chord diagrams: with the ukulele, mandolin, or banjo picked as the instrument (the instrument button on the Chords tab or on a song's page), every common chord in every key has a diagram.
+- PDF import: songbooks imported through Import files in the New button's menu on the Songs screen are split into their songs more often, and choruses set in bold, italic, or indented lines are kept as choruses.
+- Export: with a transposition, capo, or tempo set by tapping its controls on a song, Share or export in its three-dot menu, with Share as set to ChordPro, offers As played here, which writes them into the exported file.
 
 The microphone is used only by the Tuner tab (and the tuner sheet opened from a song), and is asked for only when the user taps the button on that page. It is listened to only while that page is on screen; nothing it hears is recorded, kept, or sent anywhere.
 

@@ -33,7 +33,7 @@ Letras, acordes y repertorios
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.2.1: tablaturas dibujadas como partitura, números de Nashville y romanos para canciones sin tonalidad, Campfire en hebreo y mejor importación de sus PDF.
+Novedad en 5.2.2: acordes con capo por forma o por sonido, cinco canciones al azar, diagramas en todas las tonalidades para más instrumentos y mejor importación de PDF.
 ```
 
 ## Description (4,000 characters max)

@@ -32,7 +32,7 @@ Chansonnier et setlists
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.2.1 : des tablatures dessinées en partition, les chiffres de Nashville et romains pour les chansons sans tonalité, Campfire en hébreu et l'import de ses PDF.
+Nouveau en 5.2.2 : accords avec capo nommés par doigté ou son réel, cinq chansons au hasard, diagrammes dans chaque tonalité pour plus d'instruments, meilleur import PDF.
 ```
 
 ## Description (4,000 characters max)

@@ -20,7 +20,7 @@ Paste into the App Store Connect locale: ro (the Mac version's own fields; the n
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.2.1: tabulaturi desenate ca o partitură, numere Nashville și cifre romane pentru cântece fără tonalitate, Campfire în ebraică și importul mai bun al PDF-urilor.
+Nou în 5.2.2: acorduri cu capodastru după poziție sau sunet, cinci cântece la întâmplare, diagrame în orice tonalitate pentru mai multe instrumente, import PDF mai bun.
 ```
 
 ## Description (4,000 characters max)

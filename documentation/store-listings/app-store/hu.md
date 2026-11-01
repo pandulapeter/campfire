@@ -32,7 +32,7 @@ Akkordok, dalszövegek, listák
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.2.1-es verzióban: kottaként rajzolt tabulatúrák, Nashville- és római számok hangnem nélküli dalokhoz, héber nyelv és jobb import a saját PDF-ekből.
+Újdonságok az 5.2.2-es verzióban: akkordnevek capóval fogás vagy hangzás szerint, öt véletlen dal, akkordábrák minden hangnemben több hangszerre és jobb PDF-import.
 ```
 
 ## Description (4,000 characters max)

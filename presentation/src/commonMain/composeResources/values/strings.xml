@@ -1193,7 +1193,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">What's new in Campfire %1$s</string>
-    <string name="whats_new_message">• **Improved tab appearance** Tabs are drawn like sheet music, with ruled strings and bold fret numbers, on screen and in the PDF.\n• **Numbered chords without a written key** Nashville numbers and Roman numerals now count a song that names no key from the key its chords suggest, instead of leaving it in letters.\n• **Campfire in Hebrew** The app now speaks Hebrew, laid out right to left, and right-to-left songs are shown, edited, printed, and imported from the right.\n• **PDF import improvements** A PDF printed by Campfire now comes back with more of its sections, tab and grid labels, comments, and chord positions kept.</string>
+    <string name="whats_new_message">• **Chord names with a capo** A capo now keeps the shapes and raises the pitch, and you pick whether chords are named by shape or by sound.\n• **Random picks** Libraries of over 20 songs start with five random songs, new every hour or when you ask.\n• **More chord diagrams** Every common chord in every key, on ukulele, mandolin, banjo, and alternate guitar tunings.\n• **PDF import improvements** Songbooks split into their songs more often, and choruses are found by their bold, italic, or indented lines.\n• **Export songs as you play them** Exported ChordPro files keep your transposition, capo, and tempo, as does adding a song to a setlist.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Skip</string>
