@@ -158,7 +158,8 @@ public object ChordSheetConverter {
 
     /**
      * [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under;
-     * [isContinuation] a lyric row of Campfire's export that continues the line above ([ChordSheetCampfireLayout.CONTINUATION]).
+     * [isContinuation] a lyric row of Campfire's export that continues the line above ([ChordSheetCampfireLayout.CONTINUATION]),
+     * and [isHardCut] one that continues a word of it, opening with two marks, which is joined back with no space.
      */
     private data class Rendered(
         val text: String,
@@ -173,7 +174,11 @@ public object ChordSheetConverter {
         /** Where the chords over a row holding right-to-left text in reading order hang from. */
         val bidi: ChordSheetBidiAnchors? = null,
         val isContinuation: Boolean = false,
-    )
+        val isHardCut: Boolean = false,
+    ) {
+        /** What goes between the row this one continues and its text. */
+        val joint get() = if (isHardCut) "" else " "
+    }
     private data class Token(val text: String, val index: Int)
     private enum class Kind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHORD, LYRIC }
 
@@ -190,7 +195,7 @@ public object ChordSheetConverter {
 
     private fun clean(text: String): String = buildString {
         for (c in text) when (c) {
-            '\u00ad', '\u200b', '\u200c', '\u200d', '\ufeff', '\u007f', in '\u202a'..'\u202e', in '\u2066'..'\u2069' -> Unit
+            '\u00ad', '\u200b', '\u200c', '\u200d', '\u2060', '\ufeff', '\u007f', in '\u202a'..'\u202e', in '\u2066'..'\u2069' -> Unit
             '\ufb00' -> append("ff")
             '\ufb01' -> append("fi")
             '\ufb02' -> append("fl")
@@ -204,7 +209,8 @@ public object ChordSheetConverter {
     /**
      * The text of [line], spaced by where its words stand. Where it [dropsPadding] (Campfire's own export), the no-break
      * spaces padding a lyric under a wide chord are left out, and leave no gap that would read as a space: the export
-     * writes every space of the words as one. Its continuation mark is left out too, and kept as [Rendered.isContinuation].
+     * writes every space of the words as one. Its continuation marks are left out too, and kept as [Rendered.isContinuation]
+     * and [Rendered.isHardCut].
      */
     private fun render(line: ChordSheet.Line, normalize: (String) -> String, dropsPadding: Boolean = false): Rendered {
         val text = StringBuilder()
@@ -238,8 +244,10 @@ public object ChordSheetConverter {
             previous = span
         }
         val result = text.toString().trimEnd()
-        val isContinuation = dropsPadding && line.spans.firstOrNull { it.text.isNotEmpty() }?.text?.first() == ChordSheetCampfireLayout.CONTINUATION
-        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), isContinuation = isContinuation)
+        val opening = if (dropsPadding) line.spans.firstOrNull { it.text.isNotEmpty() }?.text.orEmpty() else ""
+        val isContinuation = opening.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION
+        val isHardCut = opening.startsWith("${ChordSheetCampfireLayout.CONTINUATION}${ChordSheetCampfireLayout.CONTINUATION}")
+        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), isContinuation = isContinuation, isHardCut = isHardCut)
     }
 
     private fun isExportFiller(character: Char) = character == ChordSheetCampfireLayout.PADDING || character == ChordSheetCampfireLayout.CONTINUATION
@@ -466,16 +474,17 @@ public object ChordSheetConverter {
      * [lines] with each row of labelled values that Campfire's export wrapped in a narrow column joined back into one: a
      * value wider than the column (`Capo: 2 (chords as they sound)`) goes on in the rows under it, each marked as a
      * wrapped lyric's rest is ([Rendered.isContinuation]), and read apart its first row would name a bare value and the
-     * rest a lyric.
+     * rest a lyric. A row continuing a word the column cut inside ([Rendered.isHardCut]) joins with no space.
      */
     private fun joinWrappedDetails(lines: List<Rendered>): List<Rendered> = lines.fold(mutableListOf()) { joined, line ->
         val previous = joined.lastOrNull()
         // The header is the song's first 15 rows, as classify counts them.
         val isHeader = joined.size <= 15
         val indent = line.text.length - line.text.trimStart().length
-        val text = previous?.let { "${it.text} ${line.text.substring(indent)}" }
+        val text = previous?.let { "${it.text}${line.joint}${line.text.substring(indent)}" }
         if (line.isContinuation && previous != null && text != null && labelledRow(text, isHeader) != null) {
-            val positions = previous.positions + (previous.positions.lastOrNull() ?: 0.0) + line.positions.copyOfRange(indent, line.positions.size)
+            val space = if (line.isHardCut) DoubleArray(0) else doubleArrayOf(previous.positions.lastOrNull() ?: 0.0)
+            val positions = previous.positions + space + line.positions.copyOfRange(indent, line.positions.size)
             joined[joined.lastIndex] = previous.copy(text = text, positions = positions, bidi = null)
         } else {
             joined += line
@@ -763,7 +772,7 @@ public object ChordSheetConverter {
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
         var last = first
         while (kinds.getOrNull(last + 1) == Kind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
-        val title = (first..last).joinToString(" ") { lines[it].text.trim() }
+        val title = joinRows(lines, first, last)
         val (name, named) = ChordSheetTitles.split(title)
         addTitle(header, name, named)
         omitted += first..last
@@ -883,7 +892,7 @@ public object ChordSheetConverter {
                         if (output.lastOrNull()?.isNotBlank() == true) output += ""
                     }
                     val directive = if (line.role == ChordSheetCampfireLayout.Role.BOX_COMMENT) "comment_box" else "comment"
-                    output += "{$directive: ${headerValue((index..end).joinToString(" ") { lines[it].text.trim() })}}"
+                    output += "{$directive: ${headerValue(joinRows(lines, index, end))}}"
                     index = end
                 }
                 Kind.GRID -> { if (!inGrid) { output += "{start_of_grid}"; inGrid = true }; output += line.text.trimEnd() }
@@ -905,11 +914,11 @@ public object ChordSheetConverter {
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
                     if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
-                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation)
+                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
                         index++
                     } else output += bracketed(candidates[index]!!, chordRow(line))
                 }
-                Kind.LYRIC -> addLyric(inline(line, convertParentheses), line.isContinuation)
+                Kind.LYRIC -> addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
                 Kind.BLANK -> output += ""
                 Kind.METADATA -> Unit
             }
@@ -926,10 +935,14 @@ public object ChordSheetConverter {
     private class BodyWriter {
         val output = mutableListOf<String>()
 
-        /** A lyric line, or where it [continues] the one before (a row the export wrapped), the rest of that line. */
-        fun addLyric(line: String, continues: Boolean) {
+        /**
+         * A lyric line, or where it [continues] the one before (a row the export wrapped), the rest of that line, with no
+         * space between where the row [isHardCut] inside a word.
+         */
+        fun addLyric(line: String, continues: Boolean, isHardCut: Boolean) {
             val previous = output.lastOrNull()
-            if (continues && previous != null && previous.isNotBlank() && !previous.startsWith('{')) output[output.lastIndex] = "$previous ${line.trimStart()}"
+            val joint = if (isHardCut) "" else " "
+            if (continues && previous != null && previous.isNotBlank() && !previous.startsWith('{')) output[output.lastIndex] = "$previous$joint${line.trimStart()}"
             else output += line
         }
         var environment: String? = null
@@ -1137,6 +1150,10 @@ public object ChordSheetConverter {
         }
         return low
     }
+
+    /** The text of [lines] from [first] to [last], one value the export wrapped: a row continuing a word joins with no space. */
+    private fun joinRows(lines: List<Rendered>, first: Int, last: Int) =
+        ((first + 1)..last).fold(lines[first].text.trim()) { text, index -> text + lines[index].joint + lines[index].text.trim() }
 
     private fun headerValue(value: String) = value.replace('{', '(').replace('}', ')').replace('\n', ' ').trim()
     private fun collapse(lines: List<String>): String {

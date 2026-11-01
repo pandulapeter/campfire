@@ -137,8 +137,9 @@ internal object ChordSheetCampfireLayout {
     const val PADDING = '\u00A0'
 
     /**
-     * The word joiner that opens the text of a lyric row the export wrapped onto a row of its own at a space, which joins
-     * it back to the line it continues: printed, the two rows look like two lines.
+     * The word joiner that opens the text of a row the export wrapped onto a row of its own, which joins it back to the
+     * line it continues: printed, the two rows look like two lines. Two of them open a row that continues a word the
+     * column cut, which joins back with no space.
      */
     const val CONTINUATION = '\u2060'
 

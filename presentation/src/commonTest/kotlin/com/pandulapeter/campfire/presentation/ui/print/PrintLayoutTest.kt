@@ -197,6 +197,27 @@ internal class PrintLayoutTest {
         assertEquals(listOf(false, true), texts.filter { it.text == "Am" || it.text == "G" }.map { it.isContinuation })
     }
 
+    @Test fun `a row cut inside a word is marked as a hard cut, in a lyric, a title, and the playing row`() = runTest {
+        val spaced = (1..12).joinToString(" ") { "word$it" }
+        val lines = listOf(ChordProLine.Lyrics("and " + "qz".repeat(40), emptyList()), ChordProLine.Lyrics(spaced, emptyList()))
+        val entry = PrintSong("song.cho", "jx".repeat(40), "Artist", transposition = 2, song = ChordProSong(
+            ChordProMetadata(key = "D"), listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lines))))
+        val texts = layoutPrintDocument(source(entry), PrintSettings(columns = 4), labels.copy(transposition = "vk".repeat(30)), ::measure)
+            .pages.single().texts
+        val lyric = texts.filter { 'q' in it.text || 'z' in it.text }
+        val title = texts.filter { 'j' in it.text || 'x' in it.text }
+        val details = texts.filter { 'v' in it.text || 'k' in it.text || "+2" in it.text }
+        val wrapped = texts.filter { "word" in it.text }
+
+        assertTrue(lyric.size > 2 && title.size > 1 && details.size > 1 && wrapped.size > 1, texts.map { it.text }.toString())
+        assertEquals(listOf(false) + List(lyric.size - 1) { true }, lyric.map { it.isHardCut })
+        assertEquals(listOf(false) + List(lyric.size - 1) { true }, lyric.map { it.isContinuation })
+        assertEquals(listOf(false) + List(title.size - 1) { true }, title.map { it.isHardCut })
+        assertTrue(title.drop(1).all { it.isContinuation })
+        assertTrue(details[1].isHardCut && details.drop(1).all { it.isContinuation }, details.toString())
+        assertTrue(wrapped.drop(1).all { it.isContinuation && !it.isHardCut }, wrapped.toString())
+    }
+
     @Test fun `a key change is printed where it stands and only with the chords`() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(1)),
@@ -668,6 +689,13 @@ internal class PrintLayoutTest {
         val texts = document.pages.flatMap { it.texts }
         assertEquals(texts.first { it.text == "a" }.y + 12 * 1.45f, texts.first { it.text == "b" }.y, 0.01f)
         assertFalse(texts.any { '\n' in it.text || '\r' in it.text })
+    }
+
+    @Test fun `a cut is told at a space past the chord layout's marks at either end`() {
+        assertTrue(isCutAtSpace("and\u200E\u00A0\u2060\u00A0\u200E\u200B", "\u05D9\u05DC\u05D3\u05D4"))
+        assertTrue(isCutAtSpace("word\u200B", "\u2060\u00A0\u00A0more"))
+        assertTrue(isCutAtSpace("word ", "more"))
+        assertFalse(isCutAtSpace("and i", "ncomp"))
     }
 
     @Test fun `wrapping breaks at the last space when the word after it fits a line`() {

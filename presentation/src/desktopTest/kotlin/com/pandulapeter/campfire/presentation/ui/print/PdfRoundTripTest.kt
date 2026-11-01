@@ -149,6 +149,35 @@ class PdfRoundTripTest {
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }
 
+    @Test
+    fun `a title and a lyric cut inside a word by a narrow column come back whole`() = runBlocking {
+        val lyric = "[F]Another rather lengthy line, with [C]commas, and words like extraordinarily [G]and incomprehensibilities, to [C]end"
+        val failures = listOf("\u00c1rv\u00edzt\u0171r\u0151 t\u00fck\u00f6rf\u00far\u00f3g\u00e9p", "Pasted\u00a0Spaces").mapNotNull { title ->
+            val song = ChordProParser.parse("{title: $title}\n{start_of_verse}\n$lyric\n{end_of_verse}\n")
+            val expected = summary(song)
+            val actual = summary(roundTrip(song, PrintSettings(columns = PrintSettings.MAX_COLUMNS)))
+            if (expected == actual) null else "expected $expected\n  actual   $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
+    fun `a playing details row cut inside a label by a narrow column comes back in every language`() = runBlocking {
+        val song = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n{start_of_verse}\n[Em]Hello [Am]world [Em]and [D]more [Em]here\n{end_of_verse}\n")
+        val settings = PrintSettings(columns = PrintSettings.MAX_COLUMNS, fontSize = 20, marginMm = 25)
+        val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+        val failures = folders.mapNotNull { folder ->
+            val imported = roundTrip(song, settings, printLabelsOf(folder), transposition = 2, shapesKey = "Em")
+            val lyrics = imported.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
+            // The page count is left out of what is compared: whether a wide margin keeps it out of the lyrics is the PDF
+            // text extraction's to tell, and this is about the details row alone.
+            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }.filterNot { Regex("[0-9]+ / [0-9]+").matches(it) }
+            val actual = listOf(imported.metadata.key, imported.metadata.capo?.toString()) + words
+            if (actual == listOf("Em", "2", "Hello world and more here")) null else "${folder.name}: $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
     /** The labels the export prints in the language of the `values*` [folder], read from its `strings.xml` as the app reads them. */
     private fun printLabelsOf(folder: File): PrintLabels {
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(folder, "strings.xml"))

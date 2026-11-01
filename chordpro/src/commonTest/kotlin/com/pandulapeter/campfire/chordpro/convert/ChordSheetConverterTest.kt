@@ -582,6 +582,39 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a row of Campfire's own export continuing a word the column cut is joined back with no space`() {
+        // Two word joiners open the text of a row that continues a word, ahead of its first glyph.
+        fun glyphs(text: String, size: Double, bold: Boolean = false, isHardCut: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, character ->
+                span((if (index == 0 && isHardCut) "\u2060\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
+            },
+        )
+        val page = ChordSheet.Page(
+            listOf(
+                glyphs("\u00c1rv\u00edzt\u0171r\u0151 t\u00fc", 19.0, bold = true),
+                glyphs("k\u00f6rf\u00far\u00f3g\u00e9p", 19.0, bold = true, isHardCut = true),
+                glyphs("Someone", 12.0),
+                glyphs("Tonalit\u00e0: A   Trasposizio", 11.0),
+                glyphs("ne: +2", 11.0, isHardCut = true),
+                glyphs("Verse", 11.0, bold = true),
+                glyphs("Hello and i", 12.0),
+                glyphs("ncomprehensible", 12.0, isHardCut = true),
+            ),
+        )
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        assertTrue(result.startsWith("{title: \u00c1rv\u00edzt\u0171r\u0151 t\u00fck\u00f6rf\u00far\u00f3g\u00e9p}\n"), result)
+        assertFalse("Trasposizio" in result || "ne: +2" in result, result)
+        assertTrue("\nHello and incomprehensible\n" in result, result)
+    }
+
+    @Test
+    fun `a word joiner in a pasted text is left out of the song`() {
+        val result = convert("Song\nSomeone\nVerse 1\nHello\u2060\u2060 world")
+        assertFalse('\u2060' in result, result)
+        assertTrue("Hello world" in result, result)
+    }
+
+    @Test
     fun `a key printed with an accidental sign is written with the file's ASCII accidental`() {
         fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
             text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
