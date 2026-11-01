@@ -26,6 +26,13 @@ package com.pandulapeter.campfire.chordpro.voicings
  * most keys filed or moved, an open-position one where that is the least work. Where one of them, moved to a key, would
  * come before the shape that key was shown with, that shape is filed under its chord there too, so that every chord a
  * table answered before keeps its shape. A few span five frets, where their chord has no shape within four.
+ *
+ * Every table then ends in the shapes of the chords a chart names that it held none for: some fifty qualities in every
+ * key, and on the guitar's tunings a triad over any bass and the inversions of the common sevenths and sixths. No
+ * openly licensed library has them, so each was picked from the search's shapes by the same rules: an open-position
+ * shape where the search's first takes three fingers or fewer below the fourth fret, then the moveable shape reaching the
+ * most keys still without one, then the search's first, five frets wide where the chord has nothing within four, and
+ * never past the twelfth fret. A chord whose shape one of them would have displaced has that shape filed under it.
  */
 internal object ChordVoicingTables {
 
