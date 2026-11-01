@@ -13,7 +13,8 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Add an option to pin chord diagrams
+- Add an option to pin chord diagrams / scales.
+- In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
 ## Short-term
