@@ -206,6 +206,22 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a chord row opening with an annotation stays one row over its lyric`() {
+        val chorus = MARGIN + 8.0
+        assertEquals(
+            "{title: A song}\n\n{start_of_chorus: Chorus}\n[*Everybody][D7]Home, [G]home on the [C]range\n{end_of_chorus}\n",
+            convert(
+                text("Chorus", x = chorus, size = LABEL, bold = true),
+                ChordSheet.Line(
+                    text("Everybody", x = chorus, italic = true).spans + text("D7", x = chorus + 11 * GLYPH, bold = true).spans +
+                        text("G", x = chorus + 17 * GLYPH, bold = true).spans + text("C", x = chorus + 29 * GLYPH, bold = true).spans,
+                ),
+                text("\u00a0".repeat(11) + "Home, home on the range", x = chorus),
+            ),
+        )
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

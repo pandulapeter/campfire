@@ -135,6 +135,18 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a chord row opening with an annotation comes back as one row over its lyric`() = runBlocking {
+        val song = ChordProParser.parse("{title: Song}\n{start_of_chorus}\n[*Everybody] [D7]Home, [G]home on the [C]range\n{end_of_chorus}\n")
+        val failures = listOf(PrintSettings(), PrintSettings(isLandscape = true), PrintSettings(columns = 2), PrintSettings(columns = 2, isLandscape = true))
+            .mapNotNull { settings ->
+                val expected = summary(song)
+                val actual = summary(roundTrip(song, settings))
+                if (expected == actual) null else "${settings.columns} columns${if (settings.isLandscape) " landscape" else ""}: $actual"
+            }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",

@@ -78,7 +78,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   all of them, so a chord row or a lyric set against the left edge keeps its first word. A label no heading word or
   abbreviation names is a verse under its own name.
 - The rest of what the ChordPro app prints is read back too: a header line printed in left, centre, and right parts
-  (`ChordSheetHeaderParts`, a gap of three ems, above the first chord row only) is one line per part, the part beside
+  (`ChordSheetHeaderParts`, a gap of three ems, above the first chord row only; never in Campfire's own export, which
+  prints none) is one line per part, the part beside
   the title or a line centred under a centred title being its subtitle; a note among a row's chords (`(x)`,
   `(to v:)`) is an annotation where it stands, one ending the row staying text after the lyric; the dashes it fills
   a chord's width with at a lyric's end are left out; and a `©` line is the copyright wherever it stands.
