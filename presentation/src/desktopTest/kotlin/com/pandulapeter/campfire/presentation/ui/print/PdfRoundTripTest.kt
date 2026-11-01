@@ -158,6 +158,20 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a right-to-left song's chords a narrow column overflows onto rows of their own come back on their line`() = runBlocking {
+        // As in a left-to-right song, only the prints where the chords overflow are compared.
+        val song = ChordProParser.parse(
+            "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\n\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n",
+        )
+        val failures = (3..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+            val expected = summary(song)
+            val actual = summary(roundTrip(song, PrintSettings(columns = columns)))
+            if (expected == actual) null else "$columns columns:\n  expected $expected\n  actual   $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `a right-to-left song's row of chords alone comes back in its order`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[C]\u05e9\u05dc\u05d5\u05dd [G]\u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n" +

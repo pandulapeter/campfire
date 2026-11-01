@@ -269,7 +269,9 @@ public object ChordSheetConverter {
             previous = span
         }
         val result = text.toString().trimEnd()
-        val opening = if (dropsPadding) line.spans.firstOrNull { it.text.isNotEmpty() }?.text.orEmpty() else ""
+        // The marks open the row's first text in its reading order, which in a right-to-left song's row of chords, laid
+        // out from the right, is not the first span on the page: no other text of a row opens with one.
+        val opening = if (dropsPadding) line.spans.firstOrNull { it.text.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION }?.text.orEmpty() else ""
         val isContinuation = opening.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION
         val isHardCut = opening.startsWith("${ChordSheetCampfireLayout.CONTINUATION}${ChordSheetCampfireLayout.CONTINUATION}")
         return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), isContinuation = isContinuation, isHardCut = isHardCut)

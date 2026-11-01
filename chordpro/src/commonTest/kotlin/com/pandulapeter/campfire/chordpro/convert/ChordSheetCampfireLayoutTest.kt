@@ -300,6 +300,17 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a right-to-left song's chords a narrow column overflows onto a row of their own come back on their line`() {
+        val song = convert(
+            text("Am", x = RIGHT - 4 * GLYPH, bold = true),
+            rtl("\u05e9\u05dc\u05d5\u05dd"),
+            // The mark opens the row's first chord, its rightmost.
+            ChordSheet.Line(text("G", x = RIGHT - 5 * GLYPH, bold = true).spans + marked(text("C", x = RIGHT - GLYPH, bold = true)).spans),
+        )
+        assertTrue("\n[Am]\u05e9\u05dc\u05d5\u05dd [C] [G]\n" in song, song)
+    }
+
+    @Test
     fun `a song of choruses is read from its left, its details row no box`() {
         val chorus = MARGIN + 8.0
         val song = convert(
