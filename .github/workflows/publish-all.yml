@@ -42,8 +42,8 @@
 # whatever it needs by hand, new screenshots say, and is sent from there. Every store's listing text is written from
 # documentation/store-listings/<store>/<language>.md by its workflow (.github/scripts/store_listings.py); a store's
 # "listings: false" leaves that store's listing text as it is in its console and writes only the notes. All of them
-# are optional. Without the English notes the visible description stands in for them, with its markdown taken out, and
-# where that is empty too, "Bug fixes and improvements.", without the priority it is 0, and without a store's submit or
+# are optional. Without the English notes the visible description stands in for them, with its markdown and HTML (the
+# store badges) taken out, and where that is empty too, "Bug fixes and improvements.", without the priority it is 0, and without a store's submit or
 # listings it is true. What is there has to be readable, though (.github/scripts/release_description.py): a store name
 # it does not know, a submit or listings other than true or false, a priority outside 0-5, and a whats-new block in a
 # language the app does not have stop the release, and so does a comment that looks like one of them but is not

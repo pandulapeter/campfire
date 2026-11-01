@@ -53,8 +53,8 @@ listing text as it is in the console and writes only the notes).
   notes in any language over App Store Connect's 4 000 or Partner Center's 1 500 characters (whatever `submit` says)
   stop the release before any build. Over Play's 500 is a warning (Play gets the lines that fit).
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
-- Fallbacks: the visible description without markdown, then "Bug fixes and improvements.", or (hand dispatch with
-  nothing given) the commit log since the previous tag. A language without a block, and every language of a hand
+- Fallbacks: the visible description without markdown and HTML (the store badges), then "Bug fixes and
+  improvements.", or (hand dispatch with nothing given) the commit log since the previous tag. A language without a block, and every language of a hand
   dispatch, gets the English notes. The workflows get the notes per language as `release_notes_by_language` (JSON).
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
 
