@@ -71,9 +71,10 @@ class PdfRoundTripTest {
         .replace("[x]", "")
 
     @Test
-    fun `a song printed to a PDF and imported back keeps its title, sections, lyrics, and chords`() = runBlocking {
+    fun `a song printed to a PDF and imported back keeps its title, sections, lyrics, and chords in every column count`() = runBlocking {
+        val prints = (1..PrintSettings.MAX_COLUMNS).flatMap { columns -> listOf(PrintSettings(columns = columns), PrintSettings(columns = columns, isLandscape = true)) }
         val failures = corpus.flatMap { (name, text) ->
-            listOf(PrintSettings(), PrintSettings(columns = 2), PrintSettings(columns = 2, isLandscape = true)).mapNotNull { settings ->
+            prints.mapNotNull { settings ->
                 val original = songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
                 val expected = summary(original)
                 val actual = summary(roundTrip(original, settings))
