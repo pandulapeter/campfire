@@ -329,9 +329,11 @@ data class UserPreferences(
         ALPHABETICAL("alphabetical"),
     }
 
+    /** [SHUFFLE] is a new order every hour, taken only as the list is opened: see `GetScreenDataUseCase`. */
     enum class SortingMode(val id: String) {
         BY_TITLE("by_title"),
         BY_ARTIST("by_artist"),
+        SHUFFLE("shuffle"),
     }
 
     /**

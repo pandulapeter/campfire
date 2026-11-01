@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Random sorting mode
 - Add an option to pin chord diagrams
 - Settings → About should contain a more straightforward link to the website
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots

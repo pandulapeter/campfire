@@ -236,6 +236,7 @@
     <string name="songs_unknown_artist">Artista sconosciuto</string>
     <string name="songs_sorting_mode_by_artist">Artista</string>
     <string name="songs_sorting_mode_by_title">Titolo</string>
+    <string name="songs_sorting_mode_shuffle">Casuale</string>
     <string name="songs_empty_title">La tua libreria è vuota</string>
     <string name="songs_empty_hint">Crea una canzone, incollane una dagli appunti, importa canzoni, documenti PDF o Word e archivi zip, oppure aggiungi la libreria di prova.</string>
     <string name="songs_create_song">Crea una canzone</string>

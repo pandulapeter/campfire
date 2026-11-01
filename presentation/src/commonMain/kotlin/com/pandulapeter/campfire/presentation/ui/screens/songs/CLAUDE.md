@@ -22,6 +22,12 @@ The songs screen.
   (`KeepCardsInPlaceAcrossSearch`, `SearchCardHold`, narrated by `ListAnchor` on the bar's spring); closing unscrolled
   over the same songs puts it back where it was.
 
+## Shuffle
+
+- The Shuffle sort is one headerless list, like a search's results, in a new order every hour; the hour moves on only as
+  the screen is opened (the app returning to the front on it, or another tab left for it: `LibraryState.shuffleHour`),
+  never under a reader or on closing a song over it. The new order arrives with a new `orderKey`, so it opens at the top.
+
 ## Back resets the filters
 
 - With Songs the whole back stack, a back (gesture, system button, the web's Escape) resets the tag and language

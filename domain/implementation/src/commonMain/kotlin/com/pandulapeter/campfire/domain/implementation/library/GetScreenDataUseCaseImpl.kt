@@ -69,7 +69,7 @@ internal class GetScreenDataUseCaseImpl(
      * of a transposition played from a setlist is a setlist write, and it must not have the whole library filtered and
      * sorted again for it.
      */
-    override operator fun invoke(songFilter: Flow<SongFilter>): Flow<DataState<ScreenData>> {
+    override operator fun invoke(songFilter: Flow<SongFilter>, shuffleHour: Flow<Int>): Flow<DataState<ScreenData>> {
         val preferences = userPreferencesRepository.userPreferences
         val songPart = combine(
             songRepository.songs,
@@ -79,10 +79,11 @@ internal class GetScreenDataUseCaseImpl(
             preferences.map { state -> state.mapData { it.toSongListPreferences() }.orWhenUnreadable(DEFAULT_SONG_LIST_PREFERENCES) }
                 .distinctUntilChanged(),
             songFilter.distinctUntilChanged(),
-        ) { songsDataState, songListPreferencesDataState, filter ->
+            shuffleHour.distinctUntilChanged(),
+        ) { songsDataState, songListPreferencesDataState, filter, hour ->
             listOf(songsDataState, songListPreferencesDataState).combinedState(
                 songsDataState.data?.let { songs ->
-                    songListPreferencesDataState.data?.let { songListPreferences -> songs.toSongPart(songListPreferences, filter) }
+                    songListPreferencesDataState.data?.let { songListPreferences -> songs.toSongPart(songListPreferences, filter, hour) }
                 },
             )
         }
@@ -111,6 +112,7 @@ internal class GetScreenDataUseCaseImpl(
                     sortedSongs = songPart.sortedSongs,
                     songFilter = songPart.songFilter,
                     sortingMode = songPart.sortingMode,
+                    shuffleHour = songPart.shuffleHour,
                     tagMatchMode = songPart.tagMatchMode,
                     languageMatchMode = songPart.languageMatchMode,
                 ).also {
@@ -147,19 +149,23 @@ internal class GetScreenDataUseCaseImpl(
             isWholeLibrary = false,
             songFilter = songPart.songFilter,
             sortingMode = songPart.sortingMode,
+            shuffleHour = songPart.shuffleHour,
             tagMatchMode = songPart.tagMatchMode,
             languageMatchMode = songPart.languageMatchMode,
         )
     }
 
-    private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter): SongPart {
+    private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter, hour: Int): SongPart {
         // What the library holds, whatever is selected: the two filter groups are counted over the songs the other one
         // leaves, but both of them decide what is still a tag and what is still a language from here, or narrowing by
         // one would quietly switch the other one off.
         val availableTags = toTags(normalizeText::invoke)
         val availableLanguages = toLanguages()
         // The filters are predicates over the library in its order, so what they leave is already sorted.
-        val sorted = sorted(songListPreferences.sortingMode)
+        // An hour only matters to the shuffled order: passing it on to any other would sort the library again every hour
+        // for nothing, and make two equal lists two different values.
+        val shuffleHour = if (songListPreferences.sortingMode == UserPreferences.SortingMode.SHUFFLE) hour else 0
+        val sorted = sorted(songListPreferences.sortingMode, shuffleHour)
         val songsByTag = sorted.songs.filterTags(filter, songListPreferences.tagMatchMode, availableTags)
         val songsByLanguage = sorted.songs.filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
         val songSections = songsByTag
@@ -177,6 +183,7 @@ internal class GetScreenDataUseCaseImpl(
             sortedSongs = sorted.songs,
             songFilter = filter,
             sortingMode = songListPreferences.sortingMode,
+            shuffleHour = shuffleHour,
             tagMatchMode = songListPreferences.tagMatchMode,
             languageMatchMode = songListPreferences.languageMatchMode,
         )
@@ -194,6 +201,7 @@ internal class GetScreenDataUseCaseImpl(
         val sortedSongs: List<Song>,
         val songFilter: SongFilter,
         val sortingMode: UserPreferences.SortingMode,
+        val shuffleHour: Int,
         val tagMatchMode: UserPreferences.MatchMode,
         val languageMatchMode: UserPreferences.MatchMode,
     )
@@ -217,10 +225,13 @@ internal class GetScreenDataUseCaseImpl(
         }.thenBy { normalizeText(it.title) }.thenBy { it.fileName }
     )
 
-    /** The library sorted for [sortingMode], sorted again only when the library or the mode has changed (see [sortMemo]). */
-    private fun List<Song>.sorted(sortingMode: UserPreferences.SortingMode): SortMemo =
-        sortMemo?.takeIf { it.input === this && it.sortingMode == sortingMode }
-            ?: sortedFor(sortingMode, normalizeText::invoke).also { sortMemo = it }
+    /**
+     * The library sorted for [sortingMode] and [shuffleHour], sorted again only when the library, the mode or the hour has
+     * changed (see [sortMemo]).
+     */
+    private fun List<Song>.sorted(sortingMode: UserPreferences.SortingMode, shuffleHour: Int): SortMemo =
+        sortMemo?.takeIf { it.input === this && it.sortingMode == sortingMode && it.shuffleHour == shuffleHour }
+            ?: sortedFor(sortingMode, shuffleHour, normalizeText::invoke).also { sortMemo = it }
 
     /** The part of the preferences the song list depends on. */
     private data class SongListPreferences(
@@ -255,6 +266,7 @@ internal class GetScreenDataUseCaseImpl(
             sortedSongs = emptyList(),
             songFilter = SongFilter(),
             sortingMode = DEFAULT_SONG_LIST_PREFERENCES.sortingMode,
+            shuffleHour = 0,
             tagMatchMode = DEFAULT_SONG_LIST_PREFERENCES.tagMatchMode,
             languageMatchMode = DEFAULT_SONG_LIST_PREFERENCES.languageMatchMode,
         )

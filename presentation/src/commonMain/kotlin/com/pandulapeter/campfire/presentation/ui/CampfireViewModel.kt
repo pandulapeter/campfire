@@ -357,6 +357,12 @@ class CampfireViewModel(
                 dialogHost.dismissSheet(DialogType.Tuner)
             }
         }
+        addOnBackStackChanged { previousTop, stack ->
+            // Another tab left for the songs opens them; anything closed over them returns to the list as it was left.
+            if (stack.lastOrNull() == CampfireDestination.Songs && previousTop is CampfireDestination.TopLevel && previousTop != CampfireDestination.Songs) {
+                libraryState.catchUpWithTheHour()
+            }
+        }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
         addOnBackStackChanged { _, stack -> metronomeController.onBackStackChanged(stack) }
         addOnBackStackChanged { _, _ -> importController.onBackStackChanged() }
@@ -728,6 +734,7 @@ class CampfireViewModel(
         screenData = libraryState.screenData,
         userPreferencesState = preferencesController.userPreferencesState,
         songFilter = _songFilter,
+        shuffleHour = libraryState.shuffleHour,
         getScreenData = getScreenData,
         updateUserPreferences = updateUserPreferences,
         openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },

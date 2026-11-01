@@ -79,6 +79,8 @@ data class ScreenData(
      */
     val songFilter: SongFilter = SongFilter(),
     val sortingMode: UserPreferences.SortingMode = UserPreferences.SortingMode.BY_ARTIST,
+    /** The hour [songs] were shuffled for when [sortingMode] is [UserPreferences.SortingMode.SHUFFLE], 0 otherwise. */
+    val shuffleHour: Int = 0,
     val tagMatchMode: UserPreferences.MatchMode = UserPreferences.MatchMode.ANY,
     val languageMatchMode: UserPreferences.MatchMode = UserPreferences.MatchMode.ANY,
 )

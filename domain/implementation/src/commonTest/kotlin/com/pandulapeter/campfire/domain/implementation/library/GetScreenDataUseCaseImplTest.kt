@@ -32,6 +32,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
@@ -48,6 +49,7 @@ class GetScreenDataUseCaseImplTest {
     private val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song("Yesterday"), song("Hey Jude"))))
     private val preferences = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(TEST_PREFERENCES))
     private val filter = MutableStateFlow(SongFilter())
+    private val shuffleHour = MutableStateFlow(480_000)
     private val useCase = GetScreenDataUseCaseImpl(
         normalizeText = object : NormalizeTextUseCase {
             override fun invoke(text: String) = text.lowercase()
@@ -119,6 +121,23 @@ class GetScreenDataUseCaseImplTest {
         val second = latest.first { it?.data != null && it.data !== first }?.data
 
         assertNotSame(first.songSections, second?.songSections)
+    }
+
+    @Test
+    fun `a new hour reshuffles a shuffled list and leaves a sorted one alone`() = runTest {
+        songs.value = DataState.Idle((1..30).map { song("Song $it") })
+        val latest = collectScreenData()
+        val sorted = latest.idle()
+
+        shuffleHour.value = 480_001
+        preferences.value = DataState.Idle(TEST_PREFERENCES.copy(sortingMode = UserPreferences.SortingMode.SHUFFLE))
+        val shuffled = latest.first { it?.data?.sortingMode == UserPreferences.SortingMode.SHUFFLE }?.data
+        shuffleHour.value = 480_002
+        val reshuffled = latest.first { it?.data?.shuffleHour == 480_002 }?.data
+
+        assertEquals(0, sorted.shuffleHour)
+        assertEquals(480_001, shuffled?.shuffleHour)
+        assertNotEquals(shuffled?.songs, reshuffled?.songs)
     }
 
     @Test
@@ -342,7 +361,7 @@ class GetScreenDataUseCaseImplTest {
      */
     private fun TestScope.collectScreenData(): StateFlow<DataState<ScreenData>?> {
         val latest = MutableStateFlow<DataState<ScreenData>?>(null)
-        backgroundScope.launch { useCase(filter).collect { latest.value = it } }
+        backgroundScope.launch { useCase(filter, shuffleHour).collect { latest.value = it } }
         return latest
     }
 

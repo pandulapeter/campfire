@@ -265,6 +265,7 @@
     <string name="songs_unknown_artist">Artist necunoscut</string>
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Titlu</string>
+    <string name="songs_sorting_mode_shuffle">Amestecat</string>
     <string name="songs_empty_title">Biblioteca ta este goală</string>
     <string name="songs_empty_hint">Creează un cântec, lipește unul din clipboard, importă cântece, documente PDF sau Word și arhive zip ori adaugă biblioteca demonstrativă.</string>
     <string name="songs_create_song">Creează un cântec</string>

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences.SortingM
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /** The order of the song list and the headers it is listed under, which the fast scroller and the sections rely on. */
 class SongSortingTest {
@@ -45,7 +46,7 @@ class SongSortingTest {
     @Test
     fun `songs that tie on everything else are in the order of their file names`() {
         val sorted = listOf(song("Yesterday", fileName = "yesterday_2.cho"), song("Yesterday", fileName = "yesterday.cho"))
-            .sortedFor(SortingMode.BY_TITLE, NormalizeTextUseCaseImpl()::invoke)
+            .sortedFor(SortingMode.BY_TITLE, shuffleHour = 0, normalize = NormalizeTextUseCaseImpl()::invoke)
 
         assertEquals(listOf("yesterday.cho", "yesterday_2.cho"), sorted.songs.map { it.fileName })
     }
@@ -53,13 +54,44 @@ class SongSortingTest {
     @Test
     fun `a pointed and an unpointed title sort together`() {
         val sorted = listOf(song("שלומית"), song("שלום", fileName = "b.cho"), song("שלוה"), song("שָׁלוֹם", fileName = "a.cho"))
-            .sortedFor(SortingMode.BY_TITLE, NormalizeTextUseCaseImpl()::invoke)
+            .sortedFor(SortingMode.BY_TITLE, shuffleHour = 0, normalize = NormalizeTextUseCaseImpl()::invoke)
 
         assertEquals(listOf("שלוה", "שָׁלוֹם", "שלום", "שלומית"), sorted.songs.map { it.title })
     }
 
+    @Test
+    fun `a shuffled library is one section with no header`() {
+        val sections = sections(SortingMode.SHUFFLE, song("Yesterday"), song("Hey Jude"), song("1999"))
+
+        assertEquals(listOf(null), sections.map { it.header })
+        assertEquals(setOf("Yesterday", "Hey Jude", "1999"), sections.single().songs.map { it.title }.toSet())
+    }
+
+    @Test
+    fun `an hour shuffles the library the same way every time, and another hour another way`() {
+        val library = (1..30).map { song("Song $it") }
+
+        val thisHour = library.shuffledFor(hour = 480_000)
+
+        assertEquals(thisHour, library.reversed().shuffledFor(hour = 480_000))
+        assertNotEquals(thisHour, library.shuffledFor(hour = 480_001))
+    }
+
+    @Test
+    fun `a song added within the hour leaves the others in their order`() {
+        val library = (1..30).map { song("Song $it") }
+
+        val before = library.shuffledFor(hour = 480_000)
+        val after = (library + song("Newcomer")).shuffledFor(hour = 480_000)
+
+        assertEquals(before, after - "Newcomer")
+    }
+
+    private fun List<Song>.shuffledFor(hour: Int) =
+        sortedFor(SortingMode.SHUFFLE, shuffleHour = hour, normalize = NormalizeTextUseCaseImpl()::invoke).songs.map { it.title }
+
     private fun sections(sortingMode: SortingMode, vararg songs: Song): List<SongSection> {
-        val sorted = songs.toList().sortedFor(sortingMode, NormalizeTextUseCaseImpl()::invoke)
+        val sorted = songs.toList().sortedFor(sortingMode, shuffleHour = 0, normalize = NormalizeTextUseCaseImpl()::invoke)
         return sorted.songs.map { sorted.byFileName.getValue(it.fileName) }.cutIntoSections(sortingMode)
     }
 

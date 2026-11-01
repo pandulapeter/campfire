@@ -15,6 +15,10 @@
   re-filter and re-sort the library.
 - The library is sorted once per change of library or sorting mode (`sortMemo`); filters only narrow that order. One
   key (`NormalizeTextUseCase`, accents ignored) decides both order and sections.
+- **Shuffle** is one headerless section ordered by `shuffleRank`, each song's own hash of its file name and the hour the
+  caller passes (`LibraryState` moves it on only as the songs screen is opened, never under a reader): a song added or
+  renamed moves only itself, and every device shows an hour's order alike. The hour is 0 in the other modes, so a new
+  hour re-sorts nothing.
 - `cache` lets `Loading` / `Failure` still carry the last good data. With none yet, a part whose first read failed
   stands in empty (songs, setlists) or at defaults (preferences), flagged by `ScreenData.isWholeLibrary = false`, and is
   never cached. A part merely still loading is never filled in.

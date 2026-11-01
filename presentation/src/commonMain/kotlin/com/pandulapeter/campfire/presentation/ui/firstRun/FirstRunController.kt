@@ -69,6 +69,7 @@ internal class FirstRunController(
     private val screenData: StateFlow<DataState<ScreenData>>,
     private val userPreferencesState: StateFlow<DataState<UserPreferences>>,
     private val songFilter: StateFlow<SongFilter>,
+    private val shuffleHour: StateFlow<Int>,
     private val getScreenData: GetScreenDataUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val openOnboarding: () -> Unit,
@@ -133,7 +134,7 @@ internal class FirstRunController(
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
         // so the row fades out disabled instead of coming back for the moments in between.
-        val library = getScreenData(songFilter).first { it !is DataState.Loading }.data
+        val library = getScreenData(songFilter, shuffleHour).first { it !is DataState.Loading }.data
         if (library != null && DemoLibrary.isPresentIn(songs = library.unfilteredSongs, setlists = library.setlists)) {
             demoLibraryOffer.first { it == null }
         }

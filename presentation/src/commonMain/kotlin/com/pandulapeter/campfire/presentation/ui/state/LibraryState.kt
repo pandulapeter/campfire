@@ -28,15 +28,19 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * The library as the app shows it, read once into memory and kept in step with the files: the songs, the setlists and
@@ -50,12 +54,21 @@ internal class LibraryState(
     private val normalizeSearchText: NormalizeSearchTextUseCase,
 ) {
 
+    private val _shuffleHour = MutableStateFlow(currentHour())
+
+    /**
+     * The hour the Shuffle order is drawn for (see [GetScreenDataUseCase]): the hour the app was started in, moved on to
+     * a new one only by [catchUpWithTheHour] as the songs screen is opened, never by the clock, so that the list is
+     * never reshuffled under somebody reading it.
+     */
+    val shuffleHour = _shuffleHour.asStateFlow()
+
     /**
      * The single subscription to the domain layer: every state below maps over this instead of over
      * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
      * eagerly so that the data is loaded into memory as the app starts, rather than when a screen first asks for it.
      */
-    val screenData: StateFlow<DataState<ScreenData>> = getScreenData(songFilter).stateIn(
+    val screenData: StateFlow<DataState<ScreenData>> = getScreenData(songFilter, shuffleHour).stateIn(
         scope = scope,
         started = SharingStarted.Eagerly,
         // Loading, not Failure: nothing has been asked for yet, which is not something to show an error for.
@@ -137,10 +150,10 @@ internal class LibraryState(
             sections = data?.songSections.orEmpty(),
             sorted = data?.sortedSongs.orEmpty(),
             filterKey = data?.let {
-                "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
+                "${it.sortingMode.name}@${it.shuffleHour}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
                     "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
             }.orEmpty(),
-            orderKey = data?.sortingMode?.name.orEmpty(),
+            orderKey = data?.let { "${it.sortingMode.name}@${it.shuffleHour}" }.orEmpty(),
             isLibraryRead = !latch.isLoading,
         )
     }.distinctUntilChanged().map { input ->
@@ -184,6 +197,12 @@ internal class LibraryState(
             }
         }
         .asState(scope, null)
+
+    /**
+     * Takes the Shuffle order on to this hour's, for the songs screen being opened: the app coming back to the front on
+     * it, or another tab left for it - not a song closed over it, which returns to the list where it was left.
+     */
+    fun catchUpWithTheHour() = _shuffleHour.update { currentHour() }
 
     /** When the last rescan started or, once it has finished, finished; see [refreshIfStale]. */
     private var lastRescanAt: TimeMark? = null
@@ -259,5 +278,7 @@ internal class LibraryState(
 
     private companion object {
         val MIN_RESCAN_INTERVAL = 10.seconds
+
+        fun currentHour() = Clock.System.now().epochSeconds.floorDiv(3_600L).toInt()
     }
 }

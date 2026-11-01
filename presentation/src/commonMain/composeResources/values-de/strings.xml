@@ -236,6 +236,7 @@
     <string name="songs_unknown_artist">Unbekannter Interpret</string>
     <string name="songs_sorting_mode_by_artist">Interpret</string>
     <string name="songs_sorting_mode_by_title">Titel</string>
+    <string name="songs_sorting_mode_shuffle">Gemischt</string>
     <string name="songs_empty_title">Deine Bibliothek ist leer</string>
     <string name="songs_empty_hint">Erstelle einen Song, füge einen aus der Zwischenablage ein, importiere Songs, PDF- oder Word-Dokumente und Zip-Archive oder füge die Demo-Bibliothek hinzu.</string>
     <string name="songs_create_song">Song erstellen</string>

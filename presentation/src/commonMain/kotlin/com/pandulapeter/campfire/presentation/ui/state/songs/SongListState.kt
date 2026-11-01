@@ -188,7 +188,7 @@ internal fun songGroupsFor(
     filtered: List<SearchableSong>,
     normalizedQuery: String,
 ): List<SongGroup> = if (normalizedQuery.isEmpty()) {
-    sections.map { SongGroup(header = SongGroupHeader.Section(it.header), songs = it.songs) }
+    sections.map { SongGroup(header = it.header?.let(SongGroupHeader::Section), songs = it.songs) }
 } else {
     rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
 }

@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.share.SharedLink
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
@@ -111,7 +112,11 @@ fun CampfireApp(
     // the app pauses it with the click still in view.
     val areBeatsFeltInBackground = areBeatHapticsFeltInBackground && rememberBeatHaptics() != null
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.metronomeController.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
-    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.metronomeController.onAppStarted() }
+    // Coming back to the app on the song list opens it again, for the Shuffle order too (LibraryState.shuffleHour).
+    LifecycleEventEffect(Lifecycle.Event.ON_START) {
+        viewModel.metronomeController.onAppStarted()
+        if (viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs) viewModel.libraryState.catchUpWithTheHour()
+    }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.preferencesController.arePreferencesLoaded.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
