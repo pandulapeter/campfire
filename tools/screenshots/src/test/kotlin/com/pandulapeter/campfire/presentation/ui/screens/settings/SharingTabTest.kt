@@ -26,7 +26,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_description
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_nothing_shared
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_orphaned
-import com.pandulapeter.campfire.presentation.resources.settings_sharing_show_qr_code
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_stop_all
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.share_copy
@@ -83,11 +82,12 @@ internal class SharingTabTest {
     ) {
         openSharingTab()
 
-        // The most recently shared first: the song, whose item the library holds.
+        // The row itself shows the code; its menu keeps copying the link.
         onAllNodes(hasContentDescription(string(Res.string.settings_sharing_actions)))[0].performTouchInput { click() }
         waitForIdle()
         onNode(hasText(string(Res.string.share_copy)) and hasClickAction()).assertExists()
-        tap(hasText(string(Res.string.settings_sharing_show_qr_code)) and hasClickAction())
+        pressBack()
+        tap(hasText(RISING_SUN_TITLE) and hasClickAction())
 
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
     }
@@ -165,9 +165,7 @@ internal class SharingTabTest {
 
     private fun AppTestScope.openQrCode() {
         openSharingTab()
-        onAllNodes(hasContentDescription(string(Res.string.settings_sharing_actions)))[0].performTouchInput { click() }
-        waitForIdle()
-        tap(hasText(string(Res.string.settings_sharing_show_qr_code)) and hasClickAction())
+        tap(hasText(RISING_SUN_TITLE) and hasClickAction())
         waitUntil(timeoutMillis = 10_000) { onAllNodes(hasContentDescription(string(Res.string.share_qr_code))).fetchSemanticsNodes().isNotEmpty() }
     }
 
