@@ -33,7 +33,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
-import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabTransposer
 
 /**
  * Finds the parts of a ChordPro document an editor wants to colour. It lives next to the parser rather than in the
@@ -237,7 +237,12 @@ public object ChordProHighlighter {
                 }
             }
 
-            scanned.environment == TAB && ChordProTabWrapper.isChordLine(line) -> tokens += tabChordTokens(line, lineStart)
+            // A tab line with no brackets is coloured by the rule the transposition renames it by and the parser counts
+            // its chords by, so that what is coloured is what moves and what the song's chord list names.
+            scanned.environment == TAB && !ChordProTokens.isStaffLine(line) && !ChordProDirectives.hasBrackets(line) ->
+                ChordProTabTransposer.chordWords(line)?.forEach { word ->
+                    tokens += Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1)
+                }
 
             // A chord row's repeat counts and bar lines are shown with its chords, as annotations; the lines of a tab
             // that are not its staff are rows of chord names only to the transposition, never to the parser.
@@ -356,14 +361,6 @@ public object ChordProHighlighter {
         .zip(ChordProTokens.parseGridTokens(line.trim()))
         .filter { (_, token) -> token is GridToken.Chord }
         .map { (word, _) -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
-
-    /**
-     * The chord names of a line of a tab that holds nothing else, as the viewer decides it, so that its bar lines and
-     * repeat counts are left plain.
-     */
-    private fun tabChordTokens(line: String, lineStart: Int): List<Token> = ChordProTokens.words(line)
-        .filter { ChordProTabWrapper.isChordWord(it.value) }
-        .map { word -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
 
     /**
      * The chords of the text of a comment or a label, offsets into [text]: the brackets the transposition moves there.

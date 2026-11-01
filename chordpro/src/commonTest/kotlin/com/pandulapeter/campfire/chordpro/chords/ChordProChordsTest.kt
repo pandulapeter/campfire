@@ -309,6 +309,11 @@ class ChordProChordsTest {
     }
 
     @Test
+    fun `a tab's chord row with bar lines and beat slashes is listed among the song's chords`() {
+        assertEquals(listOf("G", "D"), ChordProChords.namesIn(ChordProParser.parse("{start_of_tab}\nG / / / | D\ne|--0--|\n{end_of_tab}")))
+    }
+
+    @Test
     fun `a chord written with markup in a comment is named by its text`() {
         assertTrue("Em" in ChordProChords.namesIn(ChordProParser.parse("{c: Intro [<b>Em</b>]}\n\n[G]a")))
     }

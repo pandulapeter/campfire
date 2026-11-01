@@ -36,6 +36,6 @@ and still counts as the song's one key. `highlight(text, previous)` reads from t
 the edit is the old one in the same state (open environment, once-only kinds said, header key) and on the same side of
 the body's start, and must always equal `tokenize`: the tests type and delete through a song.
 
-Chords without brackets are `CHORD` too, each as its reader decides: a grid's cells, the names of a tab line the viewer
-draws as chords (`ChordProTabWrapper.isChordLine`), and an `abc` tune's quoted chord symbols, found by the walk the grid
-import reads them with (`AbcBars.chordSymbols`; a `%%begintext` block is skipped, so it is part of the state).
+Chords without brackets are `CHORD` too, each as its reader decides: a grid's cells, the names of a tab line the
+transposition renames (`ChordProTabTransposer.chordWords`), and an `abc` tune's quoted chord symbols, found by the walk
+the grid import reads them with (`AbcBars.chordSymbols`; a `%%begintext` block is skipped, so it is part of the state).

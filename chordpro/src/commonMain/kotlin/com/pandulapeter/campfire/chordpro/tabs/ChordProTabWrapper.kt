@@ -158,14 +158,14 @@ public object ChordProTabWrapper {
      * numbered extension, and `C(add9)`).
      */
     internal fun isChordWord(word: String) =
-        ChordProChordNames.isDisplayedChordName(word.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(word.withoutUnmatchedParentheses())
+        ChordProChordNames.isDisplayedChordName(word.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(withoutUnmatchedParentheses(word))
 
-    /** [this] without the `(` it starts with or the `)` it ends with where nothing in it closes or opens them. */
-    private fun String.withoutUnmatchedParentheses(): String {
-        var word = this
-        while (word.startsWith('(') && word.count { it == '(' } > word.count { it == ')' }) word = word.substring(1)
-        while (word.endsWith(')') && word.count { it == ')' } > word.count { it == '(' }) word = word.dropLast(1)
-        return word
+    /** [word] without the `(` it starts with or the `)` it ends with where nothing in it closes or opens them. */
+    internal fun withoutUnmatchedParentheses(word: String): String {
+        var trimmed = word
+        while (trimmed.startsWith('(') && trimmed.count { it == '(' } > trimmed.count { it == ')' }) trimmed = trimmed.substring(1)
+        while (trimmed.endsWith(')') && trimmed.count { it == ')' } > trimmed.count { it == '(' }) trimmed = trimmed.dropLast(1)
+        return trimmed
     }
 
     private val repeatCountRegex = Regex("[xX×]?\\d+[xX×]?")

@@ -111,7 +111,8 @@ internal object ChordProTabTransposer {
     }
 
     /**
-     * Rewrites a line of the environment that is not tablature, but only if every word on it is a chord or a marker.
+     * Rewrites a line of the environment that is not tablature, but only if every word on it is a chord or a marker
+     * (see [chordWords]).
      *
      * A bare tuning line (`E A D G B E`) is six valid chord names, and is rewritten like a row of six chords would be:
      * nothing on the line itself tells the two apart, and a guess would be wrong as often as right. The spelling that
@@ -127,26 +128,37 @@ internal object ChordProTabTransposer {
         return if (replacements.isEmpty()) line else replaceKeepingColumns(line, replacements, filler = ' ')
     }
 
-    /** The chord names of a line that holds only chords and markers, or null when the line is prose. */
-    private fun chordWords(line: String): List<ChordProTokens.Word>? {
+    /**
+     * The chord names of a line that holds only chords and markers, or null when the line is prose: the rows the viewer
+     * draws as chords ([ChordProTabWrapper.isChordLine]), steps of the key aside, since the file is never written in a
+     * numbering. A marker is a word with no letter or digit (bar lines, `.`, `%`, `/`, `~`, dashes), a volta, a repeat
+     * count (`x2`, `2x`, `(4x)`, or a bare number, which is how a count line of markers alone is no chord row), or `N.C.`.
+     * A name opening or closing a group across words (`(G`, `D)`) is the name alone, its range too, so that a rename
+     * leaves the parenthesis where it is.
+     */
+    internal fun chordWords(line: String): List<ChordProTokens.Word>? {
         val chordWords = mutableListOf<ChordProTokens.Word>()
         ChordProTokens.words(line).forEach { word ->
+            val name = ChordProTabWrapper.withoutUnmatchedParentheses(word.value)
             when {
-                // A Latin name is read here so that a file written in Latin has its row read into the standard notation.
-                ChordProChordNames.isChordName(word.value) || ChordProChordNames.latinExpanded(word.value) != null -> chordWords += word
+                isChordName(word.value) -> chordWords += word
                 isMarker(word.value) -> Unit
+                isChordName(name) -> {
+                    val start = word.range.first + word.value.indexOf(name)
+                    chordWords += ChordProTokens.Word(start until start + name.length, name)
+                }
                 else -> return null
             }
         }
         return chordWords
     }
 
+    /** A Latin name is read here so that a file written in Latin has its row read into the standard notation. */
+    private fun isChordName(word: String) = ChordProChordNames.isChordName(word) || ChordProChordNames.latinExpanded(word) != null
+
     private fun isMarker(word: String) = ChordProTokens.isBar(word) ||
-            word == BEAT ||
-            word == REPEAT ||
-            word == DOUBLE_REPEAT ||
+            word.none(Char::isLetterOrDigit) ||
             repeatCountRegex.matches(word) ||
-            dashesRegex.matches(word) ||
             noChordRegex.matches(word)
 
     /**
@@ -186,11 +198,7 @@ internal object ChordProTabTransposer {
 
     internal const val SEMITONES_IN_OCTAVE = 12
     private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar or a `4x` after the last one, whose number is not a fret.
-    private const val BEAT = "."
-    private const val REPEAT = "%"
-    private const val DOUBLE_REPEAT = "%%"
-    private val dashesRegex = Regex("-+")
-    private val repeatCountRegex = Regex("\\(?[xX]\\d+\\)?")
+    private val repeatCountRegex = Regex("\\(?[xX×]?\\d+[xX×]?\\)?")
 
     /**
      * `N.C.`, and the ways it is abbreviated further: the one word a row of chord names carries that names the absence

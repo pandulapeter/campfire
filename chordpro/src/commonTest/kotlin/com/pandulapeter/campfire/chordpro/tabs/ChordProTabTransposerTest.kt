@@ -56,6 +56,18 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a chord row with the viewer's markers is transposed`() {
+        val rows = listOf("(G D)", "(G  D) x2", "G ||: D :||", "G / / / | D", "G , D", "G ~ D", "G D 2x", "G 4x")
+        val text = (listOf("{sot}") + rows + listOf("e|--0--|", "1 & 2 & 3 & 4 &", "Tuning: E A D G B E", "{eot}")).joinToString("\n")
+        val transposedRows = listOf("(A E)", "(A  E) x2", "A ||: E :||", "A / / / | E", "A , E", "A ~ E", "A E 2x", "A 4x")
+
+        assertEquals(
+            (listOf("{sot}") + transposedRows + listOf("e|--2--|", "1 & 2 & 3 & 4 &", "Tuning: E A D G B E", "{eot}")).joinToString("\n"),
+            ChordProTransposer.transposeText(text, 2),
+        )
+    }
+
+    @Test
     fun `every abbreviation of no chord is a marker`() {
         val lines = listOf("C NC D n.c E N.C", "e|--0--|")
 

@@ -133,6 +133,35 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `a count line in a tab is not coloured as chords`() {
+        assertEquals(
+            emptyList(),
+            spans("{start_of_tab}\n1 & 2 & 3 & 4 &\n1 2 3 4 5 6\n{end_of_tab}").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
+    fun `a tab's chord row is coloured as the transposition renames it`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "G", TokenType.CHORD to "D"),
+            spans("{start_of_tab}\nG  N.C.  D | x2\ne|--0--1--|\n{end_of_tab}").filter { it.first == TokenType.CHORD },
+        )
+        assertEquals(
+            listOf(TokenType.CHORD to "Sol", TokenType.CHORD to "Re"),
+            spans("{start_of_tab}\nSol  Re\n{end_of_tab}").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
+    fun `a parenthesis or beat slash around a tab's chords is left plain`() {
+        val text = "{start_of_tab}\n(G  D) x2\nG / / / | D\n{end_of_tab}"
+        val chords = ChordProHighlighter.tokenize(text).filter { it.type == TokenType.CHORD }
+
+        assertEquals(listOf("G", "D", "G", "D"), chords.map { text.substring(it.start, it.end) })
+        assertEquals(listOf(16, 19), chords.take(2).map { it.start })
+    }
+
+    @Test
     fun `any end of an environment ends a grid`() {
         assertEquals(
             listOf(TokenType.CHORD to "Am", TokenType.CHORD to "[Am]"),
@@ -576,6 +605,9 @@ class ChordProHighlighterTest {
         assertIncremental(longSong, longSong.replace("%%begintext", "%%begintex"))
         assertIncremental(longSong, longSong.replace("%%endtext", "%%endtex"))
         assertIncremental(longSong.replace("%%endtext", "%%endtex"), longSong)
+        val countedSong = longSong.replace("Am  G\n{end_of_tab}", "Am  G\n1 & 2 & 3 & 4 &\n{end_of_tab}")
+        assertIncremental(countedSong, countedSong.replace("1 & 2 & 3 & 4 &", "1 & 2 & G & 4 &"))
+        assertIncremental(countedSong.replace("1 & 2 & 3 & 4 &", "1 & 2 & G & 4 &"), countedSong)
     }
 
     @Test
