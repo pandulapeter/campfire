@@ -28,9 +28,9 @@ The songs screen.
   at random (`randomPicks`, `SongGroupHeader.RandomPicks`), as copies with keys of their own, then the divider the
   Selection has. Gone while a search is open (`withoutSectionHeaders`) and in selection mode (`withSelectionLeading`),
   and with the Settings → Features switch (`isRandomPicksEnabled`).
-- `RandomPicksDraw` holds a device-local seed, never synced or kept: new picks once an hour has gone by, taken only as
-  the screen is opened (the app returning to the front on it, or another tab left for it), never under a reader; the
-  header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
+- `RandomPicksDraw` holds a device-local seed, never synced or kept: new picks once an hour has gone by on the wall clock,
+  taken only as the screen is opened (the app returning to the front on it after at least five minutes away, or another
+  tab left for it), never under a reader; the header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
 - Under the first picks shown, `RandomPicksQuestionCard` asks whether to keep them, saying the switch is in Settings;
   either answer, or the switch flipped, sets `isRandomPicksQuestionAnswered` for good.
 - A sort picked from the menu over the very top of the list glides down to the first section once the new order

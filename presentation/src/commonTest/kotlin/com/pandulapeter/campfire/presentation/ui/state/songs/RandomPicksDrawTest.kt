@@ -13,21 +13,25 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.TestTimeSource
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class RandomPicksDrawTest {
 
-    private val timeSource = TestTimeSource()
-    private val draw = RandomPicksDraw(timeSource = timeSource, random = Random(seed = 42))
+    private val clock = FakeClock()
+    private val draw = RandomPicksDraw(clock = clock, random = Random(seed = 42))
 
     @Test
     fun `opening the list within the hour keeps the picks, and after it draws new ones`() {
         val first = draw.seed.value
-        timeSource += 59.minutes
+        clock += 59.minutes
         draw.catchUp()
         assertEquals(first, draw.seed.value)
-        timeSource += 1.minutes
+        clock += 1.minutes
         draw.catchUp()
         assertNotEquals(first, draw.seed.value)
     }
@@ -35,12 +39,75 @@ class RandomPicksDrawTest {
     @Test
     fun `a refresh draws at once and starts the hour again`() {
         val first = draw.seed.value
-        timeSource += 50.minutes
+        clock += 50.minutes
         draw.reshuffle()
         val refreshed = draw.seed.value
         assertNotEquals(first, refreshed)
-        timeSource += 30.minutes
+        clock += 30.minutes
         draw.catchUp()
         assertEquals(refreshed, draw.seed.value)
+    }
+
+    @Test
+    fun `a start with no stop before it draws nothing`() {
+        val first = draw.seed.value
+        clock += 2.hours
+        draw.onAppStarted(isSongsOnTop = true)
+        assertEquals(first, draw.seed.value)
+    }
+
+    @Test
+    fun `a return after seconds keeps the picks, and one after five minutes draws new ones`() {
+        val first = draw.seed.value
+        clock += 1.hours
+        draw.onAppStopped()
+        clock += 10.seconds
+        draw.onAppStarted(isSongsOnTop = true)
+        assertEquals(first, draw.seed.value)
+        draw.onAppStopped()
+        clock += 5.minutes
+        draw.onAppStarted(isSongsOnTop = true)
+        assertNotEquals(first, draw.seed.value)
+    }
+
+    @Test
+    fun `a return is counted once`() {
+        val first = draw.seed.value
+        draw.onAppStopped()
+        clock += 30.minutes
+        draw.onAppStarted(isSongsOnTop = true)
+        clock += 30.minutes
+        draw.onAppStarted(isSongsOnTop = true)
+        assertEquals(first, draw.seed.value)
+    }
+
+    @Test
+    fun `a return to another screen draws nothing`() {
+        val first = draw.seed.value
+        clock += 1.hours
+        draw.onAppStopped()
+        clock += 10.minutes
+        draw.onAppStarted(isSongsOnTop = false)
+        assertEquals(first, draw.seed.value)
+    }
+
+    @Test
+    fun `a clock set back during a stay away draws nothing`() {
+        val first = draw.seed.value
+        clock += 2.hours
+        draw.onAppStopped()
+        clock += (-1).hours
+        draw.onAppStarted(isSongsOnTop = true)
+        assertEquals(first, draw.seed.value)
+    }
+
+    private class FakeClock : Clock {
+        private var now = Instant.fromEpochSeconds(1_800_000_000)
+
+        override fun now() = now
+
+        operator fun plusAssign(duration: Duration) {
+            now += duration
+        }
     }
 }

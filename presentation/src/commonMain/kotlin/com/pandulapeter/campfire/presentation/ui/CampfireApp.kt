@@ -111,11 +111,14 @@ fun CampfireApp(
     // MetronomeController.onAppStopped. ON_STOP rather than ON_PAUSE: Control Center or a notification shade pulled over
     // the app pauses it with the click still in view.
     val areBeatsFeltInBackground = areBeatHapticsFeltInBackground && rememberBeatHaptics() != null
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.metronomeController.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
-    // Coming back to the app on the song list opens it again, for the random picks too (RandomPicksDraw).
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.metronomeController.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground)
+        viewModel.randomPicksDraw.onAppStopped()
+    }
+    // Coming back to the app on the song list after a stay away opens it again, for the random picks too (RandomPicksDraw).
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         viewModel.metronomeController.onAppStarted()
-        if (viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs) viewModel.randomPicksDraw.catchUp()
+        viewModel.randomPicksDraw.onAppStarted(isSongsOnTop = viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs)
     }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.preferencesController.arePreferencesLoaded.collectAsStateWithLifecycle()

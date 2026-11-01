@@ -173,7 +173,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.random.Random
-import kotlin.time.TimeSource
+import kotlin.time.Clock
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -261,7 +261,7 @@ class CampfireViewModel(
             ?: SongFilter()
     )
 
-    internal val randomPicksDraw = RandomPicksDraw(timeSource = TimeSource.Monotonic, random = Random.Default)
+    internal val randomPicksDraw = RandomPicksDraw(clock = Clock.System, random = Random.Default)
 
     internal val libraryState: LibraryState = LibraryState(
         scope = viewModelScope,
