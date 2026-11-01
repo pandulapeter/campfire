@@ -121,6 +121,45 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `the row campfires PDF heads a song with is read in every language the app prints it in`() {
+        // The labels as each language's strings.xml has them: key, transposition, capo, tempo, and time.
+        val languages = listOf(
+            listOf("Key", "Transposition", "Capo", "Tempo", "Time"),
+            listOf("Hangnem", "Transzpon\u00e1l\u00e1s", "Capo", "Temp\u00f3", "\u00dctemmutat\u00f3"),
+            listOf("Tonalitate", "Transpunere", "Capodastru", "Tempo", "M\u0103sur\u0103"),
+            listOf("Tonart", "Transposition", "Kapodaster", "Tempo", "Taktart"),
+            listOf("Tonalidad", "Transposici\u00f3n", "Capo", "Tempo", "Comp\u00e1s"),
+            listOf("Tonalit\u00e9", "Transposition", "Capo", "Tempo", "Mesure"),
+            listOf("Tonalit\u00e0", "Trasposizione", "Capotasto", "Tempo", "Metro"),
+            listOf(
+                "\u05d8\u05d5\u05e0\u05dc\u05d9\u05d5\u05ea",
+                "\u05d8\u05e8\u05e0\u05e1\u05e4\u05d5\u05d6\u05d9\u05e6\u05d9\u05d4",
+                "\u05e7\u05d0\u05e4\u05d5",
+                "\u05d8\u05de\u05e4\u05d5",
+                "\u05de\u05e9\u05e7\u05dc",
+            ),
+        )
+        for (labels in languages) {
+            val separator = if (labels[0] == "Tonalit\u00e9") " : " else ": "
+            val values = listOf("F#m", "+2", "2", "96 BPM", "3/4")
+            val row = labels.zip(values) { label, value -> "$label$separator$value" }.joinToString("   ")
+            val result = convert("Song\nSomeone\n$row\nVerse 1\nEm C\nHello world")
+            assertTrue(result.contains("{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n"), result)
+            assertTrue(labels.none { result.contains(it) }, result)
+        }
+    }
+
+    @Test
+    fun `a time label that is an ordinary word is read only with a time signature`() {
+        for (lyric in listOf("Metro dopo metro", "Mesure par mesure", "Metro: dopo metro", "Mesure : par mesure")) {
+            val result = convert("Song\nSomeone\n$lyric\nVerse 1\nEm C\nHello world")
+            assertFalse(result.contains("{time"), result)
+            assertTrue(result.contains(lyric), result)
+        }
+        assertTrue(convert("Song\nSomeone\nM\u0103sur\u0103: 3/4\nVerse 1\nEm C\nHello world").contains("{time: 3/4}"))
+    }
+
+    @Test
     fun `heading decoration is left out of section names`() {
         val result = convert("[Verse 1]\nC   G\nHello world\n\n[Intro]\nC G\n\n[Chorus]\nAm F\nLa la")
         assertTrue(result.contains("{start_of_verse: Verse 1}"))

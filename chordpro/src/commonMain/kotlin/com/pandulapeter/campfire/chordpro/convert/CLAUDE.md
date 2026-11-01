@@ -28,7 +28,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   row of no right-to-left letter whose glyphs are drawn out of its order (`2 2 tonight` in a Hebrew song) is read the
   same way. A wrapped tab system comes back as the system it was printed as.
 - An export's label opens the kind its leading heading word names, in every language the app prints labels in,
-  whatever follows it (`Chorus (twice)`); a pre-chorus is the editor's `pre-chorus`, never a site's bridge.
+  whatever follows it (`Chorus (twice)`); a pre-chorus is the editor's `pre-chorus`, never a site's bridge. The
+  playing details row (key, transposition, capo, tempo, time) is read in every language the app prints it in, from the
+  same labels as `strings.xml`; a label that is an ordinary word too (`Metro`, `Mesure`) takes only a value of its
+  field's shape.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands.
 - Any row with `pieces` is matched by those edges (another producer's PDF, put into reading order by `:data:formats`),
   within an em of the lyric rather than the export's exact point.

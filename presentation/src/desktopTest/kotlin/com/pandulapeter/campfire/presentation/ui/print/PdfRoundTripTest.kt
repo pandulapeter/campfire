@@ -28,7 +28,9 @@ import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import org.w3c.dom.Element
 import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,11 +79,41 @@ class PdfRoundTripTest {
         assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
     }
 
-    private suspend fun roundTrip(song: ChordProSong, settings: PrintSettings): ChordProSong {
+    @Test
+    fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
+        val song = ChordProParser.parse(
+            "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",
+        )
+        val failures = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+            .mapNotNull { folder ->
+                val metadata = roundTrip(song, PrintSettings(), printLabelsOf(folder), transposition = 2).metadata
+                val actual = listOf(metadata.key, metadata.capo?.toString(), metadata.tempo, metadata.time)
+                if (actual == listOf("F#m", "2", "96", "3/4")) null else "${folder.name}: $actual"
+            }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    /** The labels the export prints in the language of the `values*` [folder], read from its `strings.xml` as the app reads them. */
+    private fun printLabelsOf(folder: File): PrintLabels {
+        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(folder, "strings.xml"))
+        val strings = document.getElementsByTagName("string").let { nodes -> (0 until nodes.length).map { nodes.item(it) as Element } }
+            .associate { it.getAttribute("name") to it.textContent.replace("\\'", "'") }
+        return labels.copy(
+            key = strings.getValue("song_editor_insert_key"),
+            transposition = strings.getValue("song_details_transposition"),
+            capo = strings.getValue("song_editor_insert_capo"),
+            tempo = strings.getValue("song_editor_insert_tempo"),
+            tempoValue = strings.getValue("song_details_tempo").replace("%1\$s", TEMPO_VALUE),
+            time = strings.getValue("print_time"),
+            labelledValue = strings.getValue("print_label_value").replace("%1\$s", LABELLED_LABEL).replace("%2\$s", LABELLED_VALUE),
+        )
+    }
+
+    private suspend fun roundTrip(song: ChordProSong, settings: PrintSettings, labels: PrintLabels = this.labels, transposition: Int = 0): ChordProSong {
         val printed = songRenderer.notatedSong(song, UserPreferences.ChordSpelling.Default)
         val title = song.metadata.title.orEmpty()
         val document = layoutPrintDocument(
-            PrintSource(title, songs = listOf(PrintSong("song.cho", title, song.metadata.artist, song = printed))),
+            PrintSource(title, songs = listOf(PrintSong("song.cho", title, song.metadata.artist, transposition = transposition, song = printed))),
             settings, labels, renderer::width, measureLyric = renderer::lyricLayout,
         )
         val extracted = PdfTextExtractor.extract(renderer.pdf(document, title))
