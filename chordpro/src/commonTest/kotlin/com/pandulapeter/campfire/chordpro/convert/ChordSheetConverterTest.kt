@@ -765,6 +765,27 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a song set wholly in italic with one plain footer line has no chorus`() {
+        fun line(text: String, italic: Boolean = true, size: Double = 10.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isItalic = italic) })
+        val lines = listOf(
+            line("Song", size = 16.0),
+            line("G       C"),
+            line("Somebody told me"),
+            line("We were born to sing"),
+            ChordSheet.Line(emptyList()),
+            line("Hey now you're a star"),
+            line("Get your game on"),
+            ChordSheet.Line(emptyList()),
+            line("www.example.com/songs", italic = false),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]Somebody [C]told me\nWe were born to sing\n\nHey now you're a star\nGet your game on\n\nwww.example.com/songs\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(

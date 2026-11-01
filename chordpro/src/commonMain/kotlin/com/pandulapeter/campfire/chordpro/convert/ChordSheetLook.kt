@@ -38,8 +38,8 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
 
         /**
          * The first lines of the runs of a stanza's lyrics set apart from the song's plain verses, two lines at least in the verses' size,
-         * which open a chorus no heading names: bold or italic where the song has plain lyrics (a song set wholly in one
-         * has nothing to set apart). An inset alone does not, with no heading to say what it sets apart: a second
+         * which open a chorus no heading names: bold or italic where the song has a plain verse of two lines or more (a
+         * song set wholly in one has nothing to set apart). An inset alone does not, with no heading to say what it sets apart: a second
          * column, a bridge, and a centred stanza all start further in. The lines right under the title, before any stanza
          * break, chord row, or plain lyric, are the header's (a credit, an album), so a run there opens nothing. [looks]
          * holds a lyric's look and null for any other line, [breaks] whether a line ends a stanza (a chord row does not),
@@ -48,6 +48,15 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
         fun unlabelled(looks: List<ChordSheetLook?>, breaks: List<Boolean>, rows: List<Boolean>): Set<Int> {
             val plain = looks.filterNotNull().filter { !it.isBold && !it.isItalic }.takeIf { it.isNotEmpty() } ?: return emptySet()
             val size = plain.map { it.size }.sorted()[plain.size / 2]
+            // A plain footer, credit, or repeat mark under a song set wholly in italic is no verse to set a chorus apart from.
+            var plainRun = 0
+            val hasVerse = looks.indices.any { index ->
+                if (breaks[index]) plainRun = 0
+                val look = looks[index]
+                if (look != null) plainRun = if (!look.isBold && !look.isItalic) plainRun + 1 else 0
+                plainRun >= 2
+            }
+            if (!hasVerse) return emptySet()
             val starts = mutableSetOf<Int>()
             val run = mutableListOf<Int>()
             var hasStarted = false
