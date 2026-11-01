@@ -172,6 +172,17 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a right-to-left annotation over a left-to-right lyric comes back where it stands`() = runBlocking {
+        val song = ChordProParser.parse("{title: Song}\n{start_of_verse}\n[C]Sing [*\u05e4\u05e2\u05de\u05d9\u05d9\u05dd]along with [G]me\n{end_of_verse}\n")
+        val failures = sizedPrints.filter { it.columns <= 2 }.mapNotNull { settings ->
+            val expected = summary(song)
+            val actual = summary(roundTrip(song, settings))
+            if (expected == actual) null else "${settings.columns} columns at ${settings.fontSize} points:\n  expected $expected\n  actual   $actual"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
     fun `a right-to-left song wrapped by a narrow column comes back with each chord on its letter and each line whole`() = runBlocking {
         val failures = listOf("60-generated-rtl-10.cho", "60-generated-rtl-15.cho").flatMap { name ->
             val original = songRenderer.transposedSong(corpus.getValue(name), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)

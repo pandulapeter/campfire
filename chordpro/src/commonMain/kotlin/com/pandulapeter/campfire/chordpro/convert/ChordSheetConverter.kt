@@ -1167,7 +1167,12 @@ public object ChordSheetConverter {
         // set from the right runs from its right end.
         val readsFromRight = chords.isSetFromRight && lyrics.bidi != null
         for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { if (readsFromRight) -it.index else it.index }) {
-            val x = chords.positions.getOrNull(word.index) ?: 0.0
+            // A right-to-left annotation is written in its reading order over its glyphs, its first character at its
+            // right end: over a lyric read by its positions rather than by the edges of its glyphs, it stands where its
+            // leftmost glyph does, as a left-to-right chord stands where its first one does.
+            val x = if (lyrics.bidi != null) chords.positions.getOrNull(word.index) ?: 0.0 else {
+                word.text.indices.mapNotNull { chords.positions.getOrNull(word.index + it) }.minOrNull() ?: 0.0
+            }
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
