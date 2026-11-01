@@ -187,7 +187,8 @@ def numbered_songbook():
 
 
 def styled_songbook():
-    """A typeset songbook: a large bold title type, songs following each other on a page, a title wrapped in two."""
+    """A typeset songbook: a large bold title type, songs following each other on a page, a title wrapped in two, and a
+    chorus set apart in italic with no heading."""
     pdf = canvas.Canvas(str(ROOT / "songbook-styled.pdf"), pagesize=(612, 792), pageCompression=1, invariant=1)
     chord_font, lyric_font = ("Helvetica-Oblique", 9), ("Helvetica", 10)
 
@@ -218,7 +219,8 @@ def styled_songbook():
     y = title(["2 Oh! Susanna, oh don't", "you cry for me"], "Stephen Foster", y - 20)
     song_lines(pdf, SONGS[1][2][2:], 72, y, chord_font, lyric_font)
     pdf.showPage()
-    y = song_lines(pdf, SONGS[1][2][:2], 72, 720, chord_font, lyric_font)
+    # The chorus in italic, with no heading, the verse before it plain.
+    y = song_lines(pdf, SONGS[1][2][:2], 72, 720, chord_font, ("Helvetica-Oblique", 10))
     y = title(["3 Home on the Range"], "Brewster Higley", y - 20)
     y = song_lines(pdf, SONGS[2][2], 72, y, chord_font, lyric_font)
     y = title(["4 Shenandoah"], None, y - 20)

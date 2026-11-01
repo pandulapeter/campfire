@@ -194,6 +194,8 @@ public object ChordSheetConverter {
         val joint get() = if (isHardCut) "" else " "
     }
     private data class Token(val text: String, val index: Int)
+    private val sungWord = Regex("\\p{L}{2}")
+
     private enum class Kind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHORD, LYRIC }
 
     /** Primitive storage keeps an allowed large text file from allocating one boxed Double per character. */
@@ -962,7 +964,16 @@ public object ChordSheetConverter {
         convertParentheses: Boolean,
     ): List<String> = with(BodyWriter()) {
         fun look(at: Int) = lines[at].let { ChordSheetLook.of(it.source, it.positions.getOrNull(it.text.indexOfFirst { c -> !c.isWhitespace() })) }
-        fun follow(at: Int) { if (!lines[at].isContinuation) look(at)?.let { follow(it, lines[at].text) } }
+        fun isSung(at: Int) = !lines[at].isContinuation && sungWord.containsMatchIn(lines[at].text)
+        fun follow(at: Int) { if (isSung(at)) look(at)?.let { follow(it, lines[at].text) } }
+        val unlabelled = ChordSheetLook.unlabelled(
+            // A line with no word (a tab's string or a stray accidental the reading took for a lyric) is not sung.
+            looks = lines.indices.map { at ->
+                if (kinds[at] != Kind.LYRIC || at in omitted || !isSung(at)) null else look(at)
+            },
+            breaks = kinds.map { it == Kind.BLANK || it == Kind.SECTION || it == Kind.COMMENT || it == Kind.TAB || it == Kind.GRID },
+        )
+        fun openUnlabelled(at: Int) { if (at in unlabelled) openChorus() }
         var index = 0
         while (index < lines.size) {
             changes[index]?.let { pendingChanges += it }
@@ -1023,6 +1034,7 @@ public object ChordSheetConverter {
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
+                    openUnlabelled(index + 1)
                     val isUnderMarkedLyric = kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && lines[index + 1].isContinuation
                     // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
                     // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
@@ -1035,6 +1047,7 @@ public object ChordSheetConverter {
                     } else output += bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight)
                 }
                 Kind.LYRIC -> {
+                    openUnlabelled(index)
                     follow(index)
                     addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
                 }
@@ -1092,6 +1105,15 @@ public object ChordSheetConverter {
 
         private fun words(text: String) = text.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }.joinToString(" ")
 
+        /** A chorus no heading names, set apart by its type alone, which a change of type ends. */
+        fun openChorus() {
+            if (environment != null || inTab || inGrid) return
+            if (output.lastOrNull()?.isNotBlank() == true) output += ""
+            output += "{start_of_chorus}"
+            open("chorus")
+            sectionBody = null
+        }
+
         fun open(type: String) {
             environment = type
             sectionLook = null
@@ -1100,9 +1122,9 @@ public object ChordSheetConverter {
         }
 
         /**
-         * A lyric of [look]: a section set apart from the verses ends where the lyrics return to their look, before the
-         * blank lines that end its last stanza. With no verse before it to compare with, only a change of type ends it,
-         * since lines of a centred sheet each start somewhere else.
+         * A lyric of [look]: a section set apart from the verses ends where the lyrics return to their look. With no verse
+         * before it to compare with, only a change of type ends it, since lines of a centred sheet each start somewhere
+         * else.
          */
         fun follow(look: ChordSheetLook, text: String) {
             val opened = sectionLook
@@ -1111,6 +1133,7 @@ public object ChordSheetConverter {
                 val body = sectionBody
                 val ends = if (body == null) opened.differsInType(look) else opened.isSetApartFrom(body) && !look.isSetApartFrom(body)
                 if (ends) {
+                    // A section ending mid-song ends with its last stanza, before the blank lines parting it from the next.
                     val blanks = output.takeLastWhile { it.isBlank() }.size
                     repeat(blanks) { output.removeAt(output.lastIndex) }
                     closeSection()

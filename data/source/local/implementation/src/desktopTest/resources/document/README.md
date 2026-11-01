@@ -24,7 +24,7 @@ The test does not regenerate them or require any producer application.
 | `two-column.pdf` | ReportLab, two verses side by side below a title |
 | `songbook.pdf` | ReportLab, two separately titled song pages |
 | `songbook-numbered.pdf` | ReportLab, a word processor's songbook: a cover in a larger type, a contents page, numbered titles and chords in bold at the lyrics' size, one song a page, one running onto the next and one whose title has a bold label under it, as a chorus does; the cover leaves the split to the titles' type, the contents confirm the title the type cannot, and the numbers leave the titles |
-| `songbook-styled.pdf` | ReportLab, a typeset songbook: a large bold title type shared by an index page, songs following each other on a page, a title wrapped onto a second line of its type, and a song running onto the next page |
+| `songbook-styled.pdf` | ReportLab, a typeset songbook: a large bold title type shared by an index page, songs following each other on a page, a title wrapped onto a second line of its type, a song running onto the next page, and its chorus set in italic with no heading |
 | `protected.pdf` | pypdf encryption of the ReportLab sheet with an empty password; must be unreadable |
 | `campfire.pdf` | Campfire `PrintRendererTest`, page image plus invisible glyphless Type 3 text; Hungarian accents, styled title and proportional chord placement |
 | `campfire-columns.pdf` | Campfire `PrintRendererTest`, thirty numbered lyric/chord pairs flowing through both columns; song reading order and no page footer in the imported lyrics |

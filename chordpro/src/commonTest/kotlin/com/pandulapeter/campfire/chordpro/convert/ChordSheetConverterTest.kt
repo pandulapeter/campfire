@@ -596,6 +596,34 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
+        fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
+        val lines = listOf(
+            ChordSheet.Line(listOf(span("Song", 0.0, 40.0, size = 20.0))),
+            line("G       C"),
+            line("We were born to sing"),
+            line("Under a sky so wide"),
+            line("Hey now you're a star", italic = true),
+            line("•"),
+            line("Get your game on, go play", italic = true),
+            line("It's a cool place"),
+            line("And it gets colder"),
+            line("A single italic line", italic = true),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]We were [C]born to sing\nUnder a sky so wide\n\n{start_of_chorus}\nHey now you're a star\n•\nGet your game on, go play\n" +
+                "{end_of_chorus}\nIt's a cool place\nAnd it gets colder\nA single italic line\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun `an inset stanza with no heading stays a verse, as a second column or a bridge starts further in too`() {
+        val result = convert("Somebody told me\nWe were born to sing\n\n    Hey now you're a star\n    Get your game on\n\nIt's a cool place")
+        assertFalse(result.contains("chorus"), result)
+    }
+
+    @Test
     fun `a chorus heading over the chorus's own words is that chorus written out, however it is set`() {
         val result = convert("Somebody told me\n\nChorus:\n    Hey now you're a star\n    Get your game on\nIt's a cool place\n\nChorus:\nHey now you're a star\nGet the show on")
         assertTrue(result.endsWith("{start_of_chorus: Chorus}\nHey now you're a star\nGet the show on\n{end_of_chorus}\n"), result)

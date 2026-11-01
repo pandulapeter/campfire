@@ -79,6 +79,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   than a character and a half) ends where the lyrics return to the verses' look, not only at the next heading; with no
   verse before it, only a change of type ends it (a centred sheet's lines each start elsewhere). A chorus heading
   over lines neither set in the look the song set its chorus apart in nor singing its words recalls it (`{chorus}`).
+- With no heading, a stanza's run of two lyrics or more set in bold or italic at the size of the song's plain verses is
+  a chorus, ended by a change of type; an inset alone is not one (a second column or a bridge starts further in too),
+  and a line with no word (a tab's string, a stray accidental) neither belongs to such a run nor ends it.
 - Chord shapes listed one a line (`Bb(#11)/A = x03330`) become `{define}` lines in the header
   (`ChordSheetDefinitions`), except a chord listed both plain and starred (`Bb`, `Bb*`): the star is dropped where the
   chord is played, so one definition would stand for both.
