@@ -159,6 +159,8 @@ class ChordSheetConverterTest {
         assertTrue(shapes.contains("{key: F#m}\n{capo: 2}\n") && shapes.contains("[Em]Hello [C]world"), shapes)
         val other = convert("Song\nSomeone\nCapo: 2 (optional)\nVerse 1\nF#m   D\nHello world")
         assertTrue(other.contains("{capo: 2}\n") && other.contains("[F#m]Hello [D]world"), other)
+        val overflowing = convert("Song\nSomeone\nCapo: 99999999999 (chords as they sound)\nVerse 1\nF#m   D\nHello world")
+        assertTrue(overflowing.contains("[F#m]Hello [D]world"), overflowing)
     }
 
     @Test

@@ -701,7 +701,8 @@ public object ChordSheetConverter {
                     }
                     name == CAPO_SOUNDING -> {
                         header += "{capo: $value}"
-                        soundingCapo = value.toInt()
+                        // A run of digits too long for a fret is no capo chart to move the chords of.
+                        soundingCapo = value.toIntOrNull() ?: 0
                     }
                     // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
                     name == ChordProVocabulary.KEY -> header += "{$name: ${headerValue(ascii(value))}}"
