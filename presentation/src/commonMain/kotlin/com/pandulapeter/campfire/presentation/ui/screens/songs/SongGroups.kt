@@ -20,6 +20,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
  * @param isLibraryRead Whether these are the songs of the whole library rather than of a read still under way, carried
  * with them because the songs are put together on another dispatcher and arrive after `LibraryState.isLoading` says
  * the read is over: a list told it was loaded by that would animate the songs landing in it.
+ * @param areRandomPicksAwaited Whether the random picks are still to lead this list: they are drawn only from the whole
+ * library, so a list of a read still under way leaves them out, and the launch screen stays up over it until the read
+ * ends (`LaunchState.hasLibraryToShow`). False with the picks or Songs switched off and while a search is open.
  * @param librarySongCount The songs in the library the list was built from, and [filteredSongCount] those of them the
  * filters let through, before the search: counted in the same pass as [groups], so that the placeholder tells its empty
  * states apart by the list alone and never pairs it with a library that is newer.
@@ -29,6 +32,7 @@ data class SongGroups(
     val orderKey: String,
     val groups: List<SongGroup>,
     val isLibraryRead: Boolean,
+    val areRandomPicksAwaited: Boolean,
     val librarySongCount: Int,
     val filteredSongCount: Int,
 )

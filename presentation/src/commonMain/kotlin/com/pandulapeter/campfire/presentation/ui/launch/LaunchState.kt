@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.launch
 
+import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
@@ -75,16 +76,25 @@ internal class LaunchState(
      * lands a few frames after it: uncovered in between, the songs screen would open on its loading placeholder,
      * without the New button, which then makes its room in the bar and moves the pill aside as the list arrives, and
      * the setlists screen would show its loading placeholder for those frames. Neither list holds
-     * a slow read back by more than its first batch: the songs as soon as some are listed, the setlists as soon as
-     * the read has found none yet or they are listed.
+     * a slow read back by more than its first batch, unless the random picks are to lead the songs list: the songs as
+     * soon as some are listed, the setlists as soon as the read has found none yet or they are listed. The picks are
+     * drawn only from the whole library ([SongGroups.areRandomPicksAwaited]), and uncovered before it is read, the list
+     * would have them land above its first section and push it down. That wait is taken only while the songs list is
+     * on top, since a screen restored or pushed over it hides the list anyway; [backStack] is read in a snapshot flow
+     * so that a screen pushed over the list during the read lets the launch screen go at once, not at the next batch.
      *
      * Latched like `PreferencesController.arePreferencesLoaded`: a rescan reads the library again and says so, and none
      * of that is a reason to put the launch screen back up over an app the user is already using.
      */
     val hasLibraryToShow = combine(
-        combine(screenData, songGroups, listedSetlists) { state, songGroups, listedSetlists ->
+        combine(
+            screenData,
+            songGroups,
+            listedSetlists,
+            snapshotFlow { backStack.lastOrNull() == CampfireDestination.Songs },
+        ) { state, songGroups, listedSetlists, isSongsOnTop ->
             (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true) &&
-                (songGroups.isLibraryRead || songGroups.groups.isNotEmpty()) &&
+                (songGroups.isLibraryRead || (songGroups.groups.isNotEmpty() && !(songGroups.areRandomPicksAwaited && isSongsOnTop))) &&
                 (listedSetlists.isLibraryRead || listedSetlists.setlists.isNotEmpty() || state.data?.setlists.isNullOrEmpty())
         },
         isDemoLibraryPending,

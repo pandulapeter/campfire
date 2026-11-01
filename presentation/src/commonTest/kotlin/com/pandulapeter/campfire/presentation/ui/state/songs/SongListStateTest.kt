@@ -12,19 +12,24 @@ package com.pandulapeter.campfire.presentation.ui.state.songs
 import com.pandulapeter.campfire.presentation.ui.LowercaseSearchText
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongLanguage
 import com.pandulapeter.campfire.data.model.song.Tag
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter
 import com.pandulapeter.campfire.domain.api.library.SongSection
+import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -116,6 +121,57 @@ class SongListStateTest {
         assertTrue(songGroupsFor(sections, searchable, "song", randomPicksSeed = 7L, isRandomPicksQuestionAsked = true).none { it.isRandomPicks })
     }
 
+    @Test
+    fun `a library still being read shows no random picks and awaits them`() = runTest {
+        val songs = (1..30).map { song("song$it") }
+        val indexed = MutableStateFlow(indexed(songs, isLibraryRead = false))
+        val state = songListState(indexedSongs = indexed, userPreferences = MutableStateFlow(testPreferences()))
+        val partial = state.songGroups.first { it.librarySongCount == songs.size }
+        assertTrue(partial.groups.none { it.isRandomPicks }, "Picks from a partial read")
+        assertTrue(partial.areRandomPicksAwaited)
+
+        indexed.value = indexed(songs, isLibraryRead = true)
+        val whole = state.songGroups.first { it.isLibraryRead }
+        assertTrue(whole.groups.first().isRandomPicks, "The whole library leads with its picks")
+        assertFalse(whole.areRandomPicksAwaited)
+    }
+
+    /** The list is built on another dispatcher, so each step waits for the answer to change rather than reading it. */
+    @Test
+    fun `the random picks are awaited only while they could show`() = runTest {
+        val songs = (1..30).map { song("song$it") }
+        val preferences = MutableStateFlow<UserPreferences?>(null)
+        val state = songListState(indexedSongs = MutableStateFlow(indexed(songs, isLibraryRead = false)), userPreferences = preferences)
+        assertTrue(state.songGroups.first { it.librarySongCount == songs.size }.areRandomPicksAwaited, "Preferences not read yet")
+
+        preferences.value = testPreferences().copy(isRandomPicksEnabled = false)
+        state.songGroups.first { !it.areRandomPicksAwaited }
+        preferences.value = testPreferences()
+        state.songGroups.first { it.areRandomPicksAwaited }
+        preferences.value = testPreferences().copy(areSongsEnabled = false)
+        state.songGroups.first { !it.areRandomPicksAwaited }
+        preferences.value = testPreferences()
+        state.songGroups.first { it.areRandomPicksAwaited }
+
+        state.songsSearch.open()
+        state.songsSearch.textFieldState.setTextAndPlaceCursorAtEnd("song")
+        Snapshot.sendApplyNotifications()
+        assertFalse(state.songGroups.first { it.groups.size == 1 && it.groups.single().header == null }.areRandomPicksAwaited, "A search open")
+    }
+
+    private fun indexed(songs: List<Song>, isLibraryRead: Boolean) = LibraryState.IndexedSongs(
+        sections = listOf(SongSection(header = SongSection.Header.Letter('S'), songs = songs)),
+        search = SongSearchSnapshot(
+            filtered = songs.map { SearchableSong(song = it, title = it.title, artist = "", tags = emptyList()) },
+            byFileName = songs.associate { it.fileName to SearchableSong(song = it, title = it.title, artist = "", tags = emptyList()) },
+            songsByFileName = songs.associateBy { it.fileName },
+        ),
+        filterKey = "",
+        orderKey = "",
+        sorted = songs,
+        isLibraryRead = isLibraryRead,
+    )
+
     private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(
         song = song(name), title = title, artist = artist, tags = tags,
     )
@@ -126,18 +182,23 @@ class SongListStateTest {
         canUpdateFileName = false, lastModified = 0L, size = 0L,
     )
 
-    private fun TestScope.songListState() = SongListState(
+    private fun TestScope.songListState(
+        indexedSongs: MutableStateFlow<LibraryState.IndexedSongs> = MutableStateFlow(
+            LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", orderKey = "", sorted = emptyList(), isLibraryRead = true),
+        ),
+        userPreferences: MutableStateFlow<UserPreferences?> = MutableStateFlow(null),
+    ) = SongListState(
         scope = backgroundScope,
         savedStateStore = SavedStateStore(SavedStateHandle(), backgroundScope),
         mutableSongFilter = songFilter,
         screenData = MutableStateFlow<DataState<ScreenData>>(DataState.Loading(null)),
-        indexedSongs = MutableStateFlow(LibraryState.IndexedSongs(sections = emptyList(), search = SongSearchSnapshot.Empty, filterKey = "", orderKey = "", sorted = emptyList(), isLibraryRead = true)),
+        indexedSongs = indexedSongs,
         tags = tags,
         languages = languages,
         isImporting = MutableStateFlow(false),
         normalizeSearchText = LowercaseSearchText,
         changeUserPreferences = {},
-        userPreferences = MutableStateFlow(null),
+        userPreferences = userPreferences,
         randomPicksSeed = MutableStateFlow(0L),
     )
 }

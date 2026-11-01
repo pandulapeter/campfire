@@ -111,6 +111,8 @@ internal class SongListState(
         randomPicksSeed,
     ) { indexed, query, randomPicksPreferences, seed ->
         val normalizedQuery = normalizeSearchText(query)
+        // The picks are a draw over the whole library, and a first read publishes it in growing batches: drawn from
+        // each, they would be swapped under the reader as each larger batch arrived.
         SongGroups(
             filterKey = "$normalizedQuery|${indexed.filterKey}",
             orderKey = "$normalizedQuery|${indexed.orderKey}",
@@ -118,16 +120,17 @@ internal class SongListState(
                 sections = indexed.sections,
                 filtered = indexed.search.filtered,
                 normalizedQuery = normalizedQuery,
-                randomPicksSeed = seed.takeIf { randomPicksPreferences.isEnabled },
+                randomPicksSeed = seed.takeIf { randomPicksPreferences.isEnabled && indexed.isLibraryRead },
                 isRandomPicksQuestionAsked = !randomPicksPreferences.isQuestionAnswered,
             ),
             isLibraryRead = indexed.isLibraryRead,
+            areRandomPicksAwaited = randomPicksPreferences.isAwaited && !indexed.isLibraryRead && normalizedQuery.isEmpty(),
             librarySongCount = indexed.search.byFileName.size,
             filteredSongCount = indexed.search.filtered.size,
         )
     }.flowOn(Dispatchers.Default).asState(
         scope,
-        SongGroups(filterKey = "", orderKey = "", groups = emptyList(), isLibraryRead = false, librarySongCount = 0, filteredSongCount = 0),
+        SongGroups(filterKey = "", orderKey = "", groups = emptyList(), isLibraryRead = false, areRandomPicksAwaited = true, librarySongCount = 0, filteredSongCount = 0),
     )
 
     /**
@@ -215,12 +218,19 @@ internal fun songGroupsFor(
     rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
 }
 
-/** The two preferences the random picks are built from, so that no other change of the preferences rebuilds the list. */
-private data class RandomPicksPreferences(val isEnabled: Boolean, val isQuestionAnswered: Boolean) {
+/**
+ * The preferences the random picks are built from, so that no other change of the preferences rebuilds the list.
+ *
+ * @param isAwaited Whether picks could lead a songs list once the library is read: switched on with Songs on, or the
+ * preferences not read yet. Unknown preferences count, since a first batch landing before them would otherwise let the
+ * launch screen go before the picks arrive at the end of the read and push the list down.
+ */
+private data class RandomPicksPreferences(val isEnabled: Boolean, val isQuestionAnswered: Boolean, val isAwaited: Boolean) {
     companion object {
         fun of(preferences: UserPreferences?) = RandomPicksPreferences(
             isEnabled = preferences?.isRandomPicksEnabled == true,
             isQuestionAnswered = preferences?.isRandomPicksQuestionAnswered != false,
+            isAwaited = preferences == null || preferences.isRandomPicksEnabled && preferences.areSongsEnabled,
         )
     }
 }

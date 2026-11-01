@@ -93,6 +93,7 @@ class ListPlaceholdersTest {
         orderKey = "",
         groups = groups,
         isLibraryRead = isLibraryRead,
+        areRandomPicksAwaited = false,
         librarySongCount = library,
         filteredSongCount = filtered,
     )
