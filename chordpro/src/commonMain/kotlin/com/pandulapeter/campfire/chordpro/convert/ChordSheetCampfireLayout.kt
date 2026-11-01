@@ -170,6 +170,9 @@ internal object ChordSheetCampfireLayout {
     /** Just over the distance between rows (`PrintRows`, 1.45 times the size), which a wrapped lyric continues at. */
     private const val WRAPPED_ROW = 1.5
 
-    /** A song's title is set at 1.6 times the lyrics' size (`PrintRows.titleStyle`), over anything else in bold. */
-    private const val TITLE_SIZE_RATIO = 1.3
+    /**
+     * A song's title is set at 1.6 times the lyrics' size (`PrintRows.titleStyle`), over anything else in bold, the
+     * chords included, which the converter reads as chords only under it.
+     */
+    const val TITLE_SIZE_RATIO = 1.3
 }

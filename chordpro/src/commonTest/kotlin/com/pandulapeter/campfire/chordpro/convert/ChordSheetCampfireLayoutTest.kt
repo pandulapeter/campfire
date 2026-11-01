@@ -136,6 +136,28 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `only a word printed in the chords' type is a chord`() {
+        val song = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    ChordSheet.Page(
+                        listOf(
+                            text("A", size = 19.0, bold = true),
+                            text("Verse", size = LABEL, bold = true),
+                            chords("C" to 0),
+                            text("Hello a b c d"),
+                            text("a b c d"),
+                        ),
+                    ),
+                ),
+                isCampfireExport = true,
+            ),
+        ).single()
+        assertTrue(song.startsWith("{title: A}\n"), song)
+        assertTrue("\na b c d\n" in song, song)
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

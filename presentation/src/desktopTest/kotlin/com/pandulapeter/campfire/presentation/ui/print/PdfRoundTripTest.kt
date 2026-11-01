@@ -94,6 +94,12 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a title and a lyric whose words are chord names by their text alone come back as they were`() = runBlocking {
+        val song = ChordProParser.parse("{title: A}\n{start_of_verse}\n[C]Hello a b c d\na b c d\n{end_of_verse}\n")
+        assertEquals(summary(song), summary(roundTrip(song, PrintSettings())))
+    }
+
+    @Test
     fun `the playing details row comes back in every language the app prints it in`() = runBlocking {
         val song = ChordProParser.parse(
             "{title: Song}\n{artist: Someone}\n{key: F#m}\n{capo: 2}\n{tempo: 96}\n{time: 3/4}\n{start_of_verse}\n[Em]Hello [C]world\n{end_of_verse}\n",

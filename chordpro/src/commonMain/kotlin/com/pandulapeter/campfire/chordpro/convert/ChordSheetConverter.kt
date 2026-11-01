@@ -57,10 +57,11 @@ public object ChordSheetConverter {
                     page[index].source.spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }.maxOfOrNull { it.size }
                 }
             }.sorted()
-            val bodySize = lyricSizes.getOrNull(lyricSizes.size / 2) ?: plainSizes.getOrNull(plainSizes.size / 2) ?: 1.0
+            val knownBodySize = lyricSizes.getOrNull(lyricSizes.size / 2) ?: plainSizes.getOrNull(plainSizes.size / 2)
+            val bodySize = knownBodySize ?: 1.0
             rendered.mapIndexed { pageIndex, page ->
                 val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], bodySize)
-                page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true) }
+                page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true, bodySize = knownBodySize ?: 0.0) }
             }
         }
         val all = pages.flatten()
@@ -182,6 +183,8 @@ public object ChordSheetConverter {
         val isCampfire: Boolean = false,
         /** Where the chords over a row holding right-to-left text in reading order hang from. */
         val bidi: ChordSheetBidiAnchors? = null,
+        /** The lyrics' size in Campfire's own export ([isCampfire]), which its chords are printed at; 0 where it is unknown. */
+        val bodySize: Double = 0.0,
         val isContinuation: Boolean = false,
         val isHardCut: Boolean = false,
     ) {
@@ -312,7 +315,9 @@ public object ChordSheetConverter {
      * Campfire's export ([isCampfire]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
      * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
      * is all notes, so it is never taken for chords, unless it is the chord row of a lyric's continuation, which the
-     * export marks ([Rendered.isContinuation]).
+     * export marks ([Rendered.isContinuation]). There a word is a chord only where it is printed in the chords' type, bold
+     * under the title's size, or in a tab's monospaced chord line, so that a lyric `a b c d` and a title `A` stay what they
+     * are; where the lyrics' size is unknown, the text alone decides.
      */
     private fun chordRow(line: Rendered, isCampfire: Boolean = line.isCampfire): ChordRow? = chordRow(
         text = line.text,
@@ -323,12 +328,25 @@ public object ChordSheetConverter {
                 x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
             }
         },
+        isChord = if (!isCampfire || line.bodySize <= 0.0) null else { word ->
+            word.text.indices.all { offset ->
+                val x = line.positions.getOrNull(word.index + offset)
+                x != null && line.source.spans.any {
+                    (it.isMonospace || it.isBold && it.size < line.bodySize * ChordSheetCampfireLayout.TITLE_SIZE_RATIO) && x >= it.start - 0.01 && x < it.end
+                }
+            }
+        },
     )
 
     /** Whether [text] is a row of chords, the notes a songbook prints among them included. */
     internal fun isChordRow(text: String) = chordRow(text) != null
 
-    private fun chordRow(text: String, isNote: ((Token) -> Boolean)? = null, allowsNotesOnly: Boolean = false): ChordRow? {
+    private fun chordRow(
+        text: String,
+        isNote: ((Token) -> Boolean)? = null,
+        allowsNotesOnly: Boolean = false,
+        isChord: ((Token) -> Boolean)? = null,
+    ): ChordRow? {
         val words = tokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
@@ -350,6 +368,7 @@ public object ChordSheetConverter {
         }
         if (allowsNotesOnly && row.isEmpty() && notes.isNotEmpty()) return ChordRow(row, null, notes)
         if (row.none { rowChord(it.text) } || !row.all { rowChord(it.text) || furniture(it.text) }) return null
+        if (isChord != null && row.any { rowChord(it.text) && !isChord(it) }) return null
         return ChordRow(row, text.substring(words.getOrNull(start)?.index ?: text.length).trim().ifEmpty { null }, notes)
     }
 
@@ -775,7 +794,9 @@ public object ChordSheetConverter {
         omitted: MutableSet<Int>,
     ) {
         val first = kinds.indexOfFirst { it != Kind.BLANK }
-        if (first < 0 || kinds[first] != Kind.LYRIC || isChordLine(lines[first].text)) return
+        if (first < 0 || kinds[first] != Kind.LYRIC) return
+        // The export's own test reads chords by their type, which a title naming a chord (`A`) is not printed in.
+        if (if (lines[first].isCampfire) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return
         if (!isTitle(lines[first], lines)) return extractPlainTitle(lines, kinds, first, header, omitted)
         // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.

@@ -15,7 +15,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
 - **No recognized song structure means escaped prose, not a guessed song** (`ChordProLiteralText`), and a line that is
   as likely sung (a single chord, `La La La`, "Time after time") is a chord or a field only with corroborating evidence.
 - It reads back Campfire's own PDF export (the heading row, wrapped chord lines, narrow-column titles). A sheet flagged
-  as one (`ChordSheet.isCampfireExport`) is read by the type each line is printed in (`ChordSheetCampfireLayout`):
+  as one (`ChordSheet.isCampfireExport`) is read by the type each line is printed in (`ChordSheetCampfireLayout`; a
+  chord is one only in the chords' type, bold at the lyrics' size, or a tab's monospaced line, so a lyric `a b c d`
+  and a title `A` stay what they are):
   labels open sections (a point under the lyrics' size, read from the lines under its chord rows; a label over a
   tab is the tab's), grids, italic comments, and boxed comments come back as
   written (an italic lyric is told from a comment by its distance under the chord row above,
