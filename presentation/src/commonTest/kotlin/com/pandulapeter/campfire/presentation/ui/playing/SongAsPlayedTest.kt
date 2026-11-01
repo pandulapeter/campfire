@@ -44,6 +44,16 @@ class SongAsPlayedTest {
     }
 
     @Test
+    fun `an override a switch hides is not written`() {
+        assertNull(songAsPlayedOf(playback(transposition = 2, capo = 4), guitar.copy(areChordsEnabled = false)))
+        assertNull(songAsPlayedOf(playback(bpm = 90), guitar.copy(isMetronomeEnabled = false)))
+        assertEquals(
+            "{title: Song}\n{key: G}\n{capo: 2}\n{tempo: 90}\n[G]One [C]two\n",
+            asPlayed(playback(transposition = 2, bpm = 90), guitar.copy(areChordsEnabled = false)),
+        )
+    }
+
+    @Test
     fun `a transposition moves the chords and the key, the capo staying`() =
         assertEquals("{title: Song}\n{key: A}\n{capo: 2}\n[A]One [D]two\n", asPlayed(playback(transposition = 2)))
 
