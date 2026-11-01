@@ -158,6 +158,29 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `an export's title is taken as it is printed, with no page word or artist split off`() {
+        fun convertTitled(title: String) = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    ChordSheet.Page(
+                        listOf(
+                            at(0.0, text(title, size = 19.0, bold = true)),
+                            at(2.6, text("Verse", size = LABEL, bold = true)),
+                            at(4.0, chords("C" to 0, "G" to 6)),
+                            at(5.3, text("Hello world")),
+                        ),
+                    ),
+                ),
+                isCampfireExport = true,
+            ),
+        ).single()
+        val chords = convertTitled("Wide Chords")
+        assertTrue(chords.startsWith("{title: Wide Chords}\n"), chords)
+        val dashed = convertTitled("Hey - Jude")
+        assertTrue(dashed.startsWith("{title: Hey - Jude}\n") && "{artist" !in dashed, dashed)
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

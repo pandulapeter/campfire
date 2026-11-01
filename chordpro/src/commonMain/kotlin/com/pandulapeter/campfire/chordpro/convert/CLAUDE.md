@@ -83,7 +83,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   a chord's width with at a lyric's end are left out; and a `©` line is the copyright wherever it stands.
 - The title shapes a copied page opens with come from `ChordSheetTitles`. `Artist - Title` is read artist first, a
   documented limit, since both orders are common on the web; a title ending in a page word with no credit after it
-  (`Three Chords`) loses that word, the same documented limit.
+  (`Three Chords`) loses that word, the same documented limit, which Campfire's own export, its title printed alone, is
+  not read by.
 - A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate

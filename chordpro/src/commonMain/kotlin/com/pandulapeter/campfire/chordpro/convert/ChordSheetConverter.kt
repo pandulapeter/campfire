@@ -808,7 +808,9 @@ public object ChordSheetConverter {
         var last = first
         while (kinds.getOrNull(last + 1) == Kind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
         val title = joinRows(lines, first, last)
-        val (name, named) = ChordSheetTitles.split(title)
+        // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
+        // credit in it to split off.
+        val (name, named) = if (lines[first].isCampfire) title to null else ChordSheetTitles.split(title)
         addTitle(header, name, named)
         omitted += first..last
         val artist = last + 1
