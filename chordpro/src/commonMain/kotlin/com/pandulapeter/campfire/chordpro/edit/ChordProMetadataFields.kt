@@ -106,6 +106,24 @@ public object ChordProMetadataFields {
         return if (isChanged) ChordProLines.joinLines(lines, text) else text
     }
 
+    /**
+     * Rewrites the song's changes of tempo mid-song: every `{tempo}` line of the body (see
+     * [ChordProHeaderLayout.bodyStartIndex]), recognised as [set] recognises them, is passed its value to [transform], and
+     * a non-null result is written back where the line stands, in the spelling it was written in (`{meta: tempo …}` stays
+     * a `meta`); null keeps the line as it is. The header's lines, the song's own tempo, are never passed: [set] is what
+     * changes those. A text in which nothing changes returns unchanged.
+     */
+    public fun mapTempoChanges(text: String, transform: (String) -> String?): String {
+        val lines = ChordProLines.splitLines(text)
+        val bodyStart = ChordProHeaderLayout.bodyStartIndex(lines)
+        val kept = lines.mapIndexed { index, line ->
+            val isChange = index >= bodyStart && line.kind() == Field.TEMPO.directiveName
+            val newValue = if (isChange) transform(line.value().orEmpty()) else null
+            if (newValue == null || newValue == line.value()) line else line.rewritten(Field.TEMPO, newValue)
+        }
+        return if (kept == lines) text else ChordProLines.joinLines(kept, text)
+    }
+
     private fun set(text: String, field: Field, value: String?): String {
         val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
         val lines = ChordProLines.splitLines(text)

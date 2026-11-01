@@ -174,4 +174,24 @@ class ChordProMetadataFieldsTest {
         val text = "{title: Song}\n{key: }\n\n[G]Hello\n{tempo: 90}\n[C]World\n"
         assertEquals(text, ChordProMetadataFields.declare(text, mapOf(Field.KEY to "C", Field.TEMPO to "120")))
     }
+
+    @Test
+    fun `mapTempoChanges rewrites the changes in the body only, in their own spelling`() {
+        assertEquals(
+            "{title: S}\n{tempo: 120}\n[C]a\n{tempo: 55}\n[G]b\n",
+            ChordProMetadataFields.mapTempoChanges("{title: S}\n{tempo: 120}\n[C]a\n{tempo: 60}\n[G]b\n") { "55" },
+        )
+        assertEquals(
+            "{title: S}\n{tempo: 120}\n[C]a\n{meta: tempo 55}\n[G]b\n",
+            ChordProMetadataFields.mapTempoChanges("{title: S}\n{tempo: 120}\n[C]a\n{meta: tempo 60}\n[G]b\n") { "55" },
+        )
+    }
+
+    @Test
+    fun `mapTempoChanges returns a text it changes nothing in as it is`() {
+        val text = "{title: S}\n{tempo: 120}\n[C]a\n{tempo: 60}\n[G]b\n"
+        assertSame(text, ChordProMetadataFields.mapTempoChanges(text) { null })
+        val headerOnly = "{title: S}\n{tempo: 120}\n[C]a\n"
+        assertSame(headerOnly, ChordProMetadataFields.mapTempoChanges(headerOnly) { "55" })
+    }
 }

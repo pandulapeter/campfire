@@ -86,4 +86,43 @@ class SongAsPlayedTest {
         assertEquals("[A]la", rewrite.rewritten("a.cho", "[G]la"))
         assertEquals("[G]la", rewrite.rewritten("b.cho", "[G]la"))
     }
+
+    private fun atTempo(bpm: Int, text: String) = assertNotNull(songAsPlayedOf(playback(bpm = bpm), guitar)).applyTo(text)
+
+    @Test
+    fun `a later tempo is scaled with the one played, as the page plays it`() = assertEquals(
+        "{title: Song}\n{tempo: 110}\n[G]One\n{tempo: 55}\n[C]two\n",
+        atTempo(110, "{title: Song}\n{tempo: 120}\n[G]One\n{tempo: 60}\n[C]two\n"),
+    )
+
+    @Test
+    fun `a later tempo stays as written where the tempo is not overridden`() {
+        val written = assertNotNull(songAsPlayedOf(playback(transposition = 2), guitar))
+            .applyTo("{title: Song}\n{tempo: 120}\n[G]One\n{tempo: 60}\n[C]two\n")
+        assertEquals("{title: Song}\n{tempo: 120}\n[A]One\n{tempo: 60}\n[D]two\n", written)
+    }
+
+    @Test
+    fun `a later tempo with no number is kept as written`() = assertEquals(
+        "{title: Song}\n{tempo: 110}\n[G]One\n{tempo: fast}\n[C]two\n",
+        atTempo(110, "{title: Song}\n{tempo: 120}\n[G]One\n{tempo: fast}\n[C]two\n"),
+    )
+
+    @Test
+    fun `a song whose tempo is its first change in the body is scaled once`() = assertEquals(
+        "{title: Song}\n[G]One\n{tempo: 110}\n[C]two\n{tempo: 55}\n[D]three\n",
+        atTempo(110, "{title: Song}\n[G]One\n{tempo: 120}\n[C]two\n{tempo: 60}\n[D]three\n"),
+    )
+
+    @Test
+    fun `an unreadable opening tempo leaves its changes as written`() = assertEquals(
+        "{title: Song}\n{tempo: 110}\n[G]One\n{tempo: 60}\n[C]two\n",
+        atTempo(110, "{title: Song}\n{tempo: fast}\n[G]One\n{tempo: 60}\n[C]two\n"),
+    )
+
+    @Test
+    fun `a change the metronome's range holds at its own number keeps its spelling`() = assertEquals(
+        "{title: Song}\n{tempo: 110}\n[G]One\n{tempo: 30 bpm}\n[C]two\n",
+        atTempo(110, "{title: Song}\n{tempo: 120}\n[G]One\n{tempo: 30 bpm}\n[C]two\n"),
+    )
 }

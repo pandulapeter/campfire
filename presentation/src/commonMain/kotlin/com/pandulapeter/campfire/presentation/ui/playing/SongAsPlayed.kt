@@ -9,9 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProTempo
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 
 /**
@@ -36,15 +39,34 @@ internal data class SongAsPlayed(
 
     /**
      * [text] rewritten, every other byte of it kept: its notation, its comments, its layout. Chords that do not move keep
-     * their spelling too, which the reader's accidentals would otherwise respell.
+     * their spelling too, which the reader's accidentals would otherwise respell. The song's later changes of tempo are
+     * scaled with [tempo] as the page plays them ([withTempo]).
      */
     fun applyTo(text: String): String = ChordProMetadataFields.set(
-        text = if (semitones == 0) text else ChordProTransposer.transposeText(text, semitones, preferFlats),
+        text = (if (semitones == 0) text else ChordProTransposer.transposeText(text, semitones, preferFlats)).withTempoChangesScaled(),
         values = buildMap {
             capo?.let { put(ChordProMetadataFields.Field.CAPO, it.takeIf { fret -> fret != 0 }?.toString()) }
             tempo?.let { put(ChordProMetadataFields.Field.TEMPO, it.toString()) }
         },
     )
+
+    /**
+     * Each change of tempo in the body at its ratio to the song's own tempo, read as [withTempo] reads it. This runs
+     * before the opening tempo is set: where the header names none, the song's own is its first readable change, which
+     * scales to exactly [tempo] here and is then found already saying it, rather than being scaled a second time. A value
+     * with no number is kept, as the page plays it as written, and so is one the metronome's range holds at its own
+     * number, which keeps its spelling (`{tempo: 30 bpm}`).
+     */
+    private fun String.withTempoChangesScaled(): String {
+        val playedBpm = tempo ?: return this
+        val songFileBpm = ChordProTempo.parse(ChordProParser.parseMetadata(this).tempo)?.let(MetronomePattern::coerceBpm)
+        if (songFileBpm == null || songFileBpm == playedBpm) return this
+        return ChordProMetadataFields.mapTempoChanges(this) { value ->
+            ChordProTempo.parse(value)?.let { sectionFileBpm ->
+                sectionBpm(MetronomePattern.coerceBpm(sectionFileBpm), songFileBpm, playedBpm).takeIf { it != sectionFileBpm }?.toString()
+            }
+        }
+    }
 }
 
 /**
