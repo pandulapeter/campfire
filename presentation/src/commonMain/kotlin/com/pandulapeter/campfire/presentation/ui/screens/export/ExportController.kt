@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
+import com.pandulapeter.campfire.presentation.ui.playing.songAsPlayedOf
 import com.pandulapeter.campfire.presentation.ui.playing.shapeCapoFor
 import com.pandulapeter.campfire.presentation.ui.playing.shapeNamesOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -188,9 +189,8 @@ internal class ExportController(
             val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
             val capo = effectiveCapo.takeUnless { it.isDefault }?.fret
             val playback = SongPlayback(transposition = playedTransposition, capo = effectiveCapo, tempo = effectiveTempo, capoKeepsKey = capoKeepsKey)
-            // The pages name the chords as the screen does: what sounds, the capo played counted in unless it keeps the key,
-            // or the shapes fingered above it ([shapeNames]); the diagrams are the shapes played above the capo, none on the
-            // keyboard, which still prints the capo, since it raises the pitch for every instrument where it does.
+            // The pages name the chords as the screen does, what sounds or the shapes above the capo ([shapeNames]); the diagrams
+            // are the shapes played above the capo, none on the keyboard, which prints the capo where the screen shows it.
             val transposition = playback.soundingTransposition
             val shapeCapo = playback.shapeCapoFor(preferences)
             val tabCapo = playback.tabCapoFor(preferences)
@@ -252,7 +252,7 @@ internal class ExportController(
             }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, transposition = playedTransposition, song = rendered, text = content?.text, chords = chords,
-                scaleGroups = scaleGroups,
+                scaleGroups = scaleGroups, asPlayed = songAsPlayedOf(playback, preferences),
                 shapesKey = shapeNames?.shapesKey,
                 // A capo printed over chords that have no shape names is one they are named as they sound over.
                 areChordsSounding = shapeNames == null,
@@ -335,12 +335,11 @@ internal class ExportController(
     }
 
     /**
-     * The export screen's other format: a song as the `.cho` file it already is, a setlist as a zip of its manifest and
-     * the songs it names, and several songs as a zip of those songs alone. A saved file closes the screen, as a saved PDF
-     * does, and the same guard keeps a tap that lands while the screen slides away from bringing a picker up over
-     * whatever is under it.
+     * The export screen's other format: a song as its `.cho` file, a setlist as a zip of its manifest and songs, several
+     * songs as a zip of those alone, each song file as [rewrite] answers it (`SongAsPlayed`). A saved file closes
+     * the screen, as a saved PDF does; the guard keeps a tap as the screen slides away from bringing a picker up over it.
      */
-    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, isShare: Boolean) {
+    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, isShare: Boolean, rewrite: (fileName: String, text: String) -> String) {
         if (dialogHost.visibleDialog.value != dialog) return
         val setlist = dialog.setlist
         launchFileTransfer {
@@ -359,8 +358,8 @@ internal class ExportController(
             ) {
                 when {
                     setlist != null -> exportSetlist(setlistFileName = setlist.fileName, isDated = true)
-                    dialog.songs.isNotEmpty() -> exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isDated = true)
-                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true)
+                    dialog.songs.isNotEmpty() -> exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isDated = true, rewrite = rewrite)
+                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true, rewrite = rewrite)
                 }
             }
         }

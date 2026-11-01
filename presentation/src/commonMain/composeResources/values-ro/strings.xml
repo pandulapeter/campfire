@@ -1295,6 +1295,8 @@
     <string name="print_format_chordpro_description">Format standard de fișier, compatibil cu majoritatea aplicațiilor de cântece</string>
     <string name="print_format_zip_description">Fișiere ChordPro într-o singură arhivă, pentru majoritatea aplicațiilor de cântece</string>
     <string name="print_files_song_description">Versuri și acorduri ca text simplu, care rămâne editabil și transpozabil, pentru orice aplicație care citește ChordPro, inclusiv Campfire.</string>
+    <string name="print_as_played">Cum îl cânți aici</string>
+    <string name="print_as_played_songs_description">Fiecare cântec cu transpunerea, capodastrul și tempoul cu care îl cânți aici, așa cum îl tipărește PDF-ul</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">Singurul cântec al listei ca fișier ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>
         <item quantity="few">Cele %1$d cântece ale listei ca fișiere ChordPro pentru orice aplicație de cântece, cu ordinea din care Campfire reface lista.</item>

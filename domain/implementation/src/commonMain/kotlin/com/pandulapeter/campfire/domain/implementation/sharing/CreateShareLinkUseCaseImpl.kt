@@ -44,7 +44,7 @@ internal class CreateShareLinkUseCaseImpl(
         // from unchanged files finds nothing to upload.
         val copy = when (kind) {
             SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, isDated = false)
-            SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false)
+            SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false) { _, text -> text }
         } ?: return CreateShareResult.Missing
         // Anyone opening the link takes the copy in as an import, which refuses anything larger.
         if (copy.bytes.size > ImportLimits.MAX_IMPORT_SIZE) return CreateShareResult.TooLarge

@@ -25,21 +25,21 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `a single song is named by its header`() = runTest {
-        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false, isDated = true)
+        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false, isDated = true, rewrite = asStored)
 
         assertEquals("new_title.cho", assertNotNull(exported).name)
     }
 
     @Test
     fun `the stored extension is kept`() = runTest {
-        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false, isDated = true)
+        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false, isDated = true, rewrite = asStored)
 
         assertEquals("song.crd", assertNotNull(exported).name)
     }
 
     @Test
     fun `several songs keep their library names inside the archive`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false, isDated = true)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false, isDated = true, rewrite = asStored)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho", "b_2.cho"), archive.packed.keys)
@@ -47,11 +47,24 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `songs asked for as an archive are zipped even when one is left`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isDated = true)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isDated = true, rewrite = asStored)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho"), archive.packed.keys)
     }
+
+    @Test
+    fun `each song goes out as the rewrite answers it, whether alone or zipped`() = runTest {
+        val rewrite = { fileName: String, text: String -> if (fileName == "a.cho") "$text{capo: 2}\n" else text }
+        val single = useCase(mapOf("a" to "a.cho"), "a.cho" to "{title: A}\n").invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = rewrite)
+        assertEquals("{title: A}\n{capo: 2}\n", assertNotNull(single).bytes.decodeToString())
+
+        useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: B}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = true, rewrite = rewrite)
+        assertEquals("{title: A}\n{capo: 2}\n", archive.packed.getValue("a.cho").decodeToString())
+        assertEquals("{title: B}\n", archive.packed.getValue("b.cho").decodeToString())
+    }
+
+    private val asStored = { _: String, text: String -> text }
 
     /** @param names What the import would name a song, by the fallback title it is asked with. */
     private fun useCase(names: Map<String, String>, vararg files: Pair<String, String>) = ExportSongsUseCaseImpl(

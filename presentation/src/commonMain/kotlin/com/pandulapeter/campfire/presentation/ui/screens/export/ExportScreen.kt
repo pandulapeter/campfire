@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
+import com.pandulapeter.campfire.presentation.ui.playing.rewritten
 import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animate
@@ -285,7 +286,9 @@ internal fun ExportScreen(
         if (isOpen && !isFileTransferActive) {
             when {
                 isLink -> if (request == ExportRequest.SHARE) link?.onShare?.invoke() else link?.onSaveQrCode?.invoke()
-                isFiles -> viewModel.exportController.exportFiles(filePicker, dialog, isShare = request == ExportRequest.SHARE)
+                isFiles -> asPlayedFilesOf(state.source, state.settings).let { asPlayed ->
+                    viewModel.exportController.exportFiles(filePicker, dialog, isShare = request == ExportRequest.SHARE, rewrite = asPlayed::rewritten)
+                }
                 else -> requestedExport = request
             }
         }

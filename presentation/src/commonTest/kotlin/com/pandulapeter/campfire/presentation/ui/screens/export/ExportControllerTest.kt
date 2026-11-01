@@ -58,10 +58,12 @@ class ExportControllerTest {
     private var libraryExport: ExportLibraryUseCase.Result? = null
     private val picker = RecordingFilePicker()
 
+    private val asStored = { _: String, text: String -> text }
+
     @Test
     fun `a setlist's files are saved whole, confirmed, and the screen closes`() = runTest {
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false, rewrite = asStored)
         runCurrent()
         assertEquals(listOf("setlist gig.setlist.json"), requests)
         assertEquals(listOf("gig.zip"), picker.saved.map { it.name })
@@ -72,7 +74,7 @@ class ExportControllerTest {
     @Test
     fun `several songs are exported as an archive of them all`() = runTest {
         val (controller, _, messageSink) = controller(visibleDialog = songsExport)
-        controller.exportFiles(picker, songsExport, isShare = false)
+        controller.exportFiles(picker, songsExport, isShare = false, rewrite = asStored)
         runCurrent()
         assertEquals(listOf("songs [a.cho, b.cho, c.cho] archive: true"), requests)
         assertEquals(listOf<Message>(Message.SongsExported), messageSink.messages())
@@ -81,7 +83,7 @@ class ExportControllerTest {
     @Test
     fun `nothing is exported for a screen that is no longer shown`() = runTest {
         val (controller, _, _) = controller(visibleDialog = null)
-        controller.exportFiles(picker, setlistExport, isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false, rewrite = asStored)
         runCurrent()
         assertTrue(requests.isEmpty())
         assertTrue(picker.saved.isEmpty())
@@ -90,7 +92,7 @@ class ExportControllerTest {
     @Test
     fun `a share is not confirmed and leaves the screen open`() = runTest {
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, isShare = true)
+        controller.exportFiles(picker, setlistExport, isShare = true, rewrite = asStored)
         runCurrent()
         assertEquals(listOf("gig.zip"), picker.shared.map { it.name })
         assertTrue(messageSink.messages().isEmpty())
@@ -101,7 +103,7 @@ class ExportControllerTest {
     fun `a dismissed picker says nothing and leaves the screen open`() = runTest {
         picker.isSaved = false
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
-        controller.exportFiles(picker, setlistExport, isShare = false)
+        controller.exportFiles(picker, setlistExport, isShare = false, rewrite = asStored)
         runCurrent()
         assertTrue(messageSink.messages().isEmpty())
         assertEquals(setlistExport, dialogHost.visibleDialog.value)
@@ -223,7 +225,12 @@ class ExportControllerTest {
             songRenderer = testSongRenderer(),
             getSongContent = songFiles,
             exportSongs = object : ExportSongsUseCase {
-                override suspend fun invoke(fileNames: List<String>, isArchive: Boolean, isDated: Boolean): ExportedFile {
+                override suspend fun invoke(
+                    fileNames: List<String>,
+                    isArchive: Boolean,
+                    isDated: Boolean,
+                    rewrite: (fileName: String, text: String) -> String,
+                ): ExportedFile {
                     requests += "songs $fileNames archive: $isArchive"
                     return zip("songs.zip", size = 1)
                 }

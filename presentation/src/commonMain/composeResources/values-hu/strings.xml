@@ -1247,6 +1247,8 @@
     <string name="print_format_chordpro_description">Szabványos fájlformátum, amely a legtöbb daloskönyv-alkalmazással működik</string>
     <string name="print_format_zip_description">ChordPro-fájlok egy tömörített fájlban, a legtöbb daloskönyv-alkalmazásnak</string>
     <string name="print_files_song_description">A dalszöveg és az akkordok egyszerű szövegként, szerkeszthetően és transzponálhatóan, bármely ChordPro-t olvasó alkalmazásnak, a Campfire-t is beleértve.</string>
+    <string name="print_as_played">Ahogy itt játszod</string>
+    <string name="print_as_played_songs_description">Minden dal azzal a transzponálással, capóval és tempóval, amellyel itt játszod, ahogy a PDF is nyomtatja</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">A lista %1$d dala ChordPro-fájlként bármely daloskönyv-alkalmazásnak, a sorrenddel együtt, amelyből a Campfire visszaállítja a listát.</item>
         <item quantity="other">A lista %1$d dala ChordPro-fájlokként bármely daloskönyv-alkalmazásnak, a sorrenddel együtt, amelyből a Campfire visszaállítja a listát.</item>

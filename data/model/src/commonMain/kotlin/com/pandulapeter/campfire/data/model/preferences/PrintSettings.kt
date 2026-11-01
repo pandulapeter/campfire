@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.data.model.preferences
 
 /**
  * The export screen's choices, local preferences independent of how a song is read on screen: the [format] the file is
- * written in, and the rest for how a PDF is laid out, which an export of the library's own files has no use for. Every
+ * written in, [exportsAsPlayed] for the library's own files, and the rest for how a PDF is laid out. Every
  * box of what is printed starts ticked, so that a new user's first PDF holds everything and what they untick is
  * remembered from then on.
  */
@@ -53,6 +53,12 @@ data class PrintSettings(
     val overviewColumns: Int = 1,
     /** The setlist's date and description and its songs' artists on the running order page, apart from [showMetadata]. */
     val showOverviewDetails: Boolean = true,
+    /**
+     * Whether a song's ChordPro file, or a zip of songs, is written as the song is played where it is shared from - its
+     * transposition, capo, and tempo written into it - rather than as it is stored. On at first, so that it says what the
+     * PDF prints; a setlist's zip is always as stored, its manifest carrying how each song is played.
+     */
+    val exportsAsPlayed: Boolean = true,
 ) {
     fun normalized() = copy(
         fontSize = fontSize.coerceIn(8, 20),

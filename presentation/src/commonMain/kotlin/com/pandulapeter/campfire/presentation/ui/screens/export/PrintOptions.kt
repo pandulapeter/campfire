@@ -37,7 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 /**
  * The options, in one list that scrolls on its own: the format and what it is good for, then the preview where it is
  * stacked with them ([header]), then for a PDF its options ([PdfOptions]). Every song goes out, a setlist whole. The library's own files are the songs as the library
- * holds them, so the PDF's options fold away under the format while it is chosen; a link offers [linkOptions] instead.
+ * holds them, so the PDF's options fold away under the format while it is chosen, leaving only whether they are written as
+ * played ([AsPlayedOption]); a link offers [linkOptions] instead.
  * [onSettings] takes every change, normalized and saved by the screen.
  */
 @Composable
@@ -59,6 +60,7 @@ internal fun PrintOptions(
     // animation is the fade alone.
     val isPdf = settings.format == PrintSettings.Format.PDF
     val isLink = settings.format == PrintSettings.Format.LINK
+    val isFiles = settings.format == PrintSettings.Format.FILES
     LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state, MaterialTheme.colorScheme.background), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         // The format comes before the preview it decides, so that what the preview shows follows from what is chosen
         // above it, and the choice is the first thing on the screen.
@@ -76,6 +78,11 @@ internal fun PrintOptions(
         }
         if (isLink) {
             item(key = "link") { Column(listItemAnimation(state, placementSpec = null)) { linkOptions() } }
+        }
+        item(key = "asPlayed") {
+            FoldingOption(modifier = listItemAnimation(state, placementSpec = null), isVisible = isFiles && isAsPlayedOffered(source)) {
+                AsPlayedOption(modifier = Modifier, source = source, settings = settings, onSettings = onSettings)
+            }
         }
         item(key = "pdf") {
             FoldingOption(modifier = listItemAnimation(state, placementSpec = null), isVisible = isPdf) {

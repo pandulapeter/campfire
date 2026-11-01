@@ -1,0 +1,79 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.playing
+
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class SongAsPlayedTest {
+
+    private val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
+    private val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
+
+    /** G shapes at the second fret, which sound in A. */
+    private val capoChart = "{title: Song}\n{key: G}\n{capo: 2}\n[G]One [C]two\n"
+
+    private fun playback(transposition: Int = 0, capo: Int = 2, bpm: Int? = null, capoKeepsKey: Boolean = false) = SongPlayback(
+        transposition = transposition,
+        capo = EffectiveCapo(fret = capo, songFret = 2),
+        tempo = if (bpm == null) {
+            EffectiveTempo(bpm = 120, source = EffectiveTempo.Source.DEFAULT, songBpm = 120)
+        } else {
+            EffectiveTempo(bpm = bpm, source = EffectiveTempo.Source.LIBRARY_OVERRIDE, songBpm = 120)
+        },
+        capoKeepsKey = capoKeepsKey,
+    )
+
+    private fun asPlayed(playback: SongPlayback, preferences: UserPreferences = guitar) = songAsPlayedOf(playback, preferences)?.applyTo(capoChart)
+
+    @Test
+    fun `a song played as its file says is not rewritten`() {
+        assertNull(songAsPlayedOf(playback(), guitar))
+        assertNull(songAsPlayedOf(playback(capo = 4, capoKeepsKey = true).copy(capo = EffectiveCapo(fret = 2, songFret = 2)), guitar))
+    }
+
+    @Test
+    fun `a transposition moves the chords and the key, the capo staying`() =
+        assertEquals("{title: Song}\n{key: A}\n{capo: 2}\n[A]One [D]two\n", asPlayed(playback(transposition = 2)))
+
+    @Test
+    fun `a capo that raises the pitch is written over the same shapes`() =
+        assertEquals("{title: Song}\n{key: G}\n{capo: 4}\n[G]One [C]two\n", asPlayed(playback(capo = 4)))
+
+    @Test
+    fun `a capo that keeps the key is written over the shapes it is played with, so the file still sounds in A`() {
+        assertEquals("{title: Song}\n{key: F}\n{capo: 4}\n[F]One [Bb]two\n", asPlayed(playback(capo = 4, capoKeepsKey = true)))
+        // Taken off, the A is played open and the file names no capo.
+        assertEquals("{title: Song}\n{key: A}\n[A]One [D]two\n", asPlayed(playback(capo = 0, capoKeepsKey = true)))
+    }
+
+    @Test
+    fun `a keyboard player who keeps the key writes the chords as they sound, with no capo`() =
+        assertEquals("{title: Song}\n{key: A}\n[A]One [D]two\n", asPlayed(playback(capo = 4, capoKeepsKey = true), keyboard))
+
+    @Test
+    fun `a tempo alone is written, the chords keeping their spelling`() {
+        val flats = guitar.copy(chordSpelling = guitar.chordSpelling.copy(accidentals = UserPreferences.Accidentals.FLATS))
+        val written = assertNotNull(songAsPlayedOf(playback(bpm = 96), flats)).applyTo("{title: Song}\n{capo: 2}\n[A#]One\n")
+        assertTrue("{tempo: 96}" in written, written)
+        assertTrue("[A#]One" in written, written)
+    }
+
+    @Test
+    fun `only the songs named are rewritten`() {
+        val rewrite = mapOf("a.cho" to SongAsPlayed(semitones = 2, capo = null, tempo = null, transposition = 2, preferFlats = null))
+        assertEquals("[A]la", rewrite.rewritten("a.cho", "[G]la"))
+        assertEquals("[G]la", rewrite.rewritten("b.cho", "[G]la"))
+    }
+}

@@ -183,6 +183,7 @@ internal fun PrintSettingsDocument.toModel() = PrintSettings(
     includeSongSheets = includeSongSheets,
     overviewColumns = overviewColumns,
     showOverviewDetails = showOverviewDetails ?: showMetadata,
+    exportsAsPlayed = exportsAsPlayed,
 ).normalized()
 
 internal fun PrintSettings.toDocument() = normalized().let { settings ->
@@ -208,6 +209,7 @@ internal fun PrintSettings.toDocument() = normalized().let { settings ->
         includeSongSheets = settings.includeSongSheets,
         overviewColumns = settings.overviewColumns,
         showOverviewDetails = settings.showOverviewDetails,
+        exportsAsPlayed = settings.exportsAsPlayed,
     )
 }
 

@@ -1248,6 +1248,8 @@
     <string name="print_format_chordpro_description">Standard file format that works with most songbook apps</string>
     <string name="print_format_zip_description">ChordPro files in one archive, for most songbook apps</string>
     <string name="print_files_song_description">Lyrics and chords as plain text that stays editable and transposable, for any app that reads ChordPro, Campfire included.</string>
+    <string name="print_as_played">As played here</string>
+    <string name="print_as_played_songs_description">Each song with the transposition, capo, and tempo it is played with here, as the PDF prints it</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">The setlist's %1$d song as a ChordPro file for any songbook app, with the running order Campfire reads back as the setlist.</item>
         <item quantity="other">The setlist's %1$d songs as ChordPro files for any songbook app, with the running order Campfire reads back as the setlist.</item>

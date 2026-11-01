@@ -109,7 +109,12 @@ class CreateShareLinkUseCaseImplTest {
             override suspend fun invoke(setlistFileName: String, isDated: Boolean) = setlist(setlistFileName, isDated)
         },
         exportSongs = object : ExportSongsUseCase {
-            override suspend fun invoke(fileNames: List<String>, isArchive: Boolean, isDated: Boolean) = songs(fileNames, isArchive, isDated)
+            override suspend fun invoke(
+                fileNames: List<String>,
+                isArchive: Boolean,
+                isDated: Boolean,
+                rewrite: (fileName: String, text: String) -> String,
+            ) = songs(fileNames, isArchive, isDated)
         },
     )
 

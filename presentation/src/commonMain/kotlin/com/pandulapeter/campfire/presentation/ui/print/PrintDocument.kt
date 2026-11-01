@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongScaleGroup
 import com.pandulapeter.campfire.presentation.ui.songView.model.chordKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleAnalysisOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.songScaleGroupsOf
+import com.pandulapeter.campfire.presentation.ui.playing.SongAsPlayed
 
 /**
  * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
@@ -73,6 +74,8 @@ internal data class PrintSong(
     val song: ChordProSong?,
     /** The file as it is stored, which the library's own files are written from, and null when it could not be read. */
     val text: String? = null,
+    /** How the file is rewritten to say how the song is played here, null where it already does, see [SongAsPlayed]. */
+    val asPlayed: SongAsPlayed? = null,
     /**
      * Every chord the song plays, in the order it is first played, with the shape its Chords section draws it with in
      * the reader's tuning; empty where the chord diagrams are switched off in the app, whatever the export asks for.

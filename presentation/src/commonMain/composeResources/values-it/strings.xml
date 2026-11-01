@@ -1248,6 +1248,8 @@
     <string name="print_format_chordpro_description">Formato di file standard compatibile con la maggior parte delle app di canzonieri</string>
     <string name="print_format_zip_description">File ChordPro in un unico archivio, per la maggior parte delle app di canzonieri</string>
     <string name="print_files_song_description">Testo e accordi come testo semplice che resta modificabile e trasponibile, per qualsiasi app che legga ChordPro, Campfire compresa.</string>
+    <string name="print_as_played">Come lo suoni qui</string>
+    <string name="print_as_played_songs_description">Ogni brano con la trasposizione, il capotasto e il tempo con cui lo suoni qui, come lo stampa il PDF</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">La %1$d canzone della scaletta come file ChordPro per qualsiasi app di canzonieri, con la sequenza dei brani che Campfire rilegge come scaletta.</item>
         <item quantity="other">Le %1$d canzoni della scaletta come file ChordPro per qualsiasi app di canzonieri, con la sequenza dei brani che Campfire rilegge come scaletta.</item>
