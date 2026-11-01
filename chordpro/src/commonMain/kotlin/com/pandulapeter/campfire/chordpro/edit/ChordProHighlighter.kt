@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro.edit
 
+import com.pandulapeter.campfire.chordpro.abc.AbcBars
+import com.pandulapeter.campfire.chordpro.abc.AbcLines
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
@@ -23,6 +25,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.KEY
@@ -30,6 +33,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.syntax.MetadataKind
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 
 /**
  * Finds the parts of a ChordPro document an editor wants to colour. It lives next to the parser rather than in the
@@ -48,7 +52,11 @@ public object ChordProHighlighter {
         /** What the directive is set to, without the closing brace. */
         DIRECTIVE_VALUE,
 
-        /** A bracketed chord over the lyrics, or a chord cell of a grid, which is written without brackets. */
+        /**
+         * A bracketed chord over the lyrics, or one written without brackets: a chord cell of a grid, a name of a line
+         * of a tab that holds chord names only (which the viewer draws as chords), or a quoted chord symbol of an ABC
+         * tune, quotes included.
+         */
         CHORD,
 
         /** `[*text]`, spaces inside the brackets allowed, which the viewer shows in the lyrics rather than as a chord. */
@@ -182,6 +190,7 @@ public object ChordProHighlighter {
         // song's key from even where it is empty.
         var saidOnce = before.saidOnce
         var hasHeaderKey = before.hasHeaderKey
+        var abcBlock = before.abcBlock.takeIf { scanned.environment == ABC }
         val index = scanned.index
         val line = scanned.raw
         val directive = scanned.directive
@@ -216,6 +225,20 @@ public object ChordProHighlighter {
             // brackets at all: its cells are chords as they are, and the transposition renames them.
             scanned.environment == GRID -> tokens += gridChordTokens(line, lineStart)
 
+            // An ABC tune is the one delegated environment whose chords the app reads: its chord symbols, which the
+            // notation draws over the staff and the import reads into the grid. A `%%begintext` block is free text.
+            scanned.environment == ABC -> {
+                val openBlock = abcBlock
+                if (openBlock != null) {
+                    if (AbcLines.closesBlock(line, openBlock)) abcBlock = null
+                } else {
+                    abcBlock = AbcLines.blockOpenedBy(line)
+                    if (abcBlock == null) tokens += AbcBars.chordSymbols(line).map { Token(TokenType.CHORD, lineStart + it.first, lineStart + it.last + 1) }
+                }
+            }
+
+            scanned.environment == TAB && ChordProTabWrapper.isChordLine(line) -> tokens += tabChordTokens(line, lineStart)
+
             // A chord row's repeat counts and bar lines are shown with its chords, as annotations; the lines of a tab
             // that are not its staff are rows of chord names only to the transposition, never to the parser.
             !scanned.isDelegated && !(scanned.environment == TAB && ChordProTokens.isStaffLine(line)) -> {
@@ -228,10 +251,14 @@ public object ChordProHighlighter {
                 }
             }
         }
-        return if (scanned.environmentAfter == before.environment && saidOnce === before.saidOnce && hasHeaderKey == before.hasHeaderKey) {
+        if (scanned.environmentAfter != ABC) abcBlock = null
+        return if (
+            scanned.environmentAfter == before.environment && saidOnce === before.saidOnce && hasHeaderKey == before.hasHeaderKey &&
+            abcBlock == before.abcBlock
+        ) {
             before
         } else {
-            HighlightState(environment = scanned.environmentAfter, saidOnce = saidOnce, hasHeaderKey = hasHeaderKey)
+            HighlightState(environment = scanned.environmentAfter, saidOnce = saidOnce, hasHeaderKey = hasHeaderKey, abcBlock = abcBlock)
         }
     }
 
@@ -329,6 +356,14 @@ public object ChordProHighlighter {
         .zip(ChordProTokens.parseGridTokens(line.trim()))
         .filter { (_, token) -> token is GridToken.Chord }
         .map { (word, _) -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
+
+    /**
+     * The chord names of a line of a tab that holds nothing else, as the viewer decides it, so that its bar lines and
+     * repeat counts are left plain.
+     */
+    private fun tabChordTokens(line: String, lineStart: Int): List<Token> = ChordProTokens.words(line)
+        .filter { ChordProTabWrapper.isChordWord(it.value) }
+        .map { word -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
 
     /**
      * The chords of the text of a comment or a label, offsets into [text]: the brackets the transposition moves there.

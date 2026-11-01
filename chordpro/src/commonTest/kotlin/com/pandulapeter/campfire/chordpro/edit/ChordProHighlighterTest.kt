@@ -114,6 +114,25 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the chord symbols of an abc tune are chords, and its annotations, comments, fields and text blocks are not`() {
+        val text = "{start_of_abc}\nX:1\nK:C\n\"Am\"A2 \"^softly\"B \"G7\"c|[CEG] % \"C\"\n%\"D\"\nw: \"E\"\n" +
+            "%%begintext\n\"F\" said\n%%endtext\n\"Dm\"d\n{end_of_abc}\n\"C\""
+        assertEquals(
+            listOf(TokenType.CHORD to "\"Am\"", TokenType.CHORD to "\"G7\"", TokenType.CHORD to "\"Dm\""),
+            spans(text).filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
+    fun `the names of a line of a tab that holds only chord names are chords`() {
+        val text = "{start_of_tab}\nAm    C  | x2\ne|--0--1--|\nPlay it Am\n{end_of_tab}\nAm"
+        assertEquals(
+            listOf(TokenType.CHORD to "Am", TokenType.CHORD to "C"),
+            spans(text).filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
     fun `any end of an environment ends a grid`() {
         assertEquals(
             listOf(TokenType.CHORD to "Am", TokenType.CHORD to "[Am]"),
@@ -535,8 +554,8 @@ class ChordProHighlighterTest {
             append("{start_of_verse: Verse ${verse + 1}}\n[Am]There is a [C]house\n{comment: softly [G]}\n{end_of_verse}\n\n")
             append("{start_of_chorus}\n[C]Oh mother [G]tell\n{end_of_chorus}\n\n")
         }
-        append("{start_of_tab}\ne|--[C]--|\n[C]  [G]\n{end_of_tab}\n{start_of_grid}\n| C . G . |\n{end_of_grid}\n")
-        append("{start_of_abc}\nX:1\n{title: Tune}\n# not a comment\n{end_of_abc}\n[F]End\n")
+        append("{start_of_tab}\ne|--[C]--|\n[C]  [G]\nAm  G\n{end_of_tab}\n{start_of_grid}\n| C . G . |\n{end_of_grid}\n")
+        append("{start_of_abc}\nX:1\n{title: Tune}\n# not a comment\n\"Am\"A \"G\"B|\n%%begintext\n\"C\"\n%%endtext\n\"D\"d\n{end_of_abc}\n[F]End\n")
     }
 
     @Test
@@ -554,6 +573,9 @@ class ChordProHighlighterTest {
         assertIncremental(longSong, longSong.replace("{start_of_abc}", "{start_of_abd}"))
         assertIncremental(longSong, longSong.replace("{end_of_abc}", "{end_of_ab}"))
         assertIncremental(longSong, longSong.replace("X:1", "X:[C]1"))
+        assertIncremental(longSong, longSong.replace("%%begintext", "%%begintex"))
+        assertIncremental(longSong, longSong.replace("%%endtext", "%%endtex"))
+        assertIncremental(longSong.replace("%%endtext", "%%endtex"), longSong)
     }
 
     @Test

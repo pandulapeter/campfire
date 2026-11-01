@@ -79,18 +79,44 @@ internal object AbcBars {
         val skipped = mutableListOf<Token>()
         var index = 0
         while (index < line.length) {
-            val character = line[index]
             val isRead = voices.isRead
             val tokens = if (isRead) lineTokens else skipped.apply { clear() }
-            index = when {
-                character == '"' -> quoted(line, index, tokens)
-                character == '!' || character == '+' || character == '{' -> decorationEnd(line, index)
-                character == '[' -> bracketed(line, index, tokens, voices)
-                character in BAR_CHARACTERS -> barLine(line, index, tokens)
-                character in NOTE_LETTERS -> (index + 1).also { tokens += Token.Note }
-                else -> index + 1
-            }
+            index = next(line, index, tokens, voices)
             if (!isRead && skipped.any { it is Token.Chord }) voices.skippedChord()
+        }
+    }
+
+    /**
+     * Where the chord symbols of one line of a tune are, their quotes included, found by the walk that reads them into
+     * the grid so that the editor colours exactly the symbols the grid would take, of every voice. A field line, a
+     * comment, and what follows a `%` are not music; an unclosed symbol runs to the end of the line, as it is read.
+     */
+    fun chordSymbols(line: String): List<IntRange> {
+        if (line.isBlank() || AbcLines.isComment(line) || AbcLines.field(line) != null) return emptyList()
+        val music = AbcLines.withoutComment(line)
+        val ranges = mutableListOf<IntRange>()
+        val tokens = mutableListOf<Token>()
+        val voices = Voices(read = null)
+        var index = 0
+        while (index < music.length) {
+            val start = index
+            val count = tokens.size
+            index = next(music, index, tokens, voices)
+            if (music[start] == '"' && tokens.size > count) ranges += start until minOf(index, music.length)
+        }
+        return ranges
+    }
+
+    /** Reads the token at [index] of [line] into [tokens], answering where the next one starts. */
+    private fun next(line: String, index: Int, tokens: MutableList<Token>, voices: Voices): Int {
+        val character = line[index]
+        return when {
+            character == '"' -> quoted(line, index, tokens)
+            character == '!' || character == '+' || character == '{' -> decorationEnd(line, index)
+            character == '[' -> bracketed(line, index, tokens, voices)
+            character in BAR_CHARACTERS -> barLine(line, index, tokens)
+            character in NOTE_LETTERS -> (index + 1).also { tokens += Token.Note }
+            else -> index + 1
         }
     }
 

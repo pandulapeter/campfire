@@ -35,15 +35,17 @@ public class ChordProHighlighting internal constructor(
 
 /**
  * What reading a line of a ChordPro text carries to the next one: the [environment] it leaves open, the once-only
- * kinds of metadata said so far ([saidOnce]) and whether the header has a key line ([hasHeaderKey]). A line that
- * changes none of them leaves the very same object, so the one set is shared by every line until the next is said.
+ * kinds of metadata said so far ([saidOnce]), whether the header has a key line ([hasHeaderKey]), and the
+ * `%%begin…` block of an ABC tune it leaves open ([abcBlock]), whose lines are not music. A line that changes none of
+ * them leaves the very same object, so the one set is shared by every line until the next is said.
  */
 internal data class HighlightState(
     val environment: String?,
     val saidOnce: Set<String>,
     val hasHeaderKey: Boolean,
+    val abcBlock: String?,
 ) {
     companion object {
-        val START = HighlightState(environment = null, saidOnce = emptySet(), hasHeaderKey = false)
+        val START = HighlightState(environment = null, saidOnce = emptySet(), hasHeaderKey = false, abcBlock = null)
     }
 }

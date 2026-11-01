@@ -157,7 +157,7 @@ public object ChordProTabWrapper {
      * them written across words (`(G`, `D)`) — the parentheses inside a name kept, since they are part of it (`5(7)`, a
      * numbered extension, and `C(add9)`).
      */
-    private fun isChordWord(word: String) =
+    internal fun isChordWord(word: String) =
         ChordProChordNames.isDisplayedChordName(word.trim('(', ')')) || ChordProChordNames.isDisplayedChordName(word.withoutUnmatchedParentheses())
 
     /** [this] without the `(` it starts with or the `)` it ends with where nothing in it closes or opens them. */

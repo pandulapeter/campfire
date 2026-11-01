@@ -26,7 +26,7 @@ google-playInstallReferrer = "2.2" # https://developer.android.com/google/play/i
 gradle = "9.5.0" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jbr-api = "1.12.0" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
-jetbrains-compose = "1.12.2" # https://github.com/JetBrains/compose-jb/releases
+jetbrains-compose = "1.12.2" # https://github.com/JetBrains/compose-multiplatform/releases
 jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.compose.material3)
 #noinspection UnusedVersionCatalogEntry
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
