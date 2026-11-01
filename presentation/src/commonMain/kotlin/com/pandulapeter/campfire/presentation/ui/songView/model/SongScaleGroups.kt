@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.model
 
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.scales.ScaleGroup
 import com.pandulapeter.campfire.chordpro.scales.Scales
 import com.pandulapeter.campfire.chordpro.scales.SongScaleGroups
 import com.pandulapeter.campfire.chordpro.scales.SongScaleSuggestions
+import com.pandulapeter.campfire.presentation.ui.chords.movedBy
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.header
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
@@ -65,7 +67,9 @@ internal data class SongScaleGroup(
  * group (the home scale, then what a player reaches for first), since a row of rarities buries the answer and the
  * Scales tab has every other one, and [MAX_EXCEPTION_SCALES] scale over each of its chords worth one, the common one
  * first, every chord named as the page shows it in [notation], a numbering counted from [inferredKey] where the file
- * names no key.
+ * names no key. Where the page names the shapes fingered above a capo of [nameCapo] frets, a chord is named as
+ * [namedSong] (the same song moved down by [nameCapo]) writes it, a numbering counted from [namedInferredKey], while the
+ * scales stay the ones that sound, since a scale is played by ear and by position rather than read off a shape.
  */
 internal fun songScaleGroupsOf(
     song: ChordProSong,
@@ -73,17 +77,18 @@ internal fun songScaleGroupsOf(
     notation: ChordNotation,
     analysis: SongScaleAnalysis = songScaleAnalysisOf(song, labels),
     inferredKey: String? = null,
+    namedSong: ChordProSong = song,
+    nameCapo: Int = 0,
+    namedInferredKey: String? = inferredKey,
 ): List<SongScaleGroup> {
     val numbered = analysis.numbered
     val groups = analysis.groups
     if (groups.isEmpty()) return emptyList()
-    val shownNames = ChordProNotation.shownNames(song, notation, fallbackKey = inferredKey)
+    val shownName = shownChordNames(song, notation, inferredKey, namedSong, nameCapo, namedInferredKey)
     val exceptions = groups.map { group ->
         group.exceptions.map { exception ->
             SongScaleException(
-                chordNames = (listOf(exception.chordName) + exception.otherChordNames).map { name ->
-                    ChordProNotation.withAccidentalSigns(shownNames[name] ?: name)
-                },
+                chordNames = (listOf(exception.chordName) + exception.otherChordNames).map(shownName),
                 rootName = exception.rootName,
                 scales = exception.scales.filter { it in Scales.common }.ifEmpty { exception.scales }.take(MAX_EXCEPTION_SCALES),
             )
@@ -138,6 +143,30 @@ internal fun songScaleGroupsOf(
     }
     if (missing.isEmpty()) return rows
     return rows + rowOf(missing, groups.first().rootName, emptyList(), emptyList())
+}
+
+/**
+ * How the page names a chord of [song] written as the standard name it is given: as [song] shows it in [notation], or,
+ * where the page names the shapes fingered above a capo of [nameCapo] frets, as [namedSong] shows the chord that many
+ * semitones lower, matched by the notes rather than by the spelling, which the move down may well have changed (`A#` and
+ * `Bb`), as the Chords section matches them (`namedAsShapes`).
+ */
+private fun shownChordNames(
+    song: ChordProSong,
+    notation: ChordNotation,
+    inferredKey: String?,
+    namedSong: ChordProSong,
+    nameCapo: Int,
+    namedInferredKey: String?,
+): (String) -> String {
+    val shownNames = ChordProNotation.shownNames(song, notation, fallbackKey = inferredKey)
+    if (nameCapo == 0) return { name -> ChordProNotation.withAccidentalSigns(shownNames[name] ?: name) }
+    val namedNames = ChordProNotation.shownNames(namedSong, notation, fallbackKey = namedInferredKey)
+    val spellings = namedNames.keys.mapNotNull { name -> ChordProChords.parse(name)?.let { it to name } }.distinctBy { it.first }.toMap()
+    return { name ->
+        val shape = ChordProChords.parse(name)?.movedBy(-nameCapo)?.let(spellings::get)
+        ChordProNotation.withAccidentalSigns(shape?.let(namedNames::getValue) ?: shownNames[name] ?: name)
+    }
 }
 
 /**

@@ -63,8 +63,9 @@ The values a song is played with and where each is kept.
   `SHAPES` (the default) names them the shapes fingered above the capo, `SOUNDING` what sounds; the keyboard always
   sounds (`namesShapes`). `nameCapoFor` is how far the names sit below what sounds (the capo, else 0) and
   `namingTransposition` what the page's chords, comments' chords, key-change lines, the Transposition control's key, the
-  Chords section's names, the chord sheet's title, and the PDF are moved by: under `SHAPES` a capo renames none of them,
-  only the transposition does. `ShapeNames` carries the rest: the page reads the song twice (once sounding, for the
+  Chords section's names, the chords the Scales section names (its scales still sounding), a staff's chord symbols (its
+  notes still sounding, `NotationChordSpelling.nameCapo`), the chord sheet's title, and the PDF are moved by: under
+  `SHAPES` a capo renames none of them, only the transposition does. `ShapeNames` carries the rest: the page reads the song twice (once sounding, for the
   Chords and Scales sections), and the key line names the sounding key and then the shapes' ("Capo 2 (Em shapes)", the
   capo's label "shapes, capo" after the stepper's key; the PDF's capo value the same, so the importer still reads it).
 - **The diagrams are the shapes**: the sounding chords moved down by the effective capo (`shapeCapoFor`); none on the

@@ -70,6 +70,17 @@ class NotationChordNamesTest {
     }
 
     @Test
+    fun `chords named by the shapes under a capo are named below the notes, which still sound`() {
+        val tune = "K:G\n\"G\"G \"D7\"A"
+        val symbols = abcChordSymbols(tune)
+        val named = NotationChordSpelling(semitones = 2, preferFlats = null, notation = ChordNotation.STANDARD, nameCapo = 2)
+        val names = abcChordNames(tune, symbols, named)
+        assertEquals(listOf("G", "D7"), names)
+        // abc2svg drew the chords moved with the notes, to what sounds, which is how the drawn ones are found again.
+        assertEquals(names, drawingWithChords("A", "E7").withChordNames(symbols, names, named.semitones).chordTexts())
+    }
+
+    @Test
     fun `a transposed chord is the written one with its root moved and the rest kept`() {
         assertTrue(isTransposedChord("D7/F#", "E7/G♯", 2))
         assertTrue(isTransposedChord("Bbm", "Cm", 2))

@@ -19,10 +19,21 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 /**
  * How the chords over a song's lyrics are named on the page, which an engraved tune's chord symbols follow so that the
  * staff and the lyrics never disagree: moved by [semitones] (the file's `{transpose}` and the reader's transposition,
- * the capo counted in), spelled with flats or sharps as [preferFlats] says (null: as the key asks), and shown in
- * [notation].
+ * the capo counted in), less [nameCapo], spelled with flats or sharps as [preferFlats] says (null: as the key asks), and
+ * shown in [notation]. The notes are moved by [semitones] alone, since the staff is the melody as it sounds.
+ *
+ * @property nameCapo The semitones the page names its chords below what sounds: the capo where it names the shapes
+ *   fingered above it (`ShapeNames`), else 0.
  */
-internal data class NotationChordSpelling(val semitones: Int, val preferFlats: Boolean?, val notation: ChordNotation) {
+internal data class NotationChordSpelling(
+    val semitones: Int,
+    val preferFlats: Boolean?,
+    val notation: ChordNotation,
+    val nameCapo: Int = 0,
+) {
+
+    /** The semitones the chord symbols are named at, see [nameCapo]. */
+    val namingSemitones get() = semitones - nameCapo
 
     /** This spelling moved [offset] semitones further, for a tune under a key change ([abcTunesOf]). */
     fun movedBy(offset: Int) = if (offset == 0) this else copy(semitones = semitones + offset)
@@ -43,16 +54,16 @@ internal fun abcChordSymbols(tune: String): List<String> = tune.lineSequence()
     .toList()
 
 /**
- * [symbols] as the page names them in [spelling], in the same order, through the same transposition and notation the
- * lyrics' chords go through; a numbering counts them from the tune's first `K:`. Where the song model does not give one
- * name back for each symbol, the symbols come back as they are.
+ * [symbols] as the page names them in [spelling] (moved by its [NotationChordSpelling.namingSemitones]), in the same
+ * order, through the same transposition and notation the lyrics' chords go through; a numbering counts them from the
+ * tune's first `K:`. Where the song model does not give one name back for each symbol, the symbols come back as they are.
  */
 internal fun abcChordNames(tune: String, symbols: List<String>, spelling: NotationChordSpelling): List<String> {
     if (symbols.isEmpty()) return symbols
     val key = abcKeyOf(tune)?.let { "{key: $it}\n" }.orEmpty()
     val song = ChordProParser.parse(key + symbols.joinToString(separator = "\n") { "[$it]" }, ChordNotation.STANDARD)
     val shown = ChordProNotation.withAccidentalSigns(
-        ChordProNotation.toNotation(ChordProTransposer.transpose(song, spelling.semitones, spelling.preferFlats), spelling.notation),
+        ChordProNotation.toNotation(ChordProTransposer.transpose(song, spelling.namingSemitones, spelling.preferFlats), spelling.notation),
     )
     val names = shown.blocks.filterIsInstance<ChordProBlock.Section>()
         .flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>().flatMap { line -> line.chords.map { it.name } } }

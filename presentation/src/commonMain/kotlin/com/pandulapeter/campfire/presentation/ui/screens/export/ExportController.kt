@@ -241,18 +241,22 @@ internal class ExportController(
                 emptyList()
             }
             val scaleGroups = if (transposed != null && suggestsScales) {
-                withContext(Dispatchers.Default) { printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation(), analysis, inferredChordsKey) }
+                withContext(Dispatchers.Default) {
+                    printScaleGroupsOf(transposed, sectionLabels, spelling.notation.toChordNotation(), analysis, inferredChordsKey,
+                        namedSong = named ?: transposed, nameCapo = shapeNames?.capo ?: 0, namedInferredKey = namedInferredKey)
+                }
             } else {
                 emptyList()
             }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
                 index = if (setlist == null) null else index + 1, transposition = playedTransposition, song = rendered, text = content?.text, chords = chords,
                 scaleGroups = scaleGroups,
-                shapesKey = shapeNames?.shapesKey?.takeIf { capo != null && capo != 0 },
+                shapesKey = shapeNames?.shapesKey,
                 notationChords = NotationChordSpelling(
-                    semitones = (named?.metadata?.transpose ?: 0) + transposition - (shapeNames?.capo ?: 0),
+                    semitones = (named?.metadata?.transpose ?: 0) + transposition,
                     preferFlats = spelling.accidentals.toPreferFlats(),
                     notation = spelling.notation.toChordNotation(),
+                    nameCapo = shapeNames?.capo ?: 0,
                 ))
         }
         // Several songs are titled by the screen, which counts them in the app's language.

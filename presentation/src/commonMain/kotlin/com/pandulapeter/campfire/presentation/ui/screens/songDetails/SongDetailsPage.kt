@@ -255,9 +255,10 @@ internal fun SongDetailsPage(
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
                 notationChords = NotationChordSpelling(
-                    semitones = named.metadata.transpose + inputs.transposition - (shapes?.capo ?: 0),
+                    semitones = named.metadata.transpose + inputs.transposition,
                     preferFlats = inputs.spelling.accidentals.toPreferFlats(),
                     notation = inputs.spelling.notation.toChordNotation(),
+                    nameCapo = shapes?.capo ?: 0,
                 ),
             )
         }

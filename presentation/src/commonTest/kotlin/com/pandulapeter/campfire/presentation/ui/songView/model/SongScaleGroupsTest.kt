@@ -130,6 +130,16 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `under a capo whose shapes the page names, a chord is named by its shape and its scales still sound`() {
+        val shapes = ChordProParser.parse("[C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x [C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x")
+        val sounding = ChordProTransposer.transpose(shapes, 2)
+        val exceptions = songScaleGroupsOf(sounding, labels, ChordNotation.STANDARD, namedSong = shapes, nameCapo = 2).single().exceptions
+        assertEquals(listOf("A7", "E7"), exceptions.map { it.chordNames.single() })
+        // A7 and E7 lead to Dm and Am, played two frets up: the scales are on E and B, as they sound.
+        assertEquals(listOf("E", "B"), exceptions.map { it.rootName })
+    }
+
+    @Test
     fun `an exception offers the common scales where one holds the chord`() {
         val exception = groups("[C]One [F]two [G]three [E]four").single().exceptions.single()
         assertTrue(exception.scales.isNotEmpty() && exception.scales.all { it in Scales.common })

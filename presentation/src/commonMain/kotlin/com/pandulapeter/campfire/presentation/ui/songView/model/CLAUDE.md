@@ -62,7 +62,9 @@ Product side in `ui/metronome/CLAUDE.md`.
   right on its first frame. Without a home the degrees count from `SongKeys.ofChords` (the capo chart rule).
 - **The scales read the sounding song with the file's capo line** (`standardSong`, before `withCapo`): that line only says
   how a capo chart's `{key}` is meant, so the Scales section names the key the capo played sounds in, and its sheet
-  dims the neck below that capo (`ScaleSuggestions.capo`, `DialogType.Scale.capo`, `ScaleDiagramGeometry`).
+  dims the neck below that capo (`ScaleSuggestions.capo`, `DialogType.Scale.capo`, `ScaleDiagramGeometry`). The chord
+  a row is "over" is named as the page names it, the shape where it names the shapes (`namedSong`, `nameCapo`); its
+  scales stay the sounding ones.
 - **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
   line measured on the main thread, and a concatenated songbook froze the app for seconds. The model stops after the
   last section that fits and says so; the file is untouched and the header is built from all of it.

@@ -161,7 +161,8 @@ internal fun printScaleAnalysisOf(song: ChordProSong, labels: DefaultSectionLabe
 /**
  * The scales [song], transposed as it is printed and still in the standard notation, is played over, as the song details
  * screen's Scales section suggests them from [analysis], its sections named by [labels] and its chords in [notation]
- * (a numbering counted from [inferredKey] where the file names no key); none for a songbook, for which the section
+ * (a numbering counted from [inferredKey] where the file names no key, and by the shapes of [namedSong] where the page
+ * names them, [nameCapo] below what sounds, as [songScaleGroupsOf] says); none for a songbook, for which the section
  * suggests none either.
  */
 internal fun printScaleGroupsOf(
@@ -170,7 +171,12 @@ internal fun printScaleGroupsOf(
     notation: ChordNotation,
     analysis: SongScaleAnalysis? = printScaleAnalysisOf(song, labels),
     inferredKey: String? = null,
-): List<SongScaleGroup> = analysis?.let { songScaleGroupsOf(song, labels, notation, it, inferredKey) }.orEmpty()
+    namedSong: ChordProSong = song,
+    nameCapo: Int = 0,
+    namedInferredKey: String? = inferredKey,
+): List<SongScaleGroup> = analysis?.let {
+    songScaleGroupsOf(song, labels, notation, it, inferredKey, namedSong = namedSong, nameCapo = nameCapo, namedInferredKey = namedInferredKey)
+}.orEmpty()
 
 private val ChordProSong.isSongbook get() = blocks.count { it is ChordProBlock.Section } > LayoutBudget.MAX_CUT_SECTION_COUNT
 

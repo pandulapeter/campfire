@@ -115,8 +115,8 @@ internal class SongLyricsModel(
  * @param shapeCapo The fret the Chords section's shapes are fingered above, see [songChordsOf]'s `capo`.
  * @param namedSong [standardSong] as the page names its chords where that is [nameCapo] semitones below what sounds (the
  * shapes fingered above the capo, `SongPlayback.nameCapoFor`), which the Chords section's names are then read from
- * ([namedAsShapes]); everything else of a chord, its notes, its shape, and its degree, and the Scales section stay the
- * sounding song's.
+ * ([namedAsShapes]), as are the chords the Scales section names; everything else of a chord, its notes, its shape, and
+ * its degree, and the scales themselves stay the sounding song's.
  * @param namedInferredKey [inferredKey] in the frame of [namedSong].
  * @param shapesKey The key of the shapes the page names, which the line of values names after the capo, see
  * [SongLyricsModel.shapesKey].
@@ -173,7 +173,16 @@ internal fun prepareSongLyrics(
         // being waited for, a second walk over the song's chords; none collected is not an answer, since there may have
         // been no tuning to collect them for, or more chords than a section draws.
         hasChords = shouldShowChords && (chords.isNotEmpty() || hasSongChords(standardSong, notation, inferredKey)),
-        scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(standardSong, labels, notation, analysis, inferredKey) else emptyList(),
+        scaleGroups = if (analysis != null && suggestsScales) songScaleGroupsOf(
+            song = standardSong,
+            labels = labels,
+            notation = notation,
+            analysis = analysis,
+            inferredKey = inferredKey,
+            namedSong = namedSong,
+            nameCapo = nameCapo,
+            namedInferredKey = namedInferredKey,
+        ) else emptyList(),
         notationChords = notationChords,
         shapesKey = shapesKey,
     )

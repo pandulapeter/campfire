@@ -29,7 +29,9 @@ import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
+import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.state.songText.FakeSongFiles
+import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -165,6 +167,33 @@ class ExportControllerTest {
         assertTrue(messageSink.messages().isEmpty())
     }
 
+    @Test
+    fun `a capo written in the file prints the key of the shapes and engraves the tune as it sounds`() = runTest {
+        val song = song("a.cho").copy(key = "Em")
+        val text = "{key: Em}\n{capo: 2}\n[Em]Home, [C]home on the [D]range\n{start_of_abc}\nK:Em\n\"Em\"E2\n{end_of_abc}"
+        val (controller, _, _) = controller(
+            visibleDialog = null,
+            capo = EffectiveCapo(fret = 2, songFret = 2),
+            songFiles = FakeSongFiles(mapOf("a.cho" to text)),
+        )
+        val printed = controller.preparePrintSource(DialogType.Export(song = song), tabNoticeLabels, sectionLabels).songs.single()
+        assertEquals("Em", printed.shapesKey)
+        assertEquals(2, printed.song?.metadata?.capo)
+        // The notes are moved to the pitch that sounds, the chord symbols named back by the capo, as the lyrics' are.
+        assertEquals(2, printed.notationChords.semitones)
+        assertEquals(0, printed.notationChords.namingSemitones)
+    }
+
+    private val tabNoticeLabels = TabNoticeLabels(
+        octaveUp = "", octaveDown = "", otherInstrument = "", notMoved = "", notMovedInstrument = "", hidden = "", hiddenInstrument = "",
+        instruments = emptyMap(),
+    )
+
+    private val sectionLabels = DefaultSectionLabels(
+        verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus",
+        solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG", shouldNumberSections = false,
+    )
+
     private fun MessageSink.messages() = messageQueue.value.map { it.value }
 
     private fun song(fileName: String) = Song(
@@ -175,7 +204,11 @@ class ExportControllerTest {
 
     private fun zip(name: String, size: Int) = ExportedFile(name, ExportedFile.ZIP_MIME_TYPE, ByteArray(size))
 
-    private fun TestScope.controller(visibleDialog: DialogType?): Triple<ExportController, DialogHost, MessageSink> {
+    private fun TestScope.controller(
+        visibleDialog: DialogType?,
+        capo: EffectiveCapo = EffectiveCapo(fret = 0, songFret = 0),
+        songFiles: FakeSongFiles = FakeSongFiles(),
+    ): Triple<ExportController, DialogHost, MessageSink> {
         val dialogHost = DialogHost(backgroundScope).apply { setVisibleDialog(visibleDialog) }
         val messageSink = MessageSink(backgroundScope)
         val controller = ExportController(
@@ -186,9 +219,9 @@ class ExportControllerTest {
             userPreferencesState = MutableStateFlow(DataState.Loading(null)),
             transpositions = MutableStateFlow(Transpositions()),
             effectiveTempoOf = { _, _ -> EffectiveTempo(bpm = 120, source = EffectiveTempo.Source.DEFAULT, songBpm = 120) },
-            effectiveCapoOf = { _, _ -> EffectiveCapo(fret = 0, songFret = 0) },
+            effectiveCapoOf = { _, _ -> capo },
             songRenderer = testSongRenderer(),
-            getSongContent = FakeSongFiles(),
+            getSongContent = songFiles,
             exportSongs = object : ExportSongsUseCase {
                 override suspend fun invoke(fileNames: List<String>, isArchive: Boolean, isDated: Boolean): ExportedFile {
                     requests += "songs $fileNames archive: $isArchive"
