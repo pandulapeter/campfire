@@ -806,6 +806,33 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a lyrics-only song whose chorus is printed on every page is not taken for a songbook with contents`() {
+        fun line(text: String, size: Double = 10.0) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size) })
+        val chorus = listOf("Hey now you're an all star", "Get your game on, go play", "Hey now you're a rock star", "Get the show on, get paid").map { line(it) }
+        fun page(vararg verse: String) = ChordSheet.Page(verse.map { line(it) } + chorus)
+        val result = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    ChordSheet.Page(
+                        listOf(line("Star Song", size = 16.0)) + page("Somebody once told me", "The world is gonna roll me", "I ain't the sharpest tool").lines,
+                    ),
+                    page("So much to do so much to see", "So what's wrong with taking the back streets", "You'll never know if you don't go"),
+                    page("It's a cool place and they say it gets colder", "You're bundled up now wait till you get older", "But the meteor men beg to differ"),
+                    page(
+                        "The ice we skate is getting pretty thin",
+                        "Somebody told me so",
+                        "We were born to sing",
+                        "The water's getting warm so you might as well swim",
+                        "My world's on fire how about yours",
+                    ),
+                ),
+            ),
+        )
+        assertEquals(1, result.size, result.joinToString("{new_song}\n"))
+        assertEquals(4, Regex("Get the show on, get paid").findAll(result.single()).count(), result.single())
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(
