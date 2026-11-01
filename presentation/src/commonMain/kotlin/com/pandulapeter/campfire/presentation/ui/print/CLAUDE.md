@@ -63,7 +63,8 @@ words by the screen (`rememberPrintScales`) only while printed, since the layout
 - The playing row (`playingDetails`) **follows the reader's settings as the screen does**: transposition, capo, and
   tempo are the setlist's, else the reader's own, else the file's. The sounding key (the inferred one where the file
   names none, as on screen), the reader's transposition, and non-zero capo with `showKey` (the keyboard's too, as on
-  screen; "2 (Em shapes)" where the chords are named by the shapes, `PrintLabels.capoWithShapes`; "2 (chords as they
+  screen; "2 (Em shapes)" where the chords are named by the shapes, `PrintLabels.capoWithShapes`, whose key the import
+  reads back as the song's; "2 (chords as they
   sound)" where they are named as they sound, `PrintLabels.capoSounding`, which the import reads back as the shapes
   over the same capo; diagrams drawn above the printed capo); tempo and time signature with `showTempo`, which also prints later changes. **Values are three spaces apart**, which lets the importer read them back one by one.
   A value too wide for a row of its own wraps (a sounding capo in three or four columns), its rest marked as a wrapped

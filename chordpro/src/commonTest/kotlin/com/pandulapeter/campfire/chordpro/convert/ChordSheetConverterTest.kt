@@ -156,7 +156,7 @@ class ChordSheetConverterTest {
         assertTrue(sounding.contains("[Em]Hello [C]world"), sounding)
         assertTrue(sounding.contains("e|-0-----3-|\nB|-------1-|"), sounding)
         val shapes = convert("Song\nSomeone\nKey: F#m   Capo: 2 (Em shapes)\nVerse 1\nEm    C\nHello world")
-        assertTrue(shapes.contains("{key: F#m}\n{capo: 2}\n") && shapes.contains("[Em]Hello [C]world"), shapes)
+        assertTrue(shapes.contains("{key: Em}\n{capo: 2}\n") && shapes.contains("[Em]Hello [C]world"), shapes)
         val other = convert("Song\nSomeone\nCapo: 2 (optional)\nVerse 1\nF#m   D\nHello world")
         assertTrue(other.contains("{capo: 2}\n") && other.contains("[F#m]Hello [D]world"), other)
         val overflowing = convert("Song\nSomeone\nCapo: 99999999999 (chords as they sound)\nVerse 1\nF#m   D\nHello world")
@@ -184,6 +184,37 @@ class ChordSheetConverterTest {
         assertTrue(latin.contains("{key: Em}\n{capo: 2}\n") && latin.contains("[Em]Hello [C]world"), latin)
         val german = convert("Song\nSomeone\nKapodaster: 2 (klingende Akkorde)\nVerse 1\nH     E\nHello world")
         assertTrue(german.contains("{capo: 2}\n") && german.contains("[A]Hello [D]world"), german)
+    }
+
+    @Test
+    fun `a capo marked with its shapes' key makes that key the song's in every language the app prints it in`() {
+        // The capo labels and the shapes markers as each language's strings.xml has them.
+        val languages = listOf(
+            "Capo" to "Em shapes",
+            "Capo" to "Em fog\u00e1sok",
+            "Capodastru" to "pozi\u021bii de Em",
+            "Kapodaster" to "Em-Griffe",
+            "Capo" to "formas de Em",
+            "Capo" to "doigt\u00e9s de Em",
+            "Capotasto" to "diteggiature di Em",
+            "\u05e7\u05d0\u05e4\u05d5" to "\u05e6\u05d5\u05e8\u05d5\u05ea Em",
+        )
+        for ((label, marker) in languages) {
+            val result = convert("Song\nSomeone\nKey: F#m   $label: 2 ($marker)\nVerse 1\nEm    C\nHello world")
+            assertTrue(result.contains("{key: Em}\n") && result.contains("{capo: 2}\n") && !result.contains("F#m"), result)
+            assertTrue(result.contains("[Em]Hello [C]world"), result)
+        }
+        val latin = convert("Song\nSomeone\nTonalidad: Fa#m   Capo: 2 (formas de Mim)\nVerse 1\nMim   Do\nHello world")
+        // The key comes back in the notation it is printed in, as a `Key:` value would.
+        assertTrue(latin.contains("{key: Mim}\n{capo: 2}\n"), latin)
+        val optional = convert("Song\nSomeone\nCapo: 2 (optional)\nVerse 1\nEm    C\nHello world")
+        assertTrue(optional.contains("{capo: 2}\n") && !optional.contains("{key"), optional)
+        val other = convert("Song\nSomeone\nKey: A\nCapo: 2 (G shapes)\nVerse 1\nG     C\nHello world")
+        assertTrue(other.contains("{key: G}\n") && other.contains("{capo: 2}\n") && !other.contains("{key: A}"), other)
+        val roman = convert("Song\nSomeone\nCapo: II (G shapes)\nVerse 1\nG     C\nHello world")
+        assertTrue(!roman.contains("{capo") && !roman.contains("{key") && roman.contains("Capo: II (G shapes)"), roman)
+        val german = convert("Song\nSomeone\nKapodaster: 2 (Em-Griffe)\nVerse 1\nEm    C\nHello world")
+        assertTrue(german.contains("{key: Em}\n{capo: 2}\n"), german)
     }
 
     @Test

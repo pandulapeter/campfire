@@ -33,7 +33,8 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   same labels as `strings.xml`; a label that is an ordinary word too (`Metro`, `Mesure`) takes only a value of its
   field's shape, and a row of it marked as a continuation is the rest of the value above, wrapped by a narrow column
   (`joinWrappedDetails`). A capo marked as sounding (`print_capo_sounding`) is imported as the capo chart: the chords
-  and key moved down by the capo in the standard notation, tab frets kept.
+  and key moved down by the capo in the standard notation, tab frets kept. A capo marked with its shapes' key
+  (`song_details_capo_shapes`, in any of the app's languages, from any sheet) writes that key as the song's `{key}`.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands.
 - Any row with `pieces` is matched by those edges (another producer's PDF, put into reading order by `:data:formats`),
   within an em of the lyric rather than the export's exact point.

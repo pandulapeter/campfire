@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor
 import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -119,9 +120,9 @@ class PdfRoundTripTest {
                 }
             }
         }
-        // What sounds is told by the chords and the capo alone: the shapes print keeps the key that sounds over its shapes,
-        // which SongKeys may read either way, so the chords' first one, moved up by the capo, is what is compared. The
-        // lyrics are the verse's line alone, with nothing of the details row read as one.
+        // What sounds is told by the chords and the capo alone: the shapes print brings the shapes' key back and the
+        // sounding print the key it moves its chords to, so the chords' first one, moved up by the capo, is what is
+        // compared. The lyrics are the verse's line alone, with nothing of the details row read as one.
         val failures = prints.mapNotNull { (name, imported) ->
             val capo = imported.metadata.capo ?: 0
             val moved = ChordProTransposer.transpose(imported, capo, preferFlats = false)
@@ -129,6 +130,21 @@ class PdfRoundTripTest {
             val heard = lyrics.firstNotNullOfOrNull { it.chords.firstOrNull()?.name }
             val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }
             if (capo == 2 && heard == "F#m" && words == listOf("Hello world and more here")) null else "$name: capo $capo, sounds $heard, lyrics $words"
+        }
+        assertEquals(emptyList(), failures, failures.joinToString("\n"))
+    }
+
+    @Test
+    fun `a capo song printed with its shapes' key comes back keyed by its shapes in every language and column count`() = runBlocking {
+        val song = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n{start_of_verse}\n[C]Hello [G]world [D]and [Em]more\n{end_of_verse}\n")
+        val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+        val failures = folders.flatMap { folder ->
+            val labels = printLabelsOf(folder)
+            (1..PrintSettings.MAX_COLUMNS).mapNotNull { columns ->
+                val imported = roundTrip(song, PrintSettings(columns = columns), labels, shapesKey = "Em")
+                val actual = listOf(imported.metadata.key, imported.metadata.capo?.toString(), SongKeys.ofChords(imported))
+                if (actual == listOf("Em", "2", "Em")) null else "${folder.name} in $columns columns: $actual"
+            }
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }
