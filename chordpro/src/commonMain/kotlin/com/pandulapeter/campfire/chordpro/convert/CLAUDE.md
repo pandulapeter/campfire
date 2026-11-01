@@ -35,7 +35,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   over its glyphs (`ChordSheet.Span.pieces`), and its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`): a
   Hebrew letter's chord ends at its right edge, a Latin one's starts at its left, a space only where no letter fits; a
   row of no right-to-left letter whose glyphs are drawn out of its order (`2 2 tonight` in a Hebrew song) is read the
-  same way. A wrapped tab system comes back as the system it was printed as.
+  same way. A row of chords alone in a song set from the right (`ChordSheetCampfireLayout.isSetFromRight`, the song's
+  side) is read from its right end, where the export starts it. A wrapped tab system comes back as the system it was
+  printed as.
 - An export's label opens the kind its leading heading word names, in every language the app prints labels in,
   whatever follows it (`Chorus (twice)`); a pre-chorus is the editor's `pre-chorus`, never a site's bridge. The
   playing details row (key, transposition, capo, tempo, time) is read in every language the app prints it in, from the

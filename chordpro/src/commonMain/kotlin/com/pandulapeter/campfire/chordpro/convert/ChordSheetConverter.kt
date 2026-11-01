@@ -64,7 +64,10 @@ public object ChordSheetConverter {
             val bodySize = knownBodySize ?: 1.0
             rendered.mapIndexed { pageIndex, page ->
                 val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], bodySize)
-                page.mapIndexed { index, line -> line.copy(role = roles[index], isCampfire = true, bodySize = knownBodySize ?: 0.0) }
+                val isSetFromRight = ChordSheetCampfireLayout.isSetFromRight(page.map { it.source }, bodySize)
+                page.mapIndexed { index, line ->
+                    line.copy(role = roles[index], isCampfire = true, bodySize = knownBodySize ?: 0.0, isSetFromRight = isSetFromRight[index])
+                }
             }
         }
         val all = pages.flatten()
@@ -195,6 +198,8 @@ public object ChordSheetConverter {
          * makes a row of notes alone the chord row of that line.
          */
         val isContinuedBelow: Boolean = false,
+        /** Whether the line belongs to a song Campfire's export printed from the right, a row of its chords alone too. */
+        val isSetFromRight: Boolean = false,
     ) {
         /** What goes between the row this one continues and its text. */
         val joint get() = if (isHardCut) "" else " "
@@ -696,8 +701,10 @@ public object ChordSheetConverter {
     /**
      * A chord row with no lyric under it. Its playing note is written as an annotation, so that it stands on the row with
      * the chords rather than as a lyric under them; one after a lyric line stays text, since the line has words already.
+     * A row [isSetFromRight] is read from its right end, where the export starts it.
      */
-    private fun bracketed(row: List<Token>, chordRow: ChordRow?) = (row + chordRow?.notes.orEmpty()).sortedBy { it.index }.joinToString(" ") {
+    private fun bracketed(row: List<Token>, chordRow: ChordRow?, isSetFromRight: Boolean) = (row + chordRow?.notes.orEmpty())
+        .sortedBy { if (isSetFromRight) -it.index else it.index }.joinToString(" ") {
         when {
             it in chordRow?.notes.orEmpty() -> note(it.text)
             rowChord(it.text) -> "[${rowChordName(it.text)}]"
@@ -1016,11 +1023,11 @@ public object ChordSheetConverter {
                     // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
                     // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
                     if (line.isContinuation && !isUnderMarkedLyric) {
-                        addLyric(bracketed(candidates[index]!!, chordRow(line)), continues = true, isHardCut = false)
+                        addLyric(bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight), continues = true, isHardCut = false)
                     } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
                         index++
-                    } else output += bracketed(candidates[index]!!, chordRow(line))
+                    } else output += bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight)
                 }
                 Kind.LYRIC -> addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
                 Kind.BLANK -> output += ""

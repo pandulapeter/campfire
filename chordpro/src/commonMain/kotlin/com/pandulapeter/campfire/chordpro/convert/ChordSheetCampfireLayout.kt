@@ -29,10 +29,8 @@ internal object ChordSheetCampfireLayout {
      * right, where it ends. [isChordRow] says which lines are rows of chords, the converter's own test of one.
      */
     fun roles(lines: List<ChordSheet.Line>, isChordRow: List<Boolean>, bodySize: Double): List<Role?> {
-        // A line's first space counts: a lyric indented by spaces starts at the column, where its first one is.
-        val starts = lines.map { line -> line.spans.firstOrNull()?.start }
-        // Reading order is not the order on the page, so a right-to-left row ends where its rightmost glyph does.
-        val ends = lines.map { line -> line.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.end } }
+        val starts = startsOf(lines)
+        val ends = endsOf(lines)
         val songs = songsOf(lines, bodySize)
         val roles = mutableListOf<Role?>()
         lines.forEachIndexed { index, line ->
@@ -53,6 +51,26 @@ internal object ChordSheetCampfireLayout {
         }
         return roles
     }
+
+    /**
+     * Whether each line of a page belongs to a song printed from the right, whose rows of chords alone are laid out from
+     * their right end too: their first chord is the rightmost.
+     */
+    fun isSetFromRight(lines: List<ChordSheet.Line>, bodySize: Double): List<Boolean> {
+        val starts = startsOf(lines)
+        val ends = endsOf(lines)
+        val songs = songsOf(lines, bodySize)
+        return lines.indices.map { index -> isFlushRight(lines, starts, ends, songs.first { index in it }, index) }
+    }
+
+    /** Where each line starts, its first space counted: a lyric indented by spaces starts at the column, at that space. */
+    private fun startsOf(lines: List<ChordSheet.Line>) = lines.map { line -> line.spans.firstOrNull()?.start }
+
+    /**
+     * Where each line ends: reading order is not the order on the page, so a right-to-left row ends where its rightmost
+     * glyph does.
+     */
+    private fun endsOf(lines: List<ChordSheet.Line>) = lines.map { line -> line.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.end } }
 
     /**
      * Whether a line wholly in italics is a lyric set in `<i>` rather than a comment, which differs from it only by a
@@ -111,6 +129,8 @@ internal object ChordSheetCampfireLayout {
             val otherEnd = ends[other]
             if (otherStart != null && otherEnd != null && lines[other].isPlain() && otherStart < until && otherEnd > from) Triple(other, otherStart, otherEnd) else null
         }
+        // A row with no line of lyrics beside it (a chord row alone in its column) has nothing to be read by.
+        if (column.isEmpty()) return false
         // The edge the most lines share: a line of left-to-right text set from the right may end past it, and a song of
         // choruses has a details row alone at the margin.
         fun shared(edges: List<Double>) = edges.maxBy { edge -> edges.count { abs(it - edge) <= TOLERANCE } }

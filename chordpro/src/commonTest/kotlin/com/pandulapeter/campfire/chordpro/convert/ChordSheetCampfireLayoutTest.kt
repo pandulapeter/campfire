@@ -291,6 +291,15 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a row of chords alone in a song printed from the right is read from its right end`() {
+        val song = convert(
+            rtl("\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd"),
+            ChordSheet.Line(text("Am", x = RIGHT - 9 * GLYPH, bold = true).spans + text("G", x = RIGHT - 5 * GLYPH, bold = true).spans + text("C", x = RIGHT - GLYPH, bold = true).spans),
+        )
+        assertTrue("\n[C] [G] [Am]\n" in song, song)
+    }
+
+    @Test
     fun `a song of choruses is read from its left, its details row no box`() {
         val chorus = MARGIN + 8.0
         val song = convert(

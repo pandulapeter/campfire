@@ -158,6 +158,15 @@ class PdfRoundTripTest {
     }
 
     @Test
+    fun `a right-to-left song's row of chords alone comes back in its order`() = runBlocking {
+        val song = ChordProParser.parse(
+            "{title: \u05e9\u05d9\u05e8}\n{start_of_verse}\n[C]\u05e9\u05dc\u05d5\u05dd [G]\u05e2\u05d5\u05dc\u05dd\n{end_of_verse}\n" +
+                "{start_of_verse}\n[C] [G] [Am]\n{end_of_verse}\n",
+        )
+        assertEquals(summary(song), summary(roundTrip(song, PrintSettings())))
+    }
+
+    @Test
     fun `a song's side is told by the edge most of its lines share`() = runBlocking {
         val choruses = ChordProParser.parse(
             "{title: Truck Driver Change}\n{key: C}\n{start_of_chorus}\n[C]Love is [F]all a[G]round\n{end_of_chorus}\n" +
