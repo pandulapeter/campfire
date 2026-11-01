@@ -678,6 +678,50 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `in a song that heads every section, a chorus heading over new words in another look is that chorus written out`() {
+        val result = convert(
+            "Verse 1:\nSomebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star\n    Get your game on\n\n" +
+                "Verse 2:\nIt's a cool place\nAnd it gets colder\n\nChorus:\nHey now you're a rock star\nGet the show on, get paid",
+        )
+        assertEquals(
+            "{start_of_verse: Verse 1}\nSomebody told me\nWe were born to sing\n\n{end_of_verse}\n{start_of_chorus: Chorus}\nHey now you're a star\n" +
+                "Get your game on\n\n{end_of_chorus}\n{start_of_verse: Verse 2}\nIt's a cool place\nAnd it gets colder\n\n{end_of_verse}\n" +
+                "{start_of_chorus: Chorus}\nHey now you're a rock star\nGet the show on, get paid\n{end_of_chorus}\n",
+            result,
+        )
+    }
+
+    @Test
+    fun `a chorus heading over the plain verse after a bold chorus that the verse ended recalls it, in a song that heads its first verse`() {
+        fun line(text: String, bold: Boolean = false, size: Double = 10.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isBold = bold) })
+        val blank = ChordSheet.Line(emptyList())
+        val lines = listOf(
+            line("Song", size = 16.0),
+            line("Verse 1:"),
+            line("Somebody told me"),
+            line("We were born to sing"),
+            blank,
+            line("Chorus:"),
+            line("Hey now you're a star", bold = true),
+            line("Get your game on", bold = true),
+            blank,
+            line("It's a cool place"),
+            line("And it gets colder"),
+            blank,
+            line("Chorus:"),
+            line("The ice we skate"),
+            line("Is getting pretty thin"),
+        )
+        assertEquals(
+            "{title: Song}\n\n{start_of_verse: Verse 1}\nSomebody told me\nWe were born to sing\n\n{end_of_verse}\n{start_of_chorus: Chorus}\n" +
+                "Hey now you're a star\nGet your game on\n{end_of_chorus}\n\nIt's a cool place\nAnd it gets colder\n\n{chorus}\n" +
+                "The ice we skate\nIs getting pretty thin\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(

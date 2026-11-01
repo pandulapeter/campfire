@@ -1139,7 +1139,7 @@ public object ChordSheetConverter {
                     // A section ending mid-song ends with its last stanza, before the blank lines parting it from the next.
                     val blanks = output.takeLastWhile { it.isBlank() }.size
                     repeat(blanks) { output.removeAt(output.lastIndex) }
-                    closeSection()
+                    closeSection(isReturn = true)
                     repeat(blanks) { output += "" }
                 }
             }
@@ -1178,9 +1178,14 @@ public object ChordSheetConverter {
             return abs(look.left - edge) <= maxOf(look.size, verse.size) * 1.5
         }
 
-        fun closeSection() {
+        /**
+         * Closes the open section, recording its look only where the song showed it set apart: against verses outside any
+         * section, or by a lyric returning from it ([isReturn]). In a song that heads every section the next heading closes
+         * a chorus, so nothing is recorded and a later chorus heading over new words is that chorus written out.
+         */
+        fun closeSection(isReturn: Boolean = false) {
             val type = environment
-            if (type != null && sectionLooks.isNotEmpty() && (sectionVerses.isEmpty() || isSetApart(sectionVerses, sectionLooks))) {
+            if (type != null && sectionLooks.isNotEmpty() && (isReturn || sectionVerses.isNotEmpty() && isSetApart(sectionVerses, sectionLooks))) {
                 setApart.getOrPut(type) { sectionLooks.first() to sectionWords.toSet() }
             }
             type?.let { output += "{end_of_$it}" }

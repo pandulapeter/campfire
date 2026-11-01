@@ -81,7 +81,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   inside it is a backing vocal or an aside). An inset counts only where two of the section's lyrics or more, all of them so far, start more than a
   character and a half to one side of the edge the verses share; a sheet whose verses share none (centred,
   right-aligned) sets a section apart by type alone. A chorus heading
-  over lines neither set in the look the song set its chorus apart in nor singing its words recalls it (`{chorus}`).
+  over lines neither set in the look the song set its chorus apart in nor singing its words recalls it (`{chorus}`),
+  once the song showed that look apart: against verses outside any section, or by the lyrics returning from it (in a
+  song that heads every section, lyrics under a chorus heading are that chorus).
 - With no heading, a stanza's run of two lyrics or more set in bold or italic at the size of the song's plain verses is
   a chorus, ended where the lyrics return to plain type; an inset alone is not one (a second column or a bridge starts further in too),
   and a line with no word (a tab's string, a stray accidental) neither belongs to such a run nor ends it.
