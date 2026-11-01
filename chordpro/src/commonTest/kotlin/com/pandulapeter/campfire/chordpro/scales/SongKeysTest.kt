@@ -31,6 +31,24 @@ class SongKeysTest {
     }
 
     @Test
+    fun `a capo chart keyed by the sounding key is read in its shapes' key though the two keys share chords`() {
+        assertEquals("G", SongKeys.capoChartKeyOf(song(key = "A", capo = 2, chords = "G C D G")))
+        assertEquals("Em", SongKeys.capoChartKeyOf(song(key = "Am", capo = 5, chords = "Em Am D Em")))
+        assertEquals("Em", SongKeys.capoChartKeyOf(song(key = "F#m", capo = 2, chords = "Em C G D")))
+        assertEquals("Em", SongKeys.ofChords(song(key = "F#m", capo = 2, chords = "Em C G D")))
+        val sounding = ChordProTransposer.transpose(song(key = "Am", capo = 5, chords = "Em Am D Em"), semitones = 3)
+        assertEquals("Gm", SongKeys.capoChartKeyOf(sounding))
+    }
+
+    @Test
+    fun `a capo chart keyed by its shapes' key, or fitting both keys alike, keeps its written key`() {
+        assertNull(SongKeys.capoChartKeyOf(song(key = "D", capo = 2)))
+        assertEquals("D", SongKeys.ofChords(song(key = "D", capo = 2)))
+        assertNull(SongKeys.capoChartKeyOf(song(key = "A", capo = 2, chords = "G A G A")))
+        assertEquals("A", SongKeys.ofChords(song(key = "A", capo = 2, chords = "G A G A")))
+    }
+
+    @Test
     fun `a written key that holds the chords is their own`() {
         assertNull(SongKeys.capoChartKeyOf(song(key = "D", capo = 5)))
         assertNull(SongKeys.capoChartKeyOf(song(key = "G", capo = null)))

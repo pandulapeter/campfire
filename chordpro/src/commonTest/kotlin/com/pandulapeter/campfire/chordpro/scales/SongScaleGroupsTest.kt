@@ -554,8 +554,10 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a capo chart keyed by its sounding key is read in the key of its shapes`() =
+    fun `a capo chart keyed by its sounding key is read in the key of its shapes`() {
         assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "G", capo = 5)))
+        assertEquals(listOf("E" to "natural_minor"), rootAndFirst(song("Em Am D Em", key = "Am", capo = 5)))
+    }
 
     @Test
     fun `the key of the shapes is the capo chart's shapes' key and otherwise the written one`() {

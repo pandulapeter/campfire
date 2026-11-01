@@ -30,9 +30,27 @@ internal class Harmony(val parts: List<SongPart>) {
         val key = key ?: return@lazy null
         ranked.first().takeIf { it.pitchClass == (key.root.pitchClass - capo).mod(12) }?.let { SongKey(it, key.isMinor) }
     }
+
+    /**
+     * The key the chords are in where the key in force names the sounding key over them: [capoKey], where its own scale
+     * (major; natural or harmonic minor) holds more of the plays than the written key's does, else null. The two keys
+     * share chords (`{key: A}{capo: 2}` over `G C D G` plays A major's D; `{key: Am}{capo: 5}` over `Em Am D Em` its Am
+     * and Em, and A Dorian holds it whole), so what decides is which holds more, never whether the written key holds the
+     * part; on a tie the author's word stands and the written key is the chords' own.
+     */
+    val shapesKey by lazy {
+        val written = key ?: return@lazy null
+        capoKey?.takeIf { playsHeldBy(it) > playsHeldBy(written) }
+    }
     private val notes = chords.flatMapTo(mutableSetOf()) { it.notes }
 
     fun holds(scale: Scale, root: SpelledNote) = Scales.pitchClasses(scale, root.pitchClass).containsAll(notes)
+
+    /** How many of the plays the own scale of [key] holds, a minor key's being its natural or its harmonic minor. */
+    private fun playsHeldBy(key: SongKey): Int {
+        val scales = if (key.isMinor) listOf(naturalMinor, harmonicMinor) else listOf(major)
+        return chords.count { chord -> scales.any { holdsChord(it, key.root.pitchClass, chord) } }
+    }
 
     /** The chords [home] on [root] leaves out, each with what to play over it ([ScaleExceptions]). */
     fun exceptionsTo(home: Scale, root: SpelledNote) = ScaleExceptions.of(chords, names, roots.map { it.name }, root.pitchClass, root.name, home)
@@ -160,3 +178,4 @@ private const val PHRYGIAN_DOMINANT_ID = "phrygian_dominant"
 private const val MIXOLYDIAN_ID = "mixolydian"
 private val major = Scales.fromId("major")!!
 private val naturalMinor = Scales.fromId("natural_minor")!!
+private val harmonicMinor = Scales.fromId("harmonic_minor")!!

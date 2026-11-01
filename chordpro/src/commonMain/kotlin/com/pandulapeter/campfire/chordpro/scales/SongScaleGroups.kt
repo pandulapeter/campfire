@@ -48,19 +48,15 @@ public object SongScaleGroups {
     /**
      * The key in force at the first part of [song] (`{key}`, or the key a `{transpose}` names), read as the key its chords
      * are written in: for a capo chart whose `{key}` names the sounding key over shapes in another (`{key: G}{capo: 5}`
-     * over D shapes), the key the shapes play, decided as [fitOf] decides it for a part: only where the written key holds
-     * nothing of the song whole and the shapes' key does. Null where the song names no key or plays no chord; the written
-     * key unweighed for a song playing more than [MAX_PLAYED_CHORDS] chords. Paired with whether it is the shapes' key
-     * rather than the written one. See [SongKeys].
+     * over D shapes), the key the shapes play ([Harmony.shapesKey]), decided as [fitOf] decides it for a part. Null where
+     * the song names no key or plays no chord. Paired with whether it is the shapes' key rather than the written one. See
+     * [SongKeys].
      */
     internal fun keyOfChordsIn(song: ChordProSong): Pair<SongKey, Boolean>? {
         val parts = SongParts.of(song)
         val harmony = Harmony(parts.ifEmpty { return null })
         val key = harmony.key ?: return null
-        val shapes = harmony.capoKey?.takeIf {
-            parts.sumOf { part -> part.chords.size } <= MAX_PLAYED_CHORDS &&
-                keyFitOf(harmony, key)?.level != Level.TONAL && keyFitOf(harmony, it)?.level == Level.TONAL
-        }
+        val shapes = harmony.shapesKey
         return if (shapes != null) shapes to true else key to false
     }
 
@@ -170,16 +166,13 @@ public object SongScaleGroups {
      * the chords ([guessedFitOf]), a vamp on one chord answered as the chord's own sheet is ([oneChordFitOf]).
      *
      * A capo chart may write its `{key}` as the sounding key over shapes in another (`{key: G}{capo: 5}` over D shapes),
-     * so where the written key holds nothing of the part whole, the key the shapes play ([Harmony.capoKey]) answers if
-     * it does; where neither does, the written key keeps its word.
+     * so where the key the shapes play holds more of the part than the written key does ([Harmony.shapesKey]), that key
+     * is the one in force.
      */
     private fun fitOf(parts: List<SongPart>): Fit? {
         val harmony = Harmony(parts)
         powerRiffFitOf(harmony)?.let { return it }
-        val written = harmony.key?.let { keyFitOf(harmony, it) }
-        if (written?.level == Level.TONAL) return written
-        harmony.capoKey?.let { keyFitOf(harmony, it) }?.takeIf { it.level == Level.TONAL }?.let { return it }
-        return written ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
+        return (harmony.shapesKey ?: harmony.key)?.let { keyFitOf(harmony, it) } ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
     }
 
     /**

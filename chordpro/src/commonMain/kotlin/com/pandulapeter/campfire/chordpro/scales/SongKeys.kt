@@ -19,8 +19,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  * Transposition control, the song lists, the degrees, the scales) goes through. A capo chart may write its `{key}` as
  * the key its shapes are in (`{key: D}{capo: 2}` over D shapes, sounding E) or as the key that sounds
  * (`{key: G}{capo: 5}` over D shapes), and only its chords tell the two apart: the written key is the chords' own unless
- * it holds nothing of the song whole and the key a capo's shapes play does, the rule [SongScaleGroups] reads every part
- * by. Every reading is shift-invariant, so a song moved by any transposition, the file's capo counted in or not, reads
+ * the song is heard on the root the capo shifts it to and that key's own scale holds more of its plays than the written
+ * key's does (`{key: A}{capo: 2}` over `G C D G` is in G, though A major holds its D), a tie keeping the author's word,
+ * the rule [SongScaleGroups] reads every part by. Every reading is shift-invariant, so a song moved by any transposition, the file's capo counted in or not, reads
  * alike.
  */
 public object SongKeys {
@@ -35,7 +36,7 @@ public object SongKeys {
     /**
      * The key the chords of [song], a capo chart in the standard notation, are in where its `{key}` names the sounding key
      * over them (`D` for `{key: G}{capo: 5}` over D shapes), and null where the written key is the chords' own: one that
-     * names no `{capo}` or no `{key}`, or whose key holds its chords. Read where the file is scanned, since the lists
+     * names no `{capo}` or no `{key}`, or whose key holds as many of its chords as the shapes' key does. Read where the file is scanned, since the lists
      * name a song's key without its text.
      */
     public fun capoChartKeyOf(song: ChordProSong): String? {
