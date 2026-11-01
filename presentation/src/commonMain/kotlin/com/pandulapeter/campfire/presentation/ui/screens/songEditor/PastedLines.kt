@@ -21,8 +21,10 @@ internal data class PastedLines(val start: Int, val text: String)
  * with what the two begin and end with alike taken off when the change [isWholeText], the whole text replaced by the
  * whole text. The web's text input reports a typed character that way, which would read as a paste of every line of the
  * song. Any other change is answered unchanged: a paste over a selection is what the user pasted, and the lines it
- * shares with the selection at either end are still part of it (a chord row over its lyric, a closing line break). The
- * ends never stop between the two halves of a surrogate pair.
+ * shares with the selection at either end are still part of it (a chord row over its lyric, a closing line break). A
+ * paste over the whole text reads like a keystroke on the web and is narrowed too, so there the lines it shares with
+ * the old text at either end are taken as kept rather than pasted. The ends never stop between the two halves of a
+ * surrogate pair.
  */
 internal fun narrowedInsertion(
     start: Int,

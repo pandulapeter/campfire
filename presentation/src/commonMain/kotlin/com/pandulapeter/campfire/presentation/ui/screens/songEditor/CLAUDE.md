@@ -65,7 +65,8 @@ numbers nothing to count from.
   paste; never the editor's own `edit`s; nothing past `LONG_DOCUMENT_LENGTH`.
 - A change of the whole text into the whole text is first narrowed to what differs (`narrowedInsertion`): the web
   reports a typed character that way, which would otherwise read as a paste of the song, prettify it, and put the caret
-  at its end. Any other change, a paste over a selection included, is taken whole.
+  at its end. Any other change, a paste over a selection included, is taken whole; a paste over the whole text (Select
+  all) cannot be told from a keystroke, so it loses the lines it shares with the old text at either end.
 
 ## Overflow menu
 
