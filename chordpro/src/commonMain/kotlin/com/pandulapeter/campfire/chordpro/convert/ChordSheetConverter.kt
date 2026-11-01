@@ -1015,9 +1015,7 @@ public object ChordSheetConverter {
                     // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
                     if (line.isContinuation && !isUnderMarkedLyric) {
                         addLyric(bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight), continues = true, isHardCut = false)
-                    } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1]) &&
-                        isLyricOf(line, lines[index + 1])
-                    ) {
+                    } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
                         index++
                     } else output += bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight)
@@ -1058,9 +1056,6 @@ public object ChordSheetConverter {
         fun closeSection() { environment?.let { output += "{end_of_$it}" }; environment = null }
         fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }
-
-    /** Whether [lyric] is the lyric of the chord row [chords] over it, which only Campfire's export says by where it stands. */
-    private fun isLyricOf(chords: Rendered, lyric: Rendered) = !chords.isCampfire || ChordSheetCampfireLayout.isLyricOf(chords.source, lyric.source)
 
     /**
      * A row of three or more chords typed one space apart over a lyric more than twice its length lost its columns

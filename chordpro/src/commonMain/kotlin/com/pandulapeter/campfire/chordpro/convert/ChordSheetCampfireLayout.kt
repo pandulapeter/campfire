@@ -157,31 +157,6 @@ internal object ChordSheetCampfireLayout {
     }
 
     /**
-     * Whether [lyric] is printed as the lyric of the row of [chords] right above it rather than as the next row, under a
-     * line of chords alone, or in another column: the export never parts a lyric from its chords, but a line of chords
-     * alone over a line of no chords reads just like one line. The two are told apart by where the rows' texts start,
-     * which is where the export lays them out whatever font draws the lyric (a right-to-left one's falls back on another,
-     * which sits on another baseline): a lyric [CampfireExportLayout.LYRIC_UNDER_CHORDS] font sizes under its chords,
-     * the next row [CampfireExportLayout.ROW_HEIGHT] under a row of chords alone. The chords are set in the bundled Inter,
-     * whose line box, the size the export writes a text at, is [INTER_LINE_BOX] times the font size, so it is what the
-     * distance is measured in. A lyric in a fallback font is written at its glyphs' box, which may start lower than its
-     * row (0.8 points at 12 points for Arabic on the desktop), so the two distances are told apart halfway. True where
-     * either line's position is unknown.
-     */
-    fun isLyricOf(chords: ChordSheet.Line, lyric: ChordSheet.Line): Boolean {
-        val chordsTop = chords.top() ?: return true
-        val lyricTop = lyric.top() ?: return true
-        val fontSize = chords.size()?.let { it / INTER_LINE_BOX } ?: return true
-        return lyricTop > chordsTop && lyricTop - chordsTop < fontSize * (CampfireExportLayout.LYRIC_UNDER_CHORDS + CampfireExportLayout.ROW_HEIGHT) / 2
-    }
-
-    /** The largest size a line's text is set at: in the export, the height of its line box. */
-    private fun ChordSheet.Line.size() = spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.size }
-
-    /** Where a line's text starts on the page: the export writes each text at the foot of its line box, as tall as its size. */
-    private fun ChordSheet.Line.top() = baseline?.let { baseline -> size()?.let { baseline - it } }
-
-    /**
      * Whether a line's [edge] sits 5 points in from some other line's and none lies between the two: the box against the
      * lines around it rather than the column, which also finds a box inside a chorus, whose lines are indented by more.
      * The edges of a song printed from the right are passed negated, so that "in" is always the larger value, with the
@@ -286,9 +261,6 @@ internal object ChordSheetCampfireLayout {
      * next row's 1.45 under a row of chords alone (1.2), and a comment's after a row of chords alone 2.1 (1.74).
      */
     private const val ITALIC_LYRIC_UNDER_CHORDS = 1.375
-
-    /** The height of the bundled Inter's line box, in its font size. */
-    private const val INTER_LINE_BOX = 1.21
 
     /**
      * How far a line's baseline may stand under an italic lyric's, in its own line box, and still be the row that lyric

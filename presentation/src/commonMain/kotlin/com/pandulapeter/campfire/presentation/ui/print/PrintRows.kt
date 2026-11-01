@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
-import com.pandulapeter.campfire.chordpro.convert.CampfireExportLayout
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -321,7 +320,7 @@ internal class PrintRows(
             val isHardCut = isHardCut(fragments, index, style)
             val part = Part(fragment, x = x, style = style, formatting = formatting, isContinuation = isHardCut, isHardCut = isHardCut)
             start += fragment.length
-            Row(listOf(part), style.size * CampfireExportLayout.ROW_HEIGHT.toFloat())
+            Row(listOf(part), style.size * 1.45f)
         }
     }
 
@@ -362,7 +361,7 @@ internal class PrintRows(
         fragments.mapIndexed { index, fragment ->
             val x = if (style.isRightToLeft) width - drawnWidth(fragment, style, emptyList()) { measure(fragment, style) } else 0f
             val isHardCut = isHardCut(fragments, index, style)
-            Row(listOf(Part(fragment, x = x, style = style, isSelectable = isSelectable, isContinuation = isHardCut, isHardCut = isHardCut)), style.size * CampfireExportLayout.ROW_HEIGHT.toFloat())
+            Row(listOf(Part(fragment, x = x, style = style, isSelectable = isSelectable, isContinuation = isHardCut, isHardCut = isHardCut)), style.size * 1.45f)
         }
     }
 
