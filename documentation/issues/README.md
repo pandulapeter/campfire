@@ -16,9 +16,10 @@ links, and the Microsoft Store languages.
    those languages comes back two semitones low.
 2. **About 180 of the new chord-table shapes drop the root needlessly** and are shown as the chord's default on the
    ukulele, the mandolin, and the banjo (plan 04).
-3. **Shuffle broke two Songs-screen rules:** the app bar and list inset jump in one frame when the list loses or gains
-   its headers (plan 02), and the order is reshuffled and the list sent to the top on any `ON_START`, such as returning
-   from the file picker or mid selection (plan 03).
+3. **Shuffle broke two Songs-screen rules** (plans 02 and 03 as written). 3ffe2c950 has since replaced the Shuffle
+   sort with five random picks atop the list, which never leaves the list without headers, so plan 02 is dropped (see
+   Dropped). The hourly rule moved into `RandomPicksDraw`, so plan 03 is rewritten for it: new picks on any `ON_START`
+   (the file picker's return, a recreation), and an hour timed on a clock that stops while the phone sleeps.
 
 ## Fixed during the review
 
@@ -29,8 +30,7 @@ None: no finding was simple enough to fix on the spot.
 | # | Plan | Severity | Lane |
 |---|---|---|---|
 | 01 | [Mark a printed capo over chords named as they sound, and import it as the shapes the capo plays](01-print-a-sounding-capo-so-the-import-reads-it-back.md) | medium | P |
-| 02 | [Animate the songs app bar and list inset when the list loses or gains its section headers](02-animate-the-songs-app-bar-when-the-list-loses-or-gains-headers.md) | medium-low | S |
-| 03 | [Take a new Shuffle order on returning to the app only after a real stay away, and never mid selection](03-take-a-new-shuffle-order-only-after-a-real-stay-away.md) | low | S |
+| 03 | [Draw new random picks on returning to the app only after a real stay away, timed on the wall clock](03-draw-new-random-picks-only-after-a-real-stay-away.md) | low | S |
 | 04 | [Prefer chord shapes that keep the root, and replace the picked table rows that drop it needlessly](04-keep-the-root-in-the-searched-chord-shapes.md) | medium | T |
 | 05 | [Read back the PDF's playing details row in every language the app prints it in](05-read-back-the-pdf-playing-details-in-every-app-language.md) | medium | P |
 
@@ -39,7 +39,7 @@ None: no finding was simple enough to fix on the spot.
 | Lane | Area | Plans, in order | Files owned |
 |---|---|---|---|
 | T | chord tables | 04 | `chordpro/.../chordpro/voicings/` (main and test), its `CLAUDE.md` |
-| S | Songs screen and Shuffle | 02 → 03 | `ui/screens/songs/` (`SongsScreen.kt`, `KeepCardsInPlaceUnderTick.kt`, `CLAUDE.md`), `ui/components/appBar/SearchBarMotion.kt`, `ui/CampfireApp.kt`, `ui/state/LibraryState.kt`, `ui/state/ShuffleReturn.kt` (new) and its test, `tools/screenshots/.../screens/songs/SongHeaderlessBarTest.kt` (new) |
+| S | random picks | 03 | `ui/state/songs/RandomPicksDraw.kt` and its test, `ui/CampfireViewModel.kt` (its construction only), `ui/CampfireApp.kt`, `ui/screens/songs/CLAUDE.md` |
 | P | print and PDF import | 05 → 01 | `chordpro/.../chordpro/convert/` (main, test, `CLAUDE.md`), `chordpro/.../chordpro/chords/ChordProTransposer.kt` and its test, `ui/print/` (`PrintLayout.kt`, `PrintDocument.kt`, `CLAUDE.md`), `ui/screens/export/` (`ExportController.kt`, `PrintLabelsResource.kt`), every `values*/strings.xml`, `presentation/src/desktopTest/.../print/PdfRoundTripTest.kt`, `presentation/src/commonTest/.../print/PrintLayoutTest.kt` |
 
 (`ui/` = `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`.)
@@ -62,21 +62,21 @@ it is merged word by word, every sentence of both sides kept. A lane touching a 
   and matches what a shapes print imports to. Alternative (a1): import it as no capo (sounds right too, but drops the
   capo and needs tab frets raised). Rejected: (b) stop printing the capo over sounding names, which reverses
   fd1c29082's deliberate choice.
-- **D2 — plan 03, how long away counts as returning to the songs list** (on the wall clock, since a sleeping
+- **D2 — plan 03, how long away counts as returning to the songs list** (now for the random picks) (on the wall clock, since a sleeping
   phone stops the monotonic one). Recommended: **5 minutes**, long enough
   that a trip to the system file picker or a share sheet never reshuffles, short enough that putting the phone down
   and coming back does. Alternative: 30 seconds, which only filters out recreations and quick glances.
 
 ## Challenge
 
-Ran on all five plans (one Opus challenger, writing only this folder; probes in an untracked test at 286971fe4,
+Ran on all five plans as first written (one Opus challenger, writing only this folder; probes in an untracked test at 286971fe4,
 deleted). All five amended, none dropped:
 
 - **01** — the sounding capo's chords are moved in the standard notation: `transposeText` leaves Latin chords and keys
   as they are (probe: `{key: Fa#m}[Fa#m]…[Re]…` unchanged at -2), and the converter's output is still in the
   printed notation, so every reader in Latin would have kept the bug. Also: where the marker is read (before `capo()`
   strips it), a length limit on the translations, Latin, German, and Hebrew test cases, and how 5.2.x reads it.
-- **02** — the card held under a selection tick needs the inset's travel added (the inset moves the whole viewport),
+- **02** (dropped since, see Dropped) — the card held under a selection tick needs the inset's travel added (the inset moves the whole viewport),
   no longer "check, and maybe"; the snap is an `animateFloatAsState` `snap()` spec; the test also checks that no
   collapsed first row is kept after a sort change or the first song arriving in an empty library.
 - **03** — the wall clock instead of `TimeSource.Monotonic`, which stops while Android, iOS, and macOS sleep.
@@ -94,7 +94,7 @@ D1 keeps (a), with the notation step; D2 keeps 5 minutes, measured on the wall c
   gating and its persisted defaults; the setlist entry copy on all four add paths.
 - **Chord tables:** 13,555 entries checked for chord tones, bass, span, the banjo's drone, uniform shifts, no changed
   default of any chord that had a shape at aca41acce, and JVM method size.
-- **Shuffle:** order stability, cross-platform determinism (FNV-1a and SplitMix64 over the UTC hour), and the
+- **Shuffle** (since replaced by the random picks, which reuse its ranking): order stability, cross-platform determinism (FNV-1a and SplitMix64 over the UTC hour), and the
   persistence fallback; other sorts never see the hour (`GetScreenDataUseCaseImpl` passes 0).
 - **Editor highlighting:** TAB and ABC ranges, CRLF, and the incremental state.
 - **Shared links:** `SharedLinkList` click gating.
@@ -103,6 +103,10 @@ D1 keeps (a), with the notation step; D2 keeps 5 minutes, measured on the wall c
   positives.
 
 ## Dropped after verification
+
+- **Plan 02 (the songs app bar jumping when the list loses or gains its headers).** Only the Shuffle sort left a loaded
+  list headerless, and 3ffe2c950 removed it: the random picks lead the list under a header of their own, so the
+  instant branch in `SongsScreen` is again reached only by the loading placeholder giving way to the first section.
 
 - **Capo overrides saved by 5.2.1 now change the sounding key.** Intended by 61971509e; no migration for a tiny user
   base. The release notes should say so.

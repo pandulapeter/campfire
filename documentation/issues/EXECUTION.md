@@ -19,7 +19,7 @@ Then commit the plans (`git add documentation/issues && git commit -m "Add the 5
 | Lane | Plans, in order | Worktree |
 |---|---|---|
 | T | 04 | `../Campfire-lane-t` |
-| S | 02 → 03 | `../Campfire-lane-s` |
+| S | 03 | `../Campfire-lane-s` |
 | P | 05 → 01 | `../Campfire-lane-p` |
 
 The files each lane owns are in the README's Lanes table. Create every worktree detached from `START`:
@@ -77,9 +77,7 @@ Lane commands (`<commands>`):
 
 - **T:** `./gradlew :chordpro:desktopTest :app:desktop:compileKotlin :app:web:compileKotlinWasmJs`. Plan 04 also
   runs its own scratch comparison of every chord's default before and after (described in the plan) and deletes it.
-- **S:** `./gradlew :presentation:desktopTest :app:desktop:compileKotlin :app:web:compileKotlinWasmJs`, then
-  `./gradlew :tools:screenshots:test` (the UI tests, including the new `SongHeaderlessBarTest`; goldens compare on
-  Linux only). Never run a Gradle build beside a render (`tools/screenshots/CLAUDE.md`).
+- **S:** `./gradlew :presentation:desktopTest :app:desktop:compileKotlin :app:web:compileKotlinWasmJs`.
 - **P:** `./gradlew :chordpro:desktopTest :presentation:desktopTest :data:source:local:implementation:desktopTest :app:desktop:compileKotlin :app:web:compileKotlinWasmJs`
   (the last test task holds `DocumentGoldenTest`, which runs real documents through the converter), and
   `python3 .github/scripts/check_regexes.py chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/convert/ChordSheetConverter.kt`
@@ -93,8 +91,8 @@ As each lane reports (and only in this order), for lane `<x>` with base `START`:
    lane's files (README Lanes table).
 2. In the main checkout: `git cherry-pick START..<lane HEAD>`. Resolve conflicts keeping both sides' intent;
    `CLAUDE.md` paragraphs and `strings.xml` as a word-level three-way merge, every sentence and key from both sides.
-3. `./gradlew desktopTest`; after S also `./gradlew :tools:screenshots:test`. A break is fixed by one more commit
-   (`Fix the desktop tests after the Shuffle return change.`), never by rewriting landed commits.
+3. `./gradlew desktopTest`. A break is fixed by one more commit (`Fix the desktop tests after the random picks
+   return change.`), never by rewriting landed commits.
 4. `git worktree remove ../Campfire-lane-<x>`.
 
 After the last lane, the full build:
