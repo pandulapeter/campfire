@@ -31,8 +31,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   whatever follows it (`Chorus (twice)`); a pre-chorus is the editor's `pre-chorus`, never a site's bridge. The
   playing details row (key, transposition, capo, tempo, time) is read in every language the app prints it in, from the
   same labels as `strings.xml`; a label that is an ordinary word too (`Metro`, `Mesure`) takes only a value of its
-  field's shape. A capo marked as sounding (`print_capo_sounding`) is imported as the capo chart: the chords and key
-  moved down by the capo in the standard notation, tab frets kept.
+  field's shape, and a row of it marked as a continuation is the rest of the value above, wrapped by a narrow column
+  (`joinWrappedDetails`). A capo marked as sounding (`print_capo_sounding`) is imported as the capo chart: the chords
+  and key moved down by the capo in the standard notation, tab frets kept.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands.
 - Any row with `pieces` is matched by those edges (another producer's PDF, put into reading order by `:data:formats`),
   within an em of the lyric rather than the export's exact point.

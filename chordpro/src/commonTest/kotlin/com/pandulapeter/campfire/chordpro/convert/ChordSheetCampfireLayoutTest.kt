@@ -112,6 +112,17 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `a playing details row wrapped by a narrow column is read back as the one row it was printed as`() {
+        val verse = arrayOf(chords("F#m" to 0, "D" to 6), text("Hello world"))
+        val sounding = convert(text("Key: F#m   Capo: 2 (chords", size = LABEL), text("⁠as they", size = LABEL), text("⁠sound)", size = LABEL), *verse)
+        assertEquals("{title: A song}\n{key: Em}\n{capo: 2}\n\n[Em]Hello [C]world\n", sounding)
+        val tempo = convert(text("Tempo: 96", size = LABEL), text("⁠BPM   Time: 3/4", size = LABEL), *verse)
+        assertEquals("{title: A song}\n{tempo: 96}\n{time: 3/4}\n\n[F#m]Hello [D]world\n", tempo)
+        // An unmarked row under the details is a lyric of its own, as any other producer's is.
+        assertTrue("{capo: 2}\n\nsound)\n" in convert(text("Capo: 2 (chords as they", size = LABEL), text("sound)", size = LABEL), *verse))
+    }
+
+    @Test
     fun `another producer's sheet is not read by campfire's layout`() {
         val lines = arrayOf(text("Organ solo", size = LABEL, bold = true), text("| Am | C  |", bold = true, mono = true), chords("Am" to 0), text("Hello world"))
         assertTrue("{start_of_solo: Organ solo}" in convert(*lines))

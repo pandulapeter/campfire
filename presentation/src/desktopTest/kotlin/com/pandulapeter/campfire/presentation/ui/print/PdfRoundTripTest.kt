@@ -95,33 +95,40 @@ class PdfRoundTripTest {
     }
 
     @Test
-    fun `a capo song printed with either chord names comes back sounding as printed in every language`() = runBlocking {
+    fun `a capo song printed with either chord names comes back sounding as printed in every language and column count`() = runBlocking {
         val verse = "{start_of_verse}\n%s\n{end_of_verse}\n"
-        val shapes = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[Em]Hello [Am]world [Em]and [D]more [Em]here"))
-        val sounding = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[F#m]Hello [Bm]world [F#m]and [E]more [F#m]here"))
+        val shapes = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[Em]Hello [Am]world"))
+        val sounding = ChordProParser.parse("{title: Song}\n{key: F#m}\n{capo: 2}\n" + verse.format("[F#m]Hello [Bm]world"))
         val german = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.GERMAN)
         val latin = UserPreferences.ChordSpelling.Default.copy(notation = UserPreferences.Notation.LATIN)
         val folders = File("src/commonMain/composeResources").listFiles().orEmpty().filter { it.name.startsWith("values") }.sortedBy { it.name }
+        // A narrow column wraps the capo's value, the sounding marker of every language in four of them; the verse is
+        // one short enough a line for every column, so that only the details row is wrapped.
         val prints = folders.flatMap { folder ->
             val labels = printLabelsOf(folder)
-            listOf(
-                "${folder.name} shapes" to roundTrip(shapes, PrintSettings(), labels, shapesKey = "Em"),
-                "${folder.name} sounding" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true),
-            ) + when (folder.name) {
-                "values-es" -> listOf("${folder.name} sounding in Latin" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true, spelling = latin))
-                "values-de" -> listOf("${folder.name} sounding in German" to roundTrip(sounding, PrintSettings(), labels, areChordsSounding = true, spelling = german))
-                else -> emptyList()
+            (1..PrintSettings.MAX_COLUMNS).flatMap { columns ->
+                val settings = PrintSettings(columns = columns)
+                val name = "${folder.name} in $columns columns"
+                listOf(
+                    "$name shapes" to roundTrip(shapes, settings, labels, shapesKey = "Em"),
+                    "$name sounding" to roundTrip(sounding, settings, labels, areChordsSounding = true),
+                ) + when (folder.name) {
+                    "values-es" -> listOf("$name sounding in Latin" to roundTrip(sounding, settings, labels, areChordsSounding = true, spelling = latin))
+                    "values-de" -> listOf("$name sounding in German" to roundTrip(sounding, settings, labels, areChordsSounding = true, spelling = german))
+                    else -> emptyList()
+                }
             }
         }
         // What sounds is told by the chords and the capo alone: the shapes print keeps the key that sounds over its shapes,
-        // which SongKeys may read either way, so the chords' first one, moved up by the capo, is what is compared.
+        // which SongKeys may read either way, so the chords' first one, moved up by the capo, is what is compared. The
+        // lyrics are the verse's line alone, with nothing of the details row read as one.
         val failures = prints.mapNotNull { (name, imported) ->
             val capo = imported.metadata.capo ?: 0
             val moved = ChordProTransposer.transpose(imported, capo, preferFlats = false)
-            val heard = moved.blocks.filterIsInstance<ChordProBlock.Section>().firstNotNullOfOrNull { section ->
-                section.lines.filterIsInstance<ChordProLine.Lyrics>().firstNotNullOfOrNull { it.chords.firstOrNull()?.name }
-            }
-            if (capo == 2 && heard == "F#m") null else "$name: capo $capo, sounds $heard"
+            val lyrics = moved.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { section -> section.lines.filterIsInstance<ChordProLine.Lyrics>() }
+            val heard = lyrics.firstNotNullOfOrNull { it.chords.firstOrNull()?.name }
+            val words = lyrics.map { it.text.replace(Regex("\\s+"), " ").trim() }
+            if (capo == 2 && heard == "F#m" && words == listOf("Hello world")) null else "$name: capo $capo, sounds $heard, lyrics $words"
         }
         assertEquals(emptyList(), failures, failures.joinToString("\n"))
     }

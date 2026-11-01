@@ -65,7 +65,7 @@ public object ChordSheetConverter {
             val lead = page.indexOfFirst { it.text.isNotBlank() }
             groups.last().addAll(if (starts[index] == ChordSheetPageSplit.Start.CONTINUATION) page.drop(lead + 1) else page)
         }
-        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))), guessesTitle)) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(joinWrappedDetails(withoutInjections(singleSpaced(it)))), guessesTitle)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -441,6 +441,27 @@ public object ChordSheetConverter {
     private fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
         ?: romanCapo.matchEntire(value.uppercase())?.groupValues?.get(1)?.let { roman -> (romanNumerals.indexOf(roman) + 1).toString() }
         ?: ""
+
+    /**
+     * [lines] with each row of labelled values that Campfire's export wrapped in a narrow column joined back into one: a
+     * value wider than the column (`Capo: 2 (chords as they sound)`) goes on in the rows under it, each marked as a
+     * wrapped lyric's rest is ([Rendered.isContinuation]), and read apart its first row would name a bare value and the
+     * rest a lyric.
+     */
+    private fun joinWrappedDetails(lines: List<Rendered>): List<Rendered> = lines.fold(mutableListOf()) { joined, line ->
+        val previous = joined.lastOrNull()
+        // The header is the song's first 15 rows, as classify counts them.
+        val isHeader = joined.size <= 15
+        val indent = line.text.length - line.text.trimStart().length
+        val text = previous?.let { "${it.text} ${line.text.substring(indent)}" }
+        if (line.isContinuation && previous != null && text != null && labelledRow(text, isHeader) != null) {
+            val positions = previous.positions + (previous.positions.lastOrNull() ?: 0.0) + line.positions.copyOfRange(indent, line.positions.size)
+            joined[joined.lastIndex] = previous.copy(text = text, positions = positions, bidi = null)
+        } else {
+            joined += line
+        }
+        joined
+    }
 
     /**
      * Splits a heading's label from the chord row written after it on its line, `Verse 1: G D Em C` or

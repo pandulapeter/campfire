@@ -284,12 +284,17 @@ internal class PrintRows(
     /**
      * The labelled values [details] (`Key: Am`, `Tempo: 96 BPM`) in a row, as many to a row as fit [width]: a row breaks
      * between two of them rather than inside one, which an import of the PDF would read as the label's whole value and
-     * a lyric under it.
+     * a lyric under it. A value wider than a row of its own (`Capo: 2 (chords as they sound)` in a narrow column) wraps,
+     * its rest marked as a wrapped lyric's is ([Part.isContinuation]), by which the import joins it back into the value.
      */
     fun detailRows(details: List<String>, width: Float = columnWidth): List<Row> = details.fold(emptyList<String>()) { lines, detail ->
         val joined = lines.lastOrNull()?.let { it + METADATA_SEPARATOR + detail }
         if (joined != null && measure(joined, detailStyle) <= width) lines.dropLast(1) + joined else lines + detail
-    }.flatMap { wrapped(it, detailStyle, width) }
+    }.flatMap { line ->
+        wrapped(line, detailStyle, width).mapIndexed { index, row ->
+            if (index == 0) row else row.copy(parts = row.parts.map { it.copy(isContinuation = true) })
+        }
+    }
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !(if (comment.isInTab) options.showTabs else options.showChords)) -> emptyList()
