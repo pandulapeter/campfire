@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
+import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
@@ -49,6 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_share_app_descr
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_version
+import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -61,8 +63,8 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What the app is and where it lives, in three groups: the app itself (where every build of it is, how to give
- * something back, and, last, who made it and which version this is); help (the website's support page, the source code
+ * What the app is and where it lives, in three groups: the app itself (its website, where every build of it is, how to
+ * give something back, and, last, who made it and which version this is); help (the website's support page, the source code
  * and issue tracker, and the app's log for a report there); and the fine print. The row that names the author is the link to the
  * author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
  * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
@@ -105,6 +107,12 @@ private fun AppSection(
     urlOpener: (String) -> Unit,
     onShareClicked: (() -> Unit)?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_campfire)) {
+    LinkListItem(
+        title = stringResource(Res.string.settings_website),
+        description = WEBSITE_HOST,
+        icon = painterResource(Res.drawable.ic_website),
+        onClick = { urlOpener(WEBSITE_URL) },
+    )
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
         description = stringResource(Res.string.settings_distributions_all_description),
@@ -199,4 +207,6 @@ private val Distribution.storeName
         Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_microsoft_store
     }
 
-private const val WEBSITE_URL = "https://campfire-songbook.com/"
+private const val WEBSITE_HOST = "campfire-songbook.com"
+
+private const val WEBSITE_URL = "https://$WEBSITE_HOST/"

@@ -82,7 +82,8 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 
 ### The app says nothing about the other builds but where to find them
 
-- "Every version of Campfire" links to https://campfire-songbook.com/#download, which can change without a release.
+- "Website" (first, its address as the description) opens https://campfire-songbook.com/ itself; "Every version of
+  Campfire" after it links to its `#download`, which can change without a release.
 - A null `Distribution.listingUrl` (`ui/platform/Platform.kt`) means not on that store yet (publishing fills it in).
 - `platformStore` is the store of the platform the app **runs** on (a hand-built Mac build is still a Mac build). It
   decides the one "Rate Campfire" row (absent on Linux, the web, and where the listing is null) and
