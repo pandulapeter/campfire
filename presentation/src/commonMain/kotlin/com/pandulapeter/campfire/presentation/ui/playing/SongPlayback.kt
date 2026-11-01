@@ -38,19 +38,18 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
 
 /**
  * The semitones that take the file's chords to the ones that sound where the song is opened: the reader's transposition
- * and the file's own `{capo}`, wrapped around the octave as the stepper wraps. The file's capo only says which shapes the
- * file is written in, so it is pitch, while a capo the setlist or the device puts on instead keeps the pitch and changes
- * the shapes played under it ([shapeCapoFor]): every instrument names the chords, the key, and the scales that sound.
+ * and the effective capo, wrapped around the octave as the stepper wraps. The file's chords are the shapes fingered above
+ * a capo, the file's own `{capo}` or the one the setlist or the device puts on instead, so every capo keeps the shapes
+ * ([shapeCapoFor]) and raises the pitch: every instrument names the chords, the key, and the scales that sound.
  */
-internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, capo.songFret)
+internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, capo.fret)
 
 /**
  * The semitones of [soundingTransposition] a tab's frets are not moved by: a tab is counted from the capo it is played
- * above, so it moves by the reader's transposition and by the difference between the file's capo and the one played
- * at ([shapeCapoFor]), which keeps its pitch as a capo override keeps the chords'. The octave the wrap took is counted
- * in, so that the frets move by the unwrapped amount.
+ * above ([shapeCapoFor]), so it moves by the reader's transposition alone, as the shapes do. The octave the wrap took is
+ * counted in, so that the frets move by the unwrapped amount.
  */
-internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTransposition - transposition - capo.songFret + shapeCapoFor(preferences)
+internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTransposition - transposition - capo.fret + shapeCapoFor(preferences)
 
 /**
  * The fret the shapes the player frets sit above, a chord's sounding name moved down by it naming its shape (a capo of 2
@@ -61,7 +60,7 @@ internal fun SongPlayback.shapeCapoFor(preferences: UserPreferences?) = if (pref
 
 /**
  * Whether the player's instrument takes no capo: the keyboard, which has no capo stepper or capo line, and whose diagrams
- * are the sounding chords themselves. Overrides of the capo are kept for the other instruments.
+ * are the sounding chords themselves, the effective capo counted in as for every instrument.
  */
 internal val UserPreferences?.playsWithoutCapo get() = this?.instrument == UserPreferences.Instrument.KEYBOARD
 

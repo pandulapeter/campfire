@@ -48,5 +48,4 @@ One instrument for the whole app.
 
 - Every instrument reads the sounding chords (see `ui/playing/CLAUDE.md`); the keyboard takes no capo
   (`playsWithoutCapo`, whatever the Chord diagrams switch says): no capo stepper or capo text, and its diagrams are the
-  sounding chords themselves, since only the file's `{capo}` is pitch and a capo override changes nothing there. Capo
-  overrides are kept for other instruments. The PDF follows the screen.
+  sounding chords themselves, the effective capo counted in, since every capo is pitch. The PDF follows the screen.

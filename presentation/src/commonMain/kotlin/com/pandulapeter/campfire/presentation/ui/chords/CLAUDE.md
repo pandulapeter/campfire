@@ -24,8 +24,7 @@ be brought back (`RenderSection.Metadata.instrumentPill`).
 **A chord is named as it sounds and drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the
 sounding chord (its name, notes, and scales), `shapeChord` the shape played above `capo` (`songChordsOf`'s `capo`), which
 a shape is looked up, picked, and stored by. A `{define}` is moved down by the capo as a transposition moves one, so a
-file's shape comes back to where it was written under its own capo; under another capo it is kept only where that capo
-moves it down exactly, else (a lower capo, an open shape) it gives way to the player's shape. `ChordDiagramGeometry`
+file's shape comes back to where it was written under any capo, moved by the reader's transposition alone. `ChordDiagramGeometry`
 draws the shape where it is played, frets numbered from the nut, the capo a muted bar across the window's first row
 (`capoRow`) where the shape sits right above it, its open strings ringed on the bar (they ring at the capo) as over the
 nut without one, the bar and string clipped out inside each ring so the card (or the PDF's page) shows through, outside

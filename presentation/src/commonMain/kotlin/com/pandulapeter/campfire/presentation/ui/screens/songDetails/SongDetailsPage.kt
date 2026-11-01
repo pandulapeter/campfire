@@ -103,7 +103,7 @@ import org.jetbrains.compose.resources.painterResource
  *   song being read, and so that a page keeps where it was left while its text is loaded again.
  * @param tempoOverride The tempo the song plays at here where that is not its own, which the tempo line then shows,
  *   the way the key line shows the transposed key, so that the page never contradicts the metronome.
- * @param transposition The semitones the file's chords are moved by to the ones that sound, the file's own capo counted
+ * @param transposition The semitones the file's chords are moved by to the ones that sound, the capo played counted
  *   in (`SongPlayback.soundingTransposition`): the page names what the band hears on every instrument.
  * @param tabCapo How many of [transposition]'s semitones a tab's frets are not moved by, see `SongPlayback.tabCapoFor`.
  * @param capoOverride The fret this setlist (or this device) capos the song at where that is not its own, shown the

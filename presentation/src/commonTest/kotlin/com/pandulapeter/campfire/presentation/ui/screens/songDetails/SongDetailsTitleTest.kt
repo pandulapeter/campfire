@@ -67,7 +67,7 @@ class SongDetailsTitleTest {
 
         assertNull(keyOf(unkeyed))
         assertEquals("D", keyOf(unkeyed, inferredKey = "D"))
-        assertEquals("Dm", keyOf(unkeyed, inferredKey = "Dm", overrides = capoed), "a capo put on keeps the pitch")
+        assertEquals("Em", keyOf(unkeyed, inferredKey = "Dm", overrides = capoed), "a capo put on raises the pitch")
         assertEquals("Em", keyOf(unkeyed.copy(capo = 2), inferredKey = "Dm"), "the file's own capo is pitch")
         assertEquals("Em", keyOf(unkeyed, inferredKey = "Dm", overrides = transposed))
         assertEquals("G", keyOf(song, inferredKey = "D"))

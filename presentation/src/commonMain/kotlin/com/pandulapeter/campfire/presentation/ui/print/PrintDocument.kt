@@ -56,7 +56,7 @@ internal data class PrintSource(
 /**
  * One song of a [PrintSource], [index] being its one-based slot in a setlist, kept when songs are left out, and
  * [transposition] the semitones the reader moves it by, printed beside its key; [song] is already rendered in the chords
- * that sound, the file's capo counted in as on the screen (`SongPlayback.soundingTransposition`).
+ * that sound, the capo played counted in as on the screen (`SongPlayback.soundingTransposition`).
  */
 internal data class PrintSong(
     val fileName: String,

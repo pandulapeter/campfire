@@ -60,9 +60,9 @@ Product side in `ui/metronome/CLAUDE.md`.
 - **One scale walk a model** (`songScaleAnalysisOf`): the Scales section and the Chords section's key groups and
   degrees share it, run whenever either section is shown; never for a songbook. It is in the in-place first model too, so the degrees are
   right on its first frame. Without a home the degrees count from `SongKeys.ofChords` (the capo chart rule).
-- **The scales read the sounding song with the file's capo** (`standardSong`, before `withCapo`): the capo only says how
-  a capo chart's `{key}` is meant, so the Scales section names the sounding key whatever capo is put on, and its sheet
-  dims the neck below the effective one (`ScaleSuggestions.capo`, `DialogType.Scale.capo`, `ScaleDiagramGeometry`).
+- **The scales read the sounding song with the file's capo line** (`standardSong`, before `withCapo`): that line only says
+  how a capo chart's `{key}` is meant, so the Scales section names the key the capo played sounds in, and its sheet
+  dims the neck below that capo (`ScaleSuggestions.capo`, `DialogType.Scale.capo`, `ScaleDiagramGeometry`).
 - **`LayoutBudget` caps what is laid out** (3,000 lines, 200,000 characters): every section is fitted and every chorded
   line measured on the main thread, and a concatenated songbook froze the app for seconds. The model stops after the
   last section that fits and says so; the file is untouched and the header is built from all of it.

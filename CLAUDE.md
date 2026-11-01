@@ -162,8 +162,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
-- Every name is what sounds (chords, keys, scales, the file's capo counted in); a capo put on keeps the pitch, and the
-  diagrams are the shapes fingered above it: `ui/playing`, `ui/chords`.
+- Every name is what sounds (chords, keys, scales, the capo played counted in); every capo, the file's or one put on,
+  keeps the shapes and raises the pitch, and the diagrams are the shapes fingered above it: `ui/playing`, `ui/chords`.
 - Settings → Features switches what the app has (its screens and what goes online), Settings → Preferences how a song
   is read (chords, their diagrams and degrees, scale suggestions), also from the song details menu; both only hide,
   never write or delete: `ui`.

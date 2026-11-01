@@ -50,28 +50,29 @@ class SongChordsTest {
     }
 
     @Test
-    fun `a song's shape under a capo other than its own is kept only where that capo moves it down the neck`() {
-        fun chordOf(song: String, capo: Int, tuning: ChordTuning = ChordTuning.GUITAR) =
-            songChordsOf(ChordProParser.parse(song), ChordNotation.STANDARD, tuning, capo = capo).single()
+    fun `a song's own shape is kept under any capo, moved by the reader's transposition alone`() {
+        val text = "{capo: 2}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n[G]la"
+        // The page hands over the song moved by the reader's transposition and the capo played, see `soundingTransposition`.
+        fun chordOf(transposition: Int, capo: Int, song: String = text, tuning: ChordTuning = ChordTuning.GUITAR) =
+            songChordsOf(ChordProTransposer.transpose(ChordProParser.parse(song), transposition + capo), ChordNotation.STANDARD, tuning, capo = capo).single()
+        fun frets(chord: SongChord) = (chord.definition?.voicing as ChordVoicing.Fretted).frets
 
-        val putOn = chordOf("{define: G base-fret 1 frets 3 2 0 0 0 3}\n[G]la", capo = 2)
-        assertNull(putOn.definition)
-        assertNull(putOn.undrawnDefinition)
-        assertEquals(ChordVoicings.default(ChordProChords.parse("F")!!, ChordTuning.GUITAR), putOn.defaultShape)
+        val raised = chordOf(transposition = 0, capo = 3)
+        assertEquals(ChordProChords.parse("Bb"), raised.chord)
+        assertEquals(listOf<Int?>(3, 2, 0, 0, 0, 3), frets(raised))
+        assertEquals(0, raised.definition?.movedBy)
 
-        val sounding = ChordProTransposer.transpose(ChordProParser.parse("{capo: 2}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n[G]la"), 2)
-        val takenOff = songChordsOf(sounding, ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 0).single()
-        assertNull(takenOff.definition)
-        assertNull(takenOff.undrawnDefinition)
-        assertEquals(ChordVoicings.default(ChordProChords.parse("A")!!, ChordTuning.GUITAR), takenOff.defaultShape)
+        val takenOff = chordOf(transposition = 0, capo = 0)
+        assertEquals(ChordProChords.parse("G"), takenOff.chord)
+        assertEquals(listOf<Int?>(3, 2, 0, 0, 0, 3), frets(takenOff))
 
-        val barre = chordOf("{define: A base-fret 1 frets 5 7 7 6 5 5}\n[A]la", capo = 2).definition
-        assertEquals(listOf<Int?>(3, 5, 5, 4, 3, 3), (barre?.voicing as ChordVoicing.Fretted).frets)
-        assertEquals(-2, barre.movedBy)
+        val transposed = chordOf(transposition = 2, capo = 2)
+        assertEquals(ChordProChords.parse("B"), transposed.chord)
+        assertEquals(2, transposed.definition?.movedBy)
 
-        val twelfth = chordOf("{define-ukulele: C frets 0 0 0 3}\n[C]la", capo = 12, tuning = ChordTuning.UKULELE).definition
-        assertEquals(listOf<Int?>(0, 0, 0, 3), (twelfth?.voicing as ChordVoicing.Fretted).frets)
-        assertEquals(0, twelfth.movedBy)
+        val twelfth = chordOf(transposition = 0, capo = 12, song = "{define-ukulele: C frets 0 0 0 3}\n[C]la", tuning = ChordTuning.UKULELE)
+        assertEquals(listOf<Int?>(0, 0, 0, 3), frets(twelfth))
+        assertEquals(0, twelfth.definition?.movedBy)
     }
 
     @Test

@@ -25,7 +25,7 @@ The song card the song lists and setlists draw (`SongListItem`).
   songs screen; the caller makes it draggable.
 - `SongListItem` names the **sounding** key first on the details line (never the title, which must not be pushed out): `{key}`
   (`Song.chordsKey`, a capo chart's read by `SongKeys` at scan time) moved by the file's `{transpose}`, the listing's
-  transposition, and the file's capo (`SongRenderer.renderKey`; a capo put on keeps the pitch), so one song
+  transposition, and the capo played (`SongRenderer.renderKey`; every capo raises the pitch), so one song
   can read differently inside a setlist. The tempo follows (`EffectiveTempo.bpm`, 120 where nothing names one), in the
   muted color so it doesn't compete with the key. Both come from scanned metadata, never by parsing the file. "Lyrics
   only" replaces the key for a chordless song — but with the Chords switch off the place is empty. Changes crossfade

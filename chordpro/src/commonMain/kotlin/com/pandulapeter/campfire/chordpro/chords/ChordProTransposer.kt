@@ -57,9 +57,8 @@ public object ChordProTransposer {
      *   transposition, in one move, so that it is put on the neck by one decision rather than two (see
      *   [ChordProTabRetuner]). Null moves the frets by the transposition alone, as the text transposition does.
      * @param capo How many of [semitones] a tab's frets are not moved by: a capo's, counted in to name the chords that
-     *   sound. A tab's frets are counted from the capo, as tablature is, so they move by the rest alone, which is negative
-     *   where the capo played is higher than the one the chords are named for, while every chord name, a tab's included,
-     *   moves by all of it.
+     *   sound. A tab's frets are counted from the capo, as tablature is, so they move by the rest alone, which may be
+     *   negative, while every chord name, a tab's included, moves by all of it.
      */
     public fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null, tabPlayer: TabPlayer? = null, capo: Int = 0): ChordProSong {
         val isModulated = song.blocks.any { it is ChordProBlock.Transpose }

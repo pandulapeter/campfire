@@ -116,7 +116,7 @@ class SongRenderer(
 
     /**
      * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
-     * [transposition] that takes its chords to the ones that sound (the reader's and the file's capo,
+     * [transposition] that takes its chords to the ones that sound (the reader's and the capo played,
      * `SongPlayback.soundingTransposition`) and the spelling they read chords in, from the key its chords are written in
      * ([Song.chordsKey], one reading of a capo chart's `{key}`). Null for a file that declares no `{key}`, which the lists
      * then say nothing about.

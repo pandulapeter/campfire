@@ -188,7 +188,7 @@ internal class ExportController(
             val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
             val capo = effectiveCapo.takeUnless { it.isDefault }?.fret
             val playback = SongPlayback(transposition = playedTransposition, capo = effectiveCapo, tempo = effectiveTempo)
-            // The pages are in the chords that sound, as the screen is, the file's capo counted in; the diagrams are the
+            // The pages are in the chords that sound, as the screen is, the capo played counted in; the diagrams are the
             // shapes played above the capo the page prints, none on the keyboard, which prints no capo either.
             val transposition = playback.soundingTransposition
             val shapeCapo = playback.shapeCapoFor(preferences)

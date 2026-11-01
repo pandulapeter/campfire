@@ -57,15 +57,15 @@ internal fun rememberSongPlayingControls(
     val (transposition, capo, tempo) = playback
     val canTranspose = shouldShowChords && song.hasChords
     val playsWithoutCapo = userPreferences.playsWithoutCapo
-    // The key the page's chords sound in, which the file's capo is counted into and a capo override is not: that keeps
-    // the pitch and changes the shapes under it. The stepper itself reads the reader's own semitones, which it steps.
-    val fileCapo = capo.songFret
+    // The key the page's chords sound in, the capo played counted in: it keeps the shapes and raises the pitch. The
+    // stepper itself reads the reader's own semitones, which it steps.
+    val capoFret = capo.fret
     val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.soundingTransposition, spelling = chordSpelling, inferredKey = inferredKey) else null
-    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, fileCapo, inferredKey) {
+    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, capoFret, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, fileCapo), spelling = chordSpelling, inferredKey = inferredKey)
+            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, capoFret), spelling = chordSpelling, inferredKey = inferredKey)
             transpositionValue(transposition, shownKey)
         }
     }
