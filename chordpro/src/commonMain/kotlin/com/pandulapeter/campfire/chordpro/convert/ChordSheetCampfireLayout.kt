@@ -160,16 +160,18 @@ internal object ChordSheetCampfireLayout {
      * line of chords alone, or in another column: the export never parts a lyric from its chords, but a line of chords
      * alone over a line of no chords reads just like one line. The two are told apart by where the rows' texts start,
      * which is where the export lays them out whatever font draws the lyric (a right-to-left one's falls back on another,
-     * which sits on another baseline): a lyric 1.3 times the font size under its chords, the next row 1.45 times under
-     * a row of chords alone. The chords are set in the bundled Inter, whose line box, the size the export writes a text
-     * at, is [INTER_LINE_BOX] times the font size, so it is what the distance is measured in. True where either line's
-     * position is unknown.
+     * which sits on another baseline): a lyric [CampfireExportLayout.LYRIC_UNDER_CHORDS] font sizes under its chords,
+     * the next row [CampfireExportLayout.ROW_HEIGHT] under a row of chords alone. The chords are set in the bundled Inter,
+     * whose line box, the size the export writes a text at, is [INTER_LINE_BOX] times the font size, so it is what the
+     * distance is measured in. A lyric in a fallback font is written at its glyphs' box, which may start lower than its
+     * row (0.8 points at 12 points for Arabic on the desktop), so the two distances are told apart halfway. True where
+     * either line's position is unknown.
      */
     fun isLyricOf(chords: ChordSheet.Line, lyric: ChordSheet.Line): Boolean {
         val chordsTop = chords.top() ?: return true
         val lyricTop = lyric.top() ?: return true
-        val size = chords.size() ?: return true
-        return lyricTop > chordsTop && lyricTop - chordsTop < size * ROW_UNDER_CHORDS / INTER_LINE_BOX
+        val fontSize = chords.size()?.let { it / INTER_LINE_BOX } ?: return true
+        return lyricTop > chordsTop && lyricTop - chordsTop < fontSize * (CampfireExportLayout.LYRIC_UNDER_CHORDS + CampfireExportLayout.ROW_HEIGHT) / 2
     }
 
     /** The largest size a line's text is set at: in the export, the height of its line box. */
@@ -282,9 +284,6 @@ internal object ChordSheetCampfireLayout {
      * `PrintRows`).
      */
     private const val LYRIC_UNDER_CHORDS = 1.375
-
-    /** Between a lyric's distance under its chords (1.3 times the font size, `PrintLyricRows`) and the next row's (1.45). */
-    private const val ROW_UNDER_CHORDS = 1.375
 
     /** The height of the bundled Inter's line box, in its font size. */
     private const val INTER_LINE_BOX = 1.21

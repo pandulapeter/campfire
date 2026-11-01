@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.chordpro.convert.CampfireExportLayout
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -96,7 +97,7 @@ internal class PrintLyricRows(
         missingPadding: MutableMap<Int, Int>?,
     ): List<Row> {
         val isRightToLeft = lyricStyle.isRightToLeft
-        val chordLineHeight = options.fontSize * 1.3f
+        val chordLineHeight = options.fontSize * CampfireExportLayout.LYRIC_UNDER_CHORDS.toFloat()
         val wrappingStyle = lyrics.formatting.wrappingStyle(lyricStyle)
         val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, wrappingStyle) }
         var start = 0
@@ -169,7 +170,7 @@ internal class PrintLyricRows(
                 }
                 val lyricY = if (parts.isEmpty()) 0f else chordY + chordLineHeight
                 if (!isChordsOnly) parts += Part(fragment, x = lyricX, y = lyricY, style = lyricStyle, formatting = formatting, isContinuation = isContinuation, isHardCut = isHardCut)
-                val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
+                val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * CampfireExportLayout.ROW_HEIGHT.toFloat()
                 if (rowHeight <= capacity) {
                     add(Row(parts, rowHeight))
                 } else {
