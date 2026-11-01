@@ -34,12 +34,12 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   past a declared `/Length`.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, with a fifth of the characters
   on each side, counting no line that crosses it (a narrow column's lyric beside the gap in its chord row is no second
-  column), **found at every half point, not sampled**, since Campfire's own export leaves only 18 points between
-  20-point text. A band no line crosses that opens a column beats one a heading crosses, so a short second column
-  beside a wide heading is not cut inside the first. Among bands crossed by as many lines, the one the fewest
-  characters cross wins (a page number centred under the gutter rather than a lyric filled to the column's edge), then
-  the widest. Each side is searched again
-  (three and four columns). A page whose letters mostly read from the right is read from its right column.
+  column) and leaving a crossing first or last line of the page (a heading, a footer) out of the whole as well, **found
+  at every half point, not sampled**, since Campfire's own export leaves only 18 points between 20-point text. A band no
+  line crosses that opens a column beats one a heading crosses, so a short second column beside a wide heading is not
+  cut inside the first. Among bands crossed by as many lines, the one the fewest characters cross wins (a page number
+  centred under the gutter rather than a lyric filled to the column's edge), then the widest. Each side is searched
+  again (three and four columns). A page whose letters mostly read from the right is read from its right column.
 - Running lines (`PdfRunningLines`) are judged on each page's margins laid out across the whole width, never by the
   columns found below them: a short last page can read as columns, which would cut its header into parts no other
   page's header matches. A dropped margin line takes every line on its baseline with it. A number in a running line is

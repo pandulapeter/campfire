@@ -121,8 +121,13 @@ internal object PdfLineLayout {
         val rows = glyphs.groupBy { (it.y / 3).roundToInt() }.values.map { row -> row.sortedBy { it.span.start } }
         val blocked = IntArray(count + 1)
         val blockedCharacters = IntArray(count + 1)
+        // A heading over the columns or a footer under them crosses the gutter without belonging to either side, so the
+        // fair share each side must hold leaves it out; a line crossing among the columns' rows still counts against them.
+        val edgeRows = setOf(rows.minBy { it.first().y }, rows.maxBy { it.first().y })
+        val blockedEdgeCharacters = IntArray(count + 1)
         val segments = mutableListOf<Segment>()
         for (row in rows) {
+            val isEdgeRow = row in edgeRows
             var start = row.first().span.start
             var end = row.first().span.end
             var characters = 0
@@ -134,6 +139,10 @@ internal object PdfLineLayout {
                     blocked[to + 1]--
                     blockedCharacters[from] += characters
                     blockedCharacters[to + 1] -= characters
+                    if (isEdgeRow) {
+                        blockedEdgeCharacters[from] += characters
+                        blockedEdgeCharacters[to + 1] -= characters
+                    }
                 }
                 segments += Segment(start, end, characters)
             }
@@ -163,6 +172,7 @@ internal object PdfLineLayout {
         }
         var crossing = 0
         var crossingCharacters = 0
+        var edgeCrossingCharacters = 0
         var best: Double? = null
         var bestCrossing = 0
         var bestCrossingCharacters = 0
@@ -170,11 +180,13 @@ internal object PdfLineLayout {
         for (index in 0 until count) {
             crossing += blocked[index]
             crossingCharacters += blockedCharacters[index]
+            edgeCrossingCharacters += blockedEdgeCharacters[index]
             val x = left + index * step
             if (x <= left + (right - left) * 0.25 || x >= left + (right - left) * 0.75) continue
             val leftCount = charactersByEnd[ends.countAtMost(x - band)]
             val rightCount = characters - charactersByStart[starts.countBelow(x)]
-            if (leftCount > characters / 5 && rightCount > characters / 5 && crossing <= rows.size / 5) {
+            val share = characters - edgeCrossingCharacters
+            if (leftCount > share / 5 && rightCount > share / 5 && crossing <= rows.size / 5) {
                 // Fewer crossing characters break a tie before the gap, so a page number centred under the gutter is the line
                 // cut through rather than a lyric filled to its column's edge beside it.
                 if (best == null || crossing < bestCrossing ||

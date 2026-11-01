@@ -115,6 +115,15 @@ class PdfLineLayoutTest {
         assertEquals((left + right).map { it.text }, lines(left + right + footer).filter { it != "Page 2 / 3" })
     }
 
+    @Test
+    fun `a title over a short second column does not hide that column`() = runTest {
+        val title = Placed(40, 740, "T".repeat(43))
+        val left = (1..25).map { Placed(40, 720 - it * 12, "l$it".padEnd(12, 'l')) }
+        val right = (1..5).map { Placed(200, 720 - it * 12, "r$it".padEnd(17, 'r')) }
+
+        assertEquals((listOf(title) + left + right).map { it.text }, lines(listOf(title) + left + right))
+    }
+
     /**
      * A string shown in Courier, 0.6 of its [size] a glyph, with its baseline starting at [x], [y]; one [isWhole] is
      * carried by an `ActualText`, which makes it one span, as Campfire's export writes a right-to-left run.
