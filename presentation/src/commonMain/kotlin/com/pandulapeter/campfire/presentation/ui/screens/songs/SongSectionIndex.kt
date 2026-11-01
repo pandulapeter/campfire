@@ -13,7 +13,10 @@ import com.pandulapeter.campfire.domain.api.library.SongSection
 
 /** Cumulative lazy-grid boundaries keep fast-scroll lookup and pushed-header lookup proportional to sections. */
 internal class SongSectionIndex(groups: List<Group>) {
-    /** @param itemCount The items of the group under its header: its songs, and the Selection section's divider. */
+    /**
+     * @param itemCount The items of the group under its header: its songs, a leading group's divider, and the random
+     *   picks' question.
+     */
     data class Group(val itemCount: Int, val header: SongGroupHeader?)
 
     private val ends = IntArray(groups.size)
@@ -45,9 +48,10 @@ internal class SongSectionIndex(groups: List<Group>) {
 }
 
 /**
- * The single character shown in the bubble of the fast scroller while this section is at the top of the list.
+ * The single character shown in the bubble of the fast scroller while this section is at the top of the list, none for
+ * the random picks, which have no place in the order a letter could name.
  */
-private val SongGroupHeader.fastScrollerLabel: String
+private val SongGroupHeader.fastScrollerLabel: String?
     get() = when (this) {
         is SongGroupHeader.Section -> when (val header = header) {
             is SongSection.Header.Artist -> header.initial?.toString() ?: SYMBOLS_LABEL
@@ -56,6 +60,7 @@ private val SongGroupHeader.fastScrollerLabel: String
         }
 
         SongGroupHeader.Selection -> SELECTION_LABEL
+        SongGroupHeader.RandomPicks -> null
     }
 
 private const val SYMBOLS_LABEL = "#"

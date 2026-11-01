@@ -19,6 +19,10 @@ import com.pandulapeter.campfire.data.model.song.Song
  *   been ticked since the list was last refreshed ([withSelectionLeading]). A copy is an item of its own to the grid.
  * @param leadingGap The empty cells before the first song, an item of their own to the grid, which an open search puts
  *   there to keep the card that was at the top left of the list in its column ([withoutSectionHeaders]).
+ * @param isRandomPicks Whether these are the songs drawn at random that lead the list, each of them a copy of a song
+ *   still listed in its own section, with keys of their own ([itemKey]).
+ * @param isRandomPicksQuestionAfter Whether the songs are followed by the question that asks whether to keep the picks,
+ *   an item of its own to the grid.
  */
 data class SongGroup(
     val header: SongGroupHeader?,
@@ -26,9 +30,15 @@ data class SongGroup(
     val copiedFileNames: Set<String> = emptySet(),
     val isSelection: Boolean = header == SongGroupHeader.Selection,
     val leadingGap: Int = 0,
+    val isRandomPicks: Boolean = header == SongGroupHeader.RandomPicks,
+    val isRandomPicksQuestionAfter: Boolean = false,
 ) {
     /** The key of the grid item that shows [song] in this group: its own one, or its copy's. */
-    fun itemKey(song: Song) = if (song.fileName in copiedFileNames) "$SONG_COPY_ITEM_KEY_PREFIX${song.fileName}" else songItemKey(song)
+    fun itemKey(song: Song) = when {
+        isRandomPicks -> "$RANDOM_PICK_ITEM_KEY_PREFIX${song.fileName}"
+        song.fileName in copiedFileNames -> "$SONG_COPY_ITEM_KEY_PREFIX${song.fileName}"
+        else -> songItemKey(song)
+    }
 
     /**
      * Where the song whose [itemKey] is [key] is in [songs], or -1. The key is taken apart rather than every song's key
@@ -36,6 +46,9 @@ data class SongGroup(
      */
     fun indexOfItem(key: Any): Int {
         val text = key as? String ?: return -1
+        if (isRandomPicks) {
+            return if (text.startsWith(RANDOM_PICK_ITEM_KEY_PREFIX)) songs.indexOfFirst { it.fileName == text.removePrefix(RANDOM_PICK_ITEM_KEY_PREFIX) } else -1
+        }
         val isCopy = text.startsWith(SONG_COPY_ITEM_KEY_PREFIX)
         val fileName = when {
             isCopy -> text.removePrefix(SONG_COPY_ITEM_KEY_PREFIX)
@@ -53,6 +66,9 @@ private const val SONG_ITEM_KEY_PREFIX = "song_"
 
 /** What [SongGroup.itemKey] puts in front of the file name of a copy, a prefix no [songItemKey] can start with. */
 private const val SONG_COPY_ITEM_KEY_PREFIX = "copy_song_"
+
+/** What [SongGroup.itemKey] puts in front of the file name of a random pick, which no other key can start with. */
+private const val RANDOM_PICK_ITEM_KEY_PREFIX = "pick_song_"
 
 /** What a song's card is to the grid. */
 internal const val SONG_CONTENT_TYPE = "song"

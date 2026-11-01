@@ -18,13 +18,17 @@ internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int
         val songIndex = group.indexOfItem(key)
         if (songIndex >= 0) return index + songIndex
         index += group.songs.size
-        if (hasSelectionDividerAfter(groupIndex)) index++
+        if (group.isRandomPicksQuestionAfter) index++
+        if (hasDividerAfter(groupIndex)) index++
     }
     return null
 }
 
-/** Whether [SongList] follows the group at [index] with the divider that sets the Selection section off from the rest. */
-internal fun List<SongGroup>.hasSelectionDividerAfter(index: Int) = this[index].isSelection && index < lastIndex
+/**
+ * Whether [SongList] follows the group at [index] with the divider that sets a leading group, the Selection or the
+ * random picks, off from the sections.
+ */
+internal fun List<SongGroup>.hasDividerAfter(index: Int) = (this[index].isSelection || this[index].isRandomPicks) && index < lastIndex
 
 /**
  * The grid index of the first card, counted the way [SongList] emits its items: zero-height header slots are not scroll
@@ -38,4 +42,14 @@ internal fun List<SongGroup>.firstCardIndex(hasPlaceholder: Boolean): Int {
         if (group.songs.isNotEmpty()) break
     }
     return index
+}
+
+/**
+ * The grid index of the header of the first section after the random picks that lead these groups, counted the way
+ * [SongList] emits its items when no search is open: the picks' header, their songs, their question and the divider.
+ * Null where the list does not start with the picks, or has nothing after them.
+ */
+internal fun List<SongGroup>.firstSectionAfterRandomPicksIndex(): Int? {
+    val picks = firstOrNull()?.takeIf { it.isRandomPicks && size > 1 } ?: return null
+    return 1 + picks.songs.size + (if (picks.isRandomPicksQuestionAfter) 1 else 0) + if (hasDividerAfter(0)) 1 else 0
 }

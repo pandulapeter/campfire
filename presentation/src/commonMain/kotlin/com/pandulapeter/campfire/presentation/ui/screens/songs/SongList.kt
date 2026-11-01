@@ -92,6 +92,7 @@ internal fun SongList(
     appBarOverlap: () -> AppBarOverlap,
     isSelecting: Boolean,
     selection: Set<String>,
+    sortChangeReveal: SortChangeReveal,
 ) {
     val songActions = rememberSongActionHandler(viewModel)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
@@ -122,7 +123,8 @@ internal fun SongList(
         SongSectionIndex(
             groups.mapIndexed { index, group ->
                 SongSectionIndex.Group(
-                    itemCount = group.songs.size + (if (group.leadingGap > 0) 1 else 0) + if (groups.hasSelectionDividerAfter(index)) 1 else 0,
+                    itemCount = group.songs.size + (if (group.leadingGap > 0) 1 else 0) + (if (group.isRandomPicksQuestionAfter) 1 else 0) +
+                        if (groups.hasDividerAfter(index)) 1 else 0,
                     header = group.header,
                 )
             },
@@ -166,6 +168,7 @@ internal fun SongList(
         anchor = filterAnchor,
         itemIndex = { key -> groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
         topKey = songGroups.orderKey,
+        topIndex = { sortChangeReveal.topIndex(orderKey = songGroups.orderKey, groups = groups) },
     )
     KeepCardsInPlaceUnderTick(
         listState = listState,
@@ -272,6 +275,17 @@ internal fun SongList(
                                 endPadding = headerEndPadding,
                                 text = header.displayText(selectionCount = selection.size),
                                 onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
+                                action = if (header == SongGroupHeader.RandomPicks) {
+                                    { actionModifier, buttonModifier ->
+                                        RandomPicksRefreshButton(
+                                            modifier = actionModifier,
+                                            buttonModifier = buttonModifier,
+                                            onRefresh = viewModel.randomPicksDraw::reshuffle,
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
                                 opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
                                 appBarOverlap = appBarOverlap,
                             )
@@ -322,21 +336,32 @@ internal fun SongList(
                             )
                         }
                     }
+                    if (group.isRandomPicksQuestionAfter) {
+                        item(key = RANDOM_PICKS_QUESTION_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "random_picks_question") {
+                            RandomPicksQuestionCard(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
+                                    .anchoredTransition(filterAnchor, listState, RANDOM_PICKS_QUESTION_KEY)
+                                    .fadingUnderListTop(topFade),
+                                onKeep = { viewModel.preferencesController.setRandomPicksEnabled(true) },
+                                onTurnOff = { viewModel.preferencesController.setRandomPicksEnabled(false) },
+                            )
+                        }
+                    }
                     // The two parts are told apart the way the sheets tell them apart, and an open search takes away every
                     // header there is, the Selection one included, which leaves the divider the only thing between them.
-                    if (groups.hasSelectionDividerAfter(groupIndex)) {
+                    if (groups.hasDividerAfter(groupIndex)) {
                         item(
-                            key = SELECTION_DIVIDER_KEY,
+                            key = LEADING_GROUP_DIVIDER_KEY,
                             span = { GridItemSpan(maxLineSpan) },
-                            contentType = "selection_divider",
+                            contentType = "leading_group_divider",
                         ) {
                             // Faded under the top of the list like a card, or it would be drawn across the pinned header and
                             // the bar's pill as it scrolls under them.
                             HorizontalDivider(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
-                                    .anchoredTransition(filterAnchor, listState, SELECTION_DIVIDER_KEY)
+                                    .anchoredTransition(filterAnchor, listState, LEADING_GROUP_DIVIDER_KEY)
                                     .fadingUnderListTop(topFade)
-                                    .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = SELECTION_DIVIDER_PADDING),
+                                    .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = LEADING_GROUP_DIVIDER_PADDING),
                             )
                         }
                     }
@@ -401,14 +426,17 @@ internal fun SongList(
 /** The key of the empty cells that keep a card in its column as the search opens ([SongGroup.leadingGap]). */
 private const val SEARCH_GAP_KEY = "search_gap"
 
-/** The key of the divider under the Selection section. */
-private const val SELECTION_DIVIDER_KEY = "selection_divider"
+/** The key of the divider under a leading group, the Selection or the random picks ([hasDividerAfter]). */
+private const val LEADING_GROUP_DIVIDER_KEY = "leading_group_divider"
+
+/** The key of [RandomPicksQuestionCard]. */
+private const val RANDOM_PICKS_QUESTION_KEY = "random_picks_question"
 
 /** The key of [AddSongsHintCard]. */
 private const val ADD_SONGS_HINT_KEY = "add_songs_hint"
 
-/** The room above and below the divider under the Selection section. */
-private val SELECTION_DIVIDER_PADDING = 8.dp
+/** The room above and below the divider under a leading group. */
+private val LEADING_GROUP_DIVIDER_PADDING = 8.dp
 
 /** How far the Done button stands from the list's bottom and end edges, as the setlist reorder mode's does. */
 private val DONE_BUTTON_MARGIN = 16.dp

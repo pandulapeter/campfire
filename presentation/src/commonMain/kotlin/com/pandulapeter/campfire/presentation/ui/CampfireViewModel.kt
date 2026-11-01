@@ -151,6 +151,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SelectionEditing
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
+import com.pandulapeter.campfire.presentation.ui.state.songs.RandomPicksDraw
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
@@ -171,6 +172,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import kotlin.time.TimeSource
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -257,6 +260,8 @@ class CampfireViewModel(
             ?.let { SongFilter(selectedTags = it.selectedTags.toSet(), selectedLanguages = it.selectedLanguages.toSet()) }
             ?: SongFilter()
     )
+
+    internal val randomPicksDraw = RandomPicksDraw(timeSource = TimeSource.Monotonic, random = Random.Default)
 
     internal val libraryState: LibraryState = LibraryState(
         scope = viewModelScope,
@@ -360,7 +365,7 @@ class CampfireViewModel(
         addOnBackStackChanged { previousTop, stack ->
             // Another tab left for the songs opens them; anything closed over them returns to the list as it was left.
             if (stack.lastOrNull() == CampfireDestination.Songs && previousTop is CampfireDestination.TopLevel && previousTop != CampfireDestination.Songs) {
-                libraryState.catchUpWithTheHour()
+                randomPicksDraw.catchUp()
             }
         }
         addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
@@ -626,6 +631,8 @@ class CampfireViewModel(
         isImporting = importController.isImporting,
         normalizeSearchText = normalizeSearchText,
         changeUserPreferences = { preferencesController.changeUserPreferences(it) },
+        userPreferences = preferencesController.userPreferences,
+        randomPicksSeed = randomPicksDraw.seed,
     )
 
     internal val setlistsController: SetlistsController = SetlistsController(
@@ -734,7 +741,6 @@ class CampfireViewModel(
         screenData = libraryState.screenData,
         userPreferencesState = preferencesController.userPreferencesState,
         songFilter = _songFilter,
-        shuffleHour = libraryState.shuffleHour,
         getScreenData = getScreenData,
         updateUserPreferences = updateUserPreferences,
         openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },

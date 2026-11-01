@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.update
  * @param mutableSongFilter The filter, shared with [LibraryState], which builds the library from it.
  * @param isImporting Whether an import is running, which an empty library is waiting for.
  * @param changeUserPreferences See [PreferencesController.changeUserPreferences].
+ * @param randomPicksSeed What the random picks are drawn with, see [RandomPicksDraw].
  */
 internal class SongListState(
     private val scope: CoroutineScope,
@@ -62,6 +64,8 @@ internal class SongListState(
     isImporting: StateFlow<Boolean>,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val changeUserPreferences: (UserPreferences.() -> UserPreferences) -> Unit,
+    userPreferences: StateFlow<UserPreferences?>,
+    randomPicksSeed: StateFlow<Long>,
 ) {
 
     val songsScrollPosition = ScrollPosition()
@@ -100,12 +104,23 @@ internal class SongListState(
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
-    val songGroups = combine(indexedSongs, songsSearch.activeQuery) { indexed, query ->
+    val songGroups = combine(
+        indexedSongs,
+        songsSearch.activeQuery,
+        userPreferences.map { RandomPicksPreferences.of(it) }.distinctUntilChanged(),
+        randomPicksSeed,
+    ) { indexed, query, randomPicksPreferences, seed ->
         val normalizedQuery = normalizeSearchText(query)
         SongGroups(
             filterKey = "$normalizedQuery|${indexed.filterKey}",
             orderKey = "$normalizedQuery|${indexed.orderKey}",
-            groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
+            groups = songGroupsFor(
+                sections = indexed.sections,
+                filtered = indexed.search.filtered,
+                normalizedQuery = normalizedQuery,
+                randomPicksSeed = seed.takeIf { randomPicksPreferences.isEnabled },
+                isRandomPicksQuestionAsked = !randomPicksPreferences.isQuestionAnswered,
+            ),
             isLibraryRead = indexed.isLibraryRead,
             librarySongCount = indexed.search.byFileName.size,
             filteredSongCount = indexed.search.filtered.size,
@@ -175,7 +190,8 @@ internal class SongListState(
 }
 
 /**
- * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, and
+ * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, led
+ * by the [randomPicks] of their songs for [randomPicksSeed] (none while it is null, the picks switched off), and
  * otherwise the ranked matches of [filtered] as one headerless group. The decision is made on the normalized query
  * rather than on the typed one, since a query of punctuation, symbols or emoji alone folds to nothing and would
  * otherwise "rank" the whole list in its own order, without its headers.
@@ -187,8 +203,24 @@ internal fun songGroupsFor(
     sections: List<SongSection>,
     filtered: List<SearchableSong>,
     normalizedQuery: String,
+    randomPicksSeed: Long?,
+    isRandomPicksQuestionAsked: Boolean,
 ): List<SongGroup> = if (normalizedQuery.isEmpty()) {
-    sections.map { SongGroup(header = it.header?.let(SongGroupHeader::Section), songs = it.songs) }
+    val picks = randomPicksSeed?.let { seed -> randomPicks(songs = sections.flatMap { it.songs }, seed = seed) }.orEmpty()
+    val picksGroup = picks.takeIf { it.isNotEmpty() }?.let {
+        SongGroup(header = SongGroupHeader.RandomPicks, songs = it, isRandomPicksQuestionAfter = isRandomPicksQuestionAsked)
+    }
+    listOfNotNull(picksGroup) + sections.map { SongGroup(header = SongGroupHeader.Section(it.header), songs = it.songs) }
 } else {
     rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
+}
+
+/** The two preferences the random picks are built from, so that no other change of the preferences rebuilds the list. */
+private data class RandomPicksPreferences(val isEnabled: Boolean, val isQuestionAnswered: Boolean) {
+    companion object {
+        fun of(preferences: UserPreferences?) = RandomPicksPreferences(
+            isEnabled = preferences?.isRandomPicksEnabled == true,
+            isQuestionAnswered = preferences?.isRandomPicksQuestionAnswered != false,
+        )
+    }
 }

@@ -25,6 +25,8 @@ internal data class UserPreferencesDocument(
     // written either way still says the same thing.
     val isLyricsOnlyModeEnabled: Boolean = false,
     val areSongsEnabled: Boolean = true,
+    val isRandomPicksEnabled: Boolean = true,
+    val isRandomPicksQuestionAnswered: Boolean = false,
     val areSetlistsEnabled: Boolean = true,
     val isMetronomeEnabled: Boolean = true,
     val isTunerEnabled: Boolean = true,

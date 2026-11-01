@@ -159,6 +159,8 @@ The view model facade, the composition root, and the product rules every screen 
     through the import screen's review and under a warning atop it (as are setlists with the Setlists switch off,
     `ImportFeatureWarning`), but nothing opens a song, no preview or editor starts (`ImportController`'s
     `areSongsEnabled`, the import screen's rows). The app opens on the first tool switched on (`TopLevel.home`).
+  - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): the five random songs atop a long songs
+    list (`screens/songs`); also answers the question under them.
   - **Metronome**: takes its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
   - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
   - **Chords** (`isChordLibraryEnabled`): takes the Chords tab and the scale sheet's chord rows, whatever songs show.

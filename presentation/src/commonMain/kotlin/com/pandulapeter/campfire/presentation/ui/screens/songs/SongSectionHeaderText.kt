@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.checklist_selected
+import com.pandulapeter.campfire.presentation.resources.songs_random_picks
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 internal fun SongGroupHeader.displayText(selectionCount: Int): String = when (this) {
     is SongGroupHeader.Section -> header.displayText()
     SongGroupHeader.Selection -> stringResource(Res.string.checklist_selected, selectionCount)
+    SongGroupHeader.RandomPicks -> stringResource(Res.string.songs_random_picks)
 }
 
 @Composable

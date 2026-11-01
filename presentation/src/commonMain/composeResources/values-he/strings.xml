@@ -262,9 +262,14 @@
     <string name="songs_filter_active">סינון שירים, יש מסננים פעילים</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">אמן לא ידוע</string>
+    <string name="songs_random_picks">בחירות אקראיות</string>
+    <string name="songs_random_picks_refresh">בחירה חדשה</string>
+    <string name="random_picks_question_title">להשאיר את הבחירות האקראיות?</string>
+    <string name="random_picks_question_text">חמישה שירים מהספרייה שלך, שנבחרים מחדש בכל שעה או כשמבקשים אחרים. אפשר להפעיל או לכבות אותן בכל עת בהגדרות, תחת תכונות.</string>
+    <string name="random_picks_question_keep">להשאיר</string>
+    <string name="random_picks_question_turn_off">לכבות</string>
     <string name="songs_sorting_mode_by_artist">אמן</string>
     <string name="songs_sorting_mode_by_title">שם</string>
-    <string name="songs_sorting_mode_shuffle">ערבוב</string>
     <string name="songs_empty_title">הספרייה ריקה</string>
     <string name="songs_empty_hint">אפשר ליצור שיר, להדביק שיר מהלוח, לייבא שירים, מסמכי PDF או Word וארכיוני zip, או להוסיף את ספריית ההדגמה.</string>
     <string name="songs_create_song">יצירת שיר</string>
@@ -468,6 +473,7 @@
     <string name="settings_scale_suggestions">הצעות לסולמות</string>
     <string name="settings_scale_suggestions_description">הצגת הסולמות שאפשר לנגן מעל כל חלק בשיר, אחרי האקורדים שלו, ואת הסולמות של אקורד בדף שלו.</string>
     <string name="settings_setlists_description">הלשונית “סט־ליסטים” והוספת שירים לסט־ליסטים. כשהאפשרות כבויה הם רק מוסתרים: אף סט־ליסט לא נמחק.</string>
+    <string name="settings_random_picks_description">חמישה שירים אקראיים בראש רשימה של יותר מ־20, חדשים בכל שעה</string>
     <string name="settings_song_details_lookup">פרטי שיר מהרשת</string>
     <string name="settings_song_details_lookup_description">הצעה לחפש ב־MusicBrainz וב־iTunes את האמן, האלבום, השנה והכותבים של שיר בזמן עריכת הפרטים שלו</string>
     <string name="settings_cover_art">תמונות עטיפה</string>

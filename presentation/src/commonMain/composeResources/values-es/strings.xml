@@ -234,9 +234,14 @@
     <string name="songs_filter_active">Filtrar canciones, hay filtros activos</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Artista desconocido</string>
+    <string name="songs_random_picks">Selección aleatoria</string>
+    <string name="songs_random_picks_refresh">Nueva selección</string>
+    <string name="random_picks_question_title">¿Mantener la selección aleatoria?</string>
+    <string name="random_picks_question_text">Cinco canciones de tu biblioteca, elegidas de nuevo cada hora o cuando pidas otras. Puedes activarla o desactivarla cuando quieras en Ajustes, en Funciones.</string>
+    <string name="random_picks_question_keep">Mantener</string>
+    <string name="random_picks_question_turn_off">Desactivar</string>
     <string name="songs_sorting_mode_by_artist">Artista</string>
     <string name="songs_sorting_mode_by_title">Título</string>
-    <string name="songs_sorting_mode_shuffle">Aleatorio</string>
     <string name="songs_empty_title">Tu biblioteca está vacía</string>
     <string name="songs_empty_hint">Crea una canción, pega una desde el portapapeles, importa canciones, documentos PDF o Word y archivos zip, o añade la biblioteca de ejemplo.</string>
     <string name="songs_create_song">Crear una canción</string>
@@ -434,6 +439,7 @@
     <string name="settings_scale_suggestions">Sugerencias de escalas</string>
     <string name="settings_scale_suggestions_description">Muestra, tras los acordes de una canción, las escalas sobre las que se puede tocar cada parte, y las escalas de un acorde en su hoja.</string>
     <string name="settings_setlists_description">La pestaña Repertorios y la opción de añadir canciones a repertorios. Si se desactiva, solo se ocultan: no se elimina ningún repertorio.</string>
+    <string name="settings_random_picks_description">Cinco canciones al azar al principio de una lista de más de 20, nuevas cada hora</string>
     <string name="settings_song_details_lookup">Detalles de canciones en línea</string>
     <string name="settings_song_details_lookup_description">Ofrece buscar en MusicBrainz e iTunes el artista, el álbum, el año y los compositores de una canción mientras se editan sus detalles</string>
     <string name="settings_cover_art">Portadas</string>

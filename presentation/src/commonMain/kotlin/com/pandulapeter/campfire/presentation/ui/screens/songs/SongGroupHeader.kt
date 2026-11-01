@@ -12,8 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import com.pandulapeter.campfire.domain.api.library.SongSection
 
 /**
- * What a group of the song list is headed by: a section the sort cut the library into, or the songs ticked in the
- * selection mode, which lead the list under a header of their own (see [withSelectionLeading]). The domain's sections
+ * What a group of the song list is headed by: a section the sort cut the library into, the songs ticked in the
+ * selection mode, which lead the list under a header of their own (see [withSelectionLeading]), or the random picks,
+ * which lead it otherwise. The domain's sections
  * stay what the sort cut, so the selection is a header of the list's rather than one more kind of theirs.
  */
 sealed interface SongGroupHeader {
@@ -31,6 +32,11 @@ sealed interface SongGroupHeader {
     data object Selection : SongGroupHeader {
         /** A character no section's key holds, since an artist's key is made of the artist's name. */
         override val key = "\u0000selection"
+    }
+
+    /** The songs drawn at random that lead the list ([SongGroup.isRandomPicks]). */
+    data object RandomPicks : SongGroupHeader {
+        override val key = "\u0000random_picks"
     }
 }
 

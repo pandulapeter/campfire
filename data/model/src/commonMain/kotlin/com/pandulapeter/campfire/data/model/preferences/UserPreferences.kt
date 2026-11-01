@@ -43,6 +43,10 @@ data class UserPreferences(
      * travelling through imports, exports and sync runs.
      */
     val areSongsEnabled: Boolean = true,
+    /** Whether a long songs list starts with a few of its songs drawn at random. */
+    val isRandomPicksEnabled: Boolean = true,
+    /** Whether keeping [isRandomPicksEnabled] was asked under the picks (or the switch flipped): asked only once. */
+    val isRandomPicksQuestionAnswered: Boolean = false,
     /**
      * Whether the app has setlists at all: their tab and every way of putting a song into one. Off, the files stay in
      * the library and keep travelling through imports, exports and sync runs; they are only out of sight.
@@ -329,11 +333,9 @@ data class UserPreferences(
         ALPHABETICAL("alphabetical"),
     }
 
-    /** [SHUFFLE] is a new order every hour, taken only as the list is opened: see `GetScreenDataUseCase`. */
     enum class SortingMode(val id: String) {
         BY_TITLE("by_title"),
         BY_ARTIST("by_artist"),
-        SHUFFLE("shuffle"),
     }
 
     /**

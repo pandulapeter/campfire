@@ -263,9 +263,14 @@
     <string name="songs_filter_active">Filtrează cântecele, filtrele sunt active</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Artist necunoscut</string>
+    <string name="songs_random_picks">Alegeri aleatorii</string>
+    <string name="songs_random_picks_refresh">Alege altele</string>
+    <string name="random_picks_question_title">Păstrezi alegerile aleatorii?</string>
+    <string name="random_picks_question_text">Cinci cântece din biblioteca ta, alese din nou în fiecare oră sau oricând ceri altele. Le poți porni sau opri oricând din Setări, la Funcții.</string>
+    <string name="random_picks_question_keep">Păstrează</string>
+    <string name="random_picks_question_turn_off">Oprește</string>
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Titlu</string>
-    <string name="songs_sorting_mode_shuffle">Amestecat</string>
     <string name="songs_empty_title">Biblioteca ta este goală</string>
     <string name="songs_empty_hint">Creează un cântec, lipește unul din clipboard, importă cântece, documente PDF sau Word și arhive zip ori adaugă biblioteca demonstrativă.</string>
     <string name="songs_create_song">Creează un cântec</string>
@@ -469,6 +474,7 @@
     <string name="settings_scale_suggestions">Sugestii de game</string>
     <string name="settings_scale_suggestions_description">Arată gamele peste care se poate cânta fiecare parte a unui cântec, după acordurile lui, și gamele unui acord în fișa lui.</string>
     <string name="settings_setlists_description">Fila Liste și adăugarea cântecelor în liste. Dezactivate, listele sunt doar ascunse: niciuna nu este ștearsă.</string>
+    <string name="settings_random_picks_description">Cinci cântece aleatorii în capul unei liste de peste 20, noi în fiecare oră</string>
     <string name="settings_song_details_lookup">Detalii online ale cântecelor</string>
     <string name="settings_song_details_lookup_description">Oferă căutarea artistului, albumului, anului și autorilor unui cântec pe MusicBrainz și iTunes cât timp îi editezi detaliile</string>
     <string name="settings_cover_art">Coperte</string>

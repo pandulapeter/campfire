@@ -167,6 +167,9 @@ internal class PreferencesController(
 
     fun setSetlistsEnabled(value: Boolean) = changeUserPreferences { copy(areSetlistsEnabled = value) }
 
+    /** Flipped anywhere, here or in the question under the picks, the switch answers that question too. */
+    fun setRandomPicksEnabled(value: Boolean) = changeUserPreferences { copy(isRandomPicksEnabled = value, isRandomPicksQuestionAnswered = true) }
+
     fun setMetronomeEnabled(value: Boolean) = changeUserPreferences { copy(isMetronomeEnabled = value) }
 
     fun setTunerEnabled(value: Boolean) = changeUserPreferences { copy(isTunerEnabled = value) }

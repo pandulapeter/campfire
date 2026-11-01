@@ -112,10 +112,10 @@ fun CampfireApp(
     // the app pauses it with the click still in view.
     val areBeatsFeltInBackground = areBeatHapticsFeltInBackground && rememberBeatHaptics() != null
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.metronomeController.onAppStopped(areBeatsFeltInBackground = areBeatsFeltInBackground) }
-    // Coming back to the app on the song list opens it again, for the Shuffle order too (LibraryState.shuffleHour).
+    // Coming back to the app on the song list opens it again, for the random picks too (RandomPicksDraw).
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         viewModel.metronomeController.onAppStarted()
-        if (viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs) viewModel.libraryState.catchUpWithTheHour()
+        if (viewModel.navigator.backStack.lastOrNull() == CampfireDestination.Songs) viewModel.randomPicksDraw.catchUp()
     }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.preferencesController.arePreferencesLoaded.collectAsStateWithLifecycle()

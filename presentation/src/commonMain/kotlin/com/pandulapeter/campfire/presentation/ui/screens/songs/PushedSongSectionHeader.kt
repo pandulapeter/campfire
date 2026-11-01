@@ -50,6 +50,13 @@ internal fun PushedSongSectionHeader(
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
         endPadding = endPadding,
         onClick = null,
+        action = if (header == SongGroupHeader.RandomPicks) {
+            { actionModifier, buttonModifier ->
+                RandomPicksRefreshButton(modifier = actionModifier, buttonModifier = buttonModifier, isDecorative = true, onRefresh = {})
+            }
+        } else {
+            null
+        },
         contentOpacity = { (pushed.value?.visibleFraction ?: 0f) * appBarOverlap().coverage },
         pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
         appBarOverlap = appBarOverlap,

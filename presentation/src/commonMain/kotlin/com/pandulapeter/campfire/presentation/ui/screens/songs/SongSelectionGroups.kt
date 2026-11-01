@@ -26,17 +26,19 @@ import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberCh
  * as a copy - the card that was tapped stays where it is, so the list never moves under the finger. A section the
  * refresh emptied goes, header and all. A song unticked since the last refresh stays in the group until the next one.
  *
- * With nothing to lead, the list is the one it was given, the same instance.
+ * The random picks go, as the selection takes their place at the top. With nothing to lead and no picks, the list is the
+ * one it was given, the same instance.
  */
 internal fun List<SongGroup>.withSelectionLeading(order: ChecklistOrder): List<SongGroup> {
-    val selected = order.selectedGroup(flatMap { it.songs }) { it.fileName }
-    if (selected.isEmpty()) return this
+    val sections = filterNot { it.isRandomPicks }
+    val selected = order.selectedGroup(sections.flatMap { it.songs }) { it.fileName }
+    if (selected.isEmpty()) return if (sections.size == size) this else sections
     val selection = SongGroup(
         header = SongGroupHeader.Selection,
         songs = selected,
         copiedFileNames = selected.mapNotNullTo(hashSetOf()) { song -> song.fileName.takeIf { it !in order.heldKeys } },
     )
-    return listOf(selection) + mapNotNull { group ->
+    return listOf(selection) + sections.mapNotNull { group ->
         group.songs.filterNot { it.fileName in order.heldKeys }.takeIf { it.isNotEmpty() }?.let { group.copy(songs = it) }
     }
 }

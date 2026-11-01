@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class SongItemIndexTest {
@@ -27,6 +28,16 @@ class SongItemIndexTest {
         assertEquals(1, groups.itemIndexOf(songItemKey(song("a1")), hasPlaceholder = false))
         assertEquals(2, groups.itemIndexOf(songItemKey(song("a2")), hasPlaceholder = false))
         assertEquals(4, groups.itemIndexOf(songItemKey(song("b1")), hasPlaceholder = false))
+    }
+
+    @Test
+    fun `the first section after the random picks is found past their songs, question, and divider`() {
+        val picks = SongGroup(header = SongGroupHeader.RandomPicks, songs = listOf(song("b1"), song("a2")), isRandomPicksQuestionAfter = true)
+        val led = listOf(picks) + groups
+        val index = assertNotNull(led.firstSectionAfterRandomPicksIndex())
+        assertEquals(led.itemIndexOf(songItemKey(song("a1")), hasPlaceholder = false), index + 1)
+        assertNull(groups.firstSectionAfterRandomPicksIndex(), "No picks")
+        assertNull(listOf(picks).firstSectionAfterRandomPicksIndex(), "Nothing after them")
     }
 
     @Test

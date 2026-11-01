@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_sort
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_shuffle
 
 /**
  * The order of the songs, offered on the songs screen and in the song picker sheet alike. It is one preference rather
@@ -37,7 +36,6 @@ internal fun SongSortMenu(
         options = listOf(
             UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
             UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
-            UserPreferences.SortingMode.SHUFFLE to stringResource(Res.string.songs_sorting_mode_shuffle),
         ),
         selected = selected,
         onSelected = onSelected,

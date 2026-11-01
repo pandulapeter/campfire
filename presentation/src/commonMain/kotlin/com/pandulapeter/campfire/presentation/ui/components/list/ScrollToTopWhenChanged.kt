@@ -55,6 +55,8 @@ import kotlinx.coroutines.flow.filter
  * list as it was - would leave the row pending until the list next changes for some unrelated reason.
  * @param itemIndex The index of the item with the given key in [contents], or null where it holds no such item.
  * @param topKey The part of [key] whose change sends the list to the top, all of it by default.
+ * @param topIndex Where the top is that a change of [topKey] sends the list to, asked once per change in the
+ * composition the new contents arrive in: the first item unless the list says otherwise.
  */
 @Composable
 internal fun ScrollToTopWhenChanged(
@@ -65,6 +67,7 @@ internal fun ScrollToTopWhenChanged(
     itemIndex: (Any) -> Int? = { null },
     topKey: String = key,
     scrollToTopOnKeyChange: Boolean = true,
+    topIndex: () -> Int = { 0 },
 ) {
     var lastKey by rememberSaveable { mutableStateOf(key) }
     var lastTopKey by rememberSaveable { mutableStateOf(topKey) }
@@ -95,7 +98,7 @@ internal fun ScrollToTopWhenChanged(
                 }
             }
         } else if (shouldScrollToTop) {
-            listState.requestScrollToItem(0)
+            listState.requestScrollToItem(topIndex())
         } else if (heldTop.isHolding && contents !== heldTop.contents && !listState.isScrollInProgress) {
             listState.requestScrollToItem(
                 index = listState.firstVisibleItemIndex,

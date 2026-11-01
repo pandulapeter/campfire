@@ -12,7 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 /**
  * The groups of an open search: the sections run together under no header, so that the cards of one fill the columns the
  * one before it left open instead of each section ending in a short row. The Selection group loses its header too and
- * keeps the divider after it ([SongGroup.isSelection]), which is what tells its songs apart from the rest.
+ * keeps the divider after it ([SongGroup.isSelection]), which is what tells its songs apart from the rest. The random
+ * picks go: they are copies of songs the search runs through anyway.
  *
  * Running the sections together moves every card after the first short row into another column, the one the eye is on
  * included. With [anchor], the group it is in starts with as many empty cells as keep its card in the column it was in
@@ -25,7 +26,7 @@ internal fun List<SongGroup>.withoutSectionHeaders(anchor: SongCardSlot? = null)
     if (none { it.header != null }) return this
     val selection = filter { it.isSelection }.map { it.copy(header = null) }
     // Whatever is not the selection, the ranked results of a query (which have no header) as well as the sections.
-    val rest = filterNot { it.isSelection }
+    val rest = filterNot { it.isSelection || it.isRandomPicks }
     val merged = if (rest.isEmpty()) selection else selection + SongGroup(header = null, songs = rest.flatMap { it.songs })
     if (anchor == null) return merged
     return merged.map { group ->

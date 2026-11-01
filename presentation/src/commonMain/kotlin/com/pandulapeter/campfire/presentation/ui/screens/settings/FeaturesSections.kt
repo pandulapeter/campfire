@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_everything_off
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
+import com.pandulapeter.campfire.presentation.resources.settings_random_picks_description
 import com.pandulapeter.campfire.presentation.resources.settings_scales_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
 import com.pandulapeter.campfire.presentation.resources.settings_song_details_lookup
@@ -34,6 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_song_details_lo
 import com.pandulapeter.campfire.presentation.resources.settings_songs_description
 import com.pandulapeter.campfire.presentation.resources.settings_songs_description_without_setlists
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_random_picks
 import com.pandulapeter.campfire.presentation.resources.settings_tuner_description
 import com.pandulapeter.campfire.presentation.resources.tuner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -77,6 +79,14 @@ private fun PlayingSection(
         ),
         isChecked = userPreferences?.areSongsEnabled != false,
         onCheckedChange = viewModel.preferencesController::setSongsEnabled,
+    )
+    // Disabled with the songs off, as the setlists are: the picks are a part of the songs list.
+    SwitchListItem(
+        title = stringResource(Res.string.songs_random_picks),
+        description = stringResource(Res.string.settings_random_picks_description),
+        isChecked = userPreferences?.isRandomPicksEnabled != false,
+        isEnabled = userPreferences?.areSongsEnabled != false,
+        onCheckedChange = viewModel.preferencesController::setRandomPicksEnabled,
     )
     // Disabled rather than hidden with the songs off: a setlist is a list of songs, so without them there is nothing it
     // could hold, and what it is set to is still what the app has once the songs are back.

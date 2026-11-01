@@ -187,6 +187,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/screens/scales`, `ui/songView`, `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
+- Over 20 songs, the songs list starts with five random picks, new every hour or on Refresh, device-local, switched off
+  in Settings → Features, asked about once under them: `ui/screens/songs`.
 - Under three songs, the songs list ends in a hint on pasting from a website and importing another app's songs:
   `ui/screens/songs`.
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.

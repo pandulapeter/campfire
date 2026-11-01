@@ -234,9 +234,14 @@
     <string name="songs_filter_active">Filter songs, filters are on</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Unknown artist</string>
+    <string name="songs_random_picks">Random picks</string>
+    <string name="songs_random_picks_refresh">Draw new picks</string>
+    <string name="random_picks_question_title">Keep the random picks?</string>
+    <string name="random_picks_question_text">Five songs from your library, drawn again every hour or whenever you ask for new ones. You can turn them on or off any time in Settings, under Features.</string>
+    <string name="random_picks_question_keep">Keep</string>
+    <string name="random_picks_question_turn_off">Turn off</string>
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Title</string>
-    <string name="songs_sorting_mode_shuffle">Shuffle</string>
     <string name="songs_empty_title">Your library is empty</string>
     <string name="songs_empty_hint">Create a song, paste one from the clipboard, import songs, PDF or Word documents, and zip archives, or add the demo library.</string>
     <string name="songs_create_song">Create a song</string>
@@ -434,6 +439,7 @@
     <string name="settings_scale_suggestions">Scale suggestions</string>
     <string name="settings_scale_suggestions_description">Show the scales each part of a song can be played over, after its chords, and the scales for a chord in its sheet.</string>
     <string name="settings_setlists_description">The Setlists tab and adding songs to setlists. Off, they are only hidden: no setlist is deleted.</string>
+    <string name="settings_random_picks_description">Five random songs at the top of a list of more than 20, new every hour</string>
     <string name="settings_song_details_lookup">Online song details</string>
     <string name="settings_song_details_lookup_description">Offer to look up a song\'s artist, album, year, and songwriters on MusicBrainz and iTunes while its details are edited</string>
     <string name="settings_cover_art">Cover art</string>

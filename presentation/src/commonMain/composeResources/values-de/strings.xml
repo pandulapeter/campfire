@@ -234,9 +234,14 @@
     <string name="songs_filter_active">Songs filtern, Filter sind aktiv</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Unbekannter Interpret</string>
+    <string name="songs_random_picks">Zufallsauswahl</string>
+    <string name="songs_random_picks_refresh">Neue Auswahl</string>
+    <string name="random_picks_question_title">Zufallsauswahl behalten?</string>
+    <string name="random_picks_question_text">Fünf Songs aus deiner Bibliothek, jede Stunde neu gezogen oder wann immer du neue willst. Du kannst sie jederzeit in den Einstellungen unter Funktionen ein- oder ausschalten.</string>
+    <string name="random_picks_question_keep">Behalten</string>
+    <string name="random_picks_question_turn_off">Ausschalten</string>
     <string name="songs_sorting_mode_by_artist">Interpret</string>
     <string name="songs_sorting_mode_by_title">Titel</string>
-    <string name="songs_sorting_mode_shuffle">Gemischt</string>
     <string name="songs_empty_title">Deine Bibliothek ist leer</string>
     <string name="songs_empty_hint">Erstelle einen Song, füge einen aus der Zwischenablage ein, importiere Songs, PDF- oder Word-Dokumente und Zip-Archive oder füge die Demo-Bibliothek hinzu.</string>
     <string name="songs_create_song">Song erstellen</string>
@@ -434,6 +439,7 @@
     <string name="settings_scale_suggestions">Tonleiter-Vorschläge</string>
     <string name="settings_scale_suggestions_description">Zeigt nach den Akkorden die Tonleitern, über die sich jeder Teil eines Songs spielen lässt, und im Akkordblatt die Tonleitern zu einem Akkord.</string>
     <string name="settings_setlists_description">Der Tab „Setlists“ und das Hinzufügen von Songs zu Setlists. Ausgeschaltet werden sie nur ausgeblendet: Keine Setlist wird gelöscht.</string>
+    <string name="settings_random_picks_description">Fünf zufällige Songs oben in einer Liste mit mehr als 20, jede Stunde neue</string>
     <string name="settings_song_details_lookup">Song-Details online</string>
     <string name="settings_song_details_lookup_description">Bietet beim Bearbeiten der Details eines Songs an, Interpret, Album, Jahr und Songwriter auf MusicBrainz und iTunes nachzuschlagen</string>
     <string name="settings_cover_art">Cover</string>

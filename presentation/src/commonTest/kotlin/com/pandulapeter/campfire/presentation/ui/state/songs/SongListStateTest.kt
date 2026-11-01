@@ -90,13 +90,30 @@ class SongListStateTest {
                 SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('F')), songs = listOf(first.song)),
                 SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('S')), songs = listOf(second.song)),
             ),
-            songGroupsFor(sections, listOf(first, second), ""),
+            songGroupsFor(sections, listOf(first, second), "", randomPicksSeed = 1L, isRandomPicksQuestionAsked = true),
         )
         assertEquals(
             listOf(SongGroup(header = null, songs = listOf(second.song))),
-            songGroupsFor(sections, listOf(first, second), "sec"),
+            songGroupsFor(sections, listOf(first, second), "sec", randomPicksSeed = null, isRandomPicksQuestionAsked = false),
         )
-        assertEquals(emptyList(), songGroupsFor(sections, listOf(first, second), "nothing"))
+        assertEquals(emptyList(), songGroupsFor(sections, listOf(first, second), "nothing", randomPicksSeed = null, isRandomPicksQuestionAsked = false))
+    }
+
+    @Test
+    fun `a long list is led by its random picks and their question, a search by neither`() {
+        val songs = (1..21).map { song("song$it") }
+        val sections = listOf(SongSection(header = SongSection.Header.Letter('S'), songs = songs))
+        val searchable = songs.map { SearchableSong(song = it, title = it.title, artist = "", tags = emptyList()) }
+
+        val groups = songGroupsFor(sections, searchable, "", randomPicksSeed = 7L, isRandomPicksQuestionAsked = true)
+        assertEquals(
+            SongGroup(header = SongGroupHeader.RandomPicks, songs = randomPicks(songs, seed = 7L), isRandomPicksQuestionAfter = true),
+            groups.first(),
+        )
+        assertEquals(songs, groups.last().songs)
+
+        assertEquals(1, songGroupsFor(sections, searchable, "", randomPicksSeed = null, isRandomPicksQuestionAsked = true).size, "Switched off")
+        assertTrue(songGroupsFor(sections, searchable, "song", randomPicksSeed = 7L, isRandomPicksQuestionAsked = true).none { it.isRandomPicks })
     }
 
     private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(
@@ -120,5 +137,7 @@ class SongListStateTest {
         isImporting = MutableStateFlow(false),
         normalizeSearchText = LowercaseSearchText,
         changeUserPreferences = {},
+        userPreferences = MutableStateFlow(null),
+        randomPicksSeed = MutableStateFlow(0L),
     )
 }

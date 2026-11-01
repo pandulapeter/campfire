@@ -234,9 +234,14 @@
     <string name="songs_filter_active">Filtra le canzoni, filtri attivi</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Artista sconosciuto</string>
+    <string name="songs_random_picks">Scelte a caso</string>
+    <string name="songs_random_picks_refresh">Nuove scelte</string>
+    <string name="random_picks_question_title">Tenere le scelte a caso?</string>
+    <string name="random_picks_question_text">Cinque canzoni della tua libreria, estratte di nuovo ogni ora o quando ne chiedi altre. Puoi attivarle o disattivarle quando vuoi nelle Impostazioni, in Funzionalità.</string>
+    <string name="random_picks_question_keep">Tieni</string>
+    <string name="random_picks_question_turn_off">Disattiva</string>
     <string name="songs_sorting_mode_by_artist">Artista</string>
     <string name="songs_sorting_mode_by_title">Titolo</string>
-    <string name="songs_sorting_mode_shuffle">Casuale</string>
     <string name="songs_empty_title">La tua libreria è vuota</string>
     <string name="songs_empty_hint">Crea una canzone, incollane una dagli appunti, importa canzoni, documenti PDF o Word e archivi zip, oppure aggiungi la libreria di prova.</string>
     <string name="songs_create_song">Crea una canzone</string>
@@ -434,6 +439,7 @@
     <string name="settings_scale_suggestions">Scale suggerite</string>
     <string name="settings_scale_suggestions_description">Mostra le scale su cui si può suonare ogni parte di una canzone, dopo i suoi accordi, e le scale per un accordo nella sua scheda.</string>
     <string name="settings_setlists_description">La scheda Scalette e l\'aggiunta di canzoni alle scalette. Se disattivata, vengono solo nascoste: nessuna scaletta viene eliminata.</string>
+    <string name="settings_random_picks_description">Cinque canzoni a caso in cima a una lista di più di 20, nuove ogni ora</string>
     <string name="settings_song_details_lookup">Dettagli delle canzoni online</string>
     <string name="settings_song_details_lookup_description">Propone di cercare l\'artista, l\'album, l\'anno e gli autori di una canzone su MusicBrainz e iTunes mentre ne modifichi i dettagli</string>
     <string name="settings_cover_art">Copertine</string>

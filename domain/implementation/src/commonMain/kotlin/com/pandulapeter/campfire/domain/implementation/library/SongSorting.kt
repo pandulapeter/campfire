@@ -14,35 +14,22 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
 
 /**
- * The whole library in the order [sortingMode] asks for, [shuffleHour] deciding the shuffled one (see [shuffleRank]).
- * The keys are computed once per song, since the selector of a comparator runs on every comparison.
+ * The whole library in the order [sortingMode] asks for. The keys are computed once per song, since the selector of a
+ * comparator runs on every comparison.
  */
-internal fun List<Song>.sortedFor(sortingMode: UserPreferences.SortingMode, shuffleHour: Int, normalize: (String) -> String): SortMemo {
-    val keyed = map { SortableSong(song = it, sortingMode = sortingMode, artist = normalize(it.artist), title = normalize(it.title)) }
-    val sortable = if (sortingMode == UserPreferences.SortingMode.SHUFFLE) {
-        keyed.map { it to shuffleRank(it.song.fileName, shuffleHour) }
-            .sortedWith(compareBy({ it.second }, { it.first.song.fileName }))
-            .map { it.first }
-    } else {
-        keyed.sortedWith(SortableSong.ORDER)
-    }
-    return SortMemo(
-        input = this,
-        sortingMode = sortingMode,
-        shuffleHour = shuffleHour,
-        songs = sortable.map { it.song },
-        byFileName = sortable.associateBy { it.song.fileName },
-    )
+internal fun List<Song>.sortedFor(sortingMode: UserPreferences.SortingMode, normalize: (String) -> String): SortMemo {
+    val sortable = map { SortableSong(song = it, sortingMode = sortingMode, artist = normalize(it.artist), title = normalize(it.title)) }
+        .sortedWith(SortableSong.ORDER)
+    return SortMemo(input = this, sortingMode = sortingMode, songs = sortable.map { it.song }, byFileName = sortable.associateBy { it.song.fileName })
 }
 
 /**
- * The library [input] sorted by [sortingMode] (shuffled for [shuffleHour]): [songs] in that order, and the sort keys of
- * each song by its file name, which is unique in the library.
+ * The library [input] sorted by [sortingMode]: [songs] in that order, and the sort keys of each song by its file
+ * name, which is unique in the library.
  */
 internal class SortMemo(
     val input: List<Song>,
     val sortingMode: UserPreferences.SortingMode,
-    val shuffleHour: Int,
     val songs: List<Song>,
     val byFileName: Map<String, SortableSong>,
 )
@@ -55,9 +42,6 @@ internal class SortMemo(
  * that no header can come up twice whatever a title starts with.
  */
 internal fun List<SortableSong>.cutIntoSections(sortingMode: UserPreferences.SortingMode): List<SongSection> {
-    if (sortingMode == UserPreferences.SortingMode.SHUFFLE) {
-        return if (isEmpty()) emptyList() else listOf(SongSection(header = null, songs = map { it.song }))
-    }
     val sections = linkedMapOf<String, MutableList<SortableSong>>()
     forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
     return sections.map { (key, songs) ->
@@ -65,8 +49,7 @@ internal fun List<SortableSong>.cutIntoSections(sortingMode: UserPreferences.Sor
         SongSection(
             header = when (sortingMode) {
                 UserPreferences.SortingMode.BY_ARTIST -> SongSection.Header.Artist(name = first.song.artist, initial = first.initial, key = key)
-                UserPreferences.SortingMode.BY_TITLE,
-                UserPreferences.SortingMode.SHUFFLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
+                UserPreferences.SortingMode.BY_TITLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
             },
             songs = songs.map { it.song },
         )

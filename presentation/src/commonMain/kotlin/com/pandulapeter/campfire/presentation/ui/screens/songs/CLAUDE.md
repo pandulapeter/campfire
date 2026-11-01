@@ -22,11 +22,21 @@ The songs screen.
   (`KeepCardsInPlaceAcrossSearch`, `SearchCardHold`, narrated by `ListAnchor` on the bar's spring); closing unscrolled
   over the same songs puts it back where it was.
 
-## Shuffle
+## Random picks
 
-- The Shuffle sort is one headerless list, like a search's results, in a new order every hour; the hour moves on only as
-  the screen is opened (the app returning to the front on it, or another tab left for it: `LibraryState.shuffleHour`),
-  never under a reader or on closing a song over it. The new order arrives with a new `orderKey`, so it opens at the top.
+- With more than `RANDOM_PICKS_MIN_SONGS` songs in the list (after the filters), both sorts are led by five of them drawn
+  at random (`randomPicks`, `SongGroupHeader.RandomPicks`), as copies with keys of their own, then the divider the
+  Selection has. Gone while a search is open (`withoutSectionHeaders`) and in selection mode (`withSelectionLeading`),
+  and with the Settings → Features switch (`isRandomPicksEnabled`).
+- `RandomPicksDraw` holds a device-local seed, never synced or kept: new picks once an hour has gone by, taken only as
+  the screen is opened (the app returning to the front on it, or another tab left for it), never under a reader; the
+  header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
+- Under the first picks shown, `RandomPicksQuestionCard` asks whether to keep them, saying the switch is in Settings;
+  either answer, or the switch flipped, sets `isRandomPicksQuestionAnswered` for good.
+- A sort picked from the menu over the very top of the list glides down to the first section once the new order
+  arrives (`SortChangeReveal`), since the picks it leaves in sight do not show the change; picked over a list still
+  resting where that left it, the new order opens on its first section (`ScrollToTopWhenChanged`'s `topIndex`). From
+  anywhere else the sort sends the list to the top as before.
 
 ## Back resets the filters
 
@@ -56,7 +66,7 @@ The songs screen.
 - Cards show a crossfaded box in place of star and menu; a tap ticks; a screen reader hears one checkbox. A tag or
   language tapped under a song still filters.
 - **Ticked songs lead the list** (`ChecklistOrder`, as in Choose songs) under a counting header
-  (`SongGroupHeader.Selection`, "✓" on the fast scroller), always followed by a divider (`hasSelectionDividerAfter`,
+  (`SongGroupHeader.Selection`, "✓" on the fast scroller), always followed by a divider (`hasDividerAfter`,
   counted as an item by `itemIndexOf` and `SongSectionIndex`).
   - At a refresh, ticked songs lead in list order, taken out of their sections (an emptied section goes). A refresh is a
     change of search, sort, or filter (`SongGroups.filterKey`), or Select all (`SongSelection.selectAllCount`); the

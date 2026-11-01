@@ -106,6 +106,8 @@ internal fun SongsScreen(
         songGroups
     }
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !songGroups.isLibraryRead)
+    val sortChangeReveal = remember { SortChangeReveal() }
+    RevealSortChange(reveal = sortChangeReveal, listState = listState, songGroups = shownSongGroups)
     val clipboardReader = rememberClipboardTextReader()
     val badgeRecession = songFilterBackRecession(
         isBackEnabled = isSongFilterActive && !isSelecting && !isSearchOpen && visibleDialog == null &&
@@ -160,6 +162,7 @@ internal fun SongsScreen(
                     appBarOverlap = appBarOverlap,
                     isSelecting = isSelecting,
                     selection = selection.orEmpty(),
+                    sortChangeReveal = sortChangeReveal,
                 )
             },
         ) {
@@ -190,7 +193,7 @@ internal fun SongsScreen(
                         ) { isShowingSelectionMenu ->
                             if (isShowingSelectionMenu) {
                                 val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-                                val listedFileNames = remember(songGroups) { songGroups.groups.flatMap { group -> group.songs.map { it.fileName } } }
+                                val listedFileNames = remember(songGroups) { songGroups.groups.filterNot { it.isRandomPicks }.flatMap { group -> group.songs.map { it.fileName } } }
                                 val ticked = selection.orEmpty()
                                 SongSelectionMenu(
                                     isRoomy = layout.columnCount > 1,
@@ -223,7 +226,14 @@ internal fun SongsScreen(
                         SongSortMenu(
                             modifier = Modifier.overlappingAction(),
                             selected = userPreferences?.sortingMode,
-                            onSelected = viewModel.preferencesController::setSortingMode,
+                            onSelected = { sortingMode ->
+                                sortChangeReveal.onSortPicked(
+                                    listState = listState,
+                                    orderKey = shownSongGroups.orderKey,
+                                    isRevealed = sortingMode != userPreferences?.sortingMode && !isSearchOpen,
+                                )
+                                viewModel.preferencesController.setSortingMode(sortingMode)
+                            },
                         )
                         // The last tag leaving the library takes the filters with it while the list is being looked at,
                         // but the first one arriving with the library is no change anybody made.
