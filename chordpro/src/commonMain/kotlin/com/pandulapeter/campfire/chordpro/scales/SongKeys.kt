@@ -19,9 +19,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  * Transposition control, the song lists, the degrees, the scales) goes through. A capo chart may write its `{key}` as
  * the key its shapes are in (`{key: D}{capo: 2}` over D shapes, sounding E) or as the key that sounds
  * (`{key: G}{capo: 5}` over D shapes), and only its chords tell the two apart: the written key is the chords' own unless
- * the song is heard on the root the capo shifts it to and that key's own scale holds more of its plays than the written
- * key's does (`{key: A}{capo: 2}` over `G C D G` is in G, though A major holds its D), a tie keeping the author's word,
- * the rule [SongScaleGroups] reads every part by. Every reading is shift-invariant, so a song moved by any transposition, the file's capo counted in or not, reads
+ * the song is heard on the root the capo shifts it to, or on that key's relative with its root ranked too, never the
+ * written tonic (`{key: F#m}{capo: 2}` over `G D Em C` is in Em), and that key's own scale holds more of its plays than
+ * the written key's does (`{key: A}{capo: 2}` over `G C D G` is in G, though A major holds its D), a tie keeping the author's word,
+ * the rule [SongScaleGroups] reads every part by (a part alone not on the relative). Every reading is shift-invariant, so a song moved by any transposition, the file's capo counted in or not, reads
  * alike.
  */
 public object SongKeys {

@@ -41,11 +41,20 @@ class SongKeysTest {
     }
 
     @Test
+    fun `a capo chart keyed by the sounding key is read in its shapes' key where it opens on the relative chord`() {
+        assertEquals("Em", SongKeys.ofChords(song(key = "F#m", capo = 2, chords = "G D Em C")))
+        assertEquals("G", SongKeys.ofChords(song(key = "A", capo = 2, chords = "Em C G D")))
+        assertEquals("C", SongKeys.ofChords(song(key = "D", capo = 2, chords = "Am F C G")))
+    }
+
+    @Test
     fun `a capo chart keyed by its shapes' key, or fitting both keys alike, keeps its written key`() {
         assertNull(SongKeys.capoChartKeyOf(song(key = "D", capo = 2)))
         assertEquals("D", SongKeys.ofChords(song(key = "D", capo = 2)))
         assertNull(SongKeys.capoChartKeyOf(song(key = "A", capo = 2, chords = "G A G A")))
         assertEquals("A", SongKeys.ofChords(song(key = "A", capo = 2, chords = "G A G A")))
+        assertEquals("F#m", SongKeys.ofChords(song(key = "F#m", capo = 3, chords = "F#m C#7 D Bm Ebmaj7 Abm Db Gb E# Cb B#dim")))
+        assertEquals("C", SongKeys.ofChords(song(key = "C", capo = 5, chords = "C Am D7 G")))
     }
 
     @Test

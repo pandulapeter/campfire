@@ -54,7 +54,7 @@ public object SongScaleGroups {
      */
     internal fun keyOfChordsIn(song: ChordProSong): Pair<SongKey, Boolean>? {
         val parts = SongParts.of(song)
-        val harmony = Harmony(parts.ifEmpty { return null })
+        val harmony = Harmony(parts.ifEmpty { return null }, isWholeSong = true)
         val key = harmony.key ?: return null
         val shapes = harmony.shapesKey
         return if (shapes != null) shapes to true else key to false
@@ -64,10 +64,10 @@ public object SongScaleGroups {
     internal fun playedGroupsOf(song: ChordProSong): List<PlayedGroup> {
         val parts = SongParts.of(song)
         if (parts.isEmpty() || parts.sumOf { it.chords.size } > MAX_PLAYED_CHORDS) return emptyList()
-        fitOf(parts)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.playedGroupOf(parts)) }
+        fitOf(parts, isWholeSong = true)?.takeIf { it.level == Level.TONAL }?.let { return listOf(it.playedGroupOf(parts)) }
         val groups = mutableListOf<PartGroup>()
         parts.forEach { part ->
-            val own = fitOf(listOf(part)) ?: return@forEach
+            val own = fitOf(listOf(part), isWholeSong = false) ?: return@forEach
             val chords = part.chords.toSet()
             val candidates = groups.sortedBy { group ->
                 when {
@@ -80,14 +80,14 @@ public object SongScaleGroups {
             val joined = candidates.firstNotNullOfOrNull { group ->
                 when {
                     group.fit.isRockRiff && group.fit.absorbs(own, part) -> group to group.fit
-                    group.isTonicVamp(own.root) || part.isTonicVamp(group.fit.root) -> fitOf(group.parts + part)?.takeIf { combined ->
+                    group.isTonicVamp(own.root) || part.isTonicVamp(group.fit.root) -> fitOf(group.parts + part, isWholeSong = false)?.takeIf { combined ->
                         // A vamp takes the other side's answer only where that covers it: an A intro before an Am F C G verse
                         // would otherwise be named a dominant of the iv.
                         val vampNames = (if (part.isTonicVamp(group.fit.root)) part.names else group.parts.flatMap { it.names }).toSet()
                         combined.level != Level.PASSING && combined.root.pitchClass == group.fit.root.pitchClass &&
                             combined.exceptions.none { exception -> exception.chordName in vampNames || exception.otherChordNames.any { it in vampNames } }
                     }?.let { group to it }
-                    else -> fitOf(group.parts + part)?.takeIf { canJoin(group.fit, own, it) }?.let { group to it }
+                    else -> fitOf(group.parts + part, isWholeSong = false)?.takeIf { canJoin(group.fit, own, it) }?.let { group to it }
                 }
             }
             if (joined != null) {
@@ -167,10 +167,11 @@ public object SongScaleGroups {
      *
      * A capo chart may write its `{key}` as the sounding key over shapes in another (`{key: G}{capo: 5}` over D shapes),
      * so where the key the shapes play holds more of the part than the written key does ([Harmony.shapesKey]), that key
-     * is the one in force.
+     * is the one in force; [isWholeSong] where [parts] are the whole song, whose shapes' key is read as the song's key is
+     * ([Harmony.capoKey]).
      */
-    private fun fitOf(parts: List<SongPart>): Fit? {
-        val harmony = Harmony(parts)
+    private fun fitOf(parts: List<SongPart>, isWholeSong: Boolean): Fit? {
+        val harmony = Harmony(parts, isWholeSong)
         powerRiffFitOf(harmony)?.let { return it }
         return (harmony.shapesKey ?: harmony.key)?.let { keyFitOf(harmony, it) } ?: oneChordFitOf(harmony) ?: guessedFitOf(harmony)
     }

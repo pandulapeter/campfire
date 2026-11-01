@@ -570,6 +570,32 @@ class SongScaleGroupsTest {
     }
 
     @Test
+    fun `a section on the relative of a correctly keyed capo chart's shifted key keeps its own centre`() {
+        val intro = "F Am Dm Gm C F F7 Bb Gm7 D7 Gm F C Gm Gm F C Gm C7"
+        val verse = "F Am Dm Gm C F Am Dm Gm C F"
+        val prechorus = "F7 Bb Gm7 D7 Gm D7 Gm Gm Am Bb B C-"
+        val chorus = "F Gm Am Dm Gm7 C F Gm Am Dm Gm7 D7 Gm F C Gm Gm F C Gm C Bb"
+        val sections = listOf(
+            "intro" to intro,
+            "verse" to verse,
+            "prechorus" to prechorus,
+            "chorus" to chorus,
+            "verse" to verse,
+            "prechorus" to prechorus,
+            "solo" to "F Am Dm Gm C F Am Dm Gm C",
+            "prechorus" to "F $prechorus",
+            "chorus" to chorus,
+            "outro" to "F Am Dm Gm C F F7 Bb",
+        )
+        val text = "{key: F}\n{capo: 7}\n" + sections.joinToString("\n") { (kind, chords) ->
+            "{start_of_$kind}\n" + chords.split(' ').joinToString(" ") { "[$it]x" } + "\n{end_of_$kind}"
+        }
+        val prechorusGroups = groups(text).filter { group -> group.labels.any { it.contains("prechorus", ignoreCase = true) } }
+        assertTrue(prechorusGroups.isNotEmpty())
+        prechorusGroups.forEach { assertEquals("G" to "natural_minor", it.rootName to it.scales.first().id) }
+    }
+
+    @Test
     fun `the written key keeps its word where it holds the part`() {
         assertEquals(listOf("D" to "major"), rootAndFirst(song("D G A Bm D G A D", key = "D", capo = 5)))
         assertEquals(listOf("G" to "major"), rootAndFirst(song("G C D G", key = "G", capo = 5)))

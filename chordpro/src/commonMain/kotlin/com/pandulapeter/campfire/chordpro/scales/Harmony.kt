@@ -11,8 +11,8 @@ package com.pandulapeter.campfire.chordpro.scales
 
 import com.pandulapeter.campfire.chordpro.model.Chord
 
-/** The chords of a list of parts, read once for every fit tried on them. */
-internal class Harmony(val parts: List<SongPart>) {
+/** The chords of a list of parts, read once for every fit tried on them; [isWholeSong] where they are every part of the song. */
+internal class Harmony(val parts: List<SongPart>, val isWholeSong: Boolean) {
     val key = parts.first().key
     val names = parts.flatMap { it.names }
     val chords = parts.flatMap { it.chords }
@@ -24,11 +24,25 @@ internal class Harmony(val parts: List<SongPart>) {
      * that root ([ranked]'s first), else null. The shifted root of the common capos is a chord every song in the written
      * key plays (capo 5: its V, capo 7: its IV), so a chord on it is no evidence that the key names the sounding pitch:
      * `{key: C}{capo: 5}` `C Am D7 G` would read in G, which holds it whole.
+     *
+     * Read as the whole song, a first-ranked root on the shifted key's relative counts too, where the shifted root is
+     * ranked as well, since a progression opening on the relative chord (`{key: F#m}{capo: 2}` over `G D Em C`) ranks
+     * the relative first; never where that relative is the written key's own root, the best evidence the written key is
+     * the chords' own. A part alone keeps the narrow rule: a section with a centre of its own in a correctly keyed chart
+     * can rank the shifted key's relative first (Don't Stop Me Now's G minor prechorus under `{key: F}{capo: 7}` would be
+     * read in B♭).
      */
     val capoKey by lazy {
         val capo = parts.first().capo?.takeIf { it != 0 } ?: return@lazy null
         val key = key ?: return@lazy null
-        ranked.first().takeIf { it.pitchClass == (key.root.pitchClass - capo).mod(12) }?.let { SongKey(it, key.isMinor) }
+        val shifted = (key.root.pitchClass - capo).mod(12)
+        val relative = (shifted + if (key.isMinor) 3 else 9).mod(12)
+        val first = ranked.first()
+        when (first.pitchClass) {
+            shifted -> SongKey(first, key.isMinor)
+            relative -> if (!isWholeSong || relative == key.root.pitchClass) null else ranked.firstOrNull { it.pitchClass == shifted }?.let { SongKey(it, key.isMinor) }
+            else -> null
+        }
     }
 
     /**
