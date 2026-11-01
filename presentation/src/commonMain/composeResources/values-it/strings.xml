@@ -432,6 +432,8 @@
     <string name="settings_chord_names_description">Con il capotasto, gli accordi di un brano prendono il nome dalle diteggiature suonate sopra di esso o da come suonano. La tonalità del brano dice sempre come suona, e alla tastiera anche gli accordi.</string>
     <string name="settings_chord_names_shapes">Diteggiature</string>
     <string name="settings_chord_names_sounding">Come suonano</string>
+    <string name="settings_capo_keeps_key">Il capotasto mantiene la tonalità</string>
+    <string name="settings_capo_keeps_key_description">Un capotasto messo su un brano cambia solo le diteggiature, e il brano resta nella sua tonalità. Un capotasto scritto nel file del brano ne stabilisce comunque la tonalità.</string>
     <string name="settings_metronome_description">La scheda Metronomo e il clic nella schermata di una canzone, insieme al tempo e all\'indicazione di tempo di ogni canzone</string>
     <string name="settings_tuner_description">La scheda Accordatore e il microfono con cui ascolta</string>
     <string name="settings_scales_description">La scheda Scale: tutte le scale e i modi che l\'app conosce, disegnati sul tuo strumento</string>
@@ -976,6 +978,8 @@
     <string name="chord_names_explanation">Con il capotasto, gli accordi di una canzone possono prendere il nome dalle diteggiature che suoni sopra di esso o da come suonano.</string>
     <string name="chord_names_shapes_description">Gli accordi che diteggi sopra il capotasto, come li scrivono gli spartiti per capotasto</string>
     <string name="chord_names_sounding_description">Gli accordi che si sentono, per suonare insieme ad altri senza capotasto</string>
+    <string name="chord_names_keep_key">Mantieni la tonalità</string>
+    <string name="chord_names_keep_key_description">Il brano resta nella sua tonalità e il capotasto cambia solo le diteggiature, con gli accordi chiamati come suonano</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Trasposizione</string>
     <string name="song_details_transpose_up">Trasponi su</string>

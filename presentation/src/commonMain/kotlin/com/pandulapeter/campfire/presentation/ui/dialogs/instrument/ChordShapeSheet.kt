@@ -100,7 +100,7 @@ internal fun ChordShapeSheet(
     val playback = songPlaybackOf(
         song = song,
         setlistFileName = dialog.setlistFileName,
-        overrides = PlayingOverridesSnapshot(transpositions = transpositions, capos = capos),
+        overrides = PlayingOverridesSnapshot(transpositions = transpositions, capos = capos, capoKeepsKey = userPreferences?.capoKeepsKey == true),
     )
     val transposition = playback.soundingTransposition
     val capo = playback.shapeCapoFor(userPreferences)

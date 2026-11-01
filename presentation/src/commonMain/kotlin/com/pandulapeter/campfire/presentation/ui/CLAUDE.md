@@ -184,6 +184,9 @@ The view model facade, the composition root, and the product rules every screen 
     fingered above the capo (default) or by what sounds (`ui/playing/CLAUDE.md`); disabled with songs or chords off and
     on the keyboard, which always reads what sounds, as its description says. Asked once, over the first song a capo
     matters on (`screens/songDetails`), never with the layout question.
+  - **Capo keeps the key** (`capoKeepsKey`, after Chord names): a capo put on changes only the shapes, the file's
+    `{capo}` alone being pitch (`ui/playing/CLAUDE.md`). Enabled on the keyboard too, for which a capo then changes
+    nothing; the question's third answer.
   - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
     at the song's pace, asked once by the onboarding or over the first song (`screens/songDetails/autoScroll`). The one
     choice here that rearranges rather than hides.

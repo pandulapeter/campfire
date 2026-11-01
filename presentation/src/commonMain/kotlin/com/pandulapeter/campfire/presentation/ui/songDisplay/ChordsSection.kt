@@ -21,6 +21,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_des
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
+import com.pandulapeter.campfire.presentation.resources.settings_capo_keeps_key
+import com.pandulapeter.campfire.presentation.resources.settings_capo_keeps_key_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
@@ -32,6 +34,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_notation_descri
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
+import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
@@ -41,8 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
  * How the chords are written, in the Preferences tab and first in the song display sheet: their notation, their
- * accidentals, and whether a song's chords name the shapes fingered above its capo or what sounds. The instrument is not
- * here: it is picked where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding).
+ * accidentals, whether a song's chords name the shapes fingered above its capo or what sounds, and whether its capo
+ * stepper keeps the key. The instrument is not here: it is picked where it is used (song details, the Tuner, the Chords
+ * and the Scales tabs, and the onboarding).
  */
 @Composable
 internal fun ChordsSection(
@@ -50,6 +54,7 @@ internal fun ChordsSection(
     onNotationClicked: () -> Unit,
     onAccidentalsSelected: (UserPreferences.Accidentals) -> Unit,
     onChordNamesSelected: (ChordNames) -> Unit,
+    onCapoKeepsKeyChanged: (Boolean) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_chords)) {
     // The notation and the accidentals only decide how a chord or a key is written, so with nothing on that names one
     // they have nothing to say. They stay in the section rather than disappearing from it: what they are set to is still
@@ -102,6 +107,15 @@ internal fun ChordsSection(
             onSelected = onChordNamesSelected,
         )
     }
+    // Unlike the names, this moves what the band hears, so it applies on the keyboard too, whose capo stepper is the
+    // band's.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_capo_keeps_key),
+        description = stringResource(Res.string.settings_capo_keeps_key_description),
+        isChecked = userPreferences?.capoKeepsKey == true,
+        isEnabled = userPreferences?.areSongsEnabled != false && userPreferences?.areChordsEnabled != false,
+        onCheckedChange = onCapoKeepsKeyChanged,
+    )
 }
 
 /**

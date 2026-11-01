@@ -102,8 +102,13 @@ internal class PlayingOverrides(
     /** Every song's capo override, as the song details screen and the lists that name a sounding key read it. */
     val capos = capoOverrides.effective.asState(scope, Capos())
 
-    /** The three overrides of how a song is played as one value, for the screens that read all three. */
-    val playingOverrides = combine(transpositions, capos, tempos, ::PlayingOverridesSnapshot).asState(scope, PlayingOverridesSnapshot())
+    /**
+     * The three overrides of how a song is played as one value, for the screens that read all three, with what a capo
+     * put on means to this reader.
+     */
+    val playingOverrides = combine(transpositions, capos, tempos, userPreferences) { transpositions, capos, tempos, userPreferences ->
+        PlayingOverridesSnapshot(transpositions = transpositions, capos = capos, tempos = tempos, capoKeepsKey = userPreferences?.capoKeepsKey == true)
+    }.asState(scope, PlayingOverridesSnapshot())
 
     /**
      * One step of the transposition stepper. A song opened from a setlist transposes inside that setlist; one opened from

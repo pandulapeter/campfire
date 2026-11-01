@@ -51,6 +51,7 @@ internal data class UserPreferencesDocument(
     val areChordDegreesEnabled: Boolean = false,
     val chordNames: String = "",
     val isChordNamesChosen: Boolean = false,
+    val capoKeepsKey: Boolean = false,
     val isChordLibraryEnabled: Boolean = true,
     val areScalesEnabled: Boolean = true,
     val areScaleSuggestionsEnabled: Boolean = true,

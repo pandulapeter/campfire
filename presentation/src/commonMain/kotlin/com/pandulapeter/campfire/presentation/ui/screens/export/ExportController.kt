@@ -173,6 +173,7 @@ internal class ExportController(
         val suggestsScales = FeatureSwitches.of(preferences).areScaleSuggestionsEnabled && preferences?.areChordsEnabled != false
         // The diagrams name their degrees in print wherever they do on the screen.
         val showsDegrees = preferences?.areChordDegreesEnabled == true
+        val capoKeepsKey = preferences?.capoKeepsKey == true
         // The tabs are printed for the reader as the screen shows them: theirs, moved to their strings.
         val tabs = preferences?.let { tabReadingOf(preferences = it, labels = tabNoticeLabels, isMoved = true) }
         val printSongs = entries.mapIndexed { index, entry ->
@@ -185,10 +186,10 @@ internal class ExportController(
             val tempo = effectiveTempo.takeUnless { it.isDefault }?.bpm
             val effectiveCapo = effectiveCapoOf(entry.songFileName, setlistFileName)
             val capo = effectiveCapo.takeUnless { it.isDefault }?.fret
-            val playback = SongPlayback(transposition = playedTransposition, capo = effectiveCapo, tempo = effectiveTempo)
-            // The pages name the chords as the screen does: what sounds, the capo played counted in, or the shapes fingered
-            // above it ([shapeNames]); the diagrams are the shapes played above the capo, none on the keyboard, which still
-            // prints the capo, since it raises the pitch for every instrument.
+            val playback = SongPlayback(transposition = playedTransposition, capo = effectiveCapo, tempo = effectiveTempo, capoKeepsKey = capoKeepsKey)
+            // The pages name the chords as the screen does: what sounds, the capo played counted in unless it keeps the key,
+            // or the shapes fingered above it ([shapeNames]); the diagrams are the shapes played above the capo, none on the
+            // keyboard, which still prints the capo, since it raises the pitch for every instrument where it does.
             val transposition = playback.soundingTransposition
             val shapeCapo = playback.shapeCapoFor(preferences)
             val tabCapo = playback.tabCapoFor(preferences)

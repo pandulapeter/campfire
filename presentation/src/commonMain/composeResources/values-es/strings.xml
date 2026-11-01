@@ -432,6 +432,8 @@
     <string name="settings_chord_names_description">Con capo, los acordes de una canción se nombran por las formas que se pisan sobre él o por cómo suenan. La tonalidad de la canción siempre dice cómo suena, y en un teclado también los acordes.</string>
     <string name="settings_chord_names_shapes">Formas</string>
     <string name="settings_chord_names_sounding">Cómo suenan</string>
+    <string name="settings_capo_keeps_key">El capo mantiene la tonalidad</string>
+    <string name="settings_capo_keeps_key_description">Un capo puesto en una canción solo cambia las formas que pisas, y la canción se queda en su tonalidad. Un capo escrito en el archivo de la canción sigue fijando su tonalidad.</string>
     <string name="settings_metronome_description">La pestaña Metrónomo y el clic en la pantalla de una canción, además del tempo y el compás de cada canción</string>
     <string name="settings_tuner_description">La pestaña Afinador y el micrófono con el que escucha</string>
     <string name="settings_scales_description">La pestaña Escalas: todas las escalas y modos que conoce la app, dibujados en tu instrumento</string>
@@ -976,6 +978,8 @@
     <string name="chord_names_explanation">Con capo, los acordes de una canción pueden nombrarse por las formas que tocas sobre él o por cómo suenan.</string>
     <string name="chord_names_shapes_description">Los acordes que pisas sobre el capo, como se escriben las partituras con capo</string>
     <string name="chord_names_sounding_description">Los acordes que se oyen, para tocar junto a otros sin capo</string>
+    <string name="chord_names_keep_key">Mantener la tonalidad</string>
+    <string name="chord_names_keep_key_description">La canción se queda en su tonalidad y el capo solo cambia las formas que pisas, con los acordes nombrados por cómo suenan</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposición</string>
     <string name="song_details_transpose_up">Transponer hacia arriba</string>

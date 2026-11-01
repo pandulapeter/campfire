@@ -98,7 +98,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   sheet is gone. The sheet names the song's key both ways ("in Em by the shapes, in F#m as it sounds"; generic words
   where the song names no key), and each card ends in the song's first four chords named its way, as the page would
   (`leadingChordNames`: the reader's notation and transposition, the shapes read at `namingTransposition`); a capo just
-  stepped to none is exemplified by the one it was stepped from, so the two never read alike. Both are marked asked as they are shown, so a dismissal keeps the default and is never
+  stepped to none is exemplified by the one it was stepped from, so the two never read alike. A third card, with no
+  chords, keeps the key (`capoKeepsKey`, named as they sound), which brings a capo just stepped back to the song's
+  pitch at once. Both are marked asked as they are shown, so a dismissal keeps the default and is never
   asked again; a pick in Preferences answers it too (`isChordNamesChosen`).
 
 ### The menu's own entries

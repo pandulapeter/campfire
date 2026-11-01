@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chord_names_example
 import com.pandulapeter.campfire.presentation.resources.chord_names_explanation
+import com.pandulapeter.campfire.presentation.resources.chord_names_keep_key
+import com.pandulapeter.campfire.presentation.resources.chord_names_keep_key_description
 import com.pandulapeter.campfire.presentation.resources.chord_names_shapes_description
 import com.pandulapeter.campfire.presentation.resources.chord_names_sounding_description
 import com.pandulapeter.campfire.presentation.resources.chord_names_title
@@ -48,7 +50,8 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerCol
  * The question the first song a capo matters on asks once, over that song: whether its chords are named by the shapes
  * fingered above the capo or by what sounds, told with the song's own key both ways where it names one (in general words
  * where it does not), and each card ending in the song's first chords named its way, so the choice is seen rather than
- * imagined. Built as the layout question ([SongLayoutSheet]) is, so
+ * imagined. A third card keeps the key instead (`UserPreferences.capoKeepsKey`): the chords named as they sound and a capo
+ * changing only the shapes. Built as the layout question ([SongLayoutSheet]) is, so
  * the two read as one family: a pick is written at once and closes the sheet, the song behind it changing as it goes;
  * closing it without one keeps the shapes, which is what is shown as picked.
  */
@@ -75,11 +78,13 @@ internal fun ChordNamesSheet(
                 .padding(bottom = 16.dp),
         ) {
             ChordNamesMessage(dialog = dialog)
+            val capoKeepsKey = userPreferences?.capoKeepsKey == true
             ChordNamesChoices(
                 exampleChords = dialog.exampleChords(),
-                selected = userPreferences?.chordNames,
-                onSelected = { chordNames ->
-                    viewModel.preferencesController.setChordNames(chordNames)
+                chordNames = userPreferences?.chordNames,
+                capoKeepsKey = capoKeepsKey,
+                onSelected = { answer ->
+                    viewModel.preferencesController.answerChordNamesQuestion(chordNames = answer.chordNames, capoKeepsKey = answer.keepsKey)
                     sheet.close()
                 },
             )
@@ -132,25 +137,55 @@ internal fun DialogType.ChordNames.exampleChords() = if (shapesChords.isNotEmpty
 
 private const val CHORD_SEPARATOR = " · "
 
+/** The question's answers: the two ways of naming chords under a capo that raises the pitch, and keeping the key. */
+private enum class CapoAnswer(
+    val chordNames: ChordNames,
+    val keepsKey: Boolean,
+) {
+    SHAPES(ChordNames.SHAPES, keepsKey = false),
+    SOUNDING(ChordNames.SOUNDING, keepsKey = false),
+    KEEP_KEY(ChordNames.SOUNDING, keepsKey = true),
+}
+
 @Composable
 private fun ChordNamesChoices(
     exampleChords: Pair<String, String>?,
-    selected: ChordNames?,
-    onSelected: (ChordNames) -> Unit,
+    chordNames: ChordNames?,
+    capoKeepsKey: Boolean,
+    onSelected: (CapoAnswer) -> Unit,
 ) = Column(
     modifier = Modifier.fillMaxWidth().selectableGroup(),
     verticalArrangement = Arrangement.spacedBy(12.dp),
 ) {
-    ChordNames.entries.forEach { chordNames ->
-        val isShapes = chordNames == ChordNames.SHAPES
+    CapoAnswer.entries.forEach { answer ->
         ChoiceCard(
             modifier = Modifier.fillMaxWidth(),
-            title = stringResource(if (isShapes) Res.string.settings_chord_names_shapes else Res.string.settings_chord_names_sounding),
-            description = stringResource(if (isShapes) Res.string.chord_names_shapes_description else Res.string.chord_names_sounding_description),
-            detail = exampleChords?.let { (shapes, sounding) -> if (isShapes) shapes else sounding },
-            isSelected = chordNames == selected,
+            title = stringResource(
+                when (answer) {
+                    CapoAnswer.SHAPES -> Res.string.settings_chord_names_shapes
+                    CapoAnswer.SOUNDING -> Res.string.settings_chord_names_sounding
+                    CapoAnswer.KEEP_KEY -> Res.string.chord_names_keep_key
+                },
+            ),
+            description = stringResource(
+                when (answer) {
+                    CapoAnswer.SHAPES -> Res.string.chord_names_shapes_description
+                    CapoAnswer.SOUNDING -> Res.string.chord_names_sounding_description
+                    CapoAnswer.KEEP_KEY -> Res.string.chord_names_keep_key_description
+                },
+            ),
+            // Keeping the key is about what a capo changes rather than what the chords are called, which a row of chord
+            // names would not show.
+            detail = exampleChords?.let { (shapes, sounding) ->
+                when (answer) {
+                    CapoAnswer.SHAPES -> shapes
+                    CapoAnswer.SOUNDING -> sounding
+                    CapoAnswer.KEEP_KEY -> null
+                }
+            },
+            isSelected = answer.keepsKey == capoKeepsKey && (answer.keepsKey || answer.chordNames == chordNames),
             role = Role.RadioButton,
-            onClick = { onSelected(chordNames) },
+            onClick = { onSelected(answer) },
         )
     }
 }

@@ -121,6 +121,12 @@ data class UserPreferences(
     /** Whether [chordNames] was picked, in Preferences or in the question the first capoed song asks. */
     val isChordNamesChosen: Boolean = false,
     /**
+     * Whether a capo a setlist or this device puts on a song keeps it in its key, changing only the shapes fingered, rather
+     * than raising the pitch. The file's own `{capo}` still says what pitch the song is written for. Never exported or
+     * synced, like [chordNames]: it is how one player reads a capo, so a setlist's capo can mean either on two devices.
+     */
+    val capoKeepsKey: Boolean = false,
+    /**
      * Whether the app has a chord library: the Chords tab, and the chords a scale sheet lists. It follows neither
      * [areChordsEnabled] nor [areChordDiagramsEnabled], which are about how a song is read.
      */

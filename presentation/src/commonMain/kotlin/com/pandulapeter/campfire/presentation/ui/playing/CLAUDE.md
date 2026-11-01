@@ -53,8 +53,8 @@ The values a song is played with and where each is kept.
 
 ### What sounds and what is fingered
 
-- **Every capo keeps the shapes and raises the pitch**, the file's `{capo}` and one a setlist or the device puts on
-  alike: the file's chords are the shapes fingered above the capo played, so the shapes are the written chords moved by
+- **Every capo keeps the shapes and raises the pitch** (unless the reader keeps the key, below), the file's `{capo}` and
+  one a setlist or the device puts on alike: the file's chords are the shapes fingered above the capo played, so the shapes are the written chords moved by
   the transposition alone, and a capo change never moves a shape, a `{define}`, or a tab's fret.
 - **What sounds** (`SongPlayback.soundingTransposition`) is the file's chords moved by the transposition and the
   effective capo: the header's key, the cards and rows, the scales, and the Chords section's notes and degrees read it.
@@ -72,6 +72,13 @@ The values a song is played with and where each is kept.
   keyboard (`playsWithoutCapo`), which plays what sounds, the effective capo counted in. Since a capo raises the pitch for
   everybody, the keyboard has the capo stepper, the capo in the read only line and the PDF, and Song defaults too, so a
   pianist sees why the key moved and can set or reset the band's capo.
+- **Capo keeps the key** (`UserPreferences.capoKeepsKey`, carried by `PlayingOverridesSnapshot` into `SongPlayback`):
+  the reverse reading, for players who want a capo to change only the fingering. The pitch counts the file's `{capo}`
+  alone (`pitchCapo`), so a capo a setlist or the device puts on keeps what sounds, and the shapes, `{define}`s (held
+  only where a hand can, as after a transposition), and tabs' frets move down by it instead (`shapeCapoFor`,
+  `tabCapoFor`). It is a reading, not a write: switching it rereads every song at once, the transposition stepper keeps
+  showing only the reader's own transposition, and one setlist capo sounds differently on two devices that read capos
+  differently.
 - **Tabs move with the shapes**: counted from the capo they are played above, they move by the transposition alone
   (`tabCapoFor`, `ChordProTransposer`'s `capo`).
 - The scales read the song with the file's capo line, which says how its `{key}` is meant (`SongKeys`); the page's capo

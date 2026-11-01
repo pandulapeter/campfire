@@ -101,6 +101,33 @@ class SongPlaybackTest {
     }
 
     @Test
+    fun `a capo override that keeps the key keeps the pitch the file's capo gives and moves the shapes down by itself`() {
+        val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR, capoKeepsKey = true)
+        val shapeMove = { playback: SongPlayback -> playback.soundingTransposition - playback.shapeCapoFor(guitar) }
+        val fretMove = { playback: SongPlayback -> playback.soundingTransposition - playback.tabCapoFor(guitar) }
+        // The file's G shapes at capo 2 sound in A, as they do for every reader.
+        val own = songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot(capoKeepsKey = true))
+        assertEquals(2, own.soundingTransposition)
+        assertEquals(0, shapeMove(own))
+        // At capo 5 they still sound in A, fingered as E shapes, and a tab moves down with them.
+        val raised = songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot(capos = Capos().with(library, 5), capoKeepsKey = true))
+        assertEquals(2, raised.soundingTransposition)
+        assertEquals(-3, shapeMove(raised))
+        assertEquals(-3, fretMove(raised))
+        // Taken off, the A is played open, two frets up the neck from the written shapes.
+        val takenOff = songPlaybackOf(song, setlistFileName = SETLIST, overrides = PlayingOverridesSnapshot(capos = Capos().with(setlist, 0), capoKeepsKey = true))
+        assertEquals(2, takenOff.soundingTransposition)
+        assertEquals(2, shapeMove(takenOff))
+        // The reader's own transposition still moves what sounds.
+        val transposed = PlayingOverridesSnapshot(
+            transpositions = Transpositions(SongOverrides<Int>().with(library, 3)),
+            capos = Capos().with(library, 5),
+            capoKeepsKey = true,
+        )
+        assertEquals(5, songPlaybackOf(song, setlistFileName = null, overrides = transposed).soundingTransposition)
+    }
+
+    @Test
     fun `a tab's frets move by the transposition alone, whatever the capo`() {
         val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
         val fretMove = { playback: SongPlayback -> playback.soundingTransposition - playback.tabCapoFor(guitar) }

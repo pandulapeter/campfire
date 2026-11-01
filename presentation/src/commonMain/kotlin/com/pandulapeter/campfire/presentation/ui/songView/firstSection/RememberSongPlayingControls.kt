@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor
+import com.pandulapeter.campfire.presentation.ui.playing.pitchCapo
 import com.pandulapeter.campfire.presentation.ui.playing.namingTransposition
 import com.pandulapeter.campfire.presentation.ui.playing.SEMITONES_PER_OCTAVE
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
@@ -57,17 +58,17 @@ internal fun rememberSongPlayingControls(
     if (!shouldShowChords && !shouldShowTempo) return null
     val (transposition, capo, tempo) = playback
     val canTranspose = shouldShowChords && song.hasChords
-    // The key the page's chords are in: the one they sound in, the capo played counted in, or where they are named as the
-    // shapes fingered above it, the shapes' key, which only the transposition moves. The stepper itself reads the reader's
-    // own semitones, which it steps.
-    val capoFret = capo.fret
+    // The key the page's chords are in: the one they sound in, the capo played counted in unless it keeps the key, or
+    // where they are named as the shapes fingered above it, the shapes' key. The stepper itself reads the reader's own
+    // semitones, which it steps.
+    val pitchCapo = playback.pitchCapo
     val nameCapo = playback.nameCapoFor(userPreferences)
     val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
-    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, capoFret, nameCapo, inferredKey) {
+    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, pitchCapo, nameCapo, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, capoFret) - nameCapo, spelling = chordSpelling, inferredKey = inferredKey)
+            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, pitchCapo) - nameCapo, spelling = chordSpelling, inferredKey = inferredKey)
             transpositionValue(transposition, shownKey)
         }
     }

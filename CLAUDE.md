@@ -164,7 +164,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names; the keyboard always sounds), and
-  the diagrams are the shapes fingered above it: `ui/playing`, `ui/chords`.
+  the diagrams are the shapes fingered above it; with Capo keeps the key, a capo put on changes only the shapes and the
+  file's capo alone is pitch: `ui/playing`, `ui/chords`.
 - Settings → Features switches what the app has (its screens and what goes online), Settings → Preferences how a song
   is read (chords, their diagrams and degrees, scale suggestions), also from the song details menu; both only hide,
   never write or delete: `ui`.

@@ -243,6 +243,13 @@ internal class PreferencesController(
     /** Picking how chords are named also answers the question the first capoed song asks about it. */
     fun setChordNames(value: ChordNames) = changeUserPreferences { copy(chordNames = value, isChordNamesChosen = true) }
 
+    /** Whether the capo stepper keeps the key, which is part of the same question as [setChordNames]. */
+    fun setCapoKeepsKey(value: Boolean) = changeUserPreferences { copy(capoKeepsKey = value, isChordNamesChosen = true) }
+
+    /** An answer to the question the first capoed song asks, which sets both halves of how a capo is read at once. */
+    fun answerChordNamesQuestion(chordNames: ChordNames, capoKeepsKey: Boolean) =
+        changeUserPreferences { copy(chordNames = chordNames, capoKeepsKey = capoKeepsKey, isChordNamesChosen = true) }
+
     /** The question about chord names has been put over a capoed song, and is not asked again. */
     fun markChordNamesChosen() = changeUserPreferences { if (isChordNamesChosen) this else copy(isChordNamesChosen = true) }
 

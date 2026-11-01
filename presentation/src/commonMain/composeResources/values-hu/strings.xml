@@ -432,6 +432,8 @@
     <string name="settings_chord_names_description">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kapják a nevüket. A dal hangneme mindig azt mondja meg, hogyan szól, és billentyűn az akkordok is.</string>
     <string name="settings_chord_names_shapes">Fogások</string>
     <string name="settings_chord_names_sounding">Hangzás</string>
+    <string name="settings_capo_keeps_key">A capo megtartja a hangnemet</string>
+    <string name="settings_capo_keeps_key_description">A dalra tett capo csak a lefogott fogásokat változtatja meg, a dal a hangnemében marad. A dalfájlba írt capo továbbra is a hangnemét adja meg.</string>
     <string name="settings_metronome_description">A Metronóm fül és a dalok képernyőjén a metronóm, a dalok tempójával és ütemmutatójával együtt</string>
     <string name="settings_tuner_description">A Hangoló fül, és a mikrofon, amelyen keresztül hallgat</string>
     <string name="settings_scales_description">A Skálák fül: minden skála és modus, amit az app ismer, a hangszereden ábrázolva</string>
@@ -975,6 +977,8 @@
     <string name="chord_names_explanation">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kaphatnak nevet.</string>
     <string name="chord_names_shapes_description">A capo fölött lefogott akkordok, ahogy a capós kották írják</string>
     <string name="chord_names_sounding_description">A hallható akkordok, capo nélküli együttjátszáshoz</string>
+    <string name="chord_names_keep_key">Hangnem megtartása</string>
+    <string name="chord_names_keep_key_description">A dal a hangnemében marad, a capo csak a lefogott fogásokat változtatja meg, az akkordok pedig a hangzásuk szerint kapják a nevüket</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>

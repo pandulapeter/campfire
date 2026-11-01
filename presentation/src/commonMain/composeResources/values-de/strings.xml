@@ -432,6 +432,8 @@
     <string name="settings_chord_names_description">Mit Capo heißen die Akkorde eines Songs nach den Griffen darüber oder nach ihrem Klang. Die Tonart des Songs nennt immer den Klang, und auf dem Keyboard tun es auch die Akkorde.</string>
     <string name="settings_chord_names_shapes">Griffe</string>
     <string name="settings_chord_names_sounding">Klang</string>
+    <string name="settings_capo_keeps_key">Capo behält die Tonart</string>
+    <string name="settings_capo_keeps_key_description">Ein Capo, den du bei einem Song einstellst, ändert nur die Griffe, und der Song bleibt in seiner Tonart. Ein Capo in der Songdatei legt weiterhin seine Tonart fest.</string>
     <string name="settings_metronome_description">Der Tab „Metronom“ und der Klick auf der Seite eines Songs, dazu Tempo und Taktart jedes Songs</string>
     <string name="settings_tuner_description">Der Tab „Stimmgerät“ und das Mikrofon, über das es zuhört</string>
     <string name="settings_scales_description">Der Tab „Tonleitern“: alle Tonleitern und Modi, die die App kennt, auf deinem Instrument dargestellt</string>
@@ -976,6 +978,8 @@
     <string name="chord_names_explanation">Mit Capo können die Akkorde eines Songs nach den Griffen darüber oder nach ihrem Klang heißen.</string>
     <string name="chord_names_shapes_description">Die Akkorde, die du über dem Capo greifst, so wie Capo-Charts sie schreiben</string>
     <string name="chord_names_sounding_description">Die Akkorde, die zu hören sind, zum Mitspielen ohne Capo</string>
+    <string name="chord_names_keep_key">Tonart behalten</string>
+    <string name="chord_names_keep_key_description">Der Song bleibt in seiner Tonart, und der Capo ändert nur die Griffe, mit den Akkorden nach ihrem Klang benannt</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Hoch transponieren</string>

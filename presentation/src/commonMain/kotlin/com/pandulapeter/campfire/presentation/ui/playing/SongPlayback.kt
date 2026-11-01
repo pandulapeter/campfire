@@ -14,20 +14,29 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
-/** Every override of how a song is played, as one value the screens that read all three collect once. */
+/**
+ * Every override of how a song is played, as one value the screens that read all three collect once, with how the
+ * reader reads a capo put on ([capoKeepsKey], `UserPreferences.capoKeepsKey`), which decides what the capo override means.
+ */
 @Immutable
 internal data class PlayingOverridesSnapshot(
     val transpositions: Transpositions = Transpositions(),
     val capos: Capos = Capos(),
     val tempos: Tempos = Tempos(),
+    val capoKeepsKey: Boolean = false,
 )
 
-/** How a song is played where it is opened: the transposition, the capo and the tempo, overrides applied. */
+/**
+ * How a song is played where it is opened: the transposition, the capo and the tempo, overrides applied.
+ *
+ * @param capoKeepsKey Whether a capo put on keeps the song's pitch rather than raising it, see [pitchCapo].
+ */
 @Immutable
 internal data class SongPlayback(
     val transposition: Int,
     val capo: EffectiveCapo,
     val tempo: EffectiveTempo,
+    val capoKeepsKey: Boolean = false,
 )
 
 /** [song] as it is played opened from [setlistFileName], or from the library for null, see [SongOverrides]. */
@@ -35,16 +44,24 @@ internal fun songPlaybackOf(song: Song, setlistFileName: String?, overrides: Pla
     transposition = overrides.transpositions[song.fileName, setlistFileName],
     capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = overrides.capos),
     tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = overrides.tempos),
+    capoKeepsKey = overrides.capoKeepsKey,
 )
 
 /**
- * The semitones that take the file's chords to the ones that sound where the song is opened: the reader's transposition
- * and the effective capo, wrapped around the octave as the stepper wraps. The file's chords are the shapes fingered above
- * a capo, the file's own `{capo}` or the one the setlist or the device puts on instead, so every capo keeps the shapes
- * ([shapeCapoFor]) and raises the pitch. The key, the cards, and the scales name what sounds on every instrument; a song's
- * chords are named [nameCapoFor] lower ([namingTransposition]).
+ * The fret counted into the pitch: the effective capo, so that every capo keeps the shapes and raises the pitch, or,
+ * where the reader keeps the key ([SongPlayback.capoKeepsKey]), the file's own `{capo}`, which says what pitch its shapes
+ * are written for, so that a capo the setlist or the device puts on changes only the shapes fingered under it.
  */
-internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, capo.fret)
+internal val SongPlayback.pitchCapo get() = if (capoKeepsKey) capo.songFret else capo.fret
+
+/**
+ * The semitones that take the file's chords to the ones that sound where the song is opened: the reader's transposition
+ * and the [pitchCapo], wrapped around the octave as the stepper wraps. The file's chords are the shapes fingered above
+ * its capo, so a capo keeps the shapes and raises the pitch, unless the reader keeps the key, when a capo put on keeps
+ * the pitch and changes the shapes ([shapeCapoFor]). The key, the cards, and the scales name what sounds on every
+ * instrument; a song's chords are named [nameCapoFor] lower ([namingTransposition]).
+ */
+internal val SongPlayback.soundingTransposition get() = soundingTransposition(transposition, pitchCapo)
 
 /**
  * The semitones below the chords that sound that a song's chords are named at, over the lyrics, in its comments, in its
@@ -58,10 +75,11 @@ internal fun SongPlayback.namingTransposition(preferences: UserPreferences?) = s
 
 /**
  * The semitones of [soundingTransposition] a tab's frets are not moved by: a tab is counted from the capo it is played
- * above ([shapeCapoFor]), so it moves by the reader's transposition alone, as the shapes do. The octave the wrap took is
- * counted in, so that the frets move by the unwrapped amount.
+ * above ([shapeCapoFor]), so it moves by the reader's transposition and by the [pitchCapo] less that capo, which is
+ * nothing unless a capo put on keeps the key, as the shapes move. The octave the wrap took is counted in, so that the
+ * frets move by the unwrapped amount.
  */
-internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTransposition - transposition - capo.fret + shapeCapoFor(preferences)
+internal fun SongPlayback.tabCapoFor(preferences: UserPreferences?) = soundingTransposition - transposition - pitchCapo + shapeCapoFor(preferences)
 
 /**
  * The fret the shapes the player frets sit above, a chord's sounding name moved down by it naming its shape (a capo of 2

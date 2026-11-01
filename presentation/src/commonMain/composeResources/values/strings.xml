@@ -432,6 +432,8 @@
     <string name="settings_chord_names_description">With a capo on, a song\'s chords are named by the shapes fingered above it, or by how they sound. The song\'s key always says how it sounds, and on a keyboard the chords do too.</string>
     <string name="settings_chord_names_shapes">Shapes</string>
     <string name="settings_chord_names_sounding">Sounding</string>
+    <string name="settings_capo_keeps_key">Capo keeps the key</string>
+    <string name="settings_capo_keeps_key_description">A capo set on a song changes only the shapes you finger, and the song stays in its key. A capo written in the song file still sets its key.</string>
     <string name="settings_metronome_description">The Metronome tab and the click on a song\'s screen, along with the tempo and the time signature of every song</string>
     <string name="settings_tuner_description">The Tuner tab, and the microphone it listens through</string>
     <string name="settings_scales_description">The Scales tab: every scale and mode the app knows, drawn on your instrument</string>
@@ -976,6 +978,8 @@
     <string name="chord_names_explanation">With a capo on, a song\'s chords can be named by the shapes you play above it, or by how they sound.</string>
     <string name="chord_names_shapes_description">The chords you finger above the capo, the way capo charts are written</string>
     <string name="chord_names_sounding_description">The chords that are heard, for playing along without a capo</string>
+    <string name="chord_names_keep_key">Keep the key</string>
+    <string name="chord_names_keep_key_description">The song stays in its key and the capo only changes the shapes you finger, with the chords named as they sound</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transpose up</string>

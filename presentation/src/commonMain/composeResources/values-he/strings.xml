@@ -466,6 +466,8 @@
     <string name="settings_chord_names_description">עם קאפו, האקורדים של שיר נקראים לפי הצורות שנלחצות מעליו או לפי איך שהם נשמעים. הטונליות של השיר תמיד אומרת איך הוא נשמע, ובקלידים גם האקורדים.</string>
     <string name="settings_chord_names_shapes">צורות</string>
     <string name="settings_chord_names_sounding">צליל</string>
+    <string name="settings_capo_keeps_key">הקאפו שומר על הטונליות</string>
+    <string name="settings_capo_keeps_key_description">קאפו שמוסיפים לשיר משנה רק את הצורות שנלחצות, והשיר נשאר בטונליות שלו. קאפו שכתוב בקובץ השיר עדיין קובע את הטונליות שלו.</string>
     <string name="settings_metronome_description">הלשונית “מטרונום” והקליק במסך השיר, יחד עם הטמפו והמשקל של כל שיר</string>
     <string name="settings_tuner_description">הלשונית “טיונר”, והמיקרופון שדרכו הוא מאזין</string>
     <string name="settings_scales_description">הלשונית “סולמות”: כל הסולמות והמודוסים שהאפליקציה מכירה, מוצגים על הכלי שלכם</string>
@@ -1012,6 +1014,8 @@
     <string name="chord_names_explanation">עם קאפו, אפשר לקרוא לאקורדים של שיר לפי הצורות שמנגנים מעליו או לפי איך שהם נשמעים.</string>
     <string name="chord_names_shapes_description">האקורדים שלוחצים מעל הקאפו, כמו שכותבים תווים לקאפו</string>
     <string name="chord_names_sounding_description">האקורדים שנשמעים, לנגינה יחד עם אחרים בלי קאפו</string>
+    <string name="chord_names_keep_key">שמירה על הטונליות</string>
+    <string name="chord_names_keep_key_description">השיר נשאר בטונליות שלו והקאפו משנה רק את הצורות שנלחצות, והאקורדים נקראים לפי איך שהם נשמעים</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">טרנספוזיציה</string>
     <string name="song_details_transpose_up">העלאת טונליות</string>

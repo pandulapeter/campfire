@@ -89,8 +89,9 @@ internal data class SongChord(
  *
  * The song is the one that sounds, and every shape is fingered above [capo] (see [SongChord.shapeChord]): a definition is
  * moved down the neck by it as a transposition moves one, so that whatever capo is played the file's own shapes come
- * back to where it wrote them, moved by the reader's transposition alone, and the app's and the player's shapes are
- * those of the chord moved down by it.
+ * back to where it wrote them, moved by the reader's transposition alone (and, where a capo put on keeps the key, by the
+ * frets it is from the file's, kept only where a hand can hold the result, as for a transposition), and the app's and the
+ * player's shapes are those of the chord moved down by it.
  *
  * [inferredKey] is the key the page counts a numbering from where the file names none (`SongRenderer.movedKey`).
  */

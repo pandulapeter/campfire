@@ -274,6 +274,14 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
+    fun `the capo stepper keeps the song's key only once asked to, and the choice survives a round trip`() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertFalse(defaults.capoKeepsKey)
+        val keepingKey = defaults.copy(capoKeepsKey = true)
+        assertEquals(keepingKey, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(keepingKey.toDocument())).document.toModel())
+    }
+
+    @Test
     fun `a document an older version wrote, which never asked how chords are named, reads as not yet asked`() {
         // As 5.2.0 wrote it: the layout already chosen, a guitar, and neither chord names field.
         val older = UserPreferencesDocumentFormat.decode("""{"isSongLayoutChosen": true, "instrument": "guitar", "areChordsEnabled": true}""").document.toModel()

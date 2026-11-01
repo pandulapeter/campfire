@@ -436,6 +436,8 @@
     <string name="settings_chord_names_description">Avec un capo, les accords d\'un morceau sont nommés d\'après les doigtés joués au-dessus ou d\'après leur son. La tonalité du morceau dit toujours comment il sonne, et au clavier les accords aussi.</string>
     <string name="settings_chord_names_shapes">Doigtés</string>
     <string name="settings_chord_names_sounding">Son réel</string>
+    <string name="settings_capo_keeps_key">Le capo garde la tonalité</string>
+    <string name="settings_capo_keeps_key_description">Un capo mis sur un morceau ne change que les doigtés, et le morceau reste dans sa tonalité. Un capo écrit dans le fichier du morceau fixe toujours sa tonalité.</string>
     <string name="settings_metronome_description">L\'onglet Métronome et le clic sur l\'écran d\'une chanson, ainsi que le tempo et la mesure de chaque chanson</string>
     <string name="settings_tuner_description">L\'onglet Accordeur, et le micro par lequel il écoute</string>
     <string name="settings_scales_description">L\'onglet Gammes : toutes les gammes et tous les modes que l\'app connaît, dessinés sur ton instrument</string>
@@ -981,6 +983,8 @@
     <string name="chord_names_explanation">Avec un capo, les accords d\'une chanson peuvent être nommés d\'après les doigtés joués au-dessus ou d\'après leur son.</string>
     <string name="chord_names_shapes_description">Les accords que tu doigtes au-dessus du capo, comme les grilles pour capo les écrivent</string>
     <string name="chord_names_sounding_description">Les accords qu\'on entend, pour jouer avec les autres sans capo</string>
+    <string name="chord_names_keep_key">Garder la tonalité</string>
+    <string name="chord_names_keep_key_description">Le morceau reste dans sa tonalité et le capo ne change que les doigtés, avec les accords nommés d\'après leur son</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transposer vers le haut</string>

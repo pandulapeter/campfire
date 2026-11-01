@@ -60,6 +60,7 @@ internal fun SongDisplaySheet(
                 onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
                 onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
                 onChordNamesSelected = viewModel.preferencesController::setChordNames,
+                onCapoKeepsKeyChanged = viewModel.preferencesController::setCapoKeepsKey,
             )
             SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
         }
