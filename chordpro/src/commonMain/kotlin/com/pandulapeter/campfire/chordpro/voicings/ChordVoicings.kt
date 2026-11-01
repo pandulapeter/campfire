@@ -30,7 +30,7 @@ import kotlin.concurrent.Volatile
  * fifth may go first, then the root, where there are more notes than strings), with the bass, or else the root, as the
  * lowest note that sounds (not on an instrument that plays the chord over its strings, [ChordInstrument.playsChordOver]:
  * the re-entrant ukulele, the mandolin, and the banjo), no muted string between two that sound, and no more than four
- * fingers, a barre counting as one. That is complete for its own rules,
+ * fingers, a barre counting as one; the shapes that keep the root come first. That is complete for its own rules,
  * which is all that "every shape" can honestly mean: what a hand can do is a matter of hands, and the shape a song
  * wants is often no voicing of its chord's name at all, which is what a `{define}` is for.
  *

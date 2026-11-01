@@ -200,7 +200,10 @@ internal object ChordVoicingSearch {
         )
     }
 
-    /** Every shape the search finds for [chord] on a fretted [tuning]'s strings, the lowest position first. */
+    /**
+     * Every shape the search finds for [chord] on a fretted [tuning]'s strings: the ones that sound the root first, then
+     * the rootless ones that sound no note twice, then the rest, each the lowest position first.
+     */
     fun search(chord: Chord, tuning: ChordTuning): List<ChordVoicing.Fretted> {
         val played = playedOn(chord, tuning.instrument)
         val strings = tuning.strings
@@ -250,15 +253,37 @@ internal object ChordVoicingSearch {
         return found.filter { frets -> found.none { other -> other != frets && frets.indices.all { frets[it] == null || frets[it] == other[it] } } }
             .map { ChordVoicing.Fretted(it) }
             .sortedWith(
-                compareBy<ChordVoicing.Fretted>({ position(it.frets) }, { -it.frets.count { fret -> fret != null } }, { stretch(it.frets) })
-                    .thenComparator { a, b -> compareFrets(a.frets, b.frets) },
+                compareBy<ChordVoicing.Fretted>(
+                    { rootBand(it.frets, played.root, strings, drone) },
+                    { position(it.frets) },
+                    { -it.frets.count { fret -> fret != null } },
+                    { stretch(it.frets) },
+                ).thenComparator { a, b -> compareFrets(a.frets, b.frets) },
             )
     }
 
     /**
+     * Where a shape of [frets] stands among the search's shapes of a chord with [root] on [strings]: 0 where it sounds the
+     * root, 1 where it leaves the root out but sounds no note on two strings, and 2 where it leaves the root out and
+     * sounds another note twice, a string that could have carried the root. A rootless shape is a real choice on four
+     * strings, so it is offered after the ones that keep the root rather than not at all; the [drone] string, which
+     * only ever rings open, does not count as a doubling.
+     */
+    private fun rootBand(frets: List<Int?>, root: Int, strings: List<Int>, drone: Int?): Int {
+        val notes = frets.indices.filter { frets[it] != null && it != drone }.map { (strings[it] + frets[it]!!) % 12 }
+        val soundsRoot = notes.contains(root) || drone != null && frets[drone] != null && (strings[drone] + frets[drone]!!) % 12 == root
+        return when {
+            soundsRoot -> 0
+            notes.size == notes.toSet().size -> 1
+            else -> 2
+        }
+    }
+
+    /**
      * The notes of [chord] a shape may leave out on an instrument of [strings] strings: the fifth of any chord of four
-     * notes or more, which says nothing the root does not, and the root as well where there are more notes than strings.
-     * The bass of a slash chord is never one of them.
+     * notes or more, which says nothing the root does not, and the root as well where there are more notes than strings,
+     * though [search] offers a shape that keeps it before any that does not ([rootBand]). The bass of a slash chord is
+     * never one of them.
      */
     private fun omissions(chord: Chord, strings: Int): Set<Int> {
         val fifth = ((chord.root + 7) % 12).takeIf { 7 in chord.intervals && chord.intervals.size >= 4 && it != chord.bass }

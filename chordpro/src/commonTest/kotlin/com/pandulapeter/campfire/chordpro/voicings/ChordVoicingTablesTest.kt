@@ -93,7 +93,32 @@ class ChordVoicingTablesTest {
     }
 
     @Test
+    fun `a shape that leaves out its chord's root sounds no note twice where its chord has a shape that does not`() {
+        tablesByTuning.forEach { (tuning, lines) ->
+            val instrument = tuning.instrument
+            lines.forEach { line ->
+                val shape = ChordProDefinitions.read(line, instrument.id) as ChordProDefinitions.Reading.Shape
+                val chord = ChordProChords.parse(shape.name)!!.let { if (instrument.playsChordOver) it.copy(bass = null) else it }
+                val voicing = shape.voicing as ChordVoicing.Fretted
+                if (chord.bass != null || !doublesWithoutRoot(chord.root, voicing, tuning)) return@forEach
+                val better = ChordVoicingSearch.search(chord, tuning)
+                    .filter { it.frets.filterNotNull().max() <= 12 }
+                    .any { !doublesWithoutRoot(chord.root, it, tuning) }
+                assertTrue(!better, "$line leaves out its root and sounds a note twice")
+            }
+        }
+    }
+
+    @Test
     fun `every table is checked here`() {
         ChordTuning.entries.filter { it.tableTuning == it }.forEach { assertTrue(it in tablesByTuning || !it.instrument.isFretted, it.id) }
+    }
+
+    /** Whether [voicing] leaves out [root] and sounds another note on two strings, the banjo's drone not counted. */
+    private fun doublesWithoutRoot(root: Int, voicing: ChordVoicing.Fretted, tuning: ChordTuning): Boolean {
+        if (root in ChordShapeGeometry.pitchClasses(voicing, tuning.strings)) return false
+        val drone = tuning.instrument.droneString
+        val notes = voicing.frets.indices.filter { voicing.frets[it] != null && it != drone }.map { (tuning.strings[it] + voicing.frets[it]!!) % 12 }
+        return notes.size != notes.toSet().size
     }
 }

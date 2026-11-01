@@ -31,8 +31,8 @@ package com.pandulapeter.campfire.chordpro.voicings
  * key, and on the guitar's tunings a triad over any bass and the inversions of the common sevenths and sixths. No
  * openly licensed library has them, so each was picked from the search's shapes by the same rules: an open-position
  * shape where the search's first takes three fingers or fewer below the fourth fret, then the moveable shape reaching the
- * most keys still without one, then the search's first, five frets wide where the chord has nothing within four, and
- * never past the twelfth fret. A chord whose shape one of them would have displaced has that shape filed under it.
+ * most keys still without one, then the search's first, which keeps the root wherever a shape of the chord does, five
+ * frets wide where the chord has nothing within four, and never past the twelfth fret. A chord whose shape one of them would have displaced has that shape filed under it.
  */
 internal object ChordVoicingTables {
 

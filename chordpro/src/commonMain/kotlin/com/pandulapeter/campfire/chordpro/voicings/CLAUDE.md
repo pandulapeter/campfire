@@ -14,7 +14,9 @@
   order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`
   is tolerant. A table is read on its first use (a `lazy`, which a second thread waits for); `ChordVoicings.prepare`
   reads it ahead, off the main thread. Every table ends in shapes picked from the search for the chords a chart names
-  that it had none for (the rules in `ChordVoicingTables`' KDoc); no player has reviewed them.
+  that it had none for (the rules in `ChordVoicingTables`' KDoc); no player has reviewed them. A table shape that leaves
+  out the root never sounds another note twice where its chord has a shape that does not (`ChordVoicingTablesTest`), and
+  the search offers rootless shapes only after every one that keeps the root.
 - **Every chord a seven-note scale stacks has a table shape in every key and fretted tuning** (`ScaleChordsTest`): the
   scale sheet draws only the tables'. Adding to a table never changes the shape a chord was shown with (a moved shape
   a new one would come before is filed under its chord). A table shape spans five frets only where its chord has no
