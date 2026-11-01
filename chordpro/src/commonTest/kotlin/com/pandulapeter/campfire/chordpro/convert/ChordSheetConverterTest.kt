@@ -786,6 +786,26 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a song whose later pages open with bold part names of the body's size stays one song`() {
+        fun line(text: String, bold: Boolean = false, size: Double = 10.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isBold = bold) })
+        val chords = line("G       C", bold = true)
+        fun page(vararg lines: ChordSheet.Line) = ChordSheet.Page(lines.toList())
+        val result = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    page(line("My Song", bold = true, size = 14.0), chords, line("Somebody told me"), chords, line("We were born to sing")),
+                    page(line("Repeat Chorus", bold = true), chords, line("Hey now you're a star"), chords, line("Get your game on")),
+                    page(line("Middle eight", bold = true), chords, line("It's a cool place"), chords, line("And it gets colder")),
+                ),
+            ),
+        )
+        assertEquals(1, result.size, result.joinToString("{new_song}\n"))
+        assertTrue(result.single().startsWith("{title: My Song}"), result.single())
+        assertTrue("[G]It's a [C]cool place" in result.single(), result.single())
+    }
+
+    @Test
     fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(

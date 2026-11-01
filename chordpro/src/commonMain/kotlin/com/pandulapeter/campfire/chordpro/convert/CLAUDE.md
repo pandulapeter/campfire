@@ -65,9 +65,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   index its chords would land in the opposite order. `chrome-hebrew` in `:data:source:local:implementation`'s document
   fixtures shows it: Chrome's print of the sheet in a `<pre dir="rtl">` and the plain text give the same song.
 - A document is cut into songs by `ChordSheetSongSplit`. The titles' type is the first one opening two songs of
-  different titles, else the document's first title's, so a cover in a type of its own does not stop the split. A
-  page opens a song with a title in that type (a bold title of the body's size not followed by more bold lyrics, which
-  is a chorus); a type larger than the body opens one on any line of a page, a line under one in its type being the
+  different titles that stands out by its size, or whose openings the contents list, else the document's first
+  title's, so a cover in a type of its own does not stop the split. A page opens a song with a title in that type (a
+  bold title of the body's size not followed by more bold lyrics, which is a chorus); a type larger than the body opens one on any line of a page, a line under one in its type being the
   title wrapped. A page repeating the current song's title continues it, the repetition left out where it is marked
   (`(cont.)`, a page number) or set in the title's type.
 - A contents page (`ChordSheetIndexTitles`: most of its lines, at least three, found again on three other pages or

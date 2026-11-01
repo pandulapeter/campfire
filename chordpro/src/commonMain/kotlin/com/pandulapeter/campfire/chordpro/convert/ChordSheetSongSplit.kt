@@ -45,10 +45,10 @@ internal object ChordSheetSongSplit {
 
     fun cuts(pages: List<List<Line>>, medianSize: Double): Cuts {
         val leads = pages.mapIndexed { pageIndex, page -> page.indexOfFirst { it.text.isNotBlank() }.takeIf { it >= 0 }?.let { lead(pages, Place(pageIndex, it)) } }
-        val reference = reference(leads.filterNotNull().filter { it.line.isTitle }, medianSize)
+        val index = ChordSheetIndexTitles.of(pages, ::key)
+        val reference = reference(leads.filterNotNull().filter { it.line.isTitle }, medianSize, index?.titles.orEmpty())
         val typed = reference?.let { typedOpenings(pages, leads, it, medianSize) }.orEmpty()
         val byType = typed.distinctBy { words(it.line.text) }.size >= 2
-        val index = ChordSheetIndexTitles.of(pages, ::key)
         // An index of artists names the credit under each title too, which is never in the titles' type, and an entry
         // wrapped by its column names the rest of a title wrapped by its own.
         val listed = index?.titles.orEmpty().filter { place ->
@@ -117,13 +117,17 @@ internal object ChordSheetSongSplit {
 
     /**
      * The first title whose type opens two songs of different titles, else the document's first title, whose type then
-     * opens no other song unless it opens one more page.
+     * opens no other song unless it opens one more page. Past the first title, a type of the body's size counts only
+     * where the contents ([listed]) name two of its openings: a sheet sets a part's name (`Repeat Chorus`, `Middle
+     * eight`) bold at the body's size as often as a title, and a contents page never lists one.
      */
-    private fun reference(titles: List<Lead>, medianSize: Double): Lead? {
+    private fun reference(titles: List<Lead>, medianSize: Double, listed: Set<Place>): Lead? {
         val first = titles.firstOrNull() ?: return null
         if (titles.count { opensSong(it, first, medianSize) } >= 2) return first
         return titles.firstOrNull { candidate ->
-            titles.filter { opensSong(it, candidate, medianSize) }.distinctBy { words(it.line.text) }.size >= 2
+            val opened = titles.filter { opensSong(it, candidate, medianSize) }
+            val standsOut = candidate.line.line.isHeading || size(candidate.line.line) > medianSize * 1.2
+            (standsOut || opened.count { it.place in listed } >= 2) && opened.distinctBy { words(it.line.text) }.size >= 2
         } ?: first
     }
 
