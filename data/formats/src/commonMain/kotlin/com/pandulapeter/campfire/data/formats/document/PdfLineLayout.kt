@@ -120,6 +120,7 @@ internal object PdfLineLayout {
         val count = ((right - left) / step).toInt() + 1
         val rows = glyphs.groupBy { (it.y / 3).roundToInt() }.values.map { row -> row.sortedBy { it.span.start } }
         val blocked = IntArray(count + 1)
+        val blockedCharacters = IntArray(count + 1)
         val segments = mutableListOf<Segment>()
         for (row in rows) {
             var start = row.first().span.start
@@ -128,7 +129,12 @@ internal object PdfLineLayout {
             fun block() {
                 val from = (floor((start - left) / step) + 1).toInt().coerceAtLeast(0)
                 val to = (ceil((end + band - left) / step) - 1).toInt().coerceAtMost(count - 1)
-                if (from <= to) { blocked[from]++; blocked[to + 1]-- }
+                if (from <= to) {
+                    blocked[from]++
+                    blocked[to + 1]--
+                    blockedCharacters[from] += characters
+                    blockedCharacters[to + 1] -= characters
+                }
                 segments += Segment(start, end, characters)
             }
             for (glyph in row) {
@@ -156,17 +162,29 @@ internal object PdfLineLayout {
             return firsts.maxOfOrNull { edge -> firsts.count { abs(it - edge) < 1.0 } }?.let { it * 2 >= firsts.size } ?: false
         }
         var crossing = 0
+        var crossingCharacters = 0
         var best: Double? = null
         var bestCrossing = 0
+        var bestCrossingCharacters = 0
         var fallback: Double? = null
         for (index in 0 until count) {
             crossing += blocked[index]
+            crossingCharacters += blockedCharacters[index]
             val x = left + index * step
             if (x <= left + (right - left) * 0.25 || x >= left + (right - left) * 0.75) continue
             val leftCount = charactersByEnd[ends.countAtMost(x - band)]
             val rightCount = characters - charactersByStart[starts.countBelow(x)]
             if (leftCount > characters / 5 && rightCount > characters / 5 && crossing <= rows.size / 5) {
-                if (best == null || crossing < bestCrossing || crossing == bestCrossing && gap(x) > gap(best)) { best = x; bestCrossing = crossing }
+                // Fewer crossing characters break a tie before the gap, so a page number centred under the gutter is the line
+                // cut through rather than a lyric filled to its column's edge beside it.
+                if (best == null || crossing < bestCrossing ||
+                    crossing == bestCrossing &&
+                    (crossingCharacters < bestCrossingCharacters || crossingCharacters == bestCrossingCharacters && gap(x) > gap(best))
+                ) {
+                    best = x
+                    bestCrossing = crossing
+                    bestCrossingCharacters = crossingCharacters
+                }
             } else if (crossing == 0 && rowEnds.countAtMost(x - band) >= 2 && rowStarts.size - rowStarts.countBelow(x) >= 2) {
                 if (fallback == null || gap(x) > gap(fallback)) fallback = x
             }

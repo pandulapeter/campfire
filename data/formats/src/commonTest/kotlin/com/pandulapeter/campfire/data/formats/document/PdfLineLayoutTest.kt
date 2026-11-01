@@ -106,6 +106,15 @@ class PdfLineLayoutTest {
         assertEquals(listOf("Title line", "Key: Am", "Verse", "G Em", "A lyric that is long enough", "C G", "A shorter lyric line", "E7", "The last lyric"), lines(placed).map { it.replace(Regex(" +"), " ") }.filter { it != "1 / 1" })
     }
 
+    @Test
+    fun `a page number centred across the gutter does not join a lyric ending at the column's edge to the line beside it`() = runTest {
+        val left = (1..8).map { Placed(40, 700 - it * 24, if (it == 4) "L".repeat(35) else "l$it".padEnd(30, 'l')) }
+        val right = (1..8).map { Placed(290, 700 - it * 24, "r$it".padEnd(30, 'r')) }
+        val footer = Placed(254, 40, "Page 2 / 3", size = 6)
+
+        assertEquals((left + right).map { it.text }, lines(left + right + footer).filter { it != "Page 2 / 3" })
+    }
+
     /**
      * A string shown in Courier, 0.6 of its [size] a glyph, with its baseline starting at [x], [y]; one [isWhole] is
      * carried by an `ActualText`, which makes it one span, as Campfire's export writes a right-to-left run.

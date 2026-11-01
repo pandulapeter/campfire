@@ -36,7 +36,9 @@ Documents are read locally, never rendered, uploaded, or kept; `ExtractedDocumen
   on each side, counting no line that crosses it (a narrow column's lyric beside the gap in its chord row is no second
   column), **found at every half point, not sampled**, since Campfire's own export leaves only 18 points between
   20-point text. A band no line crosses that opens a column beats one a heading crosses, so a short second column
-  beside a wide heading is not cut inside the first. Each side is searched again
+  beside a wide heading is not cut inside the first. Among bands crossed by as many lines, the one the fewest
+  characters cross wins (a page number centred under the gutter rather than a lyric filled to the column's edge), then
+  the widest. Each side is searched again
   (three and four columns). A page whose letters mostly read from the right is read from its right column.
 - Running lines (`PdfRunningLines`) are judged on each page's margins laid out across the whole width, never by the
   columns found below them: a short last page can read as columns, which would cut its header into parts no other
