@@ -963,6 +963,11 @@
     <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
     <string name="song_layout_continuous">Folyamatos</string>
     <string name="song_layout_continuous_description">Egy hasáb, amely magától gördül a dal tempójában, dalonként beállítható sebességgel</string>
+    <string name="chord_names_title">Hogyan olvasod az akkordokat capóval?</string>
+    <string name="chord_names_example">Ennél a dalnál %1$s. bundon van a capo: a lefogott fogások szerint %2$s, a hangzása szerint %3$s a hangneme.</string>
+    <string name="chord_names_explanation">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kaphatnak nevet.</string>
+    <string name="chord_names_shapes_description">A capo fölött lefogott akkordok, ahogy a capós kották írják</string>
+    <string name="chord_names_sounding_description">A hallható akkordok, capo nélküli együttjátszáshoz</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>

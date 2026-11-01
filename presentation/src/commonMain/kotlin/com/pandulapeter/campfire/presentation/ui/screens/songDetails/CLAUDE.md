@@ -86,6 +86,21 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   (`showsFontScaleInPerformanceBar`, about 394dp), else at the end of the menu; the cover only where the title keeps
   160dp beside all three (`showsCoverInPerformanceMode`). **The overflow button is always the bar's last.**
 
+### The questions asked once over a song
+
+- The layout (`AskForSongLayoutOnce`, see `autoScroll/`), then the chord names (`AskForChordNamesOnce`,
+  `ChordNamesSheet`, `isChordNamesQuestionOwed`): the first time a song with chords is opened or paged to with a capo
+  on, or its capo stepped while it is read (to none included; asked once the stepper has rested 1.5 s, so a capo
+  stepped through to the third fret is not asked about at the first), unless the answer changes nothing (chords off, the
+  keyboard) or the reader is playing (read only mode's performance mode; an archived setlist's song still asks), never
+  in an import preview or the editor. It waits for the layout question to have been put and for nothing over the
+  screen (and for the song's text), so a song that would ask both asks the layout first and the chord names once that
+  sheet is gone. The sheet names the song's key both ways ("in Em by the shapes, in F#m as it sounds"; generic words
+  where the song names no key), and each card ends in the song's first four chords named its way, as the page would
+  (`leadingChordNames`: the reader's notation and transposition, the shapes read at `namingTransposition`); a capo just
+  stepped to none is exemplified by the one it was stepped from, so the two never read alike. Both are marked asked as they are shown, so a dismissal keeps the default and is never
+  asked again; a pick in Preferences answers it too (`isChordNamesChosen`).
+
 ### The menu's own entries
 
 - Both menus (read only mode's too) hold About the song (where the sheet is offered: never in a preview) and

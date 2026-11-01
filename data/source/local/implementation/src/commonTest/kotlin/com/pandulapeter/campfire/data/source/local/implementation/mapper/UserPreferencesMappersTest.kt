@@ -263,12 +263,22 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the chord names default to the shapes and survive a round trip, an unknown one read as the shapes`() {
+    fun `the chord names default to the shapes, unasked, and survive a round trip, an unknown one read as the shapes`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(ChordNames.SHAPES, defaults.chordNames)
-        val sounding = defaults.copy(chordNames = ChordNames.SOUNDING)
+        assertFalse(defaults.isChordNamesChosen)
+        val sounding = defaults.copy(chordNames = ChordNames.SOUNDING, isChordNamesChosen = true)
         assertEquals(sounding, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(sounding.toDocument())).document.toModel())
         assertEquals(ChordNames.SHAPES, UserPreferencesDocument(chordNames = "whistled").toModel().chordNames)
+    }
+
+    @Test
+    fun `a document an older version wrote, which never asked how chords are named, reads as not yet asked`() {
+        // As 5.2.0 wrote it: the layout already chosen, a guitar, and neither chord names field.
+        val older = UserPreferencesDocumentFormat.decode("""{"isSongLayoutChosen": true, "instrument": "guitar", "areChordsEnabled": true}""").document.toModel()
+        assertTrue(older.isSongLayoutChosen)
+        assertFalse(older.isChordNamesChosen)
+        assertEquals(ChordNames.SHAPES, older.chordNames)
     }
 
     @Test

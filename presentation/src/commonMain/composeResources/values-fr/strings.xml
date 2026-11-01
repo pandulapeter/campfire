@@ -969,6 +969,11 @@
     <string name="song_layout_pages_description">Le plus de la chanson à l\'écran à la fois, en colonnes tournées page par page</string>
     <string name="song_layout_continuous">Continu</string>
     <string name="song_layout_continuous_description">Une seule colonne qui défile toute seule au rythme de la chanson, à une vitesse réglée pour chaque chanson</string>
+    <string name="chord_names_title">Comment lis-tu les accords avec un capo ?</string>
+    <string name="chord_names_example">Cette chanson a un capo à la case %1$s : d\'après les doigtés que tu joues, elle est en %2$s ; d\'après le son, en %3$s.</string>
+    <string name="chord_names_explanation">Avec un capo, les accords d\'une chanson peuvent être nommés d\'après les doigtés joués au-dessus ou d\'après leur son.</string>
+    <string name="chord_names_shapes_description">Les accords que tu doigtes au-dessus du capo, comme les grilles pour capo les écrivent</string>
+    <string name="chord_names_sounding_description">Les accords qu\'on entend, pour jouer avec les autres sans capo</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transposer vers le haut</string>

@@ -964,6 +964,11 @@
     <string name="song_layout_pages_description">La mayor parte posible de la canción en pantalla a la vez, en columnas que se pasan página a página</string>
     <string name="song_layout_continuous">Continua</string>
     <string name="song_layout_continuous_description">Una sola columna que se desplaza sola al ritmo de la canción, a la velocidad que elijas para cada una</string>
+    <string name="chord_names_title">¿Cómo lees los acordes con capo?</string>
+    <string name="chord_names_example">Esta canción lleva el capo en el traste %1$s: por las formas que tocas está en %2$s, y por cómo suena, en %3$s.</string>
+    <string name="chord_names_explanation">Con capo, los acordes de una canción pueden nombrarse por las formas que tocas sobre él o por cómo suenan.</string>
+    <string name="chord_names_shapes_description">Los acordes que pisas sobre el capo, como se escriben las partituras con capo</string>
+    <string name="chord_names_sounding_description">Los acordes que se oyen, para tocar junto a otros sin capo</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposición</string>
     <string name="song_details_transpose_up">Transponer hacia arriba</string>

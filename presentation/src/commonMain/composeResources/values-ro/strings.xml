@@ -1002,6 +1002,11 @@
     <string name="song_layout_pages_description">Cât mai mult din cântec pe ecran deodată, în coloane, întors pagină cu pagină</string>
     <string name="song_layout_continuous">Continuu</string>
     <string name="song_layout_continuous_description">O singură coloană care se derulează singură în ritmul cântecului, cu o viteză pe care o setezi pentru fiecare cântec</string>
+    <string name="chord_names_title">Cum citești acordurile cu capodastru?</string>
+    <string name="chord_names_example">Cântecul acesta are capodastrul pe tasta %1$s: după pozițiile pe care le cânți e în %2$s, după cum sună e în %3$s.</string>
+    <string name="chord_names_explanation">Cu capodastru, acordurile unui cântec pot fi numite după pozițiile pe care le cânți deasupra lui sau după cum sună.</string>
+    <string name="chord_names_shapes_description">Acordurile pe care le iei deasupra capodastrului, cum sunt scrise partiturile pentru capodastru</string>
+    <string name="chord_names_sounding_description">Acordurile care se aud, pentru a cânta împreună cu alții fără capodastru</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transpunere</string>
     <string name="song_details_transpose_up">Transpune în sus</string>

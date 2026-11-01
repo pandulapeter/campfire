@@ -61,4 +61,5 @@ columns the bottom of one and the top of the next share a height, so any motion 
 ### Asking once
 
 - The onboarding's Song layout page answers it by being shown (`markSongLayoutChosen`); anyone else is asked over the
-  first song they open (`AskForSongLayoutOnce`, `SongLayoutSheet`), once, a pick written at once and closing the sheet.
+  first song they open (`AskForSongLayoutOnce`, `SongLayoutSheet`), once, a pick written at once and closing the sheet;
+  the chord names question waits for it (see the song details notes).

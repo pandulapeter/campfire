@@ -291,6 +291,7 @@ private fun writeLibrary(
         putJsonArray("seenWhatsNewVersions") { add(JsonPrimitive(System.getProperty("campfire.screenshots.versionName"))) }
         put("songLayout", songLayout.id)
         put("isSongLayoutChosen", true)
+        put("isChordNamesChosen", true)
     }
     File(dataDirectory, "preferences").mkdirs()
     File(dataDirectory, "preferences/preferences.json").writeText(preferences.toString())

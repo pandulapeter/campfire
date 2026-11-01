@@ -148,6 +148,7 @@ internal fun SongDetailsScreen(
         songTimings = songTimings,
     )
     val currentSong = songs.getOrNull(pagerState.currentPage)
+    if (!isImportPreview) AskForChordNamesOnce(viewModel = viewModel, song = currentSong, destination = destination)
     val canPage = songs.size > 1
     // A setlist of one song is still a setlist being played, so it keeps the bar that names it; only a song opened
     // from the library, with nothing before or after it, goes without one.

@@ -236,7 +236,11 @@ internal class PreferencesController(
 
     fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
 
-    fun setChordNames(value: ChordNames) = changeUserPreferences { copy(chordNames = value) }
+    /** Picking how chords are named also answers the question the first capoed song asks about it. */
+    fun setChordNames(value: ChordNames) = changeUserPreferences { copy(chordNames = value, isChordNamesChosen = true) }
+
+    /** The question about chord names has been put over a capoed song, and is not asked again. */
+    fun markChordNamesChosen() = changeUserPreferences { if (isChordNamesChosen) this else copy(isChordNamesChosen = true) }
 
     fun setNotation(notation: UserPreferences.Notation) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(notation = notation)) }
 

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_check
@@ -45,6 +46,8 @@ import org.jetbrains.compose.resources.painterResource
  * three ways at once, the container, the border and the mark at the end, so that it reads in either theme, in every one
  * of the colors, and to somebody who cannot tell the container colors apart.
  *
+ * @param detail A line under the [description] showing what the answer means in the case at hand (a song's own chords
+ *   named that way), in the content color, since it is read as part of the answer.
  * @param icon Drawn in the content color at the start, decoration only: the title says what the card is.
  */
 @Composable
@@ -52,6 +55,7 @@ internal fun ChoiceCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
+    detail: String? = null,
     icon: (@Composable () -> Unit)? = null,
     isSelected: Boolean,
     role: Role,
@@ -87,6 +91,14 @@ internal fun ChoiceCard(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isSelected) contentColor else colors.onSurfaceVariant,
+                    )
+                }
+                detail?.let {
+                    Text(
+                        modifier = Modifier.padding(top = 2.dp),
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }

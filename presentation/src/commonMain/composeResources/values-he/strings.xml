@@ -1000,6 +1000,11 @@
     <string name="song_layout_pages_description">כמה שיותר מהשיר על המסך בבת אחת, בעמודות שמתחלפות עמוד אחר עמוד</string>
     <string name="song_layout_continuous">רציף</string>
     <string name="song_layout_continuous_description">עמודה אחת שנגללת מעצמה בקצב של השיר, במהירות שנקבעת לכל שיר בנפרד</string>
+    <string name="chord_names_title">איך קוראים אקורדים עם קאפו?</string>
+    <string name="chord_names_example">בשיר הזה הקאפו על שריג %1$s: לפי הצורות שמנגנים הוא ב־%2$s, ולפי איך שהוא נשמע, ב־%3$s.</string>
+    <string name="chord_names_explanation">עם קאפו, אפשר לקרוא לאקורדים של שיר לפי הצורות שמנגנים מעליו או לפי איך שהם נשמעים.</string>
+    <string name="chord_names_shapes_description">האקורדים שלוחצים מעל הקאפו, כמו שכותבים תווים לקאפו</string>
+    <string name="chord_names_sounding_description">האקורדים שנשמעים, לנגינה יחד עם אחרים בלי קאפו</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">טרנספוזיציה</string>
     <string name="song_details_transpose_up">העלאת טונליות</string>

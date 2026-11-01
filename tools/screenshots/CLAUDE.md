@@ -25,8 +25,8 @@ set holds the app's UI tests.
 - **The library is a copy, never committed**: `library/` (gitignored) holds a data folder's `library/`, `covers/`, and
   `preferences/preferences.json`. Every render copies it into its own temporary `user.home` (the desktop file storage
   derives its folder from it when Koin creates it), with the shot's theme and language written in, the current
-  version marked as introduced (no What's new dialog), and the song layout as chosen (no question over the first
-  song). Nothing reaches the copy or the user's library.
+  version marked as introduced (no What's new dialog), and the song layout and the chord names as chosen (no question
+  over the first song or the first capoed one). Nothing reaches the copy or the user's library.
 - **One app start per image** (`render`, over `withCampfireApp`, which the UI tests share): home,
   `PlatformImpersonation`, and Koin are set up before the scene and Koin stopped after, since storage, repositories,
   and the view model read their start once. The scene runs on `Dispatchers.Main` (Swing), which the view model
@@ -83,7 +83,8 @@ runs in Hebrew.
   would fail after a correct rewrite of the screen is the wrong test. Tests sit in the package of the screen they cover;
   the ways to a screen or sheet that several of them take are `AppTestNavigation.kt`'s.
 - The library is the demo songs plus the `src/test/resources/songs` and `setlists` files a test names; never the tool's
-  own `library/`. A preferences document is written, so no onboarding, no planted demo, and no song layout question;
+  own `library/`. A preferences document is written, so no onboarding, no planted demo, and no song layout or chord names
+  question;
   covers are off unless asked for, and the song text size is `runAppTest`'s `fontScale`. `isFirstRun` starts from an empty data directory instead,
   in English (the system's language, pinned for the test).
 - **What may be faked** is only what reaches outside or picks files: `Fakes.kt`, `TestFakes.kt` (the cover search finds

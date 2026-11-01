@@ -964,6 +964,11 @@
     <string name="song_layout_pages_description">La maggior parte della canzone sullo schermo in una volta, in colonne sfogliate una pagina alla volta</string>
     <string name="song_layout_continuous">Continuo</string>
     <string name="song_layout_continuous_description">Una sola colonna che scorre da sola al ritmo della canzone, a una velocità che imposti per ogni canzone</string>
+    <string name="chord_names_title">Come leggi gli accordi con il capotasto?</string>
+    <string name="chord_names_example">Questa canzone ha il capotasto al tasto %1$s: secondo le diteggiature che suoni è in %2$s, secondo come suona è in %3$s.</string>
+    <string name="chord_names_explanation">Con il capotasto, gli accordi di una canzone possono prendere il nome dalle diteggiature che suoni sopra di esso o da come suonano.</string>
+    <string name="chord_names_shapes_description">Gli accordi che diteggi sopra il capotasto, come li scrivono gli spartiti per capotasto</string>
+    <string name="chord_names_sounding_description">Gli accordi che si sentono, per suonare insieme ad altri senza capotasto</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Trasposizione</string>
     <string name="song_details_transpose_up">Trasponi su</string>

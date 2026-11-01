@@ -179,6 +179,7 @@ private fun prepareLibrary(
             "language" to JsonPrimitive(shot.language.id),
             "seenWhatsNewVersions" to JsonArray((seenVersions + versionName).distinct().map(::JsonPrimitive)),
             "isSongLayoutChosen" to JsonPrimitive(true),
+            "isChordNamesChosen" to JsonPrimitive(true),
         ),
     )
     File(target, "preferences").mkdirs()

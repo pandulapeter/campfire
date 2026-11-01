@@ -964,6 +964,11 @@
     <string name="song_layout_pages_description">So viel vom Song wie möglich auf einmal auf dem Bildschirm, in Spalten, Seite für Seite umgeblättert</string>
     <string name="song_layout_continuous">Fortlaufend</string>
     <string name="song_layout_continuous_description">Eine Spalte, die im Takt des Songs von selbst scrollt, mit einem Tempo, das du für jeden Song festlegst</string>
+    <string name="chord_names_title">Wie liest du Akkorde mit Capo?</string>
+    <string name="chord_names_example">Dieser Song hat den Capo im %1$s. Bund: nach den Griffen, die du spielst, steht er in %2$s, nach dem Klang in %3$s.</string>
+    <string name="chord_names_explanation">Mit Capo können die Akkorde eines Songs nach den Griffen darüber oder nach ihrem Klang heißen.</string>
+    <string name="chord_names_shapes_description">Die Akkorde, die du über dem Capo greifst, so wie Capo-Charts sie schreiben</string>
+    <string name="chord_names_sounding_description">Die Akkorde, die zu hören sind, zum Mitspielen ohne Capo</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Hoch transponieren</string>
