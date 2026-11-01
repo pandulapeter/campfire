@@ -15,6 +15,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.size
@@ -42,7 +43,6 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
-import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_actions
 import com.pandulapeter.campfire.presentation.resources.settings_sharing_copy_missing
@@ -66,6 +66,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param busyShareIds The shares being stopped, drawn faded and with a progress indicator in place of their menu until
  *   the list lets them go, or until the stop fails and gives the menu back.
  * @param canShowQrCode Whether the library holds the item, which the export screen that shows the QR code is opened on.
+ *   Where it does, and the link is worth handing out, selecting the row opens it: that is what a row is visited for,
+ *   so it is not left to the menu.
  */
 @Composable
 internal fun ColumnScope.SharedLinkList(
@@ -104,7 +106,13 @@ private fun SharedLinkRow(
     onShowQrCode: () -> Unit,
     onStop: () -> Unit,
 ) = ListItem(
-    modifier = Modifier.alpha(animateFloatAsState(if (isBusy) 0.5f else 1f).value),
+    modifier = Modifier
+        .clickable(
+            enabled = !isBusy && share.isWorthHandingOut && canShowQrCode,
+            onClickLabel = stringResource(Res.string.settings_sharing_show_qr_code),
+            onClick = onShowQrCode,
+        )
+        .alpha(animateFloatAsState(if (isBusy) 0.5f else 1f).value),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     leadingContent = {
         Icon(
@@ -133,7 +141,7 @@ private fun SharedLinkRow(
             if (isStopping) {
                 StoppingIndicator()
             } else {
-                SharedLinkActions(share = share, canShowQrCode = canShowQrCode, onCopy = onCopy, onShowQrCode = onShowQrCode, onStop = onStop)
+                SharedLinkActions(share = share, onCopy = onCopy, onStop = onStop)
             }
         }
     },
@@ -142,23 +150,15 @@ private fun SharedLinkRow(
 @Composable
 private fun SharedLinkActions(
     share: Share,
-    canShowQrCode: Boolean,
     onCopy: () -> Unit,
-    onShowQrCode: () -> Unit,
     onStop: () -> Unit,
 ) = ActionsMenu(contentDescription = stringResource(Res.string.settings_sharing_actions)) {
-    val isWorthHandingOut = share.state != ShareState.ORPHANED && share.state != ShareState.COPY_MISSING
     listOfNotNull(
         ActionsMenuItem(
             title = stringResource(Res.string.share_copy),
             icon = painterResource(Res.drawable.ic_duplicate),
             onClick = onCopy,
-        ).takeIf { isWorthHandingOut },
-        ActionsMenuItem(
-            title = stringResource(Res.string.settings_sharing_show_qr_code),
-            icon = painterResource(Res.drawable.ic_share),
-            onClick = onShowQrCode,
-        ).takeIf { isWorthHandingOut && canShowQrCode },
+        ).takeIf { share.isWorthHandingOut },
         ActionsMenuItem(
             title = stringResource(Res.string.share_stop),
             icon = painterResource(Res.drawable.ic_delete),
@@ -182,6 +182,9 @@ private fun StoppingIndicator() {
         )
     }
 }
+
+/** Whether the link still leads to a copy of something in the library, so that it is worth copying or showing. */
+private val Share.isWorthHandingOut get() = state != ShareState.ORPHANED && state != ShareState.COPY_MISSING
 
 /** The line under a share's title: what keeps it from following its item, else the day it was shared. */
 @Composable

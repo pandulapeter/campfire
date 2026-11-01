@@ -14,9 +14,7 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Fix the [capo handling issues](https://github.com/pandulapeter/campfire/issues/10)
-- Settings → Shared links should be clickable
 - Random sorting mode
-- Setlists should import songs with their overridden tempos
 - Onboarding celebration animation is missing for people who open the app for the first time from a deep link
 - Improve the chord library based on [Chorducate](https://www.chorducate.com/discover/guitar/chords/)
 - Add an option to pin chord diagrams

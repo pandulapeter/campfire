@@ -29,7 +29,8 @@ breakpoint, as do the wide layout's pages. A build without sync leaves Sharing o
 - **Sharing** (`SharingSections`): there while disconnected too. Stages (`sharingStageOf`) crossfade, except the list
   arriving over "Nothing shared yet". Connect keeps `SyncConsentOrigin.Sharing`. Settling into view (not being composed
   by the pager) reads the account's list once per visit; the mirror shows meanwhile and offline, saying so once a read
-  fails (`isStaleSharingList`). A row being stopped (every row, for Stop sharing everything) fades, its menu crossfading
+  fails (`isStaleSharingList`). Selecting a row shows its QR code (the export screen); its menu holds Copy link and
+  Stop sharing. A row being stopped (every row, for Stop sharing everything) fades, its menu crossfading
   into a progress indicator until it shrinks in place (`sharedLinkRowsOf`), or, where the stop fails, back with a
   snackbar saying why. Stop sharing everything is alone in the last section.
 - **Features**: Playing switches first, one per tab, in the navigation's order (songs, setlists, metronome, tuner,
