@@ -47,26 +47,13 @@ public object ChordSheetConverter {
             }.let { lines -> if (sheet.isCampfireExport) markRowsContinuedBelow(lines) else lines }
         }
         val pages = if (!sheet.isCampfireExport) rendered else {
-            // The lyrics' size, which the labels are set a point under: that of the lines right under a chord row, a lyric
-            // under its chords being always at the body's size. The plain text at large, not the many glyphs of a tab, is
-            // only the fallback for a document of no chords: the details row is plain too, a point smaller, and outvotes
-            // the lyrics wherever it has more letters, right-to-left lyrics arriving as one span a line.
-            val plainSizes = rendered.flatten().flatMap { line ->
-                line.source.spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }.map { it.size }
-            }.sorted()
             val isChordRowLine = rendered.map { page -> page.map { it.text.isNotBlank() && chordRow(it, isCampfire = true) != null } }
-            val lyricSizes = rendered.flatMapIndexed { pageIndex, page ->
-                page.indices.filter { it > 0 && isChordRowLine[pageIndex][it - 1] }.mapNotNull { index ->
-                    page[index].source.spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }.maxOfOrNull { it.size }
-                }
-            }.sorted()
-            val knownBodySize = lyricSizes.getOrNull(lyricSizes.size / 2) ?: plainSizes.getOrNull(plainSizes.size / 2)
-            val bodySize = knownBodySize ?: 1.0
+            val typeSizes = ChordSheetCampfireLayout.Sizes.of(rendered.map { page -> page.map { it.source } }, isChordRowLine)
             rendered.mapIndexed { pageIndex, page ->
-                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], bodySize)
-                val isSetFromRight = ChordSheetCampfireLayout.isSetFromRight(page.map { it.source }, bodySize)
+                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], typeSizes)
+                val isSetFromRight = ChordSheetCampfireLayout.isSetFromRight(page.map { it.source }, typeSizes.body)
                 page.mapIndexed { index, line ->
-                    line.copy(role = roles[index], isCampfire = true, bodySize = knownBodySize ?: 0.0, isSetFromRight = isSetFromRight[index])
+                    line.copy(role = roles[index], isCampfire = true, bodySize = typeSizes.lyrics ?: 0.0, isSetFromRight = isSetFromRight[index])
                 }
             }
         }
@@ -598,14 +585,16 @@ public object ChordSheetConverter {
      * over plain lyrics of the same size, the way Campfire's export and most songbook layouts set chords, and written
      * with a capital, since a lowercase word is too often a word. A lyric line wrapped in a narrow column is printed
      * as several of these, each with the one chord over its part. The size keeps a songbook index out of it, whose
-     * bold "A" over the titles starting with it is a heading set larger than they are.
+     * bold "A" over the titles starting with it is a heading set larger than they are. Campfire's export is not held to
+     * it: only a row in its chords' type is a candidate there, the title's left out, and a lyric whose letters fall back
+     * on another font than the chords' is written at another size than they are.
      */
     private fun isStyledChordLine(line: Rendered, tokens: List<Token>, next: Rendered?): Boolean {
         val spans = line.source.spans.filter { it.text.isNotBlank() }
         val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
         return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
-            spans.all { span -> lyrics.all { abs(it.size - span.size) < span.size * 0.05 } }
+            (line.isCampfire || spans.all { span -> lyrics.all { abs(it.size - span.size) < span.size * 0.05 } })
     }
 
     /**

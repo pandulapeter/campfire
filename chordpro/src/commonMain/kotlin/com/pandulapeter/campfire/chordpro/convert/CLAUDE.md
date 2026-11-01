@@ -18,8 +18,10 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   as one (`ChordSheet.isCampfireExport`) is read by the type each line is printed in (`ChordSheetCampfireLayout`; a
   chord is one only in the chords' type, bold at the lyrics' size, or a tab's monospaced line, so a lyric `a b c d`
   and a title `A` stay what they are):
-  labels open sections (a point under the lyrics' size, read from the lines under its chord rows; a label over a
-  tab is the tab's), grids, italic comments, and boxed comments come back as
+  labels open sections (a point under the body's size in the label's own font, `ChordSheetCampfireLayout.Sizes`: the
+  chords' for Latin text, the lyrics' under chord rows for right-to-left letters, which some platforms draw in a
+  fallback font of a taller line box, so no size is compared with one in another font; a label over a tab is the
+  tab's), grids, italic comments, and boxed comments come back as
   written (an italic lyric is told from a comment by its distance under the chord row above,
   `ChordSheet.Line.baseline`), the padding under wide chords is left out, the lyric-type rows right under the title,
   before the heading's gap, are the artist, however many, a chord is set on the character it stands

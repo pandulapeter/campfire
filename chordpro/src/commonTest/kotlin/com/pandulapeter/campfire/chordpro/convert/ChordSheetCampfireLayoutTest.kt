@@ -359,7 +359,7 @@ class ChordSheetCampfireLayoutTest {
             ChordSheet.Line(listOf(ChordSheet.Span("\u05e9\u05dc\u05d5\u05dd Hello world", RIGHT - 16 * GLYPH, RIGHT, BODY))),
             ChordSheet.Line(listOf(ChordSheet.Span("Rock and roll \u05e9\u05e8\u05d9\u05dd", RIGHT - 18 * GLYPH, RIGHT, BODY))),
         )
-        assertEquals(listOf(null, null, null, null), ChordSheetCampfireLayout.roles(lines, listOf(false, true, false, false), BODY))
+        assertEquals(listOf(null, null, null, null), ChordSheetCampfireLayout.roles(lines, listOf(false, true, false, false), ChordSheetCampfireLayout.Sizes(BODY)))
     }
 
     @Test
@@ -374,7 +374,55 @@ class ChordSheetCampfireLayoutTest {
         listOf(ChordSheet.Span(value, RIGHT - inset - width, RIGHT - inset, BODY)),
     )
 
-    private fun boxes(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(lines.toList(), lines.map { false }, BODY).withIndex()
+    /** A right-to-left text at [size], its glyphs [GLYPH] apart from the right edge, in reading order over them. */
+    private fun rtlGlyphs(value: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
+        listOf(
+            ChordSheet.Span(
+                value, RIGHT - value.length * GLYPH, RIGHT, size, isBold = bold,
+                pieces = value.mapIndexed { index, character -> ChordSheet.Span(character.toString(), RIGHT - (index + 1) * GLYPH, RIGHT - index * GLYPH, size, isBold = bold) },
+            ),
+        ),
+    )
+
+    @Test
+    fun `a right-to-left song's chords stay chords and its labels labels where its letters fall back on a font of a taller line box`() {
+        // The export writes a text at its line box: the bundled Inter's is 1.21 font sizes, while the font web, Linux, and
+        // Android fall back on for Hebrew has one of about 1.36, so its 12-point lyrics are written larger than its chords.
+        fun inter(points: Double) = points * 1.21
+        fun fallback(points: Double) = points * 1.36
+        val sheet = ChordSheet(
+            listOf(
+                ChordSheet.Page(
+                    listOf(
+                        rtlGlyphs("\u05e9\u05d9\u05e8", fallback(19.0), bold = true),
+                        text("Verse", x = RIGHT - 5 * GLYPH, size = inter(11.0), bold = true),
+                        text("Am", x = RIGHT - 2 * GLYPH, size = inter(12.0), bold = true),
+                        rtlGlyphs("\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd", fallback(12.0)),
+                        rtlGlyphs("\u05e4\u05d6\u05de\u05d5\u05df", fallback(11.0), bold = true),
+                        text("G", x = RIGHT - GLYPH, size = inter(12.0), bold = true),
+                        rtlGlyphs("\u05e9\u05dc\u05d5\u05dd", fallback(12.0)),
+                    ),
+                ),
+            ),
+            isCampfireExport = true,
+        )
+        assertEquals(
+            """
+            {title: שיר}
+
+            {start_of_verse: Verse}
+            [Am]שלום עולם
+            {end_of_verse}
+
+            {start_of_chorus: פזמון}
+            [G]שלום
+            {end_of_chorus}
+            """.trimIndent() + "\n",
+            ChordSheetConverter.convert(sheet).single(),
+        )
+    }
+
+    private fun boxes(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(lines.toList(), lines.map { false }, ChordSheetCampfireLayout.Sizes(BODY)).withIndex()
         .filter { it.value == ChordSheetCampfireLayout.Role.BOX_COMMENT }
         .map { it.index }
 
@@ -437,7 +485,7 @@ class ChordSheetCampfireLayoutTest {
     private fun roles(vararg lines: ChordSheet.Line) = ChordSheetCampfireLayout.roles(
         lines.toList(),
         lines.map { line -> line.spans.any { it.text.isNotBlank() } && line.spans.filter { it.text.isNotBlank() }.all { it.isBold } },
-        BODY,
+        ChordSheetCampfireLayout.Sizes(BODY),
     )
 
     @Test

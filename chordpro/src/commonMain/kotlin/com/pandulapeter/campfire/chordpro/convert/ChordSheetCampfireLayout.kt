@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
+import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
 import kotlin.math.abs
 
@@ -25,13 +26,73 @@ internal object ChordSheetCampfireLayout {
     enum class Role { LABEL, GRID, COMMENT, BOX_COMMENT }
 
     /**
-     * The role of each line of a page, by the type it is set in and where it starts or, in a song printed from the
-     * right, where it ends. [isChordRow] says which lines are rows of chords, the converter's own test of one.
+     * The sizes a document of the export is written at, each text at the height of its line box, which depends on the
+     * font that draws it: the chords and Latin text are always in the bundled Inter, while right-to-left letters fall back
+     * on a font of the platform's, whose line box is taller on some (about 1.36 font sizes against Inter's 1.21 on web,
+     * Linux, and Android). So a size is only ever compared with one drawn in the same font.
+     *
+     * @property lyrics The lyrics' size, whatever font draws them, null in a document of no plain text.
+     * @property chords The chords' size, null in a document of no chord rows.
+     * @property rightToLeftLyrics The size of the lyrics holding right-to-left letters, null where there are none.
      */
-    fun roles(lines: List<ChordSheet.Line>, isChordRow: List<Boolean>, bodySize: Double): List<Role?> {
+    data class Sizes(val lyrics: Double?, val chords: Double? = null, val rightToLeftLyrics: Double? = null) {
+
+        /** The lyrics' size, 1 where it is unknown. */
+        val body get() = lyrics ?: 1.0
+
+        /**
+         * The size [line] is written at where it is set at the body's size: a line holding right-to-left letters at the
+         * size of the lyrics that do, any other at the chords' size, both falling back on the lyrics'.
+         */
+        fun bodyOf(line: ChordSheet.Line): Double = if (line.hasRightToLeft()) rightToLeftLyrics ?: body else chords ?: body
+
+        companion object {
+            /**
+             * The sizes of the [pages] of an export, each line's [isChordRow] the converter's own test of a chord row. The
+             * lyrics' are those of the lines right under a chord row, a lyric under its chords being always at the body's
+             * size; the plain text at large, not the many glyphs of a tab, is only the fallback for a document of no
+             * chords: the details row is plain too, a point smaller, and outvotes the lyrics wherever it has more letters,
+             * right-to-left lyrics arriving as one span a line.
+             */
+            fun of(pages: List<List<ChordSheet.Line>>, isChordRow: List<List<Boolean>>): Sizes {
+                val lyrics = pages.flatMapIndexed { pageIndex, page ->
+                    page.indices.filter { it > 0 && isChordRow[pageIndex][it - 1] }.map { page[it] }.filter { it.plainSpans().isNotEmpty() }
+                }
+                val lyricSize = lyrics.map { it.plainSize() }.median() ?: pages.flatten().flatMap { it.plainSpans() }.map { it.size }.median()
+                // A title naming a chord (`A`) passes the test of a chord row by its text, but not by its size.
+                val chords = pages.flatMapIndexed { pageIndex, page ->
+                    page.filterIndexed { index, _ -> isChordRow[pageIndex][index] }.flatMap { line ->
+                        line.spans.filter { it.text.isNotBlank() && it.isBold && !it.isMonospace && it.size < (lyricSize ?: 1.0) * TITLE_SIZE_RATIO }
+                    }
+                }
+                return Sizes(
+                    lyrics = lyricSize,
+                    chords = chords.map { it.size }.median(),
+                    rightToLeftLyrics = lyrics.filter { it.hasRightToLeft() }.map { it.plainSize() }.median(),
+                )
+            }
+
+            /** The spans of a line set in the lyrics' type: text, none of it bold, italic, or monospaced. */
+            private fun ChordSheet.Line.plainSpans() = spans.filter { it.text.isNotBlank() && !it.isBold && !it.isMonospace && !it.isItalic }
+
+            private fun ChordSheet.Line.plainSize() = plainSpans().maxOf { it.size }
+
+            private fun List<Double>.median() = sorted().let { it.getOrNull(it.size / 2) }
+        }
+    }
+
+    private fun ChordSheet.Line.hasRightToLeft() = spans.any { span -> span.text.any { isStrongRtl(it.code) } }
+
+    /**
+     * The role of each line of a page, by the type it is set in and where it starts or, in a song printed from the
+     * right, where it ends. [isChordRow] says which lines are rows of chords, the converter's own test of one. A label is
+     * bold and a point smaller than the body in its own font ([Sizes.bodyOf]): a chord row, the running order's songs, and
+     * a chord-shaped label (`A`) are all bold, and told apart only by that point.
+     */
+    fun roles(lines: List<ChordSheet.Line>, isChordRow: List<Boolean>, sizes: Sizes): List<Role?> {
         val starts = startsOf(lines)
         val ends = endsOf(lines)
-        val songs = songsOf(lines, bodySize)
+        val songs = songsOf(lines, sizes.body)
         val roles = mutableListOf<Role?>()
         lines.forEachIndexed { index, line ->
             val spans = line.spans.filter { it.text.isNotBlank() }
@@ -41,7 +102,7 @@ internal object ChordSheetCampfireLayout {
             roles += when {
                 spans.isEmpty() || start == null || end == null -> null
                 spans.all { it.isBold && it.isMonospace } -> Role.GRID
-                spans.all { it.isBold && !it.isMonospace && it.size < bodySize - LABEL_SIZE_STEP / 2 } -> Role.LABEL
+                spans.all { it.isBold && !it.isMonospace && it.size < sizes.bodyOf(line) - LABEL_SIZE_STEP / 2 } -> Role.LABEL
                 spans.all { it.isItalic } && !isChordRow[index] -> Role.COMMENT.takeUnless { isItalicLyric(lines, isChordRow, roles, index) }
                 !line.isPlain() -> null
                 isFlushRight(lines, starts, ends, song, index) -> Role.BOX_COMMENT.takeIf { isBoxed(song.mapNotNull { ends[it] }.map { -it }, -end) }
