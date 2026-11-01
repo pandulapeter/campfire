@@ -34,6 +34,10 @@ class ChordSheetCampfireLayoutTest {
         text(name, x = MARGIN + column * GLYPH, bold = true).spans
     })
 
+    /** [line] opened by the [marks] the export writes into its first glyph's text where it continues the row above. */
+    private fun marked(line: ChordSheet.Line, marks: Int = 1) =
+        line.copy(spans = line.spans.mapIndexed { index, span -> if (index == 0) span.copy(text = "\u2060".repeat(marks) + span.text) else span })
+
     private fun convert(vararg lines: ChordSheet.Line, isCampfireExport: Boolean = true) =
         ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(text("A song", size = 19.0, bold = true)) + lines)), isCampfireExport = isCampfireExport)).single()
 
@@ -222,9 +226,24 @@ class ChordSheetCampfireLayoutTest {
     }
 
     @Test
+    fun `an annotation a narrow column leaves alone over the padding before its lyric opens that lyric's line`() {
+        val chorus = MARGIN + 8.0
+        assertEquals(
+            "{title: A song}\n\n{start_of_chorus: Chorus}\n[*Everybody] [D7]Home, [G]home on the [C]range\n{end_of_chorus}\n",
+            convert(
+                text("Chorus", x = chorus, size = LABEL, bold = true),
+                text("Everybody", x = chorus, italic = true),
+                marked(ChordSheet.Line(text("D7", x = chorus, bold = true).spans + text("G", x = chorus + 6 * GLYPH, bold = true).spans)),
+                marked(text("Home, home on", x = chorus)),
+                marked(text("C", x = chorus + 4 * GLYPH, bold = true)),
+                marked(text("the range", x = chorus)),
+            ),
+        )
+    }
+
+    @Test
     fun `a comment the column cut inside a word comes back as one comment`() {
-        // The export writes the marks into the text of the row's first glyph.
-        val cut = text("bilities", italic = true).let { line -> line.copy(spans = line.spans.mapIndexed { index, span -> if (index == 0) span.copy(text = "\u2060\u2060" + span.text) else span }) }
+        val cut = marked(text("bilities", italic = true), marks = 2)
         val song = convert(
             chords("C" to 0), text("Hello"),
             text("Play incomprehensi", italic = true), cut, text("extraordinarily", italic = true),

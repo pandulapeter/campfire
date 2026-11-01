@@ -135,9 +135,9 @@ class PdfRoundTripTest {
     }
 
     @Test
-    fun `a chord row opening with an annotation comes back as one row over its lyric`() = runBlocking {
+    fun `a chord row opening with an annotation comes back over its lyric in every column count`() = runBlocking {
         val song = ChordProParser.parse("{title: Song}\n{start_of_chorus}\n[*Everybody] [D7]Home, [G]home on the [C]range\n{end_of_chorus}\n")
-        val failures = listOf(PrintSettings(), PrintSettings(isLandscape = true), PrintSettings(columns = 2), PrintSettings(columns = 2, isLandscape = true))
+        val failures = (1..PrintSettings.MAX_COLUMNS).flatMap { columns -> listOf(PrintSettings(columns = columns), PrintSettings(columns = columns, isLandscape = true)) }
             .mapNotNull { settings ->
                 val expected = summary(song)
                 val actual = summary(roundTrip(song, settings))

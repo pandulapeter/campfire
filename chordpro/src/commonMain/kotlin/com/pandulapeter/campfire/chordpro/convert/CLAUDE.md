@@ -26,7 +26,9 @@ heuristics and near misses are pinned in `ChordSheetConverterTest`: a change bel
   over, an italic run among a row's chords is an annotation (`[*twice]`) where it stands, a row whose text opens with
   a word joiner (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the lyric above, wrapped by a narrow column,
   and joined back to it (its chord row too is marked, and may hold notes alone; a marked chord row with no marked
-  lyric under it is the rest of the line above); two word joiners open a row that
+  lyric under it is the rest of the line above; a row of notes alone is a chord row only over a marked row in the
+  chords' or the lyrics' type, so an annotation printed alone over its padding opens the line, and a comment's cut
+  rest stays the comment's); two word joiners open a row that
   continues a word the column cut (a lyric's, a title's, a comment's, or a labelled value's), joined back with no
   space, and the importer's `clean` drops the word joiner from any text; and staff lines are told by the test
   the export engraves by. A row holding right-to-left text arrives as one span in reading order

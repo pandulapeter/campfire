@@ -332,15 +332,16 @@ public object ChordSheetConverter {
     /**
      * Campfire's export ([isCampfire]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
      * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
-     * is all notes, so it is never taken for chords, unless it is the chord row of a lyric's continuation, which the
-     * export marks ([Rendered.isContinuation]) with the lyric under it ([Rendered.isContinuedBelow]). There a word is a
-     * chord only where it is printed in the chords' type, bold under the title's size, or in a tab's monospaced chord
-     * line, so that a lyric `a b c d` and a title `A` stay what they are; where the lyrics' size is unknown, the text
-     * alone decides.
+     * is all notes, so it is never taken for chords, unless the row under it continues its line
+     * ([Rendered.isContinuedBelow]): it is then the chord row of a lyric's continuation, or an annotation opening a line,
+     * printed alone over the padding its width needs where a narrow column wraps the lyric right after that padding.
+     * There a word is a chord only where it is printed in the chords' type, bold under the title's size, or in a tab's
+     * monospaced chord line, so that a lyric `a b c d` and a title `A` stay what they are; where the lyrics' size is
+     * unknown, the text alone decides.
      */
     private fun chordRow(line: Rendered, isCampfire: Boolean = line.isCampfire): ChordRow? = chordRow(
         text = line.text,
-        allowsNotesOnly = isCampfire && line.isContinuation && line.isContinuedBelow,
+        allowsNotesOnly = isCampfire && line.isContinuedBelow,
         isNote = if (!isCampfire) null else { word ->
             word.text.indices.all { offset ->
                 val x = line.positions.getOrNull(word.index + offset)
@@ -743,11 +744,11 @@ public object ChordSheetConverter {
                 index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     metadata(line.text)?.first == "copyright" ||
                     labelledRow(line.text, isHeader = false) != null || isKeyChange(line, line.text) -> Kind.METADATA
-                // A row of notes alone is a candidate only as the chord row of a lyric's continuation, which it stands over.
+                // A row of notes alone is a candidate only where the row under it continues its line.
                 // A row of chords the export marks as the rest of a line is one whatever follows, and so is the row its
                 // chords overflowed from; only an export's chords in their own type are candidates, so a wrapped lyric's
                 // marked rest that reads as chord names (`a b`) is never taken for one.
-                candidate != null && (candidate.isEmpty() && lines.getOrNull(index + 1)?.isContinuation == true ||
+                candidate != null && (candidate.isEmpty() ||
                     candidate.isNotEmpty() && line.isContinuation ||
                     candidate.isNotEmpty() && lines.getOrNull(index + 1)?.let { it.isContinuation && candidates.getOrNull(index + 1) != null } == true ||
                     candidate.count { rowChord(it.text) } > 1 ||
