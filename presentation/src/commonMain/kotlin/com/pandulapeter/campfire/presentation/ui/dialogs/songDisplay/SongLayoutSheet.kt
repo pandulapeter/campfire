@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
+import com.pandulapeter.campfire.presentation.resources.song_layout_message
 import com.pandulapeter.campfire.presentation.resources.song_layout_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -27,9 +27,9 @@ import com.pandulapeter.campfire.presentation.ui.songDisplay.SongLayoutChoices
 
 /**
  * The question the first song opened asks once, over that song, of a reader who has not picked a layout: pages, or one
- * column that scrolls by itself, in a [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as it goes, and only Confirm
- * closes the sheet and answers the question, so that a stray tap beside it does not; confirming without a pick keeps the
- * pages, which is what is shown as picked, and a sheet put away without Confirm is asked again.
+ * column that scrolls by itself, in a [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as
+ * it goes, and only Confirm answers the question, so that a stray tap beside it does not; confirming without a pick keeps
+ * the pages, which is what is shown as picked, and a sheet put away without Confirm (back, Escape) is asked again.
  */
 @Composable
 internal fun SongLayoutSheet(
@@ -43,7 +43,7 @@ internal fun SongLayoutSheet(
     ) {
         Text(
             modifier = Modifier.padding(bottom = 16.dp),
-            text = stringResource(Res.string.song_preference_change_hint),
+            text = stringResource(Res.string.song_layout_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

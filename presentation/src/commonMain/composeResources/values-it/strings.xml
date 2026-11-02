@@ -970,6 +970,7 @@
     <string name="song_details_auto_scroll_pause">Ferma lo scorrimento</string>
     <string name="song_details_auto_scroll_speed">Velocità di scorrimento</string>
     <string name="song_layout_title">Come vuoi vedere le canzoni?</string>
+    <string name="song_layout_message">Scegli come una canzone riempie lo schermo mentre la suoni.</string>
     <string name="song_preference_change_hint">Vale per tutte le canzoni. Puoi cambiarlo quando vuoi nelle Preferenze, dalle Impostazioni o dal menu di qualsiasi canzone.</string>
     <string name="song_layout_pages">Pagine</string>
     <string name="song_layout_pages_description">La maggior parte della canzone sullo schermo in una volta, in colonne sfogliate una pagina alla volta</string>

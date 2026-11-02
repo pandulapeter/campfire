@@ -99,11 +99,11 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   file's own capo alone raising the pitch), the first two end in the song's first four chords named their way, as the
   page would (`leadingChordNames`: the reader's notation and transposition, the shapes read at `namingTransposition`); a
   capo just stepped to none is exemplified by the one it was stepped from, so the two never read alike. Both questions
-  are a `ConfirmedQuestionSheet`: a pick written at once, the title wrapped rather than cut on a narrow phone, and
-  Confirm in a row pinned under the choices as the only way out (`isDismissible` off: no close button, swipe, scrim,
-  back, or Escape), so a stray tap never answers them.
-  Only Confirm marks them answered (`markSongLayoutChosen`, `markChordNamesChosen`); one put away without it (the stack
-  closing it, the window closed) asks again the next time it matters, the layout over the next song screen, the chord
+  are a `ConfirmedQuestionSheet`: a pick written at once, the title wrapped rather than cut on a narrow phone, the
+  Preferences hint under the choices, and Confirm in a row pinned under them (`isDismissibleByTouch` off: no close
+  button, swipe, or scrim, so a stray tap never puts them away).
+  Only Confirm marks them answered (`markSongLayoutChosen`, `markChordNamesChosen`); one put away without it (back,
+  Escape, the stack closing it, the window closed) asks again the next time it matters, the layout over the next song screen, the chord
   names over the next song (once per song, or uncovering the screen would ask again at once). A pick in Preferences
   answers them too (`isSongLayoutChosen`, `isChordNamesChosen`).
 

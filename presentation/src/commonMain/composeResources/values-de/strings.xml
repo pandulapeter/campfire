@@ -970,6 +970,7 @@
     <string name="song_details_auto_scroll_pause">Scrollen stoppen</string>
     <string name="song_details_auto_scroll_speed">Scroll-Tempo</string>
     <string name="song_layout_title">Wie sollen Songs dargestellt werden?</string>
+    <string name="song_layout_message">Wähle, wie ein Song den Bildschirm füllt, während du ihn spielst.</string>
     <string name="song_preference_change_hint">Das gilt für jeden Song. Du kannst es jederzeit in den Vorlieben ändern, über die Einstellungen oder das Menü eines beliebigen Songs.</string>
     <string name="song_layout_pages">Seiten</string>
     <string name="song_layout_pages_description">So viel vom Song wie möglich auf einmal auf dem Bildschirm, in Spalten, Seite für Seite umgeblättert</string>

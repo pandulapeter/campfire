@@ -1008,6 +1008,7 @@
     <string name="song_details_auto_scroll_pause">Oprește derularea</string>
     <string name="song_details_auto_scroll_speed">Viteza derulării</string>
     <string name="song_layout_title">Cum să fie așezate cântecele?</string>
+    <string name="song_layout_message">Alege cum umple un cântec ecranul în timp ce îl cânți.</string>
     <string name="song_preference_change_hint">Se aplică tuturor cântecelor. Poți schimba oricând asta din Preferințe, din Setări sau din meniul oricărui cântec.</string>
     <string name="song_layout_pages">Pagini</string>
     <string name="song_layout_pages_description">Cât mai mult din cântec pe ecran deodată, în coloane, întors pagină cu pagină</string>

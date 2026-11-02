@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.confirm
+import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.BottomSheetConfirmButton
@@ -30,8 +32,10 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomShe
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 
 /**
- * A question asked over a song until it is answered ([SongLayoutSheet], [ChordNamesSheet]): not dismissible, so that a
- * stray tap does not put it away, and closed by its Confirm, which [onConfirm] answers the question with. The title may
+ * A question asked over a song until it is answered ([SongLayoutSheet], [ChordNamesSheet]): not dismissible by a touch,
+ * so that a stray tap does not put it away, and answered only by its Confirm ([onConfirm]); back and Escape put it away
+ * unanswered, to be asked again the next time it matters. Under the choices, just above Confirm, it says the answer can
+ * be changed in Preferences any time, which is what is read last before confirming. The title may
  * wrap to as many lines as it needs, since the header holds nothing else and a question cut short is no question, and
  * Confirm sits in a row pinned under the scrolling [content] rather than in the header, where it would take the
  * title's width on a narrow phone and could not be missed at the end of a long one.
@@ -45,7 +49,7 @@ internal fun ConfirmedQuestionSheet(
 ) = CampfireBottomSheet(
     title = title,
     titleMaxLines = Int.MAX_VALUE,
-    isDismissible = false,
+    isDismissibleByTouch = false,
     onDismiss = onDismiss,
 ) { contentPadding ->
     val sheet = this
@@ -57,8 +61,15 @@ internal fun ConfirmedQuestionSheet(
             .fadingVerticalEdges(scrollState, sheetContainerColor())
             .bounceVerticalScroll(scrollState)
             .padding(horizontal = 16.dp),
-        content = content,
-    )
+    ) {
+        content()
+        Text(
+            modifier = Modifier.padding(top = 16.dp),
+            text = stringResource(Res.string.song_preference_change_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
     // The confirm button pads itself 8 dp from the end, which with this row's makes the sheet's 16.
     Row(
         modifier = Modifier

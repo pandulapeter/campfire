@@ -35,7 +35,6 @@ import com.pandulapeter.campfire.presentation.resources.chord_names_sounding_des
 import com.pandulapeter.campfire.presentation.resources.chord_names_title
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
-import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -45,9 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
  * fingered above the capo or by what sounds, or whether the capo keeps the key instead (`UserPreferences.capoKeepsKey`):
  * the chords named as they sound and a capo changing only the shapes. The first two cards end in the song's first
  * chords named their way, so the choice is seen rather than imagined. A [ConfirmedQuestionSheet], as the layout question
- * ([SongLayoutSheet]) is: a pick is written at once, the song behind it changing as it goes, and only Confirm closes
- * the sheet and answers the question; confirming without a pick keeps the shapes, which is what is shown as picked, and
- * a sheet put away without Confirm is asked again.
+ * ([SongLayoutSheet]) is: a pick is written at once, the song behind it changing as it goes, and only Confirm
+ * answers the question; confirming without a pick keeps the shapes, which is what is shown as picked, and
+ * a sheet put away without Confirm (back, Escape) is asked again.
  */
 @Composable
 internal fun ChordNamesSheet(
@@ -60,7 +59,12 @@ internal fun ChordNamesSheet(
         onConfirm = viewModel.preferencesController::markChordNamesChosen,
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
     ) {
-        ChordNamesMessage(capo = dialog.capo)
+        Text(
+            modifier = Modifier.padding(bottom = 16.dp),
+            text = textResource(Res.string.chord_names_example, dialog.capo.toString()),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         ChordNamesChoices(
             exampleChords = dialog.exampleChords(),
             chordNames = userPreferences?.chordNames,
@@ -71,25 +75,6 @@ internal fun ChordNamesSheet(
         )
     }
 }
-
-/** What the choice means for the song's [capo], then where it can be changed. */
-@Composable
-private fun ChordNamesMessage(
-    capo: Int,
-) {
-    MessageText(text = textResource(Res.string.chord_names_example, capo.toString()))
-    MessageText(text = stringResource(Res.string.song_preference_change_hint))
-}
-
-@Composable
-private fun MessageText(
-    text: String,
-) = Text(
-    modifier = Modifier.padding(bottom = 16.dp),
-    text = text,
-    style = MaterialTheme.typography.bodyMedium,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-)
 
 /**
  * The song's first chords named both ways, by the shapes and as they sound, joined as a line each; null where it has

@@ -970,6 +970,7 @@
     <string name="song_details_auto_scroll_pause">Detener desplazamiento</string>
     <string name="song_details_auto_scroll_speed">Velocidad de desplazamiento</string>
     <string name="song_layout_title">¿Cómo quieres ver las canciones?</string>
+    <string name="song_layout_message">Elige cómo ocupa la pantalla una canción mientras la tocas.</string>
     <string name="song_preference_change_hint">Se aplica a todas las canciones. Puedes cambiarlo cuando quieras en Preferencias, desde Ajustes o el menú de cualquier canción.</string>
     <string name="song_layout_pages">Páginas</string>
     <string name="song_layout_pages_description">La mayor parte posible de la canción en pantalla a la vez, en columnas que se pasan página a página</string>

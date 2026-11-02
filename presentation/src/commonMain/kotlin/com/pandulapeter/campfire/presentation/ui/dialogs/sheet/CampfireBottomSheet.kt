@@ -115,9 +115,9 @@ internal fun sheetContainerColor() = MaterialTheme.colorScheme.background.let { 
  *   the button that finishes what the sheet is for. The close they are handed is final: unlike the header's close
  *   button, a hide that follows an action is not taken back by a finger landing on the sliding sheet. The ones that
  *   write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
- * @param isDismissible Whether the sheet can be put away without a button of its own: by its close button, a swipe, the
- *   scrim, back, or Escape. A question asked until it is answered is not, so that a stray tap does not put it away: it
- *   goes by its own Confirm, or when the stack it is in asks it to close.
+ * @param isDismissibleByTouch Whether the sheet can be put away by a touch: its close button, a swipe, or the scrim.
+ *   Back and Escape put away every sheet. A question asked until it is answered is not, so that a stray tap does not put
+ *   it away: it goes by its own Confirm, by back or Escape (to be asked again), or when the stack it is in asks it to close.
  * @param onTopMoved Where the sheet's top edge is on the screen, on every frame it moves: for what is drawn behind the
  *   sheet and has to stay in the part of it the sheet leaves uncovered. Screen coordinates rather than the window's, since
  *   on Android the sheet is a window of its own.
@@ -134,7 +134,7 @@ internal fun CampfireBottomSheet(
     titleMaxLines: Int = 1,
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
-    isDismissible: Boolean = true,
+    isDismissibleByTouch: Boolean = true,
     onTopMoved: ((topOnScreen: Float) -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
@@ -212,8 +212,8 @@ internal fun CampfireBottomSheet(
         sheetState = sheetState,
         sheetMaxWidth = sheetMaxWidth,
         // Off for the slide of a final close, so that the second press of a double tap does not take hold of it.
-        sheetGesturesEnabled = isDismissible && !isCloseFinal,
-        properties = ModalBottomSheetProperties(shouldDismissOnBackPress = isDismissible, shouldDismissOnClickOutside = isDismissible),
+        sheetGesturesEnabled = isDismissibleByTouch && !isCloseFinal,
+        properties = ModalBottomSheetProperties(shouldDismissOnClickOutside = isDismissibleByTouch),
         containerColor = sheetContainerColor(),
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
@@ -300,7 +300,7 @@ internal fun CampfireBottomSheet(
                         subtitle = subtitle,
                         titleMaxLines = titleMaxLines,
                         actions = actions,
-                        onClose = if (isDismissible) cancel else null,
+                        onClose = if (isDismissibleByTouch) cancel else null,
                         onActionDone = close,
                     )
                     // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.

@@ -1006,6 +1006,7 @@
     <string name="song_details_auto_scroll_pause">עצירת גלילה</string>
     <string name="song_details_auto_scroll_speed">מהירות גלילה</string>
     <string name="song_layout_title">איך להציג את השירים?</string>
+    <string name="song_layout_message">בחרו איך שיר ממלא את המסך בזמן שאתם מנגנים אותו.</string>
     <string name="song_preference_change_hint">זה חל על כל השירים. אפשר לשנות את זה בכל עת בהעדפות, מההגדרות או מהתפריט של כל שיר.</string>
     <string name="song_layout_pages">עמודים</string>
     <string name="song_layout_pages_description">כמה שיותר מהשיר על המסך בבת אחת, בעמודות שמתחלפות עמוד אחר עמוד</string>
