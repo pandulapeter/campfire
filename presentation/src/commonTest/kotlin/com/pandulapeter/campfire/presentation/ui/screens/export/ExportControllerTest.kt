@@ -13,8 +13,10 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
@@ -28,12 +30,16 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.Transpositions
+import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
+import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
+import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.state.songText.FakeSongFiles
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -57,6 +63,7 @@ class ExportControllerTest {
     private val requests = mutableListOf<String>()
     private var libraryExport: ExportLibraryUseCase.Result? = null
     private val picker = RecordingFilePicker()
+    private var storedPreferences = testPreferences()
 
     private val asStored = { _: String, text: String -> text }
 
@@ -170,6 +177,25 @@ class ExportControllerTest {
     }
 
     @Test
+    fun `the export screen going flushes its options and cancels its PDF`() = runTest {
+        val (controller, dialogHost, _) = controller(visibleDialog = setlistExport)
+        val forgotten = mutableListOf<ShareTarget>()
+        controller.setPrintSettings(PrintSettings(fontSize = 16))
+        controller.exportPdf(picker, "gig.pdf", setlistExport, pageCount = 2, isShare = false) { CompletableDeferred<ByteArray>().await() }
+        runCurrent()
+        assertEquals(PdfExportProgress(done = 0, total = 2), controller.pdfExportProgress.value)
+        dialogHost.setVisibleDialog(null)
+        controller.onBeforeDialogChange(setlistExport, null, forgetShareCreation = { forgotten += it })
+        runCurrent()
+        assertEquals(16, storedPreferences.printSettings.fontSize)
+        // The pages are drawn on another dispatcher, whose cancellation reaches the export a hop later.
+        controller.isFileTransferActive.first { !it }
+        assertNull(controller.pdfExportProgress.value)
+        assertTrue(picker.saved.isEmpty())
+        assertEquals(listOf(ShareTarget(SharedLinkKind.SETLIST, "gig.setlist.json")), forgotten)
+    }
+
+    @Test
     fun `a capo written in the file prints the key of the shapes and engraves the tune as it sounds`() = runTest {
         val song = song("a.cho").copy(key = "Em")
         val text = "{key: Em}\n{capo: 2}\n[Em]Home, [C]home on the [D]range\n{start_of_abc}\nK:Em\n\"Em\"E2\n{end_of_abc}"
@@ -245,7 +271,9 @@ class ExportControllerTest {
                 override suspend fun invoke() = libraryExport
             },
             updateUserPreferences = object : UpdateUserPreferencesUseCase {
-                override suspend fun invoke(update: (UserPreferences) -> UserPreferences) = Unit
+                override suspend fun invoke(update: (UserPreferences) -> UserPreferences) {
+                    storedPreferences = update(storedPreferences)
+                }
             },
             writeDelayMillis = 0L,
         )

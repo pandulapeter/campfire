@@ -120,7 +120,6 @@ import com.pandulapeter.campfire.presentation.ui.navigation.closeScreensShowing
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
-import com.pandulapeter.campfire.presentation.ui.share.shareTargetOf
 import com.pandulapeter.campfire.presentation.ui.share.ShareLinkController
 import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigins
 import com.pandulapeter.campfire.presentation.ui.sync.showSyncConsentAnswer
@@ -129,6 +128,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.Capos
 import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
+import com.pandulapeter.campfire.presentation.ui.screens.export.onBeforeDialogChange
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.navigation.onboardingSteps
@@ -145,6 +145,7 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportSta
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.ModeEndings
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SelectionEditing
@@ -278,6 +279,12 @@ class CampfireViewModel(
     )
 
     /** Built before the dialog host and the navigator, whose listeners it is; its lambdas run only on a change. */
+    private val modeEndings = ModeEndings(
+        endSetlistReordering = { setlistsController.reorderingSetlistFileName = null },
+        endSongSelection = { songSelection.end() },
+    )
+
+    /** Built before the dialog host and the navigator, as [modeEndings] is. */
     private val soundLifetime = SoundLifetime(
         metronome = metronome,
         stopTuner = { tunerController.stopTuner() },
@@ -286,28 +293,12 @@ class CampfireViewModel(
     )
 
     internal val dialogHost: DialogHost = DialogHost(viewModelScope).apply {
-        addBeforeDialogChange { _, dialogType ->
-            // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
-            // ways of leaving the rows do rather than losing it to a name that has stopped existing.
-            if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist || dialogType is DialogType.EditSetlist) {
-                setlistsController.reorderingSetlistFileName = null
-            }
-        }
+        addBeforeDialogChange { _, dialogType -> modeEndings.onBeforeDialogChange(dialogType) }
         addBeforeDialogChange { _, dialogType ->
             appExitController.onBeforeDialogChange(dialogType)
         }
         addBeforeDialogChange { previousDialog, dialogType ->
-            // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
-            // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
-            // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
-            // nothing once it is no longer the dialog on screen.
-            if (previousDialog is DialogType.Export && dialogType != previousDialog) {
-                exportController.flushPrintSettings()
-                // How sharing it last went is for this screen only: opened again, it offers to share afresh.
-                shareTargetOf(previousDialog)?.let(shareLinkController::forgetCreation)
-                // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
-                exportController.cancelPdfExport()
-            }
+            exportController.onBeforeDialogChange(previousDialog, dialogType, forgetShareCreation = shareLinkController::forgetCreation)
         }
         addBeforeDialogChange(soundLifetime::onBeforeDialogChange)
         addOpenDialogsChange { before, after ->
@@ -338,14 +329,7 @@ class CampfireViewModel(
         endSongSelection = { songSelection.end() },
         onTransitionEnded = { songTextStore.pruneSongTexts() },
     ).apply {
-        addOnBackStackChanged { _, stack ->
-            if (stack.lastOrNull() != CampfireDestination.Setlists) setlistsController.reorderingSetlistFileName = null
-        }
-        addOnBackStackChanged { _, stack ->
-            // A tab tapped, a song opened by an import, the import screen: none of them may stand over a mode nobody can
-            // see, so leaving the songs drops the selection, as the reorder mode is dropped with its screen.
-            if (stack.lastOrNull() != CampfireDestination.Songs) songSelection.end()
-        }
+        addOnBackStackChanged { _, stack -> modeEndings.onBackStackChanged(stack) }
         addOnBackStackChanged(soundLifetime::onBackStackChanged)
         addOnBackStackChanged { previousTop, stack ->
             // Another tab left for the songs opens them; anything closed over them returns to the list as it was left.
@@ -784,10 +768,7 @@ class CampfireViewModel(
         editorSession.startRecovery()
         savedDialogRestorer.start()
         songSelection.startPruning(libraryState.screenData)
-        viewModelScope.launch {
-            // Performance mode leaves no row menu to start the mode from, and no way to act on what is ticked.
-            preferencesController.isPerformanceModeEnabled.collect { if (it) songSelection.end() }
-        }
+        modeEndings.start(viewModelScope, preferencesController.isPerformanceModeEnabled)
         viewModelScope.launch {
             // From the first read on, so that a start with the songs switched off opens on the first tool rather than
             // on a songs screen that is not there.
