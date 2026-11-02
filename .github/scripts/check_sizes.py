@@ -7,25 +7,27 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Keeps a change from pushing a file, a function or a CLAUDE.md past the sizes the code-style skill sets.
+Keeps a change from pushing a file, a function or a CLAUDE.md past the sizes the code-style skill sets, or from
+growing one already past them.
 
 Main Kotlin sources (tests are left out) should be at most FILE_LINES lines long, and a top-level function — a
 Composable above all — at most FUNCTION_LINES. A CLAUDE.md should be at most ROOT_WORDS words at the root,
 MODULE_WORDS in a module, `.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
 
-Only crossing a limit fails: a Kotlin file or function within it before the change and past it after. What was already
-past it may grow or shrink, since splitting it is a refactor of its own that a review sweep plans, so no list of
-exceptions is kept and nothing is to be updated when a file moves or shrinks. A file git sees as renamed is judged
-against its old path, and a function against its old self wherever in the change it was. A CLAUDE.md never fails:
-a word count cannot tell a needed rule from narration.
+A Kotlin file or function fails when the change takes it past its limit, or when it was already past it and the
+change makes it longer than it was; staying as long or shrinking passes, so a split that moves code out of it does.
+Nothing is stored: the base revision is the only reference, so no list of exceptions is kept and nothing is to be
+updated when a file moves or shrinks. A file git sees as renamed is judged against its old path, and a function against
+its old self wherever in the change it was. A CLAUDE.md never fails: a word count cannot tell a needed rule from
+narration.
 
 With no arguments it judges the staged change against HEAD (.githooks/pre-commit); `--base <rev>` judges the working
 tree against that revision (tests.yml, on a pull request or a push to master). `--hook` is the Claude Code edit hook
 (.claude/settings.json): it reads the hook's JSON from stdin and judges the file the edit wrote against HEAD, so that a
-file is split while it is being written; an edit that grows what is already past its limit, or a CLAUDE.md past its
-budget, gets a note instead. `--shell-hook` is the Claude Code hook after a shell command, which may have written any
-file without the edit hook seeing it: it judges the working tree against HEAD, files git does not track yet included,
-and reports failures only, since a note would repeat after every command.
+file is split while it is being written; an edit that adds lines to a CLAUDE.md past its budget gets a note instead.
+`--shell-hook` is the Claude Code hook after a shell command, which may have written any file without the edit hook
+seeing it: it judges the working tree against HEAD, files git does not track yet included, and reports failures only,
+since a note would repeat after every command.
 """
 
 import fnmatch
@@ -178,12 +180,12 @@ def judged(before, after):
         if unit == "words":
             notes.append(f"{key} is {size} words, past the {limit} the code-style skill sets; cut narration, not "
                          "rules.")
-        elif previous is not None and previous[0] > limit:
-            notes.append(f"{key} is {size} {unit}, past the limit of {limit}; if the change added a responsibility, "
-                         "give it a file or function of its own.")
-        else:
+        elif previous is None or previous[0] <= limit:
             failures.append(f"{key} is {size} {unit}, past the limit of {limit}; split it by cohesion (see the "
                             "code-style skill).")
+        elif size > previous[0]:
+            failures.append(f"{key} grew from {previous[0]} to {size} {unit}, already past the limit of {limit}; "
+                            "move code out of it, never into it (see the code-style skill).")
     return failures, notes
 
 
@@ -244,7 +246,7 @@ def checked_edit(hook_input):
     relative = os.path.relpath(os.path.realpath(path), os.path.realpath(top))
     # A file the edit left as HEAD has it is not in the diff, and one HEAD lacks reads as empty there.
     failures, notes = judged_change({relative: changed("HEAD", False).get(relative, relative)}, "HEAD", read_file)
-    # Every edit of a file already past its limit would repeat the note; only one that adds lines earns it.
+    # Every edit of a CLAUDE.md already past its budget would repeat the note; only one that adds lines earns it.
     if "old_string" in tool_input or "edits" in tool_input:
         edits = tool_input.get("edits") or [tool_input]
         if sum(edit.get("new_string", "").count("\n") - edit.get("old_string", "").count("\n") for edit in edits) <= 0:

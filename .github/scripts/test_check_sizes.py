@@ -87,13 +87,32 @@ class JudgedTest(unittest.TestCase):
         failures, _ = judged({}, {"A.kt::f": (FUNCTION_LINES + 1, FUNCTION_LINES, "lines")})
         self.assertEqual(1, len(failures))
 
-    def test_what_was_already_past_a_limit_may_grow_with_a_note(self):
-        failures, notes = judged({"A.kt": (600, 500, "lines")}, {"A.kt": (650, 500, "lines")})
-        self.assertEqual(([], 1), (failures, len(notes)))
+    def test_what_was_already_past_a_limit_may_not_grow(self):
+        failures, _ = judged({"A.kt": (600, 500, "lines")}, {"A.kt": (601, 500, "lines")})
+        self.assertEqual(1, len(failures))
+        self.assertIn("grew from 600 to 601", failures[0])
+
+    def test_what_was_already_past_a_limit_may_stay_as_long_or_shrink(self):
+        for size in (600, 550):
+            self.assertEqual(([], []), judged({"A.kt": (600, 500, "lines")}, {"A.kt": (size, 500, "lines")}))
+
+    def test_a_split_that_shrinks_the_old_file_passes(self):
+        before = {"A.kt": (900, 500, "lines"), "A.kt::f": (300, 120, "lines")}
+        after = {
+            "A.kt": (500, 500, "lines"),
+            "A.kt::f": (100, 120, "lines"),
+            "B.kt": (420, 500, "lines"),
+            "B.kt::g": (110, 120, "lines"),
+        }
+        self.assertEqual(([], []), judged(before, after))
 
     def test_a_function_moved_to_another_file_keeps_its_past(self):
         failures, _ = judged({"A.kt::f": (200, 120, "lines")}, {"B.kt::f": (200, 120, "lines")})
         self.assertEqual([], failures)
+
+    def test_a_function_moved_to_another_file_may_not_grow_there(self):
+        failures, _ = judged({"A.kt::f": (200, 120, "lines")}, {"B.kt::f": (201, 120, "lines")})
+        self.assertEqual(1, len(failures))
 
     def test_a_claude_md_past_its_budget_only_gets_a_note(self):
         failures, notes = judged({}, {"CLAUDE.md": (3000, 2500, "words")})
@@ -127,6 +146,33 @@ class ChangedTest(unittest.TestCase):
             finally:
                 os.chdir(working_directory)
             self.assertEqual({"New.kt": "Old.kt", "Edited.kt": "Edited.kt", "Added.kt": None}, paths)
+
+    def test_the_shell_hook_fails_a_file_already_past_its_limit_that_grows_and_passes_one_that_shrinks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = os.path.join(directory, "module", "src", "commonMain")
+            os.makedirs(source)
+            for name in ("Grown.kt", "Shrunk.kt"):
+                with open(os.path.join(source, name), "w") as file:
+                    file.write("x\n" * (FILE_LINES + 10))
+            subprocess.run(["git", "-C", directory, "init", "-q"], check=True, capture_output=True)
+            subprocess.run(["git", "-C", directory, "add", "."], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", directory, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"],
+                check=True,
+                capture_output=True,
+            )
+            with open(os.path.join(source, "Grown.kt"), "a") as file:
+                file.write("y\n")
+            with open(os.path.join(source, "Shrunk.kt"), "w") as file:
+                file.write("x\n" * FILE_LINES)
+            working_directory = os.getcwd()
+            os.chdir(directory)
+            try:
+                failures = checked_tree()
+            finally:
+                os.chdir(working_directory)
+            self.assertEqual(1, len(failures))
+            self.assertIn("Grown.kt", failures[0])
 
     def test_the_shell_hook_judges_files_git_does_not_track_yet(self):
         with tempfile.TemporaryDirectory() as directory:
