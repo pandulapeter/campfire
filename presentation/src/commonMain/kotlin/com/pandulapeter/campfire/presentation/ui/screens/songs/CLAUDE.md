@@ -13,72 +13,61 @@
 The songs screen.
 
 - Before the first search interaction, arriving section headers are laid out expanded, so loading cannot keep a
-  collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance
-  (no mask at the real top, grows over the first 24dp, also when the first card is item 1).
-
-- An open search runs the sections together (`withoutSectionHeaders`), so cards fill the columns a section's last row
-  left open; the Selection group loses its header too and keeps the divider (`SongGroup.isSelection`).
-- **The top left card in sight stays where it is on screen** as the search opens and closes
-  (`KeepCardsInPlaceAcrossSearch`, `SearchCardHold`, narrated by `ListAnchor` on the bar's spring); closing unscrolled
-  over the same songs puts it back where it was.
+  collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance.
+- An open search runs the sections together, so cards fill the columns a section's last row left open; the Selection
+  group loses its header too and keeps the divider.
+- **The top left card in sight stays where it is on screen** as the search opens and closes; closing unscrolled over the
+  same songs puts it back where it was.
 
 ## Random picks
 
-- With more than `RANDOM_PICKS_MIN_SONGS` songs in the list (after the filters), both sorts are led by five of them drawn
-  at random (`randomPicks`, `SongGroupHeader.RandomPicks`), as copies with keys of their own, then the divider the
-  Selection has. Gone while a search is open (`withoutSectionHeaders`) and in selection mode (`withSelectionLeading`),
-  and with the Settings → Features switch (`isRandomPicksEnabled`). Drawn only from a library read whole, never from a
-  first read's partial batches, which would swap them under the reader; the launch screen waits for the read meanwhile.
-- `RandomPicksDraw` holds a device-local seed, never synced or kept beyond a restored process (`SavedStateStore`, with
-  its draw and stop times, so a restored process judges its first start as a return): new picks once an hour has gone
-  by on the wall clock, taken only as the screen is opened (the app returning to the front on it after at least five
-  minutes away, or another tab left for it), never under a reader; the header's Refresh draws at once. Each song is ranked on its own (`pickRank`), so a sync run's change moves one pick.
-- Under the first picks shown, `RandomPicksQuestionCard` asks whether to keep them, saying the switch is in Settings;
-  either answer, or the switch flipped, sets `isRandomPicksQuestionAnswered` for good.
-- A sort picked from the menu over the very top of the list glides down to the first section once the new order
-  arrives (`SortChangeReveal`), since the picks it leaves in sight do not show the change; picked over a list still
-  resting where that left it, the new order opens on its first section (`ScrollToTopWhenChanged`'s `topIndex`). From
-  anywhere else the sort sends the list to the top as before.
+- Over `RANDOM_PICKS_MIN_SONGS` songs (after the filters), both sorts are led by five random ones, as copies with keys of
+  their own, then a divider. Gone while a search is open and in selection mode. Drawn only from a library read whole,
+  never from a first read's partial batches, which would swap them under the reader; the launch screen waits meanwhile.
+- The seed is device-local, never synced or kept beyond a restored process (saved with its draw and stop times, so a
+  restored process judges its first start as a return). New picks once an hour has gone by on the wall clock, taken only
+  as the screen is opened (the app back in front on it after at least five minutes away, or another tab left for it),
+  never under a reader; Refresh draws at once. Each song is ranked on its own, so a sync run's change moves one pick.
+- Under the first picks shown a card asks whether to keep them, saying the switch is in Settings; either answer, or the
+  switch flipped, answers it for good.
+- A sort picked over the very top of the list glides down to the first section once the new order arrives, since the
+  picks in sight do not show the change; picked over a list still resting there, the new order opens on its first
+  section. From anywhere else the sort sends the list to the top.
 
 ## Back resets the filters
 
-- With Songs the whole back stack, a back (gesture, system button, the web's Escape) resets the tag and language
-  filters instead of leaving the app, once no search is open and no selection is on (`songFilterBackRecession`); the
-  desktop's Escape does it in its key handler. A predictive gesture fades the filter action's badge and fill with the finger.
+- With Songs the whole back stack, a back (gesture, system button, the web's Escape) resets the tag and language filters
+  instead of leaving the app, once no search is open and no selection is on; the desktop's Escape does it in its key
+  handler. A predictive gesture fades the filter action's badge and fill with the finger.
 - The web's browser Back is not taken: the filters get no history entry, since one pushed again on returning from
   another tab has no user gesture behind it, and Chrome's Back skips such entries.
 
 ## The add songs hint
 
-- While the whole library holds fewer than three songs (the demo library is two), the list ends in `AddSongsHintCard`:
-  pasting a song copied off any web page, and importing another app's export. It continues the onboarding, so it has no
-  dismiss button; the third song takes it away. Not under a placeholder, a search, the selection, or performance mode
-  (`isAddSongsHintShown`).
-- It is the last grid item, never the first, so `itemIndexOf` and `SongSectionIndex` need not count it.
+- Under three songs in the whole library (the demo library is two) the list ends in a hint: pasting a song copied off
+  any web page, and importing another app's export. It continues the onboarding, so it has no dismiss button; the third
+  song takes it away. Not under a placeholder, a search, the selection, or performance mode.
+- It is the last grid item, never the first, so the item and section indices need not count it.
 
 ## Selecting songs
 
-- **Started only from a song's own menu** ("Select multiple", last of `SongActions`' `fileEditItems`), with that song
-  ticked; long press and right click still open the menu, and the bar gets no button for it.
-- State is `CampfireViewModel`'s `SongSelection` (`ui/state`), by file name, so search, sort, and filters keep working
-  and keep the selection. A song leaving a library read whole leaves the selection (a rescan's batches do not prune).
-- Ends on Done, Back, Escape (after closing an open search first), web Back, whenever Songs stops being on top (a tab,
-  an import screen, a song opened), and when performance mode comes on. Never saved or restored. **No action ends it**,
-  so one selection can be tagged, filed, then exported.
-- Cards show a crossfaded box in place of star and menu; a tap ticks; a screen reader hears one checkbox. A tag or
-  language tapped under a song still filters.
-- **Ticked songs lead the list** (`ChecklistOrder`, as in Choose songs) under a counting header
-  (`SongGroupHeader.Selection`, "✓" on the fast scroller), always followed by a divider (`hasDividerAfter`,
-  counted as an item by `itemIndexOf` and `SongSectionIndex`).
-  - At a refresh, ticked songs lead in list order, taken out of their sections (an emptied section goes). A refresh is a
-    change of search, sort, or filter (`SongGroups.filterKey`), or Select all (`SongSelection.selectAllCount`); the
-    order is keyed by session (`rememberSongGroupsWithSelection`).
-  - A tick since then joins the end of the group **as a copy** (`SongGroup.copiedFileNames`, its own grid item key)
-    while the tapped card stays put; an untick stays in the group until the next refresh.
-- **Nothing on screen moves under a tick**: `KeepCardsInPlaceUnderTick` keeps the first visible card outside the group
-  in place (like `KeepChecklistRowsInPlace`).
-- The bar keeps search, sort, and filter; New gives way to `SongSelectionMenu`, which stays while search is open
-  (`areClosedSearchActionsKeptInSearch`). Actions are disabled while nothing is ticked or a write runs
-  (`isEditingSongs`, which also shows the import progress bar).
-- Actions run on the selection in the screen's sort order (`inListOrder`): the sheets are in `ui/dialogs`; one
-  song is shared as the row's Share song, several through the export screen. **There is no bulk delete.**
+- **Started only from a song's own menu** ("Select multiple", last), with that song ticked; long press and right click
+  still open the menu, and the bar gets no button for it.
+- Kept by file name, so search, sort, and filters keep the selection. A song leaving a library read whole leaves it (a
+  rescan's batches do not prune).
+- Ends on Done, Back, Escape (after closing an open search first), web Back, whenever Songs stops being on top, and when
+  performance mode comes on. Never saved or restored. **No action ends it**, so one selection can be tagged, filed,
+  then exported.
+- Cards show a crossfaded box in place of star and menu; a screen reader hears one checkbox. A tag or language tapped
+  under a song still filters.
+- **Ticked songs lead the list** (as in Choose songs) under a counting header ("✓" on the fast scroller), always
+  followed by a divider, counted as an item by the indices.
+  - At a refresh (a change of search, sort, or filter, or Select all), ticked songs lead in list order, taken out of
+    their sections (an emptied section goes).
+  - A tick since then joins the end of the group **as a copy** (its own item key) while the tapped card stays put; an
+    untick stays in the group until the next refresh.
+- **Nothing on screen moves under a tick**: the first visible card outside the group is kept in place.
+- The bar keeps search, sort, and filter; New gives way to the selection menu, which stays while search is open. Actions
+  are disabled while nothing is ticked or a write runs.
+- Actions run in the screen's sort order; one song is shared as the row's Share song, several through the export
+  screen. **There is no bulk delete.**
