@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /** Extracts positioned text on the computation dispatcher, with the same bounds and result on every platform. */
 interface DocumentLocalSource {
     /** Null for unsupported, protected, malformed or textless documents. Cancellation still propagates. */
-    suspend fun extract(file: ImportedFile): ExtractedDocument?
+    suspend fun extract(file: ImportedFile): ChordSheet?
 }

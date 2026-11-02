@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.formats.document
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -20,8 +20,8 @@ import kotlin.math.roundToInt
 
 /** Glyphs positioned on a page, set into lines, with the columns of a page read one after another. */
 internal object PdfLineLayout {
-    data class Positioned(val span: ExtractedDocument.Span, val y: Double)
-    data class Line(val spans: List<ExtractedDocument.Span>, val y: Double) {
+    data class Positioned(val span: ChordSheet.Span, val y: Double)
+    data class Line(val spans: List<ChordSheet.Span>, val y: Double) {
         val text get() = spans.joinToString("") { it.text }
     }
 
@@ -75,7 +75,7 @@ internal object PdfLineLayout {
             else group += glyph
         }
         val lines = groups.map { group ->
-            val spans = mutableListOf<ExtractedDocument.Span>()
+            val spans = mutableListOf<ChordSheet.Span>()
             for (glyph in group.sortedBy { it.span.start }) {
                 val previous = spans.lastOrNull()
                 val span = glyph.span
@@ -85,7 +85,7 @@ internal object PdfLineLayout {
                 if (gap > span.size * 0.25 && previous?.text?.endsWith(' ') != true && !span.text.startsWith(' ')) {
                     val count = if (span.isMonospace) (gap / (span.size * 0.6)).roundToInt().coerceIn(1, 1000) else 1
                     charge(count)
-                    spans += ExtractedDocument.Span(" ".repeat(count), previous!!.end, span.start, span.size, isMonospace = span.isMonospace)
+                    spans += ChordSheet.Span(" ".repeat(count), previous!!.end, span.start, span.size, isMonospace = span.isMonospace)
                 }
                 spans += span
             }

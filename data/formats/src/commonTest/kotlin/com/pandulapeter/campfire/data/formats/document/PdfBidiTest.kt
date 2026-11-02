@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.data.formats.document
 
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -19,7 +19,7 @@ class PdfBidiTest {
 
     /** [drawn] laid out from [left] a glyph of six points each, as a producer draws a line from the left. */
     private fun glyphs(drawn: String, left: Double = 0.0) =
-        drawn.mapIndexed { index, character -> ExtractedDocument.Span(character.toString(), left + index * 6, left + index * 6 + 6, 10.0) }
+        drawn.mapIndexed { index, character -> ChordSheet.Span(character.toString(), left + index * 6, left + index * 6 + 6, 10.0) }
 
     private fun column(right: Double, direction: WritingDirection = WritingDirection.RIGHT_TO_LEFT) = PdfBidi.Column(0.0, right, direction)
 
@@ -56,9 +56,9 @@ class PdfBidiTest {
     fun `points drawn as glyphs of their own stay with the letter they are drawn over`() {
         // "שָל": the qamats is drawn over the shin, starting a little left of it, so that it sorts between the letters.
         val spans = listOf(
-            ExtractedDocument.Span("\u05dc", 0.0, 6.0, 10.0),
-            ExtractedDocument.Span("\u05b8", 5.5, 7.5, 10.0),
-            ExtractedDocument.Span("\u05e9", 6.0, 12.0, 10.0),
+            ChordSheet.Span("\u05dc", 0.0, 6.0, 10.0),
+            ChordSheet.Span("\u05b8", 5.5, 7.5, 10.0),
+            ChordSheet.Span("\u05e9", 6.0, 12.0, 10.0),
         )
 
         assertEquals("\u05e9\u05b8\u05dc", PdfBidi.readingOrder(spans, column(12.0)).single().text)
@@ -66,7 +66,7 @@ class PdfBidiTest {
 
     @Test
     fun `a line written in reading order under ActualText, or holding nothing read from the right, is left as it is`() {
-        val actual = listOf(ExtractedDocument.Span("שלום", 0.0, 24.0, 10.0, pieces = glyphs("שלום").reversed()))
+        val actual = listOf(ChordSheet.Span("שלום", 0.0, 24.0, 10.0, pieces = glyphs("שלום").reversed()))
         val latin = glyphs("Am   G")
 
         assertSame(actual, PdfBidi.readingOrder(actual, column(24.0)))

@@ -11,8 +11,8 @@
 # :data:formats
 
 Pure-Kotlin PDF and Word text extractors and zip reader/writer, on no third-party library (only `kotlinx.coroutines`)
-and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no network. Public is only what
-`:data:source:local:implementation` uses. Documents are read locally, never rendered, uploaded, or kept.
+and no module but `:data:model`, `:chordpro`, and `:chordsheet` (a document is extracted into its `ChordSheet`): no
+`FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation` uses. Documents are read locally, never rendered, uploaded, or kept.
 
 ## `document/`
 
@@ -39,7 +39,7 @@ and no module but `:data:model` and `:chordpro`: no `FileStorage`, no Koin, no n
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)
   stays; a page count stands alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's
   lowest line counting this page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
-- A PDF whose `/Producer` is Campfire is flagged (`ExtractedDocument.isCampfireExport`) for the converter to read by
+- A PDF whose `/Producer` is Campfire is flagged (`ChordSheet.isCampfireExport`) for the converter to read by
   layout; a span is italic by its font's name or italic flag; a line carries its baseline.
 - An `ActualText` over glyphs on one baseline replaces them (how Campfire's export carries right-to-left runs in logical
   order); the glyphs stay as its `pieces` where they spell its text in order, so the converter still knows where each

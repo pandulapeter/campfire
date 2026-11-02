@@ -25,14 +25,14 @@ class DocumentGoldenTest {
     @Test
     fun `campfire export imports accents and chords at their printed positions`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire.pdf", resource("campfire.pdf"))))
-        val songs = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
+        val songs = ChordSheetConverter.convert(document, String::normalizedToNfc)
         assertEquals(listOf(resource("campfire.cho").decodeToString()), songs)
     }
 
     @Test
     fun `campfire export of a right-to-left song imports back unchanged, a Latin word's chord included`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-hebrew.pdf", resource("campfire-hebrew.pdf"))))
-        assertEquals(listOf(resource("campfire-hebrew.cho").decodeToString()), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+        assertEquals(listOf(resource("campfire-hebrew.cho").decodeToString()), ChordSheetConverter.convert(document, String::normalizedToNfc))
     }
 
     @Test
@@ -41,14 +41,14 @@ class DocumentGoldenTest {
         val expected = "{title: \u05e9\u05d5\u05e8\u05d5\u05ea}\n\n{start_of_verse: Verse 1}\n" + (1..30).joinToString("\n") {
             "[Am]\u05e9\u05d5\u05e8\u05d4 ${it.toString().padStart(2, '0')} \u05e9\u05e8\u05d9\u05dd [F]\u05d1\u05d9\u05d7\u05d3."
         } + "\n{end_of_verse}\n"
-        assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+        assertEquals(listOf(expected), ChordSheetConverter.convert(document, String::normalizedToNfc))
     }
 
     @Test
     fun `other producers' right-to-left lines drawn from the left import in reading order with their chords`() = runBlocking {
         for (name in listOf("reportlab-hebrew.pdf", "chrome-hebrew.pdf")) {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(name, resource(name))), name)
-            val result = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
+            val result = ChordSheetConverter.convert(document, String::normalizedToNfc)
             assertEquals(resource("${name.substringBeforeLast('.')}.cho").decodeToString(), result.joinToString("{new_song}\n"), name)
         }
     }
@@ -65,7 +65,7 @@ class DocumentGoldenTest {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns.pdf", resource("campfire-columns.pdf"))))
         val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
             (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}\n"
-        assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+        assertEquals(listOf(expected), ChordSheetConverter.convert(document, String::normalizedToNfc))
     }
 
     @Test
@@ -74,7 +74,7 @@ class DocumentGoldenTest {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("$name.pdf", resource("$name.pdf"))), name)
             val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
                 (1..lineCount).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} [F]sung." } + "\n{end_of_verse}\n"
-            assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc), name)
+            assertEquals(listOf(expected), ChordSheetConverter.convert(document, String::normalizedToNfc), name)
         }
     }
 
@@ -85,16 +85,16 @@ class DocumentGoldenTest {
         val expected = "{title: Dense}\n\n{start_of_verse: Verse 1}\n" + (1..40).joinToString("\n") {
             "[Am]Line ${it.toString().padStart(3, '0')}\nsinging all\nthe [F]words\nof a long\nline together"
         } + "\n{end_of_verse}\n"
-        assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+        assertEquals(listOf(expected), ChordSheetConverter.convert(document, String::normalizedToNfc))
     }
 
     @Test
     fun `independent generator fixtures match their ChordPro golden files`() = runBlocking {
         for (name in listOf("python-docx.docx", "libreoffice.docx", "reportlab.pdf", "libreoffice.pdf", "chrome.pdf", "reportlab-unicode.pdf", "two-column.pdf", "songbook.pdf", "songbook-numbered.pdf", "songbook-styled.pdf")) {
             val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(name, resource(name))), name)
-            val result = ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
+            val result = ChordSheetConverter.convert(document, String::normalizedToNfc)
             assertEquals(resource("${name.substringBeforeLast('.')}.cho").decodeToString(), result.joinToString("{new_song}\n"), name)
-            assertEquals(result, ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc), name)
+            assertEquals(result, ChordSheetConverter.convert(document, String::normalizedToNfc), name)
         }
         assertNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("protected.pdf", resource("protected.pdf"))))
     }

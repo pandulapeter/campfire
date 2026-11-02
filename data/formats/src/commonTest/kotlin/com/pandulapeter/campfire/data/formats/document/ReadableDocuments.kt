@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlinx.coroutines.CancellationException
@@ -22,7 +22,7 @@ import kotlinx.coroutines.CancellationException
  */
 internal object ReadableDocuments {
 
-    suspend fun extract(file: ImportedFile): ExtractedDocument? {
+    suspend fun extract(file: ImportedFile): ChordSheet? {
         if (file.isTooLarge || file.bytes.size > ImportLimits.MAX_DOCUMENT_FILE_SIZE) return null
         return try {
             val document = when (file.name.substringAfterLast('.').lowercase()) {

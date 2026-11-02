@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -78,10 +78,10 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `converted documents are prettified too`() = runTest {
         val source = object : DocumentRepository {
-            override suspend fun extract(file: ImportedFile) = ExtractedDocument(listOf(ExtractedDocument.Page(listOf(
-                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Song", 0.0, 80.0, 20.0)), isHeading = true),
-                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
-                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+            override suspend fun extract(file: ImportedFile) = ChordSheet(listOf(ChordSheet.Page(listOf(
+                ChordSheet.Line(listOf(ChordSheet.Span("Song", 0.0, 80.0, 20.0)), isHeading = true),
+                ChordSheet.Line(listOf(ChordSheet.Span("Am", 0.0, 12.0, 10.0), ChordSheet.Span("C", 42.0, 48.0, 10.0))),
+                ChordSheet.Line(listOf(ChordSheet.Span("Hello world", 0.0, 66.0, 10.0))),
             ))))
         }
         for (name in listOf("source.pdf", "source.docx")) {
@@ -112,10 +112,10 @@ class ImportFilesUseCaseImplTest {
     @Test
     fun `documents use headers preserve source names and report unreadable ones separately`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
-        val document = ExtractedDocument(listOf(ExtractedDocument.Page(listOf(
-            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Title", 0.0, 80.0, 20.0)), isHeading = true),
-            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
-            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+        val document = ChordSheet(listOf(ChordSheet.Page(listOf(
+            ChordSheet.Line(listOf(ChordSheet.Span("Title", 0.0, 80.0, 20.0)), isHeading = true),
+            ChordSheet.Line(listOf(ChordSheet.Span("Am", 0.0, 12.0, 10.0), ChordSheet.Span("C", 42.0, 48.0, 10.0))),
+            ChordSheet.Line(listOf(ChordSheet.Span("Hello world", 0.0, 66.0, 10.0))),
         ))))
         val source = object : DocumentRepository {
             override suspend fun extract(file: ImportedFile) = document.takeIf { file.bytes.isNotEmpty() }
@@ -209,11 +209,11 @@ class ImportFilesUseCaseImplTest {
     fun `multi song documents name each header and offer no single song open action`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val documents = object : DocumentRepository {
-            override suspend fun extract(file: ImportedFile) = ExtractedDocument(listOf("First", "Second").map { title ->
-                ExtractedDocument.Page(listOf(
-                    ExtractedDocument.Line(listOf(ExtractedDocument.Span(title, 0.0, 80.0, 20.0)), isHeading = true),
-                    ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
-                    ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+            override suspend fun extract(file: ImportedFile) = ChordSheet(listOf("First", "Second").map { title ->
+                ChordSheet.Page(listOf(
+                    ChordSheet.Line(listOf(ChordSheet.Span(title, 0.0, 80.0, 20.0)), isHeading = true),
+                    ChordSheet.Line(listOf(ChordSheet.Span("Am", 0.0, 12.0, 10.0), ChordSheet.Span("C", 42.0, 48.0, 10.0))),
+                    ChordSheet.Line(listOf(ChordSheet.Span("Hello world", 0.0, 66.0, 10.0))),
                 ))
             })
         }
@@ -227,7 +227,7 @@ class ImportFilesUseCaseImplTest {
     private fun prepare(
         songs: FakeSongRepository,
         documents: DocumentRepository = object : DocumentRepository {
-            override suspend fun extract(file: ImportedFile): ExtractedDocument? = null
+            override suspend fun extract(file: ImportedFile): ChordSheet? = null
         },
         archive: ArchiveRepository = FakeArchiveRepository(),
         setlists: FakeSetlistRepository = FakeSetlistRepository(),

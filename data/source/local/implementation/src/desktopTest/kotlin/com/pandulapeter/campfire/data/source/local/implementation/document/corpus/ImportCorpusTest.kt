@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
-import com.pandulapeter.campfire.data.source.local.implementation.document.sheet
 import com.pandulapeter.campfire.data.source.local.implementation.source.DocumentLocalSourceImpl
 import java.io.File
 import kotlin.test.Test
@@ -85,7 +84,7 @@ class ImportCorpusTest {
             ChordSheetConverter.convert(ChordSheet.ofPlainText(file.readBytes().decodeLibraryText()), String::normalizedToNfc)
         } else {
             val document = DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile(file.name, file.readBytes())) ?: return null
-            ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc)
+            ChordSheetConverter.convert(document, String::normalizedToNfc)
         }
         return songs.joinToString("{new_song}\n")
     }

@@ -10,14 +10,14 @@
 package com.pandulapeter.campfire.data.formats.document
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import kotlinx.coroutines.yield
 
 object DocxTextExtractor {
-    suspend fun extract(bytes: ByteArray): ExtractedDocument {
+    suspend fun extract(bytes: ByteArray): ChordSheet {
         require(bytes.size >= 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4b.toByte())
         val parts = ZipReader.read(bytes, maxTotalSize = ImportLimits.MAX_DOCUMENT_FILE_SIZE, limitOf = { name, _ ->
             if (name == "word/document.xml" || name == "word/styles.xml") EntryPolicy.Read(ImportLimits.MAX_TEXT_FILE_SIZE) else EntryPolicy.Skip
@@ -25,7 +25,7 @@ object DocxTextExtractor {
         return fromXml(requireNotNull(parts["word/document.xml"]), parts["word/styles.xml"])
     }
 
-    internal suspend fun fromXml(document: String, stylesXml: String? = null): ExtractedDocument {
+    internal suspend fun fromXml(document: String, stylesXml: String? = null): ChordSheet {
         val styles = stylesXml?.let(::parseXml)
         val definitions = styles?.children?.filter { it.localName == "style" }?.associateBy { it.attribute("styleId").orEmpty() }.orEmpty()
         val defaultParagraph = definitions.entries.firstOrNull { it.value.attribute("type") == "paragraph" && it.value.attribute("default") in listOf("1", "true") }?.key
@@ -38,17 +38,17 @@ object DocxTextExtractor {
         val root = parseXml(document)
         require(root.localName == "document")
         val body = requireNotNull(root.child("body"))
-        val pages = mutableListOf<MutableList<ExtractedDocument.Line>>(mutableListOf())
+        val pages = mutableListOf<MutableList<ChordSheet.Line>>(mutableListOf())
         var characters = 0L
-        fun page() { require(pages.size < 2000); pages += mutableListOf<ExtractedDocument.Line>() }
-        fun append(line: ExtractedDocument.Line) {
+        fun page() { require(pages.size < 2000); pages += mutableListOf<ChordSheet.Line>() }
+        fun append(line: ChordSheet.Line) {
             characters += line.spans.sumOf { it.text.length }.toLong()
             require(characters <= ImportLimits.MAX_TEXT_FILE_SIZE / 3)
             require(pages.last().size < 100_000)
             pages.last() += line
         }
 
-        fun paragraph(p: XmlElement, emit: (ExtractedDocument.Line) -> Unit, breakPage: () -> Unit) {
+        fun paragraph(p: XmlElement, emit: (ChordSheet.Line) -> Unit, breakPage: () -> Unit) {
             val properties = p.child("pPr")
             val styleId = properties?.child("pStyle")?.attribute("val") ?: defaultParagraph
             val definition = definitions[styleId]
@@ -58,12 +58,12 @@ object DocxTextExtractor {
             val tabStops = (properties?.child("tabs") ?: definition?.child("pPr")?.child("tabs"))?.children
                 ?.filter { it.attribute("val") != "clear" }?.mapNotNull { it.attribute("pos")?.toDoubleOrNull()?.div(20)?.takeIf { position -> position.isFinite() && position in 0.0..1_000_000.0 } }?.sorted().orEmpty()
             var x = 0.0
-            var spans = mutableListOf<ExtractedDocument.Span>()
-            fun line() { emit(ExtractedDocument.Line(spans.toList(), heading)); spans = mutableListOf(); x = 0.0 }
+            var spans = mutableListOf<ChordSheet.Span>()
+            fun line() { emit(ChordSheet.Line(spans.toList(), heading)); spans = mutableListOf(); x = 0.0 }
             fun text(value: String, runStyle: Style) {
                 if (value.isEmpty()) return
                 val end = x + value.sumOf { width(it, runStyle) }
-                spans += ExtractedDocument.Span(value, x, end, runStyle.size, runStyle.bold, runStyle.monospace, runStyle.raised)
+                spans += ChordSheet.Span(value, x, end, runStyle.size, runStyle.bold, runStyle.monospace, runStyle.raised)
                 x = end
             }
             fun walk(element: XmlElement, inherited: Style) {
@@ -96,22 +96,22 @@ object DocxTextExtractor {
             val cells = table.unwrapped().filter { it.localName == "tr" }.map { row -> row.unwrapped().filter { it.localName == "tc" } }
             val rows = cells.map { row ->
                 row.map { cell ->
-                    val lines = mutableListOf<ExtractedDocument.Line>()
+                    val lines = mutableListOf<ChordSheet.Line>()
                     cell.unwrapped().filter { it.localName == "p" }.forEach { paragraph(it, lines::add, {}) }
                     lines
                 }
             }
-            fun cellText(lines: List<ExtractedDocument.Line>) = lines.joinToString(" ") { it.spans.joinToString("") { span -> span.text } }.trim()
+            fun cellText(lines: List<ChordSheet.Line>) = lines.joinToString(" ") { it.spans.joinToString("") { span -> span.text } }.trim()
             val grid = rows.size >= 2 && rows.size % 2 == 0 && rows.chunked(2).all { pair ->
                 pair[0].size == pair[1].size && pair[0].isNotEmpty() && pair[0].all { ChordSheetConverter.isChordLine(cellText(it)) } &&
                     pair[1].any { cellText(it).isNotBlank() && !ChordSheetConverter.isChordLine(cellText(it)) }
             }
             if (grid) for (pair in rows.chunked(2)) {
-                val chords = mutableListOf<ExtractedDocument.Span>()
-                val lyrics = mutableListOf<ExtractedDocument.Span>()
+                val chords = mutableListOf<ChordSheet.Span>()
+                val lyrics = mutableListOf<ChordSheet.Span>()
                 var x = 0.0
                 pair[0].indices.forEach { index ->
-                    fun shift(lines: List<ExtractedDocument.Line>): List<ExtractedDocument.Span> {
+                    fun shift(lines: List<ChordSheet.Line>): List<ChordSheet.Span> {
                         var end = x
                         return lines.flatMap { line ->
                             val start = end
@@ -126,7 +126,7 @@ object DocxTextExtractor {
                     lyrics += l
                     x = maxOf(c.lastOrNull()?.end ?: x, l.lastOrNull()?.end ?: x) + 12
                 }
-                append(ExtractedDocument.Line(chords)); append(ExtractedDocument.Line(lyrics))
+                append(ChordSheet.Line(chords)); append(ChordSheet.Line(lyrics))
                 yield()
             } else {
                 for (row in cells) for (cell in row) {
@@ -145,7 +145,7 @@ object DocxTextExtractor {
             }
             yield()
         }
-        return ExtractedDocument(pages.filter { it.isNotEmpty() }.map { ExtractedDocument.Page(it.toList()) })
+        return ChordSheet(pages.filter { it.isNotEmpty() }.map { ChordSheet.Page(it.toList()) })
     }
 
     /**

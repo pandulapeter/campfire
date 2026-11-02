@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.formats.document.PdfContentInterpreter.Point
 import com.pandulapeter.campfire.data.formats.document.PdfContentInterpreter.State
@@ -50,7 +50,7 @@ object PdfTextExtractor {
      */
     internal data class Page(val lines: List<Line>, val height: Double, val edges: List<Line> = emptyList())
 
-    suspend fun extract(bytes: ByteArray): ExtractedDocument {
+    suspend fun extract(bytes: ByteArray): ChordSheet {
         val file = PdfFile(bytes)
         val pages = mutableListOf<Page>()
         val fonts = mutableMapOf<PdfDictionary, PdfFont>()
@@ -137,7 +137,7 @@ object PdfTextExtractor {
         require(budget.shown > 0 && budget.unreadable * 2 <= budget.shown) { "PDF has no readable font mapping" }
         require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
         val repeated = runningLines(pages)
-        return ExtractedDocument(isCampfireExport = file.producer() == CAMPFIRE_PRODUCER, pages = pages.mapIndexed { index, page ->
+        return ChordSheet(isCampfireExport = file.producer() == CAMPFIRE_PRODUCER, pages = pages.mapIndexed { index, page ->
             fun isRunning(line: Line) = line.text.trim().let { text ->
                 text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
             }
@@ -149,14 +149,14 @@ object PdfTextExtractor {
                 isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 }) ||
                     line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size)
             }
-            val paragraphs = mutableListOf<ExtractedDocument.Line>()
+            val paragraphs = mutableListOf<ChordSheet.Line>()
             lines.forEachIndexed { index, line ->
                 val previous = lines.getOrNull(index - 1)
                 val size = (line.spans + previous?.spans.orEmpty()).maxOfOrNull { it.size } ?: 12.0
-                if (previous != null && line.y - previous.y > size * 2.2) paragraphs += ExtractedDocument.Line(emptyList())
-                paragraphs += ExtractedDocument.Line(line.spans, baseline = line.y)
+                if (previous != null && line.y - previous.y > size * 2.2) paragraphs += ChordSheet.Line(emptyList())
+                paragraphs += ChordSheet.Line(line.spans, baseline = line.y)
             }
-            ExtractedDocument.Page(paragraphs)
+            ChordSheet.Page(paragraphs)
         })
     }
 

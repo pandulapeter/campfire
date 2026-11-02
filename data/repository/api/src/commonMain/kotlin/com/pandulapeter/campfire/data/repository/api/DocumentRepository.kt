@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /** Stateless offline extraction. No document bytes or source format are retained after importing its text. */
 interface DocumentRepository {
     /** Null for a malformed, unsupported, protected or textless document; cancellation propagates. */
-    suspend fun extract(file: ImportedFile): ExtractedDocument?
+    suspend fun extract(file: ImportedFile): ChordSheet?
 }

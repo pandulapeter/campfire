@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.data.formats.document
 import com.pandulapeter.campfire.chordpro.language.BidiOrder
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.isStrongRtl
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 
 /**
  * A line of glyphs, as most producers draw right-to-left text, put back into reading order. Browsers, office suites, and
@@ -23,11 +23,11 @@ import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 internal object PdfBidi {
     /**
      * [spans], sorted from the left, in reading order, read in the direction [column] gives them: unchanged where nothing in them reads from the right, else one
-     * span spelling the line's text with its glyphs as [ExtractedDocument.Span.pieces], each where it is drawn, so that
+     * span spelling the line's text with its glyphs as [ChordSheet.Span.pieces], each where it is drawn, so that
      * the converter can still tell which character a chord stands over. The line takes the style its letters share, as
      * one `ActualText` does: a chord sheet's line is set in one type.
      */
-    fun readingOrder(spans: List<ExtractedDocument.Span>, column: Column): List<ExtractedDocument.Span> {
+    fun readingOrder(spans: List<ChordSheet.Span>, column: Column): List<ChordSheet.Span> {
         if (spans.any { it.pieces.isNotEmpty() } || spans.none { span -> span.text.any { isStrongRtl(it.code) } }) return spans
         val clusters = clusters(spans)
         val levels = BidiOrder.levels(clusters.map { cluster -> cluster.joinToString("") { it.text } }, column.directionOf(spans))
@@ -44,7 +44,7 @@ internal object PdfBidi {
         val pieces = if (unpaired(mirrored.flatten()) <= unpaired(read.flatten())) mirrored.flatten() else read.flatten()
         val letters = pieces.filter { it.text.isNotBlank() }.ifEmpty { pieces }
         return listOf(
-            ExtractedDocument.Span(
+            ChordSheet.Span(
                 text = pieces.joinToString("") { it.text },
                 start = pieces.minOf { it.start },
                 end = pieces.maxOf { it.end },
@@ -70,7 +70,7 @@ internal object PdfBidi {
          * or a centred line, reads as most of its column does. A line's own letters are no witness: a Hebrew paragraph
          * opening with a Latin title holds more Latin letters than Hebrew ones.
          */
-        fun directionOf(spans: List<ExtractedDocument.Span>): WritingDirection {
+        fun directionOf(spans: List<ChordSheet.Span>): WritingDirection {
             val em = spans.maxOf { it.size }
             val isFlushLeft = spans.first().start - left < em
             val isFlushRight = right - spans.last().end < em
@@ -83,7 +83,7 @@ internal object PdfBidi {
     }
 
     /** How many of the brackets of the text [pieces] spell close nothing or are never closed. */
-    private fun unpaired(pieces: List<ExtractedDocument.Span>): Int {
+    private fun unpaired(pieces: List<ChordSheet.Span>): Int {
         var open = 0
         var unpaired = 0
         pieces.forEach { piece ->
@@ -102,9 +102,9 @@ internal object PdfBidi {
      * Arabic harakat), which a producer draws as glyphs of their own, on either side of the letter's start. A mark goes
      * with the letter it is drawn over, else with the one before it.
      */
-    private fun clusters(spans: List<ExtractedDocument.Span>): List<List<ExtractedDocument.Span>> {
-        val clusters = mutableListOf<MutableList<ExtractedDocument.Span>>()
-        val leading = mutableListOf<ExtractedDocument.Span>()
+    private fun clusters(spans: List<ChordSheet.Span>): List<List<ChordSheet.Span>> {
+        val clusters = mutableListOf<MutableList<ChordSheet.Span>>()
+        val leading = mutableListOf<ChordSheet.Span>()
         spans.forEachIndexed { index, span ->
             if (!span.isMark()) {
                 clusters += mutableListOf(span).apply { addAll(leading) }
@@ -121,6 +121,6 @@ internal object PdfBidi {
         return clusters
     }
 
-    private fun ExtractedDocument.Span.isMark() = text.isNotEmpty() &&
+    private fun ChordSheet.Span.isMark() = text.isNotEmpty() &&
         text.all { it.category == CharCategory.NON_SPACING_MARK || it.category == CharCategory.ENCLOSING_MARK }
 }

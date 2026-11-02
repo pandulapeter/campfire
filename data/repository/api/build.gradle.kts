@@ -15,6 +15,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":data:model"))
+            // A document is extracted into the chord sheet the converter reads.
+            api(project(":chordsheet"))
             implementation(libs.kotlin.coroutines)
         }
     }

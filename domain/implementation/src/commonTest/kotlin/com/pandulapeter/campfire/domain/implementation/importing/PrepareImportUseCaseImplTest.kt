@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.testSetlist
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.Logger
@@ -239,7 +239,7 @@ class PrepareImportUseCaseImplTest {
             override suspend fun parseSetlist(document: String) = parseSetlist.invoke(document)
         },
         documentRepository = object : DocumentRepository {
-            override suspend fun extract(file: ImportedFile): ExtractedDocument? = null
+            override suspend fun extract(file: ImportedFile): ChordSheet? = null
         },
         logger = Logger.Standard,
     )

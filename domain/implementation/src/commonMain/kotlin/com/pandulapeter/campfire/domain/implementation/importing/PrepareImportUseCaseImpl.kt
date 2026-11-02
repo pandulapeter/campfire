@@ -36,7 +36,6 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
-import com.pandulapeter.campfire.domain.implementation.mapper.toChordSheet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -175,7 +174,7 @@ internal class PrepareImportUseCaseImpl(
                         triage.unreadableDocumentFileNames += file.name
                         return@flatMapIndexed emptyList()
                     }
-                    ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
+                    ChordSheetConverter.convert(extracted, String::normalizedToNfc)
                 }
                 file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) || file.isPlainTextByContent -> if (AbcText.isAbc(original!!)) {
                     // Asked first: the chord sheet converter would read ABC's bracketed note groups (`[CEG]`) as chords

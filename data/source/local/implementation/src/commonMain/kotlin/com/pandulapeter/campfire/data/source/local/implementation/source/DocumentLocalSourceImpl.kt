@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.Logger
@@ -25,7 +25,7 @@ import org.koin.core.annotation.Single
 internal class DocumentLocalSourceImpl(
     private val logger: Logger,
 ) : DocumentLocalSource {
-    override suspend fun extract(file: ImportedFile): ExtractedDocument? = withContext(Dispatchers.Default) {
+    override suspend fun extract(file: ImportedFile): ChordSheet? = withContext(Dispatchers.Default) {
         if (file.isTooLarge || file.bytes.size > ImportLimits.MAX_DOCUMENT_FILE_SIZE) return@withContext null
         try {
             val document = when (file.name.substringAfterLast('.').lowercase()) {

@@ -28,7 +28,6 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.scales.SongKeys
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
@@ -439,7 +438,7 @@ class PdfRoundTripTest {
             settings, labels, renderer::width, measureLyric = renderer::lyricLayout,
         )
         val extracted = PdfTextExtractor.extract(renderer.pdf(document, title))
-        return ChordSheetConverter.convert(extracted.toChordSheet()).single()
+        return ChordSheetConverter.convert(extracted).single()
     }
 
     /**
@@ -501,14 +500,6 @@ class PdfRoundTripTest {
     }
 
     private val keyLine = Regex("\\{key: (.*)\\}")
-
-    private fun ExtractedDocument.toChordSheet() = ChordSheet(
-        pages = pages.map { page -> ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { it.toChordSheetSpan() }, line.isHeading, line.baseline) }) },
-        isCampfireExport = isCampfireExport,
-    )
-
-    private fun ExtractedDocument.Span.toChordSheetSpan(): ChordSheet.Span =
-        ChordSheet.Span(text, start, end, size, isBold, isMonospace, isRaised, isItalic, pieces.map { it.toChordSheetSpan() })
 
     /**
      * The faces the export prints in, read from the files the app bundles: the system's own faces, which a renderer
