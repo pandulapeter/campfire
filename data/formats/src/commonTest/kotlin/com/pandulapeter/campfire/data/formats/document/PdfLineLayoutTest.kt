@@ -16,6 +16,16 @@ import kotlin.test.assertEquals
 class PdfLineLayoutTest {
 
     @Test
+    fun `a superscript belongs to the word it follows, never a line of its own`() = runTest {
+        val content = "BT /F1 20 Tf 1 0 0 1 50 700 Tm ([Capo 2) Tj /F1 13 Tf 1 0 0 1 134 707 Tm (nd) Tj " +
+            "/F1 20 Tf 1 0 0 1 149.6 700 Tm (]) Tj 1 0 0 1 50 670 Tm (H) Tj /F1 13 Tf 1 0 0 1 62 666 Tm (2) Tj " +
+            "/F1 20 Tf 1 0 0 1 69.8 670 Tm (O) Tj 1 0 0 1 50 640 Tm (Lyric line) Tj ET"
+        val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
+
+        assertEquals(listOf("[Capo 2nd]", "H2O", "Lyric line"), lines.map { line -> line.spans.joinToString("") { it.text } })
+    }
+
+    @Test
     fun `two columns are read one after the other`() = runTest {
         val left = (1..6).map { Placed(50, 700 - it * 12, "Left $it") }
         val right = (1..6).map { Placed(320, 700 - it * 12, "Right $it") }

@@ -75,7 +75,7 @@ internal object PdfLineLayout {
             if (group == null || abs(group.first().y - glyph.y) > minOf(group.first().span.size, glyph.span.size) * 0.22) groups += mutableListOf(glyph)
             else group += glyph
         }
-        val lines = groups.map { group ->
+        val lines = attachRaised(groups).map { (y, group) ->
             val spans = mutableListOf<ChordSheet.Span>()
             for (glyph in group.sortedBy { it.span.start }) {
                 val previous = spans.lastOrNull()
@@ -90,7 +90,7 @@ internal object PdfLineLayout {
                 }
                 spans += span
             }
-            Line(spans, group.first().y)
+            Line(spans, y)
         }
         val column = PdfBidi.Column(
             left = items.minOf { it.span.start },
@@ -98,6 +98,42 @@ internal object PdfLineLayout {
             direction = writingDirectionOf(lines.map { it.text }.filterNot(ChordSheetConverter::isChordLine).joinToString("\n")),
         )
         return lines.map { line -> line.copy(spans = PdfBidi.readingOrder(line.spans, column), column = column) }
+    }
+
+    /**
+     * The baselines and glyphs of [groups] (in baseline order) with each superscript or subscript run joined to the line
+     * it is set on, where it belongs to the word it follows (`2nd`), never a line of its own: a run in smaller type
+     * within half an em of a neighbouring line's baseline, each glyph of it starting where that line's text or the run
+     * itself ends and over none of that line's letters. A chord stands over its syllable, so a chord row set tightly
+     * above its lyric stays a row of its own.
+     */
+    private fun attachRaised(groups: List<List<Positioned>>): List<Pair<Double, List<Positioned>>> {
+        val result = groups.map { it.first().y to it }.toMutableList()
+        var index = 0
+        while (index < result.size) {
+            val run = result[index].second
+            val host = listOf(index + 1, index - 1).firstOrNull { it in result.indices && isRaisedOn(run, result[it]) }
+            if (host == null) {
+                index++
+            } else {
+                result[host] = result[host].first to result[host].second + run
+                result.removeAt(index)
+            }
+        }
+        return result
+    }
+
+    private fun isRaisedOn(run: List<Positioned>, line: Pair<Double, List<Positioned>>): Boolean {
+        val (y, glyphs) = line
+        val size = glyphs.maxOf { it.span.size }
+        if (run.any { it.span.size > size * RAISED_SIZE } || run.any { abs(it.y - y) > size * RAISED_OFFSET }) return false
+        val ink = glyphs.filter { it.span.text.isNotBlank() }
+        val ends = glyphs.map { it.span.end }.toMutableList()
+        return run.sortedBy { it.span.start }.all { glyph ->
+            val tolerance = size * RAISED_ATTACHMENT
+            ink.none { it.span.start < glyph.span.end - tolerance && it.span.end > glyph.span.start + tolerance } &&
+                ends.any { abs(glyph.span.start - it) <= tolerance }.also { if (it) ends += glyph.span.end }
+        }
     }
 
     /**
@@ -230,4 +266,13 @@ internal object PdfLineLayout {
 
     /** How many positions a gutter is looked for at, every half point up to this, which bounds the work on a wide page. */
     private const val MAX_GUTTER_POSITIONS = 4096.0
+
+    /** The largest share of its line's type a superscript or subscript is set in. */
+    private const val RAISED_SIZE = 0.8
+
+    /** How far, in ems of its line's type, a superscript's or subscript's baseline lies from its line's at most. */
+    private const val RAISED_OFFSET = 0.5
+
+    /** How far, in ems of its line's type, a superscript or subscript starts from the end of the text it follows at most. */
+    private const val RAISED_ATTACHMENT = 0.15
 }
