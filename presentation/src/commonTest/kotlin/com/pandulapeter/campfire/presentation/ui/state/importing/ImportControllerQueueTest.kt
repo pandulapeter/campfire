@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
@@ -38,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,6 +91,7 @@ class ImportControllerQueueTest {
 
     private fun TestScope.startController() {
         dialogHost = DialogHost(backgroundScope)
+        messageSink = MessageSink(backgroundScope)
         reportState = ImportReportState(
             scope = backgroundScope,
             dialogHost = dialogHost,
@@ -100,11 +103,13 @@ class ImportControllerQueueTest {
             songTexts = MutableStateFlow(emptyMap()),
             editorDraft = MutableStateFlow<SongContent?>(null),
             hasUnsavedEditorText = { false },
+            savedStateStore = SavedStateStore(SavedStateHandle(), backgroundScope),
+            messageSink = messageSink,
         )
         controller = ImportController(
             scope = backgroundScope,
             dialogHost = dialogHost,
-            messageSink = MessageSink(backgroundScope).also { messageSink = it },
+            messageSink = messageSink,
             backStack = backStack,
             reportState = reportState,
             openImportedSong = { openedSongs += it },

@@ -303,7 +303,6 @@ class CampfireViewModel(
         addBeforeDialogChange(soundLifetime::onBeforeDialogChange)
     }
 
-    // Navigation
     internal val navigator: Navigator = Navigator(
         savedStateStore = savedStateStore,
         dialogHost = dialogHost,
@@ -514,6 +513,8 @@ class CampfireViewModel(
         songTexts = songTextStore.songTexts,
         editorDraft = editorSession.editorDraft,
         hasUnsavedEditorText = { editorSession.hasUnsavedEditorText() },
+        savedStateStore = savedStateStore,
+        messageSink = messageSink,
     )
 
     internal val importController: ImportController = ImportController(
@@ -749,7 +750,6 @@ class CampfireViewModel(
             navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)
         }
         importController.startQueue(firstRunController.demoLibraryDecision)
-        importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
         dialogHost.startClosingWithSong(
             allSongs = libraryState.allSongs,

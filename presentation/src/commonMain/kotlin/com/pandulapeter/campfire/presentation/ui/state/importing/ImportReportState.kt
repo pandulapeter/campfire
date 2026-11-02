@@ -48,6 +48,8 @@ internal class ImportReportState(
     private val songTexts: StateFlow<Map<String, String>>,
     private val editorDraft: StateFlow<SongContent?>,
     private val hasUnsavedEditorText: () -> Boolean,
+    private val savedStateStore: SavedStateStore,
+    private val messageSink: MessageSink,
 ) {
 
     /**
@@ -250,7 +252,7 @@ internal class ImportReportState(
      * import screen is never restored, and its plan is far too large to be saved, so a process ended behind an
      * unwritten import says so instead. Read before the collector writes the first report over it.
      */
-    fun startReportingInterruption(savedStateStore: SavedStateStore, messageSink: MessageSink) {
+    private fun startReportingInterruption() {
         val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
         scope.launch { importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
         if (wasImportInterrupted) messageSink.sendMessage(Message.ImportInterrupted)
@@ -266,6 +268,10 @@ internal class ImportReportState(
         val hasLeft = wasOnBackStack && !isOnBackStack
         if (hasLeft) search.textFieldState.clearText()
         return hasLeft
+    }
+
+    init {
+        startReportingInterruption()
     }
 }
 
