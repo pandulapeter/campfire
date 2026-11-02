@@ -77,11 +77,17 @@ guards. Then delete the goldens and everything that exists only for them.
    key, and tag texts lie inside the card's bounds and do not overlap one another. A long title may still ellipsize;
    what the bug was is two pieces drawn over each other.
 4. **Song details first screen and labels** (`SongDetailsFitTest`, `ui/screens/songDetails`) — `openSong()` at
-   `TestWindow.PHONE`: (a) the song's first lyric line (found by its text in the demo song's file) is displayed and its
-   bottom is inside the window, above any bar drawn at the bottom (the controls leave the song a place on the first
-   screen); (b) in every app language at text scale 1.3 and 2, every text
-   of the song's controls (chips, steppers, their labels) `isWhole` and does not `breaksAWord`. Find the controls by
-   their resource strings, not by typed text.
+   `TestWindow.PHONE`. Amended: the phone's first screen is the controls and the Chords section, and the first lyric
+   comes after the Scales, Picking pattern, and Intro sections, so a lyric on it is not what the golden showed. (a) Every
+   chord the demo song's file plays (`[Am]`, `[C]`, …) has its diagram row (found by `song_details_chord_diagram`'s
+   start) displayed on the first screen, inside the song's viewport and clear of the Next page button, and no text or
+   icon of the controls (the smallest node holding the instrument pill, Transpose down, and Show metronome), the Chords
+   title, or a row of diagrams overlaps another; (b) in every app language at text scale 1.3 and 2, no text of the
+   controls or the Chords title `breaksAWord`, and every one is whole, except the instrument pill's two names, which
+   `InstrumentPill` cuts short by design where the line is too narrow for both (Spanish and Italian at 2). A stepper is
+   exactly the controls' height, so its value's line height may outgrow it by its undrawn leading; "whole" there
+   measures the letters without it. A part cleared of semantics (a stepper's room for its widest value, its silent drawn
+   value) is skipped; the field under it says the value. Find the controls by their resource strings, not by typed text.
 5. **Editor room** (`EditorRoomTest`, `ui/screens/songEditor`) — `openEditor()` at `TestWindow.PHONE`, first as the
    golden drew it (no keyboard), then with the field focused and `keyboardHeight = KEYBOARD_HEIGHT`: the text field's
    visible bounds (clipped to the window less the keyboard) are at least five of its own text lines tall (line height
