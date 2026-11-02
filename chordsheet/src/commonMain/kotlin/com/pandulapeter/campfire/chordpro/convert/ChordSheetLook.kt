@@ -70,7 +70,7 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
                 if (breaks[index] || rows[index]) hasStarted = true
                 if (look == null) return@forEachIndexed
                 // A chorus is sung in the verses' size; smaller print set apart is notes, diagrams, or credits.
-                val isApart = abs(look.size - size) < size * 0.05 && (look.isBold || look.isItalic)
+                val isApart = ChordSheetProfile.isSameSize(look.size, size) && (look.isBold || look.isItalic)
                 if (!look.isBold && !look.isItalic) hasStarted = true
                 if (!isApart || run.isNotEmpty() && looks[run.first()]!!.differsInType(look)) finish()
                 if (isApart) {

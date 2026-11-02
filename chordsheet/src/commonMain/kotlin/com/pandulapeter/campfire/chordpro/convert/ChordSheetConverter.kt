@@ -60,8 +60,7 @@ public object ChordSheetConverter {
         val all = pages.flatten()
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
         if (isChordPro(original)) return listOf(original)
-        val sizes = all.flatMap { line -> line.source.spans.filter { it.text.isNotBlank() }.map { it.size } }.sorted()
-        val cuts = ChordSheetSongSplit.cuts(pages.map(::splitLines), sizes.getOrNull(sizes.size / 2) ?: 1.0)
+        val cuts = ChordSheetSongSplit.cuts(pages.map(::splitLines), ChordSheetProfile.of(all.map { it.source }))
         val groups = mutableListOf<MutableList<Rendered>>()
         pages.forEachIndexed { pageIndex, page ->
             page.forEachIndexed { lineIndex, line ->
@@ -531,8 +530,8 @@ public object ChordSheetConverter {
      */
     private fun joinWrappedDetails(lines: List<Rendered>): List<Rendered> = lines.fold(mutableListOf()) { joined, line ->
         val previous = joined.lastOrNull()
-        // The header is the song's first 15 rows, as classify counts them.
-        val isHeader = joined.size <= 15
+        // The header reaches as far as classify counts it, from the row this one would continue.
+        val isHeader = ChordSheetProfile.isInHeader(joined.lastIndex)
         val indent = line.text.length - line.text.trimStart().length
         val text = previous?.let { "${it.text}${line.joint}${line.text.substring(indent)}" }
         if (line.isContinuation && previous != null && text != null && (labelledRow(text, isHeader) != null || isKeyChange(line, text))) {
@@ -583,9 +582,8 @@ public object ChordSheetConverter {
 
     private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
         if (line.text.isBlank() || line.isMarginLabel || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
-        val bodySizes = lines.filter { it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
-        val median = bodySizes.getOrNull(bodySizes.size / 2) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
-        return line.source.isHeading || line.source.spans.any { it.size > median * 1.2 } ||
+        val median = ChordSheetProfile.medianWithout(lines.filter { it !== line }.map { it.source }) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
+        return line.source.isHeading || line.source.spans.any { it.size > median * ChordSheetProfile.TITLE_RATIO } ||
             line.source.spans.filter { it.text.isNotBlank() }.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } && lines.any { chordTokens(it) != null }
     }
 
@@ -603,7 +601,7 @@ public object ChordSheetConverter {
         val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
         return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
-            (line.isCampfire || spans.all { span -> lyrics.all { abs(it.size - span.size) < span.size * 0.05 } })
+            (line.isCampfire || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
     }
 
     /**
@@ -613,11 +611,10 @@ public object ChordSheetConverter {
     private fun isTitleContinuation(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
         val titleSpans = title.source.spans.filter { it.text.isNotBlank() }
         val titleSize = titleSpans.maxOfOrNull { it.size } ?: return false
-        val bodySizes = lines.filter { it !== title && it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
-        val median = bodySizes.getOrNull(bodySizes.size / 2) ?: return false
+        val median = ChordSheetProfile.medianWithout(lines.filter { it !== title && it !== line }.map { it.source }) ?: return false
         val spans = line.source.spans.filter { it.text.isNotBlank() }
-        return titleSize > median * 1.2 && spans.isNotEmpty() &&
-            spans.all { abs(it.size - titleSize) < titleSize * 0.05 && it.isBold == titleSpans.first().isBold }
+        return titleSize > median * ChordSheetProfile.TITLE_RATIO && spans.isNotEmpty() &&
+            spans.all { ChordSheetProfile.isSameSize(it.size, titleSize) && it.isBold == titleSpans.first().isBold }
     }
 
     private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean): String {
@@ -748,7 +745,7 @@ public object ChordSheetConverter {
                 // as it stands rather than being set over a lyric line it was never written for.
                 isStaff[index] || candidate != null && isStaff.getOrNull(index + 1) == true -> Kind.TAB
                 headings[index] || line.isMarginLabel -> Kind.SECTION
-                index < 15 && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
+                ChordSheetProfile.isInHeader(index) && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
                     metadata(line.text)?.first == "copyright" ||
                     labelledRow(line.text, isHeader = false) != null || isKeyChange(line, line.text) -> Kind.METADATA
                 // A row of notes alone is a candidate only where the row under it continues its line.
@@ -792,7 +789,7 @@ public object ChordSheetConverter {
         var soundingCapo = 0
         var shapesKey: String? = null
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
-            (labelledRow(lines[index].text, isHeader = index < 15) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
+            (labelledRow(lines[index].text, isHeader = ChordSheetProfile.isInHeader(index)) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"

@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
-import kotlin.math.abs
-
 /**
  * Where a document's songs start. A songbook sets every song's title in one type, the type that opens more than one
  * song: a cover or a contents page set in a type of its own opens one at most, so the first title of the document is
@@ -43,11 +41,11 @@ internal object ChordSheetSongSplit {
      */
     class Cuts(val opens: Set<Place>, val dropped: Set<Place>, val numbers: Map<Place, Int>)
 
-    fun cuts(pages: List<List<Line>>, medianSize: Double): Cuts {
+    fun cuts(pages: List<List<Line>>, profile: ChordSheetProfile): Cuts {
         val leads = pages.mapIndexed { pageIndex, page -> page.indexOfFirst { it.text.isNotBlank() }.takeIf { it >= 0 }?.let { lead(pages, Place(pageIndex, it)) } }
         val index = ChordSheetIndexTitles.of(pages, ::key)
-        val reference = reference(leads.filterNotNull().filter { it.line.isTitle }, medianSize, index?.titles.orEmpty())
-        val typed = reference?.let { typedOpenings(pages, leads, it, medianSize) }.orEmpty()
+        val reference = reference(leads.filterNotNull().filter { it.line.isTitle }, profile, index?.titles.orEmpty())
+        val typed = reference?.let { typedOpenings(pages, leads, it, profile) }.orEmpty()
         val byType = typed.distinctBy { words(it.line.text) }.size >= 2
         // An index of artists names the credit under each title too, which is never in the titles' type, and an entry
         // wrapped by its column names the rest of a title wrapped by its own.
@@ -63,7 +61,7 @@ internal object ChordSheetSongSplit {
             val current = title
             when {
                 pageIndex == 0 -> Unit
-                current != null && repeatsTitle(lead, current) -> if (isRunningTitle(lead, current, medianSize)) dropped += lead.place
+                current != null && repeatsTitle(lead, current) -> if (isRunningTitle(lead, current, profile)) dropped += lead.place
                 lead.place in openings || index != null && pageIndex in index.pages && pageIndex - 1 !in index.pages -> {
                     opens += lead.place
                     title = lead
@@ -121,23 +119,23 @@ internal object ChordSheetSongSplit {
      * where the contents ([listed]) name two of its openings: a sheet sets a part's name (`Repeat Chorus`, `Middle
      * eight`) bold at the body's size as often as a title, and a contents page never lists one.
      */
-    private fun reference(titles: List<Lead>, medianSize: Double, listed: Set<Place>): Lead? {
+    private fun reference(titles: List<Lead>, profile: ChordSheetProfile, listed: Set<Place>): Lead? {
         val first = titles.firstOrNull() ?: return null
-        if (titles.count { opensSong(it, first, medianSize) } >= 2) return first
+        if (titles.count { opensSong(it, first, profile) } >= 2) return first
         return titles.firstOrNull { candidate ->
-            val opened = titles.filter { opensSong(it, candidate, medianSize) }
-            val standsOut = candidate.line.line.isHeading || size(candidate.line.line) > medianSize * 1.2
+            val opened = titles.filter { opensSong(it, candidate, profile) }
+            val standsOut = candidate.line.line.isHeading || profile.isLarger(size(candidate.line.line))
             (standsOut || opened.count { it.place in listed } >= 2) && opened.distinctBy { words(it.line.text) }.size >= 2
         } ?: first
     }
 
     /** The page leads, and where the type stands out by its size the lines anywhere on a page, that open a song. */
-    private fun typedOpenings(pages: List<List<Line>>, leads: List<Lead?>, reference: Lead, medianSize: Double): List<Lead> {
-        val anywhere = reference.line.line.isHeading || size(reference.line.line) > medianSize * 1.2
+    private fun typedOpenings(pages: List<List<Line>>, leads: List<Lead?>, reference: Lead, profile: ChordSheetProfile): List<Lead> {
+        val anywhere = reference.line.line.isHeading || profile.isLarger(size(reference.line.line))
         return pages.indices.flatMap { pageIndex ->
             val lead = leads[pageIndex] ?: return@flatMap emptyList()
             val page = pages[pageIndex]
-            val first = listOfNotNull(lead.takeIf { opensSong(it, reference, medianSize) })
+            val first = listOfNotNull(lead.takeIf { opensSong(it, reference, profile) })
             if (!anywhere) return@flatMap first
             first + page.indices.filter { it > lead.place.line }.mapNotNull { lineIndex ->
                 val line = page[lineIndex]
@@ -155,12 +153,12 @@ internal object ChordSheetSongSplit {
      * A title set no larger than the body text is told apart only by being bold, which is how many sheets set a chorus;
      * a chorus has more bold lyrics under its first line, a title has its credit or the first verse.
      */
-    private fun opensSong(lead: Lead, reference: Lead, medianSize: Double) = lead.line.isTitle && isSameType(lead.line.line, reference.line.line) &&
-        (lead.line.line.isHeading || size(lead.line.line) > medianSize * 1.2 || !lead.isFollowedByBold)
+    private fun opensSong(lead: Lead, reference: Lead, profile: ChordSheetProfile) = lead.line.isTitle && isSameType(lead.line.line, reference.line.line) &&
+        (lead.line.line.isHeading || profile.isLarger(size(lead.line.line)) || !lead.isFollowedByBold)
 
     private fun isSameType(line: ChordSheet.Line, other: ChordSheet.Line): Boolean {
         val size = size(line)
-        return line.isHeading == other.isHeading && abs(size - size(other)) < size * 0.05 && isBold(line) == isBold(other)
+        return line.isHeading == other.isHeading && ChordSheetProfile.isSameSize(size(other), size) && isBold(line) == isBold(other)
     }
 
     /** Whether [lead] names the song [title] opened: its words, then nothing but a continuation's or a page's marks. */
@@ -175,8 +173,8 @@ internal object ChordSheetSongSplit {
      * A repeated title is left out when it is marked as one or set in the title's type. Bare and in the body's type it
      * is as likely the song's first lyric on the page, a chorus singing the title, which is kept.
      */
-    private fun isRunningTitle(lead: Lead, title: Lead, medianSize: Double) = words(lead.line.text).size > words(title.line.text).size ||
-        isSameType(lead.line.line, title.line.line) && (lead.line.line.isHeading || size(lead.line.line) > medianSize * 1.2)
+    private fun isRunningTitle(lead: Lead, title: Lead, profile: ChordSheetProfile) = words(lead.line.text).size > words(title.line.text).size ||
+        isSameType(lead.line.line, title.line.line) && (lead.line.line.isHeading || profile.isLarger(size(lead.line.line)))
 
     /**
      * What a contents entry and its song's title share: the words, leaving out the number a songbook counts its songs
