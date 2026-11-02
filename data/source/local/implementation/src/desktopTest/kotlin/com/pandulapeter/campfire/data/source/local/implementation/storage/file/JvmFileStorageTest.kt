@@ -152,8 +152,11 @@ class JvmFileStorageTest {
         val storage = JvmFileStorage(root, isWindows = false)
 
         UNSTORABLE_ON_WINDOWS.forEach { assertTrue(storage.canHoldFileName(it), it) }
-        storage.writeText(StorageDirectory.SONGS, "who?.cho", "content")
-        assertEquals("content", storage.readText(StorageDirectory.SONGS, "who?.cho"))
+        // Writing one needs a host whose file system takes it, which a Windows runner's does not.
+        if (!System.getProperty("os.name").startsWith("Windows")) {
+            storage.writeText(StorageDirectory.SONGS, "who?.cho", "content")
+            assertEquals("content", storage.readText(StorageDirectory.SONGS, "who?.cho"))
+        }
     }
 
     @Test
