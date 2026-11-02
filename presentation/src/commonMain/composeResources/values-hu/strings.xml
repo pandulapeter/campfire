@@ -429,8 +429,8 @@
     <string name="settings_chord_diagrams_description">A dal elején megmutatja, hogyan kell lefogni a dal minden akkordját.</string>
     <string name="settings_chord_degrees">Akkordfokok</string>
     <string name="settings_chord_degrees_description">Minden akkordábrán megmutatja, a dal hangnemének hányadik fokán áll az akkord, például a G7 mellett azt, hogy V7.</string>
-    <string name="settings_chord_names">Akkordnevek</string>
-    <string name="settings_chord_names_description">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kapják a nevüket. A dal hangneme mindig azt mondja meg, hogyan szól, és billentyűn az akkordok is.</string>
+    <string name="settings_chord_names">Akkordnevek capóval</string>
+    <string name="settings_chord_names_description">A dal akkordjai a capo fölött lefogott fogások vagy a hangzásuk szerint kapják a nevüket. A dal hangneme mindig azt mondja meg, hogyan szól, és billentyűn az akkordok is.</string>
     <string name="settings_chord_names_shapes">Fogások</string>
     <string name="settings_chord_names_sounding">Hangzás</string>
     <string name="settings_capo_keeps_key">A capo megtartja a hangnemet</string>

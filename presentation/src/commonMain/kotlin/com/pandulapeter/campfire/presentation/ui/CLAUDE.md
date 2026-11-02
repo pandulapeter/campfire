@@ -180,13 +180,13 @@ The view model facade, the composition root, and the product rules every screen 
     tabs); takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
   - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion
     is read off the chords; takes the song's Scales section and the chord sheets' scales.
-  - **Chord names** (`chordNames`, in the Chords section after the accidentals): a song's chords named by the shapes
-    fingered above the capo (default) or by what sounds (`ui/playing/CLAUDE.md`); disabled with songs or chords off and
-    on the keyboard, which always reads what sounds, as its description says. Asked once, over the first song a capo
-    matters on (`screens/songDetails`), never with the layout question.
-  - **Capo keeps the key** (`capoKeepsKey`, after Chord names): a capo put on changes only the shapes, the file's
-    `{capo}` alone being pitch (`ui/playing/CLAUDE.md`). Enabled on the keyboard too, which then shows no capo, since
-    one changes nothing for it; the question's third answer.
+  - **Chord names with a capo** (`chordNames`, in the Chords section after the accidentals): a song's chords named by
+    the shapes fingered above the capo (default) or by what sounds (`ui/playing/CLAUDE.md`); disabled with songs or
+    chords off and on the keyboard, which always reads what sounds, as its description says. Asked once, over the first
+    song a capo matters on (`screens/songDetails`), never with the layout question.
+  - **Capo keeps the key** (`capoKeepsKey`, after Chord names with a capo): a capo put on changes only the shapes, the
+    file's `{capo}` alone being pitch (`ui/playing/CLAUDE.md`). Enabled on the keyboard too, which then shows no capo,
+    since one changes nothing for it; the question's third answer.
   - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
     at the song's pace, asked once over the first song (`screens/songDetails/autoScroll`). The one choice here that
     rearranges rather than hides.

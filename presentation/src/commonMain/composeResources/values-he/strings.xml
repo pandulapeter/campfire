@@ -463,8 +463,8 @@
     <string name="settings_chord_diagrams_description">הצגת אופן הנגינה של כל אקורד בשיר, בראש השיר.</string>
     <string name="settings_chord_degrees">דרגות האקורדים</string>
     <string name="settings_chord_degrees_description">ציון הדרגה בטונליות של השיר שעליה עומד כל אקורד בדיאגרמה, למשל V7 ליד G7.</string>
-    <string name="settings_chord_names">שמות האקורדים</string>
-    <string name="settings_chord_names_description">עם קאפו, האקורדים של שיר נקראים לפי הצורות שנלחצות מעליו או לפי איך שהם נשמעים. הטונליות של השיר תמיד אומרת איך הוא נשמע, ובקלידים גם האקורדים.</string>
+    <string name="settings_chord_names">שמות האקורדים עם קאפו</string>
+    <string name="settings_chord_names_description">האקורדים של שיר נקראים לפי הצורות שנלחצות מעל הקאפו או לפי איך שהם נשמעים. הטונליות של השיר תמיד אומרת איך הוא נשמע, ובקלידים גם האקורדים.</string>
     <string name="settings_chord_names_shapes">צורות</string>
     <string name="settings_chord_names_sounding">צליל</string>
     <string name="settings_capo_keeps_key">הקאפו שומר על הטונליות</string>

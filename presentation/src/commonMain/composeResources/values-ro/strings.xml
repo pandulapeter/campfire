@@ -464,8 +464,8 @@
     <string name="settings_chord_diagrams_description">Arată cum se cântă fiecare acord al unui cântec, la începutul cântecului.</string>
     <string name="settings_chord_degrees">Treptele acordurilor</string>
     <string name="settings_chord_degrees_description">Numește treapta din tonalitatea cântecului pe care stă fiecare diagramă de acord, de exemplu V7 lângă G7.</string>
-    <string name="settings_chord_names">Numele acordurilor</string>
-    <string name="settings_chord_names_description">Cu capodastru, acordurile unui cântec sunt numite după pozițiile luate deasupra lui sau după cum sună. Tonalitatea cântecului spune mereu cum sună acesta, iar la claviatură și acordurile.</string>
+    <string name="settings_chord_names">Numele acordurilor cu capodastru</string>
+    <string name="settings_chord_names_description">Acordurile unui cântec sunt numite după pozițiile luate deasupra capodastrului sau după cum sună. Tonalitatea cântecului spune mereu cum sună acesta, iar la claviatură și acordurile.</string>
     <string name="settings_chord_names_shapes">Poziții</string>
     <string name="settings_chord_names_sounding">Cum sună</string>
     <string name="settings_capo_keeps_key">Capodastrul păstrează tonalitatea</string>

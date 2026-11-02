@@ -429,8 +429,8 @@
     <string name="settings_chord_diagrams_description">Muestra cómo se toca cada acorde de una canción, al principio de la canción.</string>
     <string name="settings_chord_degrees">Grados de los acordes</string>
     <string name="settings_chord_degrees_description">Indica el grado de la tonalidad de la canción sobre el que está cada diagrama de acorde, como V7 junto a G7.</string>
-    <string name="settings_chord_names">Nombres de los acordes</string>
-    <string name="settings_chord_names_description">Con capo, los acordes de una canción se nombran por las formas que se pisan sobre él o por cómo suenan. La tonalidad de la canción siempre dice cómo suena, y en un teclado también los acordes.</string>
+    <string name="settings_chord_names">Nombres de los acordes con capo</string>
+    <string name="settings_chord_names_description">Los acordes de una canción se nombran por las formas que se pisan sobre el capo o por cómo suenan. La tonalidad de la canción siempre dice cómo suena, y en un teclado también los acordes.</string>
     <string name="settings_chord_names_shapes">Formas</string>
     <string name="settings_chord_names_sounding">Cómo suenan</string>
     <string name="settings_capo_keeps_key">El capo mantiene la tonalidad</string>

@@ -47,7 +47,7 @@ One instrument for the whole app.
 ## How a song is played on the keyboard
 
 - The keyboard takes no capo (`playsWithoutCapo`, whatever the Chord diagrams switch says): its chords are always named
-  as they sound, whatever Chord names says (that row is disabled while it is picked), and its diagrams are the sounding
-  chords themselves, the effective capo counted in, since every capo is pitch. It still shows the capo stepper and the
-  capo line, a capo raising the band's pitch (see `ui/playing/CLAUDE.md`), except where the reader keeps the key, when a
-  capo changes nothing for it (`isCapoShownFor`). The PDF follows the screen.
+  as they sound, whatever Chord names with a capo says (that row is disabled while it is picked), and its diagrams are
+  the sounding chords themselves, the effective capo counted in, since every capo is pitch. It still shows the capo
+  stepper and the capo line, a capo raising the band's pitch (see `ui/playing/CLAUDE.md`), except where the reader keeps
+  the key, when a capo changes nothing for it (`isCapoShownFor`). The PDF follows the screen.

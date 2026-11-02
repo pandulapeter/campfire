@@ -429,8 +429,8 @@
     <string name="settings_chord_diagrams_description">Show how every chord of a song is played, at the top of the song.</string>
     <string name="settings_chord_degrees">Chord degrees</string>
     <string name="settings_chord_degrees_description">Name the step of the song's key each chord diagram stands on, such as V7 beside G7.</string>
-    <string name="settings_chord_names">Chord names</string>
-    <string name="settings_chord_names_description">With a capo on, a song\'s chords are named by the shapes fingered above it, or by how they sound. The song\'s key always says how it sounds, and on a keyboard the chords do too.</string>
+    <string name="settings_chord_names">Chord names with a capo</string>
+    <string name="settings_chord_names_description">A song\'s chords are named by the shapes fingered above the capo, or by how they sound. The song\'s key always says how it sounds, and on a keyboard the chords do too.</string>
     <string name="settings_chord_names_shapes">Shapes</string>
     <string name="settings_chord_names_sounding">Sounding</string>
     <string name="settings_capo_keeps_key">Capo keeps the key</string>
