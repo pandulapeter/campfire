@@ -79,6 +79,10 @@ class BaselineProfileGenerator {
         waitFor(By.textContains("Rising Sun"))?.let { song ->
             song.click()
             device.waitForIdle()
+            // The first song opened asks how songs are to be laid out, in a sheet that only its Confirm closes and that
+            // would otherwise cover everything the walk does next; confirming keeps the pages it shows as picked.
+            waitFor(By.text("Confirm"))?.click()
+            device.waitForIdle()
             // About the song is the bottom sheet of the walk, and the editor is opened from the same menu with nothing
             // typed, so that their first use is not the one that compiles them. Back leaves an untouched editor at once.
             songAction("About the song")?.let { about ->

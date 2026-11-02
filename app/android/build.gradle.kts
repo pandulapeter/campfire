@@ -99,6 +99,7 @@ tasks.matching { it.name == "generateBaselineProfile" }.configureEach {
         "screens/songs/SongsScreenKt",
         "screens/songDetails/SongDetailsScreenKt",
         "dialogs/sheet/CampfireBottomSheetKt",
+        "dialogs/songDisplay/SongLayoutSheetKt",
         "screens/songEditor/LoadedSongEditorKt",
         "screens/setlists/SetlistsScreenKt",
         "screens/metronome/MetronomeScreenKt",

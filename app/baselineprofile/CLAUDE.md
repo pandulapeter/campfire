@@ -16,7 +16,8 @@ plugin, targeting `nonMinifiedRelease`. Not a test: it asserts nothing and CI ne
 
 - Two collections, run in name order (`@FixMethodOrder`; JUnit's default is a hash order). `a_journeys`, for the Baseline
   Profile only: cold start (a first run plants the demo library and walks the onboarding with **Next** to **Start
-  playing**), song list flings, a demo song opened, its **About the song** sheet and its editor (**Edit song file**,
+  playing**), song list flings, a demo song opened (its song layout question answered with **Confirm**), its **About
+  the song** sheet and its editor (**Edit song file**,
   nothing typed) opened from the song's menu, the song flung, the songs search with `rising` typed, Setlists and
   the demo setlist, the tools (**Tools** on a phone's bar opens the Metronome, then its Tuner, Chords, and Scales buttons; a tall
   rail gives each its own item; the Tuner's microphone prompt is allowed), and Settings. `b_startup`, with
