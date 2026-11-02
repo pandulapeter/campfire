@@ -13,19 +13,19 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProChordNames
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /** The words of a line, the cells of a grid line and the staff of a tab, see [words]. */
-internal object ChordProTokens {
+public object ChordProTokens {
 
     private const val PLAIN_BAR = "|"
     private val barLines = setOf(PLAIN_BAR, "||", "|.", "|:", ":|", ":|:")
     private val voltaRegex = Regex(":?\\|\\d+>?")
 
-    const val GRID_CELL_CHORD_SEPARATOR = "~"
+    internal const val GRID_CELL_CHORD_SEPARATOR = "~"
 
     private const val STAFF_DASH = '-'
     private const val MINIMUM_STAFF_DASH_COUNT = 3
 
     /** One word of a line and the range it covers, see [words]. */
-    data class Word(val range: IntRange, val value: String)
+    internal data class Word(val range: IntRange, val value: String)
 
     /**
      * The words of [line]: every run of characters no whitespace separates, each with the range it sits in, so that
@@ -37,7 +37,7 @@ internal object ChordProTokens {
      * the ASCII answer glues onto the chord beside them. [Char.isWhitespace] is the same answer on every platform,
      * and the one `trim` and [isStaffLine] already give this module.
      */
-    fun words(line: String): List<Word> {
+    internal fun words(line: String): List<Word> {
         val words = mutableListOf<Word>()
         var index = 0
         while (index < line.length) {
@@ -62,7 +62,7 @@ internal object ChordProTokens {
      * made of them, the line's first bar line is a plain `|`, and the right margin holds no label either: a part name
      * is written before a `||` or a `|:` (`A || G7 . |`), and a line with a label on its right has its margins in use.
      */
-    fun parseGridTokens(trimmedLine: String): List<GridToken> {
+    internal fun parseGridTokens(trimmedLine: String): List<GridToken> {
         val words = words(trimmedLine).map { it.value }
         val firstBarIndex = words.indexOfFirst { isBar(it) }
         val lastBarIndex = words.indexOfLast { isBar(it) }
@@ -86,13 +86,13 @@ internal object ChordProTokens {
         word == "." || word == "%" || word == "%%" || cellChords(word).all(ChordProChordNames::isChordName)
 
     /** The bar lines of a grid, the repeats and the voltas (`|1`, `:|2`, `:|2>`) included. */
-    fun isBar(word: String) = word in barLines || voltaRegex.matches(word)
+    internal fun isBar(word: String) = word in barLines || voltaRegex.matches(word)
 
     /**
      * The chords of one grid cell: ChordPro writes several chords into a cell by joining them with a `~`, and each
      * of them is a chord of its own to transpose or respell.
      */
-    fun cellChords(cell: String) = cell.split(GRID_CELL_CHORD_SEPARATOR)
+    internal fun cellChords(cell: String) = cell.split(GRID_CELL_CHORD_SEPARATOR)
 
     /**
      * A tablature line: enough dashes to be a staff, and made mostly of the characters a staff is made of. The letters
@@ -101,7 +101,7 @@ internal object ChordProTokens {
      * it, for the transposer (which moves frets on the one and chord names on the other) and for the viewer (which
      * cuts a staff at its columns and never a line of prose).
      */
-    fun isStaffLine(line: String): Boolean {
+    public fun isStaffLine(line: String): Boolean {
         var dashCount = 0
         var staffCharacterCount = 0
         var otherCharacterCount = 0

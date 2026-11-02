@@ -60,6 +60,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
   tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
                                       extracts abc2svg's music glyphs for the notation drawing
   chordpro                            dependency-free ChordPro parser, transposer, chords, tabs, converters
+    chordsheet                        chord sheets (text, PDF, Word lines) converted into ChordPro; :chordpro only
 ```
 
 Data flow: `FileStorage` → `LocalSource` → `Repository` (emits `DataState<T>`, reads once, caches, extends
@@ -90,10 +91,10 @@ campfire.log / campfire.log.1          desktop only, here (the other platforms k
 - Modules apply the convention plugins in `gradle/build-logic`. Platform code goes in `androidMain` / `desktopMain` /
   `iosMain` / `wasmJsMain`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*`
   modules, `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module is multiplatform.
-- `:chordpro`, `:metronome:api`, `:tuner:api`, and `:abc:api` use `explicitApi()`. Layers are crossed through
-  `mapper/` packages. The rest of the code style (JVM-free shared code, `Impl` naming, Material 3 Expressive only,
-  never M2) is the `code-style` skill's; formatting, license headers, and file sizes are enforced by Spotless and the
-  `.github/scripts` checks.
+- `:chordpro`, `:chordsheet`, `:metronome:api`, `:tuner:api`, and `:abc:api` use `explicitApi()`. Layers are crossed
+  through `mapper/` packages. The rest of the code style (JVM-free shared code, `Impl` naming, Material 3 Expressive
+  only, never M2) is the `code-style` skill's; formatting, license headers, and file sizes are enforced by Spotless and
+  the `.github/scripts` checks.
 
 ### Koin (Koin Annotations via the Koin compiler plugin, `campfire-koin`)
 
@@ -198,7 +199,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:
   `ui/screens/settings`.
 - Printing and export: `ui/screens/export`, `ui/print`.
-- Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordpro/convert`.
+- Documents are converted locally to ChordPro, never uploaded or kept: `data/formats`, `chordsheet`.
 - Other apps' songs and backups are translated locally (SongbookPro, OpenSong and OpenSongApp, OnSong, JSON exports),
   and ABC tunes into one song each with a chord grid and the tune kept; backups are read as archives:
   `domain/implementation`, `data/source/local/implementation`, `chordpro/abc`.

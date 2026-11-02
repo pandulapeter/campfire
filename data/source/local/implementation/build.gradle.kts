@@ -19,6 +19,7 @@ kotlin {
             api(project(":data:source:local:api"))
             implementation(project(":data:formats"))
             implementation(project(":chordpro"))
+            implementation(project(":chordsheet"))
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlin.datetime)
             implementation(libs.kotlin.serialization.json)

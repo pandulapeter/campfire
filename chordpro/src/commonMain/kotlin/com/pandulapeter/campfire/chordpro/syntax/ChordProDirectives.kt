@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.BRACKET_OPEN
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CUSTOM_PREFIX
 
 /** How a line is read as a directive and where the chords in brackets are, see [matchDirective]. */
-internal object ChordProDirectives {
+public object ChordProDirectives {
 
     private const val DIRECTIVE_OPEN = '{'
     private const val DIRECTIVE_CLOSE = '}'
@@ -48,13 +48,13 @@ internal object ChordProDirectives {
      * braces and `#`: only the `{end_of_…}` that closes it and a directive written with a colon are directives there,
      * since `{ c d e }` is LilyPond and not `{c: d e}`.
      */
-    fun matchDelegatedDirective(trimmedLine: String): Directive? {
+    internal fun matchDelegatedDirective(trimmedLine: String): Directive? {
         val (name, valueStart) = walkDirective(trimmedLine) ?: return null
         val hasColon = valueStart > 0 && trimmedLine[valueStart - 1] == DIRECTIVE_VALUE_SEPARATOR
         return if (endOfEnvironment(name) != null || hasColon) matchDirective(trimmedLine) else null
     }
 
-    fun matchDirective(trimmedLine: String): Directive? {
+    internal fun matchDirective(trimmedLine: String): Directive? {
         val (name, valueStart) = walkDirective(trimmedLine) ?: return null
         return Directive(name, if (valueStart < 0) null else trimmedLine.substring(valueStart, trimmedLine.length - 1).trim())
     }
@@ -65,13 +65,13 @@ internal object ChordProDirectives {
      * for one with no value. It is what splits a directive into its name and its value for the highlighter, which
      * cannot look for the colon, since a directive need not have one and a value may.
      */
-    fun directiveValueStart(trimmedLine: String) = walkDirective(trimmedLine)?.second?.takeIf { it >= 0 }
+    internal fun directiveValueStart(trimmedLine: String) = walkDirective(trimmedLine)?.second?.takeIf { it >= 0 }
 
     /**
      * Whether [trimmedLine] is a directive ChordPro defines, or a custom `x_` one. Unlike [matchDirective] it refuses
      * `{unknown: value}`, which is what tells a ChordPro file apart from a text that merely has braces in it.
      */
-    fun isKnownDirective(trimmedLine: String) = walkDirective(trimmedLine)?.first?.let(::isKnownName) == true
+    public fun isKnownDirective(trimmedLine: String): Boolean = walkDirective(trimmedLine)?.first?.let(::isKnownName) == true
 
     /**
      * The lowercase name of the directive on [trimmedLine] and the index its value starts at, -1 where it has none.
@@ -119,7 +119,7 @@ internal object ChordProDirectives {
             endOfEnvironment(name) != null || name.startsWith(CUSTOM_PREFIX) || hasSelectorSuffix(name)
 
     /** Every closed bracket pair from left to right; an unclosed opening bracket ends the walk. */
-    fun brackets(line: String): List<Bracket> {
+    public fun brackets(line: String): List<Bracket> {
         val brackets = mutableListOf<Bracket>()
         var index = 0
         while (true) {
@@ -134,7 +134,7 @@ internal object ChordProDirectives {
     }
 
     /** Whether [line] contains at least one closed bracket pair. */
-    fun hasBrackets(line: String): Boolean {
+    internal fun hasBrackets(line: String): Boolean {
         val openIndex = line.indexOf(BRACKET_OPEN)
         return openIndex >= 0 && line.indexOf(BRACKET_CLOSE, openIndex + 1) >= 0
     }
@@ -170,7 +170,7 @@ internal object ChordProDirectives {
      * against each other. A name with a selector (`title-guitar`) is kept whole; a negated one has already been read as
      * the directive it is written on by [matchDirective].
      */
-    fun canonicalDirective(directive: Directive): String {
+    internal fun canonicalDirective(directive: Directive): String {
         val name = longNames[directive.name] ?: directive.name
         val value = directive.value?.takeIf { it.isNotEmpty() }
         return if (value == null) "{$name}" else "{$name: $value}"
@@ -182,7 +182,7 @@ internal object ChordProDirectives {
      * where an intro is written down as a row of chords, so the transposition moves them and the highlighter colours
      * them.
      */
-    fun hasChordsInValue(name: String) = name in shownValueNames || startOfEnvironment(name) != null
+    internal fun hasChordsInValue(name: String) = name in shownValueNames || startOfEnvironment(name) != null
 
     private val shownValueNames = setOf("chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "highlight")
 
@@ -190,14 +190,14 @@ internal object ChordProDirectives {
      * True for names such as `title-guitar`: a known directive with a (non-negated) selector suffix, which Campfire
      * matches nothing against and drops. Environments are the exception, see [startOfEnvironment].
      */
-    fun hasSelectorSuffix(name: String): Boolean {
+    internal fun hasSelectorSuffix(name: String): Boolean {
         if (name.startsWith(START_OF_PREFIX) || name.startsWith(END_OF_PREFIX)) return false
         val separatorIndex = name.lastIndexOf('-')
         return separatorIndex > 0 && knownNames.contains(name.substring(0, separatorIndex))
     }
 
-    data class Directive(val name: String, val value: String?)
+    internal data class Directive(val name: String, val value: String?)
 
     /** One closed bracket pair and its untrimmed content. */
-    data class Bracket(val range: IntRange, val content: String)
+    public data class Bracket(val range: IntRange, val content: String)
 }

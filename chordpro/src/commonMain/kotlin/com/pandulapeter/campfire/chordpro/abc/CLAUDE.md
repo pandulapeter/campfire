@@ -9,8 +9,9 @@
 -->
 # chordpro/abc
 
-[ABC notation](https://abcnotation.com/wiki/abc:standard:v2.1) read into ChordPro: a file format, so a sibling of
-`convert/` (which knows none), not inside it. Pure and total: whatever text comes in, a song comes out.
+[ABC notation](https://abcnotation.com/wiki/abc:standard:v2.1) read into ChordPro: a file format, so it is
+read here rather than by the chord-sheet converter (`:chordsheet`, which knows none). Pure and total: whatever text
+comes in, a song comes out.
 
 - **The ABC block is the source, the grid and verses a one-off translation**: each tune is kept whole in
   `{start_of_abc}`, and editing it later regenerates nothing.

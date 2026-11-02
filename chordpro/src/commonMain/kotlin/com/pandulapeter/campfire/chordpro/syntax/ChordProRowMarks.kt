@@ -22,21 +22,21 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
  * a line of nothing but `x4`, which reads right as it is ("the line above, four times"). Words (`twice`, `(let ring)`)
  * are never marks: a row of chords with one may be a sung backing line, and `[*twice]` says otherwise.
  */
-internal object ChordProRowMarks {
+public object ChordProRowMarks {
 
     /** One repeat count, `x2`, `(2x)` or `×2`, as a mark of a chord row and after a heading the converter reads. */
-    val repeatCount = Regex("\\(?(?:[0-9]+[x\u00d7]|[x\u00d7][0-9]+)\\)?", RegexOption.IGNORE_CASE)
+    public val repeatCount: Regex = Regex("\\(?(?:[0-9]+[x\u00d7]|[x\u00d7][0-9]+)\\)?", RegexOption.IGNORE_CASE)
 
     private val signs = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "%", "%%", "/", "-", "N.C.", "NC", ".", "...", "\u2026")
 
-    fun isMark(word: String) = word in signs || repeatCount.matches(word)
+    internal fun isMark(word: String) = word in signs || repeatCount.matches(word)
 
     /**
      * The ranges of [text] that are marks, where [text] is the text of a line with chords at [chordPositions] that makes
      * it a chord row, or null where it is not one: no chords, a word that is no mark, or a chord standing inside a word
      * (`[G]x[C]4`), which makes it a word of the lyrics. A line with no words is a chord row without marks.
      */
-    fun marksOf(text: String, chordPositions: List<Int>): List<IntRange>? {
+    internal fun marksOf(text: String, chordPositions: List<Int>): List<IntRange>? {
         if (chordPositions.isEmpty()) return null
         val marks = mutableListOf<IntRange>()
         var index = 0
@@ -57,7 +57,7 @@ internal object ChordProRowMarks {
      * The ranges of [line], as it is written, that the parser reads as marks, read by the parser's own steps (the
      * brackets taken out, then the markup), for the highlighter to colour. Empty where the line is no chord row.
      */
-    fun marksIn(line: String): List<IntRange> {
+    internal fun marksIn(line: String): List<IntRange> {
         if (!ChordProDirectives.hasBrackets(line)) return emptyList()
         val text = StringBuilder()
         val writtenAt = mutableListOf<Int>()

@@ -16,6 +16,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:model"))
             implementation(project(":chordpro"))
+            implementation(project(":chordsheet"))
             // The extractors give way and rethrow a cancellation on long documents.
             implementation(libs.kotlin.coroutines)
         }

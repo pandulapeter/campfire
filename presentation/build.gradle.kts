@@ -45,6 +45,8 @@ kotlin {
                 implementation(project(":domain:api"))
                 // The composables render the ChordPro model directly; parsing and transposing go through use cases.
                 implementation(project(":chordpro"))
+                // Text pasted or shared into the app is read as a chord sheet.
+                implementation(project(":chordsheet"))
                 // The click is the app's rather than a screen's, and is handed a complete pattern by the view model.
                 // ABC tunes are engraved as staff notation by abc2svg, behind its own module like the click.
                 implementation(project(":abc:api"))

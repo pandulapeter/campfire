@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.textDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import java.io.File
 import java.text.Bidi
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,9 +27,13 @@ import kotlin.test.assertEquals
  * laid out by the JDK's own bidi algorithm rather than the module's, so that the two are checked against each other.
  */
 class PlainTextRoundTripTest {
+    private val corpus = File(requireNotNull(javaClass.getResource("/corpus")).toURI()).listFiles().orEmpty()
+        .filter { it.extension == "cho" }
+        .sortedBy { it.name }
+        .associate { it.name to it.readText() }
 
     @Test
-    fun `a chord sheet written out as plain text reads back with every chord over its syllable`() = Corpus.chordPro.forEach { (name, text) ->
+    fun `a chord sheet written out as plain text reads back with every chord over its syllable`() = corpus.forEach { (name, text) ->
         val song = ChordProParser.parse(text)
         val isRightToLeft = song.textDirection == WritingDirection.RIGHT_TO_LEFT
         val lyrics = song.blocks.filterIsInstance<ChordProBlock.Section>().filter { it.lines.all { line -> line is ChordProLine.Lyrics } }

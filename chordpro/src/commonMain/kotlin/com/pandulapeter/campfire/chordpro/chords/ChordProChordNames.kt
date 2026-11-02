@@ -12,9 +12,10 @@ package com.pandulapeter.campfire.chordpro.chords
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
 
 /** Linear recognition and rewriting of the notes in a chord name. */
-internal object ChordProChordNames {
+public object ChordProChordNames {
 
-    fun isChordName(word: String) = read(word, reader = null)
+    /** Whether [word] is a chord name in the standard (or German) notation, in parentheses or not. */
+    public fun isChordName(word: String): Boolean = read(word, reader = null)
 
     /**
      * Walks a chord name, handing each part of it to [reader] in the order it is written, and answers whether the
@@ -23,7 +24,7 @@ internal object ChordProChordNames {
      * only handed over once it has been recognized, and a name the walk rejects halfway has handed over parts that the
      * caller then throws away.
      */
-    fun read(word: String, reader: ChordNameReader?): Boolean {
+    internal fun read(word: String, reader: ChordNameReader?): Boolean {
         val name = unwrapped(word)
         if (name.isEmpty()) return false
         var index = noteEnd(name, 0)
@@ -61,13 +62,13 @@ internal object ChordProChordNames {
         return true
     }
 
-    fun notes(name: String): List<String> {
+    internal fun notes(name: String): List<String> {
         val chord = unwrapped(name)
         val separator = chord.lastIndexOf('/')
         return if (separator >= 0 && bassNoteEnd(chord, separator + 1) >= 0) listOf(chord.substring(0, separator), chord.substring(separator + 1)) else listOf(chord)
     }
 
-    fun rewriteNotes(name: String, rewrite: (String) -> String): String {
+    internal fun rewriteNotes(name: String, rewrite: (String) -> String): String {
         val notes = notes(name)
         val rewritten = (listOf(rewrite(notes.first())) + notes.drop(1).map { bass -> rewriteBassNote(bass, rewrite) }).joinToString("/")
         return if (isParenthesized(name)) "($rewritten)" else rewritten
@@ -95,7 +96,7 @@ internal object ChordProChordNames {
      * `am` would say minor twice and `amaj7` would be neither. The bass note after `/` is left as it is written, in
      * either case, see [bassNoteEnd].
      */
-    fun lowercaseMinorExpanded(word: String): String? {
+    internal fun lowercaseMinorExpanded(word: String): String? {
         val name = unwrapped(word)
         val root = name.firstOrNull()?.takeIf { it in 'a'..'h' } ?: return null
         val noteLength = if (name.getOrNull(1)?.let { it in "#b♯♭" } == true) 2 else 1
@@ -116,7 +117,7 @@ internal object ChordProChordNames {
      * `ChordProChordNamesTest` sweeps every quality and alteration there is to keep it so — a sign written `o` for a
      * diminished chord would make `Do` both C and D diminished.
      */
-    fun latinExpanded(word: String): String? {
+    public fun latinExpanded(word: String): String? {
         val name = unwrapped(word)
         // A cheap refusal first, since this is asked of every name of every file that is read.
         if (name.firstOrNull()?.let { it in LATIN_INITIALS } != true || name.getOrNull(1)?.let { it in LATIN_SECOND_LETTERS } != true) return null
@@ -143,10 +144,10 @@ internal object ChordProChordNames {
      * standard or the German notation, in the Latin one, or as a step of the key in either numbering. Only what reads a
      * song that has already been converted asks this, which is the viewer cutting a tab into rows.
      */
-    fun isDisplayedChordName(word: String) = isChordName(word) || latinExpanded(word) != null || ChordProNashville.isDegree(word)
+    internal fun isDisplayedChordName(word: String) = isChordName(word) || latinExpanded(word) != null || ChordProNashville.isDegree(word)
 
     /** The length of the Latin note [key] starts with, in title case or capitals and without its accidental, or null. */
-    fun latinNoteLength(key: String) = latinNoteAt(key, 0, isAnyCase = false)?.second
+    public fun latinNoteLength(key: String): Int? = latinNoteAt(key, 0, isAnyCase = false)?.second
 
     /** The standard letter of the Latin note [text] spells at [index], and its length, or null where it spells none. */
     private fun latinNoteAt(text: String, index: Int, isAnyCase: Boolean): Pair<Char, Int>? {
@@ -160,7 +161,7 @@ internal object ChordProChordNames {
     }
 
     /** The other way: [name], a minor chord, written with a lowercase root and no `m`. */
-    fun lowercaseMinorFolded(name: String): String {
+    internal fun lowercaseMinorFolded(name: String): String {
         val chord = unwrapped(name)
         val noteLength = if (chord.getOrNull(1)?.let { it in "#b♯♭" } == true) 2 else 1
         val folded = chord[0].lowercaseChar() + chord.substring(1, noteLength) + chord.substring(noteLength).removePrefix("m")

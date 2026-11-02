@@ -94,6 +94,7 @@ include(
     ":app:ios",
     ":app:web",
     ":chordpro",
+    ":chordsheet",
     ":data:formats",
     ":data:model",
     ":data:repository:api",

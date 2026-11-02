@@ -16,8 +16,6 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter.TokenType
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
-import com.pandulapeter.campfire.chordpro.convert.ChordSheet
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
@@ -209,16 +207,6 @@ class ChordProLatinNotationTest {
         val chords = ChordProHighlighter.tokenize(text).filter { it.type == TokenType.CHORD }.map { text.substring(it.start, it.end) }
 
         assertEquals(listOf("[Lam]"), chords)
-    }
-
-    @Test
-    fun `a Latin chord sheet is converted`() {
-        val sheet = ChordSheet.ofPlainText("Key: Lam\n\nLam         Fa\nLa noche es larga\nDo             Sol\nY el camino es mio")
-        val converted = ChordSheetConverter.convert(sheet).single()
-
-        assertTrue("[Lam]La noche es [Fa]larga" in converted, converted)
-        assertTrue("[Do]Y el camino es [Sol]mio" in converted, converted)
-        assertEquals("La la la la\n", ChordSheetConverter.convert(ChordSheet.ofPlainText("La la la la")).single())
     }
 
     @Test

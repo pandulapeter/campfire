@@ -9,7 +9,7 @@
 -->
 # :chordpro
 
-The ChordPro format, the conversion of chord sheets into it, and the reading of ABC tunes into it. **No dependencies at
+The ChordPro format and the reading of ABC tunes into it (chord sheets are converted by `:chordsheet`). **No dependencies at
 all**, not even Koin: stateless `object`s called directly. Everything is pure and tested in `commonTest`; rules pinned
 by a test are not repeated here.
 

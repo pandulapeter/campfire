@@ -1549,4 +1549,14 @@ class ChordSheetConverterTest {
         )
         assertFalse("{subtitle" in flush, flush)
     }
+
+    @Test
+    fun `a Latin chord sheet is converted`() {
+        val sheet = ChordSheet.ofPlainText("Key: Lam\n\nLam         Fa\nLa noche es larga\nDo             Sol\nY el camino es mio")
+        val converted = ChordSheetConverter.convert(sheet).single()
+
+        assertTrue("[Lam]La noche es [Fa]larga" in converted, converted)
+        assertTrue("[Do]Y el camino es [Sol]mio" in converted, converted)
+        assertEquals("La la la la\n", ChordSheetConverter.convert(ChordSheet.ofPlainText("La la la la")).single())
+    }
 }
