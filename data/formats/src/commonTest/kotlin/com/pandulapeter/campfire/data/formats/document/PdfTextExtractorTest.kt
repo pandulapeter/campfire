@@ -47,7 +47,9 @@ class PdfTextExtractorTest {
         }
         val bytes = PdfTestWriter.song(content)
         val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
-        assertTrue(elapsed < 2.seconds, "Took $elapsed")
+        // Unbudgeted padding is 30,000 gaps of 600,000 spaces each, never finishing; the bound leaves a slow CI runner room
+        // (3.1 s on Windows).
+        assertTrue(elapsed < 10.seconds, "Took $elapsed")
     }
 
     @Test
