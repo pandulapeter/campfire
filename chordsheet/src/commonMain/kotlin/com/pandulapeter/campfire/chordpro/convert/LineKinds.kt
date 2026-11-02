@@ -42,6 +42,7 @@ internal object LineKinds {
         val isStaff: List<Boolean>,
         val hasStructure: Boolean,
         val hasUnambiguousChords: Boolean,
+        val isItalicComment: List<Boolean>,
     )
 
     /**
@@ -63,6 +64,7 @@ internal object LineKinds {
         Rule(::grid) { it.next != LineKind.LYRIC },
         Rule(::heading) { it.next == null || it.next == LineKind.CHORD || it.next == LineKind.BLANK },
         Rule(::metadata),
+        Rule(::italicComment),
         Rule(::notesOnly),
         Rule(::exportContinuation),
         Rule(::exportOverflow),
@@ -80,7 +82,7 @@ internal object LineKinds {
                 tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
         }
-        val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates))
+        val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), italicComments(lines, features, candidates))
         val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
         val kinds = firstPass.toMutableList()
         for (index in lines.indices.reversed()) {
@@ -161,6 +163,32 @@ internal object LineKinds {
                 features.metadata?.first == "copyright" ||
                 features.bodyRow != null || isKeyChange(context.lines[index], context.lines[index].text)
             ).gives(LineKind.METADATA)
+    }
+
+    private fun italicComment(context: Context, index: Int) = context.isItalicComment[index].gives(LineKind.COMMENT)
+
+    /**
+     * Whether each line is a comment by its type (`last time slower`): a line set wholly in italics on its own, in a song
+     * whose lyrics are not, before a chord row or a heading. A run of such lines is lyrics set in italics, a chorus as many
+     * sheets set one, and so is one under a chord row or before a lyric (a backing vocal); the two lines under a title, or
+     * under the song's first line, are its credit and its album.
+     */
+    private fun italicComments(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<Boolean> {
+        val isItalic = lines.indices.map { index ->
+            candidates[index] == null && lines[index].source.spans.filter { it.text.isNotBlank() }.let { spans -> spans.isNotEmpty() && spans.all { it.isItalic } }
+        }
+        val lyrics = lines.indices.filter { features[it].isSung && candidates[it] == null }
+        if (lyrics.count { isItalic[it] } * 2 > lyrics.size) return lines.map { false }
+        val profile = ChordSheetProfile.of(lines.map { it.source })
+        val filled = lines.indices.filter { lines[it].text.isNotBlank() }
+        return lines.indices.map { index ->
+            val at = filled.indexOf(index)
+            val above = filled.getOrNull(at - 1)
+            val isUnderTitle = at < 2 || filled.subList(maxOf(0, at - 2), at).any { other -> lines[other].source.spans.any { profile.isLarger(it.size) } }
+            val below = filled.getOrNull(at + 1)
+            val opensPart = below != null && (candidates[below] != null || features[below].heading != null || features[below].isLabel || lines[below].isMarginLabel)
+            isItalic[index] && above?.let { isItalic[it] || candidates[it] != null } != true && opensPart && !isUnderTitle
+        }
     }
 
     /** A row of notes alone is a candidate only where the row under it continues its line. */

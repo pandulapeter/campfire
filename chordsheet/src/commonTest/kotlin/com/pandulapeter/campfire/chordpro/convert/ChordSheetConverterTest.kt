@@ -1662,4 +1662,27 @@ class ChordSheetConverterTest {
             convert("| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n\n| G . . . | C . . . |\n  Hello     world"),
         )
     }
+
+    @Test
+    fun `a line alone in italics among plain lyrics is a comment, while a run of italic lines is lyrics`() {
+        fun line(text: String, italic: Boolean = false) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
+        val lines = listOf(
+            line("Song"),
+            line("Someone"),
+            line("G         C"),
+            line("Hello my old friend"),
+            line("Here we go again"),
+            line("last time slower", italic = true),
+            line("G         C"),
+            line("Sing it out loud"),
+            line("One more time", italic = true),
+            line("And once again", italic = true),
+        )
+        assertEquals(
+            "Song\nSomeone\n[G]Hello my [C]old friend\nHere we go again\n{comment: last time slower}\n[G]Sing it ou[C]t loud\n\n" +
+                "{start_of_chorus}\nOne more time\nAnd once again\n{end_of_chorus}\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }
