@@ -18,16 +18,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.leadingChordNames
 import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 /**
@@ -39,17 +43,22 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 internal fun AskForChordNamesOnce(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    playingOverrides: StateFlow<PlayingOverridesSnapshot>,
+    songTextStore: SongTextStore,
+    dialogHost: DialogHost,
+    backStack: List<CampfireDestination>,
+    songRenderer: SongRenderer,
     song: Song?,
     destination: CampfireDestination.SongDetails,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val overrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
-    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
-    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
-    val isUncovered = visibleDialog == null && viewModel.navigator.backStack.lastOrNull() == destination
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
+    val overrides by playingOverrides.collectAsStateWithLifecycle()
+    val inferredKeys by songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
+    val songTexts by songTextStore.songTexts.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val visibleDialog by dialogHost.visibleDialog.collectAsStateWithLifecycle()
+    val isUncovered = visibleDialog == null && backStack.lastOrNull() == destination
     val playback = song?.let { songPlaybackOf(song = it, setlistFileName = destination.setlistFileName, overrides = overrides) }
     val capo = playback?.capo?.fret ?: 0
     // The capo the song had when this screen first showed it, so that stepping it back to none still counts as a change.
@@ -75,7 +84,7 @@ internal fun AskForChordNamesOnce(
         val exampleCapo = if (capo != 0) capo else openedCapo
         val dialog = withContext(Dispatchers.Default) {
             chordNamesQuestionOf(
-                renderer = viewModel.songRenderer,
+                renderer = songRenderer,
                 song = song,
                 text = text,
                 transposition = playback.transposition,
@@ -84,7 +93,7 @@ internal fun AskForChordNamesOnce(
                 inferredKey = inferredKeys[song.fileName],
             )
         }
-        if (viewModel.dialogHost.showIfNoneIsShown(dialog)) isAskedOverSong = true
+        if (dialogHost.showIfNoneIsShown(dialog)) isAskedOverSong = true
     }
 }
 

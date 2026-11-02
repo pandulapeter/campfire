@@ -60,7 +60,13 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_se
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -80,7 +86,14 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongDetailsPager(
     modifier: Modifier,
     contentPadding: PaddingValues,
-    viewModel: CampfireViewModel,
+    songTextStore: SongTextStore,
+    overrides: PlayingOverrides,
+    preferencesController: PreferencesController,
+    fontScaleController: FontScaleController,
+    songRenderer: SongRenderer,
+    dialogHost: DialogHost,
+    metronomeController: MetronomeController,
+    onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
     pageKey: (Song) -> String,
@@ -117,12 +130,7 @@ internal fun SongDetailsPager(
     // The library has not been read yet (or the screen is on its way out, see SongDetailsScreen, or a preview's import
     // is being written under an activity created again), so there is nothing to page through; a pager with no pages
     // would leave the screen blank under an app bar with no title in it.
-    Box(
-        modifier = modifier.padding(contentPadding),
-        contentAlignment = Alignment.Center,
-    ) {
-        DelayedLoadingIndicator()
-    }
+    Box(modifier = modifier.padding(contentPadding), contentAlignment = Alignment.Center) { DelayedLoadingIndicator() }
 } else Box(
     modifier = modifier
         .stepOnTap(
@@ -138,7 +146,14 @@ internal fun SongDetailsPager(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     SongPages(
-        viewModel = viewModel,
+        songTextStore = songTextStore,
+        overrides = overrides,
+        preferencesController = preferencesController,
+        fontScaleController = fontScaleController,
+        songRenderer = songRenderer,
+        dialogHost = dialogHost,
+        metronomeController = metronomeController,
+        onTunerClicked = onTunerClicked,
         destination = destination,
         importPreview = importPreview,
         pageKey = pageKey,

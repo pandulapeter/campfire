@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 
 /**
  * The text size stepper, reading the live font scale in a scope of its own so that a pinch recomposes the
@@ -21,10 +21,10 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 @Composable
 internal fun LiveFontScaleControls(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    fontScaleController: FontScaleController,
 ) = FontScaleControls(
     modifier = modifier,
-    fontScale = viewModel.fontScaleController.fontScale,
-    onFontScaleAdjusted = viewModel.fontScaleController::adjustFontScale,
-    onFontScaleReset = { viewModel.fontScaleController.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
+    fontScale = fontScaleController.fontScale,
+    onFontScaleAdjusted = fontScaleController::adjustFontScale,
+    onFontScaleReset = { fontScaleController.setFontScale(UserPreferences.DEFAULT_FONT_SCALE) },
 )

@@ -16,10 +16,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * What the tiles of the About the song sheet open: the dialog of each group. Over the editor (a
@@ -29,24 +30,25 @@ import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefaul
  */
 @Composable
 internal fun rememberSongInfoEditing(
-    viewModel: CampfireViewModel,
+    songMetadataEditing: SongMetadataEditing,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
     song: Song,
     setlistFileName: String?,
     target: SongEditTarget,
 ): SongInfoEditing {
     val latestSong by rememberUpdatedState(song)
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    return remember(viewModel, setlistFileName, target, isCoverArtEnabled) {
+    return remember(songMetadataEditing, setlistFileName, target, isCoverArtEnabled) {
         SongInfoEditing(
             onEditCoverArt = if (isCoverArtEnabled) {
-                { viewModel.songMetadataEditing.showSongCoverArtDialog(song = latestSong, target = target) }
+                { songMetadataEditing.showSongCoverArtDialog(song = latestSong, target = target) }
             } else null,
-            onEditMetadata = { viewModel.songMetadataEditing.showSongMetadataDialog(song = latestSong, target = target) },
-            onEditDefaults = { viewModel.songMetadataEditing.showSongPlayingDialog(song = latestSong, setlistFileName = setlistFileName, target = target) },
-            onEditTags = { viewModel.songMetadataEditing.showSongTagsDialog(song = latestSong, target = target) },
-            onEditLanguages = { viewModel.songMetadataEditing.showSongLanguagesDialog(song = latestSong, target = target) },
-            onEditLinks = { viewModel.songMetadataEditing.showSongLinksDialog(song = latestSong, target = target) },
+            onEditMetadata = { songMetadataEditing.showSongMetadataDialog(song = latestSong, target = target) },
+            onEditDefaults = { songMetadataEditing.showSongPlayingDialog(song = latestSong, setlistFileName = setlistFileName, target = target) },
+            onEditTags = { songMetadataEditing.showSongTagsDialog(song = latestSong, target = target) },
+            onEditLanguages = { songMetadataEditing.showSongLanguagesDialog(song = latestSong, target = target) },
+            onEditLinks = { songMetadataEditing.showSongLinksDialog(song = latestSong, target = target) },
         )
     }
 }

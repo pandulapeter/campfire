@@ -16,7 +16,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 
 /**
  * What [com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel] shows, for the two screens that have one.
@@ -33,20 +34,24 @@ internal data class MetronomePanelState(
 )
 
 /**
- * The [MetronomePanelState] of [viewModel], collected in the composition rather than read off the view model's flows'
+ * The [MetronomePanelState] of [metronomeController], collected in the composition rather than read off the view model's flows'
  * current values, so that a `{time}` saved or synced while the panel is up redraws the bar, and in the same frame as the
  * pager's page change that makes another song the click's. A playing click draws the bar that is heard instead: the
  * song paged to waits for the end of the bar, and only then does the row take its signature. While a change to another
  * signature waits, the accents drawn are the heard bar's own too, since the click finishes it with them.
  */
 @Composable
-internal fun rememberMetronomePanelState(viewModel: CampfireViewModel): MetronomePanelState {
-    val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
-    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
-    val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
-    val songBeatLevels by viewModel.metronomeController.songBeatLevels.collectAsStateWithLifecycle()
-    val context = viewModel.metronomeController.metronomeContext
+internal fun rememberMetronomePanelState(
+    metronomeController: MetronomeController,
+    libraryState: LibraryState,
+    songTextStore: SongTextStore,
+): MetronomePanelState {
+    val playback by metronomeController.metronomePlayback.collectAsStateWithLifecycle()
+    val settings by metronomeController.metronomeSettings.collectAsStateWithLifecycle()
+    val songsByFileName by libraryState.songsByFileName.collectAsStateWithLifecycle()
+    val songsBeingRenamed by songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songBeatLevels by metronomeController.songBeatLevels.collectAsStateWithLifecycle()
+    val context = metronomeController.metronomeContext
     val timeSignature = (playback as? MetronomePlayback.Playing)?.pattern?.timeSignature
         ?: metronomeTimeSignatureOf(context, settings) { songsByFileName[it] ?: songsBeingRenamed[it] }
     val barBeingLeft = playback.barBeingLeft

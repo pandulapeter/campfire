@@ -28,7 +28,6 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
@@ -38,6 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The song details screen's app bar actions: the text size where the bar has room for it, the song's setlists, and the
@@ -45,7 +46,8 @@ import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
  */
 @Composable
 internal fun RowScope.SongDetailsActions(
-    viewModel: CampfireViewModel,
+    fontScaleController: FontScaleController,
+    songFileNamesInSetlistsFlow: StateFlow<Set<String>>,
     songActions: SongActionHandler,
     currentSong: Song?,
     setlistFileName: String?,
@@ -58,7 +60,7 @@ internal fun RowScope.SongDetailsActions(
     tunerAction: ActionsMenuItem?,
     songDisplayAction: ActionsMenuItem,
 ) {
-    val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by songFileNamesInSetlistsFlow.collectAsStateWithLifecycle()
     // Read only mode's menu: nothing in it changes the library.
     val performanceItems = listOfNotNull(aboutSongAction, tunerAction, songDisplayAction)
     // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
@@ -72,7 +74,7 @@ internal fun RowScope.SongDetailsActions(
         exit = fadeOut() + shrinkHorizontally(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            LiveFontScaleControls(viewModel = viewModel)
+            LiveFontScaleControls(fontScaleController = fontScaleController)
             // The overflow button is the bar's last, after the stepper, as the song's own menu is outside read only mode.
             ActionsMenu(items = if (isPerformanceModeEnabled) performanceItems else emptyList())
         }
@@ -88,7 +90,7 @@ internal fun RowScope.SongDetailsActions(
             items = performanceItems,
             menuFooter = {
                 MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                    LiveFontScaleControls(viewModel = viewModel)
+                    LiveFontScaleControls(fontScaleController = fontScaleController)
                 }
             },
         )
@@ -149,7 +151,7 @@ internal fun RowScope.SongDetailsActions(
                     } else {
                         {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                                LiveFontScaleControls(viewModel = viewModel)
+                                LiveFontScaleControls(fontScaleController = fontScaleController)
                             }
                         }
                     },

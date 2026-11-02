@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 
 /**
@@ -23,11 +22,11 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
  */
 @Composable
 internal fun AskForSongLayoutOnce(
-    viewModel: CampfireViewModel,
+    showIfNoneIsShown: (DialogType) -> Boolean,
     userPreferences: UserPreferences?,
 ) {
     val isOwed = userPreferences?.isSongLayoutChosen == false
     LaunchedEffect(isOwed) {
-        if (isOwed) viewModel.dialogHost.showIfNoneIsShown(DialogType.SongLayout)
+        if (isOwed) showIfNoneIsShown(DialogType.SongLayout)
     }
 }

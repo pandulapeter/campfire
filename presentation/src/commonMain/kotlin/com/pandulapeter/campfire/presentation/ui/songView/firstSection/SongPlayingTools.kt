@@ -14,7 +14,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.metronome.api.model.MetronomeBeat
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -57,28 +57,29 @@ internal class SongMetronomeTool(
  */
 @Composable
 internal fun rememberSongPlayingTools(
-    viewModel: CampfireViewModel,
+    metronomeController: MetronomeController,
+    onTunerClicked: () -> Unit,
     bpm: Int,
     isMetronomeEnabled: Boolean,
     isTunerEnabled: Boolean,
     isTunerSheetShown: Boolean,
     isMetronomePanelShown: Boolean,
     isBeatFlashEnabled: Boolean,
-): SongPlayingTools? = remember(viewModel, bpm, isMetronomeEnabled, isTunerEnabled, isTunerSheetShown, isMetronomePanelShown, isBeatFlashEnabled) {
+): SongPlayingTools? = remember(metronomeController, onTunerClicked, bpm, isMetronomeEnabled, isTunerEnabled, isTunerSheetShown, isMetronomePanelShown, isBeatFlashEnabled) {
     if (!isMetronomeEnabled && !isTunerEnabled) {
         null
     } else {
         SongPlayingTools(
-            onTunerClicked = if (isTunerEnabled) viewModel::openTunerSheet else null,
+            onTunerClicked = if (isTunerEnabled) onTunerClicked else null,
             isTunerSheetShown = isTunerSheetShown,
             metronome = if (isMetronomeEnabled) {
                 SongMetronomeTool(
                     isPanelShown = isMetronomePanelShown,
                     bpm = bpm,
                     isFlashEnabled = isBeatFlashEnabled,
-                    playback = viewModel.metronomeController.metronomePlayback,
-                    beats = viewModel.metronomeController.metronomeBeats,
-                    onClick = viewModel.metronomeController::toggleMetronomePanel,
+                    playback = metronomeController.metronomePlayback,
+                    beats = metronomeController.metronomeBeats,
+                    onClick = metronomeController::toggleMetronomePanel,
                 )
             } else {
                 null

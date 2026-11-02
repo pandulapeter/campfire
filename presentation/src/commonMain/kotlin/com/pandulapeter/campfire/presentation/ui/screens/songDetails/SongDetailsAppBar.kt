@@ -32,7 +32,16 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
@@ -57,7 +66,16 @@ import org.jetbrains.compose.resources.painterResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SongDetailsAppBar(
-    viewModel: CampfireViewModel,
+    editorSession: EditorSession,
+    songFilesController: SongFilesController,
+    dialogHost: DialogHost,
+    playingOverridesFlow: StateFlow<PlayingOverridesSnapshot>,
+    songTextStore: SongTextStore,
+    songRenderer: SongRenderer,
+    libraryState: LibraryState,
+    fontScaleController: FontScaleController,
+    metronomeController: MetronomeController,
+    onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     currentSong: Song?,
     isReadOnly: Boolean,
@@ -79,9 +97,9 @@ internal fun SongDetailsAppBar(
     coroutineScope: CoroutineScope,
     onBack: () -> Unit,
 ) {
-    val songActions = rememberSongActionHandler(viewModel)
-    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
-    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
+    val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
+    val playingOverrides by playingOverridesFlow.collectAsStateWithLifecycle()
+    val inferredKeys by songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions, so that the
@@ -96,7 +114,7 @@ internal fun SongDetailsAppBar(
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
-        tunerAction(isAlwaysInMenu = isReadOnly, onClick = viewModel::openTunerSheet)
+        tunerAction(isAlwaysInMenu = isReadOnly, onClick = onTunerClicked)
     } else {
         null
     }
@@ -117,7 +135,7 @@ internal fun SongDetailsAppBar(
                 shouldShowChords = shouldShowChords,
                 chordSpelling = chordSpelling,
                 playingOverrides = playingOverrides,
-                songRenderer = viewModel.songRenderer,
+                songRenderer = songRenderer,
                 showsCoverInBar = showsCoverInBar,
                 currentPageScrollState = currentPageScrollState,
                 openCurrentSongInfo = openCurrentSongInfo,
@@ -128,7 +146,8 @@ internal fun SongDetailsAppBar(
         },
         actions = {
             SongDetailsActions(
-                viewModel = viewModel,
+                fontScaleController = fontScaleController,
+                songFileNamesInSetlistsFlow = libraryState.songFileNamesInSetlists,
                 songActions = songActions,
                 currentSong = currentSong,
                 setlistFileName = destination.setlistFileName,
@@ -139,18 +158,18 @@ internal fun SongDetailsAppBar(
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
                 aboutSongAction = openCurrentSongInfo?.let { aboutSongAction(onClick = it) },
                 tunerAction = tunerAction,
-                songDisplayAction = songDisplayAction(onClick = { viewModel.dialogHost.showDialog(DialogType.SongDisplay) }),
+                songDisplayAction = songDisplayAction(onClick = { dialogHost.showDialog(DialogType.SongDisplay) }),
             )
         },
         bottomContent = {
-            val panel = rememberMetronomePanelState(viewModel)
+            val panel = rememberMetronomePanelState(metronomeController, libraryState, songTextStore)
             MetronomePanel(
                 isPlaying = panel.isPlaying,
                 beatLevels = panel.beatLevels,
-                beats = viewModel.metronomeController.metronomeBeats,
+                beats = metronomeController.metronomeBeats,
                 isFlashEnabled = panel.isFlashEnabled,
-                onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
-                onPlayStop = viewModel.metronomeController::toggleMetronome,
+                onBeatLevelsChanged = { levels -> metronomeController.setBeatLevels(panel.timeSignature, levels) },
+                onPlayStop = metronomeController::toggleMetronome,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,
                 visibleState = metronomePanelState,

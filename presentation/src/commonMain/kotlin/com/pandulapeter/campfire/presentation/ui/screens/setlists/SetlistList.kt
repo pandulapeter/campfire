@@ -106,7 +106,7 @@ internal fun SetlistList(
     isScreenActive: Boolean,
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
-    val songActions = rememberSongActionHandler(viewModel)
+    val songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost)
     val setlistActions = rememberSetlistActionHandler(viewModel)
     val listedSetlists by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
     val setlistsWithSongs = listedSetlists.setlists

@@ -91,7 +91,7 @@ internal fun MetronomeScreen(
         // with it.
         modifier = modifier.fillMaxSize().then(if (isPlaying) Modifier.keepScreenOn() else Modifier),
     ) {
-        val panel = rememberMetronomePanelState(viewModel)
+        val panel = rememberMetronomePanelState(viewModel.metronomeController, viewModel.libraryState, viewModel.songTextStore)
         MetronomePanel(
             // Where the list screens' bar would stand, under the tools' buttons too, so that the play button is on the New
             // button's spot, as the Tuner tab's reference tone is.

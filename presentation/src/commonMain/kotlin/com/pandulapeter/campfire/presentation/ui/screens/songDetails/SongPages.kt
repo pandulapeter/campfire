@@ -47,7 +47,13 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
 import com.pandulapeter.campfire.presentation.ui.songView.model.ScaleSuggestions
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.fontScale.fontScaleGestures
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
@@ -75,7 +81,14 @@ import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
  */
 @Composable
 internal fun SongPages(
-    viewModel: CampfireViewModel,
+    songTextStore: SongTextStore,
+    overrides: PlayingOverrides,
+    preferencesController: PreferencesController,
+    fontScaleController: FontScaleController,
+    songRenderer: SongRenderer,
+    dialogHost: DialogHost,
+    metronomeController: MetronomeController,
+    onTunerClicked: () -> Unit,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
     pageKey: (Song) -> String,
@@ -98,30 +111,30 @@ internal fun SongPages(
     isViewportSettled: () -> Boolean,
     onCurrentPage: (ScrollState, SongStepper, SongAutoScroller) -> Unit,
 ) {
-    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
-    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
-    val inferredKeys by viewModel.songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val songTexts by songTextStore.songTexts.collectAsStateWithLifecycle()
+    val failedSongFileNames by songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
+    val inferredKeys by songTextStore.inferredKeys.keys.collectAsStateWithLifecycle()
+    val playingOverrides by overrides.playingOverrides.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // A chord's sheet picks the shape every song is drawn with, which read only mode leaves alone. A preview is read only
     // only so that nothing writes to a song file that is not there yet, so its diagrams open their sheets.
     val canPickChordShapes = !isPerformanceModeEnabled && (importPreview != null || !isReadOnly)
     val tabs = rememberTabReading(userPreferences)
     val showsDegrees = chordDiagrams != null && userPreferences?.areChordDegreesEnabled == true
-    val scaleSuggestions = rememberScaleSuggestions(viewModel = viewModel, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
+    val scaleSuggestions = rememberScaleSuggestions(dialogHost = dialogHost, userPreferences = userPreferences, shouldShowChords = shouldShowChords)
     val isContinuous = userPreferences?.songLayout == SongLayout.CONTINUOUS
     LaunchedEffect(pagerState) {
         // A swipe right after a pinch must not hand the song it leaves the size from before the pinch once it stops being
         // the current page, halfway across: the pages beside the one being read take the new size before any of them moves.
-        snapshotFlow { pagerState.isScrollInProgress }.collect { if (it) viewModel.fontScaleController.settleFontScale() }
+        snapshotFlow { pagerState.isScrollInProgress }.collect { if (it) fontScaleController.settleFontScale() }
     }
     HorizontalPager(
         modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
             .fillMaxSize()
             .fontScaleGestures(
-                fontScale = { viewModel.fontScaleController.fontScale },
-                onFontScaleChanged = viewModel.fontScaleController::setFontScale,
+                fontScale = { fontScaleController.fontScale },
+                onFontScaleChanged = fontScaleController::setFontScale,
             ),
         state = pagerState,
         key = { pageKey(songs[it]) },
@@ -137,9 +150,7 @@ internal fun SongPages(
         val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
         val autoScroller = remember(scrollState, flingBehavior) { SongAutoScroller(scrollState, flingBehavior) }
         SideEffect { flingBehavior.isCapped = !isContinuous }
-        DisposableEffect(song.fileName) {
-            onDispose { songTimings.remove(song.fileName) }
-        }
+        DisposableEffect(song.fileName) { onDispose { songTimings.remove(song.fileName) } }
         if (page == pagerState.currentPage) SideEffect { onCurrentPage(scrollState, stepper, autoScroller) }
         // Only the song being read follows a pinch, and the viewport's height, frame by frame; the pages beside it are
         // composed and laid out too, and take the scale once it has settled, or as soon as the pager starts moving, and
@@ -169,7 +180,7 @@ internal fun SongPages(
             if (importPreview != null) {
                 importPreview.toggleFold(pageFileName = song.fileName, key = key)
             } else {
-                viewModel.preferencesController.toggleSectionFold(songFileName = song.fileName, key = key)
+                preferencesController.toggleSectionFold(songFileName = song.fileName, key = key)
             }
         }
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
@@ -177,14 +188,7 @@ internal fun SongPages(
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
         val shapeCapo = playback.shapeCapoFor(userPreferences)
         val tempo = playback.tempo
-        val capo = playback.capo
-        SideEffect {
-            autoScroller.pace = SongAutoScroller.OwnPace(
-                duration = song.duration,
-                bpm = tempo.bpm,
-                beatsPerBar = (song.time?.let(TimeSignature::parse) ?: TimeSignature.COMMON_TIME).beats,
-            )
-        }
+        SideEffect { autoScroller.pace = ownPaceOf(song, tempo.bpm) }
         SongDetailsPage(
             // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
             // draws past its end off the page of the next song. The page's own padding holds the cards'
@@ -203,10 +207,10 @@ internal fun SongPages(
             tempoOverride = tempo.takeUnless { it.isDefault }?.bpm,
             // The keyboard names the capo too where it raises the pitch for every instrument, so a pianist reads why the key
             // moved; where the reader keeps the key it moves nothing, and is left out.
-            capoOverride = capo.takeUnless { it.isDefault }?.fret,
+            capoOverride = playback.capo.takeUnless { it.isDefault }?.fret,
             isCapoShown = playback.isCapoShownFor(userPreferences),
             shapeCapo = shapeCapo,
-            shapeNames = viewModel.songRenderer.shapeNamesOf(
+            shapeNames = songRenderer.shapeNamesOf(
                 song = song,
                 playback = playback,
                 preferences = userPreferences,
@@ -215,12 +219,12 @@ internal fun SongPages(
             ),
             // A numbering counts a song naming no key from it.
             inferredChordsKey = inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
-                viewModel.songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
+                songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },
             // Only the read only line needs it, as the controls name the key otherwise.
             inferredKey = if (isReadOnly) {
                 inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
-                    viewModel.songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
+                    songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
                 }
             } else {
                 null
@@ -231,7 +235,8 @@ internal fun SongPages(
                 null
             } else {
                 rememberSongPlayingControls(
-                    viewModel = viewModel,
+                    overrides = overrides,
+                    songRenderer = songRenderer,
                     song = song,
                     setlistFileName = destination.setlistFileName,
                     playback = playback,
@@ -243,7 +248,8 @@ internal fun SongPages(
                 )
             },
             playingTools = rememberSongPlayingTools(
-                viewModel = viewModel,
+                metronomeController = metronomeController,
+                onTunerClicked = onTunerClicked,
                 bpm = tempo.bpm,
                 isMetronomeEnabled = isMetronomeEnabled,
                 isTunerEnabled = isTunerEnabled,
@@ -255,9 +261,9 @@ internal fun SongPages(
             shouldShowTempo = isMetronomeEnabled,
             shouldNumberSections = userPreferences?.shouldNumberSections == true,
             fontScale = if (isFollowingGesture) {
-                { viewModel.fontScaleController.fontScale }
+                { fontScaleController.fontScale }
             } else {
-                { viewModel.fontScaleController.settledFontScale }
+                { fontScaleController.settledFontScale }
             },
             // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
             keepsStepButtonInset = canPage,
@@ -268,9 +274,9 @@ internal fun SongPages(
             chordSpelling = chordSpelling,
             settledWidth = settledWidth,
             contentPadding = pageContentPadding,
-            transposeSong = { text, transposition, capo, spelling, tabs -> viewModel.songRenderer.transposedSong(text, transposition, spelling, tabs = tabs, capo = capo) },
-            notateSong = viewModel.songRenderer::notatedSong,
-            onRetry = { viewModel.songTextStore.loadSongContent(song.fileName) },
+            transposeSong = { text, transposition, capo, spelling, tabs -> songRenderer.transposedSong(text, transposition, spelling, tabs = tabs, capo = capo) },
+            notateSong = songRenderer::notatedSong,
+            onRetry = { songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
             chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, canPickChordShapes, isChordSectionFolded, text, importPreview != null) {
@@ -279,7 +285,7 @@ internal fun SongPages(
                     onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
                     onChordClicked = if (!canPickChordShapes) null else {
                         { chordName ->
-                            viewModel.dialogHost.showDialog(
+                            dialogHost.showDialog(
                                 DialogType.ChordShape(
                                     song = song,
                                     setlistFileName = destination.setlistFileName,
@@ -290,8 +296,8 @@ internal fun SongPages(
                         }
                     },
                     // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
-                    onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
+                    onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
+                    onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
                 )
             },
             tabs = tabs,
@@ -315,7 +321,7 @@ internal fun SongPages(
  */
 @Composable
 private fun rememberScaleSuggestions(
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
     userPreferences: UserPreferences?,
     shouldShowChords: Boolean,
 ): ScaleSuggestions? {
@@ -323,8 +329,15 @@ private fun rememberScaleSuggestions(
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     return remember(notation) {
         ScaleSuggestions(
-            onScaleClicked = { scaleId, rootName, capo -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName, capo = capo)) },
+            onScaleClicked = { scaleId, rootName, capo -> dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName, capo = capo)) },
             notation = notation,
         )
     }
 }
+
+/** [song]'s own pace at [bpm], which a song scrolling by itself keeps to until its reader sets one. */
+private fun ownPaceOf(song: Song, bpm: Int) = SongAutoScroller.OwnPace(
+    duration = song.duration,
+    bpm = bpm,
+    beatsPerBar = (song.time?.let(TimeSignature::parse) ?: TimeSignature.COMMON_TIME).beats,
+)

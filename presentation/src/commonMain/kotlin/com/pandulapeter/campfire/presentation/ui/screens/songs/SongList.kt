@@ -99,7 +99,7 @@ internal fun SongList(
     selection: Set<String>,
     sortChangeReveal: SortChangeReveal,
 ) {
-    val songActions = rememberSongActionHandler(viewModel)
+    val songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
     val selectSongsIcon = painterResource(Res.drawable.ic_select)
     // An open search runs the sections together, so no section ends in a short row, keeping the card at the top left of

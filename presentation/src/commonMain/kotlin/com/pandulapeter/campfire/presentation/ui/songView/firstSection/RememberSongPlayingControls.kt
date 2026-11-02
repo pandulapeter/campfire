@@ -17,8 +17,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
@@ -46,7 +47,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.wrapTransposition
  */
 @Composable
 internal fun rememberSongPlayingControls(
-    viewModel: CampfireViewModel,
+    overrides: PlayingOverrides,
+    songRenderer: SongRenderer,
     song: Song,
     setlistFileName: String?,
     playback: SongPlayback,
@@ -65,12 +67,12 @@ internal fun rememberSongPlayingControls(
     val pitchCapo = playback.pitchCapo
     val isCapoShown = playback.isCapoShownFor(userPreferences)
     val nameCapo = playback.nameCapoFor(userPreferences)
-    val key = if (canTranspose) viewModel.songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
-    val transpositionLabels = remember(viewModel, song, canTranspose, chordSpelling, pitchCapo, nameCapo, inferredKey) {
+    val key = if (canTranspose) songRenderer.renderKey(song = song, transposition = playback.namingTransposition(userPreferences), spelling = chordSpelling, inferredKey = inferredKey) else null
+    val transpositionLabels = remember(songRenderer, song, canTranspose, chordSpelling, pitchCapo, nameCapo, inferredKey) {
         if (!canTranspose) return@remember emptyList()
         (0 until SEMITONES_PER_OCTAVE).map { semitones ->
             val transposition = wrapTransposition(semitones)
-            val shownKey = viewModel.songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, pitchCapo) - nameCapo, spelling = chordSpelling, inferredKey = inferredKey)
+            val shownKey = songRenderer.renderKey(song = song, transposition = soundingTransposition(transposition, pitchCapo) - nameCapo, spelling = chordSpelling, inferredKey = inferredKey)
             transpositionValue(transposition, shownKey)
         }
     }
@@ -79,7 +81,7 @@ internal fun rememberSongPlayingControls(
     val timeSignature = song.timeSignatureOrDefault.takeUnless { it == TimeSignature.COMMON_TIME }?.toString()
     val fileName = song.fileName
     return remember(
-        viewModel,
+        overrides,
         fileName,
         setlistFileName,
         canTranspose,
@@ -101,8 +103,8 @@ internal fun rememberSongPlayingControls(
                     isDefault = transposition == 0,
                     key = key,
                     labels = transpositionLabels,
-                    onStep = { viewModel.overrides.stepTransposition(fileName, setlistFileName, it) },
-                    onReset = { viewModel.overrides.resetTransposition(fileName, setlistFileName) },
+                    onStep = { overrides.stepTransposition(fileName, setlistFileName, it) },
+                    onReset = { overrides.resetTransposition(fileName, setlistFileName) },
                 )
             } else {
                 null
@@ -111,8 +113,8 @@ internal fun rememberSongPlayingControls(
                 SongCapoControl(
                     capo = capo,
                     namesShapes = nameCapo != 0 && key != null,
-                    onStep = { viewModel.overrides.stepCapo(fileName, setlistFileName, it) },
-                    onReset = { viewModel.overrides.resetCapo(fileName, setlistFileName) },
+                    onStep = { overrides.stepCapo(fileName, setlistFileName, it) },
+                    onReset = { overrides.resetCapo(fileName, setlistFileName) },
                 )
             } else {
                 null
@@ -120,9 +122,9 @@ internal fun rememberSongPlayingControls(
             tempo = if (shouldShowTempo) {
                 SongTempoControl(
                     tempo = tempo,
-                    onStep = { viewModel.overrides.stepTempo(fileName, setlistFileName, it) },
-                    onSet = { viewModel.overrides.setTempo(fileName, setlistFileName, it) },
-                    onReset = { viewModel.overrides.resetTempo(fileName, setlistFileName) },
+                    onStep = { overrides.stepTempo(fileName, setlistFileName, it) },
+                    onSet = { overrides.setTempo(fileName, setlistFileName, it) },
+                    onReset = { overrides.resetTempo(fileName, setlistFileName) },
                 )
             } else {
                 null

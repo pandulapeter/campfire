@@ -161,7 +161,7 @@ internal fun LoadedSongEditor(
     // A song with no file yet has no name to fall back on either.
     val untitledTitle = if (destination.isNewSong) stringResource(Res.string.songs_new_song) else destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)
     val editorSong = summary.toEditorSong(fileName = destination.fileName, untitledTitle = untitledTitle)
-    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
+    val songInfoEditing = rememberSongInfoEditing(songMetadataEditing = viewModel.songMetadataEditing, userPreferencesFlow = viewModel.userPreferences, song = editorSong, setlistFileName = null, target = SongEditTarget.EditorDraft(editorSong.fileName))
     val latestEditorSong by rememberUpdatedState(editorSong)
     val onOpenSongInfo = remember(viewModel) {
         {

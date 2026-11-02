@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
@@ -29,6 +28,8 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewFi
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewSongIndices
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewSongOf
 import com.pandulapeter.campfire.presentation.ui.state.importing.isImportPreviewFileName
+import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * What the song details screen shows as a preview of songs an import has not written yet ([CampfireDestination.SongDetails.importPreview]):
@@ -67,10 +68,10 @@ internal class ImportPreviewState(
  */
 @Composable
 internal fun rememberImportPreviewState(
-    viewModel: CampfireViewModel,
+    importReport: StateFlow<ImportReport?>,
     destination: CampfireDestination.SongDetails,
 ): ImportPreviewState? {
-    val report by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
+    val report by importReport.collectAsStateWithLifecycle()
     val lastReview = remember { LastReview() }
     (report as? ImportReport.Review)?.takeIf { it.id == destination.importPreview?.reviewId }?.let { lastReview.review = it }
     val folds = remember { mutableStateMapOf<String, Set<String>>() }
@@ -103,7 +104,8 @@ internal fun rememberImportPreviewState(
  */
 @Composable
 internal fun CloseImportPreviewWithoutReview(
-    viewModel: CampfireViewModel,
+    importReport: StateFlow<ImportReport?>,
+    backStack: List<CampfireDestination>,
     destination: CampfireDestination.SongDetails,
     importPreview: ImportPreviewState?,
     onBack: () -> Unit,
@@ -114,8 +116,8 @@ internal fun CloseImportPreviewWithoutReview(
         // configChanges do not cover) has forgotten its review, and stays until followImportedSong rewrites it: popping it
         // would be taken by applyImportPlan for the import screen being left.
         if (isOrphaned &&
-            viewModel.importReportState.importReport.value != ImportReport.Importing &&
-            viewModel.navigator.backStack.lastOrNull() == destination
+            importReport.value != ImportReport.Importing &&
+            backStack.lastOrNull() == destination
         ) {
             onBack()
         }
@@ -132,11 +134,11 @@ private class LastReview(var review: ImportReport.Review? = null)
  */
 @Composable
 internal fun InferImportPreviewKeys(
-    viewModel: CampfireViewModel,
+    inferredKeys: InferredSongKeys,
+    importReport: StateFlow<ImportReport?>,
     importPreview: ImportPreviewState,
     currentPage: Int,
 ) {
-    val inferredKeys = viewModel.songTextStore.inferredKeys
     val reviewId = importPreview.review.id
     // Another review's pages are never shown again, since a preview is only kept over the review it was opened over.
     LaunchedEffect(reviewId) { inferredKeys.forget { isImportPreviewFileName(it) && !isImportPreviewFileName(it, reviewId) } }
@@ -144,7 +146,7 @@ internal fun InferImportPreviewKeys(
         onDispose {
             // Only once the review is over: while it is up, a row selected as this preview slides out opens the same pages
             // again, which find their keys held, and would lose them here.
-            if ((viewModel.importReportState.importReport.value as? ImportReport.Review)?.id != reviewId) {
+            if ((importReport.value as? ImportReport.Review)?.id != reviewId) {
                 inferredKeys.forget { isImportPreviewFileName(it, reviewId) }
             }
         }

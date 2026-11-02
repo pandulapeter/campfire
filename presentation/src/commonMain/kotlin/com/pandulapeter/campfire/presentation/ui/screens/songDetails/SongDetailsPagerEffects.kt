@@ -21,9 +21,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 
 /**
  * Reads the text of the song being read, and of the songs beside it: the pages next to the current one are composed
@@ -33,29 +33,30 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
  */
 @Composable
 internal fun LoadSongTexts(
-    viewModel: CampfireViewModel,
+    songTextStore: SongTextStore,
     songs: List<Song>,
     currentPage: Int,
     songTexts: Map<String, String>,
 ) {
-    val failedSongFileNames by viewModel.songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
+    val failedSongFileNames by songTextStore.failedSongFileNames.collectAsStateWithLifecycle()
     val currentFileName = songs.getOrNull(currentPage)?.fileName
-    LaunchedEffect(currentFileName) { currentFileName?.let(viewModel.songTextStore::loadSongContent) }
+    LaunchedEffect(currentFileName) { currentFileName?.let(songTextStore::loadSongContent) }
     LaunchedEffect(currentPage, songs) {
         listOfNotNull(songs.getOrNull(currentPage - 1), songs.getOrNull(currentPage + 1))
             .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
-            .forEach { viewModel.songTextStore.loadSongContent(it.fileName) }
+            .forEach { songTextStore.loadSongContent(it.fileName) }
     }
 }
 
 /**
- * Scrolls a pager created before the library was read to the song that was tapped, and tells the view model where the
- * pager is: the page it has come to rest on and the page it is headed for. Not part of [SongDetailsScreen] itself, so
+ * Scrolls a pager created before the library was read to the song that was tapped, and reports where the pager is: the
+ * page it has come to rest on ([onPageSettled]) and the page it is headed for ([onPageChanged]). Not part of [SongDetailsScreen] itself, so
  * that a change of what it reads recomposes only this.
  */
 @Composable
 internal fun FollowPager(
-    viewModel: CampfireViewModel,
+    onPageSettled: (CampfireDestination.SongDetails, String) -> Unit,
+    onPageChanged: (CampfireDestination.SongDetails, String, SongTiming?) -> Unit,
     destination: CampfireDestination.SongDetails,
     songs: List<Song>,
     pagerState: PagerState,
@@ -80,7 +81,7 @@ internal fun FollowPager(
         if (isInitialPageSettled) {
             snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
                 // A preview's pages name no file, and its address is the import's.
-                if (fileName != null && latestDestination.importPreview == null) viewModel.navigator.onSongDetailsPageSettled(latestDestination, fileName)
+                if (fileName != null && latestDestination.importPreview == null) onPageSettled(latestDestination, fileName)
             }
         }
     }
@@ -92,7 +93,7 @@ internal fun FollowPager(
             snapshotFlow { latestSongs.getOrNull(pagerState.targetPage)?.fileName?.let { it to songTimings[it] } }.collect { target ->
                 // A preview has no metronome, see MetronomeController.toggleMetronomeByKey.
                 if (target != null && latestDestination.importPreview == null) {
-                    viewModel.metronomeController.onSongDetailsPageChanged(latestDestination, target.first, target.second)
+                    onPageChanged(latestDestination, target.first, target.second)
                 }
             }
         }
