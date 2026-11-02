@@ -150,11 +150,12 @@ object PdfTextExtractor {
                     line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size)
             }
             val paragraphs = mutableListOf<ChordSheet.Line>()
+            val columns = lines.mapNotNull { it.column }.distinct()
             lines.forEachIndexed { index, line ->
                 val previous = lines.getOrNull(index - 1)
                 val size = (line.spans + previous?.spans.orEmpty()).maxOfOrNull { it.size } ?: 12.0
                 if (previous != null && line.y - previous.y > size * 2.2) paragraphs += ChordSheet.Line(emptyList())
-                paragraphs += ChordSheet.Line(line.spans, baseline = line.y)
+                paragraphs += ChordSheet.Line(line.spans, baseline = line.y, column = line.column?.let(columns::indexOf))
             }
             ChordSheet.Page(paragraphs)
         })

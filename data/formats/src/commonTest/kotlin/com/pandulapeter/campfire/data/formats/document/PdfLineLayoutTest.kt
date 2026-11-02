@@ -24,6 +24,17 @@ class PdfLineLayoutTest {
     }
 
     @Test
+    fun `each line names its column, and a title over both columns names none`() = runTest {
+        val title = Placed(50, 740, "T".repeat(55))
+        val left = (1..6).map { Placed(50, 700 - it * 12, "Left $it") }
+        val right = (1..6).map { Placed(320, 700 - it * 12, "Right $it") }
+        val lines = PdfTextExtractor.extract(PdfTestWriter.song(content(listOf(title) + left + right))).pages.single().lines
+            .filter { line -> line.spans.any { it.text.isNotBlank() } }
+
+        assertEquals(listOf<Int?>(null) + List(6) { 0 } + List(6) { 1 }, lines.map { it.column })
+    }
+
+    @Test
     fun `a right column shorter than the left one is still read after it`() = runTest {
         val left = (1..6).map { Placed(50, 700 - it * 12, "Left $it") }
         val right = (1..2).map { Placed(320, 700 - it * 12, "Right $it") }
@@ -144,13 +155,12 @@ class PdfLineLayoutTest {
      */
     private data class Placed(val x: Int, val y: Int, val text: String, val size: Int = 10, val isWhole: Boolean = false)
 
-    private suspend fun lines(placed: List<Placed>): List<String> {
-        val content = placed.joinToString(" ") {
-            val shown = "BT /F1 ${it.size} Tf 1 0 0 1 ${it.x} ${it.y} Tm (${it.text}) Tj ET"
-            if (it.isWhole) "/Span << /ActualText (${it.text}) >> BDC $shown EMC" else shown
-        }
-        return PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
-            .map { line -> line.spans.joinToString("") { it.text } }
-            .filter { it.isNotEmpty() }
+    private fun content(placed: List<Placed>) = placed.joinToString(" ") {
+        val shown = "BT /F1 ${it.size} Tf 1 0 0 1 ${it.x} ${it.y} Tm (${it.text}) Tj ET"
+        if (it.isWhole) "/Span << /ActualText (${it.text}) >> BDC $shown EMC" else shown
     }
+
+    private suspend fun lines(placed: List<Placed>): List<String> = PdfTextExtractor.extract(PdfTestWriter.song(content(placed))).pages.single().lines
+        .map { line -> line.spans.joinToString("") { it.text } }
+        .filter { it.isNotEmpty() }
 }

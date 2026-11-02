@@ -21,7 +21,8 @@ import kotlin.math.roundToInt
 /** Glyphs positioned on a page, set into lines, with the columns of a page read one after another. */
 internal object PdfLineLayout {
     data class Positioned(val span: ChordSheet.Span, val y: Double)
-    data class Line(val spans: List<ChordSheet.Span>, val y: Double) {
+    /** A line at [y], set in [column]: null for a line crossing the gutter between two, which belongs to neither. */
+    data class Line(val spans: List<ChordSheet.Span>, val y: Double, val column: PdfBidi.Column? = null) {
         val text get() = spans.joinToString("") { it.text }
     }
 
@@ -53,7 +54,7 @@ internal object PdfLineLayout {
             val start = maxOf(from, heights.countBelow(y - size * 0.22))
             val end = maxOf(start, heights.countAtMost(y + size * 0.22))
             result += columns(sorted.subList(from, start))
-            result += rows(sorted.subList(start, end), charge)
+            result += rows(sorted.subList(start, end), charge).map { it.copy(column = null) }
             from = end
         }
         result += columns(sorted.subList(from, sorted.size))
@@ -96,7 +97,7 @@ internal object PdfLineLayout {
             right = items.maxOf { it.span.end },
             direction = writingDirectionOf(lines.map { it.text }.filterNot(ChordSheetConverter::isChordLine).joinToString("\n")),
         )
-        return lines.map { line -> line.copy(spans = PdfBidi.readingOrder(line.spans, column)) }
+        return lines.map { line -> line.copy(spans = PdfBidi.readingOrder(line.spans, column), column = column) }
     }
 
     /**
