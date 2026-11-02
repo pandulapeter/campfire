@@ -43,7 +43,10 @@ internal object PdfLineLayout {
             // A page of right-to-left text is read from its right column, as Campfire's export fills a Hebrew song's.
             val isRightToLeft = writingDirectionOf(items.joinToString("") { it.span.text }) == WritingDirection.RIGHT_TO_LEFT
             val (first, second) = if (isRightToLeft) right to left else left to right
-            return buildLines(first, charge) + buildLines(second, charge)
+            val firstLines = buildLines(first, charge)
+            val secondLines = buildLines(second, charge)
+            val over = overGutter(secondLines, firstLines, isRightOfGutter = !isRightToLeft, band = band)
+            return over.sortedBy { it.y } + firstLines + secondLines.filterNot { it in over }
         }
         // The rows are cut out of one sorted pass rather than by filtering every glyph again for each of them, which is the
         // same partition, since both thresholds grow with the row.
@@ -59,6 +62,24 @@ internal object PdfLineLayout {
         }
         result += columns(sorted.subList(from, sorted.size))
         return result
+    }
+
+    /**
+     * The lines of the column read second, [lines], set above every line of the column read first, [other], that reach
+     * into the gutter by more than a [band] past where the rest of their column starts: a title and credit centred over
+     * both columns, which a gutter left of them puts in the second column, though they are read before both.
+     */
+    private fun overGutter(lines: List<Line>, other: List<Line>, isRightOfGutter: Boolean, band: Double): Set<Line> {
+        val top = other.minOfOrNull { it.y } ?: return emptySet()
+        val (above, below) = lines.filter { line -> line.spans.any { it.text.isNotBlank() } }.partition { it.y < top }
+        if (below.isEmpty()) return emptySet()
+        return if (isRightOfGutter) {
+            val edge = below.minOf { it.spans.first().start }
+            above.filter { it.spans.first().start < edge - band }.toSet()
+        } else {
+            val edge = below.maxOf { it.spans.last().end }
+            above.filter { it.spans.last().end > edge + band }.toSet()
+        }
     }
 
     /**

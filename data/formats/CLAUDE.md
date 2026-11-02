@@ -35,8 +35,9 @@ locally, never rendered, uploaded, or kept.
   among equally crossed bands, the fewest crossing lines below the top of the ink right of the band win (a key printed
   over the middle of the page is cut, not a column's longest chord row), then the fewest characters crossing (a page
   number under the gutter, not a lyric filled to the edge), then the widest. Each side is searched again (three and four
-  columns). A page whose letters mostly read from the right is read from its right column. Each line names its column
-  (`ChordSheet.Line.column`), a line crossing the gutter none.
+  columns). A line of the column read second above all of the first, reaching into the gutter more than the band past
+  its column's start (a title centred over both), is read before both. A page whose letters mostly read from the right
+  is read from its right column. Each line names its column (`ChordSheet.Line.column`), a line crossing the gutter none.
 - Running lines (`PdfRunningLines`) are judged on margins laid out across the whole width, never by the columns: a short
   last page can read as columns and cut its header apart. A dropped margin line takes its whole baseline. A number in a
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)

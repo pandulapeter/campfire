@@ -75,6 +75,15 @@ class PdfLineLayoutTest {
     }
 
     @Test
+    fun `a title and credit centred over the gutter but clear of the left column are read before both columns`() = runTest {
+        val header = listOf(Placed(300, 760, "Title of the song"), Placed(320, 745, "By Someone"))
+        val left = (1..6).map { Placed(50, 700 - it * 12, "Left lyric $it") }
+        val right = (1..6).map { Placed(420, 700 - it * 12, "Right lyric $it") }
+
+        assertEquals((header + left + right).map { it.text }, lines(header + left + right))
+    }
+
+    @Test
     fun `chord rows with wide gaps over lyrics spanning the page are one column`() = runTest {
         val rows = (0 until 3).flatMap { verse ->
             val y = 700 - verse * 24
