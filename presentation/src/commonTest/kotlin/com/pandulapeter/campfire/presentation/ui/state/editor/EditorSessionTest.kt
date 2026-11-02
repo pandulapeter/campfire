@@ -77,6 +77,8 @@ class EditorSessionTest {
                 override fun invoke() = emptyFlow<Long>()
             },
             inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
+            addOnBackStackChanged = {},
+            currentSongFileName = { null },
         )
 
         init {

@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
  * The cover search sheet's search, and the copies of the covers the app keeps.
  *
  * @param songTextOf The text a metadata edit is built on, see `SongMetadataEditing.songTextOf`.
+ * @param dialogHost Followed for the sheet's dialogs, see [onOpenDialogsChanged].
  */
 internal class CoverArtSearchController(
     private val scope: CoroutineScope,
@@ -37,6 +38,7 @@ internal class CoverArtSearchController(
     getCoverArtCacheSize: GetCoverArtCacheSizeUseCase,
     private val clearCoverArtCache: ClearCoverArtCacheUseCase,
     private val songTextOf: (SongEditTarget) -> String?,
+    dialogHost: DialogHost,
 ) {
 
     /**
@@ -107,5 +109,9 @@ internal class CoverArtSearchController(
 
     fun clearCoverArtCache() {
         scope.launch { clearCoverArtCache.invoke() }
+    }
+
+    init {
+        dialogHost.addOpenDialogsChange(::onOpenDialogsChanged)
     }
 }

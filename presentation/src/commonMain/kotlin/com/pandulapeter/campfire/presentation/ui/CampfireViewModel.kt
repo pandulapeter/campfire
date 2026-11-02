@@ -301,11 +301,6 @@ class CampfireViewModel(
             exportController.onBeforeDialogChange(previousDialog, dialogType, forgetShareCreation = shareLinkController::forgetCreation)
         }
         addBeforeDialogChange(soundLifetime::onBeforeDialogChange)
-        addOpenDialogsChange { before, after ->
-            savedDialogRestorer.onOpenDialogsChanged(after)
-            coverArtSearchController.onOpenDialogsChanged(before = before, after = after)
-            songDetailsLookupController.onOpenDialogsChanged(before = before, after = after)
-        }
     }
 
     // Navigation
@@ -415,6 +410,8 @@ class CampfireViewModel(
             inferKey = songRenderer::inferredKeyOfText,
             dispatcher = Dispatchers.Default,
         ),
+        addOnBackStackChanged = navigator::addOnBackStackChanged,
+        currentSongFileName = navigator::currentSongFileName,
     )
 
     internal val songMetadataEditing: SongMetadataEditing = SongMetadataEditing(
@@ -499,12 +496,14 @@ class CampfireViewModel(
         getCoverArtCacheSize = getCoverArtCacheSize,
         clearCoverArtCache = clearCoverArtCache,
         songTextOf = { songMetadataEditing.songTextOf(it) },
+        dialogHost = dialogHost,
     )
 
     internal val songDetailsLookupController: SongDetailsLookupController = SongDetailsLookupController(
         scope = viewModelScope,
         searchSongDetails = searchSongDetails,
         loadSongCredits = loadSongCredits,
+        dialogHost = dialogHost,
     )
 
     internal val importReportState: ImportReportState = ImportReportState(
@@ -749,14 +748,6 @@ class CampfireViewModel(
             navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)
         }
         songTextStore.startFollowingFiles()
-        // Every way a song screen is pushed passes here, inside the click and before the screen's first frame, and the
-        // pushed destination is on the back stack before pruneSongTexts can run, so a text read ahead is never pruned.
-        navigator.addOnBackStackChanged { previousTop, stack ->
-            val top = stack.lastOrNull()
-            if (top is CampfireDestination.SongDetails && top != previousTop) {
-                songTextStore.readAhead(top, currentFileName = navigator.currentSongFileName(top))
-            }
-        }
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }

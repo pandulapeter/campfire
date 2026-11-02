@@ -33,6 +33,7 @@ internal class SongDetailsLookupController(
     private val scope: CoroutineScope,
     private val searchSongDetails: SearchSongDetailsUseCase,
     private val loadSongCredits: LoadSongCreditsUseCase,
+    dialogHost: DialogHost,
 ) {
 
     private val _songDetailsLookup = MutableStateFlow<SongDetailsLookupState>(SongDetailsLookupState.Idle)
@@ -97,6 +98,10 @@ internal class SongDetailsLookupController(
         searchJob = null
         _songDetailsLookup.value = SongDetailsLookupState.Idle
         clearSongCredits()
+    }
+
+    init {
+        dialogHost.addOpenDialogsChange(::onOpenDialogsChanged)
     }
 }
 

@@ -57,5 +57,7 @@ internal class FakeSongFiles(
         saveSongContent = this,
         getSongContentInvalidations = this,
         inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
+        addOnBackStackChanged = {},
+        currentSongFileName = { null },
     )
 }

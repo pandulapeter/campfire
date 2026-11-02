@@ -36,6 +36,8 @@ import kotlinx.coroutines.withContext
  *
  * @param editorDraftFileName The file the open editor's draft belongs to, whose text is kept for as long as it is open.
  * @param inferredKeys Told every text before [songTexts] has it, so that the key it is in is there in the same frame.
+ * @param addOnBackStackChanged The navigator's, through which a song screen pushed is read ahead, see [readAhead].
+ * @param currentSongFileName The page a song details screen is on, see `Navigator.currentSongFileName`.
  */
 internal class SongTextStore(
     private val scope: CoroutineScope,
@@ -46,6 +48,8 @@ internal class SongTextStore(
     private val saveSongContent: SaveSongContentUseCase,
     private val getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     val inferredKeys: InferredSongKeys,
+    addOnBackStackChanged: (listener: (previousTop: CampfireDestination?, stack: List<CampfireDestination>) -> Unit) -> Unit,
+    currentSongFileName: (CampfireDestination.SongDetails) -> String?,
 ) {
 
     /**
@@ -219,5 +223,16 @@ internal class SongTextStore(
 
     private companion object {
         const val SONG_EDIT_ATTEMPTS = 2
+    }
+
+    init {
+        // Every way a song screen is pushed passes here, inside the click and before the screen's first frame, and the
+        // pushed destination is on the back stack before pruneSongTexts can run, so a text read ahead is never pruned.
+        addOnBackStackChanged { previousTop, stack ->
+            val top = stack.lastOrNull()
+            if (top is CampfireDestination.SongDetails && top != previousTop) {
+                readAhead(top, currentFileName = currentSongFileName(top))
+            }
+        }
     }
 }

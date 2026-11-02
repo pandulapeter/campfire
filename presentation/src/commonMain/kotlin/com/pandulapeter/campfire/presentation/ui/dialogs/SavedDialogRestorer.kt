@@ -132,4 +132,8 @@ internal class SavedDialogRestorer(
         // An opener that found nothing to open on puts nothing up.
         return dialogHost.visibleDialog.value != null
     }
+
+    init {
+        dialogHost.addOpenDialogsChange { _, after -> onOpenDialogsChanged(after) }
+    }
 }
