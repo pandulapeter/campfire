@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.document
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
-import com.pandulapeter.campfire.data.model.importing.ExtractedDocument
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
@@ -100,14 +99,5 @@ class DocumentGoldenTest {
         assertNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("protected.pdf", resource("protected.pdf"))))
     }
 
-    private fun ExtractedDocument.Span.toChordSheetSpan(): ChordSheet.Span =
-        ChordSheet.Span(text, start, end, size, isBold, isMonospace, isRaised, isItalic, pieces.map { it.toChordSheetSpan() })
-
     private fun resource(name: String) = requireNotNull(javaClass.getResourceAsStream("/document/$name")) { name }.use { it.readBytes() }
-    private fun ExtractedDocument.sheet() = ChordSheet(
-        pages = pages.map { page ->
-            ChordSheet.Page(page.lines.map { line -> ChordSheet.Line(line.spans.map { it.toChordSheetSpan() }, line.isHeading) })
-        },
-        isCampfireExport = isCampfireExport,
-    )
 }
