@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.noBreakSpaces
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordTokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.labelledRow
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.metadata
@@ -112,7 +113,10 @@ internal data class LineFeatures(
                     return@map false
                 }
                 val start = line.text.indexOfFirst { !it.isWhitespace() }
-                val textEnd = line.text.indexOf(' ', start).takeIf { it > 0 }?.let { line.positions[it] } ?: end(line)
+                // No line breaks at a no-break space, so a word goes on through one and takes the ones padding it along.
+                val noBreaks = noBreakSpaces(line)
+                val textEnd = (start until line.text.length).firstOrNull { line.text[it] == ' ' && it !in noBreaks }?.let { line.positions[it] }
+                    ?: line.source.spans.filter { span -> span.text.any { !it.isWhitespace() || it == '\u00a0' } }.maxOfOrNull { it.end } ?: end(line)
                 // The first word's chord goes with it, and takes its own width where it is wider than the word.
                 val wordEnd = if (index > 0 && isChordRow[index - 1]) maxOf(textEnd, chordReach(lines[index - 1], line.positions[start], textEnd)) else textEnd
                 val size = line.source.spans.firstOrNull { it.text.isNotBlank() }?.size ?: 0.0

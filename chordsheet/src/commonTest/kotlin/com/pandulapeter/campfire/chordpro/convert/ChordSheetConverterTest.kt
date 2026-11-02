@@ -1801,4 +1801,22 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `a wrapped row's first word takes the no-break spaces set after it along onto the row`() {
+        fun line(text: String, column: Int, start: Double) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), start + index * 6.0, start + (index + 1) * 6.0, 10.0) }, column = column)
+        val lines = listOf(
+            ChordSheet.Line(listOf(ChordSheet.Span("Song", 0.0, 80.0, 20.0, isBold = true))),
+            line("G         C", 0, 0.0),
+            line("Hello darkness my old friend I've", 0, 0.0),
+            line("Because a vision softly came", 0, 0.0),
+            line("home\u00a0\u00a0\u00a0\u00a0\u00a0", 0, 0.0),
+            line("Left its seeds while I was", 1, 226.0),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]Hello dark[C]ness my old friend I've\nBecause a vision softly came home\nLeft its seeds while I was\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }

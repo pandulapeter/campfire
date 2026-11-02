@@ -262,7 +262,7 @@ internal object ChordSheetChordPlacement {
     }
 
     /** The characters of [lyrics] set as no-break spaces, which the reading cleaned to plain ones. */
-    private fun noBreakSpaces(lyrics: Rendered): Set<Int> = lyrics.text.indices.filterTo(mutableSetOf()) { index ->
+    internal fun noBreakSpaces(lyrics: Rendered): Set<Int> = lyrics.text.indices.filterTo(mutableSetOf()) { index ->
         val position = lyrics.positions[index]
         // Glyphs set edge to edge overlap by a rounding, so the character is the last span starting at its position.
         lyrics.text[index] == ' ' && lyrics.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end }?.let { span ->
