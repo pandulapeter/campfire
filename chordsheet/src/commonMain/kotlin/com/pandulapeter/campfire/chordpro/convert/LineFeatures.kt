@@ -90,8 +90,9 @@ internal data class LineFeatures(
             if (lines.none { (it.source.column ?: 0) > 0 } || lines.any { it.marks != null }) return lines.map { false }
             val isChordRow = lines.map { chordTokens(it) != null }
             // A column's text wraps where it is filled to its gutter, to within a few ems of the body's type of where the next
-            // column starts, and the last column's wraps where the one before it does. Its edge is then as far as its text
-            // reaches, a title in a larger type included, which the gutter and the edge's slack are not measured in.
+            // column starts, a title in a larger type included, which the gutter is not measured in.
+            // The columns of a layout are as wide as each other, so where one is filled, every one's edge is as far from its
+            // start as the widest lyric reaches from its own: a column of short lines wraps a long one where the others do.
             val filled = lines.filter { it.text.isNotBlank() && it.source.column != null }.groupBy { it.source.column!! }
             val starts = filled.mapValues { (_, column) -> column.minOf(::start) }
             val reaches = filled.mapValues { (_, column) -> column.maxOf(::end) }
@@ -99,8 +100,10 @@ internal data class LineFeatures(
             val isFilled = columns.zipWithNext { column, next ->
                 reaches.getValue(column) > starts.getValue(next) - bodySize * GUTTER
             }
-            val edges = columns.filterIndexed { at, _ -> isFilled.getOrNull(at) ?: isFilled.getOrNull(at - 1) ?: false }
-                .associateWith { reaches.getValue(it) + bodySize * REACH }
+            val width = filled.mapNotNull { (column, rows) ->
+                rows.filter { row -> row.source.spans.none { ChordSheetProfile(bodySize).isLarger(it.size) } }.maxOfOrNull(::end)?.minus(starts.getValue(column))
+            }.maxOrNull() ?: 0.0
+            val edges = if (isFilled.none { it }) emptyMap() else columns.associateWith { starts.getValue(it) + width }
             return lines.indices.map { index ->
                 val line = lines[index]
                 val above = if (index > 0 && isChordRow[index - 1]) index - 2 else index - 1
@@ -142,12 +145,11 @@ internal data class LineFeatures(
         private fun type(line: Rendered) = line.source.spans.filter { it.text.isNotBlank() }.map { Triple(it.isBold, it.isItalic, it.isMonospace) }.toSet()
 
         /**
-         * A word's gap, the widest gutter of a column whose text wraps, and how far its edge may stand past the furthest its
-         * text reaches, as shares of the type's size; and how far apart two rows may start and still start together.
+         * A word's gap and the widest gutter of a column whose text wraps, as shares of the type's size; and how far apart two
+         * rows may start and still start together.
          */
         private const val WORD_GAP = 0.25
         private const val GUTTER = 3.0
-        private const val REACH = 0.2
         private const val POSITION = 1.0
 
         private val sungWord = Regex("\\p{L}{2}")
