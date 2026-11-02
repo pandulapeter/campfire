@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.isExportFiller
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /** How a chord row's chords are set into the lyric under it, or written on a line of their own. */
 internal object ChordSheetChordPlacement {
@@ -124,7 +125,7 @@ internal object ChordSheetChordPlacement {
     }
 
     internal fun merge(chords: Rendered, lyricLine: Rendered, convertParentheses: Boolean): String {
-        val lyrics = withoutChordFill(chords, lyricLine)
+        val lyrics = withoutChordPadding(chords, withoutChordFill(chords, lyricLine))
         val insertions = mutableMapOf<Int, MutableList<String>>()
         val starts = tokens(lyrics.text).map { it.index }
         val positions = lyrics.positions
@@ -173,8 +174,10 @@ internal object ChordSheetChordPlacement {
             } else if (lyrics.positions.isEmpty()) at = 0
             else {
                 val lastWidth = lyrics.source.spans.lastOrNull()?.let { (it.end - it.start) / it.text.length.coerceAtLeast(1) } ?: 1.0
-                if (x >= lyrics.positions.last() + lastWidth - 0.01) at = lyrics.text.length
-                else {
+                if (x >= lyrics.positions.last() + lastWidth - 0.01) {
+                    at = lyrics.text.length
+                    if (lyricsEnd != null && isOverEndPadding(lyrics.source.spans, lyricsEnd, x)) isAttachedAtEnd = true
+                } else {
                     val nearest = if (isMonotone) {
                         val right = firstIndex(starts.size) { positions[starts[it]] >= x }
                         val left = if (right > 0) firstIndex(starts.size) { positions[starts[it]] >= positions[starts[right - 1]] } else -1
@@ -228,6 +231,52 @@ internal object ChordSheetChordPlacement {
         return converted + row?.annotation?.let { " " + ChordProLiteralText.escape(it) }.orEmpty()
     }
 
+    /**
+     * The lyric without the no-break spaces a layout pads a syllable with to make room for a wide chord, `to°°day` under
+     * `Cmaj7 G`: a run of them that the chord before reaches into, or to within a space of, and that the next chord stands
+     * in or starts right after holds no space of the words, so a word it cuts is joined back, and beside a space it adds
+     * none. A no-break space that only separates words, `I°[G]come` in a table of a web page, has no chord reaching into it
+     * and stays the space it is.
+     */
+    private fun withoutChordPadding(chords: Rendered, lyrics: Rendered): Rendered {
+        if (lyrics.bidi != null || '\u00a0' !in lyrics.source.spans.joinToString("") { it.text }) return lyrics
+        val isPadding = lyrics.text.indices.map { it in noBreakSpaces(lyrics) }
+        val placed = chordRow(chords)?.tokens.orEmpty().filter { rowChord(it.text) }
+            .mapNotNull { word -> chords.positions.getOrNull(word.index)?.let { it to chordEnd(chords, word) } }
+        val dropped = mutableSetOf<Int>()
+        var index = 0
+        while (index < isPadding.size) {
+            if (!isPadding[index]) { index++; continue }
+            val first = index
+            while (index < isPadding.size && isPadding[index]) index++
+            val from = lyrics.positions[first]
+            val to = lyrics.positions.getOrNull(index) ?: continue
+            val size = lyrics.source.spans.firstOrNull { from >= it.start - 0.01 && from < it.end }?.size ?: continue
+            val isPadded = placed.any { (start, _) -> start >= from - 0.01 && start <= to + size * PADDED_CHORD } &&
+                placed.any { (start, end) -> start < from && end + size * CHORD_GAP > from }
+            if (isPadded) dropped += first until index
+        }
+        if (dropped.isEmpty()) return lyrics
+        val kept = lyrics.text.indices.filter { it !in dropped }
+        return lyrics.copy(text = kept.map { lyrics.text[it] }.joinToString(""), positions = DoubleArray(kept.size) { lyrics.positions[kept[it]] })
+    }
+
+    /** The characters of [lyrics] set as no-break spaces, which the reading cleaned to plain ones. */
+    private fun noBreakSpaces(lyrics: Rendered): Set<Int> = lyrics.text.indices.filterTo(mutableSetOf()) { index ->
+        val position = lyrics.positions[index]
+        // Glyphs set edge to edge overlap by a rounding, so the character is the last span starting at its position.
+        lyrics.text[index] == ' ' && lyrics.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end }?.let { span ->
+            val width = (span.end - span.start) / span.text.length.coerceAtLeast(1)
+            span.text.getOrNull(((position - span.start) / width).roundToInt().coerceIn(0, span.text.length - 1)) == '\u00a0'
+        } == true
+    }
+
+    /** Whether a chord at [x] past the lyric's last character, which ends at [end], stands over no-break spaces padding it. */
+    private fun isOverEndPadding(spans: List<ChordSheet.Span>, end: Double, x: Double): Boolean {
+        val padding = spans.filter { it.start >= end - 0.01 }.takeWhile { span -> span.text.isNotEmpty() && span.text.all { it == '\u00a0' } }
+        return padding.isNotEmpty() && x <= padding.last().end + 0.01
+    }
+
     /** Where the last character of [word] on the chord row [chords] ends. */
     private fun chordEnd(chords: Rendered, word: Token): Double {
         val last = (word.index + word.text.length - 1).coerceAtMost(chords.positions.lastIndex)
@@ -255,4 +304,10 @@ internal object ChordSheetChordPlacement {
 
     /** How close to a character a chord of Campfire's own export stands to be set on it, in points. */
     private const val EXACT_POSITION = 0.75
+
+    /** How far past a run of no-break spaces a chord may start and still be the one it pads for, as a share of the lyric's type size. */
+    private const val PADDED_CHORD = 0.25
+
+    /** The least room a layout leaves between two chords of a row, as a share of the lyric's type size: about a space. */
+    private const val CHORD_GAP = 0.3
 }

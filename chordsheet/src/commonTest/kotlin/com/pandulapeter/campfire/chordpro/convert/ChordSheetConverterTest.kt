@@ -1760,4 +1760,25 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `no-break spaces padding a lyric under a wide chord are left out, and those only separating words are kept`() {
+        fun line(text: String) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0) })
+        fun chords(vararg chords: Pair<String, Double>) = ChordSheet.Line(
+            chords.flatMap { (chord, x) -> chord.mapIndexed { index, c -> ChordSheet.Span(c.toString(), x + index * 6.0, x + (index + 1) * 6.0, 10.0, isBold = true) } },
+        )
+        val lines = listOf(
+            ChordSheet.Line(listOf(ChordSheet.Span("Song", 0.0, 80.0, 20.0, isBold = true))),
+            chords("Am" to 0.0, "Cmaj7" to 54.0, "G" to 90.0),
+            line("Help you to\u00a0\u00a0\u00a0\u00a0day"),
+            chords("G" to 12.0),
+            line("I\u00a0come home"),
+            chords("C" to 0.0, "Dsus4" to 36.0),
+            line("Praise\u00a0\u00a0\u00a0\u00a0\u00a0"),
+        )
+        assertEquals(
+            "{title: Song}\n\n[Am]Help you [Cmaj7]to[G]day\nI [G]come home\n[C]Praise[Dsus4]\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }
