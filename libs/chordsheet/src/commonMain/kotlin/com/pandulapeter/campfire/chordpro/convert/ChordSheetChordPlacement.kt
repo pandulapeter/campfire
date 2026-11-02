@@ -270,11 +270,15 @@ internal object ChordSheetChordPlacement {
         val starts = chordRow(chords)?.tokens.orEmpty().filter { rowChord(it.text) }.mapNotNull { chords.positions.getOrNull(it.index) }
         if (starts.isEmpty()) return lyrics
         val drawnSpaces = spans.filter { it.text.length == 1 && it.text.isBlank() }.map { it.end - it.start }.sorted()
+        // Every gap is first measured against the widest space any span of the line could allow, so that a long line of
+        // ordinary word spaces (all of a plain text's) is passed over without scanning its spans and chords once a gap.
+        val widest = (drawnSpaces.getOrNull(drawnSpaces.size / 2) ?: ((spans.maxOfOrNull { it.size } ?: 0.0) * 0.25)) * WORD_SPACE
         val dropped = (1 until lyrics.text.length - 1).filter { index ->
             val text = lyrics.text
             if (text[index] != ' ' || !text[index - 1].isLetter() || !text[index + 1].isLetter()) return@filter false
             val from = lyrics.positions[index]
             val to = lyrics.positions[index + 1]
+            if (to - from >= widest) return@filter false
             val size = spans.firstOrNull { to >= it.start - 0.01 && to < it.end }?.size ?: return@filter false
             val space = drawnSpaces.getOrNull(drawnSpaces.size / 2) ?: (size * 0.25)
             spans.none { from >= it.start - 0.01 && from < it.end - 0.01 } && to - from < space * WORD_SPACE &&
