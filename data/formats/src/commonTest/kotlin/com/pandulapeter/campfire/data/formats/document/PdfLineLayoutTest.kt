@@ -159,6 +159,23 @@ class PdfLineLayoutTest {
         assertEquals((1..6).map { "Lyric line $it" } + "3/4", lines(placed))
     }
 
+    @Test
+    fun `chord diagrams over the song are left out while a chord row in small type stays`() = runTest {
+        val names = listOf("C", "Am", "F", "G7").mapIndexed { index, name -> Placed(60 + index * 120, 740, name, size = 8) }
+        val frets = listOf("x 3 2 0 1 0", "x 0 2 2 1 0", "1 3 3 2 1 1", "3 2 0 0 0 1").mapIndexed { index, frets ->
+            Placed(50 + index * 120, 700, frets, size = 6)
+        }
+        val song = listOf(
+            Placed(50, 660, "Verse", size = 11),
+            Placed(50, 646, "C        Am", size = 9),
+            Placed(50, 632, "Lyric line one", size = 12),
+            Placed(50, 618, "F        G7", size = 9),
+            Placed(50, 604, "Lyric line two", size = 12),
+        )
+
+        assertEquals(song.map { it.text.replace(Regex(" +"), " ") }, lines(names + frets + song).map { it.replace(Regex(" +"), " ").trim() })
+    }
+
     /**
      * A string shown in Courier, 0.6 of its [size] a glyph, with its baseline starting at [x], [y]; one [isWhole] is
      * carried by an `ActualText`, which makes it one span, as Campfire's export writes a right-to-left run.

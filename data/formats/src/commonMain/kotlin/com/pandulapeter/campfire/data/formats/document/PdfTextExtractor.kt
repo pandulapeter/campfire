@@ -98,8 +98,9 @@ object PdfTextExtractor {
             for (stream in streams) { stream.copyInto(data, at); at += stream.size; data[at++] = 10 }
             interpreter.interpret(data, resources, State())
             val height = if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0
-            val edges = rows(interpreter.glyphs.filter { isEdge(it.y, height) }, budget::chargeText)
-            return Page(buildLines(interpreter.glyphs, budget::chargeText), height, edges)
+            val glyphs = PdfChordDiagrams.withoutDiagrams(interpreter.glyphs)
+            val edges = rows(glyphs.filter { isEdge(it.y, height) }, budget::chargeText)
+            return Page(buildLines(glyphs, budget::chargeText), height, edges)
         }
 
         // A malformed page costs only itself: its slot stays, empty, so that page numbers and the running lines still

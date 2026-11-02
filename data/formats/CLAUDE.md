@@ -43,6 +43,9 @@ locally, never rendered, uploaded, or kept.
   alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's lowest line counting this
   page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
 - A span is italic by its font's name or italic flag; a line carries its baseline.
+- Chord diagrams (`PdfChordDiagrams`) are left out before the lines are set: a run of rows in type under 0.85 of the
+  song's text holding both chord names and marks (fret and finger numbers, `x`, `o`). Names alone stay (a small chord
+  row over its lyric).
 - A blank line is a gap over 2.2 em, or one 1.4 times the document's usual step (`PdfParagraphs`: a quantile above the
   median, since a chord row sits closer to its lyric than to the lyric before it) between runs of three lines or more on
   each side, so a tightly set songbook's stanzas part while a header's credits and a diagram's name over its frets stay.
