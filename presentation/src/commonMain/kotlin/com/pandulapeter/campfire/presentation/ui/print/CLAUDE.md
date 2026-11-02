@@ -44,10 +44,7 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
 - **Not `isSelectable`**, since read back they'd be chords or a lyric: diagram names, the instrument/tuning line above
   diagrams (printed unless guitar or keyboard in standard tuning), and the suggested scales.
 - Padding under wide chords is written as no-break spaces and the words' own spaces as spaces, so the import leaves
-  the padding out (and drops the direction marks closing in a piece read against its line). A lyric wrapped onto
-  another row opens it, and its chord row, with a word joiner (`isContinuation`), by which the import joins it back. A
-  row cut inside a word (never a tab's or grid's) opens with two (`isHardCut`), joined back with no space;
-  `isCutAtSpace` tells the cuts apart, looking past the chord layout's marks at both ends.
+  the padding out (and drops the direction marks closing in a piece read against its line).
 - Tablature is engraved as on screen, none of it selectable; each line reaches the text layer as the file has it, an
   invisible monospaced text sized to the columns on the string's baseline, so it reads back as a tab.
 - The playing row **follows the reader's settings as the screen does**: transposition, capo, and tempo are the
@@ -55,7 +52,7 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   non-zero capo with `showKey` ("2 (Em shapes)" where chords are named by the shapes, whose key the import reads back as
   the song's; "2 (chords as they sound)" otherwise, read back as the shapes over the same capo; diagrams drawn above the
   printed capo); tempo and time with `showTempo`, which also prints later changes. **Values are three spaces apart**, so
-  the importer reads them back one by one. A value too wide for its row wraps, its rest marked as a continuation.
+  the importer reads them back one by one. A value too wide for its row wraps.
 - `showMetadata` is the song sheets' artist; the running order has `showOverviewDetails` (read as `showMetadata` from a
   file older than it) and `overviewColumns`, its list under a heading spanning the page.
 

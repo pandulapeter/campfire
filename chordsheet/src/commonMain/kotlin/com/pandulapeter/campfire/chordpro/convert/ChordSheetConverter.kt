@@ -27,7 +27,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.parenthes
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.isExportFiller
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
@@ -49,22 +48,9 @@ public object ChordSheetConverter {
      */
     public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
-        @Suppress("NAME_SHADOWING") val sheet = sheet.copy(isCampfireExport = false)
-        val rendered = sheet.pages.map { page ->
-            val placedLines = if (sheet.isCampfireExport) page.lines.map { PlacedLine(it) } else ChordSheetHeaderParts.split(page.lines)
-            ChordSheetMarginLabels.split(placedLines).map { placed ->
-                render(placed.line, normalize, dropsPadding = sheet.isCampfireExport).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
-            }.let { lines -> if (sheet.isCampfireExport) markRowsContinuedBelow(lines) else lines }
-        }
-        val pages = if (!sheet.isCampfireExport) rendered else {
-            val isChordRowLine = rendered.map { page -> page.map { it.text.isNotBlank() && chordRow(it, isCampfire = true) != null } }
-            val typeSizes = ChordSheetCampfireLayout.Sizes.of(rendered.map { page -> page.map { it.source } }, isChordRowLine)
-            rendered.mapIndexed { pageIndex, page ->
-                val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], typeSizes)
-                val isSetFromRight = ChordSheetCampfireLayout.isSetFromRight(page.map { it.source }, typeSizes.body)
-                page.mapIndexed { index, line ->
-                    line.copy(marks = (line.marks ?: CampfireMarks()).copy(role = roles[index], bodySize = typeSizes.lyrics ?: 0.0, isSetFromRight = isSetFromRight[index]))
-                }
+        val pages = sheet.pages.map { page ->
+            ChordSheetMarginLabels.split(ChordSheetHeaderParts.split(page.lines)).map { placed ->
+                render(placed.line, normalize).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
             }
         }
         val all = pages.flatten()
@@ -80,7 +66,7 @@ public object ChordSheetConverter {
                 if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
             }
         }
-        return groups.map { normalize(convertSong(expandLabels(joinWrappedDetails(withoutInjections(singleSpaced(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))), guessesTitle, profile)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -186,23 +172,15 @@ public object ChordSheetConverter {
         fun take(count: Int) = if (count == values.size) values else values.copyOf(count)
     }
 
-    /**
-     * The text of [line], spaced by where its words stand. Where it [dropsPadding] (Campfire's own export), the no-break
-     * spaces padding a lyric under a wide chord are left out, and leave no gap that would read as a space: the export
-     * writes every space of the words as one. Its continuation marks are left out too, and kept as [CampfireMarks.isContinuation]
-     * and [CampfireMarks.isHardCut].
-     */
-    private fun render(line: ChordSheet.Line, normalize: (String) -> String, dropsPadding: Boolean = false): Rendered {
+    /** The text of [line], spaced by where its words stand. */
+    private fun render(line: ChordSheet.Line, normalize: (String) -> String): Rendered {
         val text = StringBuilder()
         val positions = Positions(line.spans.sumOf { it.text.length })
         val bidi = if (line.spans.any { it.pieces.isNotEmpty() }) ChordSheetBidiAnchors.Builder() else null
         var previous: ChordSheet.Span? = null
         for (span in line.spans) {
-            val value = normalize(clean(if (dropsPadding) span.text.filterNot(::isExportFiller) else span.text))
-            if (value.isEmpty()) {
-                if (dropsPadding && span.text.isNotEmpty()) previous = span
-                continue
-            }
+            val value = normalize(clean(span.text))
+            if (value.isEmpty()) continue
             val width = ((span.end - span.start) / value.length).coerceAtLeast(0.01)
             previous?.let { before ->
                 val gap = span.start - before.end
@@ -220,26 +198,11 @@ public object ChordSheetConverter {
             // A span written in reading order over glyphs drawn otherwise has its characters where its glyphs are.
             val drawn = ChordSheetBidiAnchors.starts(span, value)
             value.forEachIndexed { index, c -> text.append(c); positions.add(drawn?.get(index) ?: (span.start + index * width)) }
-            bidi?.span(span, { if (dropsPadding && isExportFiller(it)) "" else clean(it.toString()) }, value, width)
+            bidi?.span(span, { clean(it.toString()) }, value, width)
             previous = span
         }
         val result = text.toString().trimEnd()
-        // The marks open the row's first text in its reading order, which in a right-to-left song's row of chords, laid
-        // out from the right, is not the first span on the page: no other text of a row opens with one.
-        val opening = if (dropsPadding) line.spans.firstOrNull { it.text.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION }?.text.orEmpty() else ""
-        val isContinuation = opening.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION
-        val isHardCut = opening.startsWith("${ChordSheetCampfireLayout.CONTINUATION}${ChordSheetCampfireLayout.CONTINUATION}")
-        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), marks = if (dropsPadding) CampfireMarks(isContinuation = isContinuation, isHardCut = isHardCut) else null)
-    }
-
-    /**
-     * [page] of Campfire's export with each row marked whose line the row under it continues in the chords' or the lyrics'
-     * type ([CampfireMarks.isContinuedBelow]). A marked row set wholly in italics is the rest of a comment or of an italic
-     * lyric, which says nothing of the row above being a chord row.
-     */
-    private fun markRowsContinuedBelow(page: List<Rendered>) = page.mapIndexed { index, line ->
-        val next = page.getOrNull(index + 1)
-        line.copy(marks = line.marks?.copy(isContinuedBelow = next != null && next.marks?.isContinuation == true && !next.source.spans.filter { it.text.isNotBlank() }.all { it.isItalic }))
+        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build())
     }
 
     /**
@@ -372,28 +335,6 @@ public object ChordSheetConverter {
     internal fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
         ?: romanCapo.matchEntire(value.uppercase())?.groupValues?.get(1)?.let { roman -> (romanNumerals.indexOf(roman) + 1).toString() }
         ?: ""
-
-    /**
-     * [lines] with each row of labelled values that Campfire's export wrapped in a narrow column joined back into one: a
-     * value wider than the column (`Capo: 2 (chords as they sound)`) goes on in the rows under it, each marked as a
-     * wrapped lyric's rest is ([CampfireMarks.isContinuation]), and read apart its first row would name a bare value and the
-     * rest a lyric. A row continuing a word the column cut inside ([CampfireMarks.isHardCut]) joins with no space.
-     */
-    private fun joinWrappedDetails(lines: List<Rendered>): List<Rendered> = lines.fold(mutableListOf()) { joined, line ->
-        val previous = joined.lastOrNull()
-        // The header reaches as far as LineKinds counts it, from the row this one would continue.
-        val isHeader = ChordSheetProfile.isInHeader(joined.lastIndex)
-        val indent = line.text.length - line.text.trimStart().length
-        val text = previous?.let { "${it.text}${line.joint}${line.text.substring(indent)}" }
-        if (line.marks?.isContinuation == true && previous != null && text != null && (labelledRow(text, isHeader) != null || LineKinds.isKeyChange(line, text))) {
-            val space = if (line.marks.isHardCut) DoubleArray(0) else doubleArrayOf(previous.positions.lastOrNull() ?: 0.0)
-            val positions = previous.positions + space + line.positions.copyOfRange(indent, line.positions.size)
-            joined[joined.lastIndex] = previous.copy(text = text, positions = positions, bidi = null)
-        } else {
-            joined += line
-        }
-        joined
-    }
 
     /**
      * Splits a heading's label from the chord row written after it on its line, `Verse 1: G D Em C` or

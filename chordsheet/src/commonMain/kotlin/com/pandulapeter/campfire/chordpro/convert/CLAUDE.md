@@ -33,23 +33,14 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands. A row of chord
   names right over a tab staff is a line of the tab, kept as it stands.
 
-## Campfire's own PDF export
+## Words any sheet may print
 
-- It is read back exactly (`ChordSheet.isCampfireExport`), by the type each line is printed in
-  (`ChordSheetCampfireLayout`): a chord is one only in the chords' type, so a lyric `a b c d` and a title `A` stay what
-  they are. **No size is compared with one in another font**: right-to-left letters are drawn in a fallback font of a
-  taller line box on some platforms.
-- **The export and this reader share a contract**: a row opening with a word joiner
-  (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the line above, wrapped by a narrow column; two word joiners
-  continue a word the column cut. The importer's `ChordSheetText.clean` drops the word joiner from any text. Labels,
-  the playing details row (read from the same labels as `strings.xml`, in every language the app prints), a sounding
+- The playing details row (read from the same labels as `strings.xml`, in every language the app prints), a sounding
   capo (`print_capo_sounding`: imported as the capo chart, chords moved down, tab frets kept) and a capo's shapes' key
-  (`song_details_capo_shapes`, from any sheet, written as `{key}`) are read by what the export prints; change both
-  sides together.
+  (`song_details_capo_shapes`, written as `{key}`) are read from any sheet by the words Campfire's export prints them
+  in; change both sides together. The importer's `ChordSheetText.clean` drops the word joiner from any text.
 - A row holding right-to-left text arrives as one span in reading order over its glyphs (`ChordSheet.Span.pieces`), and
-  its chords are set by the glyphs' edges (`ChordSheetBidiAnchors`). A song set from the right
-  (`ChordSheetCampfireLayout.isSetFromRight`) has its chord rows read from their right end. Another producer's rows
-  with `pieces` are matched the same way, within an em of the lyric.
+  its chords are set by the glyphs' edges, within an em of the lyric (`ChordSheetBidiAnchors`).
 
 ## Other producers
 
@@ -68,13 +59,11 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
   and starred (`Bb`, `Bb*`): the star is dropped where the chord is played, so one definition would stand for both.
 - What the ChordPro app prints is read back too: margin section labels (`ChordSheetMarginLabels`, only where every
   other line of their column starts right of them, so a lyric against the left edge keeps its first word) and
-  header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`; never in Campfire's export, which
-  prints none).
+  header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`).
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
   Guitar's page furniture is many lines in no fixed shape and is deliberately not filtered.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title
-  ending in a page word with no credit after it (`Three Chords`) loses that word. Campfire's own export, its title
-  printed alone, is not read by either.
+  ending in a page word with no credit after it (`Three Chords`) loses that word.
 
 ## Entry points
 

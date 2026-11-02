@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.merge
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headingLabel
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.joinRows
 
 /**
  * Every decision about a song's body: where its sections open and close (by heading or by look), which heading recalls a
@@ -72,7 +71,7 @@ internal object SongStructure {
         changes: Map<Int, List<String>>,
         convertParentheses: Boolean,
     ): List<Part> = with(Builder()) {
-        fun continues(at: Int) = lines[at].marks?.isContinuation == true || features[at].isWrapped
+        fun continues(at: Int) = features[at].isWrapped
         fun follow(at: Int) { if (features[at].isSung) features[at].look?.let { follow(it, lines[at].text) } }
         val unlabelled = ChordSheetLook.unlabelled(
             // A line with no word (a tab's string or a stray accidental the reading took for a lyric) is not sung.
@@ -95,23 +94,15 @@ internal object SongStructure {
             // A change before a heading belongs to the section it heads rather than to the end of the one before.
             if (kinds[index] != LineKind.SECTION && kinds[index] != LineKind.BLANK) flushChanges()
             when (kinds[index]) {
-                LineKind.SECTION if line.marks?.role == ChordSheetCampfireLayout.Role.LABEL -> {
-                    closeSection()
-                    flushChanges()
-                    val label = headerValue(line.text)
-                    if (endsInText()) add(Line.Blank)
-                    if (nextContent(index)?.let { kinds[it] } == LineKind.TAB) openTab(label)
-                    else open(ChordSheetHeadings.sectionType(label), label)
-                }
                 LineKind.COMMENT -> {
                     var end = index
-                    while (end < lines.lastIndex && kinds[end + 1] == LineKind.COMMENT && lines[end + 1].marks?.role == line.marks?.role && end + 1 !in omitted) end++
+                    while (end < lines.lastIndex && kinds[end + 1] == LineKind.COMMENT && end + 1 !in omitted) end++
                     // A comment the next section (or the song's end) follows stands after the section it is printed under.
                     if (!isInTab && nextContent(end)?.let { kinds[it] == LineKind.SECTION } != false) {
                         closeSection()
                         if (endsInText()) add(Line.Blank)
                     }
-                    add(Line.Comment(headerValue(joinRows(lines, index, end)), isBoxed = line.marks?.role == ChordSheetCampfireLayout.Role.BOX_COMMENT))
+                    add(Line.Comment(headerValue((index..end).joinToString(" ") { lines[it].text.trim() }), isBoxed = false))
                     index = end
                 }
                 LineKind.GRID -> { if (!isInGrid) openGrid(); add(Line.Raw(line.text.trimEnd())) }
@@ -142,21 +133,16 @@ internal object SongStructure {
                 LineKind.TAB -> { if (!isInTab) openTab(label = null); add(Line.Raw(line.text)) }
                 LineKind.CHORD -> {
                     openUnlabelled(index + 1)
-                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && continues(index + 1)
-                    // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
-                    // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
-                    if (line.marks?.isContinuation == true && !isUnderMarkedLyric) {
-                        addLyric(bracketed(candidates[index]!!, chordRow(line), line.marks.isSetFromRight), continues = true, isHardCut = false)
-                    } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
+                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         follow(index + 1)
-                        addLyric(merge(line, lines[index + 1], convertParentheses), continues(index + 1), lines[index + 1].marks?.isHardCut == true)
+                        addLyric(merge(line, lines[index + 1], convertParentheses), continues(index + 1))
                         index++
-                    } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line), line.marks?.isSetFromRight == true)))
+                    } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line))))
                 }
                 LineKind.LYRIC -> {
                     openUnlabelled(index)
                     follow(index)
-                    addLyric(inline(line, convertParentheses), continues(index), line.marks?.isHardCut == true)
+                    addLyric(inline(line, convertParentheses), continues(index))
                 }
                 LineKind.BLANK -> add(Line.Blank)
                 LineKind.METADATA -> Unit
@@ -210,15 +196,11 @@ internal object SongStructure {
 
         fun endsInText() = lastWritten()?.isNotBlank() == true
 
-        /**
-         * A lyric line, or where it [continues] the one before (a row the export wrapped), the rest of that line, with no
-         * space between where the row [isHardCut] inside a word.
-         */
-        fun addLyric(line: String, continues: Boolean, isHardCut: Boolean) {
+        /** A lyric line, or where it [continues] the one before (a row a narrow column wrapped), the rest of that line. */
+        fun addLyric(line: String, continues: Boolean) {
             val previous = lastWritten()
-            val joint = if (isHardCut) "" else " "
             if (continues && previous != null && previous.isNotBlank() && !previous.startsWith('{')) {
-                container[container.lastIndex] = Line.Lyric("$previous$joint${line.trimStart()}")
+                container[container.lastIndex] = Line.Lyric("$previous ${line.trimStart()}")
             } else add(Line.Lyric(line))
         }
 

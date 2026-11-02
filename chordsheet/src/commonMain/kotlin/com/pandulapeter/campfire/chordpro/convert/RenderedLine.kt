@@ -9,10 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
-/**
- * [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under;
- * [marks] what Campfire's export says of the line, null for a line of any other sheet.
- */
+/** [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under. */
 internal data class Rendered(
     val text: String,
     val positions: DoubleArray,
@@ -22,11 +19,7 @@ internal data class Rendered(
     val isHeaderPart: Boolean = false,
     /** Where the chords over a row holding right-to-left text in reading order hang from. */
     val bidi: ChordSheetBidiAnchors? = null,
-    val marks: CampfireMarks? = null,
-) {
-    /** What goes between the row this one continues and its text. */
-    val joint get() = if (marks?.isHardCut == true) "" else " "
-}
+)
 
 internal data class Token(val text: String, val index: Int)
 

@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.ascii
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chord
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordTokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.CAPO_SHAPES
@@ -26,7 +25,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.metadata
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.shapesKeyOf
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.timingNames
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.joinRows
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
 import kotlin.math.abs
 
@@ -42,7 +40,7 @@ internal object SongHeader {
 
     /**
      * The header the title makes: [leading] goes before every other entry (the title, an artist split off it, a
-     * subtitle), [trailing] after the metadata's (a credit, the artist rows of Campfire's export).
+     * subtitle), [trailing] after the metadata's (a credit).
      */
     data class TitleLines(val leading: List<String>, val trailing: List<String>, val omitted: Set<Int>)
 
@@ -83,12 +81,10 @@ internal object SongHeader {
         val header = mutableListOf<String>()
         val omitted = mutableSetOf<Int>()
         // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
-        // written there, as Campfire's own PDF prints one. So is a later key of Campfire's export, which prints one only
-        // as a key change, unless it names the key already in force; another sheet's second key row stays in the
-        // header, more likely a repetition or a second notation than a change.
+        // written there, as Campfire's own PDF prints one. A second key row stays in the header, more likely a
+        // repetition or a second notation than a change.
         val changes = mutableMapOf<Int, List<String>>()
         val declared = mutableSetOf<String>()
-        var keyInForce: String? = null
         var soundingCapo = 0
         var shapesKey: String? = null
         kinds.forEachIndexed { index, kind -> if (kind == LineKind.METADATA) {
@@ -96,11 +92,6 @@ internal object SongHeader {
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
-                    name == ChordProVocabulary.KEY && lines[index].marks != null && !declared.add(name) -> {
-                        val key = headerValue(ascii(value))
-                        if (key != keyInForce) changes[index] = changes[index].orEmpty() + "{$name: $key}"
-                        keyInForce = key
-                    }
                     name == CREDIT || name == "artist" -> {
                         // An artist's name may end in a number (`The 1975`), so only a comma sets a year off it.
                         val split = (if (name == CREDIT) creditYear else commaYear).matchEntire(value)
@@ -122,11 +113,8 @@ internal object SongHeader {
                         // A run of digits too long for a fret is no capo chart to move the chords of.
                         soundingCapo = value.toIntOrNull() ?: 0
                     }
-                    // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
-                    name == ChordProVocabulary.KEY -> {
-                        keyInForce = headerValue(ascii(value))
-                        header += "{$name: $keyInForce}"
-                    }
+                    // A sheet may print a key's accidentals as signs, and a file keeps them as `#` and `b`.
+                    name == ChordProVocabulary.KEY -> header += "{$name: ${headerValue(ascii(value))}}"
                     else -> header += "{$name: ${headerValue(value)}}"
                 }
             }
@@ -154,39 +142,19 @@ internal object SongHeader {
         val omitted = mutableSetOf<Int>()
         val first = kinds.indexOfFirst { it != LineKind.BLANK }
         if (first < 0 || kinds[first] != LineKind.LYRIC) return noTitle
-        // The export's own test reads chords by their type, which a title naming a chord (`A`) is not printed in.
-        if (if (lines[first].marks != null) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return noTitle
+        if (isChordLine(lines[first].text)) return noTitle
         if (!isTitle(lines[first], lines, profile)) return plainTitle(lines, kinds, first)
         // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
         var last = first
         while (kinds.getOrNull(last + 1) == LineKind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], profile)) last++
         val title = ((first + 1)..last).fold(lines[first].text.trim()) { text, index ->
-            text + (if (lines[index].marks != null) lines[index].joint else if (isCutWord(lines[index - 1], lines, first..last)) "" else " ") + lines[index].text.trim()
+            text + (if (isCutWord(lines[index - 1], lines, first..last)) "" else " ") + lines[index].text.trim()
         }
-        // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
-        // credit in it to split off.
-        val (name, named) = if (lines[first].marks != null) title to null else ChordSheetTitles.split(title)
+        val (name, named) = ChordSheetTitles.split(title)
         addTitle(leading, name, named)
         omitted += first..last
         val artist = last + 1
-        // Campfire's export sets the artist in the lyrics' type right under the title, at the heading's spacing, wrapped
-        // onto as many rows as it takes, and its first block a heading gap further down: the rows at that spacing are the
-        // artist, however many and however long, and nothing else is, not even a short first lyric under a long title.
-        if (named == null && lines.getOrNull(artist)?.marks != null && lines[artist].source.baseline != null) {
-            val rows = generateSequence(artist) { it + 1 }.takeWhile { index ->
-                val line = lines.getOrNull(index)
-                val below = line?.source?.baseline
-                val above = lines[index - 1].source.baseline
-                kinds.getOrNull(index) == LineKind.LYRIC && below != null && above != null &&
-                    below - above < (line.source.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.size } ?: 0.0) * HEADING_ROW
-            }.toList()
-            if (rows.isNotEmpty()) {
-                trailing += "{artist: ${headerValue(joinRows(lines, rows.first(), rows.last()))}}"
-                omitted += rows
-            }
-            return TitleLines(leading, trailing, omitted)
-        }
         // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
         val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
         // A line between the title and the row of the song's key, tempo, or time, where no lyric ever stands, names the artist,
@@ -274,14 +242,6 @@ internal object SongHeader {
         val words = tokens(text.substring(colon + 1))
         return words.isNotEmpty() && words.count { chord(it.text) } * 2 >= words.size
     }
-
-    /**
-     * How far a row's baseline may stand under the baseline of the row above, in its own line box, and still be a row of
-     * Campfire's heading: the artist's rows are 1.45 font sizes apart (about 1.2 of an Inter line box) and the first one
-     * about 1.6 under the title's, while the first block stands 2.25 under the heading's last row (1.86; 1.65 where both
-     * are drawn in a fallback font's line box of about 1.36 font sizes, the narrowest margin).
-     */
-    private const val HEADING_ROW = 1.6
 
     private val pageWords = setOf("chords", "tab", "lyrics")
     /** A credit naming its author, `by Someone`, `Words and music by Someone`, or `Words: Someone`. */

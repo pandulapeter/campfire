@@ -26,7 +26,7 @@ import kotlin.math.abs
  * @property bodyRow The values the line names as a row of labelled values read anywhere in the song.
  * @property look How the line's lyric is set, null for a line with nothing printed.
  * @property isSung Whether the line holds a sung word, which a tab's string or a stray accidental does not, and which the
- *   rest of a line Campfire's export wrapped is not counted as.
+ *   rest of a wrapped line is not counted as.
  * @property isLabel Whether the line is set as a section's label is in many layouts: a few words alone on their line in
  *   bold, smaller than the song's body, which neither a lyric nor a title is set in. Its words need not be a heading's
  *   (`V1`, `Main riff`): the type says what the line is, so it opens the section its words name, a verse where they name
@@ -63,7 +63,7 @@ internal data class LineFeatures(
                     headerRow = headerRow,
                     bodyRow = bodyRow,
                     look = ChordSheetLook.of(line.source, line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })),
-                    isSung = line.marks?.isContinuation != true && !isWrapped[index] && sungWord.containsMatchIn(line.text),
+                    isSung = !isWrapped[index] && sungWord.containsMatchIn(line.text),
                     isLabel = index != first && index != last && metadata == null && headerRow == null && bodyRow == null && isLabel(line, bodySize),
                     isWrapped = isWrapped[index],
                 )
@@ -87,8 +87,7 @@ internal data class LineFeatures(
          * wrapped onto the next row goes on the line all the same. A chord row between the two is the wrapped row's own.
          */
         private fun wrapped(lines: List<Rendered>, bodySize: Double): List<Boolean> {
-            // Campfire's export marks the rows it wraps itself ([CampfireMarks.isContinuation]).
-            if (lines.none { (it.source.column ?: 0) > 0 } || lines.any { it.marks != null }) return lines.map { false }
+            if (lines.none { (it.source.column ?: 0) > 0 }) return lines.map { false }
             val isChordRow = lines.map { chordTokens(it) != null }
             // A column's text wraps where it is filled to its gutter, to within a few ems of the body's type of where the next
             // column starts, a title in a larger type included, which the gutter is not measured in.

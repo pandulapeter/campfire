@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
@@ -58,24 +57,6 @@ internal class PrintLayoutRightToLeftTest {
         assertEquals(right, texts.single { it.text == "Am" }.end(), 0.01f)
         assertEquals(right - measure("שלום ", lyric.style), texts.single { it.text == "G" }.end(), 0.01f)
         assertTrue(lyric.style.isRightToLeft)
-    }
-
-    @Test fun `a right-to-left row wrapped right after a padded piece's direction mark continues the line at a space`() {
-        val text = "\u05d5\u05de\u05d4 \u05dc\u05d9\u05dc\u05d4 \u05d9\u05dc\u05d3\u05d4 and \u05d9\u05dc\u05d3\u05d4"
-        val line = ChordProLine.Lyrics(text, listOf(chord(0, "Bb"), chord(text.indexOf("and"), "Gmaj7/B"), chord(text.lastIndexOf('\u05d9'), "Bm7")))
-        val lyricStyle = PrintStyle(size = 12f, direction = WritingDirection.RIGHT_TO_LEFT)
-        val chordStyle = PrintStyle(size = 12f, bold = true)
-        // Every column width the line wraps in, the rows of words after one whose lyric ends in the mark closing the
-        // padded piece.
-        val wrapped = (40..300).flatMap { width ->
-            val rows = PrintLyricRows(settings, capacity = 1000f, measure = ::measure, measureLyric = null)
-                .rows(line, width.toFloat(), lyricStyle, chordStyle, chordStyle.copy(bold = false, italic = true))
-            rows.mapNotNull { row -> row.parts.lastOrNull { it.style == lyricStyle } }.zipWithNext()
-                .filter { (previous, _) -> previous.text.trimEnd('\u200B').lastOrNull()?.let { it == '\u200E' || it == '\u200F' } == true }
-                .map { (_, next) -> next }.filterNot { it.text.isPrintBlank() }
-        }
-        assertTrue(wrapped.isNotEmpty())
-        assertEquals(emptyList(), wrapped.filterNot { it.isContinuation && !it.isHardCut }.map { it.text })
     }
 
     @Test fun `a right-to-left song's heading and details end at the right edge`() = runTest {

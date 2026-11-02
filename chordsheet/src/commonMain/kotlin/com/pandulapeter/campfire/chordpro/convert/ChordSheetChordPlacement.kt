@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChordN
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.isChordLine
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.isExportFiller
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import kotlin.math.abs
@@ -33,10 +32,9 @@ internal object ChordSheetChordPlacement {
     /**
      * A chord row with no lyric under it. Its playing note is written as an annotation, so that it stands on the row with
      * the chords rather than as a lyric under them; one after a lyric line stays text, since the line has words already.
-     * A row [isSetFromRight] is read from its right end, where the export starts it.
      */
-    internal fun bracketed(row: List<Token>, chordRow: ChordRow?, isSetFromRight: Boolean) = (row + chordRow?.notes.orEmpty())
-        .sortedBy { if (isSetFromRight) -it.index else it.index }.joinToString(" ") {
+    internal fun bracketed(row: List<Token>, chordRow: ChordRow?) = (row + chordRow?.notes.orEmpty())
+        .sortedBy { it.index }.joinToString(" ") {
         when {
             it in chordRow?.notes.orEmpty() -> note(it.text)
             rowChord(it.text) -> "[${rowChordName(it.text)}]"
@@ -141,18 +139,13 @@ internal object ChordSheetChordPlacement {
         var previous = 0
         val row = chordRow(chords)
         val notes = row?.notes.orEmpty()
-        // Campfire's own export sets a chord exactly over the character it is sung on, or right after the line's last one,
-        // so where it stands is read as it is rather than moved to the nearest word.
         val lyricsEnd = lyrics.source.spans.lastOrNull { it.text.isNotBlank() }?.end
-        // Another producer than Campfire hangs a chord from its syllable by eye, or by the columns of a plain text, so
-        // the edge it hangs from is looked for within an em of the lyric's type rather than at the export's exact point.
-        val bidiTolerance = if (lyrics.marks != null) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
+        // A chord is hung from its syllable by eye, or by the columns of a plain text, so the edge it hangs from is looked
+        // for within an em of the lyric's type.
+        val bidiTolerance = lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
         var isAttachedAtEnd = false
         // Bar lines and repeat counts mean nothing over a lyric, but "no chord" says where the playing stops.
-        // Chords set on one character, the line's end above all, are written in the order they are read, which in a row
-        // set from the right runs from its right end.
-        val readsFromRight = chords.marks?.isSetFromRight == true && lyrics.bidi != null
-        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { if (readsFromRight) -it.index else it.index }) {
+        for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { it.index }) {
             // A right-to-left annotation is written in its reading order over its glyphs, its first character at its
             // right end: over a lyric read by its positions rather than by the edges of its glyphs, it stands where its
             // leftmost glyph does, as a left-to-right chord stands where its first one does.
@@ -160,17 +153,12 @@ internal object ChordSheetChordPlacement {
                 word.text.indices.mapNotNull { chords.positions.getOrNull(word.index + it) }.minOrNull() ?: 0.0
             }
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
-            val exact = if (lyrics.marks != null) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
             // order they are read off the chord row, which is left to right.
             val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
             if (bidi != null) {
                 at = bidi.coerceAtMost(lyrics.text.length)
                 if (bidi == lyrics.text.length) isAttachedAtEnd = true
-            } else if (exact != null) at = exact
-            else if (lyrics.marks != null && lyricsEnd != null && abs(lyricsEnd - x) <= EXACT_POSITION) {
-                at = lyrics.text.length
-                isAttachedAtEnd = true
             } else if (lyrics.positions.isEmpty()) at = 0
             else {
                 val lastWidth = lyrics.source.spans.lastOrNull()?.let { (it.end - it.start) / it.text.length.coerceAtLeast(1) } ?: 1.0
@@ -307,9 +295,8 @@ internal object ChordSheetChordPlacement {
         val last = (word.index + word.text.length - 1).coerceAtMost(chords.positions.lastIndex)
         val position = chords.positions.getOrNull(last) ?: return 0.0
         val span = chords.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end + 0.01 }
-        // The span's width is shared by the characters render keeps of it, the export's fillers left out.
-        val kept = { span: ChordSheet.Span -> clean(if (chords.marks != null) span.text.filterNot(::isExportFiller) else span.text) }
-        return position + (span?.let { (it.end - it.start) / kept(it).length.coerceAtLeast(1) } ?: 0.0)
+        // The span's width is shared by the characters render keeps of it.
+        return position + (span?.let { (it.end - it.start) / clean(it.text).length.coerceAtLeast(1) } ?: 0.0)
     }
 
     /** An insertion or replacement must leave a supplementary character whole. */
@@ -326,9 +313,6 @@ internal object ChordSheetChordPlacement {
         }
         return low
     }
-
-    /** How close to a character a chord of Campfire's own export stands to be set on it, in points. */
-    private const val EXACT_POSITION = 0.75
 
     /** How far past a run of no-break spaces a chord may start and still be the one it pads for, as a share of the lyric's type size. */
     private const val PADDED_CHORD = 0.25

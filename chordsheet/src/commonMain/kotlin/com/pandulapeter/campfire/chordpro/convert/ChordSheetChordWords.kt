@@ -37,31 +37,14 @@ internal object ChordSheetChordWords {
     /**
      * A sheet that prints a song's annotations (`[*twice]`) in italics among a row's upright chords makes a run of italic
      * words there a note wherever it stands, in parentheses or not; a chord name or a bar line in italics is no note, since
-     * some sheets set every chord in italics, and so is a row set in italics throughout. Campfire's export
-     * ([Rendered.marks]) takes every italic run for one, and a line of it set in italics throughout is all notes, so it
-     * is never taken for chords, unless the row under it continues its line
-     * ([CampfireMarks.isContinuedBelow]): it is then the chord row of a lyric's continuation, or an annotation opening a line,
-     * printed alone over the padding its width needs where a narrow column wraps the lyric right after that padding.
-     * There a word is a chord only where it is printed in the chords' type, bold under the title's size, or in a tab's
-     * monospaced chord line, so that a lyric `a b c d` and a title `A` stay what they are; where the lyrics' size is
-     * unknown, the text alone decides.
+     * some sheets set every chord in italics, and so is a row set in italics throughout.
      */
-    internal fun chordRow(line: Rendered, isCampfire: Boolean = line.marks != null): ChordRow? = chordRow(
+    internal fun chordRow(line: Rendered): ChordRow? = chordRow(
         text = line.text,
-        allowsNotesOnly = isCampfire && line.marks?.isContinuedBelow == true,
-        isNote = if (!isCampfire && !hasItalicsBesideUpright(line)) null else { word ->
-            (isCampfire || !rowChord(word.text) && !furniture(word.text)) &&
-                word.text.indices.all { offset ->
-                    val x = line.positions.getOrNull(word.index + offset)
-                    x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
-                }
-        },
-        isChord = if (!isCampfire || (line.marks?.bodySize ?: 0.0) <= 0.0) null else { word ->
-            word.text.indices.all { offset ->
+        isNote = if (!hasItalicsBesideUpright(line)) null else { word ->
+            !rowChord(word.text) && !furniture(word.text) && word.text.indices.all { offset ->
                 val x = line.positions.getOrNull(word.index + offset)
-                x != null && line.source.spans.any {
-                    (it.isMonospace || it.isBold && it.size < line.marks!!.bodySize * ChordSheetCampfireLayout.TITLE_SIZE_RATIO) && x >= it.start - 0.01 && x < it.end
-                }
+                x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
             }
         },
     )
@@ -69,12 +52,7 @@ internal object ChordSheetChordWords {
     private fun hasItalicsBesideUpright(line: Rendered) =
         line.source.spans.any { it.isItalic && it.text.isNotBlank() } && line.source.spans.any { !it.isItalic && it.text.isNotBlank() }
 
-    internal fun chordRow(
-        text: String,
-        isNote: ((Token) -> Boolean)? = null,
-        allowsNotesOnly: Boolean = false,
-        isChord: ((Token) -> Boolean)? = null,
-    ): ChordRow? {
+    internal fun chordRow(text: String, isNote: ((Token) -> Boolean)? = null): ChordRow? {
         val words = tokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
@@ -94,9 +72,7 @@ internal object ChordSheetChordWords {
             notes += Token(text.substring(word.index, words[end].index + words[end].text.length), word.index)
             index = end + 1
         }
-        if (allowsNotesOnly && row.isEmpty() && notes.isNotEmpty()) return ChordRow(row, null, notes)
         if (row.none { rowChord(it.text) } || !row.all { rowChord(it.text) || furniture(it.text) }) return null
-        if (isChord != null && row.any { rowChord(it.text) && !isChord(it) }) return null
         return ChordRow(row, text.substring(words.getOrNull(start)?.index ?: text.length).trim().ifEmpty { null }, notes)
     }
 

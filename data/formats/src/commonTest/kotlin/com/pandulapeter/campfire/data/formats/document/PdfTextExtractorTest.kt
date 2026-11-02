@@ -495,18 +495,12 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun `a pdf campfire produced says so and its italic text is read as italic`() = runTest {
-        val content = "BT /F1 10 Tf 50 700 Td (Ring out) Tj ET"
-        val campfire = PdfTestWriter.song(
-            content = content,
+    fun `a pdf's italic text is read as italic`() = runTest {
+        val italic = PdfTestWriter.song(
+            content = "BT /F1 10 Tf 50 700 Td (Ring out) Tj ET",
             font = "/Type /Font /Subtype /Type1 /BaseFont /Helvetica-Italic /Encoding /WinAnsiEncoding",
-            extra = { writer -> writer.add("<< /Producer (Campfire) >>") },
         )
-        // The trailer follows the cross-reference table, so naming the Info object in it moves no offset.
-        val document = PdfTextExtractor.extract(campfire.decodeToString().replace("/Root 1 0 R", "/Root 1 0 R /Info 6 0 R").encodeToByteArray())
-        assertTrue(document.isCampfireExport)
-        assertTrue(document.pages.single().lines.single().spans.all { it.isItalic })
-        assertFalse(PdfTextExtractor.extract(PdfTestWriter.song(content)).isCampfireExport)
+        assertTrue(PdfTextExtractor.extract(italic).pages.single().lines.single().spans.all { it.isItalic })
     }
 
     private fun pages(first: String, second: String, secondPage: String = ""): ByteArray {

@@ -24,15 +24,9 @@ internal object ChordSheetText {
         }
     }
 
-    internal fun isExportFiller(character: Char) = character == ChordSheetCampfireLayout.PADDING || character == ChordSheetCampfireLayout.CONTINUATION
-
     /** The punctuation that marks an extracted heading is not part of the section's name. */
     internal fun headingLabel(text: String) = ChordSheetHeadings.parse(text)?.label
         ?: text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":").trim()
-
-    /** The text of [lines] from [first] to [last], one value the export wrapped: a row continuing a word joins with no space. */
-    internal fun joinRows(lines: List<Rendered>, first: Int, last: Int) =
-        ((first + 1)..last).fold(lines[first].text.trim()) { text, index -> text + lines[index].joint + lines[index].text.trim() }
 
     internal fun headerValue(value: String) = value.replace('{', '(').replace('}', ')').replace('\n', ' ').trim()
 }

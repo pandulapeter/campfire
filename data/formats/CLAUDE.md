@@ -30,8 +30,8 @@ locally, never rendered, uploaded, or kept.
   declared `/Length`.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, with a fifth of the characters
   on each side, counting no line that crosses it (a lyric beside the gap in its chord row is no second column) and
-  leaving a crossing first or last line of the page out as well, **found at every half point, not sampled** (Campfire's
-  export leaves only 18 points between 20-point text). A band no line crosses that opens a column beats one a heading
+  leaving a crossing first or last line of the page out as well, **found at every half point, not sampled** (since a
+  dense layout leaves less than a word's gap). A band no line crosses that opens a column beats one a heading
   crosses; among equally crossed bands, the fewest characters crossing wins (a page number under the gutter, not a lyric
   filled to the edge), then the widest. Each side is searched again (three and four columns). A page whose letters
   mostly read from the right is read from its right column. Each line names its column (`ChordSheet.Line.column`), a
@@ -41,8 +41,7 @@ locally, never rendered, uploaded, or kept.
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)
   stays; a page count stands alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's
   lowest line counting this page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
-- A PDF whose `/Producer` is Campfire is flagged (`ChordSheet.isCampfireExport`) for the converter to read by
-  layout; a span is italic by its font's name or italic flag; a line carries its baseline.
+- A span is italic by its font's name or italic flag; a line carries its baseline.
 - An `ActualText` over glyphs on one baseline replaces them (how Campfire's export carries right-to-left runs in logical
   order); the glyphs stay as its `pieces` where they spell its text in order, so the converter still knows where each
   character is drawn. One spanning several baselines (a hyphenated word) is ignored.

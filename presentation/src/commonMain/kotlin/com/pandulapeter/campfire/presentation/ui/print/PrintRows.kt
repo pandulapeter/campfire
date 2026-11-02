@@ -288,18 +288,12 @@ internal class PrintRows(
     /**
      * The labelled values [details] (`Key: Am`, `Tempo: 96 BPM`) in a row, as many to a row as fit [width]: a row breaks
      * between two of them rather than inside one, which an import of the PDF would read as the label's whole value and
-     * a lyric under it. A value wider than a row of its own (`Capo: 2 (chords as they sound)` in a narrow column) wraps,
-     * its rest marked as a wrapped lyric's is ([Part.isContinuation]), by which the import joins it back into the value,
-     * with no space where [wrapped] marks the row a cut inside a word.
+     * a lyric under it. A value wider than a row of its own (`Capo: 2 (chords as they sound)` in a narrow column) wraps.
      */
     fun detailRows(details: List<String>, width: Float = columnWidth): List<Row> = details.fold(emptyList<String>()) { lines, detail ->
         val joined = lines.lastOrNull()?.let { it + METADATA_SEPARATOR + detail }
         if (joined != null && measure(joined, detailStyle) <= width) lines.dropLast(1) + joined else lines + detail
-    }.flatMap { line ->
-        wrapped(line, detailStyle, width).mapIndexed { index, row ->
-            if (index == 0) row else row.copy(parts = row.parts.map { it.copy(isContinuation = true) })
-        }
-    }
+    }.flatMap { line -> wrapped(line, detailStyle, width) }
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float): List<Row> = when {
         !options.showComments || (comment.isInTabOrGrid && !(if (comment.isInTab) options.showTabs else options.showChords)) -> emptyList()
@@ -317,8 +311,7 @@ internal class PrintRows(
         return fragments.mapIndexed { index, fragment ->
             val formatting = stripped.formatting.clippedTo(start, fragment)
             val x = if (style.isRightToLeft) width - drawnWidth(fragment, style, formatting) { styledPieces(formatting, 0, fragment, style).widthUntil(fragment.length, ::measure) } else 0f
-            val isHardCut = isHardCut(fragments, index, style)
-            val part = Part(fragment, x = x, style = style, formatting = formatting, isContinuation = isHardCut, isHardCut = isHardCut)
+            val part = Part(fragment, x = x, style = style, formatting = formatting)
             start += fragment.length
             Row(listOf(part), style.size * 1.45f)
         }
@@ -348,8 +341,7 @@ internal class PrintRows(
     /**
      * A line break inside a text (a setlist description has up to three lines) starts a row of its own, since a row is
      * one line tall and the renderer would draw the rest over whatever comes under it. A right-to-left text ends at the
-     * right edge of [width]. A row continuing a word the column cut is marked as one ([Part.isHardCut]), so that the
-     * import joins it back with no space.
+     * right edge of [width].
      */
     fun wrapped(
         text: String,
@@ -358,10 +350,9 @@ internal class PrintRows(
         isSelectable: Boolean = true,
     ): List<Row> = text.lines().flatMap { line ->
         val fragments = wrapPrintText(line, width) { measure(it, style) }
-        fragments.mapIndexed { index, fragment ->
+        fragments.map { fragment ->
             val x = if (style.isRightToLeft) width - drawnWidth(fragment, style, emptyList()) { measure(fragment, style) } else 0f
-            val isHardCut = isHardCut(fragments, index, style)
-            Row(listOf(Part(fragment, x = x, style = style, isSelectable = isSelectable, isContinuation = isHardCut, isHardCut = isHardCut)), style.size * 1.45f)
+            Row(listOf(Part(fragment, x = x, style = style, isSelectable = isSelectable)), style.size * 1.45f)
         }
     }
 
@@ -372,13 +363,6 @@ internal class PrintRows(
      */
     private fun drawnWidth(text: String, style: PrintStyle, formatting: List<Formatting>, fallback: () -> Float) =
         measureLyric?.invoke(text, style, formatting, emptyList())?.width ?: fallback()
-
-    /**
-     * Whether the row of [fragments] at [index] continues a word the column cut. Never in a monospaced [style]: a tab's or
-     * a grid's rows are read back by their own runs, and a mark would make one a continuation to the import.
-     */
-    private fun isHardCut(fragments: List<String>, index: Int, style: PrintStyle) =
-        index > 0 && !style.monospace && !isCutAtSpace(fragments[index - 1], fragments[index])
 
     /**
      * [this], rows of music [lineWidth] wide at most, moved as one block to the right edge in a right-to-left song: a tab
@@ -441,7 +425,7 @@ internal class PrintRows(
 
 /**
  * A text of a [Row], placed relative to its top left corner, with [PrintText.formatting]'s markup, drawn as
- * [PrintText.isDrawn] says, and marked as [PrintText.isContinuation] and [PrintText.isHardCut] say.
+ * [PrintText.isDrawn] says.
  */
 internal data class Part(
     val text: String,
@@ -451,8 +435,6 @@ internal data class Part(
     val isSelectable: Boolean = true,
     val formatting: List<ChordProLine.Lyrics.Formatting> = emptyList(),
     val isDrawn: Boolean = true,
-    val isContinuation: Boolean = false,
-    val isHardCut: Boolean = false,
 )
 
 /**

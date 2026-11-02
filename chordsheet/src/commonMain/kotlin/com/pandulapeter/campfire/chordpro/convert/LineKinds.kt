@@ -14,9 +14,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.furniture
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.isChordLine
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.labelledRow
-import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
-import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
 
 /** What a line of a song is to the converter, decided for each line before the song is written. */
 internal enum class LineKind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHORD, LYRIC }
@@ -56,18 +53,12 @@ internal object LineKinds {
 
     private val rules = listOf(
         Rule(::blank),
-        Rule(::exportLabel),
         Rule(::label),
-        Rule(::exportGrid),
-        Rule(::exportComment),
         Rule(::staff),
         Rule(::grid) { it.next != LineKind.LYRIC },
         Rule(::heading) { it.next == null || it.next == LineKind.CHORD || it.next == LineKind.BLANK },
         Rule(::metadata),
         Rule(::italicComment),
-        Rule(::notesOnly),
-        Rule(::exportContinuation),
-        Rule(::exportOverflow),
         Rule(::severalChords),
         Rule(::singleChordUnderHeading) {
             it.previous == LineKind.SECTION && (it.next == null || it.next == LineKind.BLANK || it.next == LineKind.SECTION)
@@ -76,11 +67,9 @@ internal object LineKinds {
     )
 
     fun of(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<LineKind> {
-        // Campfire's own export is read by the test it engraves a staff by, which knows every instrument's strings.
         val isStaff = lines.indices.map { index ->
-            lines[index].marks != null && ChordProTokens.isStaffLine(lines[index].text) ||
-                tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
-                    lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
+            tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
+                lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
         }
         val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), italicComments(lines, features, candidates))
         val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
@@ -100,24 +89,11 @@ internal object LineKinds {
     internal fun hasStructure(lines: List<Rendered>, candidates: List<List<Token>?>) =
         hasUnambiguousChords(candidates) || lines.any { ChordSheetHeadings.parse(it.text) != null }
 
-    /**
-     * Whether [text] is a key alone on its row of Campfire's export ([line] one of it), which the export prints only as
-     * a key change, so that it is metadata anywhere in the song, not only among the heading's rows.
-     */
-    internal fun isKeyChange(line: Rendered, text: String) =
-        line.marks != null && labelledRow(text, isHeader = true)?.singleOrNull()?.first == ChordProVocabulary.KEY
-
     private fun Boolean.gives(kind: LineKind) = if (this) Evidence(kind, isStrong = true) else null
 
     private fun blank(context: Context, index: Int) = context.lines[index].text.isBlank().gives(LineKind.BLANK)
 
-    private fun exportLabel(context: Context, index: Int) =
-        (context.lines[index].marks?.role == ChordSheetCampfireLayout.Role.LABEL).gives(LineKind.SECTION)
-
     private fun label(context: Context, index: Int) = context.features[index].isLabel.gives(LineKind.SECTION)
-
-    private fun exportGrid(context: Context, index: Int) =
-        (context.lines[index].marks?.role == ChordSheetCampfireLayout.Role.GRID).gives(LineKind.GRID)
 
     /**
      * A row of bars holding chords and the beats between them (`| G . . . | C . / . |`), or the rest of one a column
@@ -131,10 +107,6 @@ internal object LineKinds {
             words.all { it.text in gridBars || it.text in gridBeats || rowChord(it.text) }
         return if (isGrid) Evidence(LineKind.GRID, isStrong = false) else null
     }
-
-    private fun exportComment(context: Context, index: Int) = context.lines[index].marks?.role.let {
-        it == ChordSheetCampfireLayout.Role.COMMENT || it == ChordSheetCampfireLayout.Role.BOX_COMMENT
-    }.gives(LineKind.COMMENT)
 
     /**
      * A row of chord names right over a staff names its bars, its columns the staff's, so it stays in the tab as it stands
@@ -161,7 +133,7 @@ internal object LineKinds {
         return (
             ChordSheetProfile.isInHeader(index) && (features.metadata?.second?.isNotBlank() == true || features.headerRow != null) ||
                 features.metadata?.first == "copyright" ||
-                features.bodyRow != null || isKeyChange(context.lines[index], context.lines[index].text)
+                features.bodyRow != null
             ).gives(LineKind.METADATA)
     }
 
@@ -189,27 +161,6 @@ internal object LineKinds {
             val opensPart = below != null && (candidates[below] != null || features[below].heading != null || features[below].isLabel || lines[below].isMarginLabel)
             isItalic[index] && above?.let { isItalic[it] || candidates[it] != null } != true && opensPart && !isUnderTitle
         }
-    }
-
-    /** A row of notes alone is a candidate only where the row under it continues its line. */
-    private fun notesOnly(context: Context, index: Int) = (context.candidates[index]?.isEmpty() == true).gives(LineKind.CHORD)
-
-    /**
-     * A row of chords the export marks as the rest of a line is one whatever follows, and so is the row its chords
-     * overflowed from ([exportOverflow]); only an export's chords in their own type are candidates, so a wrapped lyric's
-     * marked rest that reads as chord names (`a b`) is never taken for one.
-     */
-    private fun exportContinuation(context: Context, index: Int): Evidence? {
-        val candidate = context.candidates[index] ?: return null
-        return (candidate.isNotEmpty() && context.lines[index].marks?.isContinuation == true).gives(LineKind.CHORD)
-    }
-
-    private fun exportOverflow(context: Context, index: Int): Evidence? {
-        val candidate = context.candidates[index] ?: return null
-        return (
-            candidate.isNotEmpty() &&
-                context.lines.getOrNull(index + 1)?.let { it.marks?.isContinuation == true && context.candidates.getOrNull(index + 1) != null } == true
-            ).gives(LineKind.CHORD)
     }
 
     private fun severalChords(context: Context, index: Int): Evidence? {
@@ -259,7 +210,7 @@ internal object LineKinds {
         val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
         return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
-            (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) || it.size > span.size } })
+            spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) || it.size > span.size } }
     }
 
     private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")

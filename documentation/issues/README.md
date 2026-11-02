@@ -16,12 +16,8 @@ landed, and 06 landed without `ChordSheetLook`'s per-column inset (it needed a f
 forbids). Plan 02's step 2 landed later with the Hebrew face read through an expect/actual `scriptFontFamilies()`
 (Compose resources' `Font` on Android, desktop, and iOS, `preloadFont` on the web, the only target that has it) rather
 than `preloadFont` from `commonMain`; 04 landed after its 19 comma test names were renamed, and 01 with its step 4 re-derived
-from what each golden guarded. The plans below stopped where the plan itself was wrong or the lane ran out of
-room; none of them was improvised past that point.
-
-| # | Plan | Landed | Why it stopped |
-|---|---|---|---|
-| 07 | Restructure the converter into explicit stages | steps 1–2 | Replanned on 2026-11-02 (the writer's redesign spelled out, batches A–F, the owner's decisions in the plan); running batch by batch. |
+from what each golden guarded. Plan 07 landed after a replan, batch by batch, the Campfire export's own reading rules
+deleted once the general reader read its PDFs nearly as well.
 
 Plan 13 left these starts in `CampfireViewModel`'s `init`, each needing a reorder or a parameter the size check refuses:
 `FontScaleController.startEcho`, `DialogHost.startClosingWithSong`, `SyncController.startRestoring`,

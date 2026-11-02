@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
-
 /** Preserve every character (including spaces used as chord anchors), splitting at words where there is room. */
 internal fun wrapPrintText(text: String, width: Float, measure: (String) -> Float): List<String> {
     if (text.isEmpty()) return listOf("")
@@ -56,18 +54,6 @@ internal fun wrapPrintText(text: String, width: Float, measure: (String) -> Floa
     }
     return result
 }
-
-/** The chord layout's invisible marks: break opportunities, direction marks, and the mark opening a padding run. */
-private fun String.trimLayoutMarks() = trim('\u200B', '\u200E', '\u200F', PADDING_MARK)
-
-/**
- * Whether the cut [wrapPrintText] made between [previous] and [fragment] fell at a space (a no-break space of the chords'
- * padding counting as one) rather than inside a word. The chord layout's marks are looked past at both ends: a piece read
- * against its line closes with a direction mark after its padding, and the extra padding a right-to-left row lacks opens
- * after the break opportunity, so either would otherwise make a cut at a space look like one inside a word.
- */
-internal fun isCutAtSpace(previous: String, fragment: String) =
-    previous.trimLayoutMarks().lastOrNull()?.isWhitespace() == true || fragment.trimLayoutMarks().firstOrNull()?.isWhitespace() == true
 
 /** Whether a cut between `index - 1` and `index` would separate a character from what is drawn as one with it. */
 private fun String.splitsClusterAt(index: Int): Boolean {
