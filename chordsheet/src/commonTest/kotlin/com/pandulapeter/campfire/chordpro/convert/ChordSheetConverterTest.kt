@@ -1111,6 +1111,20 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `no-break spaces padding a right-to-left word for the wide chord before the next one in it are left out`() {
+        // "שלום" with room made inside it for "Cmaj7", hanging from its first letter, before "G" on its third.
+        val glyphs = listOf(
+            span("\u05e9", 92.0, 100.0), span("\u05dc", 86.0, 92.0), span("\u00a0", 80.0, 86.0), span("\u00a0", 74.0, 80.0),
+            span("\u05d5", 71.0, 74.0), span("\u05dd", 65.0, 71.0),
+        )
+        val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 65.0, 100.0).copy(pieces = glyphs)))
+        val chords = ChordSheet.Line(listOf(span("G", 64.0, 74.0, bold = true), span("Cmaj7", 76.0, 100.0, bold = true)))
+        val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
+        assertTrue("[Cmaj7]\u05e9\u05dc[G]\u05d5\u05dd" in result, result)
+    }
+
+    @Test
     fun `a chord ending short of a right-to-left word's first letter where a space starts is the letter's`() {
         val glyphs = listOf(
             span("\u05e9", 92.0, 100.0), span("\u05dc", 86.0, 92.0), span("\u05d5", 83.0, 86.0), span("\u05dd", 77.0, 83.0),

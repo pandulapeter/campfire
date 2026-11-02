@@ -201,7 +201,7 @@ internal object ChordSheetChordPlacement {
             previous = at
             insertions.getOrPut(at) { mutableListOf() } += if (word in notes) note(word.text) else "[${rowChordName(word.text)}]"
         }
-        var escaped = ChordProLiteralText.escape(lyrics.text)
+        var escaped = ChordProLiteralText.escape(withoutBidiPadding(lyrics, insertions))
         // A lyric printed a few columns in from the chord over it starts where that chord does, which is all its indent
         // says; written as it is, it would be sung after a pause of spaces. Two chords or more in the indent are played
         // before the words, so it is kept where they would otherwise run together.
@@ -259,6 +259,31 @@ internal object ChordSheetChordPlacement {
         if (dropped.isEmpty()) return lyrics
         val kept = lyrics.text.indices.filter { it !in dropped }
         return lyrics.copy(text = kept.map { lyrics.text[it] }.joinToString(""), positions = DoubleArray(kept.size) { lyrics.positions[kept[it]] })
+    }
+
+    /**
+     * The text of a right-to-left row ([Rendered.bidi]) without the no-break spaces a layout pads a word with to make room
+     * for the wide chord before the next chord set in it, `קט°°[C]נה`, with [insertions] moved onto what is left: a run
+     * of them inside a word, a chord set on the letter after it and another before it in the row. [withoutChordPadding]
+     * finds the same padding by where it is drawn, which a row written in its reading order over its glyphs does not keep.
+     */
+    private fun withoutBidiPadding(lyrics: Rendered, insertions: MutableMap<Int, MutableList<String>>): String {
+        val text = lyrics.text
+        val raw = lyrics.source.spans.joinToString("") { it.text }.takeIf { lyrics.bidi != null && clean(it).trimEnd() == text } ?: return text
+        val dropped = mutableSetOf<Int>()
+        var index = 0
+        while (index < text.length) {
+            if (raw[index] != '\u00a0') { index++; continue }
+            val first = index
+            while (index < text.length && raw[index] == '\u00a0') index++
+            val isInWord = first > 0 && !raw[first - 1].isWhitespace() && index < text.length && !raw[index].isWhitespace()
+            if (isInWord && insertions.containsKey(index) && insertions.keys.any { it < first }) dropped += first until index
+        }
+        if (dropped.isEmpty()) return text
+        val moved = insertions.entries.associate { (at, values) -> at - dropped.count { it < at } to values }
+        insertions.clear()
+        insertions.putAll(moved)
+        return text.filterIndexed { at, _ -> at !in dropped }
     }
 
     /** The characters of [lyrics] set as no-break spaces, which the reading cleaned to plain ones. */
