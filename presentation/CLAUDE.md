@@ -53,6 +53,8 @@ checks that once `VIEW_MODEL_RULE` is on, until then judging that import by noth
 - A text that is one Campfire link and nothing else (`sharedLinkIn`) is that link's import; a link beside other words
   stays text. Every way ends in `ImportController.importSharedLink`: a newer version's link is a snackbar, any other is
   downloaded from the address `SharedLink.Readable.downloadUrl` builds (never one the text names) and always reviewed.
+- What the review chose is written by `ApplyImportUseCase`, with what it records for the demo and each shared link;
+  the link's trust rule (`sharedLinkChoices`) is `:data:model`'s.
 - Summaries report unreadable documents separately and append the number of converted songs actually written.
 
 ## Strings

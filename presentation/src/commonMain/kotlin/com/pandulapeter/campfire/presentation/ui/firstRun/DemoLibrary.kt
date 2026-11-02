@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.firstRun
 
-import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
@@ -48,11 +48,11 @@ internal object DemoLibrary {
         return songFileNames.all { it in storedSongFileNames } && setlists.any { it.fileName == SETLIST_FILE_NAME }
     }
 
-    /** The songs of [result] the import wrote under the demo's own names, see [setlistFileNamesWrittenBy]. */
-    fun songFileNamesWrittenBy(result: ImportResult) = result.importedSongFileNames.filter { it in songFileNames }
-
-    /** The same for the setlist: a numbered copy of either is not the demo's, and is not remembered as one. */
-    fun setlistFileNamesWrittenBy(result: ImportResult) = result.importedSetlistFileNames.filter { it == SETLIST_FILE_NAME }
+    /**
+     * What an import of the demo records of what it wrote: the songs and the setlist under the demo's own names, while a
+     * numbered copy of either is not the demo's, and is not remembered as one.
+     */
+    val bookkeeping get() = ImportBookkeeping(demoSongFileNames = songFileNames.toSet(), demoSetlistFileNames = setOf(SETLIST_FILE_NAME))
 
     /**
      * The bundled files, read as the import wants them. It throws the way reading any resource does, and the caller

@@ -7,12 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.state.importing
+package com.pandulapeter.campfire.data.model.importing
 
-import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
-import com.pandulapeter.campfire.data.model.importing.ImportPlan
-import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test

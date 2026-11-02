@@ -10,14 +10,14 @@
 package com.pandulapeter.campfire.domain.implementation.library
 
 import com.pandulapeter.campfire.data.repository.api.DemoLibraryRepository
-import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
 internal class RememberDemoLibraryFilesUseCaseImpl(
     private val demoLibraryRepository: DemoLibraryRepository,
-) : RememberDemoLibraryFilesUseCase {
+) {
 
-    override suspend operator fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>) =
+    /** See `DemoLibraryRepository.rememberDemoLibraryFiles`: what the demo files just planted under these names hold. */
+    suspend operator fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>) =
         demoLibraryRepository.rememberDemoLibraryFiles(songFileNames, setlistFileNames)
 }

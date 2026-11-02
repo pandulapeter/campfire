@@ -29,7 +29,7 @@
   decision: the scan can finish first, and an empty library would flash before the songs arrived.
 - Reading the bundle times out after ten seconds: on the web those are requests, and one never answering would hold the
   launch screen for good.
-- Both ways of planting record what they wrote (`RememberDemoLibraryFilesUseCase`, local-only), so sync takes another
+- Both ways of planting record what they wrote (`ApplyImportUseCase`, local-only), so sync takes another
   device's untouched demo from the cloud instead of keeping a copy of each.
 - Android's first launch also reads Play's install referrer (`src/androidMain`); a shared link it names joins the import
   queue, landing beside the demo, after the onboarding.

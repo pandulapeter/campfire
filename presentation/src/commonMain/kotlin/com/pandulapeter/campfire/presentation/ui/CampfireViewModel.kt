@@ -73,15 +73,13 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.library.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.library.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberSharedLinkImportUseCase
 import com.pandulapeter.campfire.domain.api.songs.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
@@ -199,7 +197,7 @@ class CampfireViewModel(
     private val deleteLibrary: DeleteLibraryUseCase,
     downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
-    private val importFiles: ImportFilesUseCase,
+    private val applyImport: ApplyImportUseCase,
     private val exportSongs: ExportSongsUseCase,
     private val exportSetlist: ExportSetlistUseCase,
     private val exportLibrary: ExportLibraryUseCase,
@@ -216,9 +214,7 @@ class CampfireViewModel(
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
     private val forgetSyncConnection: ForgetSyncConnectionUseCase,
-    private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
     private val getSharedLinkImport: GetSharedLinkImportUseCase,
-    private val rememberSharedLinkImport: RememberSharedLinkImportUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -532,10 +528,8 @@ class CampfireViewModel(
         isLeaving = { isLeaving },
         downloadImportFile = downloadImportFile,
         prepareImport = prepareImport,
-        importFiles = importFiles,
-        rememberDemoLibraryFiles = rememberDemoLibraryFiles,
+        applyImport = applyImport,
         getSharedLinkImport = getSharedLinkImport,
-        rememberSharedLinkImport = rememberSharedLinkImport,
         deleteLibrary = deleteLibrary,
     )
 

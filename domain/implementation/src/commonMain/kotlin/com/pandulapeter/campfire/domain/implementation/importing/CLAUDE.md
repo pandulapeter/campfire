@@ -49,3 +49,6 @@
   under its arrival name (shown as missing). Identical entries are disregarded whatever the choices say.
 - A write failure stops before any dependent setlist. What was written is adopted in one change (`adoptImported`, also
   after failure or cancellation), from the models built, not by rescanning.
+- `ApplyImportUseCaseImpl` writes the plan and then its records (the demo's names, each shared link's) whole, even for a
+  cancelled caller. A link's review starts on Replace only for names that link wrote here (`SharedLinkChoices.kt` in
+  `:data:model`), never for the recipient's own songs.

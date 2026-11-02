@@ -13,6 +13,7 @@ import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
@@ -21,14 +22,14 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.SharedLinkPart
+import com.pandulapeter.campfire.data.model.importing.sharedLinkChoices
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
+import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
@@ -42,7 +43,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -58,7 +58,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
@@ -94,10 +93,8 @@ internal class ImportController(
     private val isLeaving: () -> Boolean,
     private val downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
-    private val importFiles: ImportFilesUseCase,
-    private val rememberDemoLibraryFiles: RememberDemoLibraryFilesUseCase,
+    private val applyImport: ApplyImportUseCase,
     private val getSharedLinkImport: GetSharedLinkImportUseCase,
-    private val rememberSharedLinkImport: RememberSharedLinkImportUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
 
@@ -643,31 +640,11 @@ internal class ImportController(
         preview: ImportReport.Review? = null,
     ) {
         try {
-            // Not cancellable once it has started writing: the view model going away with the Android activity is no
-            // reason to leave an archive half imported - its setlists come after all of its songs - and the
-            // repositories the files go into outlive it, so whatever screen comes back finds the whole import.
-            val result = withContext(NonCancellable) {
-                importFiles.invoke(
-                    plan = plan,
-                    choices = choices,
-                ) { if (request.shouldAnnounceResult) _importProgress.value = it }
-                    .also { result ->
-                        if (request.isDemoLibrary) {
-                            rememberDemoLibraryFiles(
-                                songFileNames = DemoLibrary.songFileNamesWrittenBy(result),
-                                setlistFileNames = DemoLibrary.setlistFileNamesWrittenBy(result),
-                            )
-                        }
-                        sharedLinkParts.forEach { part ->
-                            val linkPlan = part.of(plan)
-                            rememberSharedLinkImport(
-                                linkFileId = part.fileId,
-                                songFileNames = sharedLinkSongFileNamesWrittenBy(linkPlan, result),
-                                setlistFileNames = sharedLinkSetlistFileNamesWrittenBy(linkPlan, result),
-                            )
-                        }
-                    }
-            }
+            val result = applyImport(
+                plan = plan,
+                choices = choices,
+                bookkeeping = (if (request.isDemoLibrary) DemoLibrary.bookkeeping else ImportBookkeeping()).copy(sharedLinkParts = sharedLinkParts),
+            ) { if (request.shouldAnnounceResult) _importProgress.value = it }
             _importProgress.value = null
             val songToOpen = songToOpen(
                 plan = plan,

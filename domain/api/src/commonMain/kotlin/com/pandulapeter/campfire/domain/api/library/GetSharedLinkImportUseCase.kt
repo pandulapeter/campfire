@@ -13,7 +13,7 @@ interface GetSharedLinkImportUseCase {
 
     /**
      * The library paths (`songs/<file name>`, `setlists/<file name>`) that earlier imports of [linkFileId]'s link wrote
-     * on this device, see [RememberSharedLinkImportUseCase]; empty where there are none or the preferences cannot be read.
+     * on this device, see `ApplyImportUseCase`; empty where there are none or the preferences cannot be read.
      * Names are as they were written, so they are compared with `LibraryFiles.isSameLibraryName`.
      */
     suspend operator fun invoke(linkFileId: String): Set<String>

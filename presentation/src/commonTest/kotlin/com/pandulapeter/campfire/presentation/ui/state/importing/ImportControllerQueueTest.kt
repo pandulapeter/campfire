@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
@@ -20,6 +21,8 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.sharedLinkSetlistFileNamesWrittenBy
+import com.pandulapeter.campfire.data.model.importing.sharedLinkSongFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -27,11 +30,9 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
-import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberDemoLibraryFilesUseCase
-import com.pandulapeter.campfire.domain.api.library.RememberSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -135,8 +136,13 @@ class ImportControllerQueueTest {
                     return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, skippedFileNames = plannedSkipped)
                 }
             },
-            importFiles = object : ImportFilesUseCase {
-                override suspend fun invoke(plan: ImportPlan, choices: ImportChoices, onProgress: (ImportProgress) -> Unit): ImportResult {
+            applyImport = object : ApplyImportUseCase {
+                override suspend fun invoke(
+                    plan: ImportPlan,
+                    choices: ImportChoices,
+                    bookkeeping: ImportBookkeeping,
+                    onProgress: (ImportProgress) -> Unit,
+                ): ImportResult {
                     importCount++
                     if (isImportFailing) error("The disk is full.")
                     // A kept-both conflict lands under a numbered name, as the storage layer writes it.
@@ -146,19 +152,17 @@ class ImportControllerQueueTest {
                         if (isKeptBoth) entry.fileName.replace(".cho", "_2.cho") else entry.fileName
                     }
                     if (isLibraryIndexedAtOnce) library.value = library.value.withSongs(written)
-                    return ImportResult(importedSongFileNames = written)
+                    val result = ImportResult(importedSongFileNames = written)
+                    bookkeeping.sharedLinkParts.forEach { part ->
+                        val linkPlan = part.of(plan)
+                        rememberedSharedLinkImports += part.fileId to
+                            (sharedLinkSongFileNamesWrittenBy(linkPlan, result) + sharedLinkSetlistFileNamesWrittenBy(linkPlan, result))
+                    }
+                    return result
                 }
-            },
-            rememberDemoLibraryFiles = object : RememberDemoLibraryFilesUseCase {
-                override suspend fun invoke(songFileNames: Collection<String>, setlistFileNames: Collection<String>) = Unit
             },
             getSharedLinkImport = object : GetSharedLinkImportUseCase {
                 override suspend fun invoke(linkFileId: String) = sharedLinkImports[linkFileId].orEmpty()
-            },
-            rememberSharedLinkImport = object : RememberSharedLinkImportUseCase {
-                override suspend fun invoke(linkFileId: String, songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
-                    rememberedSharedLinkImports += linkFileId to (songFileNames + setlistFileNames).toList()
-                }
             },
             deleteLibrary = object : DeleteLibraryUseCase {
                 override suspend fun invoke() = Unit

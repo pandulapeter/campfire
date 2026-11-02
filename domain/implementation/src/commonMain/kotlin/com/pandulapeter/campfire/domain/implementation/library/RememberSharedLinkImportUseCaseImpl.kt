@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
-import com.pandulapeter.campfire.domain.api.library.RememberSharedLinkImportUseCase
 import org.koin.core.annotation.Factory
 
 /** How many links [withSharedLinkImport] keeps a record of, the most recently imported ones. */
@@ -26,13 +25,26 @@ internal const val MAX_SHARED_LINK_IMPORTS = 100
  */
 internal const val MAX_SHARED_LINK_IMPORT_PATHS = 1_000
 
+/**
+ * Records on this device which library files an import of a shared link wrote under the names it asked for, so that a
+ * later import of the same link starts them on Replace, see `GetSharedLinkImportUseCase`. Run by `ApplyImportUseCase`.
+ */
 @Factory
 internal class RememberSharedLinkImportUseCaseImpl(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val logger: Logger,
-) : RememberSharedLinkImportUseCase {
+) {
 
-    override suspend operator fun invoke(linkFileId: String, songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
+    /**
+     * Adds these names to what [linkFileId]'s link is remembered for, never forgetting any recorded before: a file the
+     * link brought back unchanged is not written again, and is still the link's. Only the names the link asked for
+     * belong here, never a numbered copy kept beside one of the library's. Never throws: a record that could not be
+     * written costs only the next update's preselection.
+     *
+     * @param linkFileId The link's Dropbox file id, the one part of a link another link cannot borrow: it decides which
+     *   bytes the link serves.
+     */
+    suspend operator fun invoke(linkFileId: String, songFileNames: Collection<String>, setlistFileNames: Collection<String>) {
         val paths = songFileNames.map { "${LibraryFileKind.SONG.id}/$it" } + setlistFileNames.map { "${LibraryFileKind.SETLIST.id}/$it" }
         if (linkFileId.isBlank() || paths.isEmpty()) return
         logger.recovering(

@@ -32,6 +32,7 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
 - `ForgetSyncConnectionUseCase` tells the service nothing: a first launch runs it before restoring, since the iOS
   Keychain survives an uninstall. `ConnectSyncProviderUseCase` takes an `AuthorizationCompletionPage` because the
   desktop browser's landing page is rendered outside the app and the data layer has no translations.
-  `RememberDemoLibraryFilesUseCase` lets sync take another version's untouched demo instead of keeping both.
+  `ApplyImportUseCase` records a planted demo, which lets sync take another version's untouched demo instead of keeping
+  both.
 - Import application stops on a write failure and returns a partial `ImportResult` rather than losing what was
   written; cancellation still throws. The `ImportProgress` observer may run on the worker dispatcher.
