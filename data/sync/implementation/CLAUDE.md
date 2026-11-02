@@ -23,9 +23,10 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
   `SharedLinksJournalApplier` from loading the journal until what was applied is removed, and by Stop sharing and Stop
   sharing everything, so a step never uploads a copy stopped after it read the list; the journal's file lock inside it.
   The applier never takes the run lock, so it, and a share applying the journal first, may wait for a run.
-- `LibraryFileLock`: held by the engine around local file calls only, never a request. Not reentrant: the repositories
-  take their own locks first and this one inside; nothing holding it calls anything that takes it. A local write or
-  deletion and its `onLocalFileChanged` finish together once started (`NonCancellable`).
+- `LibraryFileLock`: held by the engine around local file calls only, never a request. Not reentrant, and refuses
+  reentry from its holder with an exception rather than deadlock: the repositories take their own locks first and this
+  one inside; nothing holding it calls anything that takes it. A local write or deletion and its `onLocalFileChanged`
+  finish together once started (`NonCancellable`).
 - `SyncLibraryRefresher.changedFilesMutex`: innermost.
 
 ## Invariants
