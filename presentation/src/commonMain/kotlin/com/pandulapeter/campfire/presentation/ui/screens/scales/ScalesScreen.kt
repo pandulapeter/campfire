@@ -66,9 +66,9 @@ import com.pandulapeter.campfire.presentation.ui.scales.scaleName
 import com.pandulapeter.campfire.presentation.ui.scales.scaleTitle
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
-import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_GROUP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
+import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge

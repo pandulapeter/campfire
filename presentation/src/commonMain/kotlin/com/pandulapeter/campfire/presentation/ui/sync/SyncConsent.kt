@@ -13,8 +13,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.platform.keepSyncConsentOrigin
-import com.pandulapeter.campfire.presentation.ui.platform.takeSyncConsentOrigin
 import com.pandulapeter.campfire.presentation.ui.screens.export.shareTargetOf
 import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget

@@ -17,7 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
+import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
 
 /**
  * Listens while the screen holding the tuner is started and [canListen] - the microphone known to be allowed, or asked

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**

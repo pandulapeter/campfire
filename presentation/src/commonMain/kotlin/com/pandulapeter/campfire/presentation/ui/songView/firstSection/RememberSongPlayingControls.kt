@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.SongPlayback
 import com.pandulapeter.campfire.presentation.ui.playing.isCapoShownFor
 import com.pandulapeter.campfire.presentation.ui.playing.nameCapoFor

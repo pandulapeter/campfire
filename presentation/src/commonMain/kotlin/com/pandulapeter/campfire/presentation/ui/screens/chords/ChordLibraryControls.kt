@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolCapoControls
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting

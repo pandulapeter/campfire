@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row

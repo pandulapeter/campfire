@@ -74,7 +74,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
-import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo

@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.metronome
 
-import com.pandulapeter.campfire.chordpro.ChordProTime
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
@@ -17,6 +16,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 
@@ -91,6 +91,3 @@ internal fun Map<String, Map<String, List<String>>>.withSongBeatLevels(
     }
     return if (songLevels.isEmpty()) this - songFileName else this + (songFileName to songLevels)
 }
-
-internal val Song?.timeSignatureOrDefault
-    get() = this?.time?.let(ChordProTime::parse)?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME

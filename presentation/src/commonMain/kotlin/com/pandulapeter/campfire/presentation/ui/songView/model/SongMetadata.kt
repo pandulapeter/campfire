@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 
 /**

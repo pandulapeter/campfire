@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_vibrate
 import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
-import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
+import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_TOP_INSET
 import com.pandulapeter.campfire.presentation.ui.components.only

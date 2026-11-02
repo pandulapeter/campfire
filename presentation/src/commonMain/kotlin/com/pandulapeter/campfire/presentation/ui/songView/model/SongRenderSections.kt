@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOf
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind

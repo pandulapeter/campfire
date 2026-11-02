@@ -20,10 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
+import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_CATEGORY_PANE_WIDTH
 
 /**
  * The tabs of the settings screen as a list at the start of the screen, for a window wide enough to hold the selected
@@ -53,6 +53,3 @@ internal fun SettingsCategoryPane(
         )
     }
 }
-
-/** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
-internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp

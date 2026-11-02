@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.preferences.THEME_COLOR_CHOICE_WIDTH
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_CATEGORY_PANE_WIDTH
 
 /**
  * What the settings screen decides from the width it settles at without its insets, rather than the one it is being
@@ -85,3 +84,6 @@ internal val PAGE_TOP_PADDING = 8.dp
 
 /** Above this four tabs are four words spread apart rather than a row of tabs. */
 internal val SETTINGS_TAB_ROW_MAX_WIDTH = MAX_COLUMN_WIDTH
+
+/** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
+internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp

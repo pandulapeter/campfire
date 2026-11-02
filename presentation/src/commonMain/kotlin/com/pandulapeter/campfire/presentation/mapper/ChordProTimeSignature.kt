@@ -7,9 +7,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.metronome
+package com.pandulapeter.campfire.presentation.mapper
 
 import com.pandulapeter.campfire.chordpro.ChordProTime
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 
 /**
@@ -20,3 +21,6 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 internal fun timeSignatureOf(time: String?): TimeSignature? = ChordProTime.parse(time)
     ?.takeIf { (beats, unit) -> beats in TimeSignature.BEATS_RANGE && unit in TimeSignature.UNITS }
     ?.let { (beats, unit) -> TimeSignature(beats, unit) }
+
+internal val Song?.timeSignatureOrDefault
+    get() = this?.time?.let(ChordProTime::parse)?.let { (beats, unit) -> TimeSignature(beats, unit) } ?: TimeSignature.COMMON_TIME

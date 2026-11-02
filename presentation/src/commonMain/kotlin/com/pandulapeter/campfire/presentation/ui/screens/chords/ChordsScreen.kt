@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.chords
 
 import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_PAGE_PADDING
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_GROUP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -61,7 +61,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordCellMinWidth
 import com.pandulapeter.campfire.presentation.ui.chords.selectShape
 import com.pandulapeter.campfire.presentation.ui.chords.shownChordName
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
+import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only

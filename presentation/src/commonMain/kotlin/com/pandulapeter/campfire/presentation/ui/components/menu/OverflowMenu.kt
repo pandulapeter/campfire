@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
-import com.pandulapeter.campfire.presentation.ui.update.LocalIsCoveredByRequiredUpdate
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler

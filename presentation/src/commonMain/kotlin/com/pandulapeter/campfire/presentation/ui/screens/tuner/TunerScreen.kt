@@ -40,7 +40,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
-import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopOnRequest
+import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.rememberMicrophonePermission
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect

@@ -53,7 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.components.songCard.draggedList
 import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberOverflowMenuState
-import com.pandulapeter.campfire.presentation.ui.components.songCard.rememberSongCardKey
+import com.pandulapeter.campfire.presentation.ui.rendering.rememberSongCardKey
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf

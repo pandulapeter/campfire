@@ -33,7 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.ui.chrome.TOOL_GROUP_GAP
+import com.pandulapeter.campfire.presentation.ui.components.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PAGE_TOP_PADDING
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection

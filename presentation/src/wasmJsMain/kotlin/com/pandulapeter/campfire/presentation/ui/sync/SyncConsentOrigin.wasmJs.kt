@@ -9,9 +9,8 @@
  */
 @file:OptIn(ExperimentalWasmJsInterop::class)
 
-package com.pandulapeter.campfire.presentation.ui.platform
+package com.pandulapeter.campfire.presentation.ui.sync
 
-import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.js.ExperimentalWasmJsInterop

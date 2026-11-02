@@ -74,7 +74,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_tempo_and_time
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
-import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
+import com.pandulapeter.campfire.presentation.mapper.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
