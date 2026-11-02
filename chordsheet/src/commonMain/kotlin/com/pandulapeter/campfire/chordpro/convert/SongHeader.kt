@@ -161,7 +161,9 @@ internal object SongHeader {
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
         var last = first
         while (kinds.getOrNull(last + 1) == LineKind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], profile)) last++
-        val title = joinRows(lines, first, last)
+        val title = ((first + 1)..last).fold(lines[first].text.trim()) { text, index ->
+            text + (if (lines[index].marks != null) lines[index].joint else if (isCutWord(lines[index - 1], lines, first..last)) "" else " ") + lines[index].text.trim()
+        }
         // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
         // credit in it to split off.
         val (name, named) = if (lines[first].marks != null) title to null else ChordSheetTitles.split(title)
@@ -246,6 +248,19 @@ internal object SongHeader {
         val margin = lines.mapNotNull { rendered -> rendered.source.spans.firstOrNull { it.text.isNotBlank() }?.start }.minOrNull() ?: return false
         return titleInk.first().start > margin + size * 2 && lineInk.first().start > margin + size * 2 &&
             abs((lineInk.first().start + lineInk.last().end) - (titleInk.first().start + titleInk.last().end)) / 2 <= size
+    }
+
+    /**
+     * Whether [row] of the title at [rows] is one word cut where its column ends, which a word too long for the column is
+     * (`CLEMENTINE-TH` over `E WHOLE STORY`): it has no space to have been wrapped at and reaches as far as any other line
+     * of its column, so the row under it goes on with the same word. A title set on rows by hand breaks short of the edge.
+     */
+    private fun isCutWord(row: Rendered, lines: List<Rendered>, rows: IntRange): Boolean {
+        val text = row.text.trim()
+        if (text.isEmpty() || text.any { it.isWhitespace() } || !text.last().isLetterOrDigit()) return false
+        fun end(line: Rendered) = line.source.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.end }
+        val reach = lines.filterIndexed { index, line -> index !in rows && line.source.column == row.source.column }.mapNotNull(::end).maxOrNull() ?: return false
+        return (end(row) ?: return false) >= reach
     }
 
     private fun addTitle(header: MutableList<String>, title: String, artist: String?) {

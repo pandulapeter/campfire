@@ -1706,4 +1706,15 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `a title row that is one word cut where its column ends goes on with that word on the row under it`() {
+        fun title(text: String) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 15.0, (index + 1) * 15.0, 20.0, isBold = true) })
+        fun line(text: String) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0) })
+        fun convert(vararg titleRows: String) = ChordSheetConverter.convert(
+            ChordSheet(listOf(ChordSheet.Page(titleRows.map(::title) + listOf(line("G         C"), line("Hello darkness my"))))),
+        ).single().lines().first()
+        assertEquals("{title: RIVER-SHE WALKS}", convert("RIVER-SH", "E WALKS"))
+        assertEquals("{title: RIVER WALKS}", convert("RIVER", "WALKS"))
+    }
 }
