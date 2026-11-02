@@ -27,8 +27,8 @@ import com.pandulapeter.campfire.presentation.resources.song_layout_pages_descri
 import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 
 /**
- * The two ways a song can be laid out, as a card each with what it means: the question the onboarding and the first song
- * opened ask, in the same words. [selected] is null where nothing is to be shown as picked yet.
+ * The two ways a song can be laid out, as a card each with what it means: the question the first song opened asks.
+ * [selected] is null where nothing is to be shown as picked yet.
  */
 @Composable
 internal fun SongLayoutChoices(

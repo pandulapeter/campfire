@@ -25,7 +25,6 @@ enum class OnboardingStep {
     INSTRUMENT,
     FEATURES,
     NOTATION,
-    SONG_LAYOUT,
     SYNC,
 }
 
@@ -40,7 +39,7 @@ internal fun onboardingSteps(
     areChordsEnabled: Boolean,
 ) = OnboardingStep.entries.filter { step ->
     when (step) {
-        OnboardingStep.WELCOME, OnboardingStep.LOOK, OnboardingStep.INSTRUMENT, OnboardingStep.FEATURES, OnboardingStep.SONG_LAYOUT -> true
+        OnboardingStep.WELCOME, OnboardingStep.LOOK, OnboardingStep.INSTRUMENT, OnboardingStep.FEATURES -> true
         OnboardingStep.NOTATION -> areChordsEnabled
         OnboardingStep.SYNC -> canConnectSync
     }

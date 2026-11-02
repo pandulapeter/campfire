@@ -227,7 +227,14 @@ internal class PreferencesController(
     /** Picking a layout also answers the question the first song opened asks about it. */
     fun setSongLayout(value: SongLayout) = changeUserPreferences { copy(songLayout = value, isSongLayoutChosen = true) }
 
-    /** The question about the layout has been put, in the onboarding or over a song, and is not asked again. */
+    /**
+     * A pick in the question the first song opened asks: written at once, so that the song behind it changes as it goes,
+     * but leaving the question owed until it is confirmed ([markSongLayoutChosen]), so that a sheet put away without
+     * Confirm asks again over the next song.
+     */
+    fun pickSongLayout(value: SongLayout) = changeUserPreferences { copy(songLayout = value) }
+
+    /** The question about the layout has been confirmed, and is not asked again. */
     fun markSongLayoutChosen() = changeUserPreferences { if (isSongLayoutChosen) this else copy(isSongLayoutChosen = true) }
 
     /** The song's own pace is no entry, so that a song dragged back to it is as if it had never been changed. */
@@ -246,11 +253,14 @@ internal class PreferencesController(
     /** Whether the capo stepper keeps the key, which is part of the same question as [setChordNames]. */
     fun setCapoKeepsKey(value: Boolean) = changeUserPreferences { copy(capoKeepsKey = value, isChordNamesChosen = true) }
 
-    /** An answer to the question the first capoed song asks, which sets both halves of how a capo is read at once. */
-    fun answerChordNamesQuestion(chordNames: ChordNames, capoKeepsKey: Boolean) =
-        changeUserPreferences { copy(chordNames = chordNames, capoKeepsKey = capoKeepsKey, isChordNamesChosen = true) }
+    /**
+     * A pick in the question the first capoed song asks, which sets both halves of how a capo is read at once: written at
+     * once, like [pickSongLayout], and leaving the question owed until it is confirmed ([markChordNamesChosen]).
+     */
+    fun pickChordNamesAnswer(chordNames: ChordNames, capoKeepsKey: Boolean) =
+        changeUserPreferences { copy(chordNames = chordNames, capoKeepsKey = capoKeepsKey) }
 
-    /** The question about chord names has been put over a capoed song, and is not asked again. */
+    /** The question about chord names has been confirmed, and is not asked again. */
     fun markChordNamesChosen() = changeUserPreferences { if (isChordNamesChosen) this else copy(isChordNamesChosen = true) }
 
     fun setNotation(notation: UserPreferences.Notation) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(notation = notation)) }

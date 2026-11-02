@@ -43,7 +43,8 @@ import org.jetbrains.compose.resources.painterResource
  * like it could be dragged back down, so the button is on the short sheets too, where the next one opened may not be
  * short. A sheet about one song or one setlist names it in the subtitle ([songLabel], or the setlist's title), even
  * where the screen behind it is that very song: it is opened from rows of other lists as readily as from the thing
- * itself, and one that named what its boxes are about only some of the time would read as two different sheets.
+ * itself, and one that named what its boxes are about only some of the time would read as two different sheets. A sheet
+ * that cannot be dismissed ([onClose] null) has no close button, only its actions.
  */
 @Composable
 internal fun SheetHeader(
@@ -51,18 +52,20 @@ internal fun SheetHeader(
     subtitle: String,
     titleMaxLines: Int,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)?,
-    onClose: () -> Unit,
+    onClose: (() -> Unit)?,
     onActionDone: () -> Unit,
 ) = Row(
     // An action at the end sits as far from the edge as the close button does from the start.
-    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = if (actions == null) 16.dp else 4.dp, top = 12.dp),
+    modifier = Modifier.fillMaxWidth().padding(start = if (onClose == null) 16.dp else 4.dp, end = if (actions == null) 16.dp else 4.dp, top = 12.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
-    IconButton(onClick = onClose) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_clear),
-            contentDescription = stringResource(Res.string.close),
-        )
+    if (onClose != null) {
+        IconButton(onClick = onClose) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_clear),
+                contentDescription = stringResource(Res.string.close),
+            )
+        }
     }
     Column(
         modifier = Modifier.weight(1f),

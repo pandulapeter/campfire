@@ -14,6 +14,7 @@
     <string name="close">Schließen</string>
     <string name="cancel">Abbrechen</string>
     <string name="done">Fertig</string>
+    <string name="confirm">Bestätigen</string>
     <string name="delete">Löschen</string>
     <string name="create">Erstellen</string>
     <string name="duplicate">Duplizieren</string>
@@ -968,15 +969,14 @@
     <string name="song_details_auto_scroll_play">Scrollen starten</string>
     <string name="song_details_auto_scroll_pause">Scrollen stoppen</string>
     <string name="song_details_auto_scroll_speed">Scroll-Tempo</string>
-    <string name="song_layout_title">Wie liest du Songs?</string>
+    <string name="song_layout_title">Wie sollen Songs dargestellt werden?</string>
     <string name="song_preference_change_hint">Das gilt für jeden Song. Du kannst es jederzeit in den Vorlieben ändern, über die Einstellungen oder das Menü eines beliebigen Songs.</string>
     <string name="song_layout_pages">Seiten</string>
     <string name="song_layout_pages_description">So viel vom Song wie möglich auf einmal auf dem Bildschirm, in Spalten, Seite für Seite umgeblättert</string>
     <string name="song_layout_continuous">Fortlaufend</string>
     <string name="song_layout_continuous_description">Eine Spalte, die im Takt des Songs von selbst scrollt, mit einem Tempo, das du für jeden Song festlegst</string>
     <string name="chord_names_title">Wie liest du Akkorde mit Capo?</string>
-    <string name="chord_names_example">Dieser Song hat den Capo im %1$s. Bund: nach den Griffen, die du spielst, steht er in %2$s, nach dem Klang in %3$s.</string>
-    <string name="chord_names_explanation">Mit Capo können die Akkorde eines Songs nach den Griffen darüber oder nach ihrem Klang heißen.</string>
+    <string name="chord_names_example">Dieser Song hat den Capo im %1$s. Bund: Die Akkorde können nach den Griffen, die du spielst, oder nach ihrem Klang heißen, oder der Song bleibt in seiner Tonart und der Capo ändert nur die Griffe.</string>
     <string name="chord_names_shapes_description">Die Akkorde, die du über dem Capo greifst, so wie Capo-Charts sie schreiben</string>
     <string name="chord_names_sounding_description">Die Akkorde, die zu hören sind, zum Mitspielen ohne Capo</string>
     <string name="chord_names_keep_key">Tonart behalten</string>
@@ -1214,7 +1214,6 @@
     <string name="onboarding_instrument_strings">Das Stimmgerät hört auf %1$s</string>
     <string name="onboarding_notation_title">Wie schreibst du Akkorde?</string>
     <string name="onboarding_notation_message">Wähle, wie Akkorde angezeigt werden. Songs werden immer in der Standardschreibweise gespeichert, damit sie in jeder App gleich aussehen.</string>
-    <string name="onboarding_song_layout_message">Blättere selbst um, oder lass den Song in seinem eigenen Tempo scrollen, während du spielst.</string>
     <string name="onboarding_feature_chords_description">Akkorde über dem Text, in jeder Tonart, mit Diagrammen für dein Instrument. Du singst nur? Wähle es ab, um nur den Text zu sehen.</string>
     <string name="onboarding_feature_metronome_description">Hält den Takt im Tempo jedes Songs, in Songs und auf einem eigenen Bildschirm</string>
     <string name="onboarding_feature_tuner_description">Stimmt dein Instrument über das Mikrofon, in Songs und auf einem eigenen Bildschirm</string>

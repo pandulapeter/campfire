@@ -14,6 +14,7 @@
     <string name="close">Chiudi</string>
     <string name="cancel">Annulla</string>
     <string name="done">Fine</string>
+    <string name="confirm">Conferma</string>
     <string name="delete">Elimina</string>
     <string name="create">Crea</string>
     <string name="duplicate">Duplica</string>
@@ -968,15 +969,14 @@
     <string name="song_details_auto_scroll_play">Avvia lo scorrimento</string>
     <string name="song_details_auto_scroll_pause">Ferma lo scorrimento</string>
     <string name="song_details_auto_scroll_speed">Velocità di scorrimento</string>
-    <string name="song_layout_title">Come leggi le canzoni?</string>
+    <string name="song_layout_title">Come vuoi vedere le canzoni?</string>
     <string name="song_preference_change_hint">Vale per tutte le canzoni. Puoi cambiarlo quando vuoi nelle Preferenze, dalle Impostazioni o dal menu di qualsiasi canzone.</string>
     <string name="song_layout_pages">Pagine</string>
     <string name="song_layout_pages_description">La maggior parte della canzone sullo schermo in una volta, in colonne sfogliate una pagina alla volta</string>
     <string name="song_layout_continuous">Continuo</string>
     <string name="song_layout_continuous_description">Una sola colonna che scorre da sola al ritmo della canzone, a una velocità che imposti per ogni canzone</string>
     <string name="chord_names_title">Come leggi gli accordi con il capotasto?</string>
-    <string name="chord_names_example">Questa canzone ha il capotasto al tasto %1$s: secondo le diteggiature che suoni è in %2$s, secondo come suona è in %3$s.</string>
-    <string name="chord_names_explanation">Con il capotasto, gli accordi di una canzone possono prendere il nome dalle diteggiature che suoni sopra di esso o da come suonano.</string>
+    <string name="chord_names_example">Questa canzone ha il capotasto al tasto %1$s: gli accordi possono prendere il nome dalle diteggiature che suoni o da come suonano, oppure la canzone può restare nella sua tonalità e il capotasto cambiare solo le diteggiature.</string>
     <string name="chord_names_shapes_description">Gli accordi che diteggi sopra il capotasto, come li scrivono gli spartiti per capotasto</string>
     <string name="chord_names_sounding_description">Gli accordi che si sentono, per suonare insieme ad altri senza capotasto</string>
     <string name="chord_names_keep_key">Mantieni la tonalità</string>
@@ -1214,7 +1214,6 @@
     <string name="onboarding_instrument_strings">L\'accordatore ascolterà %1$s</string>
     <string name="onboarding_notation_title">Come scrivi gli accordi?</string>
     <string name="onboarding_notation_message">Scegli come mostrare gli accordi. Le canzoni vengono sempre salvate in notazione standard, così si leggono allo stesso modo in ogni app.</string>
-    <string name="onboarding_song_layout_message">Gira le pagine tu, o lascia che la canzone scorra al suo ritmo mentre suoni.</string>
     <string name="onboarding_feature_chords_description">Accordi sopra il testo, in qualsiasi tonalità, con i diagrammi disegnati per il tuo strumento. Canti soltanto? Deseleziona questa voce per avere solo il testo.</string>
     <string name="onboarding_feature_metronome_description">Tiene il tempo di ogni canzone, nelle canzoni e in una schermata tutta sua</string>
     <string name="onboarding_feature_tuner_description">Accorda il tuo strumento con il microfono, nelle canzoni e in una schermata tutta sua</string>

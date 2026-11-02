@@ -14,6 +14,7 @@
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
     <string name="done">Done</string>
+    <string name="confirm">Confirm</string>
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="duplicate">Duplicate</string>
@@ -968,15 +969,14 @@
     <string name="song_details_auto_scroll_play">Start scrolling</string>
     <string name="song_details_auto_scroll_pause">Stop scrolling</string>
     <string name="song_details_auto_scroll_speed">Scroll speed</string>
-    <string name="song_layout_title">How do you read songs?</string>
+    <string name="song_layout_title">How should songs be laid out?</string>
     <string name="song_preference_change_hint">This applies to every song. You can change it any time in Preferences, from Settings or any song\'s menu.</string>
     <string name="song_layout_pages">Pages</string>
     <string name="song_layout_pages_description">The most of the song on the screen at once, in columns turned a page at a time</string>
     <string name="song_layout_continuous">Continuous</string>
     <string name="song_layout_continuous_description">One column that scrolls by itself at the song\'s pace, at a speed you set for each song</string>
     <string name="chord_names_title">How do you read chords with a capo?</string>
-    <string name="chord_names_example">With the capo on fret %1$s, this song reads in %2$s by the shapes you play, or in %3$s by how it sounds.</string>
-    <string name="chord_names_explanation">With a capo on, a song\'s chords can be named by the shapes you play above it, or by how they sound.</string>
+    <string name="chord_names_example">With the capo on fret %1$s, this song\'s chords can be named by the shapes you play or by how they sound, or the song can stay in its key, the capo changing only the shapes you finger.</string>
     <string name="chord_names_shapes_description">The chords you finger above the capo, the way capo charts are written</string>
     <string name="chord_names_sounding_description">The chords that are heard, for playing along without a capo</string>
     <string name="chord_names_keep_key">Keep the key</string>
@@ -1214,7 +1214,6 @@
     <string name="onboarding_instrument_strings">The tuner will listen for %1$s</string>
     <string name="onboarding_notation_title">How do you write chords?</string>
     <string name="onboarding_notation_message">Pick how chords are shown. Songs are always saved the standard way, so they read the same in every app.</string>
-    <string name="onboarding_song_layout_message">Turn the pages yourself, or let the song scroll at its own pace while you play.</string>
     <string name="onboarding_feature_chords_description">Chords above the lyrics, in any key, with diagrams drawn for your instrument. Only singing? Untick it for lyrics only.</string>
     <string name="onboarding_feature_metronome_description">Keeps the beat at each song\'s tempo, in songs and on a screen of its own</string>
     <string name="onboarding_feature_tuner_description">Tunes your instrument through the microphone, in songs and on a screen of its own</string>

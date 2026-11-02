@@ -12,7 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.song.Song
@@ -32,8 +34,8 @@ import kotlinx.coroutines.withContext
  * Asks how a capoed song's chords are to be named ([DialogType.ChordNames]) the first time the answer changes what the
  * reader sees: a song opened (or paged to) with a capo on, or its capo stepped while it is read, to none included. Only
  * once the layout question is behind ([isChordNamesQuestionOwed]), only while this screen is on top with nothing over
- * it, so that it follows that question, What's new, or an import's questions rather than stacking on them, and asked
- * once whatever the answer, closing the sheet included.
+ * it, so that it follows that question, What's new, or an import's questions rather than stacking on them. Asked once
+ * per song until its Confirm answers it: a sheet put away without it asks again over the next song it matters on.
  */
 @Composable
 internal fun AskForChordNamesOnce(
@@ -52,6 +54,9 @@ internal fun AskForChordNamesOnce(
     val capo = playback?.capo?.fret ?: 0
     // The capo the song had when this screen first showed it, so that stepping it back to none still counts as a change.
     val openedCapo = remember(song?.fileName) { capo }
+    // Put up over this song already: a sheet put away unanswered uncovers the screen, which would otherwise ask again at
+    // once, rather than at the next song it matters on.
+    var isAskedOverSong by remember(song?.fileName) { mutableStateOf(false) }
     val isOwed = isChordNamesQuestionOwed(
         preferences = userPreferences,
         hasChords = song?.hasChords == true,
@@ -62,7 +67,7 @@ internal fun AskForChordNamesOnce(
     // The example needs the song's text, which is read as the screen opens: the question waits the few frames that takes.
     val text = song?.let { songTexts[it.fileName] }
     LaunchedEffect(isOwed, isUncovered, text != null, capo) {
-        if (!isOwed || !isUncovered || song == null || playback == null || text == null) return@LaunchedEffect
+        if (!isOwed || !isUncovered || isAskedOverSong || song == null || playback == null || text == null) return@LaunchedEffect
         // A capo stepped from none to the third fret passes the first two: asked at once, the example would be a capo
         // the reader never meant. Each step restarts this effect, so the question waits for the stepper to rest.
         if (capo != openedCapo) delay(CAPO_SETTLE_MILLIS)
@@ -79,13 +84,13 @@ internal fun AskForChordNamesOnce(
                 inferredKey = inferredKeys[song.fileName],
             )
         }
-        if (viewModel.dialogHost.showIfNoneIsShown(dialog)) viewModel.preferencesController.markChordNamesChosen()
+        if (viewModel.dialogHost.showIfNoneIsShown(dialog)) isAskedOverSong = true
     }
 }
 
 /**
- * The question for [song] played at [transposition] under [capo]: its key and first chords named both ways, by the
- * shapes ([capo] below what sounds, as `SongPlayback.namingTransposition` names them) and as they sound.
+ * The question for [song] played at [transposition] under [capo]: its first chords named both ways, by the shapes
+ * ([capo] below what sounds, as `SongPlayback.namingTransposition` names them) and as they sound.
  */
 internal fun chordNamesQuestionOf(
     renderer: SongRenderer,
@@ -108,8 +113,6 @@ internal fun chordNamesQuestionOf(
     )
     return DialogType.ChordNames(
         capo = capo,
-        shapesKey = renderer.renderKey(song = song, transposition = shapes, spelling = spelling, inferredKey = inferredKey),
-        soundingKey = renderer.renderKey(song = song, transposition = sounding, spelling = spelling, inferredKey = inferredKey),
         shapesChords = chords(shapes),
         soundingChords = chords(sounding),
     )

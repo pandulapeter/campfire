@@ -95,13 +95,17 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   keyboard) or the reader is playing (read only mode's performance mode; an archived setlist's song still asks), never
   in an import preview or the editor. It waits for the layout question to have been put and for nothing over the
   screen (and for the song's text), so a song that would ask both asks the layout first and the chord names once that
-  sheet is gone. The sheet names the song's key both ways ("in Em by the shapes, in F#m as it sounds"; generic words
-  where the song names no key), and each card ends in the song's first four chords named its way, as the page would
-  (`leadingChordNames`: the reader's notation and transposition, the shapes read at `namingTransposition`); a capo just
-  stepped to none is exemplified by the one it was stepped from, so the two never read alike. A third card, with no
-  chords, keeps the key (`capoKeepsKey`, named as they sound), which brings a capo just stepped back to the song's
-  pitch at once. Both are marked asked as they are shown, so a dismissal keeps the default and is never
-  asked again; a pick in Preferences answers it too (`isChordNamesChosen`).
+  sheet is gone. Of its three cards (shapes, sounding, and keeping the key, `capoKeepsKey`: named as they sound, the
+  file's own capo alone raising the pitch), the first two end in the song's first four chords named their way, as the
+  page would (`leadingChordNames`: the reader's notation and transposition, the shapes read at `namingTransposition`); a
+  capo just stepped to none is exemplified by the one it was stepped from, so the two never read alike. Both questions
+  are a `ConfirmedQuestionSheet`: a pick written at once, the title wrapped rather than cut on a narrow phone, and
+  Confirm in a row pinned under the choices as the only way out (`isDismissible` off: no close button, swipe, scrim,
+  back, or Escape), so a stray tap never answers them.
+  Only Confirm marks them answered (`markSongLayoutChosen`, `markChordNamesChosen`); one put away without it (the stack
+  closing it, the window closed) asks again the next time it matters, the layout over the next song screen, the chord
+  names over the next song (once per song, or uncovering the screen would ask again at once). A pick in Preferences
+  answers them too (`isSongLayoutChosen`, `isChordNamesChosen`).
 
 ### The menu's own entries
 

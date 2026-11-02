@@ -14,6 +14,7 @@
     <string name="close">Fermer</string>
     <string name="cancel">Annuler</string>
     <string name="done">OK</string>
+    <string name="confirm">Confirmer</string>
     <string name="delete">Supprimer</string>
     <string name="create">Créer</string>
     <string name="duplicate">Dupliquer</string>
@@ -973,15 +974,14 @@
     <string name="song_details_auto_scroll_play">Lancer le défilement</string>
     <string name="song_details_auto_scroll_pause">Arrêter le défilement</string>
     <string name="song_details_auto_scroll_speed">Vitesse de défilement</string>
-    <string name="song_layout_title">Comment lis-tu les chansons ?</string>
+    <string name="song_layout_title">Comment afficher les chansons ?</string>
     <string name="song_preference_change_hint">Cela vaut pour toutes les chansons. Tu peux le changer à tout moment dans les Préférences, depuis les Réglages ou le menu de n\'importe quelle chanson.</string>
     <string name="song_layout_pages">Pages</string>
     <string name="song_layout_pages_description">Le plus de la chanson à l\'écran à la fois, en colonnes tournées page par page</string>
     <string name="song_layout_continuous">Continu</string>
     <string name="song_layout_continuous_description">Une seule colonne qui défile toute seule au rythme de la chanson, à une vitesse réglée pour chaque chanson</string>
     <string name="chord_names_title">Comment lis-tu les accords avec un capo ?</string>
-    <string name="chord_names_example">Cette chanson a un capo à la case %1$s : d\'après les doigtés que tu joues, elle est en %2$s ; d\'après le son, en %3$s.</string>
-    <string name="chord_names_explanation">Avec un capo, les accords d\'une chanson peuvent être nommés d\'après les doigtés joués au-dessus ou d\'après leur son.</string>
+    <string name="chord_names_example">Cette chanson a un capo à la case %1$s : les accords peuvent être nommés d\'après les doigtés que tu joues ou d\'après leur son, ou la chanson peut rester dans sa tonalité, le capo ne changeant que les doigtés.</string>
     <string name="chord_names_shapes_description">Les accords que tu doigtes au-dessus du capo, comme les grilles pour capo les écrivent</string>
     <string name="chord_names_sounding_description">Les accords qu\'on entend, pour jouer avec les autres sans capo</string>
     <string name="chord_names_keep_key">Garder la tonalité</string>
@@ -1219,7 +1219,6 @@
     <string name="onboarding_instrument_strings">L\'accordeur écoutera %1$s</string>
     <string name="onboarding_notation_title">Comment écris-tu les accords ?</string>
     <string name="onboarding_notation_message">Choisis comment les accords sont affichés. Les chansons sont toujours enregistrées en notation standard, pour se lire de la même façon dans toutes les applications.</string>
-    <string name="onboarding_song_layout_message">Tourne les pages toi-même, ou laisse la chanson défiler à son rythme pendant que tu joues.</string>
     <string name="onboarding_feature_chords_description">Les accords au-dessus des paroles, dans n\'importe quelle tonalité, avec des diagrammes pour ton instrument. Tu chantes seulement ? Décoche-les pour n\'avoir que les paroles.</string>
     <string name="onboarding_feature_metronome_description">Garde le tempo de chaque chanson, dans les chansons et sur un écran dédié</string>
     <string name="onboarding_feature_tuner_description">Accorde ton instrument avec le micro, dans les chansons et sur un écran dédié</string>

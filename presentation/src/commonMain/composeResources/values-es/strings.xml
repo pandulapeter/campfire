@@ -14,6 +14,7 @@
     <string name="close">Cerrar</string>
     <string name="cancel">Cancelar</string>
     <string name="done">Listo</string>
+    <string name="confirm">Confirmar</string>
     <string name="delete">Eliminar</string>
     <string name="create">Crear</string>
     <string name="duplicate">Duplicar</string>
@@ -968,15 +969,14 @@
     <string name="song_details_auto_scroll_play">Iniciar desplazamiento</string>
     <string name="song_details_auto_scroll_pause">Detener desplazamiento</string>
     <string name="song_details_auto_scroll_speed">Velocidad de desplazamiento</string>
-    <string name="song_layout_title">¿Cómo lees las canciones?</string>
+    <string name="song_layout_title">¿Cómo quieres ver las canciones?</string>
     <string name="song_preference_change_hint">Se aplica a todas las canciones. Puedes cambiarlo cuando quieras en Preferencias, desde Ajustes o el menú de cualquier canción.</string>
     <string name="song_layout_pages">Páginas</string>
     <string name="song_layout_pages_description">La mayor parte posible de la canción en pantalla a la vez, en columnas que se pasan página a página</string>
     <string name="song_layout_continuous">Continua</string>
     <string name="song_layout_continuous_description">Una sola columna que se desplaza sola al ritmo de la canción, a la velocidad que elijas para cada una</string>
     <string name="chord_names_title">¿Cómo lees los acordes con capo?</string>
-    <string name="chord_names_example">Esta canción lleva el capo en el traste %1$s: por las formas que tocas está en %2$s, y por cómo suena, en %3$s.</string>
-    <string name="chord_names_explanation">Con capo, los acordes de una canción pueden nombrarse por las formas que tocas sobre él o por cómo suenan.</string>
+    <string name="chord_names_example">Esta canción lleva el capo en el traste %1$s: los acordes pueden nombrarse por las formas que tocas o por cómo suenan, o la canción puede quedarse en su tonalidad y el capo solo cambiar las formas.</string>
     <string name="chord_names_shapes_description">Los acordes que pisas sobre el capo, como se escriben las partituras con capo</string>
     <string name="chord_names_sounding_description">Los acordes que se oyen, para tocar junto a otros sin capo</string>
     <string name="chord_names_keep_key">Mantener la tonalidad</string>
@@ -1214,7 +1214,6 @@
     <string name="onboarding_instrument_strings">El afinador escuchará %1$s</string>
     <string name="onboarding_notation_title">¿Cómo escribes los acordes?</string>
     <string name="onboarding_notation_message">Elige cómo se muestran los acordes. Las canciones siempre se guardan en la notación estándar, para que se lean igual en cualquier aplicación.</string>
-    <string name="onboarding_song_layout_message">Pasa las páginas tú mismo o deja que la canción se desplace a su ritmo mientras tocas.</string>
     <string name="onboarding_feature_chords_description">Acordes sobre la letra, en cualquier tonalidad, con diagramas dibujados para tu instrumento. ¿Solo cantas? Desmárcalo para ver solo la letra.</string>
     <string name="onboarding_feature_metronome_description">Marca el pulso al tempo de cada canción, en las canciones y en su propia pantalla</string>
     <string name="onboarding_feature_tuner_description">Afina tu instrumento con el micrófono, en las canciones y en su propia pantalla</string>

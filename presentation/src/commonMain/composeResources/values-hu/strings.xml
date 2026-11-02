@@ -14,6 +14,7 @@
     <string name="close">Bezárás</string>
     <string name="cancel">Mégse</string>
     <string name="done">Kész</string>
+    <string name="confirm">Megerősítés</string>
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="duplicate">Megkettőzés</string>
@@ -967,15 +968,14 @@
     <string name="song_details_auto_scroll_play">Görgetés indítása</string>
     <string name="song_details_auto_scroll_pause">Görgetés leállítása</string>
     <string name="song_details_auto_scroll_speed">Görgetési sebesség</string>
-    <string name="song_layout_title">Hogyan olvasod a dalokat?</string>
+    <string name="song_layout_title">Hogyan jelenjenek meg a dalok?</string>
     <string name="song_preference_change_hint">Ez minden dalra érvényes. Bármikor módosíthatod a Preferenciákban, a Beállításokból vagy bármelyik dal menüjéből.</string>
     <string name="song_layout_pages">Oldalak</string>
     <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
     <string name="song_layout_continuous">Folyamatos</string>
     <string name="song_layout_continuous_description">Egy hasáb, amely magától gördül a dal tempójában, dalonként beállítható sebességgel</string>
     <string name="chord_names_title">Hogyan olvasod az akkordokat capóval?</string>
-    <string name="chord_names_example">Ennél a dalnál %1$s. bundon van a capo: a lefogott fogások szerint %2$s, a hangzása szerint %3$s a hangneme.</string>
-    <string name="chord_names_explanation">Capóval a dal akkordjai a fölötte lefogott fogások vagy a hangzásuk szerint kaphatnak nevet.</string>
+    <string name="chord_names_example">Ennél a dalnál %1$s. bundon van a capo: az akkordok a lefogott fogások vagy a hangzásuk szerint kaphatnak nevet, vagy a dal a hangnemében maradhat, és a capo csak a fogásokat változtatja meg.</string>
     <string name="chord_names_shapes_description">A capo fölött lefogott akkordok, ahogy a capós kották írják</string>
     <string name="chord_names_sounding_description">A hallható akkordok, capo nélküli együttjátszáshoz</string>
     <string name="chord_names_keep_key">Hangnem megtartása</string>
@@ -1213,7 +1213,6 @@
     <string name="onboarding_instrument_strings">A hangoló ezekre a húrokra figyel: %1$s</string>
     <string name="onboarding_notation_title">Hogyan írod az akkordokat?</string>
     <string name="onboarding_notation_message">Válaszd ki, hogyan jelenjenek meg az akkordok. A dalok mindig a szabványos módon kerülnek mentésre, így minden alkalmazásban ugyanúgy olvashatók.</string>
-    <string name="onboarding_song_layout_message">Lapozz magad, vagy hagyd, hogy a dal a saját tempójában gördüljön, amíg játszol.</string>
     <string name="onboarding_feature_chords_description">Akkordok a dalszöveg fölött, bármelyik hangnemben, a hangszeredre rajzolt fogásokkal. Csak énekelsz? Vedd ki a pipát, és csak a dalszöveg marad.</string>
     <string name="onboarding_feature_metronome_description">Tartja az ütemet a dal tempójában, a dalokban és egy saját képernyőn</string>
     <string name="onboarding_feature_tuner_description">Behangolja a hangszered a mikrofonon keresztül, a dalokban és egy saját képernyőn</string>

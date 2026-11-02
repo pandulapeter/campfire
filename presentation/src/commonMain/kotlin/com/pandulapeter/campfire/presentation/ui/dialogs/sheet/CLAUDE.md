@@ -22,7 +22,9 @@ The bottom sheet every sheet goes through (`CampfireBottomSheet`) and its header
   above the keyboard; the content is given the window's height inside that scroll (bounding lazy lists), and its bottom
   padding excludes insets the column already consumed.
 - Every sheet has a close button in its `SheetHeader`, tall or not: a picker dragged to full height leaves no scrim to
-  tap.
+  tap. The exception is a question asked until it is answered (`isDismissible` off: the layout and chord names
+  questions, `ConfirmedQuestionSheet`), which closes only by the Confirm pinned under its choices, never by a swipe, the
+  scrim, back, or Escape, so a stray tap does not answer it.
 - A title is one line; a sheet with no text input may wrap it to two or more (`titleMaxLines`), since no keyboard budget
   counts its header.
 - **Content height changes animate** (`animateSheetContentHeight`), but a change of the room offered (keyboard, window

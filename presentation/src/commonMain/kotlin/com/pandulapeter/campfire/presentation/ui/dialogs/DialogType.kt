@@ -152,13 +152,11 @@ sealed interface DialogType {
     /**
      * Whether a capoed song's chords are named by the shapes or by what sounds, asked over the first song it matters on,
      * see `AskForChordNamesOnce`. The question's example: [capo] is that song's (the one it was stepped from, where it was
-     * just stepped to none), [shapesKey] and [soundingKey] its key both ways, null where it names none, and [shapesChords]
-     * and [soundingChords] its first chords both ways, empty where it has none to show.
+     * just stepped to none), and [shapesChords] and [soundingChords] its first chords both ways, empty where it has none
+     * to show.
      */
     data class ChordNames(
         val capo: Int,
-        val shapesKey: String?,
-        val soundingKey: String?,
         val shapesChords: List<String> = emptyList(),
         val soundingChords: List<String> = emptyList(),
     ) : DialogType

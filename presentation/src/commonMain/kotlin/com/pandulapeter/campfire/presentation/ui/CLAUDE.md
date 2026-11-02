@@ -188,8 +188,8 @@ The view model facade, the composition root, and the product rules every screen 
     `{capo}` alone being pitch (`ui/playing/CLAUDE.md`). Enabled on the keyboard too, which then shows no capo, since
     one changes nothing for it; the question's third answer.
   - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
-    at the song's pace, asked once by the onboarding or over the first song (`screens/songDetails/autoScroll`). The one
-    choice here that rearranges rather than hides.
+    at the song's pace, asked once over the first song (`screens/songDetails/autoScroll`). The one choice here that
+    rearranges rather than hides.
 - What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
   neither named nor reset.
 - A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored

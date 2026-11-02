@@ -168,6 +168,13 @@ internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState) = fadingVert
     scrolledFromBottom = { scrollState.maxValue - scrollState.value },
 )
 
+/** [fadingVerticalEdges] for a container scrolled by [scrollState] over a known opaque background. */
+internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState, backgroundColor: Color) = fadingVerticalEdges(
+    scrolledFromTop = { scrollState.value },
+    scrolledFromBottom = { scrollState.maxValue - scrollState.value },
+    backgroundColor = backgroundColor,
+)
+
 /**
  * [fadingVerticalEdges] for a lazy list over a known opaque background, which only knows how far it is scrolled into
  * its first item, and how far its last one reaches past the viewport once that one has been laid out.

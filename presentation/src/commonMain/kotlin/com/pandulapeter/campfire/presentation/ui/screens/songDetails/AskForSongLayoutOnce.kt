@@ -17,8 +17,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 
 /**
  * Asks how songs are to be laid out ([DialogType.SongLayout]) the first time a song is opened by a reader who has not
- * picked a layout yet: an installation from before there was a choice, or one whose onboarding was skipped before its
- * page. Only over no other dialog, and asked once whatever the answer, closing the sheet included.
+ * picked a layout yet (in Preferences, the only other place it is set; the onboarding leaves it to the song, where the
+ * choice can be seen). Only over no other dialog, and once per song screen until its Confirm answers it: a sheet put
+ * away without it (the stack closing it, a window closed) asks again over the next song opened.
  */
 @Composable
 internal fun AskForSongLayoutOnce(
@@ -27,6 +28,6 @@ internal fun AskForSongLayoutOnce(
 ) {
     val isOwed = userPreferences?.isSongLayoutChosen == false
     LaunchedEffect(isOwed) {
-        if (isOwed && viewModel.dialogHost.showIfNoneIsShown(DialogType.SongLayout)) viewModel.preferencesController.markSongLayoutChosen()
+        if (isOwed) viewModel.dialogHost.showIfNoneIsShown(DialogType.SongLayout)
     }
 }

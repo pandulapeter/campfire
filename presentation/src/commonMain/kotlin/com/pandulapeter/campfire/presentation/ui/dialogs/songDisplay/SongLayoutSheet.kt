@@ -9,10 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,52 +22,34 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.resources.song_layout_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.songDisplay.SongLayoutChoices
 
 /**
- * The question the first song opened asks once, over that song, of a reader the onboarding never asked: pages, or one
- * column that scrolls by itself. A pick is written at once and closes the sheet, the song behind it changing as it goes;
- * closing it without one keeps the pages, which is what is shown as picked.
+ * The question the first song opened asks once, over that song, of a reader who has not picked a layout: pages, or one
+ * column that scrolls by itself, in a [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as it goes, and only Confirm
+ * closes the sheet and answers the question, so that a stray tap beside it does not; confirming without a pick keeps the
+ * pages, which is what is shown as picked, and a sheet put away without Confirm is asked again.
  */
 @Composable
 internal fun SongLayoutSheet(
     viewModel: CampfireViewModel,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    CampfireBottomSheet(
+    ConfirmedQuestionSheet(
         title = stringResource(Res.string.song_layout_title),
+        onConfirm = viewModel.preferencesController::markSongLayoutChosen,
         onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongLayout) },
-    ) { contentPadding ->
-        val sheet = this
-        val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .fillMaxWidth()
-                .fadingTopEdge(scrollState, sheetContainerColor())
-                .bounceVerticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
-        ) {
-            Text(
-                modifier = Modifier.padding(bottom = 16.dp),
-                text = stringResource(Res.string.song_preference_change_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            SongLayoutChoices(
-                selected = userPreferences?.songLayout,
-                onSelected = { layout ->
-                    viewModel.preferencesController.setSongLayout(layout)
-                    sheet.close()
-                },
-            )
-        }
+    ) {
+        Text(
+            modifier = Modifier.padding(bottom = 16.dp),
+            text = stringResource(Res.string.song_preference_change_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        SongLayoutChoices(
+            selected = userPreferences?.songLayout,
+            onSelected = viewModel.preferencesController::pickSongLayout,
+        )
     }
 }

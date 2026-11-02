@@ -95,7 +95,7 @@ data class UserPreferences(
     val isSongDetailsLookupEnabled: Boolean = true,
     /** How the song details screen lays a song out. Never exported or synced: it is how one reader reads. */
     val songLayout: SongLayout = SongLayout.PAGES,
-    /** Whether a [songLayout] was picked, in the onboarding or in the question the first song opened asks. */
+    /** Whether a [songLayout] was picked in Preferences or confirmed in the question the first song opened asks. */
     val isSongLayoutChosen: Boolean = false,
     /**
      * Whether the sections a song gives no name of their own are numbered by their kind where it has several of one
@@ -118,7 +118,7 @@ data class UserPreferences(
     val areChordDegreesEnabled: Boolean = false,
     /** How a song's chords are named under a capo. Never exported or synced: it is how one reader reads. */
     val chordNames: ChordNames = ChordNames.SHAPES,
-    /** Whether [chordNames] was picked, in Preferences or in the question the first capoed song asks. */
+    /** Whether [chordNames] was picked in Preferences or confirmed in the question the first capoed song asks. */
     val isChordNamesChosen: Boolean = false,
     /**
      * Whether a capo a setlist or this device puts on a song keeps it in its key, changing only the shapes fingered, rather

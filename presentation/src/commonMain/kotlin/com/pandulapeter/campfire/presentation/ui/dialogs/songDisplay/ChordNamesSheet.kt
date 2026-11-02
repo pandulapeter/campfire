@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,7 +28,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chord_names_example
-import com.pandulapeter.campfire.presentation.resources.chord_names_explanation
 import com.pandulapeter.campfire.presentation.resources.chord_names_keep_key
 import com.pandulapeter.campfire.presentation.resources.chord_names_keep_key_description
 import com.pandulapeter.campfire.presentation.resources.chord_names_shapes_description
@@ -40,20 +38,16 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sou
 import com.pandulapeter.campfire.presentation.resources.song_preference_change_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
-import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 
 /**
  * The question the first song a capo matters on asks once, over that song: whether its chords are named by the shapes
- * fingered above the capo or by what sounds, told with the song's own key both ways where it names one (in general words
- * where it does not), and each card ending in the song's first chords named its way, so the choice is seen rather than
- * imagined. A third card keeps the key instead (`UserPreferences.capoKeepsKey`): the chords named as they sound and a capo
- * changing only the shapes. Built as the layout question ([SongLayoutSheet]) is, so
- * the two read as one family: a pick is written at once and closes the sheet, the song behind it changing as it goes;
- * closing it without one keeps the shapes, which is what is shown as picked.
+ * fingered above the capo or by what sounds, or whether the capo keeps the key instead (`UserPreferences.capoKeepsKey`):
+ * the chords named as they sound and a capo changing only the shapes. The first two cards end in the song's first
+ * chords named their way, so the choice is seen rather than imagined. A [ConfirmedQuestionSheet], as the layout question
+ * ([SongLayoutSheet]) is: a pick is written at once, the song behind it changing as it goes, and only Confirm closes
+ * the sheet and answers the question; confirming without a pick keeps the shapes, which is what is shown as picked, and
+ * a sheet put away without Confirm is asked again.
  */
 @Composable
 internal fun ChordNamesSheet(
@@ -61,50 +55,29 @@ internal fun ChordNamesSheet(
     dialog: DialogType.ChordNames,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    CampfireBottomSheet(
+    ConfirmedQuestionSheet(
         title = stringResource(Res.string.chord_names_title),
+        onConfirm = viewModel.preferencesController::markChordNamesChosen,
         onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-    ) { contentPadding ->
-        val sheet = this
-        val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .fillMaxWidth()
-                .fadingTopEdge(scrollState, sheetContainerColor())
-                .bounceVerticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
-        ) {
-            ChordNamesMessage(dialog = dialog)
-            val capoKeepsKey = userPreferences?.capoKeepsKey == true
-            ChordNamesChoices(
-                exampleChords = dialog.exampleChords(),
-                chordNames = userPreferences?.chordNames,
-                capoKeepsKey = capoKeepsKey,
-                onSelected = { answer ->
-                    viewModel.preferencesController.answerChordNamesQuestion(chordNames = answer.chordNames, capoKeepsKey = answer.keepsKey)
-                    sheet.close()
-                },
-            )
-        }
+    ) {
+        ChordNamesMessage(capo = dialog.capo)
+        ChordNamesChoices(
+            exampleChords = dialog.exampleChords(),
+            chordNames = userPreferences?.chordNames,
+            capoKeepsKey = userPreferences?.capoKeepsKey == true,
+            onSelected = { answer ->
+                viewModel.preferencesController.pickChordNamesAnswer(chordNames = answer.chordNames, capoKeepsKey = answer.keepsKey)
+            },
+        )
     }
 }
 
-/** What the choice means, with the song's key as the example where [example] has one, then where it can be changed. */
+/** What the choice means for the song's [capo], then where it can be changed. */
 @Composable
 private fun ChordNamesMessage(
-    dialog: DialogType.ChordNames,
+    capo: Int,
 ) {
-    val example = dialog.example()
-    MessageText(
-        text = if (example == null) {
-            stringResource(Res.string.chord_names_explanation)
-        } else {
-            textResource(Res.string.chord_names_example, dialog.capo.toString(), example.first, example.second)
-        },
-    )
+    MessageText(text = textResource(Res.string.chord_names_example, capo.toString()))
     MessageText(text = stringResource(Res.string.song_preference_change_hint))
 }
 
@@ -117,13 +90,6 @@ private fun MessageText(
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
 )
-
-/** The song's key by the shapes and as it sounds, where both are known and the capo tells them apart. */
-internal fun DialogType.ChordNames.example() = if (capo != 0 && shapesKey != null && soundingKey != null && shapesKey != soundingKey) {
-    shapesKey to soundingKey
-} else {
-    null
-}
 
 /**
  * The song's first chords named both ways, by the shapes and as they sound, joined as a line each; null where it has

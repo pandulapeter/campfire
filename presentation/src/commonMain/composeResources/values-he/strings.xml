@@ -14,6 +14,7 @@
     <string name="close">סגירה</string>
     <string name="cancel">ביטול</string>
     <string name="done">סיום</string>
+    <string name="confirm">אישור</string>
     <string name="delete">מחיקה</string>
     <string name="create">יצירה</string>
     <string name="duplicate">שכפול</string>
@@ -1004,15 +1005,14 @@
     <string name="song_details_auto_scroll_play">התחלת גלילה</string>
     <string name="song_details_auto_scroll_pause">עצירת גלילה</string>
     <string name="song_details_auto_scroll_speed">מהירות גלילה</string>
-    <string name="song_layout_title">איך קוראים שירים?</string>
+    <string name="song_layout_title">איך להציג את השירים?</string>
     <string name="song_preference_change_hint">זה חל על כל השירים. אפשר לשנות את זה בכל עת בהעדפות, מההגדרות או מהתפריט של כל שיר.</string>
     <string name="song_layout_pages">עמודים</string>
     <string name="song_layout_pages_description">כמה שיותר מהשיר על המסך בבת אחת, בעמודות שמתחלפות עמוד אחר עמוד</string>
     <string name="song_layout_continuous">רציף</string>
     <string name="song_layout_continuous_description">עמודה אחת שנגללת מעצמה בקצב של השיר, במהירות שנקבעת לכל שיר בנפרד</string>
     <string name="chord_names_title">איך קוראים אקורדים עם קאפו?</string>
-    <string name="chord_names_example">בשיר הזה הקאפו על שריג %1$s: לפי הצורות שמנגנים הוא ב־%2$s, ולפי איך שהוא נשמע, ב־%3$s.</string>
-    <string name="chord_names_explanation">עם קאפו, אפשר לקרוא לאקורדים של שיר לפי הצורות שמנגנים מעליו או לפי איך שהם נשמעים.</string>
+    <string name="chord_names_example">בשיר הזה הקאפו על שריג %1$s: אפשר לקרוא לאקורדים לפי הצורות שמנגנים או לפי איך שהם נשמעים, או להשאיר את השיר בטונליות שלו כך שהקאפו משנה רק את הצורות.</string>
     <string name="chord_names_shapes_description">האקורדים שלוחצים מעל הקאפו, כמו שכותבים תווים לקאפו</string>
     <string name="chord_names_sounding_description">האקורדים שנשמעים, לנגינה יחד עם אחרים בלי קאפו</string>
     <string name="chord_names_keep_key">שמירה על הטונליות</string>
@@ -1258,7 +1258,6 @@
     <string name="onboarding_instrument_strings">הטיונר יקשיב למיתרים %1$s</string>
     <string name="onboarding_notation_title">איך כותבים אקורדים?</string>
     <string name="onboarding_notation_message">בחרו איך יוצגו האקורדים. השירים תמיד נשמרים בכתיב הסטנדרטי, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
-    <string name="onboarding_song_layout_message">מעבירים עמודים בעצמכם, או נותנים לשיר להיגלל בקצב משלו בזמן הנגינה.</string>
     <string name="onboarding_feature_chords_description">אקורדים מעל המילים, בכל טונליות, עם דיאגרמות לכלי שלכם. רק שרים? בטלו את הסימון כדי להציג מילים בלבד.</string>
     <string name="onboarding_feature_metronome_description">שומר על הקצב בטמפו של כל שיר, בתוך השירים ובמסך משלו</string>
     <string name="onboarding_feature_tuner_description">מכוון את הכלי דרך המיקרופון, בתוך השירים ובמסך משלו</string>

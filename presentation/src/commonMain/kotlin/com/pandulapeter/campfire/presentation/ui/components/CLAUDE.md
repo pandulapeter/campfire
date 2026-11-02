@@ -44,7 +44,8 @@ it (the Link format's "Creating link…") comes and goes with it.
 - `fadingTopEdge`: over a **known opaque color**, paint that color over the edge rather than masking (a mask costs a
   viewport-sized offscreen buffer every frame). The color must be the one directly behind (`sheetContainerColor()` for
   sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
-- `fadingVerticalEdges`: lists inside a dialog; never a sheet's content.
+- `fadingVerticalEdges`: lists inside a dialog; in a sheet only content above a row pinned under it (painted, the
+  questions' Confirm row), never a sheet's content that ends at the window's bottom.
 
 ### `ShrinkToFit.kt`
 
