@@ -155,14 +155,14 @@ internal object SongHeader {
         addTitle(leading, name, named)
         omitted += first..last
         val artist = last + 1
-        // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
-        val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
+        // Straight under the title, "by Someone" or "Someone (1788)" is the credit it reads as, which it is not as a line of lyrics.
+        val credit = lines.getOrNull(artist)?.let { creditName(it.text.trim()) }
         // A line between the title and the row of the song's key, tempo, or time, where no lyric ever stands, names the artist,
         // so there a name longer than the title is the artist all the same.
         val isOverMetadata = kinds.getOrNull(artist + 1) == LineKind.METADATA
         if (named == null && kinds.getOrNull(artist) == LineKind.LYRIC && (credit != null || isOverMetadata || lines[artist].text.length < title.length &&
                 lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
-            trailing += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
+            trailing += "{artist: ${headerValue(credit ?: lines[artist].text.trim())}}"
             omitted += artist
         } else if (kinds.getOrNull(artist) == LineKind.LYRIC && (lines[artist].isHeaderPart || isCenteredUnder(lines[artist], lines[first], lines))) {
             // The part printed beside the title, or the line centred under a centred one, is the subtitle the ChordPro
@@ -189,7 +189,7 @@ internal object SongHeader {
         val text = lines[first].text.trim()
         if (text.startsWith('[') || text.startsWith('{') || isChordSummary(text) || text.lowercase() in pageWords) return noTitle
         val (name, named) = ChordSheetTitles.split(text)
-        val credit = lines.getOrNull(first + 1)?.let { credit.matchEntire(it.text.trim()) }
+        val credit = lines.getOrNull(first + 1)?.let { creditName(it.text.trim()) }
         val creditAt = (first + 1).takeIf {
             named == null && kinds.getOrNull(it) == LineKind.LYRIC && (credit != null ||
                 lines[it].text.trim().length < text.length && kinds.getOrNull(it + 1).let { next -> next == LineKind.BLANK || next == LineKind.METADATA })
@@ -201,7 +201,7 @@ internal object SongHeader {
         addTitle(leading, name, named)
         omitted += first
         if (creditAt != null) {
-            trailing += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[creditAt].text.trim())}}"
+            trailing += "{artist: ${headerValue(credit ?: lines[creditAt].text.trim())}}"
             omitted += creditAt
         }
         return TitleLines(leading, trailing, omitted)
@@ -243,9 +243,21 @@ internal object SongHeader {
         return words.isNotEmpty() && words.count { chord(it.text) } * 2 >= words.size
     }
 
+    /**
+     * The name a credit line gives: `by Someone`, or a name dated in parentheses, `Robert Burns (1788)` or
+     * `John Newton (1725–1807)`. A date in parentheses after a name is when its author wrote or lived, not the song's
+     * year, so it is left out; a subtitle is a phrase, its words not all capitalized like a name's.
+     */
+    private fun creditName(text: String) = credit.matchEntire(text)?.groupValues?.get(1) ?: datedName.matchEntire(text)?.groupValues?.get(1)
+
     private val pageWords = setOf("chords", "tab", "lyrics")
     /** A credit naming its author, `by Someone`, `Words and music by Someone`, or `Words: Someone`. */
     private val credit = Regex("^(?:(?:words|lyrics|music)(?:\\s*(?:and|&)\\s*(?:words|lyrics|music))?(?:\\s*:\\s*|\\s+by\\s+)|by\\s+)(.+)$", RegexOption.IGNORE_CASE)
+    /** A name of one to five capitalized words (with the particles names take) and a year or two in parentheses after it. */
+    private val datedName = Regex(
+        "^(\\p{Lu}[\\p{L}.'\u2019-]*(?:\\s+(?:\\p{Lu}[\\p{L}.'\u2019-]*|van|von|de|da|del|der|di|du|la|le)){0,4})\\s*" +
+            "\\((?:c\\.\\s*)?(?:1[5-9]|20)[0-9]{2}(?:\\s*[-\u2013]\\s*(?:1[5-9]|20)[0-9]{2})?\\)$",
+    )
     /** A credit ending in the year of the song, `Words & music by David Bowie 1972`. */
     private val creditYear = Regex("^(.+?),?\\s+((?:1[5-9]|20)[0-9]{2})$")
     /** An artist's name followed by the year of the song, which only a comma tells apart from a name: `David Bowie, 1972`. */

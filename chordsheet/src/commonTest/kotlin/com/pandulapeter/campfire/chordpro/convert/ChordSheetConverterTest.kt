@@ -1645,6 +1645,32 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a name dated in parentheses under a centred title is its credit, a phrase in parentheses its subtitle`() {
+        fun line(size: Double, text: String, x: Double, bold: Boolean = false) = ChordSheet.Line(
+            text.mapIndexed { index, c -> span(c.toString(), x + index * size * 0.6, x + (index + 1) * size * 0.6, size, bold) },
+        )
+        fun convert(credit: String) = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    ChordSheet.Page(
+                        listOf(
+                            line(20.0, "Auld Lang Syne", 216.0, bold = true),
+                            line(12.0, credit, 300.0 - credit.length * 3.6),
+                            line(12.0, "G       D", 64.0),
+                            line(12.0, "Should auld acquaintance be forgot", 64.0),
+                        ),
+                    ),
+                ),
+            ),
+        ).single()
+
+        assertTrue(convert("Robert Burns (1788)").startsWith("{title: Auld Lang Syne}\n{artist: Robert Burns}\n"), convert("Robert Burns (1788)"))
+        assertTrue(convert("John Newton (1725\u20131807)").startsWith("{title: Auld Lang Syne}\n{artist: John Newton}\n"), convert("John Newton (1725\u20131807)"))
+        assertTrue(convert("(The Ballad of 1788)").startsWith("{title: Auld Lang Syne}\n{subtitle: (The Ballad of 1788)}\n"), convert("(The Ballad of 1788)"))
+        assertTrue(convert("Live at the Fillmore (1971)").startsWith("{title: Auld Lang Syne}\n{subtitle: Live at the Fillmore (1971)}\n"), convert("Live at the Fillmore (1971)"))
+    }
+
+    @Test
     fun `a Latin chord sheet is converted`() {
         val sheet = ChordSheet.ofPlainText("Key: Lam\n\nLam         Fa\nLa noche es larga\nDo             Sol\nY el camino es mio")
         val converted = ChordSheetConverter.convert(sheet).single()
