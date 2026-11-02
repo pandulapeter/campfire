@@ -12,9 +12,9 @@ Keeps the imports inside `:presentation` pointing one way: down its four package
 A file may import its own layer and lower ones only. A package belongs to the longest prefix listed in LAYERS (the root
 packages match exactly, never as a prefix); every `ui.*` package not listed is app. A file under `ui.screens.<a>`
 imports nothing under `ui.screens.<b>` for another screen (the `ui.screens` package itself, which holds what several
-screens share, is allowed). With VIEW_MODEL_RULE on, `ui.CampfireViewModel` is imported only by a destination's entry
-file (`*Screen.kt` or `ExportHost.kt` directly in a `ui.screens.<a>` package); while it is off, that import is judged
-by nothing.
+screens share, is allowed). `ui.CampfireViewModel` is imported only by a destination's entry file (`*Screen.kt` or
+`ExportHost.kt` directly in a `ui.screens.<a>` package) and by the `ui` package itself (the shells and the app's own
+effects); everything else is handed what it uses. VIEW_MODEL_RULE switches that rule, on for the tree.
 
 Only main source sets are judged: tests import shared helpers from wherever they sit, which is no layering of the app.
 Each judged file has every import judged, so that nothing is stored and no list of exceptions is kept; the tree is
@@ -55,8 +55,7 @@ LAYERS = (
     ("ui", "surfaces", True),
 )
 
-# Plan 14 turns this on once no composable but a destination's entry file takes the view model.
-VIEW_MODEL_RULE = False
+VIEW_MODEL_RULE = True
 VIEW_MODEL = f"{ROOT}.ui.CampfireViewModel"
 
 
@@ -125,8 +124,8 @@ def problems(path, text, packages, view_model_rule=VIEW_MODEL_RULE):
         if imported == VIEW_MODEL:
             if view_model_rule and package != f"{ROOT}.ui" and not is_entry_file(path, package):
                 result.append(f"{path}: imports {imported}; only a destination's entry file (*Screen.kt or "
-                              "ExportHost.kt in a ui.screens.<screen> package) takes the view model, pass the rest "
-                              "what it uses.")
+                              "ExportHost.kt in a ui.screens.<screen> package) or the ui package itself takes the view "
+                              "model, pass the rest what it uses.")
             continue
         target = resolved(imported, packages)
         if target is None:

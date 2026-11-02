@@ -32,8 +32,8 @@ every other `ui.*` package is app.
 
 A file under `ui.screens.<a>` imports nothing of another screen's package (`ui.screens` itself, which holds what several
 screens share, is allowed). A declaration a lower layer needs moves down, or is passed in. Only a destination's entry
-file (`*Screen.kt` directly in `ui.screens.<a>`, or `ExportHost.kt`) is to import `ui.CampfireViewModel`; the script
-checks that once `VIEW_MODEL_RULE` is on, until then judging that import by nothing.
+file (`*Screen.kt` directly in `ui.screens.<a>`, or `ExportHost.kt`) and the `ui` package import `ui.CampfireViewModel`,
+which the script checks; everything else is handed the holders, state, and callbacks it uses.
 
 ## Text and document imports
 

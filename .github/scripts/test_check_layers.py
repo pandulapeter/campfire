@@ -78,6 +78,12 @@ class CheckLayersTest(unittest.TestCase):
         self.assertEqual([], problems(MAIN + "ui/screens/songs/SongsScreen.kt", text, PACKAGES, view_model_rule=True))
         self.assertEqual(1, len(problems(MAIN + "ui/screens/songs/SongList.kt", text, PACKAGES, view_model_rule=True)))
 
+    def test_the_view_model_rule_is_on_and_lets_the_ui_package_take_the_view_model(self):
+        self.assertEqual([], problems(MAIN + "ui/CampfireApp.kt", source("ui", "ui.CampfireViewModel"), PACKAGES))
+        failures = problems(MAIN + "ui/messages/Messages.kt", source("ui.messages", "ui.CampfireViewModel"), PACKAGES)
+        self.assertEqual(1, len(failures))
+        self.assertIn("only a destination's entry file", failures[0])
+
     def test_a_test_source_file_is_not_judged(self):
         text = source("ui.components.songCard", "ui.navigation.CampfireDestination")
         path = "presentation/src/commonTest/kotlin/com/pandulapeter/campfire/presentation/ui/components/songCard/SongCardTest.kt"

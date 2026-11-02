@@ -154,8 +154,9 @@ wrong or undo it".
   where it sits (`MiddleRow`). Extract when a group has a clear name, nests more than ~2 layout levels
   inside its parent, or the parent has outgrown a screenful; a single focused widget needs no extraction.
 - **Each extracted Composable takes only the state and callbacks it uses**, plus a `modifier` when its
-  parent positions it. Shared components take state and lambdas, not the whole `CampfireViewModel` (older ones that
-  still take it are converted when a change touches them); only a screen receives the view model. Keep lambdas stable
+  parent positions it. Shared components take state and lambdas, not the whole `CampfireViewModel`; only a screen
+  receives the view model: its entry file (`*Screen.kt`, `ExportHost.kt`) and the `ui` package, which hand the rest the
+  holders they use several members of, else values and callbacks, as `check_layers.py` checks. Keep lambdas stable
   (`remember` them or pass method references) so lists don't recompose on every frame.
 - **Extraction must not change the rendered output.** A Composable is layout-transparent: one that emits
   several siblings without a wrapper drops them straight into the caller's `Row` / `Column`, so don't add a

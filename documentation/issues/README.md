@@ -11,10 +11,10 @@ https://mozilla.org/MPL/2.0/.
 # 54th review: the plans left
 
 Reviewed at `c7807015a`; the angle and the full record are in the `54th-review` memory and in git history
-(`0b7e5c0a0..6c1d50019`, 38 commits). Executed on 2026-11-02: plans 03, 05, 08, 10, 11, 12, 13, 15, and 16 landed, and
-06 landed without `ChordSheetLook`'s per-column inset (it needed a field on `Rendered`, which the plan forbids). The
-plans below stopped where the plan itself was wrong or the lane ran out of room; none of them was improvised past
-that point.
+(`0b7e5c0a0..6c1d50019`, 38 commits). Executed on 2026-11-02: plans 03, 05, 08, 10, 11, 12, 13, 14, 15, and 16
+landed, and 06 landed without `ChordSheetLook`'s per-column inset (it needed a field on `Rendered`, which the plan
+forbids). The plans below stopped where the plan itself was wrong or the lane ran out of room; none of them was
+improvised past that point.
 
 | # | Plan | Landed | Why it stopped |
 |---|---|---|---|
@@ -22,7 +22,6 @@ that point.
 | 02 | Make the unit tests independent of the host | step 1 | Step 2 reads the Hebrew face with `preloadFont` from `commonMain`, but Compose resources 1.12.2 has it only in `webMain`; it needs an expect/actual the plan does not describe. |
 | 04 | Run the storage contract tests on the iOS simulator | nothing | Kotlin/Native rejects commas in backticked test names, and the module's `commonTest` has 18 (7 files), so `iosSimulatorArm64Test` cannot compile; rename them first, and add a rule against new ones. |
 | 07 | Restructure the converter into explicit stages | steps 1–2 | Step 3: `writeBody` / `BodyWriter` decide by what they already wrote, through private helpers on the private `Rendered`; reaching the nested `Song` / `Part` model byte-identically is a redesign the plan does not spell out. Steps 7–8 need Campfire exports in the corpus (no `campfire/` folder yet). Corpus score unchanged at 0.778. |
-| 14 | Give composables what they use instead of the whole view model | nothing | Not reached (10 steps, ~113 files); `check_layers.py`'s `VIEW_MODEL_RULE` stays `False` until it lands. |
 | 20 | Measure the `:presentation` build | nothing committed | Measured under memory pressure from a parallel lane (daemon OOM, ABI-edit compiler crash); numbers not trustworthy. Repeat on an idle machine. |
 
 Plan 13 left these starts in `CampfireViewModel`'s `init`, each needing a reorder or a parameter the size check refuses:
