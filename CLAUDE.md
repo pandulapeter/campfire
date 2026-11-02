@@ -11,11 +11,9 @@
 
 Kotlin Multiplatform app (Android, iOS, JVM desktop, and wasmJs web; Compose UI shared by all) for viewing and editing
 song lyrics and chords, with a metronome, a tuner, and chord diagrams. The app owns a library folder of plain
-[ChordPro](https://www.chordpro.org) files, filled by the built-in editor or by importing ChordPro, plain text, PDF, Word,
-ABC tunes, zip archives, and other apps' songs and backups (OpenSong, OnSong, SongbookPro, JSON exports), picked in the
-app, opened with it, or shared to it (Android, the iOS share extension). Every module has a `CLAUDE.md` of its own, as
-does every `:presentation` source set and every package with something the code cannot say; read the nearest one before
-changing code there.
+[ChordPro](https://www.chordpro.org) files, filled by the editor or by importing ChordPro, plain text, PDF, Word, ABC
+tunes, zip archives, and other apps' songs and backups. Every module, `:presentation` source set, and package with
+something the code cannot say has its own `CLAUDE.md`; read the nearest one before changing code there.
 
 ## Privacy: what reaches the network
 
@@ -23,13 +21,13 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 
 - **Sync**, off until the user connects their own cloud folder in Settings; no Campfire server exists. While the app
   is in front it also holds one long poll open on the folder's change feed.
-- **Cover images**: downloaded once from the address a song file names (public `https` hosts only, never an address
-  on the local network), then kept on the device; an address that answers with no cover is remembered as such.
+- **Cover images**: downloaded once from the address a song file names (public `https` hosts only, never the local
+  network), then kept on the device; an address that answers with no cover is remembered as such.
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
-- **Shared links**: sharing a song or setlist publishes a copy as a public link in the Dropbox the user connected for
-  Sync, kept current by sync runs; opening one downloads that zip from `dl.dropboxusercontent.com`, needing no account
-  and keeping nothing beyond the import.
+- **Shared links**: sharing a song or setlist publishes a copy as a public link in the Dropbox connected for Sync,
+  kept current by sync runs; opening one downloads that zip from `dl.dropboxusercontent.com`, needing no account and
+  keeping nothing beyond the import.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
   and `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
@@ -46,27 +44,26 @@ depends on `api` modules and gets wiring through Koin.
 app:android / desktop / ios / web     entry points, platform chrome, "open with" and share intents
   app:baselineprofile                 Baseline Profile generator for app:android, run by hand
   app:di                              the Koin application; the one place every module is named
-  presentation                        CampfireViewModel, Navigation 3 back stack, theme, every screen, strings;
-                                      platform shells in its platform source sets
+  presentation                        CampfireViewModel, Navigation 3 back stack, theme, every screen, strings
   domain:api / :implementation        use cases (single-method interfaces)
     data:repository:api / :implementation
     data:sync:implementation          the sync engine, planner, index, synced preferences, shared links
       data:source:local:api -> :implementation    files on Android/desktop/iOS, OPFS on web
         data:formats                  pure-Kotlin zip, PDF, and Word readers
-      data:source:remote:api -> :implementation   sync, covers, catalogue searches, shared links (every network call)
+      data:source:remote:api -> :implementation   every network call
         data:model                    domain models
   metronome:api / :implementation     the click engine; depends on nothing of the app's
   tuner:api / :implementation         pitch detection, tones, mic input; depends on nothing of the app's
   abc:api / :implementation           ABC tunes engraved by abc2svg in an embedded engine; depends on nothing of the app's
-  tools:screenshots                   store screenshots rendered offscreen from the desktop build
+  tools:screenshots                   store screenshots and UI tests: the desktop build rendered offscreen
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
   tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
                                       extracts abc2svg's music glyphs for the notation drawing
-  chordpro                            dependency-free ChordPro parser, serializer, transposer, chords, tabs
+  chordpro                            dependency-free ChordPro parser, transposer, chords, tabs, converters
 ```
 
-Data flow: `FileStorage` → `LocalSource` (files in, models out) → `Repository` (emits `DataState<T>`, reads once, caches,
-extends `BaseLocalDataRepository`) → use cases (`GetScreenDataUseCase` combines songs and setlists into `ScreenData`) →
+Data flow: `FileStorage` → `LocalSource` → `Repository` (emits `DataState<T>`, reads once, caches, extends
+`BaseLocalDataRepository`) → use cases (`GetScreenDataUseCase` combines songs and setlists into `ScreenData`) →
 `CampfireViewModel` (`StateFlow`s, all `SharingStarted.Eagerly`) → screens (`collectAsStateWithLifecycle`).
 
 Library layout, inside each platform's app-private data directory:
@@ -83,41 +80,33 @@ preferences/shared-links-journal.json  renames and deletions of shared items not
 preferences/editor-draft.json          the editor's unsaved text, survives process death
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
 instance.lock / instance.endpoint      desktop only: single-instance guard
-campfire.log / campfire.log.1          desktop only, here: the process log (Android, iOS, web keep it elsewhere, ui/platform)
+campfire.log / campfire.log.1          desktop only, here (the other platforms keep it elsewhere, ui/platform)
 ```
 
 ## Conventions
 
 ### Code
 
-- Modules apply the convention plugins in `gradle/build-logic` (`campfire-library`, `campfire-compose-library`).
-  Sources in `src/commonMain/kotlin`; platform code in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via
-  `expect`/`actual`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*` modules,
-  `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module (`:app:di` included) is
-  multiplatform.
-- Shared code is JVM-free (the `code-style` skill lists the replacements).
-- Implementation classes are `internal`, named `<Interface>Impl`; use cases are `operator fun invoke`. Layers are
-  crossed through `mapper/` packages. `:chordpro`, `:metronome:api`, `:tuner:api`, and `:abc:api` use
-  `explicitApi()`.
-- Formatting is checked: `.editorconfig` + Spotless/ktlint (`./gradlew spotlessApply`), and
-  `.github/scripts/check_license_headers.py` requires the MPL-2.0 header in every source file, script, workflow, XML
-  resource, and `CLAUDE.md`. The rest of the style is the `code-style` skill's.
-- Material 3 Expressive only (`org.jetbrains.compose.material3`, versioned as `jetbrains-compose-material3`); never M2.
+- Modules apply the convention plugins in `gradle/build-logic`. Platform code goes in `androidMain` / `desktopMain` /
+  `iosMain` / `wasmJsMain`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*`
+  modules, `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module is multiplatform.
+- `:chordpro`, `:metronome:api`, `:tuner:api`, and `:abc:api` use `explicitApi()`. Layers are crossed through
+  `mapper/` packages. The rest of the code style (JVM-free shared code, `Impl` naming, Material 3 Expressive only,
+  never M2) is the `code-style` skill's; formatting, license headers, and file sizes are enforced by Spotless and the
+  `.github/scripts` checks.
 
 ### Koin (Koin Annotations via the Koin compiler plugin, `campfire-koin`)
 
 - Classes declare themselves: `@Single` (repositories, sources, storage, authenticators), `@Factory` (use cases),
   `@KoinViewModel`. Each module has one `@Module @ComponentScan object XxxModule` in its top-level `Module.kt`, with
   `@Single` functions only for built definitions. Platform definitions are annotated classes in platform source sets.
-- The application and its compile-time graph check: `app/di/CLAUDE.md`.
 - **Never inject a `List<T>`**: it resolves as `getAll<T>()` and arrives empty. Wrap a list in its own type
-  (`SyncProviders`).
-- No defaulted parameter on a Koin definition's constructor or `@Single` function (see the `code-style` skill).
+  (`SyncProviders`). No defaulted parameter on a definition's constructor (the `code-style` skill says why).
 
 ### Strings
 
-- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es|-fr|-it|-he]/strings.xml`, read as
-  the `code-style` skill says.
+- In `presentation/src/commonMain/composeResources/values[-hu|-ro|-de|-es|-fr|-it|-he]/strings.xml`, read as the
+  `code-style` skill says.
 - A counted sentence is a `<plurals>` with `one` and `other` (and any other category its language's rule names), not
   a second key. A `zero` item reads 0 in any language, for a 0 worded apart ("Aucune chanson"); French 0 already
   takes the singular by its rule.
@@ -157,25 +146,25 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Setlists show every song they name regardless of filters; archive, description, date, countdown live in the file:
   `ui/screens/setlists`.
 - List screens are searched from a button; a matching setlist is shown whole: `ui/screens`.
-- A song is read in pages turned by hand or pedal, or (Preferences' Layout, asked once) in one column
-  scrolling at its own pace, a speed per song; pedals and taps only nudge it: `ui/screens/songDetails/autoScroll`.
+- A song is read in pages turned by hand or pedal, or (Preferences' Layout, asked once) in one column scrolling at its
+  own pace, a speed per song; pedals and taps only nudge it: `ui/screens/songDetails/autoScroll`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names with a capo; the keyboard always
-  sounds), and the diagrams are the shapes fingered above it; with Capo keeps the key, a capo put on changes only the
-  shapes and the file's capo alone is pitch: `ui/playing`, `ui/chords`.
+  sounds), the diagrams the shapes fingered above it; with Capo keeps the key, a capo put on changes only the shapes
+  and the file's capo alone is pitch: `ui/playing`, `ui/chords`.
 - Settings → Features switches what the app has (its screens and what goes online), Settings → Preferences how a song
-  is read (chords, their diagrams and degrees, scale suggestions), also from the song details menu; both only hide,
-  never write or delete: `ui`.
-- Songs can be switched off (Settings only), taking the setlists. The app's root is always the first main screen
-  switched on, Settings once every one is off (Features then says so, with a wink): `ui`.
+  is read (chords, diagrams, degrees, scale suggestions), also from the song details menu; both only hide, never write
+  or delete: `ui`.
+- Songs can be switched off (Settings only), taking the setlists. The root is always the first main screen switched
+  on, Settings once every one is off (Features then says so, with a wink): `ui`.
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.
 - Tabs are moved to the player's instrument and tuning; the player sees only tabs for their instrument: `ui/tabs`,
   `chordpro`.
-- With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar or a rail
-  too short for every item: `ui/chrome`.
+- With six screens on, Metronome, Tuner, Chords, and Scales go behind one Tools item on a navigation bar or a rail too
+  short for every item: `ui/chrome`.
 - One instrument preference, picked with its tuning from song details, Tuner, Chords, Scales, and onboarding:
   `ui/instrument`.
 - A song's chords are shown fingered: its own `{define}`, then the player's library-wide pick, then the app's first,
@@ -183,8 +172,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - The Chords tab browses each key's common chords, and a search for a full name finds any drawable one (`D/F#`); a
   shape picked there applies everywhere: `ui/screens/chords`.
 - The Scales tab shows every scale of the catalogue on the player's instrument and tuning, every stringed instrument
-  included; 12-TET only. Scale suggestions (a song preference, needing the Scales tab) add a song's Scales
-  section, one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
+  included; 12-TET only. Scale suggestions (a song preference, needing the Scales tab) add a song's Scales section,
+  one home and at most three moments to change scale for (a key, a centre, a chord), and a chord sheet's scales:
   `ui/screens/scales`, `ui/songView`, `chordpro/scales`.
 - The tuner asks for the microphone only on a tap, listens only while on screen, keeps nothing: `ui/tuner`.
 - The demo library (two songs, one setlist) is planted once on a fresh install through the import: `ui/firstRun`.
@@ -194,9 +183,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/screens/songs`.
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
-- Every platform keeps a bounded log of what the app printed and what the user did, never sent by itself;
-  Settings → About, and the launch after a crash, mail it to the developer (or share or save it) after a dialog saying
-  it names songs: `ui/platform`.
+- Every platform keeps a bounded log of what the app printed and what the user did, never sent by itself; Settings →
+  About, and the launch after a crash, mail it to the developer (or share or save it) after a dialog saying it names
+  songs: `ui/platform`.
 - App icon follows the theme color where possible; brand colors are purple and orange: `ui/theme`.
 - The app is set in its bundled Inter and JetBrains Mono on every platform, never the system's fonts: `ui/theme`.
 - Settings links only to the website, GitHub, the author's site, donations, and its own store's rating page:
@@ -207,7 +196,7 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   and ABC tunes into one song each with a chord grid and the tune kept; backups are read as archives:
   `domain/implementation`, `data/source/local/implementation`, `chordpro/abc`.
 - Lyrics and comments may carry `<b>`, `<i>`, and `<u>` markup (or a `<span>` saying the same), drawn on screen and in
-  the PDF, toggled in the editor by its buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the
+  the PDF, toggled by the editor's buttons and Ctrl / Cmd + B, I, and U; other markup tags are hidden, kept in the
   file: `chordpro`, `ui/songView`, `ui/print`, `ui/screens/songEditor/toolbar`.
 - An `abc` block is drawn as staff notation (abc2svg, bundled, run locally), on screen and in the PDF, its text until
   the rendering arrives or where it fails, in the song's transposition and chord notation: `abc`, `ui/notation`,
@@ -215,9 +204,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
   `chordpro`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
-- Nothing from outside is written before Import, and every song can be read first: a batch that is one song (from any
-  source) opens its preview, anything more the review, whose song rows open the same preview; existing files are
-  skipped, collisions numbered or replaced after confirmation: `ui/screens/songDetails`, `domain/implementation`.
+- Nothing from outside is written before Import, and every song can be read first: a batch that is one song opens its
+  preview, anything more the review, whose song rows open the same preview; existing files are skipped, collisions
+  numbered or replaced after confirmation: `ui/screens/songDetails`, `domain/implementation`.
 - A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
   included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
   Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
@@ -251,27 +240,26 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 
 ## Tests
 
-Pure logic is tested in `commonTest`, run on the desktop target; a few UI tests drive the whole app offscreen on the
-desktop JVM, and a release is still checked by hand. Add or update tests with every change to tested logic.
+Pure logic is tested in `commonTest`, run on the desktop target; UI tests drive the whole app offscreen on the desktop
+JVM; a release is still checked by hand. Add or update tests with every change to tested logic.
 
 ```
 ./gradlew desktopTest                      # every module's commonTest, on the desktop target
 ./gradlew -p gradle :build-logic:test      # packaging helpers
-./gradlew :tools:screenshots:test          # UI tests: the whole app driven offscreen (tools/screenshots/CLAUDE.md)
+./gradlew :tools:screenshots:test          # UI tests (tools/screenshots/CLAUDE.md)
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
-beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck`, the license header and
-size checks, and compiles every platform (iOS on macOS) on every PR, on every push to `master` that changes more than
-`documentation/` (a newer push cancels the older run), and before `publish-all.yml` builds anything.
+beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck` and the scripts'
+checks, and compiles every platform (iOS on macOS), on every PR, on every push to `master` that changes more than
+`documentation/`, and before `publish-all.yml` builds anything.
 
 ## Build
 
 - **A shipped dependency is credited in the same change**, transitive ones included: an entry in
   `ui/dialogs/about/OpenSourceComponents.kt`, its license and NOTICE under `composeResources/files/licenses` of the source
-  sets that ship it, and a row in the table in `documentation/THIRD_PARTY_SOFTWARE.md`.
-- Versions in `gradle/libs.versions.toml`. `campfire.versionName` / `campfire.buildNumber` serve every platform (the
-  Xcode build phase writes them into `Info.plist`).
+  sets that ship it, and a row in `documentation/THIRD_PARTY_SOFTWARE.md`.
+- Versions in `gradle/libs.versions.toml`. `campfire.versionName` / `campfire.buildNumber` serve every platform.
 - **Everything configurable is a `campfire.*` property** with a default in `gradle.properties`, read with
   `project.property(...)` (never findProperty, so a typo fails the build; inside `tasks.register(...) { }` it must be
   `project.property`). **`local.properties` overrides any of them and is never committed**; `settings.gradle.kts`
@@ -289,25 +277,19 @@ size checks, and compiles every platform (iOS on macOS) on every PR, on every pu
   `val` or function. An incompatible plugin gets `notCompatibleWithConfigurationCache("<why>")`, never the cache off.
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
   off.
-- **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the license header, size, and
-  store listing length checks (`.github/scripts/check_sizes.py`, limits in the `code-style` skill;
-  `check_store_listings.py`, limits in each listing's headings) so a commit never leaves them to CI, and
-  refuses a `CLAUDE.md` line naming a backticked class or path the code lacks (`check_doc_names.py`) and a regex
-  brace only the JVM accepts (`check_regexes.py`: Android's ICU wants `\{` and `\}` outside a count) and the deletion of
-  `.run/iOS.run.xml`, which the IDE drops now and then; with more than Markdown staged it also runs `spotlessCheck`
-  and `desktopTest`.
+- **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
+  (license headers, sizes, store listings, `CLAUDE.md` names, regexes), refuses deleting `.run/iOS.run.xml` (which the
+  IDE drops now and then), and, when more than Markdown is staged, `spotlessCheck` and `desktopTest`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 
 Commands:
 
 - `./gradlew :app:android:assembleDebug` (from the IDE, the shared "Android" configuration, never "Default Activity")
-- `./gradlew :app:android:generateBaselineProfile` on an emulator; the output is committed. Regenerate when startup or
-  the main screens change; prepare-release does it every release.
+- `./gradlew :app:android:generateBaselineProfile` on an emulator; the output is committed (`app/baselineprofile`).
 - `./gradlew :app:desktop:run`; `:app:desktop:packageDistributionForCurrentOS` for installers
-- `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64`; run from Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or
-  `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`
-  then `xcrun simctl install/launch`
+- `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64`; run from Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or the
+  `xcodebuild` line in `app/ios/CLAUDE.md`, then `xcrun simctl install/launch`
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun`; `:app:web:wasmJsBrowserDistribution` for the deployable site
 - `./gradlew :tools:screenshots:run` (driven by the `store-screenshots` and `website-screenshots` skills)
-- `tools/promo-video/regenerate.sh` (driven by the `promo-video` skill), into `~/Desktop/Campfire Promo Video`
+- `tools/promo-video/regenerate.sh` (driven by the `promo-video` skill)
 - Publishing and CI secrets: `.github/CLAUDE.md`.
