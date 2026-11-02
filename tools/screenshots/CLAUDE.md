@@ -78,12 +78,3 @@ model, use cases, repositories, and files in a temporary home — and drives it 
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or deleted the
   same day, never retried.
-
-### Golden renders
-
-`GoldenRendersTest` renders a short list of cases, each naming the bug it would have caught, compared with
-`src/test/resources/goldens/<name>.png` allowing a few pixels of anti-aliasing; keep the set small, so an intended
-change's rewritten goldens are quick to review. Goldens are recorded and compared on Linux only, since each system
-rasterizes text its own way; elsewhere the cases are drawn and not compared. To update them after an intended change,
-run `./gradlew :tools:screenshots:test -Pcampfire.updateGoldens=true` on Linux, or copy a failed CI run's
-`goldens/actual` artifact over the folder, then review the PNG diff in the commit.
