@@ -7,13 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.songInfo
+package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongPlayingDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.songPlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.foundation.layout.padding

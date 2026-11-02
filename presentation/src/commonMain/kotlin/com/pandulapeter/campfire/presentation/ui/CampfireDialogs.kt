@@ -7,9 +7,16 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.dialogs
+package com.pandulapeter.campfire.presentation.ui
 
-import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.ConfirmationDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteLibraryDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSetlistConfirmation
+import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSongConfirmation
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SendProcessLogDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.UnsavedChangesDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongInfoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicenseSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
@@ -18,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.scales.ScaleSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongDisplaySheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.ChordNamesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongLayoutSheet
@@ -78,8 +86,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
+import com.pandulapeter.campfire.presentation.ui.screens.SongFiltersSheet
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
