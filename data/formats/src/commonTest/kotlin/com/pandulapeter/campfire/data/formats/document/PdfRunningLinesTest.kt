@@ -63,6 +63,17 @@ class PdfRunningLinesTest {
     }
 
     @Test
+    fun `a section label opening two pages over the same lines is kept`() = runTest {
+        val pages = extract(3) { page ->
+            val chorus = "1 0 0 1 50 740 Tm (Chorus) Tj 1 0 0 1 50 722 Tm (The chorus sung again) Tj 1 0 0 1 50 708 Tm (And its last line) Tj "
+            "1 0 0 1 50 780 Tm (Songbook) Tj " + (if (page == 1) "" else chorus) + "1 0 0 1 50 500 Tm (A line sung on page $page) Tj"
+        }
+
+        assertEquals(listOf("A line sung on page 1"), pages[0])
+        (2..3).forEach { page -> assertEquals(listOf("Chorus", "The chorus sung again", "And its last line", "A line sung on page $page"), pages[page - 1]) }
+    }
+
+    @Test
     fun `a songbook's footer counting each song's pages is dropped`() = runTest {
         val footers = listOf("Page 1 of 1", "Page 1 of 3", "Page 2 of 3", "Page 3 of 3")
         val pages = extract(4) { page -> "1 0 0 1 50 700 Tm (A line sung on page $page) Tj 1 0 0 1 50 20 Tm (${footers[page - 1]}) Tj" }

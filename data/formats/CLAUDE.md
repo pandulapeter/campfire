@@ -39,8 +39,9 @@ locally, never rendered, uploaded, or kept.
 - Running lines (`PdfRunningLines`) are judged on margins laid out across the whole width, never by the columns: a short
   last page can read as columns and cut its header apart. A dropped margin line takes its whole baseline. A number in a
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)
-  stays; a page count stands alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's
-  lowest line counting this page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
+  stays, as does one counting no pages over the same body line on each (a chorus printed again); a page count stands
+  alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's lowest line counting this
+  page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
 - A span is italic by its font's name or italic flag; a line carries its baseline.
 - A blank line is a gap over 2.2 em, or one 1.4 times the document's usual step (`PdfParagraphs`: a quantile above the
   median, since a chord row sits closer to its lyric than to the lyric before it) between runs of three lines or more on

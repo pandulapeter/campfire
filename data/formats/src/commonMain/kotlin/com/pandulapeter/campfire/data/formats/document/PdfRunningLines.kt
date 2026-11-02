@@ -25,23 +25,38 @@ internal object PdfRunningLines {
      * number in one is the same on every page or counts the pages (`Page 3`, `3 of 9`): a section heading that happens
      * to open two pages (`Verse 2`, `Verse 6`) is the song's own. A line that is a page count of its own everywhere
      * (`Page 1 of 2`) is a running one whatever its numbers, since a songbook counts each song's pages; never a bare
-     * `1/2`, which is how a time signature at the top of each song reads too.
+     * `1/2`, which is how a time signature at the top of each song reads too. A line in the top margin that counts no
+     * pages and is set over the same line of the body on every page it opens is a passage the song repeats (a chorus
+     * printed again under its label), never a header, which stands over whatever each page holds.
      */
     fun runningLines(pages: List<Page>): Set<String> {
         if (pages.size < 2) return emptySet()
         val numbersBySignature = mutableMapOf<String, MutableMap<Int, List<Long>>>()
         val isOwnPageCountBySignature = mutableMapOf<String, Boolean>()
+        val bodyLinesUnderBySignature = mutableMapOf<String, MutableSet<String?>>()
         pages.forEachIndexed { index, page ->
             page.edges.filter { it.text.isNotBlank() }.forEach { line ->
                 val signature = signature(line, page.height)
+                if (line.y < page.height / 2) bodyLinesUnderBySignature.getOrPut(signature) { mutableSetOf() } += bodyLineUnder(line, page)
                 numbersBySignature.getOrPut(signature) { mutableMapOf() }
                     .getOrPut(index) { number.findAll(line.text).map { it.value.take(MAX_DIGITS).toLong() }.toList() }
                 isOwnPageCountBySignature[signature] = isOwnPageCountBySignature[signature] != false && isOwnPageCount(line.text.trim())
             }
         }
         return numbersBySignature.filter { (signature, numbers) ->
-            numbers.size >= 2 && numbers.size * 2 >= pages.size && (isOwnPageCountBySignature[signature] == true || isRunningNumbers(numbers))
+            numbers.size >= 2 && numbers.size * 2 >= pages.size && (isOwnPageCountBySignature[signature] == true || isRunningNumbers(numbers)) &&
+                (numbers.values.distinct().size > 1 || bodyLinesUnderBySignature[signature]?.singleOrNull() == null)
         }.keys
+    }
+
+    /**
+     * The line set next under [line] on [page], at its place and in its own words, where that is a line of the body,
+     * outside the margins.
+     */
+    private fun bodyLineUnder(line: Line, page: Page): String? {
+        val size = line.spans.maxOfOrNull { it.size } ?: 1.0
+        val under = page.lines.filter { it.text.isNotBlank() && it.y - line.y > size * 0.5 }.minByOrNull { it.y } ?: return null
+        return if (isEdge(under.y, page.height)) null else "${signature(under, page.height)}:${under.text.trim()}"
     }
 
     /** Whether each number of a line, by page index, is the same on every page or rises with the page. */
