@@ -16,6 +16,16 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_M
 /** What the converter takes for a chord, and which rows of a sheet are rows of chords. */
 internal object ChordSheetChordWords {
     internal fun tokens(text: String): List<Token> = token.findAll(text).map { Token(it.value, it.range.first) }.toList()
+
+    /**
+     * The words of a row that may be one of chords, a chord held with a run of dashes (`Dm7-----`, `Am----Am7`) read as
+     * the chords it holds, each where it stands: the dashes draw how long it rings, and no chord name holds two in a row.
+     */
+    internal fun rowTokens(text: String): List<Token> = tokens(text).flatMap { word ->
+        if ("--" !in word.text) return@flatMap listOf(word)
+        val held = Regex("[^-]+(?:-(?!-)[^-]*)*").findAll(word.text).map { Token(it.value.trimEnd('-'), word.index + it.range.first) }.toList()
+        if (held.isNotEmpty() && held.all { rowChord(it.text) }) held else listOf(word)
+    }
     internal fun ascii(value: String) = value.replace('\u266f', '#').replace('\u266d', 'b')
     internal fun chord(value: String): Boolean {
         val name = ascii(value).removeSurrounding("(", ")")
@@ -53,7 +63,7 @@ internal object ChordSheetChordWords {
         line.source.spans.any { it.isItalic && it.text.isNotBlank() } && line.source.spans.any { !it.isItalic && it.text.isNotBlank() }
 
     internal fun chordRow(text: String, isNote: ((Token) -> Boolean)? = null): ChordRow? {
-        val words = tokens(text)
+        val words = rowTokens(text)
         val start = words.indexOfLast { it.text.startsWith('(') }.takeIf { start ->
             start > 0 && words.size - start <= 4 && words.last().text.endsWith(')') && words.drop(start).none { rowChord(it.text) || furniture(it.text) }
         } ?: words.size

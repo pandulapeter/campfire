@@ -30,6 +30,14 @@ class ChordSheetChordPlacementTest {
         assertTrue("forty-[C]niner, and his [G7]daughter, Clemen[C]tine." in result, result)
     }
 
+    @Test
+    fun `chords held with dashes are a chord row, the dashes no part of it`() {
+        val sheet = "C-------C-------\n\nG       Am--Am7  C--------\nGive me one more chance now"
+        val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(sheet), guessesTitle = false).single()
+
+        assertTrue(result.startsWith("[C] [C]\n\n[G]Give me [Am]one [Am7]more [C]chance now"), result)
+    }
+
     /** [text] drawn glyph by glyph in a proportional type, whose glyphs' edges a layout rounds. */
     private fun glyphs(text: String): ChordSheet.Line {
         var x = 40.0

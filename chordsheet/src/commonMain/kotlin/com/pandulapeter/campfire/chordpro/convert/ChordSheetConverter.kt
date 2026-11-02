@@ -35,7 +35,7 @@ import kotlin.math.roundToInt
 /** Deterministic, conservative conversion of positioned chord sheets to ordinary ChordPro. */
 public object ChordSheetConverter {
     /** Single-chord cells are unambiguous in alternating rows of a Word chord grid. */
-    public fun isChordLine(text: String): Boolean = tokens(text).let { words ->
+    public fun isChordLine(text: String): Boolean = ChordSheetChordWords.rowTokens(text).let { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
     }
     /**
