@@ -42,6 +42,9 @@ locally, never rendered, uploaded, or kept.
   stays; a page count stands alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's
   lowest line counting this page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
 - A span is italic by its font's name or italic flag; a line carries its baseline.
+- A blank line is a gap over 2.2 em, or one 1.4 times the document's usual step (`PdfParagraphs`: a quantile above the
+  median, since a chord row sits closer to its lyric than to the lyric before it) between runs of three lines or more on
+  each side, so a tightly set songbook's stanzas part while a header's credits and a diagram's name over its frets stay.
 - An `ActualText` over glyphs on one baseline replaces them (how Campfire's export carries right-to-left runs in logical
   order); the glyphs stay as its `pieces` where they spell its text in order, so the converter still knows where each
   character is drawn. One spanning several baselines (a hyphenated word) is ignored.
