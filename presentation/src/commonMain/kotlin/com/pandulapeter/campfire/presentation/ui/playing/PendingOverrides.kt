@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
  * the click read, which is also why a value can be set absolutely: while it is pending nothing reads the store's
  * instead.
  *
+ * @param pendingWrites How long a value waits, and what writes it on the way out, which it registers with.
  * @param stored The overrides as the preferences and the setlists hold them.
  * @param name What the overrides are, for the log line of a write that failed.
  * @param write Writes one override, null removing it, and answers whether it was written and is expected to come back
@@ -34,7 +36,7 @@ import kotlinx.coroutines.launch
  */
 internal class PendingOverrides<T : Any>(
     private val scope: CoroutineScope,
-    private val delayMillis: Long,
+    private val pendingWrites: PendingWrites,
     private val stored: StateFlow<SongOverrides<T>>,
     private val name: String,
     private val write: suspend (place: SongPlace, value: T?) -> Boolean,
@@ -65,7 +67,7 @@ internal class PendingOverrides<T : Any>(
         pending.update { it + (place to Pending(value)) }
         writeJobs.remove(place)?.cancel()
         writeJobs[place] = scope.launch {
-            delay(delayMillis)
+            delay(pendingWrites.delayMillis)
             writeJobs.remove(place)
             writeNow(place, value)
         }
@@ -120,4 +122,8 @@ internal class PendingOverrides<T : Any>(
         val value: T?,
         val isWritten: Boolean = false,
     )
+
+    init {
+        pendingWrites.register(this)
+    }
 }

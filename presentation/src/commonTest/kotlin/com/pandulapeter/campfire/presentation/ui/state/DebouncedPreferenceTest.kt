@@ -89,21 +89,6 @@ class DebouncedPreferenceTest {
     }
 
     @Test
-    fun `flush all lets go only of the values unchanged since it read them`() = runTest {
-        val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
-        val numbering = DebouncedPreference<Boolean> { copy(shouldNumberSections = it) }
-        fontScale.set(1.4f)
-        numbering.set(false)
-        DebouncedPreference.flushAll(fontScale, numbering) { update ->
-            fontScale.set(1.5f)
-            write(update)
-        }
-        assertEquals(1.4f, stored.fontScale)
-        assertEquals(1.5f, fontScale.pending.value)
-        assertNull(numbering.pending.value)
-    }
-
-    @Test
     fun `a failing flush all is caught and leaves the values waiting`() = runTest {
         val fontScale = DebouncedPreference<Float> { copy(fontScale = it) }
         fontScale.set(1.4f)

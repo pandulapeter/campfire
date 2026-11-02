@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.tuner
 
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.tuner.api.model.TunerConfig
 import com.pandulapeter.campfire.tuner.api.model.TunerState
@@ -50,10 +50,7 @@ class TunerControllerTest {
         scope = backgroundScope,
         tuner = tuner,
         userPreferences = MutableStateFlow<UserPreferences?>(null),
-        updateUserPreferences = object : UpdateUserPreferencesUseCase {
-            override suspend fun invoke(update: (UserPreferences) -> UserPreferences) = Unit
-        },
-        writeDelayMillis = 0L,
+        pendingWrites = PendingWrites(backgroundScope, delayMillis = 0L, writePreferences = {}),
         backStack = emptyList(),
         visibleDialog = MutableStateFlow(null),
     )

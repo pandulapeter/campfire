@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.playing
 
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -30,7 +31,7 @@ class PendingOverridesTest {
 
     private fun TestScope.overrides() = PendingOverrides(
         scope = backgroundScope,
-        delayMillis = DELAY,
+        pendingWrites = PendingWrites(backgroundScope, delayMillis = DELAY, writePreferences = {}),
         stored = stored,
         name = "tempo",
         write = { place, value ->

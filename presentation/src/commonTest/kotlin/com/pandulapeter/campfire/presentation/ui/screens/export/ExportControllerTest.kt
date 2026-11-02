@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.songText.FakeSongFiles
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import kotlinx.coroutines.CompletableDeferred
@@ -275,7 +276,7 @@ class ExportControllerTest {
                     storedPreferences = update(storedPreferences)
                 }
             },
-            writeDelayMillis = 0L,
+            pendingWrites = PendingWrites(backgroundScope, delayMillis = 0L, writePreferences = { storedPreferences = it(storedPreferences) }),
         )
         return Triple(controller, dialogHost, messageSink)
     }

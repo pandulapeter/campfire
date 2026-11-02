@@ -12,13 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.tuner
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.scales.SCALE_NOTE_LEAD_MILLIS
 import com.pandulapeter.campfire.presentation.ui.instrument.courses
-import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import com.pandulapeter.campfire.tuner.api.Pitch
 import com.pandulapeter.campfire.tuner.api.Tuner
@@ -46,21 +45,20 @@ import kotlinx.coroutines.withTimeoutOrNull
  * the screen it is used on - the view model stops it as that screen leaves the back stack or the sheet closes, and the
  * screen as the app goes out of sight.
  *
- * @param writeDelayMillis How long the settings have to hold still before they are written to the preferences.
+ * @param pendingWrites What the settings are written by once they have held still, and on the way out.
  * @param backStack The navigator's back stack, whose top decides with [visibleDialog] whether the tones may start.
  */
 internal class TunerController(
     private val scope: CoroutineScope,
     private val tuner: Tuner,
     private val userPreferences: StateFlow<UserPreferences?>,
-    private val updateUserPreferences: UpdateUserPreferencesUseCase,
-    private val writeDelayMillis: Long,
+    pendingWrites: PendingWrites,
     private val backStack: List<CampfireDestination>,
     private val visibleDialog: StateFlow<DialogType?>,
 ) {
 
     /** Saved like the metronome's settings: a held stepper is a new reference pitch several times a second. */
-    val tunerSettingsPreference = DebouncedPreference<TunerSettings> { copy(tunerSettings = it) }
+    val tunerSettingsPreference = pendingWrites.preference<TunerSettings> { copy(tunerSettings = it) }
 
     val tunerSettings = combine(userPreferences, tunerSettingsPreference.pending) { userPreferences, pending ->
         pending ?: userPreferences?.tunerSettings ?: TunerSettings()
@@ -193,9 +191,6 @@ internal class TunerController(
         tuner.state.collect { state -> _tunedNotes.update { tunedNotesAfter(it, state.listening) } }
     }
 
-    /** Writes the settings once they have held still, see [tunerSettingsPreference]. */
-    private fun startSettingsWriter() = tunerSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
-
     /**
      * Follows the settings and the instrument with what is listening and sounding: a listening tuner reads against the new
      * strings and pitch from its next window, a tone of strings that are no longer chosen ends, and one still chosen moves
@@ -236,7 +231,6 @@ internal class TunerController(
     }
 
     init {
-        startSettingsWriter()
         startFollowingSettings()
         startTrackingTunedNotes()
         startStartableRule()

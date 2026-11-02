@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
-import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
  *
  * @param currentSongFileName The song a details screen has settled on, which the pager's target stands in for.
  * @param songsBeingRenamed The songs being renamed, under their old names, see `SongTextStore.songsBeingRenamed`.
- * @param writeDelayMillis How long the settings have to hold still before they are written to the preferences.
+ * @param pendingWrites What the settings are written by once they have held still, and on the way out.
  */
 internal class MetronomeController(
     private val scope: CoroutineScope,
@@ -60,11 +60,11 @@ internal class MetronomeController(
     private val songsBeingRenamed: StateFlow<Map<String, Song>>,
     private val messageSink: MessageSink,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
-    private val writeDelayMillis: Long,
+    pendingWrites: PendingWrites,
 ) {
 
     /** Saved like [pendingPrintSettings]: a dragged slider is a new value every frame. */
-    val metronomeSettingsPreference = DebouncedPreference<MetronomeSettings> { copy(metronomeSettings = it) }
+    val metronomeSettingsPreference = pendingWrites.preference<MetronomeSettings> { copy(metronomeSettings = it) }
 
     val metronomeSettings = combine(userPreferences, metronomeSettingsPreference.pending) { userPreferences, pending ->
         pending ?: userPreferences?.metronomeSettings ?: MetronomeSettings()
@@ -282,9 +282,6 @@ internal class MetronomeController(
         silentClickStopJob = null
     }
 
-    /** Writes the settings once they have held still, see [metronomeSettingsPreference]. */
-    private fun startSettingsWriter() = metronomeSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
-
     /** Follows what a playing click plays, see the comment inside. */
     private fun startFollowingPattern() = scope.launch {
         // One collector for everything that changes what a playing click plays, so that a context change and the
@@ -358,7 +355,6 @@ internal class MetronomeController(
     }
 
     init {
-        startSettingsWriter()
         startFollowingPattern()
         startReportingStops()
         startStartableRule()

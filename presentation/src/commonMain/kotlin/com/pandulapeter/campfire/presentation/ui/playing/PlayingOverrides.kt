@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUse
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.combine
  *
  * @param songsByFileName The library by file name as it is now, which the steppers read the song's own values from.
  * @param updateEditableSetlist A setlist changed unless it is archived, see `CampfireViewModel.updateEditableSetlist`.
- * @param writeDelayMillis How long a stepper has to hold still before its value is written.
+ * @param pendingWrites How long a stepper has to hold still before its value is written, and what writes it on the way out.
  */
 internal class PlayingOverrides(
     private val scope: CoroutineScope,
@@ -39,7 +40,7 @@ internal class PlayingOverrides(
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val updateEditableSetlist: suspend (fileName: String, transform: (Setlist) -> Setlist) -> Setlist?,
     private val messageSink: MessageSink,
-    writeDelayMillis: Long,
+    pendingWrites: PendingWrites,
 ) {
 
     /**
@@ -58,7 +59,7 @@ internal class PlayingOverrides(
     /** The tempos set here whose writes are waiting or still on their way back, see [changeTempo]. */
     private val tempoOverrides = PendingOverrides(
         scope = scope,
-        delayMillis = writeDelayMillis,
+        pendingWrites = pendingWrites,
         stored = storedTempos,
         name = "tempo",
         write = { place, bpm ->
@@ -84,7 +85,7 @@ internal class PlayingOverrides(
     /** The capos set here whose writes are waiting or still on their way back, exactly as [tempoOverrides] are. */
     private val capoOverrides = PendingOverrides(
         scope = scope,
-        delayMillis = writeDelayMillis,
+        pendingWrites = pendingWrites,
         stored = storedCapos,
         name = "capo",
         write = { place, fret ->
@@ -236,19 +237,6 @@ internal class PlayingOverrides(
         val effective = effectiveCapoOf(songFileName, setlistFileName)
         val fret = change(effective.fret).coerceIn(Song.CAPO_RANGE)
         capoOverrides.set(SongPlace(songFileName = songFileName, setlistFileName = setlistFileName), fret.takeIf { it != effective.songFret })
-    }
-
-    /**
-     * Takes the tempo and capo overrides still waiting for their debounce out of it and returns their writes, for a view
-     * model or a process that is about to go, see [PendingOverrides.takeWaiting].
-     */
-    fun takeWaitingOverrideWrites(): suspend () -> Unit {
-        val waitingTempos = tempoOverrides.takeWaiting()
-        val waitingCapos = capoOverrides.takeWaiting()
-        return {
-            waitingTempos()
-            waitingCapos()
-        }
     }
 
     /** Lets the tempos and capos set here go once the store says the same, see [PendingOverrides.start]. */

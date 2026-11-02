@@ -144,6 +144,7 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import com.pandulapeter.campfire.presentation.ui.state.ModeEndings
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SelectionEditing
@@ -246,6 +247,9 @@ class CampfireViewModel(
     /** Read by holders built before the snackbar's own members, so built first; it starts nothing. */
     internal val messageSink: MessageSink = MessageSink(viewModelScope)
 
+    /** Every value waiting for its debounce, which the holders make theirs through it; built before them. */
+    private val pendingWrites = PendingWrites(viewModelScope, PREFERENCE_WRITE_DEBOUNCE_MILLIS, updateUserPreferences::invoke)
+
     /**
      * The tags and libraryState.languages the song list is narrowed to. Held here and in [savedStateStore] only, so it lasts
      * exactly as long as the app does - a process killed in the background and restored is still the same run of the
@@ -347,8 +351,7 @@ class CampfireViewModel(
         scope = viewModelScope,
         backStack = navigator.backStack,
         dialogHost = dialogHost,
-        updateUserPreferences = updateUserPreferences,
-        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        pendingWrites = pendingWrites,
     )
 
     /** See [FontScaleController.magnifyByTouchpad]. */
@@ -458,7 +461,7 @@ class CampfireViewModel(
         updateUserPreferences = updateUserPreferences,
         updateEditableSetlist = { fileName, transform -> updateEditableSetlist(fileName, transform) },
         messageSink = messageSink,
-        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        pendingWrites = pendingWrites,
     )
 
     // Metronome
@@ -475,7 +478,7 @@ class CampfireViewModel(
         songsBeingRenamed = songTextStore.songsBeingRenamed,
         messageSink = messageSink,
         updateUserPreferences = updateUserPreferences,
-        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        pendingWrites = pendingWrites,
     )
 
     internal val songPickerState: SongPickerState = SongPickerState(
@@ -635,7 +638,7 @@ class CampfireViewModel(
         exportSetlist = exportSetlist,
         exportLibrary = exportLibrary,
         updateUserPreferences = updateUserPreferences,
-        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        pendingWrites = pendingWrites,
     )
 
     // Tuner
@@ -644,8 +647,7 @@ class CampfireViewModel(
         scope = viewModelScope,
         tuner = tuner,
         userPreferences = userPreferences,
-        updateUserPreferences = updateUserPreferences,
-        writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        pendingWrites = pendingWrites,
         backStack = navigator.backStack,
         visibleDialog = dialogHost.visibleDialog,
     )
@@ -659,14 +661,7 @@ class CampfireViewModel(
         editorSession = editorSession,
         importController = importController,
         syncController = syncController,
-        overrides = overrides,
-        waitingPreferences = listOf(
-            fontScaleController.fontScalePreference,
-            metronomeController.metronomeSettingsPreference,
-            tunerController.tunerSettingsPreference,
-            exportController.printSettingsPreference,
-        ),
-        updateUserPreferences = updateUserPreferences,
+        pendingWrites = pendingWrites,
         getSyncState = getSyncState,
         startScheduledSynchronization = startScheduledSynchronization,
         stopSilentClick = metronomeController::stopSilentClick,
@@ -765,7 +760,6 @@ class CampfireViewModel(
             songsSearch = songListState.songsSearch,
             setlistsSearch = setlistsController.setlistsSearch,
         )
-        fontScaleController.startWriter()
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()
     }

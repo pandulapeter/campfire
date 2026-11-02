@@ -14,13 +14,11 @@ import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.sync.StartScheduledSynchronizationUseCase
-import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.tuner.api.Tuner
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlin.time.Duration.Companion.seconds
@@ -35,7 +33,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Leaving the app: closing it, with the unsaved changes and the confirmation questions an exit can be parked behind,
  * the app going out of sight, and what a process or a view model about to go still owes the library.
  *
- * @param waitingPreferences The preferences still waiting for their debounce, written together on the way out.
+ * @param pendingWrites What is still waiting for its debounce, written on the way out.
  */
 internal class AppExitController(
     private val scope: CoroutineScope,
@@ -46,9 +44,7 @@ internal class AppExitController(
     private val editorSession: EditorSession,
     private val importController: ImportController,
     private val syncController: SyncController,
-    private val overrides: PlayingOverrides,
-    private val waitingPreferences: List<DebouncedPreference<*>>,
-    private val updateUserPreferences: UpdateUserPreferencesUseCase,
+    private val pendingWrites: PendingWrites,
     private val getSyncState: GetSyncStateUseCase,
     private val startScheduledSynchronization: StartScheduledSynchronizationUseCase,
     private val stopSilentClick: () -> Unit,
@@ -163,8 +159,7 @@ internal class AppExitController(
         tuner.stopTone()
         // The process ends right after this, and onCleared's detached write would race it - or, on a macOS Quit, never
         // run. Before the sync wait, so that an override written now is in the library a run that is still to start carries.
-        writeWaitingPreferences()
-        overrides.takeWaitingOverrideWrites()()
+        pendingWrites.flushAll()
         val isSyncing = { state: SyncState -> state is SyncState.Connected && state.isSyncing }
         val hasSettled = withTimeoutOrNull(EXIT_SYNC_GRACE) {
             // The state is the repository's own rather than syncState, which only follows it a hop to the main thread
@@ -218,32 +213,18 @@ internal class AppExitController(
         // Nothing of the tuner outlives its screen, and with the view model every screen is gone.
         tuner.stopListening()
         tuner.stopTone()
-        val writeWaitingOverrides = overrides.takeWaitingOverrideWrites()
+        val writeWaiting = pendingWrites.takeAll()
         // Written on a scope of their own, since this one is being cancelled: each was waiting for its debounce, which
         // this scope's cancellation would otherwise drop.
         CoroutineScope(Dispatchers.Default + NonCancellable).launch {
             try {
-                writeWaitingPreferences()
-                writeWaitingOverrides()
+                writeWaiting()
             } catch (exception: Exception) {
                 // A bare scope has no handler, and an exception escaping it would end the process.
                 println("Could not write the waiting values: ${exception.message}")
             }
         }
     }
-
-    /**
-     * Writes the text size, the metronome settings and the export options that are still waiting for their debounce, in
-     * one read-modify-write of the preferences, for a view model or a process that is about to go. Each is let go of
-     * only if nothing newer arrived meanwhile, as the collectors do.
-     */
-    private suspend fun writeWaitingPreferences() = DebouncedPreference.flushAll(
-        *waitingPreferences.toTypedArray(),
-        write = updateUserPreferences::invoke,
-    )
-
-    /** See [PlayingOverrides.takeWaitingOverrideWrites]. */
-    private fun takeWaitingOverrideWrites() = overrides.takeWaitingOverrideWrites()
 
     /** Lets go of the exits a dialog change leaves behind, as a listener of [DialogHost.setVisibleDialog]. */
     fun onBeforeDialogChange(dialogType: DialogType?) {

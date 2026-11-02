@@ -12,11 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.fontScale
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -37,14 +36,13 @@ import kotlin.math.roundToInt
  * and as it is saved once it has held still.
  *
  * @param backStack The app's back stack, which says whether the song details screen is the one being zoomed.
- * @param writeDelayMillis How long the size has to hold still before it is written to the preferences.
+ * @param pendingWrites What the size is written by once it has held still, and on the way out.
  */
 internal class FontScaleController(
     private val scope: CoroutineScope,
     private val backStack: List<CampfireDestination>,
     private val dialogHost: DialogHost,
-    private val updateUserPreferences: UpdateUserPreferencesUseCase,
-    private val writeDelayMillis: Long,
+    pendingWrites: PendingWrites,
 ) {
 
     /**
@@ -123,7 +121,7 @@ internal class FontScaleController(
      * The value set on this device and not yet written to the preferences. For as long as there is one it wins over
      * the stored value; once it is saved, whatever the preferences hold wins again.
      */
-    val fontScalePreference = DebouncedPreference<Float> { copy(fontScale = it) }
+    val fontScalePreference = pendingWrites.preference<Float> { copy(fontScale = it) }
 
     private val settledFontScaleState = mutableFloatStateOf(UserPreferences.DEFAULT_FONT_SCALE)
 
@@ -161,13 +159,10 @@ internal class FontScaleController(
         settledFontScaleState.floatValue = liveFontScale.floatValue
     }
 
-    /** Writes the size once it has held still, see [fontScalePreference]. */
-    fun startWriter() = fontScalePreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
-
     /**
      * The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins whenever nothing
      * set here is still waiting to be saved. The echo of our own save equals the live value, which is why this starts
-     * after [startWriter].
+     * after the writer, which [fontScalePreference] starts as it is made.
      */
     fun startEcho(userPreferences: Flow<UserPreferences?>) = scope.launch {
         userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->

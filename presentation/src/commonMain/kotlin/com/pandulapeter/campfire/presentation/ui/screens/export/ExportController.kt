@@ -59,7 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.print.printChordsOf
 import com.pandulapeter.campfire.presentation.ui.print.printScaleAnalysisOf
 import com.pandulapeter.campfire.presentation.ui.print.printScaleGroupsOf
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
-import com.pandulapeter.campfire.presentation.ui.state.DebouncedPreference
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.tabReadingOf
@@ -80,7 +80,7 @@ import kotlinx.coroutines.withContext
  *
  * @param effectiveTempoOf The tempo a song plays at where it is opened, see `PlayingOverrides.effectiveTempoOf`.
  * @param effectiveCapoOf The fret a song is capoed at where it is opened, see `PlayingOverrides.effectiveCapoOf`.
- * @param writeDelayMillis How long the export options have to hold still before they are written.
+ * @param pendingWrites What the export options are written by once they have held still, and on the way out.
  */
 internal class ExportController(
     private val scope: CoroutineScope,
@@ -97,7 +97,7 @@ internal class ExportController(
     private val exportSetlist: ExportSetlistUseCase,
     private val exportLibrary: ExportLibraryUseCase,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
-    private val writeDelayMillis: Long,
+    pendingWrites: PendingWrites,
 ) {
 
     /**
@@ -106,7 +106,7 @@ internal class ExportController(
      * [FontScaleController.fontScalePreference] is: once they have held still, or at once when the screen goes (see [DialogHost.setVisibleDialog]). A
      * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
      */
-    val printSettingsPreference = DebouncedPreference<PrintSettings> { copy(printSettings = it) }
+    val printSettingsPreference = pendingWrites.preference<PrintSettings> { copy(printSettings = it) }
 
     val pendingPrintSettings = printSettingsPreference.pending
 
@@ -493,7 +493,4 @@ internal class ExportController(
     fun flushPrintSettings() {
         scope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
     }
-
-    // Writes the export options once they have held still, see [printSettingsPreference].
-    init { printSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke) }
 }

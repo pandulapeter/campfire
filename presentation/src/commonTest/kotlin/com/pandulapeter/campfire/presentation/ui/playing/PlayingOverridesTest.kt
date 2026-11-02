@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestScope
@@ -114,7 +115,7 @@ class PlayingOverridesTest {
                 }
             },
             messageSink = sink,
-            writeDelayMillis = DELAY,
+            pendingWrites = PendingWrites(backgroundScope, delayMillis = DELAY, writePreferences = {}),
         )
     }
 
