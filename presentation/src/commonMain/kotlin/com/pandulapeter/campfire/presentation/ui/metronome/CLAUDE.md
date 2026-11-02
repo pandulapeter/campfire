@@ -8,85 +8,68 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 
+
 # :presentation — ui/metronome
 
-The metronome's pure helpers and shared controls. The click is `:metronome:api`'s `Metronome`, injected into
-`CampfireViewModel`, which hands it complete patterns and reads `playback` and `beats` back. The tab is in
-`screens/metronome/`; the song page's button in `screens/songDetails/`; where a tempo is stored in `ui/playing/`.
+The metronome's pure helpers and shared controls; the click is `:metronome:api`'s, injected into the view model, which
+hands it complete patterns. Where a tempo is stored: `ui/playing/`.
 
-## The click belongs to the screen it is played from
+### The click belongs to the screen it is played from
 
-There are exactly two: the Metronome tab and the song details screen. **A click never outlives the screen it was started
-on**, so nothing ever plays with no way on screen to stop it. Three rules stop it, and they are the whole lifecycle:
+Only the Metronome tab and song details play one. **A click never outlives the screen it was started on**, so nothing
+ever plays with no way on screen to stop it. Three rules stop it, and they are the whole lifecycle:
 
 - `updateBackStack`: whenever the top is neither a song nor the Metronome tab (the editor over a song, a song closed or
   deleted, a tab selected, a song opened over the tab or another song).
-- `setVisibleDialog`: as the export screen or the tuner sheet is dealt over the song. Both are dialogs to the view model
-  and never reach the back stack; the tuner also listens through the audio the click plays in.
-- `onCleared`: the app being left (a finished Activity, not a paused one; an activity destroyed without finishing, as
-  "Don't keep activities" does, keeps its click), where a singleton metronome would otherwise click on, notification
-  and all, under a process nobody is looking at.
+- `setVisibleDialog`: as the export screen or the tuner sheet is dealt over the song (dialogs to the view model, never
+  on the back stack; the tuner also listens through the audio the click plays in).
+- `onCleared`: the app being left (a finished Activity, not a paused one; one destroyed without finishing, as "Don't
+  keep activities" does, keeps its click), where a singleton metronome would otherwise click on, notification and all.
 
-Apart from those, a click that cannot sound (volume zero or every beat muted, `MetronomePattern.canSound`) is stopped
-three seconds after the app goes out of sight (the grace covers an Android activity recreation), and says so
-(`MetronomeController.onAppStopped`), so no background playback runs for silence — except on Android with Vibrate on and
-a beat not muted, which plays on (iOS has no background haptics).
+Besides, a click that cannot sound (volume zero or every beat muted) is stopped three seconds after the app goes out of
+sight (the grace covers an Android activity recreation), and says so, so no background playback runs for silence; except
+on Android with Vibrate on and a beat not muted (iOS has no background haptics).
 
-## What a click plays for (`MetronomeContext.kt`, tested)
+### What a click plays for (`MetronomeContext.kt`, tested)
 
-- The `SongDetails` destination on top of the stack, at the page its pager is heading for (`onSongDetailsPageChanged`,
-  from `targetPage`, so paging retargets while the page slides in), at the stretch of that song the page is headed for
-  (`SongTiming`, from `timingIndexAt` and `SongStepper.headedOffset`: a step's or fling's target, never a finger still
-  dragging; a song paged back to reports its last stretch). Or `Standalone`, the tab's pattern.
-- `metronomePatternOf` (`MetronomePatterns.kt`): a song's tempo and `{time}` (4/4 where it names none), accents for that
-  signature, everything else from the settings.
-- **A new song or stretch takes effect from beat one of the next bar** (`fromNextBar`), anything else from the next
-  beat; a rebuilt view model does not stop a playing click.
-- A collector in `init` tells the engine whether the tab or a song is on top with the feature on
-  (`isMetronomeStartable` → `Metronome.setStartable`): only those screens' taps may open the web's audio device; a no-op
-  elsewhere.
-- `toggleMetronome` starts or stops the context's pattern; starting over a song opens its panel. A click that stops on
-  its own is a `Message.MetronomeStopped` snackbar naming why.
-- Space (on the tab) and M (on the tab and on a song, not an import preview, which has no metronome) toggle it on the
-  desktop and the web (`toggleMetronomeByKey`), under no dialog or menu, only on a held key's first press.
+- The song on top, at the page its pager is heading for (paging retargets while the page slides in), at the stretch of
+  that page (a step's or fling's target, never a finger still dragging; a song paged back to reports its last stretch);
+  or the tab's own pattern. A song's pattern: its tempo and `{time}` (4/4 where none), accents for that signature, the
+  rest from the settings.
+- **A new song or stretch takes effect from beat one of the next bar**, anything else from the next beat; a rebuilt view
+  model does not stop a playing click.
+- Only the tab's or a song's taps, with the feature on, may open the web's audio device (`Metronome.setStartable`).
+- Starting over a song opens its panel. A click that stops on its own is a snackbar naming why.
+- Space (tab) and M (tab and song, not an import preview) toggle it on desktop and web, under no dialog or menu, only on
+  a held key's first press.
 
-## The panel (`MetronomePanel.kt`)
+### The panel
 
-- **On the song details screen it is inside the app bar** (`CampfireTopAppBar`'s `bottomContent`), so it moves with the
-  screen and covers none of the song.
-- It holds only the `BeatRow` and play / stop (`PlayStopMark`), at the end because the phone is held there. The tempo
-  is in the song's first section; sound, subdivision, and volume are the tab's. A lit beat also swells, since in the
-  light theme an accent at rest is already half the lit color.
-- The panel takes `MetronomePanelState.kt` and two callbacks, not the view model. It reads no tempo, only the
-  signature (`metronomeTimeSignatureOf`, tested).
-- **Whether it is up is a preference** (`MetronomeSettings.isSongPanelShown`), written by the song's `MetronomeButton`
-  and by a click started there, left alone when the screen is left, so the next song and the next launch keep it.
-  Opening it starts nothing; closing it stops a playing click; stopping the click leaves it up.
-- Performance mode keeps the play button; the song's read only line says the tempo.
-- The pulsing mark (`MetronomeIcon.kt`: the navigation item, the song's button) tints from a table of filters at 32
-  pulse steps, keyed on its two colors, so a playing click makes no filter per frame. Not a second draw at the pulse's
-  alpha: that blends in sRGB where `lerp` mixes in Oklab.
+- **On song details it is inside the app bar**, so it moves with the screen and covers none of the song. Only the beat
+  row and play / stop, at the end because the phone is held there; the tempo is in the song's first section, sound,
+  subdivision, and volume are the tab's. A lit beat also swells, since in the light theme an accent at rest is already
+  half the lit color.
+- **Whether it is up is a preference**, written by the song's button and by a click started there, left alone when the
+  screen is left, so the next song and launch keep it. Opening it starts nothing; closing it stops a playing click;
+  stopping the click leaves it up. Performance mode keeps the play button.
+- The pulsing mark tints from a table of filters at 32 pulse steps, keyed on its two colors, so a playing click makes no
+  filter per frame. Not a second draw at the pulse's alpha: that blends in sRGB where `lerp` mixes in Oklab.
 
 ### Accents
 
-- Tapped on the `BeatRow` in both places (`MetronomeController.setBeatLevels`), for
-  whatever the click plays for: on the tab, the signature's (`withBeatLevels`); on a song, that song's own
-  (`UserPreferences.beatLevels`, `withSongBeatLevels`, tested), by signature, so a song whose 8/8 is 3+3+2 changes no
-  other song.
-- A song's own win (`beatLevelsOf`), apply wherever the song is opened from (the bar is the song's, not a set's
-  reading), are renamed, deleted, and synced with it, and **are removed once tapped back to the signature's**, so the song
-  follows the tab again.
+- Tapped on the beat row for whatever the click plays for: on the tab, the signature's; on a song, that song's own, by
+  signature (`UserPreferences.beatLevels`, tested), so a song whose 8/8 is 3+3+2 changes no other song.
+- A song's own win, apply wherever it is opened from (the bar is the song's, not a set's reading), are renamed, deleted,
+  and synced with it, and **are removed once tapped back to the signature's**, so the song follows the tab again.
 - Each beat's whole column takes the press, not the block (a sliver at a muted beat).
-- Settings are `UserPreferences.metronomeSettings`, saved once they hold still (`DebouncedPreference`).
 
-## Tempo and time changes inside a song
+### Tempo and time changes inside a song
 
-- **A later `{tempo}` or `{time}` is a change from where it stands** (`ChordProBlock.Timing`), and the page says where
-  the band is: on the song details screen each change starts a page, headed by a read-only line, and a playing click
-  follows the page being read from beat one of the next bar (layout in `songView/model/CLAUDE.md`).
-- **Until that bar ends the screen shows what is heard**: the beat row draws the playing bar (`Playing.pattern`), with
-  its own accents where its signature differs from the one waiting (`barBeingLeft`), and ignores taps, since the accents
-  would be written for the wrong song.
-- The stepper, a setlist's entry, and the library override still hold one number, the opening tempo; a later tempo keeps
-  its ratio to the file's opening one (120 → 60 played at 110 is 55), so nothing new is stored.
+- **A later `{tempo}` or `{time}` is a change from where it stands**, and the page says where the band is: each change
+  starts a page under a read-only line, and a playing click follows the page being read from beat one of the next bar
+  (layout: `songView/model/CLAUDE.md`).
+- **Until that bar ends the screen shows what is heard**: the beat row draws the playing bar, with its own accents where
+  its signature differs, and ignores taps, since the accents would be written for the wrong song.
+- Stepper, setlist entry, and library override still hold one number, the opening tempo; a later tempo keeps its ratio
+  to the file's opening one (120 → 60 played at 110 is 55), so nothing new is stored.
 - **With the Metronome feature off none of it exists**: no line, no forced page. A later `{key}` is only read past.
