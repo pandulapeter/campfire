@@ -22,6 +22,7 @@ is a literal checked on its own. A pattern built anywhere else, in a `val` passe
 With paths it checks those files, without them every tracked Kotlin file; exits 1 on any finding.
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -199,7 +200,8 @@ def main(arguments):
         ["git", "ls-files", "*.kt", "*.kts"], check=True, capture_output=True, text=True,
     ).stdout.splitlines()]
     report = []
-    for path in paths:
+    # A tracked file deleted in the working tree (a partial commit beside a pending deletion) has nothing to check.
+    for path in filter(os.path.isfile, paths):
         with open(path, encoding="utf-8") as file:
             report += [f"{path}:{line}: {pattern}" for line, pattern in findings(file.read())]
     if report:

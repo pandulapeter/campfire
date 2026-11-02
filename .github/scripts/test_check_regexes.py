@@ -8,7 +8,7 @@
 
 import unittest
 
-from check_regexes import findings
+from check_regexes import findings, main
 
 
 def lines(source):
@@ -41,6 +41,9 @@ class FindingsTest(unittest.TestCase):
 
     def test_templates_strings_outside_a_regex_and_comments_are_not_read_as_braces(self):
         self.assertEqual([], lines('val e = Regex("""a${OTHER.pattern}b""")\nval f = "{title}"\n// Regex("}")'))
+
+    def test_a_path_missing_from_the_working_tree_is_skipped(self):
+        self.assertEqual(0, main(["does/not/exist.kt"]))
 
 
 if __name__ == "__main__":
