@@ -99,19 +99,20 @@ wrong or undo it".
   small private helpers used only by it stay with it. Shared non-UI helpers (constants, state classes,
   `Modifier` extensions, `remember…` functions) go into a file named for what they are
   (`SongCardDefaults.kt`, `ListItemMetrics.kt`, `SearchBarMotion.kt`) — never `Utils.kt` / `Helpers.kt`.
-- **Files stay small: a change may not push one past a limit, nor grow one already past it.** A main source file is
-  at most 500 lines, a top-level function — a Composable above all — at most 120, a `CLAUDE.md` at most 2,500 words at
-  the root, 1,500 in a module, `.github` or a source set, and 1,000 in a package. Split by cohesion in the change that
-  would cross a limit: private state classes become `internal` top-level classes in files of their own, a pure
-  algorithm moves next to its users in a file named for it, a Composable's visual groups become named children.
-  `.github/scripts/check_sizes.py` fails a crossing, and a file or function already past its limit that ends the
-  change longer than it began, judged against the base revision — after every edit and every shell command (the
-  Claude Code hooks in `.claude/settings.json`), before every commit (`.githooks/pre-commit`), and in CI (`tests.yml`,
-  on a pull request or a push to `master`). One already past it may stay as long or shrink, so a change it needs moves
-  as many lines out as it adds (a new responsibility gets a file of its own); splitting the rest is a planned
-  refactor, not a side task. A `CLAUDE.md` past its budget only gets a note: cut narration, never a rule. Moves and renames are judged against the old path. Pure data is exempt by name in the script's
-  `EXEMPT` list (the chord tables, the PDF glyph names, the color schemes; `strings.xml` and tests are never
-  measured), added there in a commit of its own.
+- **Files stay small: a change may not push one past a limit, nor grow one already past it.** A main source file is at
+  most 500 lines, a top-level function — a Composable above all — at most 120, a class's primary constructor at most 12
+  parameters (nested classes and data classes included), a `CLAUDE.md` at most 2,500 words at the root, 1,500 in a
+  module, `.github` or a source set, and 1,000 in a package. Split by cohesion in the change that would cross a limit:
+  private state classes become `internal` top-level classes in files of their own, a pure algorithm moves next to its
+  users in a file named for it, a Composable's visual groups become named children. `.github/scripts/check_sizes.py`
+  fails a crossing, and a file, function or constructor already past its limit that ends the change longer than it
+  began, judged against the base revision — after every edit and every shell command (the Claude Code hooks in
+  `.claude/settings.json`), before every commit (`.githooks/pre-commit`), and in CI (`tests.yml`, on a pull request or a
+  push to `master`). One already past it may stay as long or shrink, so a change it needs moves as many lines out as it
+  adds (a new responsibility gets a file of its own); splitting the rest is a planned refactor, not a side task. A
+  `CLAUDE.md` past its budget only gets a note: cut narration, never a rule. Moves and renames are judged against the
+  old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph names, the color
+  schemes; `strings.xml` and tests are never measured), added there in a commit of its own.
 - **Package by role, not by first user.** A screen's package (`ui.screens.<screen>`) holds only that
   screen; a building block a second screen needs moves to a shared package (`ui.components`, `ui.chords`,
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the

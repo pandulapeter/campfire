@@ -7,19 +7,20 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Keeps a change from pushing a file, a function or a CLAUDE.md past the sizes the code-style skill sets, or from
-growing one already past them.
+Keeps a change from pushing a file, a function, a constructor or a CLAUDE.md past the sizes the code-style skill sets,
+or from growing one already past them.
 
-Main Kotlin sources (tests are left out) should be at most FILE_LINES lines long, and a top-level function — a
-Composable above all — at most FUNCTION_LINES. A CLAUDE.md should be at most ROOT_WORDS words at the root,
-MODULE_WORDS in a module, `.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
+Main Kotlin sources (tests are left out) should be at most FILE_LINES lines long, a top-level function — a Composable
+above all — at most FUNCTION_LINES, and the primary constructor of a class, nested or not, should take at most
+CONSTRUCTOR_PARAMETERS parameters. A CLAUDE.md should be at most ROOT_WORDS words at the root, MODULE_WORDS in a module,
+`.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
 
-A Kotlin file or function fails when the change takes it past its limit, or when it was already past it and the
-change makes it longer than it was; staying as long or shrinking passes, so a split that moves code out of it does.
-Nothing is stored: the base revision is the only reference, so no list of exceptions is kept and nothing is to be
-updated when a file moves or shrinks. A file git sees as renamed is judged against its old path, and a function against
-its old self wherever in the change it was. A CLAUDE.md never fails: a word count cannot tell a needed rule from
-narration.
+A Kotlin file, function or constructor fails when the change takes it past its limit, or when it was already past it
+and the change makes it longer (a constructor: gives it more parameters) than it was; staying as long or shrinking
+passes, so a split that moves code out of it does. Nothing is stored: the base revision is the only reference, so no
+list of exceptions is kept and nothing is to be updated when a file moves or shrinks. A file git sees as renamed is
+judged against its old path, and a function or class against its old self wherever in the change it was. A CLAUDE.md
+never fails: a word count cannot tell a needed rule from narration.
 
 With no arguments it judges the staged change against HEAD (.githooks/pre-commit); `--base <rev>` judges the working
 tree against that revision (tests.yml, on a pull request or a push to master). `--hook` is the Claude Code edit hook
@@ -39,6 +40,7 @@ import sys
 
 FILE_LINES = 500
 FUNCTION_LINES = 120
+CONSTRUCTOR_PARAMETERS = 12
 ROOT_WORDS = 2500
 MODULE_WORDS = 1500
 PACKAGE_WORDS = 1000
@@ -55,6 +57,15 @@ DECLARATION = re.compile(
     r"^(?:(?:public|internal|private|protected|inline|suspend|operator|infix|override|actual|expect|tailrec|external)\s+)*fun\s"
 )
 FUNCTION_NAME = re.compile(r"fun\s+(?:<[^>]*>\s*)?([\w.`]+(?:<[^>]*>)?[\w.`]*)\s*\(")
+CLASS = re.compile(r"(?<![\w:.])class\s+([\w`]+)")
+PRIMARY_CONSTRUCTOR = re.compile(
+    r"\s*(?:(?:@[\w.]+(?:\([^()]*\))?|public|internal|private|protected)\s*)*(?:constructor\s*)?\("
+)
+PARAMETER = re.compile(
+    r"\s*(?:@[\w.:]+(?:\([^()]*\))?\s*)*"
+    r"(?:(?:private|internal|public|protected|override|open|final|vararg|crossinline|noinline|actual)\s+)*"
+    r"(?:(?:val|var)\s+)?[\w`]+\s*:"
+)
 TEST_SOURCES = re.compile(r"/src/\w*[Tt]est/")
 CONTINUATION = tuple(".?:+-*/&|=")
 
@@ -132,6 +143,45 @@ def top_level_functions(text):
     return functions
 
 
+def constructors(text):
+    """(name, parameter count) of every class with a primary constructor in a Kotlin file, nested ones included.
+
+    The parameter list is cut at the commas outside brackets, and only a piece that starts like a parameter (its
+    annotations and modifiers, then `name:`) counts, so a comma inside a default's call, lambda or type arguments
+    (`Map<String, Int>`) and a trailing comma do not.
+    """
+    code = "\n".join(code_only(text.split("\n")))
+    result = []
+    for match in CLASS.finditer(code):
+        index = match.end()
+        if code.startswith("<", index):
+            depth = 0
+            while index < len(code):
+                depth += {"<": 1, ">": -1}.get(code[index], 0)
+                index += 1
+                if depth == 0:
+                    break
+        opening = PRIMARY_CONSTRUCTOR.match(code, index)
+        if not opening:
+            continue
+        index = opening.end()
+        depth = 0
+        pieces = [""]
+        while index < len(code) and depth >= 0:
+            character = code[index]
+            if character in "([{":
+                depth += 1
+            elif character in ")]}":
+                depth -= 1
+            if character == "," and depth == 0:
+                pieces.append("")
+            elif depth >= 0:
+                pieces[-1] += character
+            index += 1
+        result.append((match.group(1), sum(1 for piece in pieces if PARAMETER.match(piece))))
+    return result
+
+
 def words(text):
     """The words of a CLAUDE.md after its license header, which every file carries and no budget should pay for."""
     if text.startswith("<!--"):
@@ -150,7 +200,8 @@ def word_budget(path, is_module):
 
 
 def measure(paths, read, is_module):
-    """Every size the check limits, as {key: (size, limit, unit)}; a function's key is "<path>::<name>"."""
+    """Every size the check limits, as {key: (size, limit, unit)}; a function's key is "<path>::<name>", a primary
+    constructor's "<path>::class <name>"."""
     sizes = {}
     for path in paths:
         if os.path.basename(path) == "CLAUDE.md":
@@ -162,6 +213,10 @@ def measure(paths, read, is_module):
                 key = f"{path}::{name}"
                 if key not in sizes or sizes[key][0] < length:
                     sizes[key] = (length, FUNCTION_LINES, "lines")
+            for name, count in constructors(text):
+                key = f"{path}::class {name}"
+                if key not in sizes or sizes[key][0] < count:
+                    sizes[key] = (count, CONSTRUCTOR_PARAMETERS, "parameters")
     return sizes
 
 
@@ -181,11 +236,12 @@ def judged(before, after):
             notes.append(f"{key} is {size} words, past the {limit} the code-style skill sets; cut narration, not "
                          "rules.")
         elif previous is None or previous[0] <= limit:
-            failures.append(f"{key} is {size} {unit}, past the limit of {limit}; split it by cohesion (see the "
-                            "code-style skill).")
+            advice = "give the class fewer responsibilities" if unit == "parameters" else "split it by cohesion"
+            failures.append(f"{key} is {size} {unit}, past the limit of {limit}; {advice} (see the code-style skill).")
         elif size > previous[0]:
+            advice = "take a responsibility out of the class" if unit == "parameters" else "move code out of it"
             failures.append(f"{key} grew from {previous[0]} to {size} {unit}, already past the limit of {limit}; "
-                            "move code out of it, never into it (see the code-style skill).")
+                            f"{advice}, never into it (see the code-style skill).")
     return failures, notes
 
 

@@ -11,7 +11,17 @@ import subprocess
 import tempfile
 import unittest
 
-from check_sizes import FILE_LINES, FUNCTION_LINES, changed, checked_tree, judged, measure, top_level_functions
+from check_sizes import (
+    CONSTRUCTOR_PARAMETERS,
+    FILE_LINES,
+    FUNCTION_LINES,
+    changed,
+    checked_tree,
+    constructors,
+    judged,
+    measure,
+    top_level_functions,
+)
 
 COMPOSABLE = """@Composable
 internal fun SongCard(
@@ -46,6 +56,40 @@ class TopLevelFunctionsTest(unittest.TestCase):
     def test_a_chained_expression_body_runs_to_its_last_line(self):
         text = "fun a() = listOf(1)\n    .map { it }\n    .sum()\nfun b() = 2\n"
         self.assertEqual([("a", 1, 3), ("b", 4, 1)], top_level_functions(text))
+
+
+CLASSES = """/** A class(with, three, commas) named in KDoc. */
+@Single
+internal class Holder<T : Comparable<T>> @Inject constructor(
+    @Named("a, b") private val first: Map<String, Int> = mapOf<String, Int>("x" to 1, "y" to 2),
+    val second: (Int, Int) -> Unit = { a, b -> println("$a, $b") },
+    third: List<Pair<Int, Int>> = listOf(1 to 2, 3 to 4),
+    override val fourth: String = ",",
+    vararg fifth: Int,
+) : Base(first, second) {
+    private data class Nested(val a: Int, val b: Int)
+
+    class Bare : Other()
+
+    fun use() = Holder::class.simpleName
+}
+
+enum class Mode(val label: String) { One("1, 2"), Two("3") }
+
+class Empty
+"""
+
+
+class ConstructorsTest(unittest.TestCase):
+
+    def test_parameters_are_counted_past_commas_in_defaults_types_lambdas_and_strings(self):
+        self.assertEqual([("Holder", 5), ("Nested", 2), ("Mode", 1)], constructors(CLASSES))
+
+    def test_tests_are_not_measured_for_constructors(self):
+        many = "class Big(" + ", ".join(f"a{index}: Int" for index in range(20)) + ")\n"
+        self.assertEqual({}, sizes_of({"m/src/desktopTest/kotlin/Big.kt": many}))
+        self.assertEqual((20, CONSTRUCTOR_PARAMETERS, "parameters"),
+                         sizes_of({"m/src/commonMain/kotlin/Big.kt": many})["m/src/commonMain/kotlin/Big.kt::class Big"])
 
 
 class SizesTest(unittest.TestCase):
@@ -113,6 +157,25 @@ class JudgedTest(unittest.TestCase):
     def test_a_function_moved_to_another_file_may_not_grow_there(self):
         failures, _ = judged({"A.kt::f": (200, 120, "lines")}, {"B.kt::f": (201, 120, "lines")})
         self.assertEqual(1, len(failures))
+
+    def test_a_constructor_crossing_the_limit_fails(self):
+        before = {"A.kt::class A": (12, 12, "parameters")}
+        failures, _ = judged(before, {"A.kt::class A": (13, 12, "parameters")})
+        self.assertEqual(1, len(failures))
+
+    def test_a_new_class_past_the_limit_fails(self):
+        failures, _ = judged({}, {"A.kt::class A": (13, 12, "parameters")})
+        self.assertEqual(1, len(failures))
+
+    def test_a_constructor_already_past_the_limit_may_not_gain_parameters_but_may_keep_or_lose_them(self):
+        before = {"A.kt::class A": (15, 12, "parameters")}
+        self.assertEqual(1, len(judged(before, {"A.kt::class A": (16, 12, "parameters")})[0]))
+        for count in (15, 14):
+            self.assertEqual(([], []), judged(before, {"A.kt::class A": (count, 12, "parameters")}))
+
+    def test_a_class_moved_to_another_file_keeps_its_past(self):
+        failures, _ = judged({"A.kt::class A": (15, 12, "parameters")}, {"B.kt::class A": (15, 12, "parameters")})
+        self.assertEqual([], failures)
 
     def test_a_claude_md_past_its_budget_only_gets_a_note(self):
         failures, notes = judged({}, {"CLAUDE.md": (3000, 2500, "words")})
