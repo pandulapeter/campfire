@@ -123,7 +123,7 @@ internal object ChordSheetChordPlacement {
     }
 
     internal fun merge(chords: Rendered, lyricLine: Rendered, convertParentheses: Boolean): String {
-        val lyrics = withoutChordPadding(chords, withoutChordFill(chords, lyricLine))
+        val lyrics = withoutChordGaps(chords, withoutChordPadding(chords, withoutChordFill(chords, lyricLine)))
         val insertions = mutableMapOf<Int, MutableList<String>>()
         val starts = tokens(lyrics.text).map { it.index }
         val positions = lyrics.positions
@@ -258,6 +258,34 @@ internal object ChordSheetChordPlacement {
     }
 
     /**
+     * The lyric without the spaces read into a word where a layout set each syllable that carries a chord apart from the one
+     * before, `józan` and `ság` drawn a little apart under `C` and `C/B`: a gap no glyph is drawn in, between two letters,
+     * narrower than most of a space of the line (a quarter of an em where the line draws none), with a chord of the row
+     * starting where the letter after it does. Two words drawn without a space glyph are set a whole space apart, so a
+     * chord over the second keeps its break.
+     */
+    private fun withoutChordGaps(chords: Rendered, lyrics: Rendered): Rendered {
+        if (lyrics.bidi != null) return lyrics
+        val spans = lyrics.source.spans
+        val starts = chordRow(chords)?.tokens.orEmpty().filter { rowChord(it.text) }.mapNotNull { chords.positions.getOrNull(it.index) }
+        if (starts.isEmpty()) return lyrics
+        val drawnSpaces = spans.filter { it.text.length == 1 && it.text.isBlank() }.map { it.end - it.start }.sorted()
+        val dropped = (1 until lyrics.text.length - 1).filter { index ->
+            val text = lyrics.text
+            if (text[index] != ' ' || !text[index - 1].isLetter() || !text[index + 1].isLetter()) return@filter false
+            val from = lyrics.positions[index]
+            val to = lyrics.positions[index + 1]
+            val size = spans.firstOrNull { to >= it.start - 0.01 && to < it.end }?.size ?: return@filter false
+            val space = drawnSpaces.getOrNull(drawnSpaces.size / 2) ?: (size * 0.25)
+            spans.none { from >= it.start - 0.01 && from < it.end - 0.01 } && to - from < space * WORD_SPACE &&
+                starts.any { abs(it - to) <= size * CHORD_ANCHOR }
+        }.toSet()
+        if (dropped.isEmpty()) return lyrics
+        val kept = lyrics.text.indices.filter { it !in dropped }
+        return lyrics.copy(text = kept.map { lyrics.text[it] }.joinToString(""), positions = DoubleArray(kept.size) { lyrics.positions[kept[it]] })
+    }
+
+    /**
      * The text of a right-to-left row ([Rendered.bidi]) without the no-break spaces a layout pads a word with to make room
      * for the wide chord before the next chord set in it, `קט°°[C]נה`, with [insertions] moved onto what is left: a run
      * of them inside a word, a chord set on the letter after it and another before it in the row. [withoutChordPadding]
@@ -334,4 +362,10 @@ internal object ChordSheetChordPlacement {
 
     /** The least room a layout leaves between two chords of a row, as a share of the lyric's type size: about a space. */
     private const val CHORD_GAP = 0.3
+
+    /** How much of a space of the line a gap in a word under a chord stays below: a word space is drawn about whole. */
+    private const val WORD_SPACE = 0.8
+
+    /** How far from a syllable's first glyph a chord set on it may start, as a share of the lyric's type size. */
+    private const val CHORD_ANCHOR = 0.05
 }

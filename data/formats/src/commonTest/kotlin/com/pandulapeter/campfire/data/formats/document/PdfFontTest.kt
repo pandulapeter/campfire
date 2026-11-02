@@ -30,6 +30,17 @@ class PdfFontTest {
     }
 
     @Test
+    fun `an accented letter of a standard font listing no widths is as wide as its bare letter`() {
+        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
+        val font = PdfFont(file, PdfSyntax("<< /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".encodeToByteArray()).next() as PdfDictionary)
+        // ó, Á, and o in WinAnsi.
+        val (accented, capital, bare) = font.decode(byteArrayOf(0xF3.toByte(), 0xC1.toByte(), 'o'.code.toByte())).toList()
+
+        assertEquals(bare.width, accented.width)
+        assertEquals(667.0, capital.width)
+    }
+
+    @Test
     fun `overlapping CID width ranges are rejected quickly`() {
         val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
         val dictionary = PdfSyntax(

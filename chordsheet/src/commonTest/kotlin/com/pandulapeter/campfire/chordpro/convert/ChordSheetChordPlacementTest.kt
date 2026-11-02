@@ -38,11 +38,26 @@ class ChordSheetChordPlacementTest {
         assertTrue(result.startsWith("[C] [C]\n\n[G]Give me [Am]one [Am7]more [C]chance now"), result)
     }
 
-    /** [text] drawn glyph by glyph in a proportional type, whose glyphs' edges a layout rounds. */
-    private fun glyphs(text: String): ChordSheet.Line {
+    @Test
+    fun `a gap a layout opens in a word for a chord is no word break, a word space with no glyph drawn is`() {
+        // Each part starts where its chord does, a little past where the part before ends; "nem" and "hat" stand a space apart.
+        val parts = listOf("Ma ", "nem", "hat rám a ", "józan", "ság sza", "va.")
+        val gaps = listOf(0.0, 2.5, 3.37, 2.5, 2.5, 2.5)
+        val lyricLine = glyphs(parts.joinToString(""), gaps = parts.indices.associate { index -> parts.take(index).sumOf { it.length } to gaps[index] })
+        val chordLine = ChordSheet.Line(
+            listOf("C", "G", "Em", "C", "C/B", "Am").mapIndexed { index, name -> chord(name, lyricLine, parts.take(index).sumOf { it.length }) },
+        )
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(chordLine, lyricLine)))), guessesTitle = false).single()
+
+        assertTrue("[C]Ma [G]nem [Em]hat rám a [C]józan[C/B]ság sza[Am]va." in result, result)
+    }
+
+    /** [text] drawn glyph by glyph in a proportional type, whose glyphs' edges a layout rounds, [gaps] left before the glyphs they name. */
+    private fun glyphs(text: String, gaps: Map<Int, Double> = emptyMap()): ChordSheet.Line {
         var x = 40.0
         return ChordSheet.Line(
-            text.map { c ->
+            text.mapIndexed { index, c ->
+                x += gaps[index] ?: 0.0
                 val width = when (c) {
                     'i', 'l', '.', ',', ' ' -> 3.37
                     'm', 'w' -> 10.51

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
+import com.pandulapeter.campfire.data.model.library.withoutAccent
+
 internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     data class Glyph(val code: Int, val text: String?, val width: Double)
     private data class Code(val value: Int, val length: Int)
@@ -34,6 +36,7 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private val defaultWidth = if (cid) file.number(descendant["DW"], 1000.0)
     else (file.resolve(descriptor?.get("MissingWidth")) as? PdfNumber)?.value?.times(widthScale) ?: if (monospace) 600.0 else 500.0
     private var encodedLength = if (cid) 2 else 1
+    private var hasStandardMetrics = false
 
     init {
         file.stream(dictionary["ToUnicode"])?.let(::cmap)
@@ -57,6 +60,7 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
                 is PdfName -> { if (code in 0..255) encoding[code] = glyphName(item.value); code++ }
                 else -> Unit
             }
+            accentedWidths()
         }
     }
 
@@ -87,6 +91,20 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
         } else if (isStandardFont()) {
             val metrics = if (baseName.startsWith("Times-")) timesWidths else helveticaWidths
             for (code in 32..126) widths[code] = if (monospace) 600.0 else metrics[code - 32].toDouble()
+            hasStandardMetrics = true
+        }
+    }
+
+    /**
+     * An accented letter of a standard font that lists no widths takes its bare letter's, as it has in the fonts' own
+     * metrics: guessed, its word would end short of where the next glyph is drawn, and the gap would read as a space.
+     */
+    private fun accentedWidths() {
+        if (!hasStandardMetrics) return
+        for (code in 0..255) {
+            val letter = encoding[code]?.singleOrNull()?.takeIf { it.isLetter() && code !in widths } ?: continue
+            val bare = letter.lowercaseChar().withoutAccent().let { if (letter.isUpperCase()) it.uppercaseChar() else it }
+            if (bare != letter && bare.code in 32..126) widths[code] = widths.getValue(bare.code)
         }
     }
     private fun dictionaryValue(name: String) = descendant[name]
