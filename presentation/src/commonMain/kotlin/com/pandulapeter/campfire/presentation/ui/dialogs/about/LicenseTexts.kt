@@ -10,13 +10,21 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.about
 
 import com.pandulapeter.campfire.presentation.resources.Res
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Every NOTICE and license text [components] name, by file, each cut into pieces ([licenseTextChunks]). */
 internal suspend fun readLicenseTexts(components: List<OpenSourceComponent>) = withContext(Dispatchers.Default) {
     components.flatMap { listOfNotNull(it.noticeFile, it.licenseFile) }.distinct().mapNotNull { file ->
-        runCatching { Res.readBytes(file).decodeToString() }.getOrNull()?.let { file to licenseTextChunks(it) }
+        val text = try {
+            Res.readBytes(file).decodeToString()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            null
+        }
+        text?.let { file to licenseTextChunks(it) }
     }.toMap()
 }
 
