@@ -301,6 +301,30 @@ starts at the column's edge and the line above reaches the other edge. The capo 
 (owner's ruling: vocabulary, not export rules). A rule that finds no general form is recorded in this plan with the
 members it costs, for the owner to accept in step 8.
 
+*Done* (general rules: a smaller bold label, a grid row of bars and beats, a lone italic line before a chord row or a
+heading as a comment, a row wrapped by a column filled to its gutter; corpus 0.8299 → 0.8352, `campfire/` unchanged at
+0.9595). With every export rule off on top of them, `campfire/` reads 0.8906 (0.8175 before them). Found no general form,
+each cost measured with only that rule off, overall score before → after:
+
+- **Word joiners** (`isContinuation`, `isHardCut`, `isContinuedBelow`, `joinWrappedDetails`): the wrap rule joins only a
+  row opening without a capital (`Y.M.C.A.`, `Clemen-tine` stay apart), never a word cut inside, a wrapped title,
+  comment, or details row. All off: `amazing_grace_capo-three-columns` 1.00 → 0.97, `because-of-jesus-b29-three-columns`
+  0.81 → 0.46, `clementine_the_whole_story-three-columns` 1.00 → 0.26, `house_of_the_rising_sun_pre-three-columns`
+  1.00 → 0.86, `starman-david-bowie-three-columns` 0.88 → 0.76, `ymca-three-columns` 1.00 → 0.80.
+- **Padding** (`dropsPadding`): `because-of-jesus-b29` 0.79 → 0.75 and 0.81 → 0.77, `ymca` 1.00 → 0.99 (both). Not
+  attempted: a general form (no-break spaces between two letters under a chord) needs the no-break space kept past
+  `ChordSheetText.clean` into the merge.
+- **Artist rows** (`HEADING_ROW`): `starman-david-bowie` 0.84 → 0.77 and 0.88 → 0.81; a name longer than the title under
+  it is a first lyric as often.
+- **Comments the italic rule misses**: three italic paragraphs in a row read as italic lyrics (`starman-david-bowie-one-column`
+  0.84 → 0.84), and a comment wrapped onto rows (`because-of-jesus-b29-three-columns` 0.81 → 0.80, `starman-…-three-columns`
+  0.88 → 0.77, with the artist rows).
+- **Exact chord position** (`EXACT_POSITION`, `lyricsEnd`): `because-of-jesus-b29` 0.79 → 0.78 and 0.81 → 0.81; the
+  snapping to a word other producers need moves a chord set mid-word.
+- No cost alone: `isChord`, `allowsNotesOnly`, the staff test, boxed comments, `isCampfireArtist`, the title read whole
+  and its chord test, `isSetFromRight`, the header-parts skip, the key change anywhere, and `isStyledChordLine`'s export
+  exemption. `isNote` off raises `campfire/` to 0.9632 while `because-of-jesus-b29` loses 0.002 (both).
+
 #### Batch F (one agent; shares files with other lanes, see **Files**): steps 8 and 9
 
 **8. Switch the export off, with the tests that pinned it** (one commit, so no commit is red). `convert` treats
