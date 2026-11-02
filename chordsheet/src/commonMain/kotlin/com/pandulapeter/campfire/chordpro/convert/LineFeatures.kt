@@ -82,7 +82,8 @@ internal data class LineFeatures(
          * Whether each line is the rest of the lyric above it, wrapped by a narrow column: in a column filled to its gutter,
          * a row starting where that lyric does and in its type, whose first word, or the chord over it where that is wider,
          * would not have fit after it before the column's edge, and opening without a capital, since a line of its own would
-         * open with one. A chord row between the two is the wrapped row's own.
+         * open with one, unless the lyric was broken at a space it kept ([isBrokenAtSpace]): a name or a capitalised word
+         * wrapped onto the next row goes on the line all the same. A chord row between the two is the wrapped row's own.
          */
         private fun wrapped(lines: List<Rendered>, bodySize: Double): List<Boolean> {
             // Campfire's export marks the rows it wraps itself ([CampfireMarks.isContinuation]).
@@ -115,7 +116,7 @@ internal data class LineFeatures(
                 val spaced = end(lyric) + size * WORD_GAP + wordEnd - line.positions[start]
                 val opening = line.text.firstOrNull { it.isLetter() }
                 abs(line.positions[start] - lyric.positions[lyric.text.indexOfFirst { !it.isWhitespace() }]) < POSITION && spaced > (edges[line.source.column] ?: Double.MAX_VALUE) &&
-                    opening?.isUpperCase() != true && type(lyric) == type(line)
+                    (opening?.isUpperCase() != true || isBrokenAtSpace(lyric)) && type(lyric) == type(line)
             }
         }
 
@@ -126,6 +127,13 @@ internal data class LineFeatures(
                 val last = row.positions[(token.index + token.text.length - 1).coerceAtMost(row.positions.lastIndex)]
                 row.source.spans.lastOrNull { last >= it.start - 0.01 && last < it.end + 0.01 }?.end ?: last
             } ?: to
+
+        /**
+         * Whether [line] ends in the one space a soft wrap broke it at, which a PDF keeps on the row it breaks and a line
+         * ending of its own does not carry; a run of spaces is padding rather than a break.
+         */
+        private fun isBrokenAtSpace(line: Rendered) = line.source.spans.joinToString("") { it.text }
+            .let { it.length > 1 && it.last().isWhitespace() && !it[it.length - 2].isWhitespace() }
 
         private fun start(line: Rendered) = line.source.spans.first { it.text.isNotBlank() }.start
 

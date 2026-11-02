@@ -1739,4 +1739,25 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `a capitalized row goes on the lyric above it where a narrow column broke that lyric at a space it kept`() {
+        fun line(text: String, column: Int, start: Double) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), start + index * 6.0, start + (index + 1) * 6.0, 10.0) }, column = column)
+        val lines = listOf(
+            ChordSheet.Line(listOf(ChordSheet.Span("Song", 0.0, 80.0, 20.0, isBold = true))),
+            line("G         C", 0, 0.0),
+            line("Hello darkness my old friend I've", 0, 0.0),
+            line("come to talk with you again in ", 0, 0.0),
+            line("London town", 0, 0.0),
+            line("Because a vision softly creeping", 0, 0.0),
+            line("Left its seeds while I was", 1, 220.0),
+            line("Sleeping with the vision", 1, 220.0),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]Hello dark[C]ness my old friend I've come to talk with you again in London town\n" +
+                "Because a vision softly creeping\nLeft its seeds while I was\nSleeping with the vision\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }
