@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncAuthenticator
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SystemBrowser
 import java.io.PrintWriter
 import java.net.Socket
 import java.net.SocketException
@@ -33,48 +34,55 @@ import kotlin.test.assertTrue
  * it is invisible until somebody actually cancels - which is what these cover.
  *
  * No browser is opened: the [com.pandulapeter.campfire.data.model.sync.SystemBrowser] is injected, which is the
- * reason this seam exists.
+ * reason this seam exists. Each listener binds a port of the operating system's choosing, so nothing here depends on
+ * the registered port being free.
  */
-class DesktopSyncAuthenticatorTest {
+class LoopbackRedirectListenerTest {
 
     @Test
-    fun `prepares a loopback redirect uri on the registered port`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
+    fun `the app listens on the address registered with the service`() {
+        assertEquals(expected = "http://127.0.0.1:53682", actual = loopbackRedirectUri(DesktopSyncAuthenticator.PORT))
+    }
+
+    @Test
+    fun `prepares a loopback redirect uri on the port it listens on`() = runBlocking {
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
         try {
-            assertEquals(expected = "http://127.0.0.1:53682", actual = authenticator.prepareRedirectUri())
-            assertTrue(isPortOpen(), "The socket the service redirects to is not listening.")
+            assertEquals(expected = loopbackRedirectUri(port), actual = "http://127.0.0.1:$port")
+            assertTrue(isPortOpen(port), "The socket the service redirects to is not listening.")
         } finally {
-            authenticator.close()
+            authenticator.close(port)
         }
     }
 
     /** The bug this exists for: cancelling used to leave the thread blocked and the port held for five minutes. */
     @Test
     fun `cancelling the authorization releases the port`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
-        authenticator.prepareRedirectUri()
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         // `accept` has to actually be blocking, which is the state the cancellation has to reach.
         awaitAccept(isBlocking = true)
-        assertTrue(isPortOpen(), "The socket should still be listening while the authorization waits.")
+        assertTrue(isPortOpen(port), "The socket should still be listening while the authorization waits.")
 
         authorization.cancel()
         withTimeout(5_000) {
-            while (isPortOpen()) {
+            while (isPortOpen(port)) {
                 delay(50)
             }
         }
-        assertFalse(isPortOpen(), "The port is still held after the authorization was cancelled.")
+        assertFalse(isPortOpen(port), "The port is still held after the authorization was cancelled.")
     }
 
     /** And the ordinary path still works: the browser's request comes back as the redirect it carries. */
     @Test
     fun `a redirect delivered to the socket is returned`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
-        authenticator.prepareRedirectUri()
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
-        Socket("127.0.0.1", 53682).use { socket ->
+        Socket("127.0.0.1", port).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
                 print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
                 flush()
@@ -86,10 +94,10 @@ class DesktopSyncAuthenticatorTest {
         }
         val outcome = withTimeout(5_000) { authorization.await() }
         assertEquals(
-            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:53682/?code=abc123&state=deadbeef"),
+            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:$port/?code=abc123&state=deadbeef"),
             actual = outcome,
         )
-        assertFalse(isPortOpen(), "The port should be released once the redirect has arrived.")
+        assertFalse(isPortOpen(port), "The port should be released once the redirect has arrived.")
     }
 
     /**
@@ -98,14 +106,14 @@ class DesktopSyncAuthenticatorTest {
      */
     @Test
     fun `a connection that sends nothing does not keep the redirect from being read`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator(systemBrowser = { true }, logger = Logger.Standard)
-        authenticator.prepareRedirectUri()
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
         val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
-        val idle = Socket("127.0.0.1", 53682)
+        val idle = Socket("127.0.0.1", port)
         // Taken off the backlog before the redirect connects, the way the browser's speculative connection comes first.
         awaitAccept(isBlocking = false)
-        Socket("127.0.0.1", 53682).use { socket ->
+        Socket("127.0.0.1", port).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
                 print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
                 flush()
@@ -119,10 +127,10 @@ class DesktopSyncAuthenticatorTest {
         }
         val outcome = withTimeout(5_000) { authorization.await() }
         assertEquals(
-            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:53682/?code=abc123&state=deadbeef"),
+            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:$port/?code=abc123&state=deadbeef"),
             actual = outcome,
         )
-        assertFalse(isPortOpen(), "The port should be released once the redirect has arrived.")
+        assertFalse(isPortOpen(port), "The port should be released once the redirect has arrived.")
     }
 
     /**
@@ -131,12 +139,12 @@ class DesktopSyncAuthenticatorTest {
      */
     @Test
     fun `an authorization whose browser could not be opened ends at once`() = runBlocking {
-        val authenticator = DesktopSyncAuthenticator(systemBrowser = { false }, logger = Logger.Standard)
-        authenticator.prepareRedirectUri()
+        val authenticator = listener(systemBrowser = { false })
+        val port = authenticator.prepareRedirectUri().port()
         val outcome = withTimeout(5_000) { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         assertIs<SyncAuthenticator.AuthorizationOutcome.Cancelled>(outcome)
         assertNotNull(outcome.message, "A browser that could not be opened is a failure, not the user backing out.")
-        withTimeout(5_000) { while (isPortOpen()) delay(50) }
+        withTimeout(5_000) { while (isPortOpen(port)) delay(50) }
     }
 
     /**
@@ -155,21 +163,29 @@ class DesktopSyncAuthenticatorTest {
      * A probe that lands while the listener is closing is reset rather than refused, since Linux drops the connection
      * still waiting in the closing socket's queue; either way nothing listens on the port any more.
      */
-    private fun isPortOpen() = try {
-        Socket("127.0.0.1", 53682).close()
+    private fun isPortOpen(port: Int) = try {
+        Socket("127.0.0.1", port).close()
         true
     } catch (exception: SocketException) {
         false
     }
 
-    /** Only needed by the test that never starts an authorization, since [DesktopSyncAuthenticator.authorize] closes its own socket. */
-    private suspend fun DesktopSyncAuthenticator.close() {
+    private fun listener(systemBrowser: SystemBrowser) = LoopbackRedirectListener(
+        systemBrowser = systemBrowser,
+        logger = Logger.Standard,
+        port = 0,
+    )
+
+    private fun String.port() = substringAfterLast(':').toInt()
+
+    /** Only needed by the test that never starts an authorization, since [LoopbackRedirectListener.authorize] closes its own socket. */
+    private suspend fun LoopbackRedirectListener.close(port: Int) {
         val authorization = kotlinx.coroutines.CoroutineScope(kotlin.coroutines.EmptyCoroutineContext)
             .async { authorize("https://example.com/authorize", COMPLETION_PAGE) }
         awaitAccept(isBlocking = true)
         authorization.cancel()
         withTimeout(5_000) {
-            while (isPortOpen()) {
+            while (isPortOpen(port)) {
                 delay(50)
             }
         }

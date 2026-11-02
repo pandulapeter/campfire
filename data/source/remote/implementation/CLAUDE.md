@@ -121,9 +121,9 @@ Shared by every provider; service specifics come from its `SyncHttpErrorMapper`.
     period for the redirect. After process death the redirect waits for `consumePendingRedirect`.
   - **Desktop**: a server on `127.0.0.1:53682` for one authorization; if the browser never opens, the attempt ends at
     once. `accept` ignores cancellation and interrupts, so cancelling closes the socket from a sibling coroutine
-    (`DesktopSyncAuthenticatorTest`; getting it wrong holds the port for five minutes). Each connection is read with a
-    timeout; non-redirect requests (speculative connections, favicon) get a 404 while listening continues. Nobody
-    answering ends it after five minutes.
+    (`LoopbackRedirectListenerTest`, on a port of its own; getting it wrong holds the port for five minutes). Each
+    connection is read with a timeout; non-redirect requests (speculative connections, favicon) get a 404 while
+    listening continues. Nobody answering ends it after five minutes.
   - **Web**: navigates away (`Redirected`), the PKCE verifier written to OPFS first; the answer is read from the query
     string at the next start and removed from the address bar so a reload cannot replay the code. `error=access_denied`
     is a refusal. The redirect URI is the `<base>` folder (not the address bar), ending in `/`, without `index.html`;

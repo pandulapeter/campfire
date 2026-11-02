@@ -252,8 +252,7 @@ behind a surprising design, platform quirks; each rule in one file, at the level
   desktop runtime → `:app:desktop:createReleaseDistributable`. Full build after the last lane:
   `./gradlew :app:android:assembleDebug :app:ios:linkDebugFrameworkIosSimulatorArm64 :app:web:wasmJsBrowserDistribution :app:desktop:packageDistributionForCurrentOS`.
 - **At most two concurrent Gradle builds** — six lanes at once hit Kotlin daemon OOMs on the 24 GB Mac.
-- Known false alarms: `DesktopSyncAuthenticatorTest` holds port 53682, so rerun it alone before calling a lane red;
-  a corrupt incremental cache is retried with `-Pkotlin.incremental=false`.
+- Known false alarm: a corrupt incremental cache, retried with `-Pkotlin.incremental=false`.
 - `local.properties` is not in a worktree; copy it in only for lanes whose manual check needs the Dropbox key.
 - Strings and the `CLAUDE.md` file a changed behaviour updates follow the `code-style` skill.
 - A refactor that renames or moves classes leaves the Android Baseline Profile stale; prepare-release regenerates
