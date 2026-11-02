@@ -9,6 +9,10 @@ A sweep has two halves. The **review** finds and verifies issues, **fixes the si
 each, and writes a plan for each complex one. The **execution** lands those plans, in a later turn, and only starts
 when the user says so — never roll from the review into it.
 
+**When to run:** at milestones only — after a planned program lands, before a major release, or when the owner asks;
+never after every batch of commits. Between them, the checks in the loop (the edit hook, the pre-commit hook) keep
+quality.
+
 ## 0. Before anything
 
 - Read the memory notes of earlier reviews (`MEMORY.md` lists them). Do not re-review an area the last sweep found
@@ -209,8 +213,8 @@ fixed during the review. Everything above still holds, with these additions.
   (`git diff --color-moved=dimmed-zebra`, or the sorted declaration lists) rather than re-reading by eye.
 - **Plans written after the review's fixes** re-check every quoted snippet and file path against the new `HEAD`,
   since the refactors moved code.
-- **Afterwards**, offer a regression review of the landed range: its angle is "did these refactors preserve
-  behaviour", area by area against the commit before them.
+- **The review after the program lands** (a milestone) takes the angle "did these refactors preserve behaviour",
+  area by area against the commit before them.
 
 ## 6. The CLAUDE.md files, in every sweep
 
