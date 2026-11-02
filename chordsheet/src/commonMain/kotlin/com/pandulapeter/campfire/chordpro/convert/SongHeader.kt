@@ -284,7 +284,8 @@ internal object SongHeader {
     private const val HEADING_ROW = 1.6
 
     private val pageWords = setOf("chords", "tab", "lyrics")
-    private val credit = Regex("^(?:words (?:and|&) music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
+    /** A credit naming its author, `by Someone`, `Words and music by Someone`, or `Words: Someone`. */
+    private val credit = Regex("^(?:(?:words|lyrics|music)(?:\\s*(?:and|&)\\s*(?:words|lyrics|music))?(?:\\s*:\\s*|\\s+by\\s+)|by\\s+)(.+)$", RegexOption.IGNORE_CASE)
     /** A credit ending in the year of the song, `Words & music by David Bowie 1972`. */
     private val creditYear = Regex("^(.+?),?\\s+((?:1[5-9]|20)[0-9]{2})$")
     /** An artist's name followed by the year of the song, which only a comma tells apart from a name: `David Bowie, 1972`. */

@@ -1819,4 +1819,21 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `a credit under the title naming its words or music, longer than the title, is the song's artist`() {
+        fun convert(credit: String) = ChordSheetConverter.convert(
+            ChordSheet(
+                listOf(
+                    ChordSheet.Page(
+                        listOf(ChordSheet.Line(listOf(span("Hello", 0.0, 10.0, size = 2.0, bold = true))), ChordSheet.Line(listOf(span(credit, 0.0, 28.0, size = 1.0)))) +
+                            ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines,
+                    ),
+                ),
+            ),
+        ).single()
+        assertTrue(convert("Words: Frederic Weatherly").startsWith("{title: Hello}\n{artist: Frederic Weatherly}\n\n"), convert("Words: Frederic Weatherly"))
+        assertTrue(convert("Lyrics and music: Somebody Else").startsWith("{title: Hello}\n{artist: Somebody Else}\n\n"))
+        assertTrue(convert("Music by Somebody Else").startsWith("{title: Hello}\n{artist: Somebody Else}\n\n"))
+    }
 }
