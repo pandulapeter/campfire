@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 
 /**
  * One setlist's rows in the order they are drawn, which is the order a drag in flight has put them in rather than

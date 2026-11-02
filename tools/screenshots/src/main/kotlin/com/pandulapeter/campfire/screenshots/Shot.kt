@@ -32,8 +32,8 @@ import com.pandulapeter.campfire.presentation.localization.StringsRo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import com.pandulapeter.campfire.tuner.api.Tuner
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonElement

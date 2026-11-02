@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.lookup
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationDigitsOf
+import com.pandulapeter.campfire.presentation.ui.songInfo.durationDigitsOf
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.catalogue.Catalogue
 import com.pandulapeter.campfire.data.model.song.Song

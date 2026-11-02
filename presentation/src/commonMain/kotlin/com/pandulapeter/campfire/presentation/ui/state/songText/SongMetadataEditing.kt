@@ -26,12 +26,12 @@ import com.pandulapeter.campfire.data.model.song.tagKey
 import com.pandulapeter.campfire.domain.api.songs.SetChordProTagUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorTextEdit
 import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import kotlinx.coroutines.flow.map
 

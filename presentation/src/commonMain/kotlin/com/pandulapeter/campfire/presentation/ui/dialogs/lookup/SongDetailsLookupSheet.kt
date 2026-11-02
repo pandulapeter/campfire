@@ -56,6 +56,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupState
 import com.pandulapeter.campfire.presentation.ui.state.online.songDetailsQueryOf
 
 /**

@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
+import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.foundation.layout.Column

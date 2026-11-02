@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
 import com.pandulapeter.campfire.presentation.ui.components.relativeDay
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import kotlinx.datetime.LocalDate
 
 /** Whether [SetlistSummary] has anything to show: a countdown, a running time, or a description. */

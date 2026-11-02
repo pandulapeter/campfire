@@ -14,10 +14,10 @@ import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.f
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.importReportSections
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.hasEntriesToChoose
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.importReviewSections
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.importReviewSummary
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.matchingReview
+import com.pandulapeter.campfire.presentation.ui.state.importing.hasEntriesToChoose
+import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSections
+import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSummary
+import com.pandulapeter.campfire.presentation.ui.state.importing.matchingReview
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.reviewHeader
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.reviewSections
 import androidx.compose.animation.AnimatedContent
@@ -68,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 
 /**
  * Every import the user started, on one screen that goes through the import's stages in place rather than as a run of

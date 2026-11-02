@@ -15,6 +15,9 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
+import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 
 /**
  * Holds the cards of the song list where they are on screen while the Selection section above them changes: a tick

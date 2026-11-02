@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.import_retry
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
 import com.pandulapeter.campfire.presentation.ui.components.CrossfadedText
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import kotlin.reflect.KClass
 import org.jetbrains.compose.resources.painterResource
 

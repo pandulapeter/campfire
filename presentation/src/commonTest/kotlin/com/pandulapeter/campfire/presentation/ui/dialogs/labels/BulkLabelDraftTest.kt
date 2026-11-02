@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.labels
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
+import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.state.ToggleableState
 import kotlin.test.Test

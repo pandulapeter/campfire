@@ -7,9 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.chords
+package com.pandulapeter.campfire.presentation.ui.chords
 
-import com.pandulapeter.campfire.presentation.ui.chords.libraryKeys
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProChords
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings

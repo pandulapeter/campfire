@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
+package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.ImportReviewSection.Kind
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReviewSection.Kind
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals

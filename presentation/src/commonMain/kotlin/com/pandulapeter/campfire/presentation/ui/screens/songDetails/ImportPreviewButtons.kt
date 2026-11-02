@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_import
 import com.pandulapeter.campfire.presentation.resources.import_preview_import_as_copy
 import com.pandulapeter.campfire.presentation.resources.import_preview_importing
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.importReviewSummary
+import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSummary
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewAction
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.max

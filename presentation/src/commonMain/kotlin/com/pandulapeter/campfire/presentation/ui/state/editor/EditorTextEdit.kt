@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songEditor
+package com.pandulapeter.campfire.presentation.ui.state.editor
 
 /**
  * One change of `EditorSession.editorTextEdits`: [edit] applied to the text the editor of [fileName] holds when it

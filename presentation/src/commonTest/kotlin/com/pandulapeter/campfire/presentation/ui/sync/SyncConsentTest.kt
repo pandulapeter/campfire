@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import kotlinx.coroutines.test.runTest

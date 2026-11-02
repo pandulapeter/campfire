@@ -19,8 +19,7 @@ import com.pandulapeter.campfire.domain.api.library.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.labels.labelsOnEverySongOf
-import com.pandulapeter.campfire.presentation.ui.screens.settings.LibrarySummary
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchIndex
 import com.pandulapeter.campfire.presentation.ui.search.SongSearchSnapshot
 import kotlin.time.Duration.Companion.seconds

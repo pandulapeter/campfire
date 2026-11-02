@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.onboarding_progress
 import com.pandulapeter.campfire.presentation.ui.components.controls.pagerSelection
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 
 /**
  * A dot for every step shown, the current one stretched into a pill, read out as "Step 2 of 4". The pill follows the

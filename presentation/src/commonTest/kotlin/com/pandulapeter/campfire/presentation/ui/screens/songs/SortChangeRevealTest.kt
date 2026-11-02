@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

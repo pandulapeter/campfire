@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+
 /** The grid index of the item with [key], counted the way [SongList] emits its items. */
 internal fun List<SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
     var index = if (hasPlaceholder) 1 else 0

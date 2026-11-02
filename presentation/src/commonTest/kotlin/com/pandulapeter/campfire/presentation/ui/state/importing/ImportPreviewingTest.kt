@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

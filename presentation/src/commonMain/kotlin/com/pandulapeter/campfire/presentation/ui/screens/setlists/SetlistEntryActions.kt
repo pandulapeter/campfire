@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.state.setlists.details
 import org.jetbrains.compose.resources.painterResource
 
 /**

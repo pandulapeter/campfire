@@ -44,6 +44,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_metadata_ed
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.songInfo.fromSongMetadataDraft
+import com.pandulapeter.campfire.presentation.ui.songInfo.songMetadataSaver
+import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 import org.jetbrains.compose.resources.painterResource
 
 /**

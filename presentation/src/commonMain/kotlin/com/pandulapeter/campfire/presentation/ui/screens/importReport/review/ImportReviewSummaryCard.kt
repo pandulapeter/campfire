@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.presentation.resources.import_review_name_taken
 import com.pandulapeter.campfire.presentation.resources.import_review_skipped
 import com.pandulapeter.campfire.presentation.resources.import_review_summary_counts
 import com.pandulapeter.campfire.presentation.resources.import_unreadable_documents
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReviewSummary
+import com.pandulapeter.campfire.presentation.ui.state.importing.hasEntriesToChoose
 import org.jetbrains.compose.resources.PluralStringResource
 
 /**

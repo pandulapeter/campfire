@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_palette
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.ic_tuner
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt

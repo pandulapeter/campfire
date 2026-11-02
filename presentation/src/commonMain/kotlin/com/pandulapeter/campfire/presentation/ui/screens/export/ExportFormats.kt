@@ -10,20 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
-import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
-
-/**
- * What [dialog] would be shared as a link: a song or a setlist, never several songs at once, which have no file of
- * their own to follow.
- */
-internal fun shareTargetOf(dialog: DialogType.Export) = when {
-    dialog.setlist != null -> ShareTarget(SharedLinkKind.SETLIST, dialog.setlist.fileName)
-    dialog.songs.isNotEmpty() -> null
-    dialog.song != null -> ShareTarget(SharedLinkKind.SONG, dialog.song.fileName)
-    else -> null
-}
+import com.pandulapeter.campfire.presentation.ui.share.shareTargetOf
 
 /**
  * The formats offered for [dialog], in the order they are recommended in: a link first, then the library's own files,

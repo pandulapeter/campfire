@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

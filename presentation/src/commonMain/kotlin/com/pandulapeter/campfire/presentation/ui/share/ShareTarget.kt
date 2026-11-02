@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.share
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import kotlinx.serialization.Serializable
 
 /**
@@ -30,3 +31,14 @@ internal data class ShareTarget(
  */
 internal fun shareOf(shares: List<Share>, target: ShareTarget) =
     shares.firstOrNull { it.kind == target.kind && LibraryFiles.isSameLibraryName(it.fileName, target.fileName) }
+
+/**
+ * What [dialog] would be shared as a link: a song or a setlist, never several songs at once, which have no file of
+ * their own to follow.
+ */
+internal fun shareTargetOf(dialog: DialogType.Export) = when {
+    dialog.setlist != null -> ShareTarget(SharedLinkKind.SETLIST, dialog.setlist.fileName)
+    dialog.songs.isNotEmpty() -> null
+    dialog.song != null -> ShareTarget(SharedLinkKind.SONG, dialog.song.fileName)
+    else -> null
+}

@@ -10,10 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.lookup
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SONG_METADATA_FIELDS
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationDigitsOf
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.durationTextOf
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.toSongMetadataDraft
+import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.songInfo.durationDigitsOf
+import com.pandulapeter.campfire.presentation.ui.songInfo.durationTextOf
+import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.model.catalogue.SongCredits

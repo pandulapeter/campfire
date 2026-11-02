@@ -82,6 +82,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSetlistActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
+import com.pandulapeter.campfire.presentation.ui.state.setlists.details
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive

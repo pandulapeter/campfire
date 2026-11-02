@@ -17,9 +17,9 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope

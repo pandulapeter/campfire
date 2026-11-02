@@ -53,7 +53,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 
 /**
  * The one confirmation that is typed rather than tapped: every song and setlist on the device goes with it, and a

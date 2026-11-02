@@ -25,6 +25,9 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelS
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.list.SECTION_START_ROOM
 import com.pandulapeter.campfire.presentation.ui.components.list.SECTION_HEADER_ROW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import kotlinx.coroutines.flow.filter
 import kotlin.math.roundToInt
 

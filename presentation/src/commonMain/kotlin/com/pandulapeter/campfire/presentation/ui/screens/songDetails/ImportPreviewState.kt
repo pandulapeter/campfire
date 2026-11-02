@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewActions
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
 import com.pandulapeter.campfire.presentation.ui.state.importing.importPreviewActionsOf

@@ -11,14 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
-import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class ExportFormatsTest {
 
@@ -74,13 +71,6 @@ class ExportFormatsTest {
             stored.copy(format = PrintSettings.Format.PDF),
             openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = PrintSettings.Format.PDF, exportFormatsOf(songExport, isSyncAvailable = true)),
         )
-    }
-
-    @Test
-    fun `a link shares the song or the setlist by its file, the song reached through a setlist included`() {
-        assertEquals(ShareTarget(SharedLinkKind.SONG, "a.cho"), shareTargetOf(songExport.copy(songSetlistFileName = "set.setlist.json")))
-        assertEquals(ShareTarget(SharedLinkKind.SETLIST, "set.setlist.json"), shareTargetOf(setlistExport))
-        assertNull(shareTargetOf(songsExport))
     }
 
     private fun song(fileName: String) = Song(

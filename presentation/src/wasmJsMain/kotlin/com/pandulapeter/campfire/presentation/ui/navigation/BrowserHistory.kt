@@ -18,7 +18,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import kotlinx.browser.window
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine

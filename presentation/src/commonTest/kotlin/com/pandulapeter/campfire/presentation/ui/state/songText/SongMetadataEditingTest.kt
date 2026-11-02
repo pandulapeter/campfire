@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorTextEdit
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorTextEdit
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

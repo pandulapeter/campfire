@@ -14,8 +14,8 @@ import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsControll
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 
 /**
  * What the song list shows instead of songs, null while it has some, see [SongListState.songsPlaceholder]. Told by the

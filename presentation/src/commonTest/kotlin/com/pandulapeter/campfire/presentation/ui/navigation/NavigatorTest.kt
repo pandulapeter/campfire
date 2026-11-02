@@ -19,10 +19,9 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
-import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
-import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleLibraryState
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.sync.SyncConsentOrigin

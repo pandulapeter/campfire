@@ -27,9 +27,6 @@ import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroupHeader
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.search.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.search.rankSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONGS_SEARCH_KEY

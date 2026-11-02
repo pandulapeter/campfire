@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFailure
 
 /** What the download of a shared link comes to for the import: the zip to read, or why there is none. */
 internal sealed interface SharedLinkDownload {

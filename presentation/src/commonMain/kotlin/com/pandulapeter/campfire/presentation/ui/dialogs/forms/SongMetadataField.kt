@@ -27,6 +27,10 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.optional_field_label
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
+import com.pandulapeter.campfire.presentation.ui.songInfo.DurationDigitsTransformation
+import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
+import com.pandulapeter.campfire.presentation.ui.songInfo.durationDigitsTyped
+import com.pandulapeter.campfire.presentation.ui.songInfo.label
 
 @Composable
 internal fun SongMetadataField(

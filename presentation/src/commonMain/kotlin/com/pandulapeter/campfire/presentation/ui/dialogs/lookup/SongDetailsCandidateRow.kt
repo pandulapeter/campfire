@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.lookup
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
+import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn

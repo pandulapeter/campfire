@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.onboarding
 
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

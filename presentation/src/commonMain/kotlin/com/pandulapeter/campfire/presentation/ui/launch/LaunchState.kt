@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.state.asState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred

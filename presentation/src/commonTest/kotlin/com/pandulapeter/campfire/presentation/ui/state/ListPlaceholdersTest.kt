@@ -14,10 +14,10 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroup
-import com.pandulapeter.campfire.presentation.ui.screens.songs.SongGroups
+import com.pandulapeter.campfire.presentation.ui.state.setlists.ListedSetlists
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals

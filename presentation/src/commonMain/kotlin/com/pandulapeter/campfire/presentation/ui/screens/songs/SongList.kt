@@ -22,6 +22,11 @@ import com.pandulapeter.campfire.presentation.resources.ic_select
 import com.pandulapeter.campfire.presentation.resources.songs_select_multiple
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
+import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_HEADER_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.songs
+package com.pandulapeter.campfire.presentation.ui.state.songs
 
 /**
  * The song list with the filter, the sort and the query it was built for: two equal lists for two filters are two

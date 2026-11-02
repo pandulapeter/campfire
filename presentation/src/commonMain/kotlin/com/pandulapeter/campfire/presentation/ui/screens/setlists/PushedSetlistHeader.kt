@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActio
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import org.jetbrains.compose.resources.painterResource
 
 /**

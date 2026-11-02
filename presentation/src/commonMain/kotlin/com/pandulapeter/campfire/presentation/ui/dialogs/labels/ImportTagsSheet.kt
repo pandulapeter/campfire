@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs.labels
 
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.import_review_tags_subtitle
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.review.importReviewSummary
+import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSummary
 
 /**
  * The tags the import under review puts on every song it writes ([TagsSheet]), opened from the review's summary. It is

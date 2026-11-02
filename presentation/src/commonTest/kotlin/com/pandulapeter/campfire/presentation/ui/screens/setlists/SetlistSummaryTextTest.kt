@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertFalse

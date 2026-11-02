@@ -26,6 +26,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.IntOffset
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
+import com.pandulapeter.campfire.presentation.ui.navigation.nextOnboardingStep
+import com.pandulapeter.campfire.presentation.ui.navigation.onboardingSteps
 import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets

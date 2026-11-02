@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 
 /**
  * Shows a sort picked from the menu at work where the random picks that lead the list would hide it: they are drawn

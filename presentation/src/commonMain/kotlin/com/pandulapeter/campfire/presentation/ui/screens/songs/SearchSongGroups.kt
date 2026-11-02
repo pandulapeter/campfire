@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+
 /**
  * The groups of an open search: the sections run together under no header, so that the cards of one fill the columns the
  * one before it left open instead of each section ending in a short row. The Selection group loses its header too and

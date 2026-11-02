@@ -36,11 +36,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistDetails
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.ListedSetlists
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.details
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.mergedSetlistDetails
 import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongTicked
 import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongsAdded
 import com.pandulapeter.campfire.presentation.ui.state.setlists.withSongsTakenOut

@@ -63,6 +63,7 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.CoverArtUnavailableException
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchState
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 

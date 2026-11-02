@@ -18,6 +18,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.ui.components.checklist.ChecklistOrder
 import com.pandulapeter.campfire.presentation.ui.components.checklist.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 
 /**
  * The song list with the songs [order] leads in one group in front of its sections, under [SongGroupHeader.Selection],

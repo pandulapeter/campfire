@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.EditorSession
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope

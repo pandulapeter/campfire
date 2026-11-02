@@ -24,6 +24,8 @@ import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeaderSt
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.list.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.state.songs.SONG_HEADER_CONTENT_TYPE
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroupHeader
 
 /**
  * The outgoing header of the song list, drawn over the grid while the next one pushes it up. A composable of its own,

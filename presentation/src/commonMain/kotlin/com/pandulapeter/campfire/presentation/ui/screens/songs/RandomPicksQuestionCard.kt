@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.random_picks_question_ti
 import com.pandulapeter.campfire.presentation.resources.random_picks_question_turn_off
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_VERTICAL_PADDING
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
 
 /**
  * Under the first random picks shown, whether to keep them ([SongGroup.isRandomPicksQuestionAfter]): an existing

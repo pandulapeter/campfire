@@ -81,6 +81,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.effectiveCapo
 import com.pandulapeter.campfire.presentation.ui.playing.playsWithoutCapo
 import com.pandulapeter.campfire.presentation.ui.playing.effectiveTempo
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
+import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import kotlin.math.absoluteValue
 
 /**

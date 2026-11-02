@@ -45,6 +45,8 @@ import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_skip
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
+import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
+import com.pandulapeter.campfire.presentation.ui.navigation.previousOnboardingStep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 

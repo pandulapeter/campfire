@@ -39,6 +39,9 @@ import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.songInfo.fromSongMetadataDraft
+import com.pandulapeter.campfire.presentation.ui.songInfo.songMetadataSaver
+import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 
 /**
  * A new song's metadata. Only its title is required; the optional values are written into its initial file.

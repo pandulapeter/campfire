@@ -22,13 +22,10 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordLibraryState
-import com.pandulapeter.campfire.presentation.ui.screens.scales.ScaleLibraryState
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.OnboardingStep
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.nextOnboardingStep
-import com.pandulapeter.campfire.presentation.ui.screens.onboarding.previousOnboardingStep
-import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryState
+import com.pandulapeter.campfire.presentation.ui.scales.ScaleLibraryState
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.BACK_STACK_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.ONBOARDING_STEP_KEY
