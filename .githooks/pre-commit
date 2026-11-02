@@ -18,6 +18,7 @@ python3 .github/scripts/check_store_listings.py
 python3 .github/scripts/store_listings.py --check
 python3 .github/scripts/check_doc_names.py --staged
 python3 .github/scripts/check_regexes.py
+python3 .github/scripts/check_test_names.py
 # The IDE drops the shared iOS run configuration now and then, and a commit staging everything has carried that deletion
 # along several times.
 if git diff --cached --name-only --diff-filter=D | grep -qx '.run/iOS.run.xml'; then

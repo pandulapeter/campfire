@@ -143,7 +143,7 @@ internal class SetlistDocumentFormatTest {
     }
 
     @Test
-    fun `a setlist of this format, of none named, or of a version that is not a number decodes`() {
+    fun `a setlist of this format or of none named or of a version that is not a number decodes`() {
         listOf(""""version":1,""", "", """"version":"2",""").forEach { version ->
             val document = SetlistDocumentFormat.decode("""{$version"title":"S","songs":[{"file":"a.cho"}]}""")
 

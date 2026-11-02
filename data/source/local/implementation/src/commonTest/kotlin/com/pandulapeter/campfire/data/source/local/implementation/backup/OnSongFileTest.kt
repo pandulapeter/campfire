@@ -82,7 +82,7 @@ class OnSongFileTest {
     }
 
     @Test
-    fun `a bracketed section heading is no chord, so the chord rows under it are set`() {
+    fun `a bracketed section heading is no chord so the chord rows under it are set`() {
         val text = read("Riverlight\nThe Invented Band\n\n[Chorus]\nG               D\nWalking down the road")
 
         assertTrue("[G]Walking down the [D]road" in text, text)

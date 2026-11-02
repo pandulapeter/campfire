@@ -54,7 +54,7 @@ class JsonSongsTest {
     }
 
     @Test
-    fun `a notes export yields nothing, while four lines of lyrics do`() {
+    fun `a notes export yields nothing while four lines of lyrics do`() {
         val prose = "First line of a note\\nSecond line of it\\nThird line of it\\nFourth line of it"
 
         assertEquals(emptyList(), JsonSongs.read("""[{"title": "Note", "content": "$prose"}]"""))
@@ -80,7 +80,7 @@ class JsonSongsTest {
     }
 
     @Test
-    fun `brackets nested past the parser's stack read as nothing, and brackets inside a text do not count`() {
+    fun `brackets nested past the parser's stack read as nothing and brackets inside a text do not count`() {
         val bracketsInText = song("One", extra = """, "notes": "${"[".repeat(5_000)}"""")
 
         assertEquals(emptyList(), JsonSongs.read("[".repeat(200_000)))

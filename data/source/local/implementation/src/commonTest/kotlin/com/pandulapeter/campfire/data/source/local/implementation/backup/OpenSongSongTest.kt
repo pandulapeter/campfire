@@ -22,7 +22,7 @@ class OpenSongSongTest {
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<song><title>$title</title><author>The Invented Band</author>$extra<lyrics>$lyrics</lyrics></song>"
 
     @Test
-    fun `a song of two verses and a chorus comes out with its header, sections, and chords set`() {
+    fun `a song of two verses and a chorus comes out with its header and sections and chords set`() {
         val lyrics = """
             [V1]
             .G           D
@@ -67,7 +67,7 @@ class OpenSongSongTest {
     }
 
     @Test
-    fun `an OpenLyrics document, another XML document, and malformed XML are not OpenSong songs`() {
+    fun `an OpenLyrics document and another XML document and malformed XML are not OpenSong songs`() {
         val openLyrics = "<song xmlns=\"http://openlyrics.info/namespace/2009/song\"><lyrics><verse name=\"v1\"><lines>La</lines></verse></lyrics></song>"
 
         assertNull(OpenSongSong.read(openLyrics, "x"))

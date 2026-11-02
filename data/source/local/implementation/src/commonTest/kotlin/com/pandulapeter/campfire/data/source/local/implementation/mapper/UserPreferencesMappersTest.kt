@@ -54,7 +54,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the remembered shared link imports survive saving and reloading, in their order`() {
+    fun `the remembered shared link imports survive saving and reloading in their order`() {
         val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
         assertEquals(emptyMap(), legacy.sharedLinkImports)
         val imports = mapOf("second" to listOf("songs/b.cho"), "first" to listOf("songs/a.cho", "setlists/gig.setlist.json"))
@@ -244,7 +244,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `tag colors survive a round trip, a color this version does not know included`() {
+    fun `tag colors survive a round trip - a color this version does not know included`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(emptyMap(), defaults.tagColors)
         val chosen = defaults.copy(tagColors = mapOf("christmas" to "red", "folk" to "ultraviolet"))
@@ -253,7 +253,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the song layout and the scroll speeds survive a round trip, a speed out of range and an unknown layout dropped`() {
+    fun `the song layout and the scroll speeds survive a round trip - a speed out of range and an unknown layout dropped`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(SongLayout.PAGES, defaults.songLayout)
         assertFalse(defaults.isSongLayoutChosen)
@@ -265,7 +265,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the chord names default to the shapes, unasked, and survive a round trip, an unknown one read as the shapes`() {
+    fun `the chord names default to the shapes unasked and survive a round trip - an unknown one read as the shapes`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertEquals(ChordNames.SHAPES, defaults.chordNames)
         assertFalse(defaults.isChordNamesChosen)
@@ -275,7 +275,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the capo stepper keeps the song's key only once asked to, and the choice survives a round trip`() {
+    fun `the capo stepper keeps the song's key only once asked to and the choice survives a round trip`() {
         val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
         assertFalse(defaults.capoKeepsKey)
         val keepingKey = defaults.copy(capoKeepsKey = true)
@@ -283,7 +283,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `a document an older version wrote, which never asked how chords are named, reads as not yet asked`() {
+    fun `a document an older version wrote - which never asked how chords are named - reads as not yet asked`() {
         // As 5.2.0 wrote it: the layout already chosen, a guitar, and neither chord names field.
         val older = UserPreferencesDocumentFormat.decode("""{"isSongLayoutChosen": true, "instrument": "guitar", "areChordsEnabled": true}""").document.toModel()
         assertTrue(older.isSongLayoutChosen)
@@ -406,7 +406,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the tools' capo survives saving and reloading, defaults to none, and is held within the neck`() {
+    fun `the tools' capo survives saving and reloading and defaults to none and is held within the neck`() {
         val preferences = UserPreferencesDocument().toModel().copy(toolCapo = 3)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(3, reloaded.toolCapo)
@@ -420,7 +420,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `the scale sheet's note names survive saving and reloading, and degrees are the default`() {
+    fun `the scale sheet's note names survive saving and reloading and degrees are the default`() {
         val preferences = UserPreferencesDocument().toModel().copy(areScaleNoteNamesShown = true)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertTrue(reloaded.areScaleNoteNamesShown)
@@ -428,7 +428,7 @@ internal class UserPreferencesMappersTest {
     }
 
     @Test
-    fun `an owed onboarding survives saving and reloading, and a document from before it owes none`() {
+    fun `an owed onboarding survives saving and reloading and a document from before it owes none`() {
         val preferences = UserPreferencesDocument().toModel().copy(isOnboardingPending = true)
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(true, reloaded.isOnboardingPending)

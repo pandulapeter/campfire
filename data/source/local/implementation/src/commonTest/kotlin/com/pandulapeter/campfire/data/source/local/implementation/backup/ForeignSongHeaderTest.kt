@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class ForeignSongHeaderTest {
 
     @Test
-    fun `names of one batch are numbered past every name already taken, whatever its case`() {
+    fun `names of one batch are numbered past every name already taken in any case`() {
         val usedNames = BatchNames()
         val names = listOf("Song", "Song", "song 2", "SONG", "Other").map { ForeignSongHeader.uniqueName(it, ".cho", usedNames) }
 

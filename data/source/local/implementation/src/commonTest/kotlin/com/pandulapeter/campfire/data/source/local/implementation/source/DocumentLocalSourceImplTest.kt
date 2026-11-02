@@ -28,14 +28,14 @@ class DocumentLocalSourceImplTest {
     private val localSource = DocumentLocalSourceImpl(Logger.Standard)
 
     @Test
-    fun `a Word document is read by its extension, whatever its case`() = runTest {
+    fun `a Word document is read by its extension in any case`() = runTest {
         val document = localSource.extract(ImportedFile("Song.DOCX", docx(paragraph("Readable"))))
 
         assertEquals("Readable", document?.pages?.single()?.lines?.single()?.spans?.single()?.text)
     }
 
     @Test
-    fun `a file of another extension is not read, whatever it holds`() = runTest {
+    fun `a file of another extension is not read whatever it holds`() = runTest {
         assertNull(localSource.extract(ImportedFile("song.doc", docx(paragraph("Readable")))))
         assertNull(localSource.extract(ImportedFile("song", docx(paragraph("Readable")))))
     }

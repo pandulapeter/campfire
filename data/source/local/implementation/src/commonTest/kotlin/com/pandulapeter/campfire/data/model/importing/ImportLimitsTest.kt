@@ -39,7 +39,7 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun `an unknown loose file that is text is kept flagged, a binary one is not`() {
+    fun `an unknown loose file that is text is kept flagged and a binary one is not`() {
         val budget = ImportBudget()
         val sheet = "G   D\nDown by the river\n".encodeToByteArray()
         val binary = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte(), 0, 1, 2)
