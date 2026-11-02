@@ -178,7 +178,10 @@ internal class AppExitController(
      * Called by the app whenever it stops being the one in front (ON_PAUSE), which is the last moment it is certainly
      * running: iOS ends a process in the background without a word, and so does Android to a task swiped away and a
      * mobile browser to a tab it wants the memory of. Stores the unsaved text, or removes what was stored when there
-     * is none. Nothing before the draft a previous run left has been read, or it would be written over.
+     * is none. Nothing before the draft a previous run left has been read, or it would be written over. What is still
+     * waiting for its debounce is written first, its overrides taken at once so that a stepper set again after the pause
+     * starts a fresh debounce; a setlist override written so may reach the other devices only with the next run rather
+     * than the one started here. On the desktop a window losing focus pauses too, which only saves sooner.
      *
      * An automatic sync run that is still waiting for the library to settle starts now as well: the phones keep a run
      * alive in the background only once the app has told them about it, which it has to do before this callback is
@@ -187,6 +190,7 @@ internal class AppExitController(
      * after a hop to the main thread this callback is holding.
      */
     fun onAppPaused(): SyncProgress? {
+        scope.launch { pendingWrites.flushAll() }
         val syncProgress = startScheduledSynchronization()
         if (!editorSession.isEditorDraftRecoveryPending.value) {
             val draft = editorSession.currentEditorDraftToStore()

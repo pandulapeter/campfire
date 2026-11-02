@@ -59,6 +59,14 @@ internal class AppExitTest {
     }
 
     @Test
+    fun `going to the background writes the values that were still waiting`() = runAppTest {
+        setWaitingPreferences()
+        runOnIdle { viewModel.appExitController.onAppPaused() }
+        waitForLibrary { storedPreferences()["fontScale"]?.jsonPrimitive?.float == FONT_SCALE }
+        assertWaitingPreferencesWritten(storedPreferences())
+    }
+
+    @Test
     fun `clearing the view model writes the values that were still waiting`() = runAppTest {
         setWaitingPreferences()
         runOnIdle { viewModel.appExitController.onCleared() }

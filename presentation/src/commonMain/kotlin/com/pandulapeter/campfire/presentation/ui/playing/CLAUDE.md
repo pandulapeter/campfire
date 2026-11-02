@@ -33,8 +33,9 @@ The values a song is played with and where each is kept.
 - A stepped tempo or capo is held pending and written once the stepper has held still for half a second: a setlist write
   is a sync run, and a held stepper steps every few frames. A pending value is dropped once its write landed and the
   store agrees; a reset removes the override at once and cancels a waiting write.
-- Writes still waiting are made in `onCleared` on a scope of their own, and awaited before the desktop process ends (a
-  macOS Quit never clears the view model), as are the metronome settings, the text size, and the export options.
+- Writes still waiting are made in `onCleared` on a scope of their own, awaited before the desktop process ends (a
+  macOS Quit never clears the view model), and made as the app goes to the background (`onAppPaused`), as are the
+  metronome settings, the text size, and the export options (`PendingWrites`).
 
 ### What sounds and what is fingered
 

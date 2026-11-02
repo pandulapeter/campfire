@@ -21,6 +21,9 @@ The view model facade, the composition root, and the product rules every screen 
   place, in the dialog host's and the navigator's `apply`: `SoundLifetime` (sound and listening end with their screen)
   and `ModeEndings` (a mode ends with its screen). The starts still in the view model's `init` need a holder built after
   theirs, wait on its arguments, or are what its tests start by hand (`EditorSession.startRecovery`).
+- A value saved once it holds still exists only through `PendingWrites` (`preference`, or `register` for the tempo and
+  capo overrides), which the exit, `onCleared`, and the app going to the background (`onAppPaused`) all write: a
+  process iOS ends in the background does not wait for a debounce.
 - **Every state is `stateIn(viewModelScope, Eagerly)`**, never started by its first collector, which would show its
   initial value for a frame and animate the real one in. Several (`syncState`, `userPreferences`, `setlists`,
   `hasUnsavedEditorChanges`, `isSyncing`) are also acted on and must not go stale.
