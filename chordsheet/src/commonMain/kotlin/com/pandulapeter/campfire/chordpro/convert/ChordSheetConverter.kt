@@ -28,14 +28,11 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.parenthes
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.isExportFiller
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.joinRows
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Deterministic, conservative conversion of positioned chord sheets to ordinary ChordPro. */
@@ -273,7 +270,7 @@ public object ChordSheetConverter {
     internal fun isChordRow(text: String) = chordRow(text) != null
 
     /** A heading that is one without the lines around it to tell, which is what a single line can be judged by. */
-    private fun isHeading(text: String) = ChordSheetHeadings.parse(text)?.isAmbiguous == false
+    internal fun isHeading(text: String) = ChordSheetHeadings.parse(text)?.isAmbiguous == false
 
     /**
      * A line in brackets is a heading of a name no list holds (`[Riff]`, `[Primeira Parte]`), where the sheet has
@@ -291,7 +288,7 @@ public object ChordSheetConverter {
      * Babylon" and "Time after time" are sung, not credited. A value that cannot be read comes back blank, and its line
      * then stays a line of text rather than vanishing ([classify]).
      */
-    private fun metadata(text: String): Pair<String, String>? {
+    internal fun metadata(text: String): Pair<String, String>? {
         if (noCapo.matches(text.trim())) return NO_CAPO to NO_CAPO
         val match = metadata.matchEntire(text.trim()) ?: unlabelledMetadata.matchEntire(text.trim())?.takeIf {
             val value = it.groupValues[2].trim()
@@ -378,7 +375,7 @@ public object ChordSheetConverter {
      * The key a capo [value] names as its shapes' in Campfire's PDF (`2 (Em shapes)`, `2 (Em-Griffe)`), cut from the
      * original text so its case survives (`em` is no chord); null where the parentheses hold no such marker.
      */
-    private fun shapesKeyOf(value: String): String? {
+    internal fun shapesKeyOf(value: String): String? {
         val marked = parentheses.find(value)?.groupValues?.get(1)?.trim() ?: return null
         val lowercase = marked.lowercase()
         return shapesCapoMarkers.firstNotNullOfOrNull { (prefix, suffix) ->
@@ -391,7 +388,7 @@ public object ChordSheetConverter {
     }
 
     /** The fret a capo value names, in digits or in the Roman numerals many sites write it in; blank where it names none. */
-    private fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
+    internal fun capo(value: String): String = Regex("[0-9]+").find(value)?.value
         ?: romanCapo.matchEntire(value.uppercase())?.groupValues?.get(1)?.let { roman -> (romanNumerals.indexOf(roman) + 1).toString() }
         ?: ""
 
@@ -449,15 +446,8 @@ public object ChordSheetConverter {
         return page.mapIndexed { index, line ->
             val isChordRow = line.text.isNotBlank() && chordTokens(line) != null
             val isTitleShaped = line.text.isNotBlank() && !isChordRow && !line.isMarginLabel && !isHeading(line.text) && metadata(line.text) == null
-            ChordSheetSongSplit.Line(line.text.trim(), line.source, isChordRow, isTitleShaped, isTitleShaped && index == lead && isTitle(line, page))
+            ChordSheetSongSplit.Line(line.text.trim(), line.source, isChordRow, isTitleShaped, isTitleShaped && index == lead && SongHeader.isTitle(line, page))
         }
-    }
-
-    private fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
-        if (line.text.isBlank() || line.isMarginLabel || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
-        val median = ChordSheetProfile.medianWithout(lines.filter { it !== line }.map { it.source }) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
-        return line.source.isHeading || line.source.spans.any { it.size > median * ChordSheetProfile.TITLE_RATIO } ||
-            line.source.spans.filter { it.text.isNotBlank() }.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } && lines.any { chordTokens(it) != null }
     }
 
     /**
@@ -477,19 +467,6 @@ public object ChordSheetConverter {
             (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
     }
 
-    /**
-     * Whether [line] is set in the type of a [title] that is larger than the body text, which is how a wrapped title
-     * continues; a title told apart only by being bold has no such type to recognize its continuation by.
-     */
-    private fun isTitleContinuation(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
-        val titleSpans = title.source.spans.filter { it.text.isNotBlank() }
-        val titleSize = titleSpans.maxOfOrNull { it.size } ?: return false
-        val median = ChordSheetProfile.medianWithout(lines.filter { it !== title && it !== line }.map { it.source }) ?: return false
-        val spans = line.source.spans.filter { it.text.isNotBlank() }
-        return titleSize > median * ChordSheetProfile.TITLE_RATIO && spans.isNotEmpty() &&
-            spans.all { ChordSheetProfile.isSameSize(it.size, titleSize) && it.isBold == titleSpans.first().isBold }
-    }
-
     private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
@@ -499,23 +476,24 @@ public object ChordSheetConverter {
         if (kinds.none { it in listOf(LineKind.CHORD, LineKind.SECTION, LineKind.TAB, LineKind.GRID) } && !convertParentheses && !styled) {
             return collapse(lines.map { ChordProLiteralText.escape(it.text) })
         }
-        val header = mutableListOf<String>()
-        val omitted = mutableSetOf<Int>()
-        val (changes, soundingCapo) = extractHeader(lines, features, kinds, header, omitted)
-        if (guessesTitle) extractTitle(lines, kinds, header, omitted)
+        val fields = SongHeader.fields(lines, features, kinds)
+        val title = if (guessesTitle) SongHeader.title(lines, kinds) else SongHeader.noTitle
+        val omitted = fields.omitted + title.omitted
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },
             // A shape in parentheses after its chord reads as a chord row with a note, `D7 (x-x-0-2-1-2)`.
             candidates = kinds.indices.filter { (kinds[it] == LineKind.LYRIC || kinds[it] == LineKind.CHORD) && it !in omitted },
             chordName = { name -> ascii(name).takeIf(::isChordOrLatinName) },
         )
-        header += definitions.values
-        omitted += definitions.keys
-        val output = SongWriter.write(SongStructure.of(lines, features, kinds, candidates, omitted, changes, convertParentheses))
-        // A credit printed both under the title and as a labelled line names the song once.
-        val distinct = header.distinct()
-        val keyChanges = output.count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
-        return asCapoChart(collapse(distinct + if (distinct.isEmpty()) output else listOf("") + output), soundingCapo, keyChanges)
+        val song = SongStructure.Song(
+            // A credit printed both under the title and as a labelled line names the song once.
+            header = (title.leading + fields.entries + title.trailing + definitions.values).distinct(),
+            parts = SongStructure.of(lines, features, kinds, candidates, omitted + definitions.keys, fields.changes, convertParentheses),
+        )
+        val output = SongWriter.write(song)
+        // The key lines after the header and the blank line under it are the key changes the body writes.
+        val keyChanges = output.drop(if (song.header.isEmpty()) 0 else song.header.size + 1).count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
+        return asCapoChart(collapse(output), fields.soundingCapo, keyChanges)
     }
 
     /**
@@ -629,205 +607,11 @@ public object ChordSheetConverter {
         }
     }
 
-    /**
-     * Takes the metadata lines into [header] and [omitted], and returns the changes of tempo and time, by the line they
-     * stand at, and the capo of a sheet whose chords are named as they sound over it ([CAPO_SOUNDING]), 0 for any other.
-     * A capo naming its shapes' key ([CAPO_SHAPES]) makes that key the song's, in place of the sounding one the row
-     * names beside it: the chords under it are those shapes.
-     */
-    private fun extractHeader(
-        lines: List<Rendered>,
-        features: List<LineFeatures>,
-        kinds: List<LineKind>,
-        header: MutableList<String>,
-        omitted: MutableSet<Int>,
-    ): Pair<Map<Int, List<String>>, Int> {
-        // The first tempo and time signature are the song's; a later one is a change from where it stands, which is
-        // written there, as Campfire's own PDF prints one. So is a later key of Campfire's export, which prints one only
-        // as a key change, unless it names the key already in force; another sheet's second key row stays in the
-        // header, more likely a repetition or a second notation than a change.
-        val changes = mutableMapOf<Int, List<String>>()
-        val declared = mutableSetOf<String>()
-        var keyInForce: String? = null
-        var soundingCapo = 0
-        var shapesKey: String? = null
-        kinds.forEachIndexed { index, kind -> if (kind == LineKind.METADATA) {
-            (features[index].headerRow ?: listOf(features[index].metadata!!)).forEach { (name, value) ->
-                when {
-                    value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
-                    name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
-                    name == ChordProVocabulary.KEY && lines[index].marks != null && !declared.add(name) -> {
-                        val key = headerValue(ascii(value))
-                        if (key != keyInForce) changes[index] = changes[index].orEmpty() + "{$name: $key}"
-                        keyInForce = key
-                    }
-                    name == CREDIT || name == "artist" -> {
-                        // An artist's name may end in a number (`The 1975`), so only a comma sets a year off it.
-                        val split = (if (name == CREDIT) creditYear else commaYear).matchEntire(value)
-                        if (split == null) {
-                            header += "{artist: ${headerValue(value)}}"
-                        } else {
-                            split.destructured.let { (artist, year) ->
-                                header += "{artist: ${headerValue(artist)}}"
-                                header += "{year: $year}"
-                            }
-                        }
-                    }
-                    name == CAPO_SHAPES -> {
-                        header += "{capo: ${capo(value)}}"
-                        shapesKey = headerValue(ascii(shapesKeyOf(value)!!))
-                    }
-                    name == CAPO_SOUNDING -> {
-                        header += "{capo: $value}"
-                        // A run of digits too long for a fret is no capo chart to move the chords of.
-                        soundingCapo = value.toIntOrNull() ?: 0
-                    }
-                    // The export draws a key's accidentals as signs, and a file keeps them as `#` and `b`.
-                    name == ChordProVocabulary.KEY -> {
-                        keyInForce = headerValue(ascii(value))
-                        header += "{$name: $keyInForce}"
-                    }
-                    else -> header += "{$name: ${headerValue(value)}}"
-                }
-            }
-            omitted += index
-        } }
-        shapesKey?.let { key ->
-            val keyEntry = header.indexOfFirst { it.startsWith("{${ChordProVocabulary.KEY}: ") }
-            if (keyEntry >= 0) {
-                header[keyEntry] = "{${ChordProVocabulary.KEY}: $key}"
-            } else {
-                header.add(header.indexOfFirst { it.startsWith("{capo: ") }.coerceAtLeast(0), "{${ChordProVocabulary.KEY}: $key}")
-            }
-        }
-        return changes to soundingCapo
-    }
-
-    /** Takes the title the song opens with, and the credit under it, into [header] and [omitted]. */
-    private fun extractTitle(
-        lines: List<Rendered>,
-        kinds: List<LineKind>,
-        header: MutableList<String>,
-        omitted: MutableSet<Int>,
-    ) {
-        val first = kinds.indexOfFirst { it != LineKind.BLANK }
-        if (first < 0 || kinds[first] != LineKind.LYRIC) return
-        // The export's own test reads chords by their type, which a title naming a chord (`A`) is not printed in.
-        if (if (lines[first].marks != null) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return
-        if (!isTitle(lines[first], lines)) return extractPlainTitle(lines, kinds, first, header, omitted)
-        // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
-        // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
-        var last = first
-        while (kinds.getOrNull(last + 1) == LineKind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
-        val title = joinRows(lines, first, last)
-        // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
-        // credit in it to split off.
-        val (name, named) = if (lines[first].marks != null) title to null else ChordSheetTitles.split(title)
-        addTitle(header, name, named)
-        omitted += first..last
-        val artist = last + 1
-        // Campfire's export sets the artist in the lyrics' type right under the title, at the heading's spacing, wrapped
-        // onto as many rows as it takes, and its first block a heading gap further down: the rows at that spacing are the
-        // artist, however many and however long, and nothing else is, not even a short first lyric under a long title.
-        if (named == null && lines.getOrNull(artist)?.marks != null && lines[artist].source.baseline != null) {
-            val rows = generateSequence(artist) { it + 1 }.takeWhile { index ->
-                val line = lines.getOrNull(index)
-                val below = line?.source?.baseline
-                val above = lines[index - 1].source.baseline
-                kinds.getOrNull(index) == LineKind.LYRIC && below != null && above != null &&
-                    below - above < (line.source.spans.filter { it.text.isNotBlank() }.maxOfOrNull { it.size } ?: 0.0) * HEADING_ROW
-            }.toList()
-            if (rows.isNotEmpty()) {
-                header += "{artist: ${headerValue(joinRows(lines, rows.first(), rows.last()))}}"
-                omitted += rows
-            }
-            return
-        }
-        // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
-        val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
-        // Read without baselines, an export's artist is still told by the row of the song's key, tempo, and time under it,
-        // where no lyric ever stands, so there a name longer than the title is the artist all the same.
-        val isCampfireArtist = lines.getOrNull(artist)?.marks != null && kinds.getOrNull(artist + 1) == LineKind.METADATA
-        if (named == null && kinds.getOrNull(artist) == LineKind.LYRIC && (credit != null || isCampfireArtist || lines[artist].text.length < title.length &&
-                lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
-            header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
-            omitted += artist
-        } else if (kinds.getOrNull(artist) == LineKind.LYRIC && (lines[artist].isHeaderPart || isCenteredUnder(lines[artist], lines[first], lines))) {
-            // The part printed beside the title, or the line centred under a centred one, is the subtitle the ChordPro
-            // app sets there.
-            header.add(if (named == null) 1 else 2, "{subtitle: ${headerValue(lines[artist].text.trim())}}")
-            omitted += artist
-        }
-    }
-
-    /**
-     * The title of a text with no type to tell it by: a first line that the song's structure follows closely, after
-     * its credit and the metadata lines the page heads the song with, either straight away or after a blank line. A
-     * line that opens with markup, a summary of the chords used, or a bare "Chords" is the page's furniture instead.
-     */
-    private fun extractPlainTitle(
-        lines: List<Rendered>,
-        kinds: List<LineKind>,
-        first: Int,
-        header: MutableList<String>,
-        omitted: MutableSet<Int>,
-    ) {
-        val text = lines[first].text.trim()
-        if (text.startsWith('[') || text.startsWith('{') || isChordSummary(text) || text.lowercase() in pageWords) return
-        val (name, named) = ChordSheetTitles.split(text)
-        val credit = lines.getOrNull(first + 1)?.let { credit.matchEntire(it.text.trim()) }
-        val creditAt = (first + 1).takeIf {
-            named == null && kinds.getOrNull(it) == LineKind.LYRIC && (credit != null ||
-                lines[it].text.trim().length < text.length && kinds.getOrNull(it + 1).let { next -> next == LineKind.BLANK || next == LineKind.METADATA })
-        }
-        var next = (creditAt ?: first) + 1
-        while (kinds.getOrNull(next) == LineKind.METADATA) next++
-        val structure = kinds.indices.firstOrNull { kinds[it] == LineKind.CHORD || kinds[it] == LineKind.SECTION } ?: return
-        if (kinds.getOrNull(next) !in listOf(LineKind.BLANK, LineKind.CHORD, LineKind.SECTION) || structure !in (first + 1)..(first + 5)) return
-        addTitle(header, name, named)
-        omitted += first
-        if (creditAt != null) {
-            header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[creditAt].text.trim())}}"
-            omitted += creditAt
-        }
-    }
-
-    /** Whether [line] is centred under a centred [title], which a lyric set against the left margin never is. */
-    private fun isCenteredUnder(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
-        fun ink(rendered: Rendered) = rendered.source.spans.filter { it.text.isNotBlank() }.takeIf { spans -> spans.isNotEmpty() && spans.none { it.isMonospace } }
-        val titleInk = ink(title) ?: return false
-        val lineInk = ink(line) ?: return false
-        val size = titleInk.maxOf { it.size }
-        val margin = lines.mapNotNull { rendered -> rendered.source.spans.firstOrNull { it.text.isNotBlank() }?.start }.minOrNull() ?: return false
-        return titleInk.first().start > margin + size * 2 && lineInk.first().start > margin + size * 2 &&
-            abs((lineInk.first().start + lineInk.last().end) - (titleInk.first().start + titleInk.last().end)) / 2 <= size
-    }
-
-    private fun addTitle(header: MutableList<String>, title: String, artist: String?) {
-        artist?.let { header.add(0, "{artist: ${headerValue(it)}}") }
-        header.add(0, "{title: ${headerValue(title)}}")
-    }
-
-    /** `Chords used: G D Em C`: a label whose value is mostly chords lists them rather than naming the song. */
-    private fun isChordSummary(text: String): Boolean {
-        val colon = text.indexOf(':').takeIf { it >= 0 } ?: return false
-        val words = tokens(text.substring(colon + 1))
-        return words.isNotEmpty() && words.count { chord(it.text) } * 2 >= words.size
-    }
-
     private fun collapse(lines: List<String>): String {
         val result = mutableListOf<String>()
         for (line in lines) if (line.isNotBlank() || result.lastOrNull()?.isNotBlank() == true) result += line.trimEnd()
         return result.joinToString("\n").trim() + "\n"
     }
-
-    /**
-     * How far a row's baseline may stand under the baseline of the row above, in its own line box, and still be a row of
-     * Campfire's heading: the artist's rows are 1.45 font sizes apart (about 1.2 of an Inter line box) and the first one
-     * about 1.6 under the title's, while the first block stands 2.25 under the heading's last row (1.86; 1.65 where both
-     * are drawn in a fallback font's line box of about 1.36 font sizes, the narrowest margin).
-     */
-    private const val HEADING_ROW = 1.6
 
     private val embed = Regex("^[0-9]*Embed$")
 
@@ -898,29 +682,23 @@ public object ChordSheetConverter {
     private val romanCapo = Regex("^(XII|XI|X|IX|IV|V?I{1,3}|V)(?:\\s+(?:FRET|TRASTE|TASTO|BUND|BUNDSTAB))?$")
     private val noCapo = Regex("^(?:No|Sin|Senza|Nincs) capo$", RegexOption.IGNORE_CASE)
     private val timeSignature = Regex("[0-9]+/[0-9]+")
-    private val timingNames = setOf("tempo", "time")
+    internal val timingNames = setOf("tempo", "time")
     private val labelGap = Regex("\\s{2,}")
-    private val pageWords = setOf("chords", "tab", "lyrics")
-    private val credit = Regex("^(?:words (?:and|&) music )?by\\s+(.+)$", RegexOption.IGNORE_CASE)
-    /** A credit ending in the year of the song, `Words & music by David Bowie 1972`. */
-    private val creditYear = Regex("^(.+?),?\\s+((?:1[5-9]|20)[0-9]{2})$")
-    /** An artist's name followed by the year of the song, which only a comma tells apart from a name: `David Bowie, 1972`. */
-    private val commaYear = Regex("^(.+?),\\s+((?:1[5-9]|20)[0-9]{2})$")
     private val bpm = Regex("^([0-9]+)\\s+BPM$", RegexOption.IGNORE_CASE)
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
 
     /** What [labelledRow] names a transposition, which no directive is written for. */
-    private const val TRANSPOSITION = "transposition"
+    internal const val TRANSPOSITION = "transposition"
 
     /** What [metadata] names a line saying the song is played without a capo, which is the default and is written as nothing. */
-    private const val NO_CAPO = "no capo"
+    internal const val NO_CAPO = "no capo"
 
     /** What [metadata] names a capo marked as one the chords are named as they sound over, `2 (chords as they sound)`. */
-    private const val CAPO_SOUNDING = "capo sounding"
+    internal const val CAPO_SOUNDING = "capo sounding"
 
     /** What [metadata] names a capo marked with the key of the shapes the chords under it are, `2 (Em shapes)`. */
-    private const val CAPO_SHAPES = "capo shapes"
+    internal const val CAPO_SHAPES = "capo shapes"
 
     /** What [metadata] names a credit (`By:`, `Words and music by:`), whose value may end in the year of the song. */
-    private const val CREDIT = "credit"
+    internal const val CREDIT = "credit"
 }

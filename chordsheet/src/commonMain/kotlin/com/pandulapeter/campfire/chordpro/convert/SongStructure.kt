@@ -25,6 +25,9 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.joinRows
  */
 internal object SongStructure {
 
+    /** A whole song: its [header]'s directives, each written once, and the [parts] of its body. */
+    data class Song(val header: List<String>, val parts: List<Part>)
+
     sealed interface Part {
         data class Loose(val lines: List<Line>) : Part
 

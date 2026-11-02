@@ -11,9 +11,13 @@ package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.convert.SongStructure.Line
 import com.pandulapeter.campfire.chordpro.convert.SongStructure.Part
+import com.pandulapeter.campfire.chordpro.convert.SongStructure.Song
 
 /** A song's body as ChordPro lines: every decision was taken by [SongStructure], so each part is written as it stands. */
 internal object SongWriter {
+
+    /** The header, a blank line under it where there is one, and the body. */
+    fun write(song: Song): List<String> = write(song.parts).let { body -> if (song.header.isEmpty()) body else song.header + "" + body }
 
     fun write(parts: List<Part>): List<String> = parts.flatMap(::write)
 
