@@ -111,7 +111,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.Tempos
-import com.pandulapeter.campfire.presentation.ui.metronome.isMetronomeScreenLeft
+import com.pandulapeter.campfire.presentation.ui.metronome.SoundLifetime
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.SavedDialogRestorer
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -277,6 +277,14 @@ class CampfireViewModel(
         normalizeSearchText = normalizeSearchText,
     )
 
+    /** Built before the dialog host and the navigator, whose listeners it is; its lambdas run only on a change. */
+    private val soundLifetime = SoundLifetime(
+        metronome = metronome,
+        stopTuner = { tunerController.stopTuner() },
+        stopScale = { tunerController.stopScale() },
+        dismissTunerSheet = { dialogHost.dismissSheet(DialogType.Tuner) },
+    )
+
     internal val dialogHost: DialogHost = DialogHost(viewModelScope).apply {
         addBeforeDialogChange { _, dialogType ->
             // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
@@ -301,20 +309,7 @@ class CampfireViewModel(
                 exportController.cancelPdfExport()
             }
         }
-        addBeforeDialogChange { _, dialogType ->
-            // The export screen covers the song the click is played from as a screen of its own would, and leaves no way
-            // to stop it, so it stops a click the way pushing a destination does (see navigator.updateBackStack). The tuner sheet
-            // listens to the room through the audio session the click plays in, and the two never hold the audio together.
-            if (dialogType is DialogType.Export || dialogType is DialogType.Tuner) metronome.stop()
-        }
-        addBeforeDialogChange { previousDialog, dialogType ->
-            // The tuner sheet listens for as long as it is up and not a moment longer, as the Tuner tab does.
-            if (previousDialog is DialogType.Tuner && dialogType !is DialogType.Tuner) tunerController.stopTuner()
-        }
-        addBeforeDialogChange { previousDialog, dialogType ->
-            // A scale plays only under the sheet that shows it: closed, or covered by a chord's sheet, it stops.
-            if (previousDialog is DialogType.Scale && dialogType != previousDialog) tunerController.stopScale()
-        }
+        addBeforeDialogChange(soundLifetime::onBeforeDialogChange)
         addOpenDialogsChange { before, after ->
             savedDialogRestorer.onOpenDialogsChanged(after)
             coverArtSearchController.onOpenDialogsChanged(before = before, after = after)
@@ -351,23 +346,7 @@ class CampfireViewModel(
             // see, so leaving the songs drops the selection, as the reorder mode is dropped with its screen.
             if (stack.lastOrNull() != CampfireDestination.Songs) songSelection.end()
         }
-        addOnBackStackChanged { previousTop, stack ->
-            // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
-            // it was started on: the editor opened over a song, a song closed, a tab selected, all stop it - and so does a
-            // different screen arriving on top, a song opened over the Metronome tab or over another song, which holds a
-            // metronome but not the one that was started. The panel the click was played from is a preference and stays
-            // where the user put it, so the next song is read to a click without asking for the instrument again.
-            if (isMetronomeScreenLeft(previousTop = previousTop, top = stack.lastOrNull())) metronome.stop()
-        }
-        addOnBackStackChanged { previousTop, stack ->
-            // Nothing of the tuner outlives the screen it is used on: the tab, or the song its sheet is opened over. The
-            // screen starts it again once it is composed, and only that screen does - which a sheet left over another screen
-            // never is, so the sheet goes with the song it was opened over.
-            if (previousTop?.contentKey != stack.lastOrNull()?.contentKey) {
-                tunerController.stopTuner()
-                dialogHost.dismissSheet(DialogType.Tuner)
-            }
-        }
+        addOnBackStackChanged(soundLifetime::onBackStackChanged)
         addOnBackStackChanged { previousTop, stack ->
             // Another tab left for the songs opens them; anything closed over them returns to the list as it was left.
             if (stack.lastOrNull() == CampfireDestination.Songs && previousTop is CampfireDestination.TopLevel && previousTop != CampfireDestination.Songs) {
