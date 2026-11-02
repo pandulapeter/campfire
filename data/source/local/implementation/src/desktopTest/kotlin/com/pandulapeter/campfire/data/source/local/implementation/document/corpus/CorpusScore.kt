@@ -20,9 +20,9 @@ import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import kotlin.math.abs
 
 /**
- * How close the converter's ChordPro is to the hand-corrected one, as five F1 scores and their mean. Every part is a plain
- * comparison of what both files say, with no tolerance of its own beyond the one character a chord may move, so a score
- * moves only when the output does.
+ * How close the converter's ChordPro is to the hand-corrected one, as five F1 scores (the sections' two, multiplied) and
+ * their mean. Every part is a plain comparison of what both files say, with no tolerance of its own beyond the one
+ * character a chord may move, so a score moves only when the output does.
  */
 internal data class CorpusScore(
     val lines: Double,
@@ -55,19 +55,23 @@ internal data class CorpusScore(
     }
 }
 
-/** One line of a song as the scoring sees it; [key] is what two lines must share to be the same line. */
+/**
+ * One line of a song as the scoring sees it; [key] is what two lines must share to be the same line, and [section] the
+ * key of the labelled section the line lies in, null outside one.
+ */
 internal sealed interface CorpusItem {
     val key: String
+    val section: String? get() = null
 
     data class Section(val type: String) : CorpusItem {
         override val key get() = "section:$type"
     }
 
-    data class Lyric(val text: String, val chords: List<PlacedChord>) : CorpusItem {
+    data class Lyric(val text: String, val chords: List<PlacedChord>, override val section: String?) : CorpusItem {
         override val key get() = "lyric:$text"
     }
 
-    data class Chords(val names: List<String>) : CorpusItem {
+    data class Chords(val names: List<String>, override val section: String?) : CorpusItem {
         override val key get() = "chords:${names.joinToString(" ")}"
     }
 
@@ -75,11 +79,11 @@ internal sealed interface CorpusItem {
         override val key get() = "comment:$text"
     }
 
-    data class Tab(val text: String) : CorpusItem {
+    data class Tab(val text: String, override val section: String?) : CorpusItem {
         override val key get() = "tab:$text"
     }
 
-    data class Grid(val text: String) : CorpusItem {
+    data class Grid(val text: String, override val section: String?) : CorpusItem {
         override val key get() = "grid:$text"
     }
 
@@ -104,8 +108,9 @@ internal fun songsOf(text: String) = text.lines()
 internal fun itemsOf(blocks: List<ChordProBlock>): List<CorpusItem> = blocks.flatMap { block ->
     when (block) {
         is ChordProBlock.Section -> {
-            val opening = if (block.type == SectionType.Paragraph || block.isContinuation) emptyList() else listOf(CorpusItem.Section(sectionKey(block)))
-            opening + block.lines.mapNotNull(::itemOf)
+            val section = if (block.type == SectionType.Paragraph) null else sectionKey(block)
+            val opening = if (section == null || block.isContinuation) emptyList() else listOf(CorpusItem.Section(section))
+            opening + block.lines.mapNotNull { itemOf(it, section) }
         }
         is ChordProBlock.Comment -> normalized(ChordProMarkup.strip(block.text).text).takeIf { it.isNotEmpty() }?.let { listOf(CorpusItem.Comment(it)) }.orEmpty()
         is ChordProBlock.ChorusRecall, is ChordProBlock.Transpose, is ChordProBlock.Timing, ChordProBlock.Break -> emptyList()
@@ -120,19 +125,19 @@ private fun sectionKey(section: ChordProBlock.Section) = when (val type = sectio
     SectionType.Paragraph -> "paragraph"
 }
 
-private fun itemOf(line: ChordProLine): CorpusItem? = when (line) {
+private fun itemOf(line: ChordProLine, section: String?): CorpusItem? = when (line) {
     is ChordProLine.Lyrics -> {
         val text = normalized(line.text)
         val chords = line.chords.filterNot { it.isMark }.map { CorpusItem.PlacedChord(chordName(it.name), normalizedIndex(line.text, it.position)) }
         when {
             text.isEmpty() && chords.isEmpty() -> null
-            text.isEmpty() -> CorpusItem.Chords(chords.map { it.name })
-            else -> CorpusItem.Lyric(text, chords)
+            text.isEmpty() -> CorpusItem.Chords(chords.map { it.name }, section)
+            else -> CorpusItem.Lyric(text, chords, section)
         }
     }
-    is ChordProLine.Tab -> normalized(line.text).takeIf { it.isNotEmpty() }?.let(CorpusItem::Tab)
-    is ChordProLine.Verbatim -> normalized(line.text).takeIf { it.isNotEmpty() }?.let(CorpusItem::Tab)
-    is ChordProLine.Grid -> normalized(line.tokens.joinToString(" ", transform = ::gridText)).takeIf { it.isNotEmpty() }?.let(CorpusItem::Grid)
+    is ChordProLine.Tab -> normalized(line.text).takeIf { it.isNotEmpty() }?.let { CorpusItem.Tab(it, section) }
+    is ChordProLine.Verbatim -> normalized(line.text).takeIf { it.isNotEmpty() }?.let { CorpusItem.Tab(it, section) }
+    is ChordProLine.Grid -> normalized(line.tokens.joinToString(" ", transform = ::gridText)).takeIf { it.isNotEmpty() }?.let { CorpusItem.Grid(it, section) }
     ChordProLine.Blank -> null
 }
 
@@ -207,15 +212,28 @@ private fun foundChords(expected: List<CorpusItem.PlacedChord>, actual: List<Cor
     }
 }
 
-/** A section opening is right where the line after it is matched and has an opening of the same type right before it. */
+/**
+ * Where sections start and which lines they hold: the F1 of the openings scaled by the F1 of the matched lines' sections. An
+ * opening is right where the line after it is matched and has an opening of the same type right before it; a matched line
+ * of a labelled section is right where both sides have it in a section of the same type. With the openings judged, that
+ * is each section's extent, so one that runs on over the unlabelled lines after it, or stops short, loses in proportion
+ * to the lines misplaced, and a song whose sections hold the right lines scores its openings alone. A line only one side
+ * has is left to the lines score.
+ */
 private fun sectionScore(expected: List<CorpusItem>, actual: List<CorpusItem>, pairs: List<Pair<Int, Int>>): Double {
     val matches = pairs.toMap()
-    val right = expected.indices.count { i ->
+    val rightOpenings = expected.indices.count { i ->
         val opening = boundaryBefore(expected, i) ?: return@count false
         val j = matches[i] ?: return@count false
         boundaryBefore(actual, j) == opening
     }
-    return f1(right, expected.indices.count { boundaryBefore(expected, it) != null }, actual.indices.count { boundaryBefore(actual, it) != null })
+    val openings = f1(rightOpenings, expected.indices.count { boundaryBefore(expected, it) != null }, actual.indices.count { boundaryBefore(actual, it) != null })
+    val extents = f1(
+        pairs.count { (i, j) -> expected[i].section != null && expected[i].section == actual[j].section },
+        pairs.count { (i, _) -> expected[i].section != null },
+        pairs.count { (_, j) -> actual[j].section != null },
+    )
+    return openings * extents
 }
 
 private fun boundaryBefore(items: List<CorpusItem>, index: Int) =

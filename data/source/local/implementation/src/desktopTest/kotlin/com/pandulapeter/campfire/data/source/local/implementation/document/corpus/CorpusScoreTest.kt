@@ -53,9 +53,19 @@ class CorpusScoreTest {
 
     @Test
     fun `a missing section heading lowers the sections and, as a missing line, the lines`() {
-        // Lines: four of five items matched, 2·4 / (5 + 4). Sections: one of two openings, 2·1 / (2 + 1).
+        // Lines: four of five items matched, 2·4 / (5 + 4). Sections: one of two openings, 2·1 / (2 + 1), scaled by the
+        // verse's two lines of the three in sections, the chorus line now lying outside any, 2·2 / (3 + 2).
         val actual = expected.replace("{start_of_chorus}\n", "").replace("{end_of_chorus}", "")
-        assertScore(CorpusScore(8.0 / 9, 1.0, 2.0 / 3, 1.0, 1.0), CorpusScore.of(expected, actual))
+        assertScore(CorpusScore(8.0 / 9, 1.0, 2.0 / 3 * 0.8, 1.0, 1.0), CorpusScore.of(expected, actual))
+    }
+
+    @Test
+    fun `a verse left inside the chorus before it lowers only the sections`() {
+        // Sections: both openings right, and the three lines the expected file has in sections of the output's five, 2·3 / (3 + 5).
+        val unlabelledVerse = "$expected\n\nVerse two\nVerse two again"
+        val actual = unlabelledVerse.replace("{end_of_chorus}\n\n", "").plus("\n{end_of_chorus}")
+        assertScore(CorpusScore(1.0, 1.0, 0.75, 1.0, 1.0), CorpusScore.of(unlabelledVerse, actual))
+        assertScore(CorpusScore(1.0, 1.0, 1.0, 1.0, 1.0), CorpusScore.of(unlabelledVerse, unlabelledVerse))
     }
 
     @Test
