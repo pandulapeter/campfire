@@ -11,33 +11,30 @@
 
 ### Preparing
 
-- Unpacks archives through `ArchiveLocalSource` (its rules are in `:data:source:local:api`).
 - A loose file goes through `ArchiveRepository.songsIn` first: another app's document of songs (JSON, OpenSong,
-  `.onsong`) or an ABC file (`.abc`, or text that reads as ABC) is those songs, sorted with the document's index as
-  their origin, before a setlist is tried or an unknown name skipped.
-- A file under an unknown name whose bytes read as text arrives flagged `isPlainTextByContent`; it is a song (converted
-  as a `.txt`, titled by its name less an extension without a space) only with `ChordSheetStructure.hasSongStructure`,
-  else reported skipped. In a bytes-only archive such an entry, and a `.txt`, count toward the gate only with structure
-  (a `.txt` also when too large), so an e-book or a licence stays one skipped file. One known only by its bytes that holds nothing importable
-  is reported as the one unsupported file it was, since OpenDocument files, e-books, and spreadsheets are zips too; a
-  bare `.json` does not count (inside another app's container it is that app's configuration).
-- Splits multi-song files at `{new_song}`; each song is named by `SongRepository.importFileName` from its own header.
-  The arrival name is only a fallback *title* (and a match for a library file of exactly that name with the same
-  text: exports carry library names, possibly from an older naming rule).
-- Planner records batch repeats by entry index, raises one conflict per library name, and leaves numbering to the
-  write. Recorded names are the library's own spellings (case / Unicode
-  form) as listed (`ImportPlan.SongEntry.replacesFileName`), so no setlist points at a name the song list lacks.
-- Songs compare by text, setlists by fields, never by stored document. An undated setlist file
-  (`ImportPlan.SetlistEntry.isDated` false) is compared without date or countdown (parsing gives it today; a
-  replacement keeps the library's) — so re-importing the demo setlist finds it unchanged. Setlist entries compare as
-  they will be written (pointing where each song lands), resolved first among songs of the same picked file
+  `.onsong`) or an ABC file (`.abc`, or text that reads as ABC) is those songs, before a setlist is tried or an unknown
+  name skipped.
+- A file under an unknown name whose bytes read as text (`isPlainTextByContent`) is a song only with
+  `ChordSheetStructure.hasSongStructure`, else reported skipped. In a bytes-only archive such an entry, and a `.txt`,
+  count toward the gate only with structure (a `.txt` also when too large), so an e-book or a licence stays one skipped
+  file. One known only by its bytes that holds nothing importable is reported as the one unsupported file it was, since
+  OpenDocument files, e-books, and spreadsheets are zips too; a bare `.json` does not count (inside another app's
+  container it is that app's configuration).
+- Each song is named by `SongRepository.importFileName` from its own header. The arrival name is only a fallback
+  *title* (and a match for a library file of exactly that name with the same text: exports carry library names,
+  possibly from an older naming rule).
+- The planner raises one conflict per library name and leaves numbering to the write. Recorded names are the library's
+  own spellings (case / Unicode form), so no setlist points at a name the song list lacks.
+- Songs compare by text, setlists by fields, never by stored document. An undated setlist file is compared without
+  date or countdown (parsing gives it today; a replacement keeps the library's), so re-importing the demo setlist finds
+  it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
-- Owns the size budget: archives share one.
-- Documents and plain text go through `ChordSheetConverter`; ChordPro extensions never do. Plain text (a `.txt`, so
-  every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune (`AbcTunes`, `AbcToChordPro`), since
-  the converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. No readable
-  text is `unreadableDocumentFileNames`, not unsupported. All incoming songs are prettified after conversion, splitting, and
-  notation normalization. No origin info survives in the library.
+- Archives share one size budget.
+- Plain text (a `.txt`, so every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune, since the
+  converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro
+  extensions never go through the converter. No readable text is `unreadableDocumentFileNames`, not unsupported. All
+  incoming songs are prettified after conversion, splitting, and notation normalization. No origin info survives in
+  the library.
 
 ### Applying
 

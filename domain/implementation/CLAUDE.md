@@ -9,27 +9,22 @@
 -->
 # :domain:implementation
 
-Implements `:domain:api` over `:data:repository:api`. A failure a use case notes but does not throw goes to the injected
-`Logger` (`:data:model`). Use cases are grouped by feature, the same packages in `:domain:api`; `importing`, `library`,
-`export`, and `songs` have a `CLAUDE.md` of their own.
+A failure a use case notes but does not throw goes to the injected `Logger`. `importing`, `library`, `export`, and
+`songs` have a `CLAUDE.md` of their own.
 
-## Import
+## Import review (product rule)
 
-`PrepareImportUseCaseImpl` + `ImportPlanner` work out what would happen; `ImportFilesUseCaseImpl` carries it out.
-
-### Review (product rule)
-
-- **Every import the user starts is reviewed before it writes** on its own screen (`CampfireDestination.ImportReport`,
-  `:presentation`'s `ui/screens/importReport/`): every entry listed and ticked; names taken by something *different*
-  each get keep-both or replace, plus one choice for all (`ImportChoices`); unticking leaves an entry out. A batch that
-  is one song is previewed instead, on the song details screen, and written only by its Import.
-- `ImportChoices.tags` go into every song written (new, numbered, or replacing) through `ChordProTags.addTag`, in the
-  text it is written with, so a file is written once; identical songs, which are never written, are left untagged.
+- **Every import the user starts is reviewed before it writes** (`CampfireDestination.ImportReport`): every entry
+  listed and ticked; names taken by something *different* each get keep-both or replace, plus one choice for all
+  (`ImportChoices`); unticking leaves an entry out. A batch that is one song is previewed instead, on the song details
+  screen, and written only by its Import.
+- `ImportChoices.tags` go into every song written (new, numbered, or replacing) in the text it is written with, so a
+  file is written once; identical songs, which are never written, are left untagged.
 - **Replacing is the only overwrite in the app**: a choice on that screen plus a confirmation, and only
   `ImportConflictResolution.REPLACE` overwrites. `ImportFilesUseCaseImpl` re-checks the rule at the write.
 - A song already in the library under its name, a numbered sibling (`x_2.cho`), or the exact name it arrived under is
-  disregarded, compared after `ChordProPrettifier`, notation normalization, and one spelling per directive
-  (`{t:X}` = `{title: X}`). Both sides are prettified, so files imported before formatting was automatic still match.
+  disregarded, compared after `ChordProPrettifier`, notation normalization, and one spelling per directive. Both sides
+  are prettified, so files imported before formatting was automatic still match.
 - Two different files of one batch wanting one name are never a question: the second is numbered. A library file the
   batch brings back unchanged is never offered for replacement (found in a first pass over the whole batch, since the
   unchanged copy may come after the song wanting its name); a different one wanting that name is numbered.
@@ -37,27 +32,22 @@ Implements `:domain:api` over `:data:repository:api`. A failure a use case notes
 ## Renames and references
 
 - **A file is only renamed by the app when the user asks, or when nothing is lost.** A setlist's file follows its
-  title (`EditSetlistUseCase`, which also writes the description), since nothing points at a setlist by name. A
-  song's does not: its name may title it, setlists point at it, and the user may have chosen it. **Update file name**
-  is offered where name and metadata drift apart beyond case or Unicode form (`Song.canUpdateFileName`). Old names
-  stay until one of those happens.
+  title, since nothing points at a setlist by name. A song's does not: its name may title it, setlists point at it, and
+  the user may have chosen it. **Update file name** is offered where name and metadata drift apart beyond case or
+  Unicode form (`Song.canUpdateFileName`).
 - **Only the use case that renamed or deleted a file can tell the two apart** (sync sees a deletion plus a new file), so
   it tells `SharedLinksRepository` once the file has moved or gone, not cancellably: a song's rename, a setlist's new
   title, either deletion, and Delete library (before its run starts). A shared item's link then follows it or stops.
 
 ## Others with logic
 
-- `SetChordProTagUseCaseImpl` is the one `:chordpro` wrapper left, for the NFC fold; `:presentation` calls the rest
-  directly and owns the preference translation (`presentation/mapper/ChordProMappers.kt`).
+- `SetChordProTagUseCaseImpl` is the one `:chordpro` wrapper left, for the NFC fold (tag matching ignores case);
+  `:presentation` calls the rest directly.
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
-  marks; the marks and word-final letter forms of other scripts come from one `ScriptFolding` row per script
-  (Hebrew points, cantillation, and final letters; Arabic harakat, the small marks of religious texts, and tatweel),
-  which file names never use.
-  `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols; it would break sorting (`a b` after
-  `ab c`).
-- Connecting (`ConnectSyncProviderUseCaseImpl`), and restoring at startup when credentials come back connected
-  (`RestoreSyncUseCaseImpl`), start a sync run at once (not debounced) and do not wait for it.
-- `CreateShareLinkUseCaseImpl` reads the account's list first and answers an existing share of the item (never one
-  whose copy is gone, `ShareState.COPY_MISSING`, which the new share replaces), then builds
-  the copy through the export use cases, undated (the same files make the same bytes on every device), and refuses one
-  over `ImportLimits.MAX_IMPORT_SIZE`, which the recipient's import would refuse. The races are the repository's.
+  marks; the marks and word-final letter forms of other scripts come from `ScriptFolding`, which file names never use.
+  `NormalizeSearchTextUseCaseImpl` also strips spaces, punctuation, and symbols, so it must never be used for sorting
+  (`a b` would sort after `ab c`).
+- Connecting and restoring at startup start a sync run at once (not debounced) and do not wait for it.
+- `CreateShareLinkUseCaseImpl` answers an existing share of the item (never one whose copy is gone,
+  `ShareState.COPY_MISSING`, which the new share replaces), builds the copy undated (the same files make the same bytes
+  on every device), and refuses one over `ImportLimits.MAX_IMPORT_SIZE`, which the recipient's import would refuse.

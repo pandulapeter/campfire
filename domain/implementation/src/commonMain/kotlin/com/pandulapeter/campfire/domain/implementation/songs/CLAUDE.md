@@ -9,17 +9,16 @@
 -->
 # domain/implementation/songs
 
-- `RenameSongFileUseCaseImpl` and `DeleteSongUseCaseImpl` share one walk (`SongReferences.kt`) over what
-  names a song by file: setlists and the per-song preference maps (`UserPreferences.withSongRenamed`). Rename moves
-  the file first, then follows every reference; delete drops them. Every reference is attempted even after one fails;
-  failure is returned, not thrown; not cancellable once the file has moved / is gone. Setlists naming the song are
-  found from the files, not the cache, and changed through `updateSetlist`; one already naming the new name keeps
+- Renaming and deleting a song share one walk (`SongReferences.kt`) over what names a song by file: setlists and the
+  per-song preference maps. Rename moves the file first, then follows every reference; delete drops them. Every
+  reference is attempted even after one fails; failure is returned, not thrown; not cancellable once the file has moved
+  or is gone. Setlists naming the song are found from the files, not the cache; one already naming the new name keeps
   one entry.
-- The new song template (`NewSongTemplate.kt`) carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`:
-  the values a song declaring none plays by. `CreateSongUseCaseImpl` writes it with the New song form's values.
-- A pasted, dropped, or shared text is never written by a form: `DraftSongFromTextUseCaseImpl` gives a missing or blank
-  title and artist the suggested one (a shared page's title), else a placeholder, then each template line it has no line
-  of (`ChordProMetadataFields.declare`), and prettifies it, for the editor to open on; `CreateSongFromTextUseCaseImpl`
-  writes the editor's text byte for byte at its Save, named by its header.
-- `DuplicateSongUseCaseImpl`: the original's current file text with only the changed fields set, named by the copy's
-  own title and artist (unchanged copy gets numbered). Null if the original is unreadable.
+- The new song template carries empty `{key}`, `{capo: 0}`, `{tempo: 120}`, and `{time: 4/4}`: the values a song
+  declaring none plays by.
+- A pasted, dropped, or shared text is never written by a form: `DraftSongFromTextUseCaseImpl` fills a missing title
+  and artist (a shared page's title, else a placeholder) and each template line it lacks, and prettifies it, for the
+  editor to open on; `CreateSongFromTextUseCaseImpl` writes the editor's text byte for byte at its Save, named by its
+  header.
+- A duplicate is the original's current file text with only the changed fields set, named by the copy's own title and
+  artist (an unchanged copy gets numbered).
