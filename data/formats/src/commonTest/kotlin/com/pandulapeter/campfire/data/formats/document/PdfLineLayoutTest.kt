@@ -62,6 +62,19 @@ class PdfLineLayoutTest {
     }
 
     @Test
+    fun `a header line over the gutter does not move the gutter into a column's long chord row`() = runTest {
+        val header = listOf(Placed(50, 760, "Song"), Placed(280, 740, "Key: C"))
+        val chords = listOf(50 to "C", 110 to "G", 170 to "C/B", 230 to "Am", 270 to "G").map { (x, chord) -> Placed(x, 640, chord) }
+        val left = (1..8).filter { it != 5 }.map { Placed(50, 700 - it * 12, "Left lyric line number $it of the song") }
+        val right = (1..8).map { Placed(320, 700 - it * 12, "Right column line $it") }
+
+        assertEquals(
+            listOf("Song", "Key: C") + left.take(4).map { it.text } + "C G C/B Am G" + left.drop(4).map { it.text } + right.map { it.text },
+            lines(header + chords + left + right).map { it.replace(Regex(" +"), " ") },
+        )
+    }
+
+    @Test
     fun `chord rows with wide gaps over lyrics spanning the page are one column`() = runTest {
         val rows = (0 until 3).flatMap { verse ->
             val y = 700 - verse * 24

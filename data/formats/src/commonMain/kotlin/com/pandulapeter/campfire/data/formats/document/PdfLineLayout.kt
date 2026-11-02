@@ -156,32 +156,18 @@ internal object PdfLineLayout {
         val step = maxOf(0.5, (right - left) / MAX_GUTTER_POSITIONS)
         val count = ((right - left) / step).toInt() + 1
         val rows = glyphs.groupBy { (it.y / 3).roundToInt() }.values.map { row -> row.sortedBy { it.span.start } }
-        val blocked = IntArray(count + 1)
-        val blockedCharacters = IntArray(count + 1)
         // A heading over the columns or a footer under them crosses the gutter without belonging to either side, so the
         // fair share each side must hold leaves it out; a line crossing among the columns' rows still counts against them.
         val edgeRows = setOf(rows.minBy { it.first().y }, rows.maxBy { it.first().y })
-        val blockedEdgeCharacters = IntArray(count + 1)
         val segments = mutableListOf<Segment>()
         for (row in rows) {
-            val isEdgeRow = row in edgeRows
             var start = row.first().span.start
             var end = row.first().span.end
             var characters = 0
             fun block() {
                 val from = (floor((start - left) / step) + 1).toInt().coerceAtLeast(0)
                 val to = (ceil((end + band - left) / step) - 1).toInt().coerceAtMost(count - 1)
-                if (from <= to) {
-                    blocked[from]++
-                    blocked[to + 1]--
-                    blockedCharacters[from] += characters
-                    blockedCharacters[to + 1] -= characters
-                    if (isEdgeRow) {
-                        blockedEdgeCharacters[from] += characters
-                        blockedEdgeCharacters[to + 1] -= characters
-                    }
-                }
-                segments += Segment(start, end, characters)
+                segments += Segment(start, end, characters, row.first().y, from, to, row in edgeRows)
             }
             for (glyph in row) {
                 if (characters > 0 && glyph.span.start - end >= band) { block(); start = glyph.span.start; characters = 0 }
@@ -196,6 +182,26 @@ internal object PdfLineLayout {
         val byStart = segments.sortedBy { it.start }
         val starts = byStart.map { it.start }
         val charactersByStart = byStart.runningFold(0) { total, segment -> total + segment.characters }
+        // A line above all the ink right of a band reads before that side's column whether it crosses the band or not, as
+        // its heading or one over both columns, so of two bands crossed as often the one cutting such a line wins: a key
+        // printed over the middle of the page is cut rather than a column's longest chord row. The top of the ink right of
+        // a position only falls further down the page the further right the position is.
+        val topsByStart = byStart.map { it.y }.asReversed().runningReduce { top, y -> minOf(top, y) }.asReversed()
+        val inkRight = (0 until count).count { index -> left + index * step <= starts.last() }
+        val tops = List(inkRight) { index -> topsByStart[starts.countBelow(left + index * step)] }
+        val blocked = IntArray(count + 1)
+        val blockedCharacters = IntArray(count + 1)
+        val blockedEdgeCharacters = IntArray(count + 1)
+        val blockedOverRight = IntArray(count + 1)
+        fun add(counts: IntArray, from: Int, to: Int, amount: Int) {
+            if (from <= to) { counts[from] += amount; counts[to + 1] -= amount }
+        }
+        for (segment in segments) {
+            add(blocked, segment.from, segment.to, 1)
+            add(blockedCharacters, segment.from, segment.to, segment.characters)
+            if (segment.isEdge) add(blockedEdgeCharacters, segment.from, segment.to, segment.characters)
+            add(blockedOverRight, maxOf(segment.from, tops.countAtMost(segment.y)), minOf(segment.to, inkRight - 1), 1)
+        }
         val characters = charactersByEnd.last()
         val normalEnds = glyphs.filter { it.span.size <= size * 1.2 }.map { it.span.end }.sorted()
         val rowEnds = rows.map { row -> row.minOf { it.span.end } }.sorted()
@@ -210,28 +216,36 @@ internal object PdfLineLayout {
         var crossing = 0
         var crossingCharacters = 0
         var edgeCrossingCharacters = 0
+        var crossingOverRight = 0
         var best: Double? = null
         var bestCrossing = 0
+        var bestCrossingInColumns = 0
         var bestCrossingCharacters = 0
         var fallback: Double? = null
         for (index in 0 until count) {
             crossing += blocked[index]
             crossingCharacters += blockedCharacters[index]
             edgeCrossingCharacters += blockedEdgeCharacters[index]
+            crossingOverRight += blockedOverRight[index]
             val x = left + index * step
             if (x <= left + (right - left) * 0.25 || x >= left + (right - left) * 0.75) continue
             val leftCount = charactersByEnd[ends.countAtMost(x - band)]
             val rightCount = characters - charactersByStart[starts.countBelow(x)]
             val share = characters - edgeCrossingCharacters
+            val crossingInColumns = crossing - crossingOverRight
             if (leftCount > share / 5 && rightCount > share / 5 && crossing <= rows.size / 5) {
                 // Fewer crossing characters break a tie before the gap, so a page number centred under the gutter is the line
                 // cut through rather than a lyric filled to its column's edge beside it.
                 if (best == null || crossing < bestCrossing ||
-                    crossing == bestCrossing &&
-                    (crossingCharacters < bestCrossingCharacters || crossingCharacters == bestCrossingCharacters && gap(x) > gap(best))
+                    crossing == bestCrossing && (
+                        crossingInColumns < bestCrossingInColumns ||
+                            crossingInColumns == bestCrossingInColumns &&
+                            (crossingCharacters < bestCrossingCharacters || crossingCharacters == bestCrossingCharacters && gap(x) > gap(best))
+                        )
                 ) {
                     best = x
                     bestCrossing = crossing
+                    bestCrossingInColumns = crossingInColumns
                     bestCrossingCharacters = crossingCharacters
                 }
             } else if (crossing == 0 && rowEnds.countAtMost(x - band) >= 2 && rowStarts.size - rowStarts.countBelow(x) >= 2) {
@@ -241,8 +255,19 @@ internal object PdfLineLayout {
         return best?.takeIf { bestCrossing == 0 } ?: fallback?.takeIf(::isColumn) ?: best
     }
 
-    /** A run of a row's ink merged across gaps too narrow to hold the gutter band: it lies on one side of a gutter or crosses it. */
-    private data class Segment(val start: Double, val end: Double, val characters: Int)
+    /**
+     * A run of a row's ink merged across gaps too narrow to hold the gutter band: it lies on one side of a gutter or crosses
+     * it. Set at [y], it blocks the gutter positions [from] to [to], and [isEdge] for the top or the bottom row.
+     */
+    private data class Segment(
+        val start: Double,
+        val end: Double,
+        val characters: Int,
+        val y: Double,
+        val from: Int,
+        val to: Int,
+        val isEdge: Boolean,
+    )
 
     private fun List<Double>.countAtMost(value: Double): Int {
         var low = 0

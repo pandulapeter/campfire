@@ -31,11 +31,12 @@ locally, never rendered, uploaded, or kept.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, with a fifth of the characters
   on each side, counting no line that crosses it (a lyric beside the gap in its chord row is no second column) and
   leaving a crossing first or last line of the page out as well, **found at every half point, not sampled** (since a
-  dense layout leaves less than a word's gap). A band no line crosses that opens a column beats one a heading
-  crosses; among equally crossed bands, the fewest characters crossing wins (a page number under the gutter, not a lyric
-  filled to the edge), then the widest. Each side is searched again (three and four columns). A page whose letters
-  mostly read from the right is read from its right column. Each line names its column (`ChordSheet.Line.column`), a
-  line crossing the gutter none.
+  dense layout leaves less than a word's gap). A band no line crosses that opens a column beats one a heading crosses;
+  among equally crossed bands, the fewest crossing lines below the top of the ink right of the band win (a key printed
+  over the middle of the page is cut, not a column's longest chord row), then the fewest characters crossing (a page
+  number under the gutter, not a lyric filled to the edge), then the widest. Each side is searched again (three and four
+  columns). A page whose letters mostly read from the right is read from its right column. Each line names its column
+  (`ChordSheet.Line.column`), a line crossing the gutter none.
 - Running lines (`PdfRunningLines`) are judged on margins laid out across the whole width, never by the columns: a short
   last page can read as columns and cut its header apart. A dropped margin line takes its whole baseline. A number in a
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)
