@@ -65,7 +65,9 @@ import com.pandulapeter.campfire.presentation.resources.scales_mode_of
 import com.pandulapeter.campfire.presentation.resources.scales_play
 import com.pandulapeter.campfire.presentation.resources.scales_relative_minor
 import com.pandulapeter.campfire.presentation.resources.scales_sevenths
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -105,11 +107,14 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun ScaleSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    tunerController: TunerController,
+    stopMetronome: () -> Unit,
+    dialogHost: DialogHost,
     dialog: DialogType.Scale,
 ) {
-    val scale = Scales.fromId(dialog.scaleId) ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val scale = Scales.fromId(dialog.scaleId) ?: return LaunchedEffect(Unit) { dialogHost.dismissSheet(dialog) }
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
     val strings = userPreferences?.instrumentTuning?.strings
@@ -117,10 +122,10 @@ internal fun ScaleSheet(
     val root = ChordProChords.parse(rootName)?.root ?: 0
     val geometry = remember(scale, root, strings, instrument, dialog.capo) { scaleDiagramGeometryOf(scale, root, strings, instrument, dialog.capo) }
     val labels = userPreferences.scaleLabels
-    val playingScaleNote by viewModel.tunerController.playingScaleNote.collectAsStateWithLifecycle()
+    val playingScaleNote by tunerController.playingScaleNote.collectAsStateWithLifecycle()
     // A scale sounds only while its sheet can be seen, as the tuner's tones do (TunerListeningEffect): out of sight the
     // run would play on, and a hidden web tab stretches each of its notes to a second.
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.tunerController.stopScale() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { tunerController.stopScale() }
     CampfireBottomSheet(
         title = scaleTitle(scale, rootName, notation),
         subtitle = shownScaleNoteNames(scale, rootName, notation).joinToString(" ").isolatedLeftToRight(),
@@ -130,13 +135,13 @@ internal fun ScaleSheet(
             {
                 ScaleLabelsToggle(
                     labels = labels,
-                    onLabelsSelected = viewModel.preferencesController::setScaleLabels,
+                    onLabelsSelected = preferencesController::setScaleLabels,
                 )
             }
         } else {
             null
         },
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         Column(
@@ -162,8 +167,8 @@ internal fun ScaleSheet(
                     // The tones and the click share one audio session on iOS, which the tones reconfigure for the tuner,
                     // so the two never sound together: a scale played over a song's metronome stops the click, as opening
                     // the tuner sheet does.
-                    viewModel.metronomeController.stopMetronome()
-                    viewModel.tunerController.toggleScale(scaleToneNotes(scale, root))
+                    stopMetronome()
+                    tunerController.toggleScale(scaleToneNotes(scale, root))
                 },
             )
             ScaleRelations(scale = scale, rootName = rootName, notation = notation)
@@ -172,7 +177,7 @@ internal fun ScaleSheet(
                 val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
                 val showsDegrees = userPreferences?.areChordDegreesEnabled == true
                 val onChordClicked = { chord: SongChord ->
-                    viewModel.dialogHost.showDialog(DialogType.ChordReference(chord, showsScales = false))
+                    dialogHost.showDialog(DialogType.ChordReference(chord, showsScales = false))
                 }
                 ScaleChordsRow(
                     modifier = Modifier.padding(top = 24.dp),

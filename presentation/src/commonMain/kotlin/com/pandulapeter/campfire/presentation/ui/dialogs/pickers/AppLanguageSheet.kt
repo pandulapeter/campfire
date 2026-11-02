@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.pickers
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.components.preferences.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -34,12 +33,13 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  */
 @Composable
 internal fun AppLanguageSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_user_interface_language),
-        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.AppLanguage) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         LanguageChoice(
@@ -51,7 +51,7 @@ internal fun AppLanguageSheet(
                 .padding(contentPadding),
             selected = userPreferences?.language,
             onSelected = { language ->
-                viewModel.preferencesController.setLanguage(language)
+                preferencesController.setLanguage(language)
                 close()
             },
         )

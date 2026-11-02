@@ -52,7 +52,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_lookup_attr
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_fill_in
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup_no_results
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController
+import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
@@ -75,11 +76,13 @@ import com.pandulapeter.campfire.presentation.ui.state.online.songDetailsQueryOf
  */
 @Composable
 internal fun SongDetailsLookupSheet(
-    viewModel: CampfireViewModel,
+    songDetailsLookupController: SongDetailsLookupController,
+    fillSongMetadata: (dialog: DialogType.SongDetailsLookup, draft: Map<ChordProMetadataFields.Field, String>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongDetailsLookup,
 ) {
-    val searchState by viewModel.songDetailsLookupController.songDetailsLookup.collectAsStateWithLifecycle()
-    val creditsLookup by viewModel.songDetailsLookupController.songCredits.collectAsStateWithLifecycle()
+    val searchState by songDetailsLookupController.songDetailsLookup.collectAsStateWithLifecycle()
+    val creditsLookup by songDetailsLookupController.songCredits.collectAsStateWithLifecycle()
     val initialQuery = remember(dialog.song.fileName) { songDetailsQueryOf(dialog.draft) }
     var title by rememberSaveable { mutableStateOf(initialQuery.title) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
@@ -94,7 +97,7 @@ internal fun SongDetailsLookupSheet(
         keyboardController?.hide()
         selectedKey = null
         toggledFields = emptySet()
-        viewModel.songDetailsLookupController.searchSongDetails(query)
+        songDetailsLookupController.searchSongDetails(query)
     }
     val results = (searchState as? SongDetailsLookupState.Active)?.results
     val candidates = results?.candidates.orEmpty()
@@ -106,7 +109,7 @@ internal fun SongDetailsLookupSheet(
     // Asked for whenever a row is open rather than from the tap, so that what is open is the one thing deciding it; an
     // Android activity recreated with a row open finds the answer the view model kept, which asks nothing again for the
     // row it already holds.
-    LaunchedEffect(selected) { selected?.let(viewModel.songDetailsLookupController::loadSongCredits) }
+    LaunchedEffect(selected) { selected?.let(songDetailsLookupController::loadSongCredits) }
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_lookup),
         subtitle = songLabel(dialog.song),
@@ -114,12 +117,12 @@ internal fun SongDetailsLookupSheet(
             BottomSheetConfirmButton(
                 enabled = tickedFields.isNotEmpty(),
                 onClick = {
-                    viewModel.fillSongMetadata(dialog = dialog, draft = dialog.draft.withSongDetails(rows, tickedFields))
+                    fillSongMetadata(dialog, dialog.draft.withSongDetails(rows, tickedFields))
                     close()
                 },
             ) { Text(stringResource(Res.string.song_details_lookup_fill_in)) }
         },
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val listState = rememberLazyListState()
         val content = when {
@@ -169,8 +172,8 @@ internal fun SongDetailsLookupSheet(
                         },
                         onToggle = { field -> toggledFields = if (field.name in toggledFields) toggledFields - field.name else toggledFields + field.name },
                         onRetryCredits = {
-                            viewModel.songDetailsLookupController.clearSongCredits()
-                            viewModel.songDetailsLookupController.loadSongCredits(candidate)
+                            songDetailsLookupController.clearSongCredits()
+                            songDetailsLookupController.loadSongCredits(candidate)
                         },
                     )
                 }
@@ -191,9 +194,7 @@ internal fun SongDetailsLookupSheet(
                         LookupContent.LOADING, LookupContent.BUSY -> LookupMessage(
                             modifier = Modifier.animateItem(),
                             text = stringResource(if (content == LookupContent.BUSY) Res.string.cover_art_search_busy else Res.string.cover_art_search_loading),
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        ) { CircularProgressIndicator() }
 
                         LookupContent.FAILED -> LookupMessage(
                             modifier = Modifier.animateItem(),

@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.open_source_licenses_intro
 import com.pandulapeter.campfire.presentation.resources.open_source_licenses_show
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import org.jetbrains.compose.resources.painterResource
@@ -53,10 +53,10 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun OpenSourceLicensesSheet(
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
 ) = CampfireBottomSheet(
     title = stringResource(Res.string.settings_open_source_licenses),
-    onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.OpenSourceLicenses) },
+    onDismiss = { dialogHost.dismissSheet(DialogType.OpenSourceLicenses) },
 ) { contentPadding ->
     val components = remember { openSourceComponents.filter { appBuild in it.builds } }
     val texts by produceState<Map<String, List<String>>?>(null) { value = readLicenseTexts(components) }
@@ -81,7 +81,7 @@ internal fun OpenSourceLicensesSheet(
             OpenSourceComponentItem(
                 component = component,
                 onSelected = {
-                    viewModel.dialogHost.showDialog(
+                    dialogHost.showDialog(
                         DialogType.OpenSourceLicense(componentName = component.name, texts = texts?.let { component.licenseTexts(it) }),
                     )
                 },

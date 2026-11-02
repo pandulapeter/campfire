@@ -49,7 +49,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_delete_
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation_shared
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation_sync
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_prompt
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.share.Share
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -68,12 +70,16 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
  */
 @Composable
 internal fun DeleteLibraryDialog(
-    viewModel: CampfireViewModel,
+    syncStateFlow: StateFlow<SyncState>,
+    sharesFlow: StateFlow<List<Share>>,
+    importController: ImportController,
+    importReportFlow: StateFlow<ImportReport?>,
+    onDismiss: () -> Unit,
 ) {
-    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
-    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
-    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
-    val importReport by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
+    val syncState by syncStateFlow.collectAsStateWithLifecycle()
+    val shares by sharesFlow.collectAsStateWithLifecycle()
+    val isImporting by importController.isImporting.collectAsStateWithLifecycle()
+    val importReport by importReportFlow.collectAsStateWithLifecycle()
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     // Files dropped or opened with the app while the sheet is up are imported against the library it would delete, so
@@ -85,12 +91,12 @@ internal fun DeleteLibraryDialog(
     val confirmOnce = rememberSingleConfirmation()
     val deleteLibrary = { close: () -> Unit ->
         confirmOnce {
-            viewModel.importController.deleteLibrary()
+            importController.deleteLibrary()
             close()
         }
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dialogHost.dismissSheet(DialogType.DeleteLibrary) },
+        onDismissRequest = onDismiss,
         title = stringResource(Res.string.settings_library_delete),
         text = { contentPadding ->
             val closeSheet = { close() }

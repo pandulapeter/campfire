@@ -32,7 +32,10 @@ import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
 import com.pandulapeter.campfire.data.model.setlist.Setlist
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.SetlistSortMenu
@@ -60,14 +63,18 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SelectionSetlistsSheet(
-    viewModel: CampfireViewModel,
+    setlistsFlow: StateFlow<List<Setlist>>,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    songRenderer: SongRenderer,
+    setlistsController: SetlistsController,
+    onDismiss: () -> Unit,
     dialog: DialogType.SelectionSetlists,
 ) {
-    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
+    val setlists by setlistsFlow.collectAsStateWithLifecycle()
     val selection = dialog.songFileNames
     val selectionSet = remember(selection) { selection.toHashSet() }
     var query by rememberSaveable { mutableStateOf("") }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     var heldWhenTapped by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
     var added by rememberSaveable(stateSaver = fileNamesBySetlistSaver) { mutableStateOf(emptyMap<String, Set<String>>()) }
     fun stateOf(setlist: Setlist) = selectionBoxState(
@@ -85,21 +92,21 @@ internal fun SelectionSetlistsSheet(
         setlists.filter { setlist -> !setlist.isArchived || heldOf(heldWhenTapped, setlist, selectionSet).isNotEmpty() }
     }
     val matches = remember(pickableSetlists, query) {
-        val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
+        val normalizedQuery = songRenderer.normalizeForSearch(query)
         pickableSetlists.filter { setlist ->
-            normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.title) ||
-                normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.description)
+            normalizedQuery in songRenderer.normalizeForSearch(setlist.title) ||
+                normalizedQuery in songRenderer.normalizeForSearch(setlist.description)
         }
     }
     val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, selection) }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
-    val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dialogHost.dismissSheet(dialog) else isNamingNewSetlist = false }
+    val closeNamingDialog = { if (isSkippingToNewSetlist) onDismiss() else isNamingNewSetlist = false }
     if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_choose_setlists),
             subtitle = pluralTextResource(Res.plurals.songs_selection_count, selection.size, selection.size.toString()),
-            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel.setlistsController::setSetlistSortingMode) },
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = setlistsController::setSetlistSortingMode) },
+            onDismiss = onDismiss,
         ) { contentPadding ->
             SearchField(
                 query = query,
@@ -130,10 +137,10 @@ internal fun SelectionSetlistsSheet(
                             heldWhenTapped = withHeldRecorded(heldWhenTapped, setlist, selectionSet)
                             val heldHere = heldWhenTapped.getValue(setlist.fileName)
                             if (addedHere.isEmpty()) {
-                                viewModel.setlistsController.addSongsToSetlist(songFileNames = selection, setlistFileName = setlist.fileName)
+                                setlistsController.addSongsToSetlist(songFileNames = selection, setlistFileName = setlist.fileName)
                                 added = added + (setlist.fileName to selection.filterNot { it in heldHere }.toSet())
                             } else {
-                                viewModel.setlistsController.takeSongsOutOfSetlist(songFileNames = addedHere, setlistFileName = setlist.fileName)
+                                setlistsController.takeSongsOutOfSetlist(songFileNames = addedHere, setlistFileName = setlist.fileName)
                                 added = added - setlist.fileName
                             }
                         },
@@ -157,7 +164,7 @@ internal fun SelectionSetlistsSheet(
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.setlistsController.createSetlistWithSongs(
+                setlistsController.createSetlistWithSongs(
                     title = setlistTitle,
                     description = description,
                     date = date,

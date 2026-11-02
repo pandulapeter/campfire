@@ -42,17 +42,23 @@ internal fun SongEditDialog(
         )
 
         is DialogType.SongMetadata -> SongMetadataDialog(
-            viewModel = viewModel,
+            userPreferencesFlow = viewModel.userPreferences,
+            showSongDetailsLookup = viewModel::showSongDetailsLookup,
+            setSongMetadata = viewModel.songMetadataEditing::setSongMetadata,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
         is DialogType.SongDetailsLookup -> SongDetailsLookupSheet(
-            viewModel = viewModel,
+            songDetailsLookupController = viewModel.songDetailsLookupController,
+            fillSongMetadata = viewModel::fillSongMetadata,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
         is DialogType.SongLinks -> SongLinksDialog(
-            viewModel = viewModel,
+            setSongLinks = viewModel.songMetadataEditing::setSongLinks,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
@@ -66,12 +72,17 @@ internal fun SongEditDialog(
         )
 
         is DialogType.SongPlaying -> SongPlayingDialog(
-            viewModel = viewModel,
+            userPreferencesFlow = viewModel.userPreferences,
+            playingOverrides = viewModel.overrides,
+            setSongPlaying = viewModel.songMetadataEditing::setSongPlaying,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
         is DialogType.CoverArtSearch -> CoverArtSearchSheet(
-            viewModel = viewModel,
+            coverArtSearchController = viewModel.coverArtSearchController,
+            dialogHost = viewModel.dialogHost,
+            setSongCoverArt = viewModel.songMetadataEditing::setSongCoverArt,
             dialog = dialog,
         )
 

@@ -34,7 +34,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.open_source_licenses_license
 import com.pandulapeter.campfire.presentation.resources.open_source_licenses_project
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
@@ -49,7 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
  */
 @Composable
 internal fun OpenSourceLicenseSheet(
-    viewModel: CampfireViewModel,
+    onDismiss: () -> Unit,
     dialog: DialogType.OpenSourceLicense,
     urlOpener: (String) -> Unit,
 ) {
@@ -58,7 +57,7 @@ internal fun OpenSourceLicenseSheet(
         title = component.name,
         subtitle = component.licenseName,
         titleMaxLines = 2,
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         OpenSourceLicenseContent(
             component = component,

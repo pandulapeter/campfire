@@ -41,7 +41,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_manage_search
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_lookup
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songInfo.SONG_METADATA_FIELDS
@@ -65,14 +66,17 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SongMetadataDialog(
-    viewModel: CampfireViewModel,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    showSongDetailsLookup: (dialog: DialogType.SongMetadata, draft: Map<Field, String>) -> Unit,
+    setSongMetadata: (target: SongEditTarget, values: Map<Field, String>, offeredValues: Map<Field, String>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongMetadata,
 ) {
     // Compared with the draft the form opened with rather than with the file's text, so that a duration the field
     // could not show, and so opened empty, is only removed when the user typed into it.
     val offeredValues = remember(dialog.values) { dialog.values.toSongMetadataDraft() }
     var values by rememberSaveable(dialog.song.fileName, dialog.fillCount, stateSaver = songMetadataSaver) { mutableStateOf(dialog.draft ?: offeredValues) }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
         SongMetadataField(
@@ -83,7 +87,7 @@ internal fun SongMetadataDialog(
         )
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismissRequest = onDismiss,
         title = stringResource(Res.string.song_details_metadata_edit),
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
@@ -103,7 +107,7 @@ internal fun SongMetadataDialog(
         startButton = if (userPreferences?.isSongDetailsLookupEnabled == true) {
             {
                 val isClosing = LocalIsSheetClosing.current
-                IconButton(onClick = { if (!isClosing()) viewModel.showSongDetailsLookup(dialog = dialog, draft = values) }) {
+                IconButton(onClick = { if (!isClosing()) showSongDetailsLookup(dialog, values) }) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_manage_search),
                         contentDescription = stringResource(Res.string.song_details_lookup),
@@ -117,11 +121,7 @@ internal fun SongMetadataDialog(
             BottomSheetConfirmButton(
                 enabled = SONG_METADATA_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.songMetadataEditing.setSongMetadata(
-                        target = dialog.target,
-                        values = values.fromSongMetadataDraft(),
-                        offeredValues = offeredValues.fromSongMetadataDraft(),
-                    )
+                    setSongMetadata(dialog.target, values.fromSongMetadataDraft(), offeredValues.fromSongMetadataDraft())
                     close()
                 },
             ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }

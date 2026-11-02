@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.ConfirmationDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteLibraryDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSetlistConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DeleteSongConfirmation
+import com.pandulapeter.campfire.presentation.ui.dialogs.DisconnectSyncConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SendProcessLogDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.UnsavedChangesDialog
@@ -41,6 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionTagsShe
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDatePickerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.EditSetlistDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetCloseRequested
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -59,21 +61,15 @@ import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_replace_message
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
-import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
-import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_action
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
-import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
-import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
-import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_pending_stops
-import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_shared_links
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
@@ -111,6 +107,9 @@ private fun CampfireDialog(
     dialog: DialogType,
     urlOpener: (String) -> Unit,
 ) {
+    val dialogHost = viewModel.dialogHost
+    val preferencesController = viewModel.preferencesController
+    val dismissSheet = { dialogHost.dismissSheet(dialog) }
     when (dialog) {
         // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
         is DialogType.Export -> Unit
@@ -131,26 +130,10 @@ private fun CampfireDialog(
             },
         )
 
-        is DialogType.EditSetlist -> SetlistDetailsDialog(
-            title = stringResource(Res.string.setlists_edit_details),
-            subtitle = dialog.setlist.title,
-            isTitleFocused = false,
-            requiresChanges = true,
-            initialTitle = dialog.setlist.title,
-            initialDescription = dialog.setlist.description,
-            initialDate = dialog.setlist.date,
-            initialIsCountdownShown = dialog.setlist.isCountdownShown,
-            confirmLabel = stringResource(Res.string.save),
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-            onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.setlistsController.editSetlist(
-                    offered = dialog.setlist,
-                    title = setlistTitle,
-                    description = description,
-                    date = date,
-                    isCountdownShown = isCountdownShown,
-                )
-            },
+        is DialogType.EditSetlist -> EditSetlistDialog(
+            editSetlist = viewModel.setlistsController::editSetlist,
+            onDismiss = dismissSheet,
+            dialog = dialog,
         )
 
         is DialogType.SetlistDate -> SetlistDatePickerSheet(
@@ -208,89 +191,107 @@ private fun CampfireDialog(
 
         DialogType.SongFilters -> SongFiltersSheet(viewModel = viewModel)
 
-        is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
+        is DialogType.SongInfo -> SongInfoSheet(
+            libraryState = viewModel.libraryState,
+            songTextsFlow = viewModel.songTextStore.songTexts,
+            editorSession = viewModel.editorSession,
+            preferencesController = preferencesController,
+            backStack = viewModel.navigator.backStack,
+            songMetadataEditing = viewModel.songMetadataEditing,
+            songRenderer = viewModel.songRenderer,
+            playingOverrides = viewModel.overrides,
+            onDismiss = dismissSheet,
+            dialog = dialog,
+            urlOpener = urlOpener,
+        )
+
         is DialogType.ChordShape -> ChordShapeSheet(
             allSongs = viewModel.libraryState.allSongs,
             songTextStore = viewModel.songTextStore,
-            preferencesController = viewModel.preferencesController,
+            preferencesController = preferencesController,
             overrides = viewModel.overrides,
             songRenderer = viewModel.songRenderer,
-            dialogHost = viewModel.dialogHost,
+            dialogHost = dialogHost,
             dialog = dialog,
         )
 
-        is DialogType.ChordReference -> ChordReferenceSheet(
-            preferencesController = viewModel.preferencesController,
-            dialogHost = viewModel.dialogHost,
+        is DialogType.ChordReference -> ChordReferenceSheet(preferencesController = preferencesController, dialogHost = dialogHost, dialog = dialog)
+
+        is DialogType.Scale -> ScaleSheet(
+            preferencesController = preferencesController,
+            tunerController = viewModel.tunerController,
+            stopMetronome = viewModel.metronomeController::stopMetronome,
+            dialogHost = dialogHost,
             dialog = dialog,
         )
 
-        is DialogType.Scale -> ScaleSheet(viewModel = viewModel, dialog = dialog)
-
-        DialogType.Instrument -> InstrumentSheet(
-            preferencesController = viewModel.preferencesController,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-        )
-
-        DialogType.Tuning -> TuningSheet(
-            preferencesController = viewModel.preferencesController,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-        )
-
-        DialogType.Notation -> NotationSheet(
-            preferencesController = viewModel.preferencesController,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-        )
-
-        DialogType.SongDisplay -> SongDisplaySheet(viewModel = viewModel)
-        DialogType.SongLayout -> SongLayoutSheet(viewModel = viewModel)
-        is DialogType.ChordNames -> ChordNamesSheet(viewModel = viewModel, dialog = dialog)
+        DialogType.Instrument -> InstrumentSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.Tuning -> TuningSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.Notation -> NotationSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.SongDisplay -> SongDisplaySheet(preferencesController = preferencesController, dialogHost = dialogHost)
+        DialogType.SongLayout -> SongLayoutSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        is DialogType.ChordNames -> ChordNamesSheet(preferencesController = preferencesController, onDismiss = dismissSheet, dialog = dialog)
 
         DialogType.Tuner -> TunerSheet(
             tunerController = viewModel.tunerController,
             userPreferencesFlow = viewModel.userPreferences,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            onDismiss = dismissSheet,
         )
 
-        DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
-        DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel)
-        is DialogType.OpenSourceLicense -> OpenSourceLicenseSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
+        DialogType.AppLanguage -> AppLanguageSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(dialogHost = dialogHost)
+        is DialogType.OpenSourceLicense -> OpenSourceLicenseSheet(onDismiss = dismissSheet, dialog = dialog, urlOpener = urlOpener)
 
         is DialogType.SetlistPicker -> SetlistPicker(
-            viewModel = viewModel,
+            setlistsFlow = viewModel.libraryState.setlists,
+            userPreferencesFlow = viewModel.userPreferences,
+            songRenderer = viewModel.songRenderer,
+            setlistsController = viewModel.setlistsController,
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 
         is DialogType.SelectionSetlists -> SelectionSetlistsSheet(
-            viewModel = viewModel,
+            setlistsFlow = viewModel.libraryState.setlists,
+            userPreferencesFlow = viewModel.userPreferences,
+            songRenderer = viewModel.songRenderer,
+            setlistsController = viewModel.setlistsController,
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 
         is DialogType.SelectionTags -> SelectionTagsSheet(
             libraryState = viewModel.libraryState,
-            preferencesController = viewModel.preferencesController,
+            preferencesController = preferencesController,
             songRenderer = viewModel.songRenderer,
             setSelectionTags = viewModel.selectionEditing::setSelectionTags,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 
         is DialogType.SelectionLanguages -> SelectionLanguagesSheet(
             libraryState = viewModel.libraryState,
-            preferencesController = viewModel.preferencesController,
+            preferencesController = preferencesController,
             songRenderer = viewModel.songRenderer,
             setSelectionLanguages = viewModel.selectionEditing::setSelectionLanguages,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 
         is DialogType.SongPicker -> SongPicker(
-            viewModel = viewModel,
+            libraryState = viewModel.libraryState,
+            songPickerState = viewModel.songPickerState,
+            preferencesController = preferencesController,
+            songRenderer = viewModel.songRenderer,
+            setSetlistSong = viewModel.setlistsController::setSetlistSong,
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 
         is DialogType.DeleteSong -> DeleteSongConfirmation(
-            viewModel = viewModel,
+            sharesFlow = viewModel.shareLinkController.shares,
+            deleteSong = viewModel.songFilesController::deleteSong,
+            onDismiss = dialogHost::dismissDialog,
             dialog = dialog,
         )
 
@@ -308,31 +309,17 @@ private fun CampfireDialog(
         )
 
         is DialogType.DeleteSetlist -> DeleteSetlistConfirmation(
-            viewModel = viewModel,
+            sharesFlow = viewModel.shareLinkController.shares,
+            deleteSetlist = viewModel.setlistsController::deleteSetlist,
+            onDismiss = dialogHost::dismissDialog,
             dialog = dialog,
         )
 
-        is DialogType.DisconnectSync -> ConfirmationDialog(
-            title = stringResource(Res.string.settings_sync_disconnect),
-            // The shares stay in the cloud folder and keep serving their last copies, which nothing updates any more.
-            text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName) +
-                if (viewModel.shareLinkController.shares.collectAsStateWithLifecycle().value.isEmpty()) {
-                    ""
-                } else {
-                    " " + stringResource(Res.string.settings_sync_disconnect_shared_links)
-                } +
-                // Deletions not yet told to the account's list are forgotten with it, leaving any of their links working.
-                if (viewModel.shareLinkController.hasPendingStops.collectAsStateWithLifecycle().value) {
-                    " " + stringResource(Res.string.settings_sync_disconnect_pending_stops)
-                } else {
-                    ""
-                },
-            confirmLabel = stringResource(Res.string.settings_sync_disconnect),
-            onDismiss = viewModel.dialogHost::dismissDialog,
-            onConfirm = {
-                viewModel.syncController.disconnectSyncProvider()
-                viewModel.dialogHost.dismissDialog()
-            },
+        is DialogType.DisconnectSync -> DisconnectSyncConfirmation(
+            shareLinkController = viewModel.shareLinkController,
+            onDisconnect = viewModel.syncController::disconnectSyncProvider,
+            onDismiss = dialogHost::dismissDialog,
+            dialog = dialog,
         )
 
         DialogType.ClearCoverArtCache -> ConfirmationDialog(
@@ -356,7 +343,11 @@ private fun CampfireDialog(
         )
 
         DialogType.DeleteLibrary -> DeleteLibraryDialog(
-            viewModel = viewModel,
+            syncStateFlow = viewModel.syncController.syncState,
+            sharesFlow = viewModel.shareLinkController.shares,
+            importController = viewModel.importController,
+            importReportFlow = viewModel.importReportState.importReport,
+            onDismiss = dismissSheet,
         )
 
         DialogType.RevertChanges -> ConfirmationDialog(
@@ -382,10 +373,10 @@ private fun CampfireDialog(
 
         is DialogType.ImportTags -> ImportTagsSheet(
             libraryTags = viewModel.libraryState.tags,
-            preferencesController = viewModel.preferencesController,
+            preferencesController = preferencesController,
             songRenderer = viewModel.songRenderer,
             importReportState = viewModel.importReportState,
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            onDismiss = dismissSheet,
             dialog = dialog,
         )
 

@@ -49,7 +49,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchController
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import org.jetbrains.compose.resources.painterResource
 
@@ -75,11 +76,13 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun CoverArtSearchSheet(
-    viewModel: CampfireViewModel,
+    coverArtSearchController: CoverArtSearchController,
+    dialogHost: DialogHost,
+    setSongCoverArt: (target: SongEditTarget, url: String?) -> Unit,
     dialog: DialogType.CoverArtSearch,
 ) {
-    val searchState by viewModel.coverArtSearchController.coverArtSearch.collectAsStateWithLifecycle()
-    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtSearchController.coverArtQueryOf(song = dialog.song, target = dialog.target) }
+    val searchState by coverArtSearchController.coverArtSearch.collectAsStateWithLifecycle()
+    val initialQuery = remember(dialog.song.fileName) { coverArtSearchController.coverArtQueryOf(song = dialog.song, target = dialog.target) }
     var mode by rememberSaveable { mutableStateOf(CoverArtSheetMode.SEARCH) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
@@ -100,7 +103,7 @@ internal fun CoverArtSearchSheet(
         // search starts, while a record really without a cover is answered at once from its memory and drops out again.
         unavailableKeys = emptySet()
         unreachableKeys = emptySet()
-        viewModel.coverArtSearchController.searchCoverArt(query)
+        coverArtSearchController.searchCoverArt(query)
     }
     val usableAddress = ChordProCoverArt.usableUrl(address)
     CampfireBottomSheet(
@@ -115,13 +118,11 @@ internal fun CoverArtSearchSheet(
                     CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl in loadedUrls && selectedUrl != dialog.song.coverArtUrl
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
-                onRemove = {
-                    viewModel.dialogHost.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target))
-                },
+                onRemove = { dialogHost.showDialog(DialogType.RemoveSongCoverArt(song = dialog.song, target = dialog.target)) },
                 onSave = {
-                    viewModel.songMetadataEditing.setSongCoverArt(
-                        target = dialog.target,
-                        url = when (mode) {
+                    setSongCoverArt(
+                        dialog.target,
+                        when (mode) {
                             CoverArtSheetMode.SEARCH -> selectedUrl
                             CoverArtSheetMode.ADDRESS -> usableAddress
                         },
@@ -130,7 +131,7 @@ internal fun CoverArtSearchSheet(
                 },
             )
         },
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         // Choose the layout from the window, not the space above the keyboard. Moving a focused field between
         // the pinned area and a lazy grid item disposes that input as the IME opens and ends its editing session.

@@ -29,7 +29,11 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.setlist.Setlist
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.checklist.checklistItems
@@ -53,12 +57,16 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SetlistPicker(
-    viewModel: CampfireViewModel,
+    setlistsFlow: StateFlow<List<Setlist>>,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    songRenderer: SongRenderer,
+    setlistsController: SetlistsController,
+    onDismiss: () -> Unit,
     dialog: DialogType.SetlistPicker,
 ) {
-    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
+    val setlists by setlistsFlow.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val checkedSetlistKeys = setlists.filter { setlist -> setlist.entries.any { it.songFileName == dialog.song.fileName } }
         .mapTo(mutableSetOf()) { it.fileName }
     val refreshKey = userPreferences?.setlistSortingMode to query
@@ -71,20 +79,20 @@ internal fun SetlistPicker(
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
     val matches = remember(pickableSetlists, query) {
-        val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
+        val normalizedQuery = songRenderer.normalizeForSearch(query)
         pickableSetlists.filter { setlist ->
-            normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.songRenderer.normalizeForSearch(setlist.description)
+            normalizedQuery in songRenderer.normalizeForSearch(setlist.title) || normalizedQuery in songRenderer.normalizeForSearch(setlist.description)
         }
     }
     val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, listOf(dialog.song.fileName)) }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
-    val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dialogHost.dismissSheet(dialog) else isNamingNewSetlist = false }
+    val closeNamingDialog = { if (isSkippingToNewSetlist) onDismiss() else isNamingNewSetlist = false }
     if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_choose_setlists),
             subtitle = songLabel(dialog.song),
-            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = viewModel.setlistsController::setSetlistSortingMode) },
-            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            actions = { SetlistSortMenu(selected = userPreferences?.setlistSortingMode, onSelected = setlistsController::setSetlistSortingMode) },
+            onDismiss = onDismiss,
         ) { contentPadding ->
             SearchField(
                 query = query,
@@ -111,9 +119,9 @@ internal fun SetlistPicker(
                         isEnabled = !setlist.isArchived && setlist.fileName != dialog.setlistFileName,
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
-                                viewModel.setlistsController.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                                setlistsController.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
                             } else {
-                                viewModel.setlistsController.removeSongFromSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                                setlistsController.removeSongFromSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
                             }
                         },
                     )
@@ -138,7 +146,7 @@ internal fun SetlistPicker(
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
-                viewModel.setlistsController.createSetlistWithSongs(
+                setlistsController.createSetlistWithSongs(
                     title = setlistTitle,
                     description = description,
                     date = date,

@@ -20,7 +20,8 @@ import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation_shared
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.share.Share
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.sync.isShared
 
 /**
@@ -29,10 +30,12 @@ import com.pandulapeter.campfire.presentation.ui.sync.isShared
  */
 @Composable
 internal fun DeleteSongConfirmation(
-    viewModel: CampfireViewModel,
+    sharesFlow: StateFlow<List<Share>>,
+    deleteSong: (fileName: String) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.DeleteSong,
 ) {
-    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
+    val shares by sharesFlow.collectAsStateWithLifecycle()
     ConfirmationDialog(
         title = stringResource(Res.string.songs_delete_song),
         text = textResource(
@@ -44,10 +47,10 @@ internal fun DeleteSongConfirmation(
             dialog.song.title,
         ),
         confirmLabel = stringResource(Res.string.delete),
-        onDismiss = viewModel.dialogHost::dismissDialog,
+        onDismiss = onDismiss,
         onConfirm = {
-            viewModel.songFilesController.deleteSong(dialog.song.fileName)
-            viewModel.dialogHost.dismissDialog()
+            deleteSong(dialog.song.fileName)
+            onDismiss()
         },
     )
 }

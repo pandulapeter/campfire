@@ -29,7 +29,13 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import kotlinx.coroutines.flow.StateFlow
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -46,36 +52,44 @@ import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditin
  */
 @Composable
 internal fun SongInfoSheet(
-    viewModel: CampfireViewModel,
+    libraryState: LibraryState,
+    songTextsFlow: StateFlow<Map<String, String>>,
+    editorSession: EditorSession,
+    preferencesController: PreferencesController,
+    backStack: List<CampfireDestination>,
+    songMetadataEditing: SongMetadataEditing,
+    songRenderer: SongRenderer,
+    playingOverrides: PlayingOverrides,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongInfo,
     urlOpener: (String) -> Unit,
 ) {
     val isDraft = dialog.target is SongEditTarget.EditorDraft
-    val songs by viewModel.libraryState.allSongs.collectAsStateWithLifecycle()
-    val songTexts by viewModel.songTextStore.songTexts.collectAsStateWithLifecycle()
-    val editorDraft by viewModel.editorSession.editorDraft.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
+    val songs by libraryState.allSongs.collectAsStateWithLifecycle()
+    val songTexts by songTextsFlow.collectAsStateWithLifecycle()
+    val editorDraft by editorSession.editorDraft.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val setlists by libraryState.setlists.collectAsStateWithLifecycle()
     // The editor's own song is the text being typed, which neither has the overrides of a setlist nor is read only.
-    val setlistFileName = if (isDraft) null else (viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
+    val setlistFileName = if (isDraft) null else (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
     val isReadOnly = !isDraft && (isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived })
     val text = if (isDraft) editorDraft?.takeIf { it.fileName == dialog.song.fileName }?.text else songTexts[dialog.song.fileName]
-    val metadata = remember(text) { text?.let(viewModel.songMetadataEditing::songMetadataOf) }
+    val metadata = remember(text) { text?.let(songMetadataEditing::songMetadataOf) }
     // Over the editor the header names the song the way the editor's title does, from the text being typed.
     val song = if (isDraft) {
         metadata?.let { dialog.song.copy(title = it.displayTitle(fallback = dialog.song.title), artist = it.artist.orEmpty()) } ?: dialog.song
     } else {
         songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
     }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
-    val editing = rememberSongInfoEditing(songMetadataEditing = viewModel.songMetadataEditing, userPreferencesFlow = viewModel.userPreferences, song = song, setlistFileName = setlistFileName, target = dialog.target)
-    val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
+    val editing = rememberSongInfoEditing(songMetadataEditing = songMetadataEditing, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName, target = dialog.target)
+    val overrides = songPlayingOverrides(playingOverrides = playingOverrides, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         if (metadata != null) {
             val scrollState = rememberScrollState()
@@ -94,7 +108,7 @@ internal fun SongInfoSheet(
                 defaults = if (shouldShowChords || shouldShowTempo) {
                     SongDefaults(
                         // The editor's text is in the reader's notation already, and the file's in the standard one.
-                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { if (isDraft) it else viewModel.songRenderer.editorKeyOf(it, viewModel.editorSession.editorNotation) },
+                        key = metadata.key?.takeIf { shouldShowChords && it.isNotBlank() }?.let { if (isDraft) it else songRenderer.editorKeyOf(it, editorSession.editorNotation) },
                         capo = metadata.capo?.takeIf { shouldShowChords },
                         // The click's own tempo and time where the file names none, as if they were written there.
                         tempo = (ChordProTempo.parse(metadata.tempo) ?: MetronomePattern.DEFAULT_BPM).takeIf { shouldShowTempo },

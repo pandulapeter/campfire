@@ -35,7 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.chord_names_sounding_des
 import com.pandulapeter.campfire.presentation.resources.chord_names_title
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.components.ChoiceCard
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 
@@ -50,14 +50,15 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
  */
 @Composable
 internal fun ChordNamesSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
     dialog: DialogType.ChordNames,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     ConfirmedQuestionSheet(
         title = stringResource(Res.string.chord_names_title),
-        onConfirm = viewModel.preferencesController::markChordNamesChosen,
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onConfirm = preferencesController::markChordNamesChosen,
+        onDismiss = onDismiss,
     ) {
         Text(
             modifier = Modifier.padding(bottom = 16.dp),
@@ -70,7 +71,7 @@ internal fun ChordNamesSheet(
             chordNames = userPreferences?.chordNames,
             capoKeepsKey = userPreferences?.capoKeepsKey == true,
             onSelected = { answer ->
-                viewModel.preferencesController.pickChordNamesAnswer(chordNames = answer.chordNames, capoKeepsKey = answer.keepsKey)
+                preferencesController.pickChordNamesAnswer(chordNames = answer.chordNames, capoKeepsKey = answer.keepsKey)
             },
         )
     }

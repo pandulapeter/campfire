@@ -70,7 +70,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_playing_ove
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_override_transposition
 import com.pandulapeter.campfire.presentation.resources.song_details_playing_range
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import kotlinx.coroutines.flow.StateFlow
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
@@ -113,11 +115,14 @@ import kotlin.math.absoluteValue
  */
 @Composable
 internal fun SongPlayingDialog(
-    viewModel: CampfireViewModel,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    playingOverrides: PlayingOverrides,
+    setSongPlaying: (target: SongEditTarget, values: Map<Field, String>, offeredValues: Map<Field, String>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongPlaying,
 ) {
     val offeredValues = dialog.values
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
     var values by rememberSaveable(dialog.song.fileName, stateSaver = songPlayingSaver) { mutableStateOf(offeredValues) }
@@ -155,7 +160,7 @@ internal fun SongPlayingDialog(
         )
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismissRequest = onDismiss,
         title = stringResource(Res.string.song_details_playing_edit),
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
@@ -175,7 +180,8 @@ internal fun SongPlayingDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     SongPlayingOverridesCard(
-                        viewModel = viewModel,
+                        playingOverrides = playingOverrides,
+                        userPreferencesFlow = userPreferencesFlow,
                         song = dialog.song,
                         setlistFileName = dialog.setlistFileName,
                     )
@@ -213,11 +219,7 @@ internal fun SongPlayingDialog(
             BottomSheetConfirmButton(
                 enabled = isValid && SONG_PLAYING_FIELDS.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.songMetadataEditing.setSongPlaying(
-                        target = dialog.target,
-                        values = values,
-                        offeredValues = offeredValues,
-                    )
+                    setSongPlaying(dialog.target, values, offeredValues)
                     close()
                 },
             ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }
@@ -242,14 +244,15 @@ internal class SongPlayingOverrides(
  */
 @Composable
 internal fun songPlayingOverrides(
-    viewModel: CampfireViewModel,
+    playingOverrides: PlayingOverrides,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
     song: Song,
     setlistFileName: String?,
 ): SongPlayingOverrides {
-    val transpositions by viewModel.overrides.transpositions.collectAsStateWithLifecycle()
-    val tempos by viewModel.overrides.tempos.collectAsStateWithLifecycle()
-    val capos by viewModel.overrides.capos.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val transpositions by playingOverrides.transpositions.collectAsStateWithLifecycle()
+    val tempos by playingOverrides.tempos.collectAsStateWithLifecycle()
+    val capos by playingOverrides.capos.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val shown = shownPlayingOverrides(
         song = song,
         transposition = transpositions[song.fileName, setlistFileName],
@@ -269,9 +272,9 @@ internal fun songPlayingOverrides(
     return SongPlayingOverrides(
         labels = labels,
         onReset = {
-            if (shown.transposition != 0) viewModel.overrides.resetTransposition(song.fileName, setlistFileName)
-            if (shown.capo != null) viewModel.overrides.resetCapo(song.fileName, setlistFileName)
-            if (shown.tempo != null) viewModel.overrides.resetTempo(song.fileName, setlistFileName)
+            if (shown.transposition != 0) playingOverrides.resetTransposition(song.fileName, setlistFileName)
+            if (shown.capo != null) playingOverrides.resetCapo(song.fileName, setlistFileName)
+            if (shown.tempo != null) playingOverrides.resetTempo(song.fileName, setlistFileName)
         },
     )
 }
@@ -283,11 +286,12 @@ internal fun songPlayingOverrides(
  */
 @Composable
 private fun SongPlayingOverridesCard(
-    viewModel: CampfireViewModel,
+    playingOverrides: PlayingOverrides,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
     song: Song,
     setlistFileName: String?,
 ) {
-    val overrides = songPlayingOverrides(viewModel = viewModel, song = song, setlistFileName = setlistFileName)
+    val overrides = songPlayingOverrides(playingOverrides = playingOverrides, userPreferencesFlow = userPreferencesFlow, song = song, setlistFileName = setlistFileName)
     var shownOverrides by remember { mutableStateOf(overrides.labels) }
     if (overrides.labels.isNotEmpty()) shownOverrides = overrides.labels
     AnimatedVisibility(

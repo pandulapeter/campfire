@@ -20,16 +20,19 @@ import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation_shared
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.share.Share
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.sync.isShared
 
 /** Deleting a setlist shared as a link stops sharing it (`DeleteSetlistUseCase`), so the question says so. */
 @Composable
 internal fun DeleteSetlistConfirmation(
-    viewModel: CampfireViewModel,
+    sharesFlow: StateFlow<List<Share>>,
+    deleteSetlist: (fileName: String) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.DeleteSetlist,
 ) {
-    val shares by viewModel.shareLinkController.shares.collectAsStateWithLifecycle()
+    val shares by sharesFlow.collectAsStateWithLifecycle()
     ConfirmationDialog(
         title = stringResource(Res.string.setlists_delete_setlist),
         text = textResource(
@@ -41,10 +44,10 @@ internal fun DeleteSetlistConfirmation(
             dialog.setlist.title,
         ),
         confirmLabel = stringResource(Res.string.delete),
-        onDismiss = viewModel.dialogHost::dismissDialog,
+        onDismiss = onDismiss,
         onConfirm = {
-            viewModel.setlistsController.deleteSetlist(dialog.setlist.fileName)
-            viewModel.dialogHost.dismissDialog()
+            deleteSetlist(dialog.setlist.fileName)
+            onDismiss()
         },
     )
 }

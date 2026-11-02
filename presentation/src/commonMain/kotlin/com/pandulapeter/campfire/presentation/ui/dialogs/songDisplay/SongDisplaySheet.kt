@@ -21,7 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_preferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -37,12 +38,13 @@ import com.pandulapeter.campfire.presentation.ui.songDisplay.SongPageSection
  */
 @Composable
 internal fun SongDisplaySheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    dialogHost: DialogHost,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_preferences),
-        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongDisplay) },
+        onDismiss = { dialogHost.dismissSheet(DialogType.SongDisplay) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         Column(
@@ -57,12 +59,12 @@ internal fun SongDisplaySheet(
             ChordsSection(
                 userPreferences = userPreferences,
                 // Over this sheet rather than in its place, so that picking one comes back here (DialogStack).
-                onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
-                onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
-                onChordNamesSelected = viewModel.preferencesController::setChordNames,
-                onCapoKeepsKeyChanged = viewModel.preferencesController::setCapoKeepsKey,
+                onNotationClicked = { dialogHost.showDialog(DialogType.Notation) },
+                onAccidentalsSelected = preferencesController::setAccidentals,
+                onChordNamesSelected = preferencesController::setChordNames,
+                onCapoKeepsKeyChanged = preferencesController::setCapoKeepsKey,
             )
-            SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
+            SongPageSection(userPreferences = userPreferences, preferencesController = preferencesController)
         }
     }
 }

@@ -65,7 +65,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_link_move_u
 import com.pandulapeter.campfire.presentation.resources.song_details_link_name
 import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.AddressTextField
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
@@ -86,7 +85,8 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SongLinksDialog(
-    viewModel: CampfireViewModel,
+    setSongLinks: (target: SongEditTarget, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongLinks,
 ) {
     var rows by rememberSaveable(dialog.song.fileName, stateSaver = songLinkRowsSaver) {
@@ -110,7 +110,7 @@ internal fun SongLinksDialog(
         coroutineScope.launch { listState.reveal(key = row.id, index = rows.lastIndex + ROWS_START_INDEX, size = size) }
     }
     TextFieldBottomSheet(
-        onDismissRequest = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismissRequest = onDismiss,
         title = stringResource(Res.string.song_details_links_edit),
         subtitle = songLabel(dialog.song),
         retainHeight = true,
@@ -164,7 +164,7 @@ internal fun SongLinksDialog(
                 enabled = linksToSave != null,
                 onClick = {
                     if (linksToSave != null) {
-                        viewModel.songMetadataEditing.setSongLinks(target = dialog.target, links = linksToSave, offeredLinks = dialog.links)
+                        setSongLinks(dialog.target, linksToSave, dialog.links)
                         close()
                     }
                 },

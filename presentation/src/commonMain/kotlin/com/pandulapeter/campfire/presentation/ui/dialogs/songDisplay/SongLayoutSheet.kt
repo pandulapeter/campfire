@@ -21,8 +21,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_layout_message
 import com.pandulapeter.campfire.presentation.resources.song_layout_title
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.songDisplay.SongLayoutChoices
 
 /**
@@ -33,13 +32,14 @@ import com.pandulapeter.campfire.presentation.ui.songDisplay.SongLayoutChoices
  */
 @Composable
 internal fun SongLayoutSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     ConfirmedQuestionSheet(
         title = stringResource(Res.string.song_layout_title),
-        onConfirm = viewModel.preferencesController::markSongLayoutChosen,
-        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongLayout) },
+        onConfirm = preferencesController::markSongLayoutChosen,
+        onDismiss = onDismiss,
     ) {
         Text(
             modifier = Modifier.padding(bottom = 16.dp),
@@ -49,7 +49,7 @@ internal fun SongLayoutSheet(
         )
         SongLayoutChoices(
             selected = userPreferences?.songLayout,
-            onSelected = viewModel.preferencesController::pickSongLayout,
+            onSelected = preferencesController::pickSongLayout,
         )
     }
 }
