@@ -15,13 +15,13 @@ Reviewed at `c7807015a`; the angle and the full record are in the `54th-review` 
 landed, and 06 landed without `ChordSheetLook`'s per-column inset (it needed a field on `Rendered`, which the plan
 forbids). Plan 02's step 2 landed later with the Hebrew face read through an expect/actual `scriptFontFamilies()`
 (Compose resources' `Font` on Android, desktop, and iOS, `preloadFont` on the web, the only target that has it) rather
-than `preloadFont` from `commonMain`. The plans below stopped where the plan itself was wrong or the lane ran out of
+than `preloadFont` from `commonMain`; 04 landed after its 19 comma test names were renamed, and 01 with its step 4 re-derived
+from what each golden guarded. The plans below stopped where the plan itself was wrong or the lane ran out of
 room; none of them was improvised past that point.
 
 | # | Plan | Landed | Why it stopped |
 |---|---|---|---|
-| 01 | Replace the Linux-only golden renders | steps 1–3 | Step 4(a) expects "There is a house in New Orleans" on the demo song's first screen at 360 × 640 dp; it comes after Chords, Scales, Picking pattern, and Intro, off the first page. Steps 5–7 wait on a corrected step 4. |
-| 07 | Restructure the converter into explicit stages | steps 1–2 | Step 3: `writeBody` / `BodyWriter` decide by what they already wrote, through private helpers on the private `Rendered`; reaching the nested `Song` / `Part` model byte-identically is a redesign the plan does not spell out. Steps 7–8 need Campfire exports in the corpus (no `campfire/` folder yet). Corpus score unchanged at 0.778. |
+| 07 | Restructure the converter into explicit stages | steps 1–2 | Replanned on 2026-11-02 (the writer's redesign spelled out, batches A–F, the owner's decisions in the plan); running batch by batch. |
 
 Plan 13 left these starts in `CampfireViewModel`'s `init`, each needing a reorder or a parameter the size check refuses:
 `FontScaleController.startEcho`, `DialogHost.startClosingWithSong`, `SyncController.startRestoring`,
