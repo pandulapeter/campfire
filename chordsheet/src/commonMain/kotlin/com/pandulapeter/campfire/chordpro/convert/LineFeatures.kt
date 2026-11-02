@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.chordpro.convert
 
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.labelledRow
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.metadata
+
 /**
  * What a line of a song says on its own, read once: every decision about the song (its kinds, its header, its sections)
  * reads these rather than parsing the line again.
@@ -29,4 +32,20 @@ internal data class LineFeatures(
     val bodyRow: List<Pair<String, String>>?,
     val look: ChordSheetLook?,
     val isSung: Boolean,
-)
+) {
+    companion object {
+        /** What each of a song's [lines] says on its own, read once for every decision about the song. */
+        fun of(lines: List<Rendered>) = lines.mapIndexed { index, line ->
+            LineFeatures(
+                heading = ChordSheetHeadings.parse(line.text),
+                metadata = metadata(line.text),
+                headerRow = labelledRow(line.text, isHeader = ChordSheetProfile.isInHeader(index)),
+                bodyRow = labelledRow(line.text, isHeader = false),
+                look = ChordSheetLook.of(line.source, line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })),
+                isSung = line.marks?.isContinuation != true && sungWord.containsMatchIn(line.text),
+            )
+        }
+
+        private val sungWord = Regex("\\p{L}{2}")
+    }
+}

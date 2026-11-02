@@ -132,7 +132,7 @@ public object ChordSheetConverter {
         if (isChordPro(text)) return null
         val lines = expandLabels(ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) })
         val candidates = chordCandidates(lines)
-        val features = features(lines)
+        val features = LineFeatures.of(lines)
         val kinds = LineKinds.of(lines, features, candidates).map { if (it == LineKind.METADATA) LineKind.LYRIC else it }
         // A bracketed heading pasted as it is would read as a chord, so it is reason enough to convert lyrics with no chords.
         if (LineKind.CHORD !in kinds && kinds.indices.none { kinds[it] == LineKind.SECTION && lines[it].text.trimStart().startsWith('[') }) return null
@@ -172,11 +172,9 @@ public object ChordSheetConverter {
                 else -> LineKind.LYRIC
             }
         }
-        val parts = SongStructure.of(lines, features(lines), kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
+        val parts = SongStructure.of(lines, LineFeatures.of(lines), kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
         return SongWriter.write(parts).joinToString("\n")
     }
-
-    private val sungWord = Regex("\\p{L}{2}")
 
     /** Primitive storage keeps an allowed large text file from allocating one boxed Double per character. */
     private class Positions(capacity: Int) {
@@ -437,7 +435,7 @@ public object ChordSheetConverter {
     private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean, profile: ChordSheetProfile): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
-        val features = features(lines)
+        val features = LineFeatures.of(lines)
         val kinds = LineKinds.of(lines, features, candidates)
         val styled = lines.any { line -> !isChordLine(line.text) && line.source.spans.any { (it.isBold || it.isRaised) && chord(it.text.trim()) } }
         if (kinds.none { it in listOf(LineKind.CHORD, LineKind.SECTION, LineKind.TAB, LineKind.GRID) } && !convertParentheses && !styled) {
@@ -507,18 +505,6 @@ public object ChordSheetConverter {
     private fun convertsParentheses(lines: List<Rendered>): Boolean {
         val parenthesized = lines.flatMap { parentheses.findAll(it.text).toList() }
         return parenthesized.isNotEmpty() && parenthesized.count { chord(it.groupValues[1]) } * 2 > parenthesized.size
-    }
-
-    /** What each of a song's [lines] says on its own, read once for every decision about the song. */
-    private fun features(lines: List<Rendered>) = lines.mapIndexed { index, line ->
-        LineFeatures(
-            heading = ChordSheetHeadings.parse(line.text),
-            metadata = metadata(line.text),
-            headerRow = labelledRow(line.text, isHeader = ChordSheetProfile.isInHeader(index)),
-            bodyRow = labelledRow(line.text, isHeader = false),
-            look = ChordSheetLook.of(line.source, line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })),
-            isSung = line.marks?.isContinuation != true && sungWord.containsMatchIn(line.text),
-        )
     }
 
     private fun collapse(lines: List<String>): String {
