@@ -100,7 +100,7 @@ internal object SongStructure {
                     val label = headerValue(line.text)
                     if (endsInText()) add(Line.Blank)
                     if (nextContent(index)?.let { kinds[it] } == LineKind.TAB) openTab(label)
-                    else open(ChordSheetCampfireLayout.sectionType(label), label)
+                    else open(ChordSheetHeadings.sectionType(label), label)
                 }
                 LineKind.COMMENT -> {
                     var end = index
@@ -118,13 +118,18 @@ internal object SongStructure {
                     closeSection()
                     flushChanges()
                     val label = headerValue(headingLabel(line.text))
-                    val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else features[index].heading?.type
+                    val type = when {
+                        line.isMarginLabel -> ChordSheetMarginLabels.type(line.text)
+                        features[index].isLabel -> ChordSheetHeadings.sectionType(label)
+                        else -> features[index].heading?.type
+                    }
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != LineKind.BLANK }
                     // Under a chorus heading, lines neither set the way the song set its chorus apart nor singing its words
                     // are sung after it.
                     val lyric = ((index + 1)..lines.lastIndex).takeWhile { kinds[it] != LineKind.SECTION }.firstOrNull { kinds[it] == LineKind.LYRIC && it !in omitted }
                     val isRecall = type != null && lyric != null && sections.isRecall(type, features[lyric].look, lines[lyric].text)
                     if (type == "chorus" && (next == null || kinds[next] == LineKind.SECTION || isRecall)) add(Line.Recall)
+                    else if (features[index].isLabel && nextContent(index)?.let { kinds[it] } == LineKind.TAB) openTab(label)
                     else if (type != null) open(type, label)
                     else {
                         // A heading the parser does not take for a section ends the lyrics before it only after a blank

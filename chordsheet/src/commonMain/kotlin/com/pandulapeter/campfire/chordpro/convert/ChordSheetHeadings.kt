@@ -57,6 +57,26 @@ internal object ChordSheetHeadings {
         return labelWords.firstOrNull(::opensWith)?.let { types[it.lowercase()] }
     }
 
+    /**
+     * The section a [label] known to be one opens: a verse, chorus, bridge, or pre-chorus by the heading word it opens
+     * with ([labelType]), any other kind by its last word (`Intro`, `Organ solo`), in English or in a language that spells
+     * it otherwise, and a verse under its own name where it names no kind (`V1`).
+     */
+    fun sectionType(label: String): String = labelType(label)
+        ?: label.trim().lowercase().split(' ').lastOrNull { it.isNotEmpty() }?.let { word -> word.takeIf { it in customTypes } ?: localizedTypes[word] }
+        ?: "verse"
+
+    private val customTypes = setOf("intro", "outro", "solo", "interlude", "instrumental", "coda", "tag", "ending", "break", "riff")
+
+    /** The words for the kinds [customTypes] names, where a language spells them otherwise. */
+    private val localizedTypes = mapOf(
+        "sz\u00f3l\u00f3" to "solo",
+        "assolo" to "solo",
+        "\u05e4\u05ea\u05d9\u05d7\u05d4" to "intro",
+        "\u05e1\u05d5\u05dc\u05d5" to "solo",
+        "\u05e1\u05d9\u05d5\u05dd" to "outro",
+    )
+
     private const val PRE_CHORUS = "pre-chorus"
 
     /** Every pre-chorus heading, the app's own label in each of its languages included. */

@@ -1627,4 +1627,31 @@ class ChordSheetConverterTest {
         assertTrue("[Do]Y el camino es [Sol]mio" in converted, converted)
         assertEquals("La la la la\n", ChordSheetConverter.convert(ChordSheet.ofPlainText("La la la la")).single())
     }
+
+    @Test
+    fun `a few bold words set smaller than the lyrics are a label, opening the section they name or a verse under their own name`() {
+        fun line(text: String, bold: Boolean = false, size: Double = 12.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 7.0, (index + 1) * 7.0, size, isBold = bold) })
+        val lines = listOf(
+            line("Song", bold = true, size = 20.0),
+            line("V1", bold = true, size = 11.0),
+            line("G         C", bold = true),
+            line("Hello my old friend"),
+            line("Pre-chorus", bold = true, size = 11.0),
+            line("Am        F", bold = true),
+            line("Almost there now"),
+            line("Main riff", bold = true, size = 11.0),
+            line("e|---0---3---|"),
+            line("B|---1---1---|"),
+            line("Chorus (twice)", bold = true, size = 11.0),
+            line("C         G", bold = true),
+            line("Sing it out loud"),
+        )
+        assertEquals(
+            "{title: Song}\n\n{start_of_verse: V1}\n[G]Hello my [C]old friend\n{end_of_verse}\n{start_of_pre-chorus: Pre-chorus}\n" +
+                "[Am]Almost the[F]re now\n{end_of_pre-chorus}\n{start_of_tab: Main riff}\ne|---0---3---|\nB|---1---1---|\n{end_of_tab}\n" +
+                "{start_of_chorus: Chorus (twice)}\n[C]Sing it ou[G]t loud\n{end_of_chorus}\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }

@@ -55,6 +55,7 @@ internal object LineKinds {
     private val rules = listOf(
         Rule(::blank),
         Rule(::exportLabel),
+        Rule(::label),
         Rule(::exportGrid),
         Rule(::exportComment),
         Rule(::staff),
@@ -108,6 +109,8 @@ internal object LineKinds {
 
     private fun exportLabel(context: Context, index: Int) =
         (context.lines[index].marks?.role == ChordSheetCampfireLayout.Role.LABEL).gives(LineKind.SECTION)
+
+    private fun label(context: Context, index: Int) = context.features[index].isLabel.gives(LineKind.SECTION)
 
     private fun exportGrid(context: Context, index: Int) =
         (context.lines[index].marks?.role == ChordSheetCampfireLayout.Role.GRID).gives(LineKind.GRID)
