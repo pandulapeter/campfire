@@ -10,152 +10,117 @@
 
 # :presentation — ui/screens/export
 
-The export screen, called **Share** in the UI: one song, a setlist, or a selection is shared, while the whole library
-is exported (Settings' Export library as zip, a backup that pairs with Import). The code keeps the export names. The PDF
-pipeline is in `ui/print/CLAUDE.md`.
+The export screen, called **Share** in the UI: one song, a setlist, or a selection is shared, while the whole library is
+exported (Settings' Export library as zip). The code keeps the export names. The PDF pipeline is in
+`ui/print/CLAUDE.md`.
 
-## Entry and sources
+## Sources and formats
 
-- Opened as `DialogType.Export` from a song's "Share song" (with the setlist it was reached through, whose key it then
-  prints in), a setlist's "Share setlist", or the selection mode's "Share songs" (`DialogType.Export.songs`, in the
-  songs screen's sort order; one ticked song is that row's own Export).
-- Settings' Show QR code and the answer to a consent asked from the Link format open it on Link for that opening only
-  (`DialogType.Export.format`, `openingSettingsOf`), the stored format untouched; a format picked on the screen is
-  stored as ever, and saved with the screen so a rotation keeps it over the opening's own.
-- The screen asks the source two things: `hasRunningOrder` (setlist: running order page, zip manifest) and
-  `hasSeveralSongs` (new page per song, Zip). Several songs are unnumbered, in library keys, zipped by
-  `ExportSongsUseCase` as `campfire_songs.zip` and saved as `campfire_songs.pdf`.
-
-## Formats and options
-
-- One Share entry per song and setlist (and selection mode's "Share songs") opens the export screen; no separate
-  file export entry. Formats, in the order offered and recommended (`exportFormatsOf`): **Link** (below, for Campfire
-  users) for one song or setlist where the build has sync, the library's own files (for any ChordPro app): **ChordPro**
-  for a song (its `.cho`), **Zip** for a setlist (its `*.setlist.json` manifest plus songs) or for several
-  selected songs (no manifest), and **PDF** (for printing). Link is the default; a stored format an export does not
-  offer opens it on PDF (`withFormatIn`), the preference kept.
-- **The library's own files go out as played** (`PrintSettings.exportsAsPlayed`, on by default and remembered, the
-  switch `AsPlayedOption` under the files' preview): a song's `.cho` and a zip of selected songs are rewritten
-  (`SongAsPlayed`, `ui/playing`) into valid ChordPro of what the reader plays, its chords, `{key}`, `{define}`s, and
-  tabs the shapes above the capo shown, `{capo}` that capo (the file's own where none is shown), `{tempo}` the one
-  played, its later changes scaled as the page plays them, so any app sounds as Campfire does under either capo reading,
-  leaving out what a switch hides (the chords and capo with chords off, the tempo with the metronome off). Offered only
-  where a file would change (`isAsPlayedOffered`), never for a setlist, whose manifest already carries how each song is
-  played (both would apply twice on a reimport). A link shares the file as stored.
-- **Every song goes out**: no song ticks and no choice of the setlist's content, which only cluttered the screen. A
-  setlist's PDF is its song sheets, after its running order where Include running order is on, or the running order
-  alone where Include song sheets is off (never both off: each box is disabled while the other is unticked); its zip
-  holds the stored manifest unchanged.
-- `PrintSettings` (format included) are local preferences (`PrintSettingsDocument`), independent of the viewer's text
-  size and folded sections.
-- **The Features switches and the song preferences reach the export**: an option whose switch is off (chords, which
-  take tablature, sheet music, diagrams, scales, and key; scale suggestions, which take scales; the metronome, which takes tempo) is
-  neither offered nor printed (`PrintSettings.withinFeatures`), but the choice is kept for when the switch comes back.
-- A setlist export keeps original slot numbers and each entry's transposition; a song reached through a setlist uses that
-  entry's key. Missing or unreadable songs keep a visibly marked slot.
-- The PDF's options (`PdfOptions`) are **sections of the document, one heading each**: Page (paper, orientation, text
-  size, margins, page numbers), Running order for a setlist (whether, then folding out its own columns and its date,
-  description, and artists), and Song sheets (for a setlist whether, then folding out their columns, a new page per
-  song, then what a sheet prints in the order it prints it: artist, key, tempo, chord diagrams, scales, chords and grids,
-  tablature and sheet music (each apart from the chords, offered where a song has any), comments). Columns are a stepper inside the section
-  they shape, never a control between sections; a new option goes into the section, and at the place, where it prints.
-- **Only what is printed goes into a PDF**: the printed key, the chosen songs and options; no original ChordPro or
-  excluded metadata. No platform print service: the file is saved or shared.
+- A song reached through a setlist is shared in that entry's key. A selection keeps the songs screen's sort order; one
+  ticked song is that row's own Export. Several songs are unnumbered and saved as `campfire_songs.zip` / `.pdf`.
+- Settings' Show QR code and a consent answered from Link open the screen on Link for that opening only, the stored
+  format untouched; a format picked on the screen is stored, and survives rotation over the opening's own.
+- Formats, in the order offered and recommended: **Link** (for Campfire users, one song or setlist, where the build has
+  sync), the library's own files (for any ChordPro app: **ChordPro** for a song, **Zip** for a setlist with its manifest
+  or for a selection without one), and **PDF** (for printing). Link is the default; a stored format an export does not
+  offer opens it on PDF, the preference kept. One Share entry per item; no separate file export entry.
+- **The library's own files go out as played** (on by default, remembered): a `.cho` and a selection's zip are rewritten
+  into valid ChordPro of what the reader plays (chords, `{key}`, `{define}`s, and tabs as the shapes above the capo
+  shown; `{capo}` that capo, else the file's; `{tempo}` the one played, later changes scaled), so any app sounds as
+  Campfire does under either capo reading, leaving out what a switch hides. Offered only where a file would change,
+  never for a setlist, whose manifest already carries how each song is played (both would apply twice on a reimport).
+  A link shares the file as stored.
+- **Every song goes out**: no song ticks or choice of a setlist's content, which only cluttered the screen. A setlist's
+  PDF is its sheets after its running order, or either alone (never both off: each box is disabled while the other is
+  unticked); its zip holds the stored manifest unchanged. Original slot numbers and each entry's transposition are kept;
+  missing or unreadable songs keep a visibly marked slot.
+- `PrintSettings` (format included) are local preferences, independent of the viewer's text size and folded sections.
+- **The Features switches and song preferences reach the export**: an option whose switch is off is neither offered nor
+  printed (`PrintSettings.withinFeatures`), but the choice is kept for when the switch comes back.
+- The PDF's options are **sections of the document, one heading each** (Page, Running order, Song sheets), a sheet's
+  items in the order they print. Columns are a stepper inside the section they shape, never between sections; a new
+  option goes into the section, and at the place, where it prints.
+- **Only what is printed goes into a PDF**: no original ChordPro or excluded metadata. No platform print service: the
+  file is saved or shared.
 
 ## Link
 
-- States (`linkExportStateOf`, pure and tested): the connection first (Connect Dropbox, which says the whole library
-  syncs; Connecting with Cancel; a failure in Settings' words), then a share the account lists (`ShareLinkController`,
-  `ui/share/`; one whose copy is gone is `CopyMissing`, saying so and offering Create link, which replaces it), then how
-  the last Create link went. Each failure is shown by what can be done: Connect again (missing
-  scope, refused authorization), Try again (network, anything unforeseen), or nothing. The FAB's action
-  (`ExportActionButton`) is `linkActionOf`; Create link is not held for a sync run.
-- A creation runs in the view model's scope, one per item (another item's still running does not hold this one's
-  Create link), and is forgotten when the screen goes; a share just made shows before the list catches up, and is
-  forgotten once the list names it, so a stop on another device clears an open screen. Offered in read only mode.
-- Shared: the QR code (white card, black modules, whatever the theme), the link selectable in monospace, the day, and a
-  too-large note. Copy link is the FAB (a snackbar where the platform says nothing, `isCopyConfirmedBySystem`); Send
-  link in the app bar sends the link as text (`FilePicker.shareText`); Save QR code (`qrCodeFileName`, the screen stays open,
-  also Ctrl / Cmd + S) and Stop sharing are options. Stop sharing asks with `StopSharingConfirmation`, composed by the
-  screen, not the dialog stack, under which the export would slide away.
+- States (`linkExportStateOf`, tested): the connection first (Connect Dropbox saying the whole library syncs; Cancel
+  while connecting), then a share the account lists (`ui/share/`; one whose copy is gone says so and offers Create link,
+  which replaces it), then how the last Create link went. A failure is shown by what can be done: Connect again (missing
+  scope, refused authorization), Try again (network, anything unforeseen), or nothing. Create link is not held for a
+  sync run.
+- A creation runs in the view model's scope, one per item (another item's does not hold this one), forgotten when the
+  screen goes; a share just made shows before the list catches up and is forgotten once the list names it, so a stop on
+  another device clears an open screen. Offered in read only mode.
+- The QR code is a white card with black modules whatever the theme. Copy link is the FAB (a snackbar where the
+  platform says nothing); Save QR code keeps the screen open (also Ctrl / Cmd + S). Stop sharing's confirmation is
+  composed by the screen, not the dialog stack, under which the export would slide away.
 - Connect from here keeps `SyncConsentOrigin.Export` (`ui/sync/CLAUDE.md`), so a start up answering the consent page
   reopens the screen on Link.
 
 ## A dialog to the view model, a screen to the user
 
-- `ExportHost` (composed by `CampfireScreens` after the `NavDisplay`, before dialogs and snackbars) slides it in and out
-  exactly like a pushed destination, following predictive back.
-- An opaque `Surface` under the host's `NavigationBackHandler`, so Escape, browser Back, and the gesture close it; a
-  failed export's snackbar still shows over it. The handler registers as the screen opens, as a sheet's does: the
-  dispatcher asks the newest first, and a screen's own (a settings tab's, an open search's) would take the back.
-- A focus group that cancels every exit while it is the dialog shown, so Tab never reaches the screen beneath
-  (`clearAndSetSemantics` only hides that from screen readers).
+- `ExportHost` (after the `NavDisplay`, before dialogs and snackbars) slides it exactly like a pushed destination,
+  following predictive back.
+- An opaque `Surface` under the host's `NavigationBackHandler` (Escape, browser Back, the gesture); a failed export's
+  snackbar still shows over it. The handler registers as the screen opens: the dispatcher asks the newest first, and a
+  screen's own (a settings tab's, an open search's) would take the back.
+- A focus group cancels every exit while it is shown, so Tab never reaches the screen beneath (`clearAndSetSemantics`
+  only hides that from screen readers).
 
 ## Format and files preview
 
-- **The format is the first option** (`FormatChoice`): a card per format (`ChoiceCard`), each saying whom it suits (the
-  names alone don't tell anybody), all at once so nobody has to try each.
-  `Format.FILES` are written by `ExportController.exportFiles`; a saved one closes the screen like a PDF.
-- All PDF options fold away for files.
-- Files skip the layout; `FilesPreview` is a summary that never scrolls (the name it is saved under, `filesFileName`;
-  what it holds and what reads it; how many songs are missing), since the text or a file list was a second scrolling
-  area beside the options. The cards say in a short line whom a format suits; the preview under them says the rest.
-- Stacked on a phone, only the PDF's pages take a fixed height (`STACKED_PREVIEW_HEIGHT`); the files and the link are
-  list rows as tall as what they say (`isInList`: messages start-aligned like the format's descriptions, no centring),
-  `LIST_PREVIEW_TOP_PADDING` under the cards, and the pane's crossfade animates the height between formats.
-- Option rows use `listItemAnimation`.
+- **The format is the first option**, a card per format each saying whom it suits (the names alone don't tell anybody),
+  all at once so nobody has to try each. All PDF options fold away for files; a saved file closes the screen like a PDF.
+- The files' preview is a summary that never scrolls (the file name, what it holds and what reads it, missing songs):
+  the text or a file list was a second scrolling area beside the options.
+- Stacked on a phone, only the PDF's pages take a fixed height; the files and the link are list rows as tall as what
+  they say (start-aligned, no centring), and the pane's crossfade animates the height between formats.
 
 ## State
 
-- `rememberExportState(dialog)`: preview page and zoom are `rememberSaveable` (survive rotation); options, source, and
-  Retry count start over.
-- The previous document stays up while the next is laid out (debounced). **Save only takes a document laid out from what
-  is on screen**: an earlier tap (a FAB has no disabled look) is kept and carried out once it is (`ExportRequest`).
-- Options go to `pendingPrintSettings` as they change, saved after settling, and whatever is pending is saved however
-  the screen closes (`setVisibleDialog`).
-- `ExportController.exportPdf` draws off the main thread into `pdfExportProgress` (a ring on the save button, which is
-  Cancel, `cancelPdfExport`, until the picker is up). The button leaves while there are no pages. Failures, including
-  `OutOfMemoryError` (not catchable on the web), report a failed export.
+- Preview page and zoom survive rotation; options, source, and Retry count start over.
+- The previous document stays up while the next is laid out (debounced). **Save only takes a document laid out from
+  what is on screen**: an earlier tap (a FAB has no disabled look) is kept and carried out once it is.
+- Options are saved after settling, and whatever is pending is saved however the screen closes.
+- The PDF is drawn off the main thread; the save button is Cancel, with a progress ring, until the picker is up, and
+  leaves while there are no pages. Failures, `OutOfMemoryError` included (not catchable on the web), report a failed
+  export.
 - A saved file closes the screen from the view model, even if not composed (an Activity recreated under the picker); a
-  share leaves it open. Share is an app bar action where the platform shares what the format makes
-  (`canShareExport`: Android, iOS, and browsers with the Web Share API, which share a PDF but no zip or `.cho`).
-- `pdfFileName` names it by `LibraryFiles.songBaseName`, like the library.
+  share leaves it open. Share is an app bar action only where the platform shares what the format makes (browsers with
+  Web Share share a PDF but no zip or `.cho`).
 
 ## Layout
 
-- Phone: the preview is an item of the options list, under the format choice that decides it, and scrolls away; from
-  520dp wide, options sit beside it. The pages take the keyboard's focus (desktop, web) only beside the options: in the
-  list a focused item is scrolled into view, which would carry the formats away as PDF is chosen.
-- **The preview is its whole pane, and no floating control ever rests on the page at zoom 1**: the page fits the pane
-  less one `FLOATING_CONTROLS_CLEARANCE` band at each end a control floats over (`PageFit`, `fitArea`). In a short window
-  (`SHORT_WINDOW_HEIGHT`) the controls stack at the pane's end and the page sits beside them; the page-count pill is
-  sized for its widest possible text so the page doesn't shift as pages turn.
-- The Link preview follows the same rule (`linkPreviewPaddingFor`), its QR code sized to its pane (`qrCodeSizeFor`, at
-  most 240dp, scrolling only below 120dp), so it is shown whole: in a short window beside the options the shared link
-  takes the pane less an end column, Copy link collapsing to its icon there; every other state keeps the bottom band,
-  its button's label saying what a bare icon would not. Each state keeps its own padding while it fades, and a resize
-  animates it.
-- **One FAB for every format** (`ExportActionButton`): a change of format or of the link's next step crossfades its
-  icon and label inside it, never a button leaving for another. The floating controls (it and the page pill) come and
-  go through `FloatingControlVisibility`, which scales them, draws the shadow itself, fading its colors (a shrinking
-  elevation stays dark on Skia), and fades only the control inside it, so no buffer cuts the shadow off (never
-  `ModulateAlpha`, which on Skia skips the layers inside); the controls draw none of their own. Those of the format the
-  screen opened on appear without animating: their pages arriving is data, not something the user did.
-- **Beside the options in a window that is not short, the FAB is filled with `primary`** (`isActionButtonFilledFor`): in
-  the far corner of a large window the tonal one went unnoticed. A resize across the line animates the color. It sits in
-  the body, which knows the arrangement from its first frame.
-- The options are composed once in any arrangement (`PrintPanes`); the preview keeps page and zoom in saved state across
-  arrangements, and the options move on the spatial spring (`animateBounds`).
+- Phone: the preview is an item of the options list, under the format choice, and scrolls away; from 520dp wide,
+  options sit beside it. The pages take keyboard focus only beside the options: in the list a focused item is scrolled
+  into view, which would carry the formats away as PDF is chosen.
+- **No floating control ever rests on the page at zoom 1**: the page fits the pane less a clearance band at each end a
+  control floats over. In a short window the controls stack at the pane's end beside the page; the page-count pill is
+  sized for its widest text so the page doesn't shift as pages turn.
+- The Link preview follows the same rule, its QR code sized to its pane (at most 240dp, scrolling only below 120dp):
+  in a short window beside the options the shared link takes the pane less an end column, Copy link collapsing to its
+  icon; every other state keeps the bottom band, its label saying what a bare icon would not. Each state keeps its own
+  padding while it fades, and a resize animates it.
+- **One FAB for every format**: a change of format or of the link's next step crossfades its icon and label inside it,
+  never a button leaving for another. `FloatingControlVisibility` scales the floating controls, draws the shadow itself
+  fading its colors (a shrinking elevation stays dark on Skia), and fades only the control inside, so no buffer cuts the
+  shadow off (never `ModulateAlpha`, which on Skia skips the layers inside). The opening format's controls appear
+  without animating: their pages arriving is data, not something the user did.
+- **Beside the options in a window that is not short, the FAB is filled with `primary`**: in the far corner of a large
+  window the tonal one went unnoticed. A resize across the line animates the color; it sits in the body, which knows
+  the arrangement from its first frame.
+- The options are composed once in any arrangement and move on the spatial spring (`animateBounds`); page and zoom
+  survive arrangements.
 - The pager fades under the app bar and toward the options only as far as a zoomed, panned, or turning page has moved,
   so a page at rest is drawn whole.
 
 ## Zoom and paging
 
 - **Zoom grows the whole sheet**, edges included, past the pane (content growing in a fixed page read as larger text in
-  the file). The zoom is stored as the page point at the pane's center (`PageView`), not a pixel pan, so resizing keeps
-  the view; turning the page opens the next one whole.
-- Stacked on a phone, a one-finger drag of a zoomed page that its top or bottom edge stops goes on scrolling the
-  options list, and its release flings it (`PageEdgeScroll`); a pinch never scrolls the list.
-- Ctrl / Cmd plus wheel zooms only in the desktop app (`isCtrlWheelZoomOwnedByApp`), since in a browser that is the
-  page's zoom.
-- A page is described to screen readers by its number.
+  the file). It is stored as the page point at the pane's center, not a pixel pan, so resizing keeps the view; turning
+  the page opens the next one whole.
+- Stacked on a phone, a one-finger drag of a zoomed page that its top or bottom edge stops goes on scrolling the options
+  list, and its release flings it; a pinch never scrolls the list.
+- Ctrl / Cmd plus wheel zooms only in the desktop app, since in a browser that is the page's zoom.
