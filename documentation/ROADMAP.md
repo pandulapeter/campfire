@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Tackle tech debt: Follow documentation/issues/EXECUTION.md
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - When selecting multiple songs, the "Random picks" section should remain visible, at the top of the list
