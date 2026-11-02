@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 internal class SongSelection(
     private val scope: CoroutineScope,
     private val backStack: List<CampfireDestination>,
+    private val screenData: StateFlow<DataState<ScreenData>>,
 ) {
 
     /** Null while the mode is off; a set, an empty one included, while it is on. */
@@ -115,7 +116,7 @@ internal class SongSelection(
      * The library's names are hashed again only when the library is a new list: a filter, a sort or a setlist write
      * emits the very same instance, which is immutable, so it is the same library.
      */
-    fun startPruning(screenData: StateFlow<DataState<ScreenData>>) = scope.launch {
+    private fun startPruning() = scope.launch {
         var prunedSongs: List<Song>? = null
         var fileNames: Set<String> = emptySet()
         screenData.collect { state ->
@@ -128,6 +129,10 @@ internal class SongSelection(
             }
             if (selected.any { it !in fileNames }) selectedSongFileNames = selected.filterTo(mutableSetOf()) { it in fileNames }
         }
+    }
+
+    init {
+        startPruning()
     }
 }
 

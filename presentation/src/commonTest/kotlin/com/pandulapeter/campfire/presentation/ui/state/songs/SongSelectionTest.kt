@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -26,9 +27,8 @@ class SongSelectionTest {
 
     @Test
     fun `a ticked song missing from a whole library is unticked`() = runTest {
-        val selection = selectionOf("a", "gone")
         val screenData = MutableStateFlow(screenDataOf(library))
-        selection.startPruning(screenData)
+        val selection = selectionOf(screenData, "a", "gone")
         runCurrent()
 
         assertEquals(setOf("a.cho"), selection.selectedSongFileNames)
@@ -36,9 +36,8 @@ class SongSelectionTest {
 
     @Test
     fun `an emission of the same library under another filter keeps the selection`() = runTest {
-        val selection = selectionOf("a", "b")
         val screenData = MutableStateFlow(screenDataOf(library))
-        selection.startPruning(screenData)
+        val selection = selectionOf(screenData, "a", "b")
         runCurrent()
         screenData.value = screenDataOf(library, songs = listOf(library.first()))
         runCurrent()
@@ -48,9 +47,8 @@ class SongSelectionTest {
 
     @Test
     fun `a song ticked between two emissions of the same library is still checked`() = runTest {
-        val selection = selectionOf("a")
         val screenData = MutableStateFlow(screenDataOf(library))
-        selection.startPruning(screenData)
+        val selection = selectionOf(screenData, "a")
         runCurrent()
         selection.toggle("gone.cho")
         screenData.value = screenDataOf(library, songs = listOf(library.first()))
@@ -61,9 +59,8 @@ class SongSelectionTest {
 
     @Test
     fun `a library not read whole prunes nothing`() = runTest {
-        val selection = selectionOf("a", "gone")
         val screenData = MutableStateFlow(screenDataOf(library, isWholeLibrary = false))
-        selection.startPruning(screenData)
+        val selection = selectionOf(screenData, "a", "gone")
         runCurrent()
 
         assertEquals(setOf("a.cho", "gone.cho"), selection.selectedSongFileNames)
@@ -83,7 +80,8 @@ class SongSelectionTest {
         assertEquals(listOf("b.cho", "a.cho", "hidden.cho"), setOf("hidden.cho", "a.cho", "b.cho").inListOrder(sorted))
     }
 
-    private fun TestScope.selectionOf(vararg names: String) = SongSelection(scope = backgroundScope, backStack = listOf(CampfireDestination.Songs)).apply {
+    private fun TestScope.selectionOf(screenData: StateFlow<DataState<ScreenData>>, vararg names: String) =
+        SongSelection(scope = backgroundScope, backStack = listOf(CampfireDestination.Songs), screenData = screenData).apply {
         start(names.first() + ".cho")
         names.drop(1).forEach { toggle("$it.cho") }
     }

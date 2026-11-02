@@ -337,7 +337,7 @@ class CampfireViewModel(
         addOnBackStackChanged { _, _ -> importController.onBackStackChanged() }
     }
 
-    internal val songSelection: SongSelection = SongSelection(scope = viewModelScope, backStack = navigator.backStack)
+    internal val songSelection: SongSelection = SongSelection(scope = viewModelScope, backStack = navigator.backStack, screenData = libraryState.screenData)
 
     /** The key the Chords and the Scales tabs both list, see [ChordLibraryState.keyIndex]. */
     private val libraryKeyIndex = mutableIntStateOf(0)
@@ -758,7 +758,6 @@ class CampfireViewModel(
         )
         editorSession.startRecovery()
         savedDialogRestorer.start()
-        songSelection.startPruning(libraryState.screenData)
         modeEndings.start(viewModelScope, preferencesController.isPerformanceModeEnabled)
         viewModelScope.launch {
             // From the first read on, so that a start with the songs switched off opens on the first tool rather than
