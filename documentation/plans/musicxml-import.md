@@ -50,7 +50,7 @@ or get it from the same site; step 6 tells them so.
   concert key.
 - **Where it lives.** `formats/musicxml/` (beside the PDF and Word readers, reusing `parseXml` and the zip reader)
   reads a score into a small model and writes it as ABC; it knows nothing of ChordPro. `backup/MusicXmlFile.kt` makes
-  the song, using `:chordpro` for directives, escaping, and the grid, the way `AbcFile` does.
+  the song, using `:libs:chordpro` for directives, escaping, and the grid, the way `AbcFile` does.
 - **Open with**, like `.abc`: Campfire is offered for `.musicxml` and `.mxl` but never made their default, since it
   is no notation editor.
 
@@ -106,7 +106,7 @@ of a short score written for the tests, so that their licence is ours.
   grace notes `{…}`; rests `z` and whole-measure rests `Z`; beams from `<beam>` (notes of one beam written together,
   others apart).
 - Chord symbols `"Gm7"` before their note, spelled from `<kind>` (a table of MusicXML's 33 kinds to the suffixes
-  `:chordpro`'s parser reads, `text=` used where the score gives its own), with `/bass`.
+  `:libs:chordpro`'s parser reads, `text=` used where the score gives its own), with `/bass`.
 - Bars: `|`, `||`, `|]`, repeats `|:` `:|` `::`, endings `[1` `[2`; a pickup measure (`implicit="yes"`) as a short
   first bar; mid-tune key, time, and clef changes as inline fields.
 - Lyrics as `w:` lines per voice and verse (`-` between syllables, `_` for an extend, `*` for a note without one), so
@@ -115,7 +115,7 @@ of a short score written for the tests, so that their licence is ours.
   dynamics, articulations other than fermata and staccato, slurs that cross voices, and anything a voice holds that
   ABC cannot say; the tune still plays and reads right without them.
 
-Tests: per feature, as ABC text; and, where the `:abc` module's desktop tests can run the engine, every fixture
+Tests: per feature, as ABC text; and, where the `:libs:abc` module's desktop tests can run the engine, every fixture
 rendered by abc2svg without an error.
 
 ### 4. The song (`backup/MusicXmlFile.kt`)

@@ -11,7 +11,7 @@
 
 # :presentation — ui/notation
 
-Drawing the staff notation `:abc:api` renders, in common code with no SVG library: Skia's SVG DOM draws no `<text>`
+Drawing the staff notation `:libs:abc:api` renders, in common code with no SVG library: Skia's SVG DOM draws no `<text>`
 and ignores `<style>`, and abc2svg writes every music symbol as text in its music font, styled by CSS class.
 
 - **Only the subset abc2svg emits** is read (translate and uniform scale; single-class CSS rules), into plain data
@@ -26,9 +26,9 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
 - **Chord names are the page's** (`NotationChordNames.kt`, tested): abc2svg moves the notes by the file's
   `{transpose}` plus the reader's sounding transposition, so the staff always sounds; the names are moved by that less
   `nameCapo`, as the lyrics' chords are; a tune's own `%%transpose` adds to both. abc2svg renames any symbol with an
-  A–G letter (it read "Do" as D) and annotations would zigzag, so **each drawn chord takes `:chordpro`'s name of the symbols it is a
-  transposition of**, in whatever order abc2svg drew them; one matching none (the capo module's line) or symbols named
-  apart keeps abc2svg's.
+  A–G letter (it read "Do" as D) and annotations would zigzag, so **each drawn chord takes `:libs:chordpro`'s name of
+  the symbols it is a transposition of**, in whatever order abc2svg drew them; one matching none (the capo module's
+  line) or symbols named apart keeps abc2svg's.
 - A tune under a mid-song `{transpose}` is moved by it, each copy of a tune by the key change it stands after:
   renderings are keyed by text and offset (`AbcTune`, `groupStartOffsetsOf`, a walk the PDF shares; a key change inside
   a recalled chorus moves nothing after the recall).

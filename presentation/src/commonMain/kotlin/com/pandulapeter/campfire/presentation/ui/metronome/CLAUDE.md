@@ -11,8 +11,8 @@
 
 # :presentation — ui/metronome
 
-The metronome's pure helpers and shared controls; the click is `:metronome:api`'s, injected into the view model, which
-hands it complete patterns. Where a tempo is stored: `ui/playing/`.
+The metronome's pure helpers and shared controls; the click is `:libs:metronome:api`'s, injected into the view model,
+which hands it complete patterns. Where a tempo is stored: `ui/playing/`.
 
 ### The click belongs to the screen it is played from
 

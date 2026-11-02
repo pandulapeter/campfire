@@ -10,7 +10,7 @@
 # :domain:api
 
 Use case interfaces and `ScreenData`: all the presentation layer sees (never repositories). `:presentation` calls
-`:chordpro`'s pure functions directly: no use case only forwards to one.
+`:libs:chordpro`'s pure functions directly: no use case only forwards to one.
 
 Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*`,
 `Import*` / `Export*`, `Is*` for yes/no, a plain verb for pure transforms.

@@ -96,7 +96,7 @@ internal val UserPreferences.Instrument.tunings: List<InstrumentTuning>
     }
 
 /**
- * `:chordpro`'s instrument for this one, null for the instruments it has no shapes for (the longer guitars, the basses,
+ * `:libs:chordpro`'s instrument for this one, null for the instruments it has no shapes for (the longer guitars, the basses,
  * the violin, and Other): a diagram for the six strings of a standard guitar would be wrong on any of them, which is
  * worse than none.
  */

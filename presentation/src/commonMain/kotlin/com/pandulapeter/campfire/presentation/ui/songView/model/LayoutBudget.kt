@@ -35,7 +35,7 @@ internal object LayoutBudget {
      * every number of columns, runs on the main thread, and runs again on every frame of a pinch, and the scale groups,
      * which grow faster than the sections, are worked out on the main thread for the page on screen, while a scale
      * suggested for a whole songbook says nothing anyway. A song under this that plays more chords than
-     * `SongScaleGroups.MAX_PLAYED_CHORDS` gets no Scales section either, `:chordpro` gating it.
+     * `SongScaleGroups.MAX_PLAYED_CHORDS` gets no Scales section either, `:libs:chordpro` gating it.
      */
     const val MAX_CUT_SECTION_COUNT = 200
 

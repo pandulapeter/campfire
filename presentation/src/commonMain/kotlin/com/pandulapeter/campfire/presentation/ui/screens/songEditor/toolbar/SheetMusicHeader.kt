@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.chordpro.ChordProTime
  * its [time] is one `{time}` accepts, `L:1/8` (the most common unit, written so the field is there to change), and its
  * [key], so that someone who does not know ABC sees where each goes.
  *
- * The key is rebuilt rather than copied, in standard letters, as `:chordpro` reads a `{key}` (`SongParts`): a root
+ * The key is rebuilt rather than copied, in standard letters, as `:libs:chordpro` reads a `{key}` (`SongParts`): a root
  * `A`–`G` in either case with its `#` or `b`, then `m` for minor or a mode's three letters, else nothing. abc2svg throws
  * on a German `K:H`, reads a key written in words (`K:A-moll`) or with a Central European suffix (`K:Fis`) as its
  * letter's major, and has no tune at all once it throws; [key] arrives in standard notation from the editor's summary,

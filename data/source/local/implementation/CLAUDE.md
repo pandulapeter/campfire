@@ -78,7 +78,7 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - `CoverArtLocalSourceImpl`: prune deletes only key-shaped names (64 lowercase hex): the directory also holds an
   in-progress temp file.
 - `SongLocalSourceImpl` reads the ChordPro family but writes only `.cho`, `importFileName` included. Metadata comes from
-  one `:chordpro` `summarize` call (a file with `{key}` and `{capo}` is also parsed whole for
+  one `:libs:chordpro` `summarize` call (a file with `{key}` and `{capo}` is also parsed whole for
   `SongKeys.capoChartKeyOf`); the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan
   publishes in batches. Unreadable or oversized files are skipped; an unlistable *directory* throws, so an unreachable
   library never looks empty.

@@ -447,8 +447,8 @@ data class UserPreferences(
     }
 
     /**
-     * The instrument in the player's hands. Each id is the id of the instrument's standard tuning in `:tuner:api`'s
-     * `InstrumentTuning`, and for the five `:chordpro` has shapes for (the guitar, the ukulele, the mandolin, the banjo,
+     * The instrument in the player's hands. Each id is the id of the instrument's standard tuning in `:libs:tuner:api`'s
+     * `InstrumentTuning`, and for the five `:libs:chordpro` has shapes for (the guitar, the ukulele, the mandolin, the banjo,
      * and the keyboard) the id of its `ChordInstrument` too, which this module does not see. A guitar or a bass with more
      * strings is an instrument of its own, since a tuning of one is never a tuning of the other; [KEYBOARD] and [OTHER]
      * have no strings to tune. [GUITAR_TWELVE_STRING] is the exception: its six courses are the six strings of the

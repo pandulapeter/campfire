@@ -31,7 +31,7 @@ MARKDOWN_HEADER = """<!--
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
 -->
-# :chordpro
+# :libs:chordpro
 """
 
 
@@ -42,22 +42,22 @@ def check(files):
 class MissingHeadersTest(unittest.TestCase):
 
     def test_a_file_with_the_header_passes(self):
-        self.assertEqual(check({"chordpro/src/commonMain/kotlin/Song.kt": KOTLIN_HEADER}), [])
+        self.assertEqual(check({"libs/chordpro/src/commonMain/kotlin/Song.kt": KOTLIN_HEADER}), [])
 
     def test_a_file_without_the_header_fails(self):
         self.assertEqual(
-            check({"chordpro/src/commonMain/kotlin/Song.kt": "package com.pandulapeter.campfire\n"}),
-            ["chordpro/src/commonMain/kotlin/Song.kt"],
+            check({"libs/chordpro/src/commonMain/kotlin/Song.kt": "package com.pandulapeter.campfire\n"}),
+            ["libs/chordpro/src/commonMain/kotlin/Song.kt"],
         )
 
     def test_a_file_in_the_allow_list_passes(self):
         self.assertEqual(check({".run/Desktop.run.xml": "<component/>\n", "gradle/wrapper/gradle-wrapper.properties": ""}), [])
 
     def test_the_html_comment_form_of_claude_md_passes(self):
-        self.assertEqual(check({"chordpro/CLAUDE.md": MARKDOWN_HEADER}), [])
+        self.assertEqual(check({"libs/chordpro/CLAUDE.md": MARKDOWN_HEADER}), [])
 
     def test_a_claude_md_without_the_header_fails(self):
-        self.assertEqual(check({"chordpro/CLAUDE.md": "# :chordpro\n"}), ["chordpro/CLAUDE.md"])
+        self.assertEqual(check({"libs/chordpro/CLAUDE.md": "# :libs:chordpro\n"}), ["libs/chordpro/CLAUDE.md"])
 
     def test_xml_is_checked_only_under_src(self):
         self.assertEqual(

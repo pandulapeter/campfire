@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 
 /**
  * The files are a map of texts that the edit is applied to as `SongRepository.editSongs` applies it, and the use cases
- * are stood in for by the `:chordpro` objects their implementations delegate to, folding tags as they fold them.
+ * are stood in for by the `:libs:chordpro` objects their implementations delegate to, folding tags as they fold them.
  */
 class SelectionEditingTest {
 

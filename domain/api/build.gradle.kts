@@ -15,7 +15,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":data:model"))
-            api(project(":chordpro"))
+            api(project(":libs:chordpro"))
             implementation(libs.kotlin.coroutines)
         }
     }

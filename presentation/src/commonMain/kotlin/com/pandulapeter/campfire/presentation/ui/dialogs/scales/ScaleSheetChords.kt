@@ -30,7 +30,7 @@ internal data class ScaleSheetChord(
 /**
  * [chords], a scale's chords in the standard notation, as the cells the scale sheet draws on [tuning], named in
  * [notation]. The shape is the tables' only, so that nothing is searched for while the sheet is composed: they hold one
- * for every chord a seven-note scale stacks, in every key and fretted tuning (`ScaleChordsTest` in `:chordpro`), and a
+ * for every chord a seven-note scale stacks, in every key and fretted tuning (`ScaleChordsTest` in `:libs:chordpro`), and a
  * chord they lacked would be drawn as the empty frame ([SongChord.isShapePending]). Its own sheet finds every shape it
  * has. Under a song's [capo] each is the shape fingered above it, as the song's Chords section draws it.
  */

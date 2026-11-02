@@ -16,7 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The editor's own arrow keys over every song of :chordpro's corpus, with Windows line breaks too. */
+/** The editor's own arrow keys over every song of :libs:chordpro's corpus, with Windows line breaks too. */
 class EditorArrowKeysPropertiesTest {
 
     private val corpus = File(requireNotNull(javaClass.getResource("/corpus")).toURI()).listFiles().orEmpty()

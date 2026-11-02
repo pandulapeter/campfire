@@ -15,9 +15,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":data:model"))
-            implementation(project(":chordpro"))
+            implementation(project(":libs:chordpro"))
             // The extractors build the chord sheet the converter reads, and return it.
-            api(project(":chordsheet"))
+            api(project(":libs:chordsheet"))
             // The extractors give way and rethrow a cancellation on long documents.
             implementation(libs.kotlin.coroutines)
         }

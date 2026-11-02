@@ -19,7 +19,7 @@ import org.jetbrains.compose.resources.DrawableResource
  * @param isOwnLine True for everything in braces, since ChordPro only reads a directive as one when it is alone on
  *   its line; the two bracketed insertions belong inside a line of lyrics instead.
  * @param metadataName The kind of metadata this describes the song with, for the insertions that go into the header
- *   instead of to the caret, under the name `:chordpro` knows it by. Null for everything that is part of the song.
+ *   instead of to the caret, under the name `:libs:chordpro` knows it by. Null for everything that is part of the song.
  * @param emptyPrefix What is written in front of the caret in place of [prefix] where nothing is selected.
  * @param emptySuffix What is written after the caret in place of [suffix] where nothing is selected.
  * @param choices What a button that opens a menu offers, each written as an insertion of its own once it is picked;

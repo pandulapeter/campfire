@@ -12,8 +12,8 @@
 # :presentation — ui/instrument
 
 One instrument for the whole app, with a tuning per instrument. This package is the one place joining `:data:model`'s
-instruments, the tuner's tunings, and `:chordpro`'s shapes; every caller goes through it. The scales read the tuning's
-strings directly (every stringed instrument, not only the five with shapes).
+instruments, the tuner's tunings, and `:libs:chordpro`'s shapes; every caller goes through it. The scales read the
+tuning's strings directly (every stringed instrument, not only the five with shapes).
 
 - `InstrumentPill`: two halves (the tuning half only for an instrument with more than one), no chevrons, one line: the
   tuning's name is cut first, down to 40% of the pill, then the instrument's; on a tool's line with trailing controls

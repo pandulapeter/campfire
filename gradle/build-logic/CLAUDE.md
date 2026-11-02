@@ -13,11 +13,12 @@ Convention plugins in an **included build** (`includeBuild("gradle")`), not `bui
 invalidate the main build.
 
 - `campfire-library` uses the **new** Android KMP target (`com.android.kotlin.multiplatform.library`, not
-  `com.android.library`).
-- `campfire-compose-library` passes `gradle/compose-stability.conf`, marking the `:chordpro` model stable: that module
-  is not built with the Compose compiler, so otherwise a new parse would recompose every line of a song. Name each
-  class individually, never a wildcard, and leave `kotlin.collections` out; `:chordpro`'s `ComposeStabilityListTest`
-  checks the names against its public classes.
+  `com.android.library`). On a `:libs:*` module it fails the configuration on any project dependency outside
+  `:libs:`, which is what keeps those modules free of the app.
+- `campfire-compose-library` passes `gradle/compose-stability.conf`, marking the `:libs:chordpro` model stable: that
+  module is not built with the Compose compiler, so otherwise a new parse would recompose every line of a song. Name
+  each class individually, never a wildcard, and leave `kotlin.collections` out; `:libs:chordpro`'s
+  `ComposeStabilityListTest` checks the names against its public classes.
 - `campfire-koin` applies in either order with the above (`pluginManager.withPlugin`). The root `build.gradle.kts`
   keeps its `apply false` so the extension type comes from one classloader.
 - `campfire-style`: the library plugins apply it; plain `:app:*` modules and `:tools:screenshots` name it in their own

@@ -108,13 +108,13 @@ class SizesTest(unittest.TestCase):
     def test_a_claude_md_is_judged_by_where_it_is(self):
         sizes = sizes_of({
             "CLAUDE.md": "w ",
-            "chordpro/CLAUDE.md": "w ",
+            "libs/chordpro/CLAUDE.md": "w ",
             "presentation/src/wasmJsMain/CLAUDE.md": "w ",
             "presentation/src/commonMain/kotlin/ui/CLAUDE.md": "w ",
-        }, modules=("chordpro",))
+        }, modules=("libs/chordpro",))
         self.assertEqual([2500, 1500, 1500, 1000], [sizes[path][1] for path in (
             "CLAUDE.md",
-            "chordpro/CLAUDE.md",
+            "libs/chordpro/CLAUDE.md",
             "presentation/src/wasmJsMain/CLAUDE.md",
             "presentation/src/commonMain/kotlin/ui/CLAUDE.md",
         )])

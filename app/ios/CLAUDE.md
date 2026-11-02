@@ -102,7 +102,7 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
 - A local notification is posted only while in the background (iOS silences foreground ones), at most once a second,
   taken down on return. Permission is asked when a run starts, in front.
 - `IosMetronomeNotifier.kt` only draws Now Playing and answers remote commands (pause, stop, and toggle all stop: no
-  paused state); the audio session, background audio, and interruptions belong to `:metronome:implementation`.
+  paused state); the audio session, background audio, and interruptions belong to `:libs:metronome:implementation`.
 
 ## Xcode project and building
 

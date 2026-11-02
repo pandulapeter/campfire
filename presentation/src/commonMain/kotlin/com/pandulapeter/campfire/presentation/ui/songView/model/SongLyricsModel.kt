@@ -129,7 +129,7 @@ internal class SongLyricsModel(
  * @param suggestsScales Whether the scales the song is played over are worked out ([songScaleGroupsOf]), for its Scales
  * section: a walk over every chord, so done here, with the chords on only, and never for a songbook (over
  * [LayoutBudget.MAX_CUT_SECTION_COUNT] sections) or a song playing over `SongScaleGroups.MAX_PLAYED_CHORDS` chords (the
- * `:chordpro` side's gate), where it grows past what the main thread can spare.
+ * `:libs:chordpro` side's gate), where it grows past what the main thread can spare.
  * @param showsDegrees Whether each chord of the Chords section is labelled with the step of the key it stands on
  * ([withDegrees]), counted against [chordKeysOf]'s keys, the home the same walk finds first.
  */

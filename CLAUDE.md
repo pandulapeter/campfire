@@ -52,16 +52,19 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
         data:formats                  pure-Kotlin zip, PDF, and Word readers
       data:source:remote:api -> :implementation   every network call
         data:model                    domain models
-  metronome:api / :implementation     the click engine; depends on nothing of the app's
-  tuner:api / :implementation         pitch detection, tones, mic input; depends on nothing of the app's
-  abc:api / :implementation           ABC tunes engraved by abc2svg in an embedded engine; depends on nothing of the app's
+  libs:*                              code that knows nothing of the app: depends on other libs:* modules only
+    chordpro                          dependency-free ChordPro parser, transposer, chords, tabs, scales, ABC reading
+      chordsheet                      chord sheets (text, PDF, Word lines) converted into ChordPro
+    abc:api / :implementation         ABC tunes engraved by abc2svg in an embedded engine
+    metronome:api / :implementation   the click engine
+    tuner:api / :implementation       pitch detection, tones, mic input
   tools:screenshots                   store screenshots and UI tests: the desktop build rendered offscreen
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
   tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
                                       extracts abc2svg's music glyphs for the notation drawing
-  chordpro                            dependency-free ChordPro parser, transposer, chords, tabs, converters
-    chordsheet                        chord sheets (text, PDF, Word lines) converted into ChordPro; :chordpro only
 ```
+
+`campfire-library` fails the build when a `:libs:*` module depends on a project outside `:libs:` (`gradle/build-logic`).
 
 Data flow: `FileStorage` → `LocalSource` → `Repository` (emits `DataState<T>`, reads once, caches, extends
 `BaseLocalDataRepository`) → use cases (`GetScreenDataUseCase` combines songs and setlists into `ScreenData`) →
@@ -91,10 +94,10 @@ campfire.log / campfire.log.1          desktop only, here (the other platforms k
 - Modules apply the convention plugins in `gradle/build-logic`. Platform code goes in `androidMain` / `desktopMain` /
   `iosMain` / `wasmJsMain`, JVM code shared by Android and desktop in `jvmSharedMain`. The four platform `:app:*`
   modules, `:app:baselineprofile`, and `:tools:screenshots` are single-platform; every other module is multiplatform.
-- `:chordpro`, `:chordsheet`, `:metronome:api`, `:tuner:api`, and `:abc:api` use `explicitApi()`. Layers are crossed
-  through `mapper/` packages. The rest of the code style (JVM-free shared code, `Impl` naming, Material 3 Expressive
-  only, never M2) is the `code-style` skill's; formatting, license headers, and file sizes are enforced by Spotless and
-  the `.github/scripts` checks.
+- `:libs:chordpro`, `:libs:chordsheet`, and the `api` modules of `:libs:abc`, `:libs:metronome`, and `:libs:tuner` use
+  `explicitApi()`. Layers are crossed through `mapper/` packages. The rest of the code style (JVM-free shared code,
+  `Impl` naming, Material 3 Expressive only, never M2) is the `code-style` skill's; formatting, license headers, and
+  file sizes are enforced by Spotless and the `.github/scripts` checks.
 
 ### Koin (Koin Annotations via the Koin compiler plugin, `campfire-koin`)
 

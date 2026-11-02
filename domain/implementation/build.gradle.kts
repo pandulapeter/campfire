@@ -17,7 +17,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":domain:api"))
             implementation(project(":data:repository:api"))
-            implementation(project(":chordsheet"))
+            implementation(project(":libs:chordsheet"))
             implementation(libs.kotlin.coroutines)
         }
     }

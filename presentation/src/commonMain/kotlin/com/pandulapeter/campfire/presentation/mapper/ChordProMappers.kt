@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.mapper
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
-/** The preference as `:chordpro` takes it, which depends on nothing and so knows no preferences. */
+/** The preference as `:libs:chordpro` takes it, which depends on nothing and so knows no preferences. */
 internal fun UserPreferences.Notation.toChordNotation() = when (this) {
     UserPreferences.Notation.STANDARD -> ChordNotation.STANDARD
     UserPreferences.Notation.GERMAN -> ChordNotation.GERMAN
@@ -22,7 +22,7 @@ internal fun UserPreferences.Notation.toChordNotation() = when (this) {
 }
 
 /**
- * The preference as `:chordpro` takes it: null for the spelling the song itself asks for, which is what
+ * The preference as `:libs:chordpro` takes it: null for the spelling the song itself asks for, which is what
  * `ChordProTransposer` works out from the key.
  */
 internal fun UserPreferences.Accidentals.toPreferFlats(): Boolean? = when (this) {

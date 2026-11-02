@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The key a song naming none is numbered from, over :chordpro's song corpus with every `{key}` taken out and over
+ * The key a song naming none is numbered from, over :libs:chordpro's song corpus with every `{key}` taken out and over
  * progressions generated in every key: it never fails, moves with the song, and is a key the chords belong to.
  */
 class InferredKeyPropertiesTest {

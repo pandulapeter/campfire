@@ -41,7 +41,7 @@ A failure a use case notes but does not throw goes to the injected `Logger`. `im
 
 ## Others with logic
 
-- `SetChordProTagUseCaseImpl` is the one `:chordpro` wrapper left, for the NFC fold (tag matching ignores case);
+- `SetChordProTagUseCaseImpl` is the one `:libs:chordpro` wrapper left, for the NFC fold (tag matching ignores case);
   `:presentation` calls the rest directly.
 - `NormalizeTextUseCaseImpl` uses `:data:model`'s `withoutAccent` table (shared with file names) and drops combining
   marks; the marks and word-final letter forms of other scripts come from `ScriptFolding`, which file names never use.

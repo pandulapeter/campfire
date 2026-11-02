@@ -19,8 +19,8 @@ platform difference is `normalizedToNfc` (expect/actual).
   sounding key without the text. `canUpdateFileName` is computed once per scan because every row asks.
 - **`Setlist.unknownFields`** (and each entry's) keep members this version does not know, so a later version's field
   survives this one's save.
-- `SongLanguage.UNKNOWN` (`und`, which `:chordpro` reads as no language, so no song carries it) groups songs declaring
-  none. Language display names are the platform's (`:presentation`).
+- `SongLanguage.UNKNOWN` (`und`, which `:libs:chordpro` reads as no language, so no song carries it) groups songs
+  declaring none. Language display names are the platform's (`:presentation`).
 
 ## Import
 

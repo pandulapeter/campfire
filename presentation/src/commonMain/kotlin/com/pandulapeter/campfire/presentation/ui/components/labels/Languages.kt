@@ -114,7 +114,7 @@ private const val FALLBACK_LANGUAGE_CODE = "en"
  * carries codes and nothing else: the names are asked for at runtime (see [languageName]), and so is the order they
  * are shown in, which is alphabetical by a name that depends on the language the app is set to.
  *
- * Two kinds of code are deliberately not here, and nothing is lost by it, since `:chordpro` reads both as the code
+ * Two kinds of code are deliberately not here, and nothing is lost by it, since `:libs:chordpro` reads both as the code
  * that replaced them: the three letter form of a language that also has a two letter one (`eng`, `ger`), and the
  * four two letter codes ISO 639-1 has itself replaced (`in`, `iw`, `ji`, `mo`). Offering either would mean two rows
  * with the same name that no song could be filed under together. Neither are the codes that name no language at all

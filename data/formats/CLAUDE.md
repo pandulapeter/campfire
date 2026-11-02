@@ -11,9 +11,9 @@
 # :data:formats
 
 Pure-Kotlin PDF and Word text extractors and zip reader/writer, on no third-party library (only `kotlinx.coroutines`)
-and no module but `:data:model`, `:chordpro`, and `:chordsheet` (a document is extracted into its `ChordSheet`): no
-`FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation` uses. Documents are read
-locally, never rendered, uploaded, or kept.
+and no module but `:data:model`, `:libs:chordpro`, and `:libs:chordsheet` (a document is extracted into its
+`ChordSheet`): no `FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation` uses.
+Documents are read locally, never rendered, uploaded, or kept.
 
 ## `document/`
 
@@ -56,10 +56,10 @@ locally, never rendered, uploaded, or kept.
   order); the glyphs stay as its `pieces` where they spell its text in order, so the converter still knows where each
   character is drawn. One spanning several baselines (a hyphenated word) is ignored.
 - Other producers draw right-to-left text glyph by glyph from the left, so `PdfBidi` reorders such a line (a subset of
-  UAX #9, `:chordpro`'s `BidiOrder`, runs by `isStrongRtl`) into one span with `pieces`; a line with an `ActualText` is
-  left alone. A line's direction is the side of its column it aligns to, else its column's letters, chord rows left out.
-  A mirrored bracket is read as drawn (ReportLab) or as meant (Chrome), whichever pairs the line's brackets; a mark goes
-  with the letter under it.
+  UAX #9, `:libs:chordpro`'s `BidiOrder`, runs by `isStrongRtl`) into one span with `pieces`; a line with an
+  `ActualText` is left alone. A line's direction is the side of its column it aligns to, else its column's letters,
+  chord rows left out. A mirrored bracket is read as drawn (ReportLab) or as meant (Chrome), whichever pairs the line's
+  brackets; a mark goes with the letter under it.
 - Page, operator, and work yields keep the web build responsive.
 
 ## `zip/`

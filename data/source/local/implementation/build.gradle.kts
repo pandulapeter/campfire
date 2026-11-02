@@ -18,8 +18,8 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:source:local:api"))
             implementation(project(":data:formats"))
-            implementation(project(":chordpro"))
-            implementation(project(":chordsheet"))
+            implementation(project(":libs:chordpro"))
+            implementation(project(":libs:chordsheet"))
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlin.datetime)
             implementation(libs.kotlin.serialization.json)

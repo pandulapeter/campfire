@@ -240,7 +240,7 @@ behind a surprising design, platform quirks; each rule in one file, at the level
 ## This repository: Campfire
 
 - **Plans folder:** `documentation/issues/` (`README.md`, `EXECUTION.md`, `NN-*.md`). Branch: `master`.
-- **Areas that have worked as reviewer splits:** `:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
+- **Areas that have worked as reviewer splits:** `:libs:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
   `SyncEngine`, Dropbox); `:domain`; `:presentation`; the platform shells, docs and CI (`app/*`, `.github/`).
 - **Unit tests**: what may be tested and the command are in the root `CLAUDE.md`'s Tests section.
 - **Budgets** are the code-style skill's (`check_sizes.py`, which leaves the license header out of the count, so it

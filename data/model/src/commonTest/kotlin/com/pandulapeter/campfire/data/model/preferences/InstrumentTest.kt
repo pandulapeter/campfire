@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 
 class InstrumentTest {
 
-    /** Every tuning `:tuner:api` knows, written out since this module does not see it, with the instrument it is of. */
+    /** Every tuning `:libs:tuner:api` knows, written out since this module does not see it, with the instrument it is of. */
     private val tunings = mapOf(
         Instrument.GUITAR to listOf(
             "guitar", "guitar_drop_d", "guitar_half_step_down", "guitar_full_step_down", "guitar_drop_c_sharp",

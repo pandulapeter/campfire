@@ -15,14 +15,14 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":abc:implementation"))
+            implementation(project(":libs:abc:implementation"))
             implementation(project(":data:repository:implementation"))
             implementation(project(":data:source:local:implementation"))
             implementation(project(":data:source:remote:implementation"))
             implementation(project(":data:sync:implementation"))
             implementation(project(":domain:implementation"))
-            implementation(project(":metronome:implementation"))
-            implementation(project(":tuner:implementation"))
+            implementation(project(":libs:metronome:implementation"))
+            implementation(project(":libs:tuner:implementation"))
             implementation(project(":presentation"))
             // The start function takes and returns Koin's own types, which the entry points calling it have to see.
             api(libs.koin.core)

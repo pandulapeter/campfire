@@ -9,8 +9,8 @@
 -->
 # :presentation
 
-The whole UI plus the thin per-platform shells. Depends on `:domain:api` and `:chordpro`, never on repositories or local
-sources.
+The whole UI plus the thin per-platform shells. Depends on `:domain:api` and `:libs:chordpro`, never on repositories or
+local sources.
 
 - **Shells** (the `ui` package of each platform source set) only do what common Compose cannot; anything non-trivial
   belongs in `commonMain` (`expect`/`actual`, `ui/platform/`). Each provides `LocalFilePicker`, a `Flow` of files the OS
@@ -59,7 +59,7 @@ which the script checks; everything else is handed the holders, state, and callb
 
 ## Strings
 
-- `localization/ApplyLanguagePreference.kt` maps the preference to `AppLocale` (a system code through `:chordpro`'s
+- `localization/ApplyLanguagePreference.kt` maps the preference to `AppLocale` (a system code through `:libs:chordpro`'s
   `LanguageCodes`, Android's `iw` being `he`) and sets `currentLanguage` as it is composed, not in an effect, so the
   first frame is already in the language and its direction.
 - **The layout direction is the app language's** (`AppLanguage.layoutDirection`), never the system's: `CampfireApp`

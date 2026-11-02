@@ -38,7 +38,7 @@ internal fun TextFieldState.insert(insertion: EditorInsertion) {
  *
  * ChordPro reads a `{title}` as the title of the song from anywhere in the file, so the one thing the caret cannot
  * decide here is where the directive goes: a title written into the middle of a verse is valid, invisible in the
- * rendered song, and nowhere near the rest of what the file says about itself. `:chordpro` picks the line, keeping
+ * rendered song, and nowhere near the rest of what the file says about itself. `:libs:chordpro` picks the line, keeping
  * the header in the order it lists metadata in and leaving one the user has arranged otherwise alone; the caret
  * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into. A song
  * that already says what the button writes has that line's value selected instead, so the button is never out of

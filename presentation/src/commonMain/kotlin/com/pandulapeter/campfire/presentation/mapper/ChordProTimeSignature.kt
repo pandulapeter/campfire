@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 
 /**
  * The signature a `{time}` value declares, or null for one [ChordProTime] does not read. The two modules check their
- * ranges each on their own, since `:chordpro` depends on nothing, so a signature the constructor would refuse is
+ * ranges each on their own, since `:libs:chordpro` depends on nothing, so a signature the constructor would refuse is
  * taken for none rather than trusted to agree.
  */
 internal fun timeSignatureOf(time: String?): TimeSignature? = ChordProTime.parse(time)

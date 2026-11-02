@@ -35,7 +35,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Every song of :chordpro's corpus printed as the export prints it in one column at the default size, and its PDF read
+ * Every song of :libs:chordpro's corpus printed as the export prints it in one column at the default size, and its PDF read
  * back as the import reads any PDF: the title, every lyric in reading order, and every chord over its syllable come back.
  * The export's other layouts are measured by the import corpus's Campfire documents rather than pinned here.
  */

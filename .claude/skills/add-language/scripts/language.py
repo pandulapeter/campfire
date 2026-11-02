@@ -39,19 +39,19 @@ FONTS = sorted(p for p in (RESOURCES / "font").glob("*.ttf") if p.name.startswit
 PRESENTATION = ROOT / "presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation"
 SCRIPT_FACES = PRESENTATION / "ui/theme/ScriptFaces.kt"
 PLURAL_RULES = PRESENTATION / "localization/PluralRules.kt"
-LANGUAGES = ROOT / "chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/language"
+LANGUAGES = ROOT / "libs/chordpro/src/commonMain/kotlin/com/pandulapeter/campfire/chordpro/language"
 APP_LANGUAGE = "data/model/src/commonMain/kotlin/com/pandulapeter/campfire/data/model/preferences/AppLanguage.kt"
 STORE_LISTINGS = ROOT / ".github/scripts/store_listings.py"
 CATEGORIES = ("zero", "one", "two", "few", "many", "other")
 
 
 def retired_codes():
-    """{retired code: current code}, from :chordpro's LanguageCodes, which every code the app compares goes through."""
+    """{retired code: current code}, from :libs:chordpro's LanguageCodes, which every code the app compares goes through."""
     return dict(re.findall(r'"([a-z]+)" to "([a-z]+)"', (LANGUAGES / "LanguageCodes.kt").read_text()))
 
 
 def right_to_left_codes():
-    """The languages written from the right, from :chordpro's RightToLeftLanguages, which decides a song's direction."""
+    """The languages written from the right, from :libs:chordpro's RightToLeftLanguages, which decides a song's direction."""
     return set(re.findall(r'"([a-z]+)"', re.search(r"setOf\((.*?)\)", (LANGUAGES / "RightToLeftLanguages.kt").read_text()).group(1)))
 
 
@@ -174,7 +174,7 @@ def preflight(code, sample):
                      "checklist is: the entry with Direction.RIGHT_TO_LEFT, its index.html TEXTS block with "
                      "dir: 'rtl', and each store's own code for the language (step 8). `wiring` checks the first two.")
         if not is_right_to_left(code):
-            blockers.append("The sample is written from the right but :chordpro's RightToLeftLanguages does not list "
+            blockers.append("The sample is written from the right but :libs:chordpro's RightToLeftLanguages does not list "
                             f"\"{code}\"; add it there (CLDR's list) first, so a song in the language reads from the right.")
     categories = plural_categories(code)
     if categories is None:

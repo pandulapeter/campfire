@@ -25,7 +25,7 @@ data class SongLanguage(
         /**
          * The songs that say nothing about their language, which the filter offers as a group of their own — it is
          * how the user finds what is still to be filled in. `und` is the ISO code for "undetermined" and is read as
-         * "no language" by `:chordpro`, so no song can ever carry it and the two can never be confused.
+         * "no language" by `:libs:chordpro`, so no song can ever carry it and the two can never be confused.
          */
         const val UNKNOWN = "und"
     }

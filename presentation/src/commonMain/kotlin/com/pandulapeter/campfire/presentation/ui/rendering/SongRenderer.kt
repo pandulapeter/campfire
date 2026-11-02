@@ -31,7 +31,7 @@ import org.koin.core.annotation.Single
 
 /**
  * What a song and its key look like on the screen, in the editor and in the PDF, and the folded text the pickers search:
- * pure functions of their arguments over `:chordpro` and two text use cases, so that a screen needs this rather than
+ * pure functions of their arguments over `:libs:chordpro` and two text use cases, so that a screen needs this rather than
  * the whole view model to draw a key. Everything that depends on the notation the editor's field is written in takes it
  * as a parameter; the view model's `editorNotation` is where it comes from.
  *

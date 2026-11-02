@@ -33,7 +33,7 @@ import kotlin.test.assertNull
 /**
  * Every edit is aimed at the editor's draft, which hands it over as a function rather than writing a file, so that a
  * test can apply it to a text of its choosing - the file as a sync run left it while the sheet was open. The use cases
- * are stood in for by the `:chordpro` objects their implementations delegate to.
+ * are stood in for by the `:libs:chordpro` objects their implementations delegate to.
  */
 class SongMetadataEditingTest {
 

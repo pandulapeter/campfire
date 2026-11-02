@@ -16,7 +16,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:model"))
             // A document is extracted into the chord sheet the converter reads.
-            api(project(":chordsheet"))
+            api(project(":libs:chordsheet"))
             // LibraryFileLock is a Mutex held across suspending calls, and LibraryChanges a SharedFlow.
             api(libs.kotlin.coroutines)
         }

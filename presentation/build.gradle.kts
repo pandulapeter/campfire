@@ -44,14 +44,14 @@ kotlin {
             dependencies {
                 implementation(project(":domain:api"))
                 // The composables render the ChordPro model directly; parsing and transposing go through use cases.
-                implementation(project(":chordpro"))
+                implementation(project(":libs:chordpro"))
                 // Text pasted or shared into the app is read as a chord sheet.
-                implementation(project(":chordsheet"))
+                implementation(project(":libs:chordsheet"))
                 // The click is the app's rather than a screen's, and is handed a complete pattern by the view model.
                 // ABC tunes are engraved as staff notation by abc2svg, behind its own module like the click.
-                implementation(project(":abc:api"))
-                implementation(project(":metronome:api"))
-                implementation(project(":tuner:api"))
+                implementation(project(":libs:abc:api"))
+                implementation(project(":libs:metronome:api"))
+                implementation(project(":libs:tuner:api"))
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.navigation3.ui)
@@ -78,8 +78,8 @@ kotlin {
             }
         }
         desktopTest {
-            // The round-trip tests read the song corpus :chordpro's own round trips run over.
-            resources.srcDir(rootProject.file("chordpro/src/desktopTest/resources"))
+            // The round-trip tests read the song corpus :libs:chordpro's own round trips run over.
+            resources.srcDir(rootProject.file("libs/chordpro/src/desktopTest/resources"))
         }
         desktopTest.dependencies {
             // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.

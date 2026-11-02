@@ -43,7 +43,7 @@ wrong or undo it".
 - **Declaration-level documentation is always KDoc (`/** … */`), never a `//` block** — including on
   `internal` and `private` declarations. `//` comments are for statements *inside* a function body.
 - **`api` modules carry the contract.** Interfaces in `:data:source:*:api`, `:data:repository:api`,
-  `:domain:api` and the public surface of `:chordpro` are documented with KDoc that explains the rules
+  `:domain:api` and the public surface of `:libs:chordpro` are documented with KDoc that explains the rules
   a second implementation must honor (see `SyncProvider` for the tone): what the type is for, what is
   opaque, what may throw, what the caller must not assume. `@param` only where the parameter is not
   self-explanatory.

@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
  * Reads an ABC file, an `.abc` or a text that reads as one (`AbcText`), into one ChordPro song per tune, each with its
- * chord grid and the tune itself kept in a `{start_of_abc}` block (see `:chordpro`'s `abc` package).
+ * chord grid and the tune itself kept in a `{start_of_abc}` block (see `:libs:chordpro`'s `abc` package).
  */
 internal object AbcFile {
 

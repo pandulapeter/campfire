@@ -11,8 +11,8 @@
 
 # :presentation — ui/chords
 
-Chord diagrams. Nothing is shipped or fetched: `:chordpro` reads what notes a name means and finds shapes (a hand-typed
-table first, a search for the rest).
+Chord diagrams. Nothing is shipped or fetched: `:libs:chordpro` reads what notes a name means and finds shapes (a
+hand-typed table first, a search for the rest).
 
 ### Instruments
 
