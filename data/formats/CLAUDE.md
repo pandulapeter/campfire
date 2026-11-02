@@ -41,7 +41,8 @@ locally, never rendered, uploaded, or kept.
   running line is the same on every page or counts the pages, so a heading opening two pages (`Verse 2`, `Verse 6`)
   stays, as does one counting no pages over the same body line on each (a chorus printed again); a page count stands
   alone (`Page 1 of 2`), never a bare `1/2`, which a time signature also reads as. A page's lowest line counting this
-  page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it).
+  page (`2 / 3`) is dropped anywhere in the lower half (a wide margin lifts it), as is a lowest line outside the margins
+  in the lower half that is the same at the same place on every page (an album and its year).
 - A span is italic by its font's name or italic flag; a line carries its baseline.
 - Chord diagrams (`PdfChordDiagrams`) are left out before the lines are set: a run of rows in type under 0.85 of the
   song's text holding both chord names and marks (fret and finger numbers, `x`, `o`). Names alone stay (a small chord

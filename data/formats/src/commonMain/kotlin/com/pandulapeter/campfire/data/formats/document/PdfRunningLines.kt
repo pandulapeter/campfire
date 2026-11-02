@@ -65,6 +65,21 @@ internal object PdfRunningLines {
         numbers.values.map { it.getOrNull(position) }.distinct().size == 1 || offsets.distinct().size == 1
     }
 
+    /**
+     * Whether every one of [pages], two at least, ends in a footer a wide bottom margin lifts out of it (an album and its
+     * year under each page of a song): the lowest line of each page outside the margins, in its lower half, the same
+     * words at the same place on all of them. The song's own last line differs from page to page.
+     */
+    fun hasLiftedFooter(pages: List<Page>): Boolean {
+        if (pages.size < 2) return false
+        val footers = pages.map { page -> liftedFooter(page)?.let { "${signature(it, page.height)}:${it.text.trim()}" } }
+        return footers.first() != null && footers.distinct().size == 1
+    }
+
+    /** The lowest line of [page] outside its margins and in its lower half, where a lifted footer stands. */
+    fun liftedFooter(page: Page) = page.lines.filter { it.text.isNotBlank() && !isEdge(it.y, page.height) }.maxByOrNull { it.y }
+        ?.takeIf { it.y > page.height / 2 }
+
     /** Whether a line at [y] is in the top or the bottom margin, where a running line is printed. */
     fun isEdge(y: Double, height: Double) = y < height * 0.08 || y > height * 0.92
 

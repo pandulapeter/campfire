@@ -74,6 +74,16 @@ class PdfRunningLinesTest {
     }
 
     @Test
+    fun `a footer lifted above the bottom margin is dropped when it ends every page at the same place`() = runTest {
+        val pages = extract(3) { page ->
+            val body = (0 until 4 + page).joinToString(" ") { "1 0 0 1 50 ${700 - it * 14} Tm (Line $it sung on page $page) Tj" }
+            "$body 1 0 0 1 50 72 Tm (An Album \\(1999\\)) Tj 1 0 0 1 50 20 Tm (1 / 1) Tj"
+        }
+
+        (1..3).forEach { page -> assertEquals((0 until 4 + page).map { "Line $it sung on page $page" }, pages[page - 1]) }
+    }
+
+    @Test
     fun `a songbook's footer counting each song's pages is dropped`() = runTest {
         val footers = listOf("Page 1 of 1", "Page 1 of 3", "Page 2 of 3", "Page 3 of 3")
         val pages = extract(4) { page -> "1 0 0 1 50 700 Tm (A line sung on page $page) Tj 1 0 0 1 50 20 Tm (${footers[page - 1]}) Tj" }

@@ -16,8 +16,10 @@ import com.pandulapeter.campfire.data.formats.document.PdfContentInterpreter.Sta
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.Line
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.buildLines
 import com.pandulapeter.campfire.data.formats.document.PdfLineLayout.rows
+import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.hasLiftedFooter
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isEdge
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isPageCount
+import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.liftedFooter
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.runningLines
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.signature
 import kotlinx.coroutines.CancellationException
@@ -136,6 +138,7 @@ object PdfTextExtractor {
         require(budget.shown > 0 && budget.unreadable * 2 <= budget.shown) { "PDF has no readable font mapping" }
         require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
         val repeated = runningLines(pages)
+        val isFooterLifted = hasLiftedFooter(pages)
         val kept = pages.mapIndexed { index, page ->
             fun isRunning(line: Line) = line.text.trim().let { text ->
                 text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
@@ -144,9 +147,11 @@ object PdfTextExtractor {
             // A wide margin lifts a page number above the bottom band, so the page's lowest line is also dropped wherever in
             // the lower half it stands when it counts this page among the document's; a time signature never reads so.
             val lowest = page.lines.maxByOrNull { it.y }
+            val footer = if (isFooterLifted) liftedFooter(page) else null
             page.lines.filterNot { line ->
                 isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 }) ||
-                    line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size)
+                    line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size) ||
+                    line === footer
             }
         }
         return ChordSheet(pages = PdfParagraphs.lines(kept).map(ChordSheet::Page))
