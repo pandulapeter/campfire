@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.chordpro.convert
 
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chord
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordTokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.furniture
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.isChordLine
@@ -24,6 +23,11 @@ internal enum class LineKind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHO
 /**
  * The kind of each of a song's lines, given by the first of a list of named rules that has evidence for one, in the order
  * they are listed; a line no rule speaks for is a lyric.
+ *
+ * A rule that reads a line on its own gives strong evidence. One that guesses from a neighbour (a word as likely sung
+ * as a heading, a single chord, a chord row over a lyric) gives weak evidence, its kind without the neighbour, which a
+ * second pass keeps or drops by the kinds around it: walking from the last line up, a line's next neighbour is already
+ * resolved and its previous one has its first-pass kind. A dropped kind falls to the next rule with evidence.
  */
 internal object LineKinds {
 
@@ -34,42 +38,55 @@ internal object LineKinds {
         val lines: List<Rendered>,
         val features: List<LineFeatures>,
         val candidates: List<List<Token>?>,
-        val headings: List<Boolean>,
         val isStaff: List<Boolean>,
+        val hasStructure: Boolean,
         val hasUnambiguousChords: Boolean,
     )
 
-    private val rules: List<(Context, Int) -> Evidence?> = listOf(
-        ::blank,
-        ::exportLabel,
-        ::exportGrid,
-        ::exportComment,
-        ::staff,
-        ::heading,
-        ::metadata,
-        ::notesOnly,
-        ::exportContinuation,
-        ::exportOverflow,
-        ::severalChords,
-        ::singleChordUnderHeading,
-        ::chordOverLyric,
+    /**
+     * The kinds around a line in the second pass: the [previous] line's first-pass kind, the [next] line's resolved one,
+     * and the next line's first-pass kind ([nextAtFirst]), each null past the song's edge.
+     */
+    private class Neighbours(val previous: LineKind?, val next: LineKind?, val nextAtFirst: LineKind?)
+
+    /** A rule, and whether its weak evidence stands between its [Neighbours] ([keeps]). */
+    private class Rule(val give: (Context, Int) -> Evidence?, val keeps: (Neighbours) -> Boolean = { true })
+
+    private val rules = listOf(
+        Rule(::blank),
+        Rule(::exportLabel),
+        Rule(::exportGrid),
+        Rule(::exportComment),
+        Rule(::staff),
+        Rule(::heading) { it.next == null || it.next == LineKind.CHORD || it.next == LineKind.BLANK },
+        Rule(::metadata),
+        Rule(::notesOnly),
+        Rule(::exportContinuation),
+        Rule(::exportOverflow),
+        Rule(::severalChords),
+        Rule(::singleChordUnderHeading) {
+            it.previous == LineKind.SECTION && (it.next == null || it.next == LineKind.BLANK || it.next == LineKind.SECTION)
+        },
+        Rule(::chordOverLyric) { it.next == LineKind.LYRIC && it.nextAtFirst != LineKind.CHORD },
     )
 
     fun of(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<LineKind> {
-        val hasStructure = hasStructure(lines, candidates)
-        // A word that is as likely sung is a heading where a chord row or a blank line follows it, as one does a heading.
-        val headings = lines.indices.map { index ->
-            features[index].heading?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
-                ?: (hasStructure && isBracketedHeading(lines[index].text))
-        }
         // Campfire's own export is read by the test it engraves a staff by, which knows every instrument's strings.
         val isStaff = lines.indices.map { index ->
             lines[index].marks != null && ChordProTokens.isStaffLine(lines[index].text) ||
                 tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
         }
-        val context = Context(lines, features, candidates, headings, isStaff, hasUnambiguousChords(candidates))
-        return lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule(context, index) }?.kind ?: LineKind.LYRIC }
+        val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates))
+        val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
+        val kinds = firstPass.toMutableList()
+        for (index in lines.indices.reversed()) {
+            val neighbours = Neighbours(firstPass.getOrNull(index - 1), kinds.getOrNull(index + 1), firstPass.getOrNull(index + 1))
+            kinds[index] = rules.firstNotNullOfOrNull { rule ->
+                rule.give(context, index)?.takeIf { it.isStrong || rule.keeps(neighbours) }
+            }?.kind ?: LineKind.LYRIC
+        }
+        return kinds
     }
 
     internal fun hasUnambiguousChords(candidates: List<List<Token>?>) = candidates.any { it != null && it.count { word -> rowChord(word.text) } > 1 }
@@ -106,7 +123,18 @@ internal object LineKinds {
     private fun staff(context: Context, index: Int) =
         (context.isStaff[index] || context.candidates[index] != null && context.isStaff.getOrNull(index + 1) == true).gives(LineKind.TAB)
 
-    private fun heading(context: Context, index: Int) = (context.headings[index] || context.lines[index].isMarginLabel).gives(LineKind.SECTION)
+    /**
+     * A heading, a margin label, or a bracketed name. A word that is as likely sung is weak evidence, kept where a chord
+     * row, a blank line, or the song's end follows it, as one does a heading.
+     */
+    private fun heading(context: Context, index: Int): Evidence? {
+        val heading = context.features[index].heading
+        return when {
+            context.lines[index].isMarginLabel -> Evidence(LineKind.SECTION, isStrong = true)
+            heading != null -> Evidence(LineKind.SECTION, isStrong = !heading.isAmbiguous)
+            else -> (context.hasStructure && isBracketedHeading(context.lines[index].text)).gives(LineKind.SECTION)
+        }
+    }
 
     private fun metadata(context: Context, index: Int): Evidence? {
         val features = context.features[index]
@@ -143,25 +171,24 @@ internal object LineKinds {
         return (candidate.count { rowChord(it.text) } > 1).gives(LineKind.CHORD)
     }
 
+    /**
+     * A row of one chord, written with a capital: weak evidence, kept under a heading where nothing is set under it, a
+     * blank line, a heading, or the song's end following it.
+     */
     private fun singleChordUnderHeading(context: Context, index: Int): Evidence? {
-        val candidate = context.candidates[index] ?: return null
-        return (
-            candidate.count { rowChord(it.text) } == 1 &&
-                candidate.filter { rowChord(it.text) }.all { it.text.first().isUpperCase() } &&
-                context.headings.getOrNull(index - 1) == true &&
-                context.lines.getOrNull(index + 1)?.let { it.text.isBlank() || context.headings[index + 1] } != false
-            ).gives(LineKind.CHORD)
+        val chords = context.candidates[index]?.filter { rowChord(it.text) } ?: return null
+        return if (chords.size == 1 && chords.all { it.text.first().isUpperCase() }) Evidence(LineKind.CHORD, isStrong = false) else null
     }
 
+    /**
+     * A chord row, where the song has a row of several chords or the row is set as chords are: weak evidence, kept over a
+     * lyric, unless that line was a chord row in the first pass: a chord row dropped to a lyric (a diagram's name over a
+     * blank line) is no lyric to set chords over.
+     */
     private fun chordOverLyric(context: Context, index: Int): Evidence? {
         val candidate = context.candidates[index] ?: return null
-        val line = context.lines[index]
-        return (
-            (context.hasUnambiguousChords || isStyledChordLine(line, candidate, context.lines.getOrNull(index + 1))) &&
-                context.lines.getOrNull(index + 1)?.let {
-                    it.text.isNotBlank() && chordTokens(it) == null && !context.headings[index + 1] && context.features[index + 1].metadata == null
-                } == true
-            ).gives(LineKind.CHORD)
+        val isChordRow = context.hasUnambiguousChords || isStyledChordLine(context.lines[index], candidate, context.lines.getOrNull(index + 1))
+        return if (isChordRow) Evidence(LineKind.CHORD, isStrong = false) else null
     }
 
     /**

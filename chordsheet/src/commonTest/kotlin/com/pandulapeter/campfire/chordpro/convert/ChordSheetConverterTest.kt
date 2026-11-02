@@ -394,6 +394,57 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a word as likely sung as a heading heads a section only where a chord row, a blank line, or the end follows it`() {
+        assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n[Am]Other [C]words\n", convert("Am    C\nHello world\nBreak\nAm    C\nOther words"))
+        assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n\n[Am]Other [C]words\n", convert("Am    C\nHello world\nBreak\n\nAm    C\nOther words"))
+        assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n", convert("Am    C\nHello world\nBreak"))
+        assertEquals("[Am]Hello [C]world\nBreak\nmy heart\n", convert("Am    C\nHello world\nBreak\nmy heart"))
+        // A lone letter no chord row in the song shows to be a chord is a lyric, so the word over it is sung too.
+        assertEquals("Hello\nBreak\nG\nthe end\n", convert("Hello\nBreak\nG\nthe end"))
+    }
+
+    @Test
+    fun `a single chord under a heading is a row of its own only where a blank line, a heading, or the end follows it`() {
+        assertEquals("{start_of_verse: Verse 1}\n[C]\n\nHello\n{end_of_verse}\n", convert("[Verse 1]\nC\n\nHello"))
+        assertEquals(
+            "{start_of_verse: Verse 1}\n[C]\n{end_of_verse}\n{start_of_chorus: Chorus}\n[Am]Hello [C]world\n{end_of_chorus}\n",
+            convert("[Verse 1]\nC\n[Chorus]\nAm    C\nHello world"),
+        )
+        assertEquals("{start_of_verse: Verse 1}\nC\nHello\n{end_of_verse}\n", convert("[Verse 1]\nC\nHello"))
+    }
+
+    @Test
+    fun `a chord row is set over the lyric under it, never over a chord row taken for a lyric`() {
+        assertEquals("[Am]Hello [C]world\n[G]more words\n", convert("Am    C\nHello world\nG\nmore words"))
+        assertEquals("[Am]Hello [C]world\nG\n\nmore\n", convert("Am    C\nHello world\nG\n\nmore"))
+        assertEquals("[Am]Hello [C]world\nG\n", convert("Am    C\nHello world\nG"))
+        // A sung word that is no heading here is a lyric to set a chord over.
+        assertEquals("[Am]Hello [C]\n[G]Break\nmy heart\n", convert("Am    C\nHello\nG\nBreak\nmy heart"))
+        // The names under a page's chord diagrams, one a line, are no chord row over a lyric.
+        assertEquals("[Am]Hello [C]world\n\nF#\nF#m\n", convert("Am    C\nHello world\n\nF#\nF#m"))
+    }
+
+    @Test
+    fun `a title is told by its type against the whole document's body, not against the page it opens`() {
+        fun line(text: String, size: Double) = ChordSheet.Line(listOf(span(text, 0.0, text.length * size, size = size)))
+        fun page(title: String, words: String) = ChordSheet.Page(listOf(line(title, 2.0)) + ChordSheet.ofPlainText("Am    C\n$words").pages.single().lines)
+        fun contents(heading: String, entries: List<String>) = ChordSheet.Page(listOf(line(heading, 1.0)) + entries.map { line(it, 0.8) })
+        val sheet = ChordSheet(
+            listOf(
+                contents("Contents", listOf("Alpha 2", "Beta 3", "Gamma 4")),
+                contents("Contents by Number", listOf("1 Alpha", "3 Beta", "5 Gamma")),
+                page("Alpha", "Hello world"),
+                page("Beta", "Other words"),
+                page("Gamma", "Last words"),
+            ),
+        )
+        val result = ChordSheetConverter.convert(sheet)
+        assertEquals(4, result.size, result.joinToString("{new_song}\n"))
+        assertTrue(result[0].startsWith("Contents\n"), result[0])
+        assertEquals(listOf("{title: Alpha}", "{title: Beta}", "{title: Gamma}"), result.drop(1).map { it.lineSequence().first() })
+    }
+
+    @Test
     fun `letter spacing does not split words`() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())

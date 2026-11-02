@@ -41,14 +41,5 @@ internal data class ChordSheetProfile(val bodySize: Double) {
 
         /** Whether the row at [index] of a song is in its header's reach. */
         fun isInHeader(index: Int) = index < HEADER_LINES
-
-        /**
-         * The median size of every span of [lines], blank ones included, which a caller passes without the line it is
-         * judging: the type around a candidate title rather than the document's. Null for no span.
-         */
-        fun medianWithout(lines: List<ChordSheet.Line>): Double? {
-            val sizes = lines.flatMap { it.spans }.map { it.size }.sorted()
-            return sizes.getOrNull(sizes.size / 2)
-        }
     }
 }

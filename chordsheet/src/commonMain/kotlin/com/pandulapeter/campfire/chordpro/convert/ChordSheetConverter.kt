@@ -23,7 +23,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isCharact
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isChordOrLatinName
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isLatinChordBeyondNote
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.isPositioned
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.note
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.parentheses
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
@@ -72,7 +71,8 @@ public object ChordSheetConverter {
         val all = pages.flatten()
         val original = sheet.originalText ?: all.joinToString("\n") { it.text }
         if (isChordPro(original)) return listOf(original)
-        val cuts = ChordSheetSongSplit.cuts(pages.map(::splitLines), ChordSheetProfile.of(all.map { it.source }))
+        val profile = ChordSheetProfile.of(all.map { it.source })
+        val cuts = ChordSheetSongSplit.cuts(pages.map { splitLines(it, profile) }, profile)
         val groups = mutableListOf<MutableList<Rendered>>()
         pages.forEachIndexed { pageIndex, page ->
             page.forEachIndexed { lineIndex, line ->
@@ -81,7 +81,7 @@ public object ChordSheetConverter {
                 if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
             }
         }
-        return groups.map { normalize(convertSong(expandLabels(joinWrappedDetails(withoutInjections(singleSpaced(it)))), guessesTitle)) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(joinWrappedDetails(withoutInjections(singleSpaced(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
     }
 
     /**
@@ -425,16 +425,16 @@ public object ChordSheetConverter {
     }
 
     /** The [page]'s lines for [ChordSheetSongSplit], which asks whether a line is a title by its type only of the page's first. */
-    private fun splitLines(page: List<Rendered>): List<ChordSheetSongSplit.Line> {
+    private fun splitLines(page: List<Rendered>, profile: ChordSheetProfile): List<ChordSheetSongSplit.Line> {
         val lead = page.indexOfFirst { it.text.isNotBlank() }
         return page.mapIndexed { index, line ->
             val isChordRow = line.text.isNotBlank() && chordTokens(line) != null
             val isTitleShaped = line.text.isNotBlank() && !isChordRow && !line.isMarginLabel && !isHeading(line.text) && metadata(line.text) == null
-            ChordSheetSongSplit.Line(line.text.trim(), line.source, isChordRow, isTitleShaped, isTitleShaped && index == lead && SongHeader.isTitle(line, page))
+            ChordSheetSongSplit.Line(line.text.trim(), line.source, isChordRow, isTitleShaped, isTitleShaped && index == lead && SongHeader.isTitle(line, page, profile))
         }
     }
 
-    private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean): String {
+    private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean, profile: ChordSheetProfile): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
         val features = features(lines)
@@ -444,7 +444,7 @@ public object ChordSheetConverter {
             return collapse(lines.map { ChordProLiteralText.escape(it.text) })
         }
         val fields = SongHeader.fields(lines, features, kinds)
-        val title = if (guessesTitle) SongHeader.title(lines, kinds) else SongHeader.noTitle
+        val title = if (guessesTitle) SongHeader.title(lines, kinds, profile) else SongHeader.noTitle
         val omitted = fields.omitted + title.omitted
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },

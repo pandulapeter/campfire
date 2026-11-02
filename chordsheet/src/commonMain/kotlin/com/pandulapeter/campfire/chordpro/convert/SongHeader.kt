@@ -49,10 +49,13 @@ internal object SongHeader {
     /** No title: a song whose caller knows its title from elsewhere, or whose first lines name none. */
     val noTitle = TitleLines(emptyList(), emptyList(), emptySet())
 
-    fun isTitle(line: Rendered, lines: List<Rendered>): Boolean {
+    /**
+     * Whether [line] of [lines] is a title by its type: a heading's, larger than the document's body ([profile]), or bold
+     * in a song with chord rows.
+     */
+    fun isTitle(line: Rendered, lines: List<Rendered>, profile: ChordSheetProfile): Boolean {
         if (line.text.isBlank() || line.isMarginLabel || isHeading(line.text) || metadata(line.text) != null || chordTokens(line) != null) return false
-        val median = ChordSheetProfile.medianWithout(lines.filter { it !== line }.map { it.source }) ?: line.source.spans.maxOfOrNull { it.size } ?: 1.0
-        return line.source.isHeading || line.source.spans.any { it.size > median * ChordSheetProfile.TITLE_RATIO } ||
+        return line.source.isHeading || line.source.spans.any { profile.isLarger(it.size) } ||
             line.source.spans.filter { it.text.isNotBlank() }.let { spans -> spans.isNotEmpty() && spans.all { it.isBold } } && lines.any { chordTokens(it) != null }
     }
 
@@ -60,12 +63,11 @@ internal object SongHeader {
      * Whether [line] is set in the type of a [title] that is larger than the body text, which is how a wrapped title
      * continues; a title told apart only by being bold has no such type to recognize its continuation by.
      */
-    private fun isTitleContinuation(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
+    private fun isTitleContinuation(line: Rendered, title: Rendered, profile: ChordSheetProfile): Boolean {
         val titleSpans = title.source.spans.filter { it.text.isNotBlank() }
         val titleSize = titleSpans.maxOfOrNull { it.size } ?: return false
-        val median = ChordSheetProfile.medianWithout(lines.filter { it !== title && it !== line }.map { it.source }) ?: return false
         val spans = line.source.spans.filter { it.text.isNotBlank() }
-        return titleSize > median * ChordSheetProfile.TITLE_RATIO && spans.isNotEmpty() &&
+        return profile.isLarger(titleSize) && spans.isNotEmpty() &&
             spans.all { ChordSheetProfile.isSameSize(it.size, titleSize) && it.isBold == titleSpans.first().isBold }
     }
 
@@ -145,6 +147,7 @@ internal object SongHeader {
     fun title(
         lines: List<Rendered>,
         kinds: List<LineKind>,
+        profile: ChordSheetProfile,
     ): TitleLines {
         val leading = mutableListOf<String>()
         val trailing = mutableListOf<String>()
@@ -153,11 +156,11 @@ internal object SongHeader {
         if (first < 0 || kinds[first] != LineKind.LYRIC) return noTitle
         // The export's own test reads chords by their type, which a title naming a chord (`A`) is not printed in.
         if (if (lines[first].marks != null) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return noTitle
-        if (!isTitle(lines[first], lines)) return plainTitle(lines, kinds, first)
+        if (!isTitle(lines[first], lines, profile)) return plainTitle(lines, kinds, first)
         // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
         var last = first
-        while (kinds.getOrNull(last + 1) == LineKind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
+        while (kinds.getOrNull(last + 1) == LineKind.LYRIC && !lines[last + 1].isHeaderPart && isTitleContinuation(lines[last + 1], lines[first], profile)) last++
         val title = joinRows(lines, first, last)
         // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
         // credit in it to split off.
