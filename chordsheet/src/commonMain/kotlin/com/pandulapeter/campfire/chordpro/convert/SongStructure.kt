@@ -72,6 +72,7 @@ internal object SongStructure {
         changes: Map<Int, List<String>>,
         convertParentheses: Boolean,
     ): List<Part> = with(Builder()) {
+        fun continues(at: Int) = lines[at].marks?.isContinuation == true || features[at].isWrapped
         fun follow(at: Int) { if (features[at].isSung) features[at].look?.let { follow(it, lines[at].text) } }
         val unlabelled = ChordSheetLook.unlabelled(
             // A line with no word (a tab's string or a stray accidental the reading took for a lyric) is not sung.
@@ -141,21 +142,21 @@ internal object SongStructure {
                 LineKind.TAB -> { if (!isInTab) openTab(label = null); add(Line.Raw(line.text)) }
                 LineKind.CHORD -> {
                     openUnlabelled(index + 1)
-                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && lines[index + 1].marks?.isContinuation == true
+                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && continues(index + 1)
                     // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
                     // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
                     if (line.marks?.isContinuation == true && !isUnderMarkedLyric) {
                         addLyric(bracketed(candidates[index]!!, chordRow(line), line.marks.isSetFromRight), continues = true, isHardCut = false)
                     } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         follow(index + 1)
-                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].marks?.isContinuation == true, lines[index + 1].marks?.isHardCut == true)
+                        addLyric(merge(line, lines[index + 1], convertParentheses), continues(index + 1), lines[index + 1].marks?.isHardCut == true)
                         index++
                     } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line), line.marks?.isSetFromRight == true)))
                 }
                 LineKind.LYRIC -> {
                     openUnlabelled(index)
                     follow(index)
-                    addLyric(inline(line, convertParentheses), line.marks?.isContinuation == true, line.marks?.isHardCut == true)
+                    addLyric(inline(line, convertParentheses), continues(index), line.marks?.isHardCut == true)
                 }
                 LineKind.BLANK -> add(Line.Blank)
                 LineKind.METADATA -> Unit
