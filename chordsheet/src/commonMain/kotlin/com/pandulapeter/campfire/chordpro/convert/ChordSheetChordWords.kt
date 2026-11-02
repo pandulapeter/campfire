@@ -35,9 +35,11 @@ internal object ChordSheetChordWords {
     internal fun chordTokens(line: Rendered): List<Token>? = chordRow(line)?.tokens
 
     /**
-     * Campfire's export ([Rendered.marks]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
-     * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
-     * is all notes, so it is never taken for chords, unless the row under it continues its line
+     * A sheet that prints a song's annotations (`[*twice]`) in italics among a row's upright chords makes a run of italic
+     * words there a note wherever it stands, in parentheses or not; a chord name or a bar line in italics is no note, since
+     * some sheets set every chord in italics, and so is a row set in italics throughout. Campfire's export
+     * ([Rendered.marks]) takes every italic run for one, and a line of it set in italics throughout is all notes, so it
+     * is never taken for chords, unless the row under it continues its line
      * ([CampfireMarks.isContinuedBelow]): it is then the chord row of a lyric's continuation, or an annotation opening a line,
      * printed alone over the padding its width needs where a narrow column wraps the lyric right after that padding.
      * There a word is a chord only where it is printed in the chords' type, bold under the title's size, or in a tab's
@@ -47,11 +49,12 @@ internal object ChordSheetChordWords {
     internal fun chordRow(line: Rendered, isCampfire: Boolean = line.marks != null): ChordRow? = chordRow(
         text = line.text,
         allowsNotesOnly = isCampfire && line.marks?.isContinuedBelow == true,
-        isNote = if (!isCampfire) null else { word ->
-            word.text.indices.all { offset ->
-                val x = line.positions.getOrNull(word.index + offset)
-                x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
-            }
+        isNote = if (!isCampfire && !hasItalicsBesideUpright(line)) null else { word ->
+            (isCampfire || !rowChord(word.text) && !furniture(word.text)) &&
+                word.text.indices.all { offset ->
+                    val x = line.positions.getOrNull(word.index + offset)
+                    x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
+                }
         },
         isChord = if (!isCampfire || (line.marks?.bodySize ?: 0.0) <= 0.0) null else { word ->
             word.text.indices.all { offset ->
@@ -62,6 +65,9 @@ internal object ChordSheetChordWords {
             }
         },
     )
+
+    private fun hasItalicsBesideUpright(line: Rendered) =
+        line.source.spans.any { it.isItalic && it.text.isNotBlank() } && line.source.spans.any { !it.isItalic && it.text.isNotBlank() }
 
     internal fun chordRow(
         text: String,

@@ -1576,6 +1576,19 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `an italic word among a row's upright chords is an annotation where it stands, an italic chord or bar line staying what it is`() {
+        fun line(vararg parts: Pair<String, Boolean>): ChordSheet.Line {
+            var x = 0.0
+            return ChordSheet.Line(parts.flatMap { (text, italic) -> text.map { c -> ChordSheet.Span(c.toString(), x, x + 6.0, 10.0, isItalic = italic).also { x += 6.0 } } })
+        }
+        fun convert(chords: ChordSheet.Line) = ChordSheetConverter.convert(
+            ChordSheet(listOf(ChordSheet.Page(listOf(line("Song" to false), line("Am      F" to false), line("Hello there world" to false), chords, line("Sing it again and again" to false))))),
+        ).single().substringAfter("world\n")
+        assertEquals("[C]Sing it [G]again and [*twice]again\n", convert(line("C       G         " to false, "twice" to true)))
+        assertEquals("[C]Sing it [G]again [D]and again\n", convert(line("C       " to false, "G" to true, "   " to false, "|" to true, " D" to false)))
+    }
+
+    @Test
     fun `dashes filling a chord's width at the end of a lyric are left out, sung ones kept`() {
         assertEquals("[Am]tonight [G]\n", convert("Am       G\ntonight-----"))
         assertEquals("[Am]Oh [C]tonight-----\n", convert("Am C\nOh tonight-----"))
