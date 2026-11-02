@@ -9,8 +9,8 @@
 -->
 # :metronome:api
 
-The contract of the click, and nothing else: depends on nothing but coroutines, so no data or domain type leaks in and
-the engine reads no settings of its own. Explicit API mode.
+The contract of the click: depends on nothing but coroutines, so no data or domain type leaks in and the engine reads
+no settings of its own.
 
 - `Metronome`: **every call returns at once and never throws**; a start that cannot happen ends in `Stopped(reason)`.
   `beats` emits when a click is *heard*, not scheduled. `update` applies timing from the next beat (or, with
@@ -22,4 +22,3 @@ the engine reads no settings of its own. Explicit API mode.
 - Enum `id`s are stored settings; never change them. `TimeSignature` is written and parsed as `"7/8"`.
 - **The tempo counts the clicks of the bar**: 6/8 at 120 is six clicks a bar at 120 a minute; the unit only decides the
   default accents (one, and every group of three in a compound meter).
-- `TapTempo` is pure and tested with a `TestTimeSource`.
