@@ -775,7 +775,6 @@ class CampfireViewModel(
             setlistsSearch = setlistsController.setlistsSearch,
         )
         fontScaleController.startWriter()
-        exportController.startPrintSettingsWriter()
         overrides.startSettling()
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()

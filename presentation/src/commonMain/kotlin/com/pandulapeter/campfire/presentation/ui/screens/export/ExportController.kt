@@ -489,11 +489,11 @@ internal class ExportController(
         messageSink.sendMessage(Message.ExportFailed)
     }
 
-    /** Writes the export options once they have held still, see [printSettingsPreference]. */
-    fun startPrintSettingsWriter() = printSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
-
     /** Writes the export options at once, for the export screen going. */
     fun flushPrintSettings() {
         scope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
     }
+
+    // Writes the export options once they have held still, see [printSettingsPreference].
+    init { printSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke) }
 }
