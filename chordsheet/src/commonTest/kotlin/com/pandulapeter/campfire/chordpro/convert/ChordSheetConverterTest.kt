@@ -1654,4 +1654,12 @@ class ChordSheetConverterTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `a row of bars holding chords and beats is a grid, and the rest of one a column wrapped too, but not a chord row over a lyric`() {
+        assertEquals(
+            "{start_of_grid}\n| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n{end_of_grid}\n\n[G]Hello     [C]world\n",
+            convert("| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n\n| G . . . | C . . . |\n  Hello     world"),
+        )
+    }
 }

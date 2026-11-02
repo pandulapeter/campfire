@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro.convert
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.furniture
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.isChordLine
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter.labelledRow
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
@@ -59,6 +60,7 @@ internal object LineKinds {
         Rule(::exportGrid),
         Rule(::exportComment),
         Rule(::staff),
+        Rule(::grid) { it.next != LineKind.LYRIC },
         Rule(::heading) { it.next == null || it.next == LineKind.CHORD || it.next == LineKind.BLANK },
         Rule(::metadata),
         Rule(::notesOnly),
@@ -114,6 +116,19 @@ internal object LineKinds {
 
     private fun exportGrid(context: Context, index: Int) =
         (context.lines[index].marks?.role == ChordSheetCampfireLayout.Role.GRID).gives(LineKind.GRID)
+
+    /**
+     * A row of bars holding chords and the beats between them (`| G . . . | C . / . |`), or the rest of one a column
+     * wrapped: a chord grid, weak evidence, kept where no lyric follows it, since a chord row over a lyric may mark its
+     * bars and beats too.
+     */
+    private fun grid(context: Context, index: Int): Evidence? {
+        val words = tokens(context.lines[index].text)
+        val bars = words.count { it.text in gridBars }
+        val isGrid = bars >= 2 && words.any { it.text in gridBeats } && words.any { rowChord(it.text) } &&
+            words.all { it.text in gridBars || it.text in gridBeats || rowChord(it.text) }
+        return if (isGrid) Evidence(LineKind.GRID, isStrong = false) else null
+    }
 
     private fun exportComment(context: Context, index: Int) = context.lines[index].marks?.role.let {
         it == ChordSheetCampfireLayout.Role.COMMENT || it == ChordSheetCampfireLayout.Role.BOX_COMMENT
@@ -220,6 +235,8 @@ internal object LineKinds {
             (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
     }
 
+    private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")
+    private val gridBeats = setOf(".", "/", "%")
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
     private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
 }
