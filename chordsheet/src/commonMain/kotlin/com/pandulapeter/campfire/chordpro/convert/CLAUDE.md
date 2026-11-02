@@ -67,8 +67,9 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - Chord shapes listed one a line become `{define}` lines (`ChordSheetDefinitions`), except a chord listed both plain
   and starred (`Bb`, `Bb*`): the star is dropped where the chord is played, so one definition would stand for both.
 - What the ChordPro app prints is read back too: margin section labels (`ChordSheetMarginLabels`, only where every
-  other line starts right of them, so a lyric against the left edge keeps its first word) and header lines printed in
-  left, centre, and right parts (`ChordSheetHeaderParts`; never in Campfire's export, which prints none).
+  other line of their column starts right of them, so a lyric against the left edge keeps its first word) and
+  header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`; never in Campfire's export, which
+  prints none).
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
   Guitar's page furniture is many lines in no fixed shape and is deliberately not filtered.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title

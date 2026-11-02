@@ -41,13 +41,12 @@ internal object ChordSheetMarginLabels {
      */
     fun split(placed: List<PlacedLine>): List<PlacedLine> {
         val lines = placed.map { it.line }
-        val shaped = lines.map(::label)
-        // A line of the body may be shaped like a label too (a chord row opening with "(x)"), so only those starting
-        // left of the body are taken, and the body's edge is measured again between the ones that are.
-        val labels = edge(lines, shaped)?.let { edge -> shaped.map { label -> label?.takeIf { it.start < edge } } } ?: return placed
-        if (labels.count { it != null } < 2) return placed
-        val edge = edge(lines, labels) ?: return placed
-        if (labels.any { it != null && (it.end > edge - it.size * 0.5 || it.contentStart < edge - it.size * 0.5) }) return placed
+        // Each column has a margin of its own, so a label beside the second column is measured against that column's body.
+        val labels = MutableList<Label?>(lines.size) { null }
+        for (column in lines.indices.groupBy { lines[it].column }.values) {
+            labels(column.map { lines[it] })?.forEachIndexed { index, label -> labels[column[index]] = label }
+        }
+        if (labels.all { it == null }) return placed
         val result = mutableListOf<PlacedLine>()
         placed.forEachIndexed { index, line ->
             val label = labels[index]
@@ -65,6 +64,18 @@ internal object ChordSheetMarginLabels {
     fun type(label: String): String = ChordSheetHeadings.parse(label)?.type
         ?: abbreviations[label.trim().trimEnd { it.isDigit() || it.isWhitespace() || it == '.' }.lowercase()]
         ?: "verse"
+
+    /** The labels of [lines], which are one column's, or null where they have none. */
+    private fun labels(lines: List<ChordSheet.Line>): List<Label?>? {
+        val shaped = lines.map(::label)
+        // A line of the body may be shaped like a label too (a chord row opening with "(x)"), so only those starting
+        // left of the body are taken, and the body's edge is measured again between the ones that are.
+        val labels = edge(lines, shaped)?.let { edge -> shaped.map { label -> label?.takeIf { it.start < edge } } } ?: return null
+        if (labels.count { it != null } < 2) return null
+        val edge = edge(lines, labels) ?: return null
+        if (labels.any { it != null && (it.end > edge - it.size * 0.5 || it.contentStart < edge - it.size * 0.5) }) return null
+        return labels
+    }
 
     /** Where the body starts: the leftmost text of the lines without a label, between the first label and the last. */
     private fun edge(lines: List<ChordSheet.Line>, labels: List<Label?>): Double? {

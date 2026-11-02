@@ -1495,6 +1495,23 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `margin labels beside a second column open its sections, measured against that column's own body`() {
+        fun column(index: Int, offset: Double, text: String) = ChordSheet.ofPlainText(text).pages.single().lines.map { line ->
+            line.copy(spans = line.spans.map { it.copy(start = it.start + offset, end = it.end + offset) }, column = index)
+        }
+        val left = column(0, 0.0, "        G            C\nV1      Amazing grace how sweet\n        D              G\nCh1     the sound that saved")
+        val right = column(1, 40.0, "        C            G\nV2      Oh happy day when Jesus\n        D              G\nCh2     washed my sins away")
+        val page = ChordSheet.Page(left + right)
+        assertEquals(
+            listOf(
+                "{start_of_verse: V1}\n[G]Amazing grace [C]how sweet\n{end_of_verse}\n{start_of_chorus: Ch1}\n[D]the sound that [G]saved\n{end_of_chorus}\n" +
+                    "{start_of_verse: V2}\n[C]Oh happy day [G]when Jesus\n{end_of_verse}\n{start_of_chorus: Ch2}\n[D]washed my sins [G]away\n{end_of_chorus}\n",
+            ),
+            ChordSheetConverter.convert(ChordSheet(listOf(page))),
+        )
+    }
+
+    @Test
     fun `a chord row reaching into the margin and a lone word left of the body stay where they are`() {
         assertEquals("[G]Amazing [C]grace\n[D]how [G]sweet\n", convert("G         C\n   Amazing grace\nD      G\n   how sweet"))
         assertEquals("Oh     happy day\nwhen Jesus washed\n", convert("Oh     happy day\n       when Jesus washed"))
