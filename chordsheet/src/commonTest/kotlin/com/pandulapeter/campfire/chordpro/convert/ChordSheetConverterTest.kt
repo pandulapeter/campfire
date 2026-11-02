@@ -1717,4 +1717,26 @@ class ChordSheetConverterTest {
         assertEquals("{title: RIVER-SHE WALKS}", convert("RIVER-SH", "E WALKS"))
         assertEquals("{title: RIVER WALKS}", convert("RIVER", "WALKS"))
     }
+
+    @Test
+    fun `a column wraps at three of its type's ems from the next one, and a row's first word takes the width of its chord`() {
+        fun line(text: String, column: Int, start: Double) =
+            ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), start + index * 6.0, start + (index + 1) * 6.0, 10.0) }, column = column)
+        val lines = listOf(
+            ChordSheet.Line(listOf(ChordSheet.Span("Song", 0.0, 80.0, 20.0, isBold = true))),
+            line("G         C", 0, 0.0),
+            line("Hello darkness my old friend I've", 0, 0.0),
+            line("come to talk with you again", 0, 0.0),
+            line("A vision softly creeping in", 0, 0.0),
+            line("Cmaj7/G", 0, 0.0),
+            line("on me", 0, 0.0),
+            line("Left its seeds while I was", 1, 226.0),
+            line("sleeping", 1, 226.0),
+        )
+        assertEquals(
+            "{title: Song}\n\n[G]Hello dark[C]ness my old friend I've come to talk with you again\nA vision softly creeping in [Cmaj7/G]on me\n" +
+                "Left its seeds while I was sleeping\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }
