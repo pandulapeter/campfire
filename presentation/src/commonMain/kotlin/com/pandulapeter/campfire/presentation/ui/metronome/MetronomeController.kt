@@ -283,10 +283,10 @@ internal class MetronomeController(
     }
 
     /** Writes the settings once they have held still, see [metronomeSettingsPreference]. */
-    fun startSettingsWriter() = metronomeSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
+    private fun startSettingsWriter() = metronomeSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
 
     /** Follows what a playing click plays, see the comment inside. */
-    fun startFollowingPattern() = scope.launch {
+    private fun startFollowingPattern() = scope.launch {
         // One collector for everything that changes what a playing click plays, so that a context change and the
         // pattern it brings are one update: paging to another song (or another stretch of one) moves the click to
         // it once the bar being played has ended, from beat one, and anything else - a tempo stepped, a setting, a
@@ -333,7 +333,7 @@ internal class MetronomeController(
     }
 
     /** Says why a click stopped on its own. */
-    fun startReportingStops() = scope.launch {
+    private fun startReportingStops() = scope.launch {
         // Only what happens from here on: the engine outlives the view model, and a reason from before it was built
         // was said by the one before it.
         metronome.playback.drop(1).collect { playback ->
@@ -342,7 +342,7 @@ internal class MetronomeController(
     }
 
     /** Tells the engine whether a screen that can start a click is on top, see [isMetronomeStartable]. */
-    fun startStartableRule() = scope.launch {
+    private fun startStartableRule() = scope.launch {
         // Where the web's audio output listens for the presses that allow a page's audio to start, so that tapping
         // around the rest of the app never opens the audio device; a no-op on the other platforms. The screen
         // composes before the tap that starts a click, so the listener is there in time.
@@ -355,5 +355,12 @@ internal class MetronomeController(
 
     private companion object {
         const val SILENT_CLICK_GRACE_MILLIS = 3_000L
+    }
+
+    init {
+        startSettingsWriter()
+        startFollowingPattern()
+        startReportingStops()
+        startStartableRule()
     }
 }

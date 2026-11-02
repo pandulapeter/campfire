@@ -776,13 +776,9 @@ class CampfireViewModel(
         )
         fontScaleController.startWriter()
         exportController.startPrintSettingsWriter()
-        metronomeController.startSettingsWriter()
         overrides.startSettling()
-        metronomeController.startFollowingPattern()
-        metronomeController.startReportingStops()
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()
-        metronomeController.startStartableRule()
     }
 
     // Navigation
