@@ -14,4 +14,15 @@ plugins {
 kotlin {
     // The public surface of a module every other one sees is written on purpose: a declaration says it is public.
     explicitApi()
+    sourceSets {
+        desktopTest.dependencies {
+            // Reads the model's Kotlin visibility for ComposeStabilityListTest; nothing ships it.
+            implementation(libs.kotlin.reflect)
+        }
+    }
+}
+
+// The stability list is read by ComposeStabilityListTest, so an edit of the list alone runs the tests again.
+tasks.named<Test>("desktopTest") {
+    inputs.file(rootProject.file("gradle/compose-stability.conf")).withPropertyName("composeStability")
 }

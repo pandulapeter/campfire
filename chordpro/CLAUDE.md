@@ -33,7 +33,8 @@ by a test are not repeated here.
   definitions: only their closing `{end_of_…}` and a directive written with a colon are directives inside them. The
   one exception: a transposition writes each `abc` tune's own `%%transpose` (`AbcTranspositions`).
 - **The model is immutable**, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
-  collection mutated afterwards. It says what a thing is, never how it looks.
+  collection mutated afterwards. It says what a thing is, never how it looks. `ComposeStabilityListTest` fails until a
+  new public class of `model/` or `scales/` is listed there, and on a listed name no class has.
 - The caller supplies NFC normalization and tag folding; this module has none.
 - **`language/` is the one answer about languages and scripts** for every module: `LanguageCodes.current` (`iw` read as
   `he`), `isStrongRtl`, `BidiOrder`, and `writingDirectionOf`. `ChordProSong.textDirection` is a song's one direction:

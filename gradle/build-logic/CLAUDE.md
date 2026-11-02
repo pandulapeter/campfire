@@ -16,7 +16,8 @@ invalidate the main build.
   `com.android.library`).
 - `campfire-compose-library` passes `gradle/compose-stability.conf`, marking the `:chordpro` model stable: that module
   is not built with the Compose compiler, so otherwise a new parse would recompose every line of a song. Name each
-  class individually, never a wildcard, and leave `kotlin.collections` out.
+  class individually, never a wildcard, and leave `kotlin.collections` out; `:chordpro`'s `ComposeStabilityListTest`
+  checks the names against its public classes.
 - `campfire-koin` applies in either order with the above (`pluginManager.withPlugin`). The root `build.gradle.kts`
   keeps its `apply false` so the extension type comes from one classloader.
 - `campfire-style`: the library plugins apply it; plain `:app:*` modules and `:tools:screenshots` name it in their own
