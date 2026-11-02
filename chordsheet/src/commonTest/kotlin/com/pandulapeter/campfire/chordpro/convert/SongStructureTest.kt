@@ -33,4 +33,26 @@ class SongStructureTest {
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
     }
+
+    @Test
+    fun `verses numbered at the start of their first line are verse sections under their numbers`() {
+        val sheet = """
+            |Am           C
+            |1. Hello my old friend
+            |G
+            |Sing it again
+            |
+            |Am           C
+            |2. The second verse is here
+            |G
+            |Sing it again
+            |
+            |In 1. place a line is sung
+        """.trimMargin()
+        assertEquals(
+            "{start_of_verse: 1}\n[Am]Hello my [C]old friend\n[G]Sing it again\n{end_of_verse}\n\n" +
+                "{start_of_verse: 2}\n[Am]The second [C]verse is here\n[G]Sing it again\n{end_of_verse}\n\nIn 1. place a line is sung\n",
+            ChordSheetConverter.convert(ChordSheet.ofPlainText(sheet), guessesTitle = false).single(),
+        )
+    }
 }

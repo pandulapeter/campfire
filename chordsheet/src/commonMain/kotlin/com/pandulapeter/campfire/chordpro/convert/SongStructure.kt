@@ -84,7 +84,11 @@ internal object SongStructure {
             breaks = kinds.map { it == LineKind.BLANK || it == LineKind.SECTION || it == LineKind.COMMENT || it == LineKind.TAB || it == LineKind.GRID },
             rows = kinds.map { it == LineKind.CHORD },
         )
-        fun openUnlabelled(at: Int) { if (at in unlabelled) openChorus() }
+        // A verse's number names its stanza alone, so a chorus set apart by its look ends it.
+        fun openUnlabelled(at: Int) { if (at in unlabelled) { closeNumbered(); openChorus() } }
+        val verseNumbers = ChordSheetVerseNumbers.of(lines, kinds)
+        val unopenedNumbers = verseNumbers.toMutableMap()
+        fun lyricAt(at: Int) = if (at in verseNumbers) ChordSheetVerseNumbers.withoutNumber(lines[at]) else lines[at]
         var index = 0
         while (index < lines.size) {
             changes[index]?.let { pendingChanges += it }
@@ -101,6 +105,10 @@ internal object SongStructure {
                 pendingGridShape = headingLabel(line.text)
                 index++
                 continue
+            }
+            (unopenedNumbers.remove(index) ?: unopenedNumbers.takeIf { kinds[index] == LineKind.CHORD }?.remove(index + 1))?.let { number ->
+                closeSection()
+                openNumbered(number)
             }
             when (kinds[index]) {
                 LineKind.COMMENT -> {
@@ -142,18 +150,18 @@ internal object SongStructure {
                 LineKind.TAB -> { if (!isInTab) openTab(label = null); add(Line.Raw(line.text)) }
                 LineKind.CHORD -> {
                     openUnlabelled(index + 1)
-                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
+                    if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lyricAt(index + 1))) {
                         follow(index + 1)
-                        addLyric(merge(line, lines[index + 1], convertParentheses), continues(index + 1))
+                        addLyric(merge(line, lyricAt(index + 1), convertParentheses), continues(index + 1))
                         index++
                     } else add(Line.Chords(bracketed(candidates[index]!!, chordRow(line))))
                 }
                 LineKind.LYRIC -> {
                     openUnlabelled(index)
                     follow(index)
-                    addLyric(inline(line, convertParentheses), continues(index))
+                    addLyric(inline(lyricAt(index), convertParentheses), continues(index))
                 }
-                LineKind.BLANK -> add(Line.Blank)
+                LineKind.BLANK -> { closeNumbered(); add(Line.Blank) }
                 LineKind.METADATA -> Unit
             }
             index++
@@ -234,6 +242,16 @@ internal object SongStructure {
             add(closed)
         }
 
+        /** Whether the open section is a verse its number opened, which names its stanza alone. */
+        private var isNumbered = false
+
+        fun openNumbered(number: String) {
+            open("verse", number)
+            isNumbered = true
+        }
+
+        fun closeNumbered() { if (isNumbered) closeSection() }
+
         fun open(type: String, label: String) {
             openSection(type, label)
             sections.opened()
@@ -273,6 +291,7 @@ internal object SongStructure {
             val open = section ?: return
             sections.closed(open.type, isReturn)
             section = null
+            isNumbered = false
             parts += Part.Section(open.type, open.label, open.lines.toList())
         }
 
