@@ -63,6 +63,7 @@ internal object LineKinds {
         Rule(::singleChordUnderHeading) {
             it.previous == LineKind.SECTION && (it.next == null || it.next == LineKind.BLANK || it.next == LineKind.SECTION)
         },
+        Rule(::singleChordsAfterRow) { it.next == null || it.next == LineKind.BLANK || it.next == LineKind.SECTION || it.next == LineKind.CHORD },
         Rule(::chordOverLyric) { it.next == LineKind.LYRIC && it.nextAtFirst != LineKind.CHORD },
     )
 
@@ -175,6 +176,24 @@ internal object LineKinds {
     private fun singleChordUnderHeading(context: Context, index: Int): Evidence? {
         val chords = context.candidates[index]?.filter { rowChord(it.text) } ?: return null
         return if (chords.size == 1 && chords.all { it.text.first().isUpperCase() }) Evidence(LineKind.CHORD, isStrong = false) else null
+    }
+
+    /**
+     * A row of one chord in a run of them right under a row of several chords or a heading (or under runs of them each a
+     * blank line apart that start so), and ending at a blank line, a heading, or the song's end: a progression whose last
+     * bars, or every bar, stand on lines of their own (`Am Dm` over `Dm`), with no lyric among them for a chord to be set
+     * over. Weak evidence, kept where the run goes on below.
+     */
+    private fun singleChordsAfterRow(context: Context, index: Int): Evidence? {
+        fun isSingle(at: Int) = context.candidates.getOrNull(at)?.filter { rowChord(it.text) }?.let { it.size == 1 && it.single().text.first().isUpperCase() } == true
+        fun runStart(at: Int) = (at downTo 0).takeWhile(::isSingle).last()
+        if (!isSingle(index)) return null
+        val last = (index..context.lines.lastIndex).takeWhile(::isSingle).last()
+        var above = runStart(index) - 1
+        while (above > 0 && context.lines[above].text.isBlank() && isSingle(above - 1)) above = runStart(above - 1) - 1
+        val opens = above >= 0 && ((context.candidates[above]?.count { rowChord(it.text) } ?: 0) > 1 || context.features[above].heading != null || context.features[above].isLabel)
+        val closes = context.lines.getOrNull(last + 1)?.let { it.text.isBlank() || context.features[last + 1].heading != null } ?: true
+        return if (opens && closes) Evidence(LineKind.CHORD, isStrong = false) else null
     }
 
     /**

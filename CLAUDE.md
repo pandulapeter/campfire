@@ -209,8 +209,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - An `abc` block is drawn as staff notation (abc2svg, bundled, run locally), on screen and in the PDF, its text until
   the rendering arrives or where it fails, in the song's transposition and chord notation: `abc`, `ui/notation`,
   `ui/songView`, `ui/print`.
-- Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input):
-  `chordpro`.
+- Files use standard chord notation; German, Latin, Nashville, and Roman are display (German and Latin also input, and
+  Roman for an import that names its key): `chordpro`, `chordsheet`.
 - The editor always opens over its song's details screen (a pasted or shared new song's once saved): `ui/navigation`.
 - Nothing from outside is written before Import, and every song can be read first: a batch that is one song opens its
   preview, anything more the review, whose song rows open the same preview; existing files are skipped, collisions

@@ -47,7 +47,8 @@ internal object ChordSheetMarginLabels {
             if (label == null) { result += line; return@forEachIndexed }
             val heading = PlacedLine(line.line.copy(spans = label.spans, isHeading = true), isMarginLabel = true)
             val previous = result.lastOrNull()
-            if (previous != null && !previous.isMarginLabel && ChordSheetConverter.isChordRow(text(previous.line.spans))) result.add(result.lastIndex, heading)
+            val above = previous?.line?.spans?.let(::text)
+            if (above != null && !previous.isMarginLabel && (ChordSheetConverter.isChordRow(above) || ChordSheetRomanChords.isNumeralLine(above))) result.add(result.lastIndex, heading)
             else result += heading
             result += line.copy(line = line.line.copy(spans = label.rest))
         }
@@ -89,8 +90,9 @@ internal object ChordSheetMarginLabels {
         val text = text(spans)
         if (text.length > MAX_LENGTH || text.split(' ').size > 2 || text.none { it.isLetterOrDigit() }) return null
         // A label may be a chord's name (C for the chorus), but a chord row whose first chord stands in the margin, over
-        // a lyric's pickup, is chords all along the line.
-        if (ChordSheetConverter.isChordLine(text) && ChordSheetConverter.isChordLine(text(rest))) return null
+        // a lyric's pickup, is chords all along the line, in letters or in numerals.
+        fun isChords(words: String) = ChordSheetConverter.isChordLine(words) || ChordSheetRomanChords.isNumeralLine(words)
+        if (isChords(text) && isChords(text(rest))) return null
         return Label(spans, rest, ink.first().value.start, lastOfLabel.value.end, ink[boundary + 1].value.start, lastOfLabel.value.size)
     }
 }

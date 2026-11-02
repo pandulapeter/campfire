@@ -274,6 +274,71 @@ class ChordProNashvilleTest {
         assertNull(ChordProNotation.romanNumeral("C", "unknown"))
     }
 
+    private fun chord(numeral: String, key: String = "C", isOnKeyScale: Boolean = false, isCaseQuality: Boolean = true) =
+        ChordProNotation.romanNumeralChord(numeral, key, isOnKeyScale, isCaseQuality)
+
+    @Test
+    fun `a numeral is read back into the chord it names in a key, spelled as the key spells`() {
+        listOf("C", "Dm", "G7", "Bb", "D7", "G/B", "Bdim", "Bm7b5", "C+", "Fmaj7", "Ebsus4", "(G)").forEach { name ->
+            assertEquals(name, chord(ChordProNotation.romanNumeral(name, "C")!!), name)
+        }
+        assertEquals("Eb", chord("bVII", "F"))
+        assertEquals("F#m", chord("vi", "A"))
+    }
+
+    @Test
+    fun `a numeral's case is its quality where the sheet mixes cases`() {
+        assertEquals(listOf("C", "F", "G", "Am", "Dm", "Em", "Bdim"), listOf("I", "IV", "V", "vi", "ii", "iii", "vii\u00b0").map { chord(it) })
+    }
+
+    @Test
+    fun `numerals in capitals throughout name their qualities in words`() {
+        assertEquals(
+            listOf("C", "F", "G", "Am", "Dm7", "Bdim", "Am", "Dm7"),
+            listOf("I", "IV", "V", "VIm", "IIm7", "VIIdim", "VI-", "II-7").map { chord(it, isCaseQuality = false) },
+        )
+    }
+
+    @Test
+    fun `numerals in small letters throughout name their qualities in words, and a written minor is minor once`() {
+        assertEquals(listOf("C", "F", "G", "Am", "Dm7"), listOf("i", "iv", "v", "vim", "iim7").map { chord(it, isCaseQuality = false) })
+        assertEquals(listOf("Am", "Dm7", "Am"), listOf("vim", "iim7", "vi-").map { chord(it) })
+    }
+
+    @Test
+    fun `a flat or a sharp before a numeral moves its step`() {
+        assertEquals(listOf("F", "F", "C#m", "C#"), listOf("bVII", "\u266dVII", "#iv", "\u266fIV").map { chord(it, "G") })
+        assertEquals("Bbm7", chord("\u266dvii7"))
+    }
+
+    @Test
+    fun `diminished, half-diminished, and augmented numerals are read by their signs and words`() {
+        assertEquals(listOf("Bdim", "Bdim", "Bm7b5", "Bm7b5", "E+", "Eaug"), listOf("vii\u00b0", "viio", "vii\u00f87", "vii\u2300", "III+", "IIIaug").map { chord(it) })
+    }
+
+    @Test
+    fun `an extension is kept, a numeral after a dominant's slash is the step it is applied to, and any other the bass`() {
+        assertEquals(listOf("G7", "Fmaj7", "Dm7", "D7", "E", "C/E", "F/G", "G/B"), listOf("V7", "IVmaj7", "ii7", "V7/V", "V/vi", "I/iii", "IV/V", "V/7").map { chord(it) })
+        assertEquals("C#dim", chord("vii\u00b0/V", "G"))
+    }
+
+    @Test
+    fun `a minor key's third, sixth and seventh are the minor scale's only where the sheet counts on the key's scale`() {
+        assertEquals("F", chord("III", "Dm", isOnKeyScale = true))
+        assertEquals("Bb", chord("VI", "Dm", isOnKeyScale = true))
+        assertEquals("C", chord("VII", "D minor", isOnKeyScale = true))
+        assertEquals("A7", chord("V7", "Dm", isOnKeyScale = true))
+        assertEquals("Dm#5", chord("i#5", "Dm", isOnKeyScale = true))
+        assertEquals("C#", chord("III", "Am"))
+        assertEquals("E", chord("III", "C", isOnKeyScale = true))
+    }
+
+    @Test
+    fun `no chord is read from a word, a number, or against a key that is no note`() {
+        listOf("Verse", "Iv", "IIII", "5", "b7", "x2", "Ix", "mix", "I.").forEach { assertNull(chord(it), it) }
+        assertNull(chord("IV", "unknown"))
+    }
+
     @Test
     fun `numbers in a comment are coloured as chords only in a numbering`() {
         assertEquals(1, ChordProHighlighter.chordsOfShownText("Intro: [5] [Verse]", ChordNotation.NASHVILLE).size)

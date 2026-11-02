@@ -414,6 +414,12 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `single chords on lines of their own under a chord row or a heading are its last bars, not a lyric`() {
+        assertEquals("[Am] [Dm]\n[Dm]\n\n[C]Hello\n", convert("Am  Dm\nDm\n\nC\nHello"))
+        assertEquals("{start_of_verse: Verse 1}\n[Dm]\n[Dm]\n\n[Dm]\n[Dm]\n{end_of_verse}\n", convert("[Verse 1]\nDm\nDm\n\nDm\nDm"))
+    }
+
+    @Test
     fun `a chord row is set over the lyric under it, never over a chord row taken for a lyric`() {
         assertEquals("[Am]Hello [C]world\n[G]more words\n", convert("Am    C\nHello world\nG\nmore words"))
         assertEquals("[Am]Hello [C]world\nG\n\nmore\n", convert("Am    C\nHello world\nG\n\nmore"))

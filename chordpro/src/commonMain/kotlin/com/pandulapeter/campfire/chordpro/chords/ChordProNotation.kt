@@ -92,6 +92,23 @@ public object ChordProNotation {
     }
 
     /**
+     * The chord the Roman numeral [numeral] names in [key], in the standard notation and spelled as the key spells its
+     * chords (`VI` in `Dm` is `Bb`): the inverse of [romanNumeral], which is how an import reads a sheet written in
+     * numerals into a file, which holds letters. Every way a sheet writes a numeral is read, as
+     * [ChordProNashville.chordOfNumeral] lists them; [isCaseQuality] is whether a small numeral is minor, which only the
+     * whole sheet can say (one written all in small letters or all in capitals says its qualities in words). A step is
+     * counted on the major scale from the key's note, as [romanNumeral] counts it, except where [isOnKeyScale] and the
+     * key is minor: then `III`, `VI` and `VII` are the minor scale's, as classical analysis writes them. A bare `I` is
+     * read as one. Null where [numeral] is no numeral naming a chord, or [key] starts with no note.
+     */
+    public fun romanNumeralChord(numeral: String, key: String, isOnKeyScale: Boolean, isCaseQuality: Boolean): String? {
+        val tonic = ChordProNashville.tonicOf(key) ?: return null
+        val isOnMinorScale = isOnKeyScale && ChordProTransposer.isMinorKey(key) == true
+        val chord = ChordProNashville.chordOfNumeral(numeral, tonic, isOnMinorScale, isCaseQuality) ?: return null
+        return ChordProTransposer.transposeChord(chord, semitones = 0, preferFlats = ChordProTransposer.prefersFlats(key) ?: false)
+    }
+
+    /**
      * One chord name as a screen or a page shows it, in whatever notation it is already written in: every sharp and
      * flat as the musical sign `♯` or `♭` rather than the `#` and `b` a file holds, so that `Bbm7` reads `B♭m7` and a
      * step `b7` reads `♭7`. Only for showing: a field, a file, the clipboard and an export keep the ASCII signs, which

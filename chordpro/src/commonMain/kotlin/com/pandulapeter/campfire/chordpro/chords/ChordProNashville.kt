@@ -92,6 +92,86 @@ internal object ChordProNashville {
     }
 
     /**
+     * The chord the numeral [word] names on the key whose note is [tonic], the inverse of [number] in numerals, read in
+     * every way a sheet writes one. A step is counted on the major scale from [tonic], as [number] counts it, unless
+     * [isOnMinorScale]: then `III`, `VI` and `VII` are the minor scale's, as classical analysis writes a minor key. Its
+     * root is spelled with sharps; the caller respells it for the key.
+     *
+     * - Where [isCaseQuality], a small numeral is minor and a capital major (`vi`, `IV`); otherwise the case says nothing
+     *   and only a quality written after the numeral does (`VIm`, `vim`). A minor written after a small numeral is minor
+     *   once, never twice, and a `-` right after the numeral is a minor (`II-7`).
+     * - A `°` or an `o` after the numeral is diminished, an `ø` or a `⌀` half-diminished, a `+` augmented; a quality,
+     *   an extension, or an alteration after it is kept (`IVmaj7`, `VIIdim`).
+     * - After a `/`, an Arabic step (`V/7`) or a numeral (`I/iii`) is the bass, the root of that step whatever its case;
+     *   a numeral after a dominant (`V7/V`, `V/vi`, `vii°/V`) is the step it is applied to, the chord counted on the major
+     *   scale from that step's root.
+     *
+     * Null where [word] is no numeral, or names no chord.
+     */
+    fun chordOfNumeral(word: String, tonic: Int, isOnMinorScale: Boolean, isCaseQuality: Boolean): String? {
+        val isParenthesized = word.length > 2 && word.first() == '(' && word.last() == ')'
+        val name = if (isParenthesized) word.substring(1, word.length - 1) else word
+        val slash = name.lastIndexOf('/')
+        val after = if (slash >= 0) name.substring(slash + 1) else null
+        val isArabicBass = slash >= 0 && arabicStepEnd(name, slash + 1) == name.length
+        val target = if (after == null || isArabicBass) null else (stepOf(after, isOnMinorScale) ?: return null)
+        val chord = if (after == null) name else name.substring(0, slash)
+        val start = if (chord.firstOrNull()?.let { it in ACCIDENTALS } == true) 1 else 0
+        val numeral = numeralAt(chord, start) ?: return null
+        val isSmall = numeral == numeral.lowercase()
+        val end = start + numeral.length
+        val sign = chord.getOrNull(end)?.takeIf { it in "\u00b0\u00f8\u2300+" || it == 'o' && chord.getOrNull(end + 1)?.isLetter() != true }
+        val written = chord.substring(if (sign == null) end else end + 1)
+        val isMinor = written.startsWith('-') || written.startsWith('m') && !written.startsWith("ma")
+        val quality = when (sign) {
+            null -> if (isCaseQuality && isSmall && !isMinor) "m" else ""
+            '+' -> AUGMENTED
+            '\u00b0', 'o' -> "dim"
+            else -> "m7b5"
+        }
+        val rest = when {
+            sign == '\u00f8' || sign == '\u2300' -> written.removePrefix("7")
+            written.startsWith('-') -> "m" + written.substring(1)
+            else -> written
+        }
+        val isDominant = numeral.uppercase() == "V" || numeral.uppercase() == "VII" && (quality == "dim" || quality == "m7b5" || rest.startsWith("dim"))
+        val isApplied = target != null && isDominant
+        val root = (if (isApplied) tonic + target else tonic) + stepOf(chord.substring(0, end), isOnMinorScale && !isApplied)!!
+        val bass = when {
+            isArabicBass -> "/" + noteOn(tonic + arabicStep(after!!))
+            target != null && !isApplied -> "/" + noteOn(tonic + target)
+            else -> ""
+        }
+        val result = noteOn(root) + quality + rest + bass
+        if (!ChordProChordNames.isChordName(result)) return null
+        return if (isParenthesized) "($result)" else result
+    }
+
+    /** The numeral at [start] of [chord], in capitals or in small letters throughout (`IV`, `iv`), or null. */
+    private fun numeralAt(chord: String, start: Int) =
+        romanNumerals.firstOrNull { chord.startsWith(it, start) } ?: romanNumerals.map { it.lowercase() }.firstOrNull { chord.startsWith(it, start) }
+
+    /** The semitones above the tonic of a numeral with nothing after it but its sign (`bVII`, `iii`), or null. */
+    private fun stepOf(text: String, isOnMinorScale: Boolean): Int? {
+        val start = if (text.firstOrNull()?.let { it in ACCIDENTALS } == true) 1 else 0
+        val numeral = numeralAt(text, start)?.takeIf { start + it.length == text.length }?.uppercase() ?: return null
+        val lowered = if (isOnMinorScale && numeral in minorScaleLowered) 1 else 0
+        return romanDegrees.indexOf(numeral) + (if (start == 1) accidentalOf(text) else 0) - lowered
+    }
+
+    /** The semitones a step written with [text] at its start is moved by: a flat down, a sharp up. */
+    private fun accidentalOf(text: String) = when (text.first()) {
+        'b', '\u266d' -> -1
+        '#', '\u266f' -> 1
+        else -> 0
+    }
+
+    /** The semitones above the tonic of an Arabic step [arabicStepEnd] has read, `b7` or `5`. */
+    private fun arabicStep(step: String) = romanDegrees.indexOf(romanSteps[step.last().digitToInt() - 1]) + accidentalOf(step)
+
+    private fun noteOn(pitchClass: Int) = sharpNotes[pitchClass.mod(NOTE_COUNT)]
+
+    /**
      * [rest], what follows a step in numbers, with its extension in parentheses where it starts with a digit: written
      * straight after the step, `57` and `b77sus4` would read as one number. A group the file already wrote (`7(b9)`) is
      * left after the parentheses rather than put inside them.
@@ -167,4 +247,6 @@ internal object ChordProNashville {
     private val romanDegrees = listOf("I", "bII", "II", "bIII", "III", "IV", "#IV", "V", "bVI", "VI", "bVII", "VII")
     private val romanSteps = listOf("I", "II", "III", "IV", "V", "VI", "VII")
     private val romanNumerals = listOf("VII", "VI", "V", "IV", "III", "II", "I")
+    private val minorScaleLowered = setOf("III", "VI", "VII")
+    private val sharpNotes = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 }

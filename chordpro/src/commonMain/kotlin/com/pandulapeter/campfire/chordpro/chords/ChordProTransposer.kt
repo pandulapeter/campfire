@@ -165,6 +165,12 @@ public object ChordProTransposer {
         return key?.transposedBy(semitones)?.prefersFlats ?: isWrittenInFlats(names)
     }
 
+    /** Whether [key] is spelled with flats, as [transposeChord] is told to spell a chord in it; null where it is no key. */
+    internal fun prefersFlats(key: String): Boolean? = keyOf(key)?.prefersFlats
+
+    /** Whether [key] is a minor one, `Dm` or `D minor`; null where it is no key. */
+    internal fun isMinorKey(key: String): Boolean? = keyOf(key)?.isMinor
+
     private fun keyOf(name: String): Key? {
         val root = ChordProChordNames.notes(name.trim()).first()
         val noteIndex = noteIndices[root.getOrNull(0)] ?: return null

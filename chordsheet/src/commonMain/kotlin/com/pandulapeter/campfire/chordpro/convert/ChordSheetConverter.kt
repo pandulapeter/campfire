@@ -66,7 +66,7 @@ public object ChordSheetConverter {
                 if (place !in cuts.dropped) groups.last() += cuts.numbers[place]?.let { length -> withoutNumber(line, length) } ?: line
             }
         }
-        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(it))), guessesTitle, profile)) }.filter { it.isNotBlank() }
+        return groups.map { normalize(convertSong(expandLabels(withoutInjections(singleSpaced(ChordSheetRomanChords.named(it)))), guessesTitle, profile)) }.filter { it.isNotBlank() }
     }
 
     /**
