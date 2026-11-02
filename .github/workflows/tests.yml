@@ -73,6 +73,15 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin "$BASE"
           python3 .github/scripts/check_sizes.py --base "$BASE"
+      # Every file a pull request or a push changes in :presentation imports only its own package layer and lower ones
+      # (presentation/CLAUDE.md); the pre-commit hook judges every commit the same way.
+      - name: Check the presentation layers' imports
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE"
+          python3 .github/scripts/check_layers.py --base "$BASE"
       # The unqualified tasks run in every module that has them, so a module that gains tests is covered without a
       # change here. --continue reports the failures of every module rather than only the first, and a ktlint violation
       # (spotlessCheck) together with them. The UI tests drive the whole desktop app offscreen from the screenshot tool's

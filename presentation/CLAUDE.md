@@ -17,6 +17,24 @@ sources.
   handed over ("open with", share), and drops (`isDropAvailable`); Android's also shared texts, iOS's the share
   extension's `InboxShare`s.
 
+## Package layers
+
+A file imports its own layer and lower ones only; `.github/scripts/check_layers.py` holds the table and fails a commit
+that breaks it (main source sets only, tests import from anywhere). A package belongs to the longest prefix listed;
+every other `ui.*` package is app.
+
+| Layer | Packages |
+|---|---|
+| foundation | the root package itself (`Module.kt`, the generated version), `localization`, `mapper`, `resources`, `ui.theme`, `ui.platform`, `ui.search` |
+| components | `ui.components`, `ui.settingsPage` |
+| app | everything else under `ui.`: `state`, `navigation`, the `ui.dialogs` package itself, `ui.dialogs.sheet`, `metronome`, `chords`, `songView`, … |
+| surfaces | `ui.screens`, `ui.chrome`, every other `ui.dialogs.<sub>`, the `ui` package itself |
+
+A file under `ui.screens.<a>` imports nothing of another screen's package (`ui.screens` itself, which holds what several
+screens share, is allowed). A declaration a lower layer needs moves down, or is passed in. Only a destination's entry
+file (`*Screen.kt` directly in `ui.screens.<a>`, or `ExportHost.kt`) is to import `ui.CampfireViewModel`; the script
+checks that once `VIEW_MODEL_RULE` is on, until then judging that import by nothing.
+
 ## Text and document imports
 
 - A pasted, dropped, or shared text goes down the import as a `.txt` (`isNewSongFromText`). One song the library does

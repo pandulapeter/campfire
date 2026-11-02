@@ -289,7 +289,7 @@ The importer is scored against a private corpus of other programs' documents (`I
 - `org.gradle.workers.max=4` because the shared Kotlin daemon ran out of memory; lower it rather than turning parallel
   off.
 - **Run `git config core.hooksPath .githooks` once per clone**: the pre-commit hook runs the `.github/scripts` checks
-  (license headers, sizes, store listings, `CLAUDE.md` names, regexes), refuses deleting `.run/iOS.run.xml` (which the
+  (license headers, sizes, `:presentation`'s package layers, store listings, `CLAUDE.md` names, regexes), refuses deleting `.run/iOS.run.xml` (which the
   IDE drops now and then), and, when more than Markdown is staged, `spotlessCheck` and `desktopTest`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 

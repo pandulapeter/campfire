@@ -118,7 +118,8 @@ wrong or undo it".
   `ui.metronome`, `ui.playing`, `ui.search`, `ui.songLayout`, …) rather than being imported out of the
   screen that first used it. A full screen lives under `ui.screens` even if it is shown over the app
   (`ui.screens.export`), and `ui.dialogs` holds dialog and sheet content. Tests sit in the package of the
-  code they test.
+  code they test. The packages form four layers that import only downwards (`presentation/CLAUDE.md`), which
+  `.github/scripts/check_layers.py` checks after every edit, before every commit, and in CI.
 - **No god objects.** When a class gains a responsibility unrelated to the ones it has, give that
   responsibility a collaborator of its own instead of another dozen members. A facade such as
   `CampfireViewModel` builds its holders and exposes them as `internal val`s, which screens call directly; logic it

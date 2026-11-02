@@ -8,6 +8,11 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/check_sizes.py\" --hook",
             "statusMessage": "Checking file and function sizes"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.github/scripts/check_layers.py\" --hook",
+            "statusMessage": "Checking the presentation layers' imports"
           }
         ]
       },
