@@ -26,13 +26,13 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   (`runShiftAtLineEnd`, as the PDF's `atLineEnd`), so a run that fills or wraps barely moves and its slots keep their
   columns. Only the drawing moves; sizes and intrinsics are unchanged.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces; a
-  padded line may break only between two chords at a word boundary (no chord pulled back over the one before), and
-  never before a chord row's mark (`x4`, `|`), which would lose what it repeats or ends.
+  padded line may break only between two chords at a word boundary (no chord pulled back over the one before), and never
+  before a chord row's mark (`x4`, `|`), which would lose what it repeats or ends.
 - Markup is drawn as spans (a comment's after the transposition); padding moves the ranges with the words and stays
   unformatted.
-- Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), a tab
-  block's its lines; an engraved tune's is its title, its chords as the page names them, and its words, never its ABC
-  source, led by the heading only where the tune names itself nothing.
+- Because chords are drawn, a chorded line's content description is its ChordPro form (`[Am]There is a…`), a tab block's
+  its lines; an engraved tune's is its title, its chords as the page names them, and its words, never its ABC source,
+  led by the heading only where the tune names itself nothing.
 - Each run of tab lines is one block, since its columns only line up measured together; so is each verbatim run, always
   preformatted, since a tied ABC line full of dashes would pass for a staff.
 - An `abc` run is engraved once its rendering arrives (`ui/notation`), the text until then or if it fails. `SongLyrics`
@@ -54,20 +54,13 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 
 ### The Scales section
 
-- After the Chords section (else the metadata section, else first), while chords and Scale suggestions are on; kept in
-  read only mode (a scale sheet writes nothing); none for a songbook or a song playing over `MAX_PLAYED_CHORDS` chords.
-  Folded per song under `SCALES_FOLD_KEY`.
+- While chords and Scale suggestions are on; kept in read only mode (a scale sheet writes nothing); none for a songbook
+  or a song playing over `MAX_PLAYED_CHORDS` chords. Folded per song under `SCALES_FOLD_KEY`.
 - Cut only between rows of chips, never between the lines one row wraps into, so a title heads all its chips; a chunk
   places only its own rows, since which line a chip lands on depends on the width being tried.
-- Groups (`songScaleGroupsOf`, tested): the home names nothing (most of the song is played over it), a moment names its
-  sections. A chorded section no row holds ends the section as a row of its own, named by its headings, with no chips
-  and an "unheld" note; the home is then named by its sections too. A song with no home names each group by its
-  sections' headings: a kind held whole said once ("Verse"), split kinds by number ("Verse 3"), headless parts as the
-  rest of the song; a heading another group also has is numbered by occurrence ("Verse (3)"), several headless groups
-  by their first words.
-- At most four chips a group, after the first two only common scales and hexatonics (a rare home scale leads, a vamp
-  keeps its chord's two textbook scales, a rare fourth never follows; the chord sheet keeps the full list), one chip a
-  chord, titled "Over E7" ("Over F♯7 and F♯" where one scale serves several).
+- How groups are named and which chips they keep (at most four a group, rarities only as the home scale) is pinned by
+  `SongScaleGroupsTest`; the home names nothing, since most of the song is played over it, and a chorded part no scale
+  holds is still named, with no chips. The chord sheet keeps the full list.
 - The PDF prints it as text under the diagrams; its export option starts on, then as last left.
 
 ### Folding (keys in `model/`)
@@ -87,8 +80,8 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - A song scrolling by itself is an unmeasured single column cut a chunk a line, so its rows name every line
   (`screens/songDetails/autoScroll`); a staff system plays two bars a line, a tune's title none.
 - The preview and a songbook (over `MAX_CUT_SECTION_COUNT` sections) keep a plain unmeasured single column, neither cut
-  nor narrowed: the search would rerun every pinch frame, and typing would move pieces. They show tempo and time
-  changes as lines.
+  nor narrowed: the search would rerun every pinch frame, and typing would move pieces. They show tempo and time changes
+  as lines.
 - **Every row shorter than the screen is followed by space down to its bottom**, so a rest shows one row; only where the
   song scrolls anyway, never in the preview.
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece; page dividers are drawn
