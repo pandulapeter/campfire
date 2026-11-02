@@ -976,7 +976,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `an artist of Campfire's own export longer than the title is still its artist`() {
+    fun `an artist under the title longer than the title is still its artist`() {
         fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
             text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
         )
@@ -989,90 +989,9 @@ class ChordSheetConverterTest {
                 glyphs("Headed down south to the land of the pines", 12.0),
             ),
         )
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue(result.startsWith("{title: Wagon Wheel}\n{key: A}\n{tempo: 145}\n{artist: Old Crow Medicine Show}\n"), result)
         assertFalse("\nOld Crow" in result, result)
-    }
-
-    @Test
-    fun `a row of Campfire's own export continuing a word the column cut is joined back with no space`() {
-        // Two word joiners open the text of a row that continues a word, ahead of its first glyph.
-        fun glyphs(text: String, size: Double, bold: Boolean = false, isHardCut: Boolean = false) = ChordSheet.Line(
-            text.mapIndexed { index, character ->
-                span((if (index == 0 && isHardCut) "\u2060\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
-            },
-        )
-        val page = ChordSheet.Page(
-            listOf(
-                glyphs("\u00c1rv\u00edzt\u0171r\u0151 t\u00fc", 19.0, bold = true),
-                glyphs("k\u00f6rf\u00far\u00f3g\u00e9p", 19.0, bold = true, isHardCut = true),
-                glyphs("Someone", 12.0),
-                glyphs("Tonalit\u00e0: A   Trasposizio", 11.0),
-                glyphs("ne: +2", 11.0, isHardCut = true),
-                glyphs("Verse", 11.0, bold = true),
-                glyphs("Hello and i", 12.0),
-                glyphs("ncomprehensible", 12.0, isHardCut = true),
-            ),
-        )
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
-        assertTrue(result.startsWith("{title: \u00c1rv\u00edzt\u0171r\u0151 t\u00fck\u00f6rf\u00far\u00f3g\u00e9p}\n"), result)
-        assertFalse("Trasposizio" in result || "ne: +2" in result, result)
-        assertTrue("\nHello and incomprehensible\n" in result, result)
-    }
-
-    @Test
-    fun `the chord rows of Campfire's own export a line's chords overflow onto are joined back to it`() {
-        fun glyphs(text: String, size: Double, bold: Boolean = false, isContinuation: Boolean = false) = ChordSheet.Line(
-            text.mapIndexed { index, character ->
-                span((if (index == 0 && isContinuation) "\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
-            },
-        )
-        fun sheet(vararg lines: ChordSheet.Line) = ChordSheetConverter.convert(
-            ChordSheet(listOf(ChordSheet.Page(listOf(glyphs("A song", 19.0, bold = true), glyphs("Verse", 11.0, bold = true)) + lines)), isCampfireExport = true),
-        ).single()
-        val stacked = sheet(
-            glyphs("Cmaj7(\u266f11)", 12.0, bold = true),
-            glyphs("Bbmaj9/D Gm7\u266d5", 12.0, bold = true, isContinuation = true),
-            glyphs("Am7add11", 12.0, bold = true, isContinuation = true),
-            glyphs("Hello world", 12.0),
-        )
-        assertTrue("\n[Cmaj7(#11)] [Bbmaj9/D] [Gm7b5] [Am7add11]\nHello world\n" in stacked, stacked)
-        val wrapped = sheet(glyphs("C", 12.0, bold = true), glyphs("Hello world", 12.0), glyphs("a b", 12.0, isContinuation = true))
-        assertTrue("\n[C]Hello world a b\n" in wrapped, wrapped)
-    }
-
-    @Test
-    fun `a key Campfire's own export prints further down is written as the key change where it stands`() {
-        fun glyphs(text: String, size: Double, bold: Boolean = false, isContinuation: Boolean = false) = ChordSheet.Line(
-            text.mapIndexed { index, character ->
-                span((if (index == 0 && isContinuation) "\u2060" else "") + character, index * size * 0.6, (index + 1) * size * 0.6, size, bold)
-            },
-        )
-        fun sheet(vararg lines: ChordSheet.Line) = ChordSheetConverter.convert(
-            ChordSheet(listOf(ChordSheet.Page(listOf(glyphs("Song", 19.0, bold = true), glyphs("Someone", 12.0)) + lines)), isCampfireExport = true),
-        ).single()
-        fun sounding(change: String) = sheet(
-            glyphs("Key: A   Capo: 5 (chords as they sound)", 11.0), glyphs("Verse 1", 11.0, bold = true),
-            glyphs("A     E", 12.0, bold = true), glyphs("Hello world", 12.0), glyphs(change, 11.0), glyphs("Chorus", 11.0, bold = true),
-            glyphs("F\u266f        C\u266f", 12.0, bold = true), glyphs("After the change", 12.0),
-        )
-        val changed = sounding("Key: F\u266f")
-        val header = changed.substringBefore("{start_of_verse")
-        assertEquals(listOf("{key: E}"), Regex("\\{key: [^}]*\\}").findAll(header).map { it.value }.toList(), changed)
-        assertTrue(Regex("\\{key: Db\\}\\n+\\{start_of_chorus").containsMatchIn(changed), changed)
-        assertTrue("[Db]After the [Ab]change" in changed, changed)
-        val unchanged = sounding("Key: A")
-        assertEquals(1, Regex("\\{key:").findAll(unchanged).count(), unchanged)
-        val verse = (1..20).flatMap { listOf(glyphs("C", 12.0, bold = true), glyphs("Line $it", 12.0)) }.toTypedArray()
-        val chorus = arrayOf(glyphs("Chorus", 11.0, bold = true), glyphs("A\u266d", 12.0, bold = true), glyphs("Sing", 12.0))
-        for (change in listOf(arrayOf(glyphs("Key: A\u266d", 11.0)), arrayOf(glyphs("Key:", 11.0), glyphs("A\u266d", 11.0, isContinuation = true)))) {
-            val late = sheet(glyphs("Key: C", 11.0), glyphs("Verse 1", 11.0, bold = true), *verse, *change, *chorus)
-            assertTrue(Regex("\\{key: Ab\\}\\n+\\{start_of_chorus").containsMatchIn(late), late)
-            assertFalse("Key:" in late || "A\u266d" in late, late)
-        }
-        val plain = convert("Song\nSomeone\nKey: A\nKey: G\nVerse 1\nA     E\nHello world")
-        assertTrue("{key: A}" in plain.substringBefore("{start_of") && "{key: G}" in plain.substringBefore("{start_of"), plain)
-        assertFalse("{key" in plain.substringAfter("{start_of"), plain)
     }
 
     @Test
@@ -1090,14 +1009,14 @@ class ChordSheetConverterTest {
         val page = ChordSheet.Page(
             listOf(glyphs("A song", 19.0, bold = true), glyphs("Key: B\u266d   Capo: 3", 11.0), glyphs("Verse", 11.0, bold = true), glyphs("Words go here", 12.0)),
         )
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue(result.startsWith("{title: A song}\n{key: Bb}\n{capo: 3}\n"), result)
     }
 
     @Test
-    fun `a right-to-left row of Campfire's own export takes each chord at the character it hangs from`() {
+    fun `a right-to-left row of a PDF takes each chord at the character it hangs from`() {
         // "שלום world" laid out from the right: the Hebrew word at the right edge, the Latin one left of it, each glyph
-        // where the export drew it, the row's text in its reading order over them.
+        // where the PDF drew it, the row's text in its reading order over them.
         val glyphs = listOf(
             span("\u05e9", 92.0, 100.0), span("\u05dc", 86.0, 92.0), span("\u05d5", 83.0, 86.0), span("\u05dd", 77.0, 83.0),
             span(" ", 74.0, 77.0), span("w", 44.0, 52.0), span("o", 52.0, 58.0), span("r", 58.0, 62.0), span("l", 62.0, 65.0),
@@ -1106,7 +1025,7 @@ class ChordSheetConverterTest {
         val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 44.0, 100.0).copy(pieces = glyphs)))
         val chords = ChordSheet.Line(listOf(span("G", 44.0, 52.0, bold = true), span("C", 75.5, 83.0, bold = true), span("Am", 88.5, 100.0, bold = true)))
         val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue("[Am]\u05e9\u05dc\u05d5[C]\u05dd [G]world" in result, result)
     }
 
@@ -1133,7 +1052,7 @@ class ChordSheetConverterTest {
         val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 51.0, 100.0).copy(pieces = glyphs)))
         val chords = ChordSheet.Line(listOf(span("F#m", 74.0, 99.4, bold = true)))
         val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue("[F#m]\u05e9\u05dc\u05d5\u05dd \u05e2" in result, result)
     }
 
@@ -1146,7 +1065,7 @@ class ChordSheetConverterTest {
         val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 43.0, 104.0).copy(pieces = glyphs)))
         val chords = ChordSheet.Line(listOf(span("D", 92.0, 100.0, bold = true)))
         val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue("[D]2 2 tonight" in result, result)
     }
 
@@ -1160,7 +1079,7 @@ class ChordSheetConverterTest {
         val row = ChordSheet.Line(listOf(span(glyphs.joinToString("") { it.text }, 58.0, 100.0).copy(pieces = glyphs)))
         val chords = ChordSheet.Line(listOf(span("A7", 66.0, 84.0, bold = true), span("Dm", 88.0, 100.0, bold = true)))
         val page = ChordSheet.Page(listOf(ChordSheet.Line(listOf(span("\u05e9\u05d9\u05e8", 70.0, 100.0, size = 19.0, bold = true))), chords, row))
-        val result = ChordSheetConverter.convert(ChordSheet(listOf(page), isCampfireExport = true)).single()
+        val result = ChordSheetConverter.convert(ChordSheet(listOf(page))).single()
         assertTrue("[Dm]\u05d4\u05b7\u05de\u05bc\u05b7[A7]\u05e2\u05b2\u05dc\u05d5\u05b9\u05ea" in result, result)
     }
 

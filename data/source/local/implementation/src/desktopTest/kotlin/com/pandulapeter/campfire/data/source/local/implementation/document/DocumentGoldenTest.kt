@@ -81,9 +81,15 @@ class DocumentGoldenTest {
     @Test
     fun `campfire export of four filled columns of the largest text imports in reading order with its chords`() = runBlocking {
         val document = assertNotNull(DocumentLocalSourceImpl(Logger.Standard).extract(ImportedFile("campfire-columns-dense.pdf", resource("campfire-columns-dense.pdf"))))
-        // A line wrapped in the column is imported as the lines it was printed as, each with its chord over its syllable.
+        // A line the column wrapped onto five rows comes back as two lines, each chord over its syllable; where a column or
+        // a page breaks the line, the rows on either side of the break stay apart.
+        val broken = mapOf(
+            4 to "\nsinging all the [F]words\nof a long line together", 23 to "\nsinging all the [F]words\nof a long line together",
+            11 to " singing all the [F]words\nof a long\nline together", 30 to " singing all the [F]words\nof a long\nline together",
+            19 to " singing all\nthe [F]words\nof a long line together", 38 to " singing all\nthe [F]words\nof a long line together",
+        )
         val expected = "{title: Dense}\n\n{start_of_verse: Verse 1}\n" + (1..40).joinToString("\n") {
-            "[Am]Line ${it.toString().padStart(3, '0')}\nsinging all\nthe [F]words\nof a long\nline together"
+            "[Am]Line ${it.toString().padStart(3, '0')}" + (broken[it] ?: " singing all the [F]words\nof a long line together")
         } + "\n{end_of_verse}\n"
         assertEquals(listOf(expected), ChordSheetConverter.convert(document, String::normalizedToNfc))
     }

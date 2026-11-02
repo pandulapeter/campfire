@@ -403,3 +403,15 @@ Taken by the owner on 2026-11-02:
   recalls), each at one column 12 pt and three columns 11 pt.
 - The step 4 design (Target shape, batch B) is approved.
 - Still the owner's, at step 8: a score loss on a document where step 7 found no general replacement for an export rule.
+- **Step 8**: every export reading rule is switched off and deleted, accepting the losses in step 7's list (`campfire/`
+  0.9595 → 0.9562: `starman-david-bowie-three-columns-11pt` 0.88 → 0.81, `house_of_the_rising_sun_pre-three-columns-11pt`
+  1.00 → 0.98, `because-of-jesus-b29` 0.79 → 0.78 and 0.81 → 0.79).
+
+Taken in step 8 (2026-11-02):
+
+- The kept round trip compares the title, and the lyric lines in their order each with its chords by word, as the corpus
+  scores them: a chord moved within its word is the loss accepted above, and a comment or a section label read as a
+  lyric is no lyric lost. Three general rules it found missing landed first: an italic word among upright chords is an
+  annotation, a single bold chord over larger lyrics is a chord, and a right-to-left word's no-break padding is dropped.
+- The six export converter tests that pass with the export off (an artist longer than the title, a key's accidental
+  sign, and four right-to-left placements) stay as tests of the general reader; the three that fail are deleted.

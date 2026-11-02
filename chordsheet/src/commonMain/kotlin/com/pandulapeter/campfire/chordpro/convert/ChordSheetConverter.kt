@@ -49,9 +49,8 @@ public object ChordSheetConverter {
      */
     public fun convert(sheet: ChordSheet, normalize: (String) -> String = { it }, guessesTitle: Boolean = true): List<String> {
         sheet.originalText?.takeIf(::isChordPro)?.let { return listOf(it) }
+        @Suppress("NAME_SHADOWING") val sheet = sheet.copy(isCampfireExport = false)
         val rendered = sheet.pages.map { page ->
-            // Campfire's export prints no header in parts, and its chord rows are told apart by their type, which the
-            // split's test by text cannot see: there it would cut a row opening with an annotation at a gap.
             val placedLines = if (sheet.isCampfireExport) page.lines.map { PlacedLine(it) } else ChordSheetHeaderParts.split(page.lines)
             ChordSheetMarginLabels.split(placedLines).map { placed ->
                 render(placed.line, normalize, dropsPadding = sheet.isCampfireExport).copy(isMarginLabel = placed.isMarginLabel, isHeaderPart = placed.isHeaderPart)
