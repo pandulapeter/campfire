@@ -930,7 +930,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a bold chord over plain lyrics of its size is a chord where no line holds two`() {
+    fun `a bold chord over plain lyrics of its size or larger is a chord where no line holds two`() {
         fun sheet(vararg lines: ChordSheet.Line) = ChordSheet(listOf(ChordSheet.Page(lines.toList())))
         val wrapped = sheet(
             ChordSheet.Line(listOf(span("Am", 0.0, 12.0, bold = true))),
@@ -939,6 +939,13 @@ class ChordSheetConverterTest {
             ChordSheet.Line(listOf(span("the world", 0.0, 45.0))),
         )
         assertEquals("[Am]Hello there\nthe [F]world\n", ChordSheetConverter.convert(wrapped).single())
+        val larger = sheet(
+            ChordSheet.Line(listOf(span("Am", 0.0, 12.0, bold = true))),
+            ChordSheet.Line(listOf(span("Hello there", 0.0, 60.0, size = 12.0))),
+            ChordSheet.Line(listOf(span("F", 18.0, 24.0, bold = true))),
+            ChordSheet.Line(listOf(span("the world", 0.0, 54.0, size = 12.0))),
+        )
+        assertEquals("[Am]Hello there\nthe [F]world\n", ChordSheetConverter.convert(larger).single())
         val index = sheet(
             ChordSheet.Line(listOf(span("A", 0.0, 8.0, size = 14.0, bold = true))),
             ChordSheet.Line(listOf(span("Amazing Grace", 0.0, 60.0))),

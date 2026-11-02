@@ -248,19 +248,18 @@ internal object LineKinds {
 
     /**
      * Whether a line of a single chord is one by its type, where no line of the song holds two to tell: set in bold
-     * over plain lyrics of the same size, the way Campfire's export and most songbook layouts set chords, and written
+     * over plain lyrics of its size or larger, the way Campfire's export and most songbook layouts set chords, and written
      * with a capital, since a lowercase word is too often a word. A lyric line wrapped in a narrow column is printed
      * as several of these, each with the one chord over its part. The size keeps a songbook index out of it, whose
-     * bold "A" over the titles starting with it is a heading set larger than they are. Campfire's export is not held to
-     * it: only a row in its chords' type is a candidate there, the title's left out, and a lyric whose letters fall back
-     * on another font than the chords' is written at another size than they are.
+     * bold "A" over the titles starting with it is a heading set larger than they are; a lyric whose letters fall back
+     * on another font than the chords' (a right-to-left script) is written larger than they are.
      */
     private fun isStyledChordLine(line: Rendered, tokens: List<Token>, next: Rendered?): Boolean {
         val spans = line.source.spans.filter { it.text.isNotBlank() }
         val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
         return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
-            (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
+            (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) || it.size > span.size } })
     }
 
     private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")
