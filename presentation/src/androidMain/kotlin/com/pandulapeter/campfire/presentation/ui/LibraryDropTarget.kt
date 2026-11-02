@@ -40,7 +40,7 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
             override fun onDrop(event: DragAndDropEvent): Boolean {
                 // Asked again rather than trusted from the start of the drag, during which a dialog, the editor or
                 // read only mode can have come.
-                if (!viewModel.isDropAvailable) return false
+                if (!viewModel.preferencesController.isDropAvailable) return false
                 val dragEvent = event.toAndroidDragEvent()
                 val clipData = dragEvent.clipData ?: return false
                 val items = (0 until clipData.itemCount).map(clipData::getItemAt)
@@ -73,7 +73,9 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
         }
     }
     return dragAndDropTarget(
-        shouldStartDragAndDrop = { event -> viewModel.isDropAvailable && event.toAndroidDragEvent().isAcceptable(viewModel) },
+        shouldStartDragAndDrop = { event ->
+            viewModel.preferencesController.isDropAvailable && event.toAndroidDragEvent().isAcceptable(viewModel)
+        },
         target = target,
     )
 }

@@ -55,7 +55,7 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
             override fun onDrop(event: DragAndDropEvent): Boolean {
                 // Asked again rather than trusted from the start of the drag, during which a dialog, the editor or
                 // read only mode can have come.
-                if (!viewModel.isDropAvailable) return false
+                if (!viewModel.preferencesController.isDropAvailable) return false
                 val providers = event.items.map { it.itemProvider }
                 val fileProviders = providers.filterNot { it.isText }
                 if (fileProviders.isEmpty()) {
@@ -79,7 +79,7 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
     return dragAndDropTarget(
         shouldStartDragAndDrop = { event ->
             val providers = event.items.map { it.itemProvider }
-            viewModel.isDropAvailable && providers.isNotEmpty() &&
+            viewModel.preferencesController.isDropAvailable && providers.isNotEmpty() &&
                 (providers.any { !it.isText } || viewModel.pastedSongController.isNewSongPasteAvailable)
         },
         target = target,

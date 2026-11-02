@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.messages
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.StringResource
 
 /** Something that has happened and is worth one line of text at the bottom of the screen. */

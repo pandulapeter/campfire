@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
  * Whether the window takes a drop at all, which every shell asks both as a drag starts and again as it ends (a drag
@@ -19,5 +19,5 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  * only mode too, and with the songs switched off, since it needs the songs on screen. Dropped files are taken with the
  * songs off as well: they are an import like Settings' own, written into a library that is only out of sight.
  */
-internal val CampfireViewModel.isDropAvailable
-    get() = !preferencesController.isPerformanceModeEnabled.value
+internal val PreferencesController.isDropAvailable
+    get() = !isPerformanceModeEnabled.value

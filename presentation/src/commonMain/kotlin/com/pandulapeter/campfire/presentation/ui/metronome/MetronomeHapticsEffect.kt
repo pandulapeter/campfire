@@ -17,7 +17,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.BeatTap
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.beatHapticsDispatcher
@@ -29,15 +28,15 @@ import kotlinx.coroutines.withContext
  * as it is composed where [areBeatHapticsFeltInBackground].
  */
 @Composable
-internal fun MetronomeHapticsEffect(viewModel: CampfireViewModel) {
+internal fun MetronomeHapticsEffect(metronomeController: MetronomeController) {
     val haptics = rememberBeatHaptics() ?: return
-    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
+    val settings by metronomeController.metronomeSettings.collectAsStateWithLifecycle()
     if (!settings.isHapticBeatEnabled) return
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(haptics, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(if (areBeatHapticsFeltInBackground) Lifecycle.State.CREATED else Lifecycle.State.RESUMED) {
             withContext(beatHapticsDispatcher) {
-                viewModel.metronomeController.metronomeBeats.collect { beat ->
+                metronomeController.metronomeBeats.collect { beat ->
                     // A subdivision carries its beat's level, so a muted beat leaves its subdivisions unfelt too.
                     val tap = when {
                         beat.level == BeatLevel.MUTED -> null

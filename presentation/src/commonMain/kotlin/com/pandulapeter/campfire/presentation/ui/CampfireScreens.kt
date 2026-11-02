@@ -18,7 +18,6 @@ import com.pandulapeter.campfire.presentation.ui.chrome.NavigationChromeSize
 import com.pandulapeter.campfire.presentation.ui.chrome.NavigationScrim
 import com.pandulapeter.campfire.presentation.ui.chrome.NoChromeRoom
 import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
-import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsButtonGroup
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
 import com.pandulapeter.campfire.presentation.ui.chrome.TopLevelScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
@@ -50,7 +49,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -64,7 +62,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.messages.Messages
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.screens.metronome.MetronomeScreen
 import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
@@ -73,7 +70,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.scales.ScalesScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.songGridColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
-import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
@@ -84,7 +80,6 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
-import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
 import kotlin.math.roundToInt
 
 /**
@@ -409,36 +404,17 @@ internal fun CampfireScreens(
                 }
             },
         )
-        // Not while the screens draw a chrome of their own, each tool screen a row of its own with it (ToolScreenFrame).
-        // Composed while the tools have items of their own too, so that it fades in and out as a resized window groups
-        // them and lets them go.
-        if (!chromeInScreens) {
-            SharedToolsButtonGroup(
-                viewModel = viewModel,
-                tools = groupedTools,
-                railWidth = railWidth,
-                contentPadding = shellContentPadding,
-                metronomeBeat = metronomeBeat,
-                isKeyboard = isKeyboard,
-            )
-        }
-        ExportHost(
+        CampfireOverlays(
             viewModel = viewModel,
-            transition = exportTransition,
-        )
-        // Not while the update required screen covers the app: every one of these is a window of its own on Android,
-        // which that screen, drawn inside the activity's content, cannot cover.
-        if (!LocalIsCoveredByRequiredUpdate.current) {
-            CampfireDialogs(
-                viewModel = viewModel,
-                urlOpener = urlOpener,
-            )
-        }
-        Messages(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(messagesPadding),
-            viewModel = viewModel,
+            urlOpener = urlOpener,
+            chromeInScreens = chromeInScreens,
+            groupedTools = groupedTools,
+            railWidth = railWidth,
+            shellContentPadding = shellContentPadding,
+            metronomeBeat = metronomeBeat,
+            isKeyboard = isKeyboard,
+            exportTransition = exportTransition,
+            messagesPadding = messagesPadding,
         )
     }
 }

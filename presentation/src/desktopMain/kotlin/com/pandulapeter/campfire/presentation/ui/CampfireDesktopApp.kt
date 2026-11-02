@@ -91,7 +91,7 @@ fun CampfireDesktopApp(
             .dragAndDropTarget(
                 shouldStartDragAndDrop = { event ->
                     val transferable = event.awtTransferable
-                    viewModel.isDropAvailable && (
+                    viewModel.preferencesController.isDropAvailable && (
                         transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
                             transferable.isDataFlavorSupported(DataFlavor.stringFlavor) && viewModel.pastedSongController.isNewSongPasteAvailable
                         )
@@ -104,7 +104,7 @@ fun CampfireDesktopApp(
                             // of here would also skip the end of the session, and the window would refuse every drag after
                             // this one.
                             val transferable = event.awtTransferable
-                            if (!viewModel.isDropAvailable) return false
+                            if (!viewModel.preferencesController.isDropAvailable) return false
                             val files = try {
                                 if (!transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
                                     // Checked again rather than trusted from the start of the drag, during which a dialog

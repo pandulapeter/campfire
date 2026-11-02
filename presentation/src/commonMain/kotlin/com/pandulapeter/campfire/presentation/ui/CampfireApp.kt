@@ -95,9 +95,9 @@ fun CampfireApp(
     onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
     ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
-    val showSyncNotification = rememberSyncNotifications(viewModel)
-    MetronomeNotificationEffect(viewModel)
-    MetronomeHapticsEffect(viewModel)
+    val showSyncNotification = rememberSyncNotifications(viewModel.syncController.syncState)
+    MetronomeNotificationEffect(metronomeController = viewModel.metronomeController, songsByFileNameFlow = viewModel.libraryState.songsByFileName)
+    MetronomeHapticsEffect(viewModel.metronomeController)
     ProvideCoverArtImageLoader()
     LibraryRefreshEffects(viewModel)
     SyncLifecycleEffects(viewModel.syncController)
@@ -170,13 +170,18 @@ fun CampfireApp(
                     ProvideInterfaceScale {
                         // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
                         // the user chose, and above the language preference, so that it is in the language they chose too.
-                        AppUpdateGate(viewModel = viewModel) {
+                        AppUpdateGate(
+                            isAppOnScreenFlow = viewModel.launchState.isAppOnScreen,
+                            hasUnsavedEditorChangesFlow = viewModel.editorSession.hasUnsavedEditorChanges,
+                            isSyncingFlow = viewModel.syncController.isSyncing,
+                            metronomePlaybackFlow = viewModel.metronomeController.metronomePlayback,
+                        ) {
                             CampfireContent(viewModel = viewModel, urlOpener = urlOpener)
                         }
                     }
                 }
                 LaunchScreenGate(
-                    viewModel = viewModel,
+                    launchState = viewModel.launchState,
                     arePreferencesLoaded = arePreferencesLoaded,
                     isThemeSettled = isThemeSettled,
                     launchScreenColors = launchScreenColors,

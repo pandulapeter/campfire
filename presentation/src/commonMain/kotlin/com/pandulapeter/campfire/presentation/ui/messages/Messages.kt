@@ -86,9 +86,10 @@ import com.pandulapeter.campfire.presentation.resources.songs_selection_failed
 import com.pandulapeter.campfire.presentation.resources.songs_selection_updated
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.resources.settings_sync_reconnect_failed
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 
 /**
  * The one line of text the app has to say after something it was asked to do has finished. It sits above the
@@ -98,7 +99,9 @@ import com.pandulapeter.campfire.presentation.localization.textResource
 @Composable
 internal fun Messages(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    messageSink: MessageSink,
+    importController: ImportController,
+    firstRunController: FirstRunController,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // Only the head of the view model's queue is read: the text of a message can only be built in a composition
@@ -107,7 +110,7 @@ internal fun Messages(
     // restart for the second one: it would sit at the head of the queue forever, unshown, with everything after it
     // stuck behind it. A message that was on screen as the composition was recreated is shown again from the start,
     // since it was cut short.
-    val queue by viewModel.messageSink.messageQueue.collectAsStateWithLifecycle()
+    val queue by messageSink.messageQueue.collectAsStateWithLifecycle()
     val head = queue.firstOrNull()
     val text = messageText(head?.value)
     val importFinished = head?.value as? Message.ImportFinished
@@ -126,14 +129,14 @@ internal fun Messages(
             )
             if (result == SnackbarResult.ActionPerformed) {
                 when {
-                    importFinished != null -> viewModel.importController.openImportReport(importFinished.result)
-                    isClipboardLinkOffer -> viewModel.firstRunController.openClipboardLink()
+                    importFinished != null -> importController.openImportReport(importFinished.result)
+                    isClipboardLinkOffer -> firstRunController.openClipboardLink()
                 }
             } else if (isClipboardLinkOffer) {
                 // Let go, the offer is not kept for anything to read the clipboard later.
-                viewModel.firstRunController.dropClipboardLinkOffer()
+                firstRunController.dropClipboardLinkOffer()
             }
-            viewModel.messageSink.onMessageShown(head)
+            messageSink.onMessageShown(head)
         }
     }
     SnackbarHost(

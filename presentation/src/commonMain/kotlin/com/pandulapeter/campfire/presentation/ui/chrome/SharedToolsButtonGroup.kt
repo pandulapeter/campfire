@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.chrome
 
 import com.pandulapeter.campfire.presentation.ui.CampfireScreens
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,14 +49,15 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 @Composable
 internal fun SharedToolsButtonGroup(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    backStack: List<CampfireDestination>,
     tools: List<CampfireDestination.TopLevel>,
     railWidth: () -> Dp,
     contentPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
+    onSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
-    val current = viewModel.navigator.backStack.lastOrNull() as? CampfireDestination.TopLevel
+    val current = backStack.lastOrNull() as? CampfireDestination.TopLevel
     val lastShownTool = remember { mutableStateOf(current?.takeIf { it in tools }) }
     val lastShownTools = remember { mutableStateOf(tools) }
     SideEffect {
@@ -81,7 +81,7 @@ internal fun SharedToolsButtonGroup(
             selected = current?.takeIf { it in tools } ?: lastShownTool.value,
             metronomeBeat = metronomeBeat,
             isKeyboard = isKeyboard,
-            onSelected = viewModel::selectTopLevelDestination,
+            onSelected = onSelected,
         )
     }
 }

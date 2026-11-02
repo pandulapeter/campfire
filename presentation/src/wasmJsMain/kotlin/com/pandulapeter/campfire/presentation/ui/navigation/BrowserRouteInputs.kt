@@ -9,13 +9,22 @@
  */
 package com.pandulapeter.campfire.presentation.ui.navigation
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
 
 /**
- * What [BrowserRoutes.paths] reads, as the view model holds it now. Read inside a `snapshotFlow`, it observes the
+ * What [BrowserRoutes.paths] reads, as the app's holders hold it now. Read inside a `snapshotFlow`, it observes the
  * snapshot states the addresses depend on; the searches and the dialog are flows, which the caller combines in.
  */
-internal fun CampfireViewModel.routeInputs() = RouteInputs(
+internal fun routeInputsOf(
+    navigator: Navigator,
+    songListState: SongListState,
+    setlistsController: SetlistsController,
+    songSelection: SongSelection,
+    dialogHost: DialogHost,
+) = RouteInputs(
     backStack = navigator.backStack.toList(),
     isSongsSearchOpen = songListState.songsSearch.isOpen.value,
     isSetlistsSearchOpen = setlistsController.setlistsSearch.isOpen.value,

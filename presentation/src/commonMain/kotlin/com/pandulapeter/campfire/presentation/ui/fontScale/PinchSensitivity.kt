@@ -9,10 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.fontScale
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-
 /**
  * The exponent applied to the spread ratio of the fingers, on a touchscreen and on a touchpad alike
- * ([CampfireViewModel.magnifyByTouchpad]), so that the same movement of the same fingers resizes the text as much on both.
+ * (`CampfireViewModel.magnifyByTouchpad`), so that the same movement of the same fingers resizes the text as much on both.
  */
 internal const val PINCH_SENSITIVITY = 0.4f

@@ -19,7 +19,6 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import kotlin.math.pow
 import kotlinx.coroutines.channels.Channel
@@ -38,7 +37,7 @@ import kotlinx.coroutines.launch
  * as a trackpad's scroll does; they are added up by a [FontScaleAccumulator], since each on its own is less than the
  * whole percent the scale is kept in. The pinches that can be told apart from a scroll - the one macOS reports to the
  * desktop app, and the Ctrl + scroll a browser makes of one while Ctrl is not held - reach
- * [CampfireViewModel.magnifyByTouchpad] from the window instead, and never get here.
+ * `CampfireViewModel.magnifyByTouchpad` from the window instead, and never get here.
  *
  * A new scale is reported at most once per frame, with the latest value the gesture arrived at: pointer events come
  * faster than frames, and every scale reported lays the whole song out again, which on a long song is more work than

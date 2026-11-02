@@ -49,10 +49,10 @@ import com.pandulapeter.campfire.presentation.resources.app_update_required_hint
 import com.pandulapeter.campfire.presentation.resources.app_update_restart
 import com.pandulapeter.campfire.presentation.resources.app_update_update
 import com.pandulapeter.campfire.presentation.resources.ic_update
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
 import org.jetbrains.compose.resources.painterResource
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Wraps the app in whatever the store has to say about a newer build of it, which on three of the four platforms is
@@ -72,16 +72,19 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun AppUpdateGate(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    isAppOnScreenFlow: StateFlow<Boolean>,
+    hasUnsavedEditorChangesFlow: StateFlow<Boolean>,
+    isSyncingFlow: StateFlow<Boolean>,
+    metronomePlaybackFlow: StateFlow<MetronomePlayback>,
     content: @Composable () -> Unit,
 ) {
-    val isAppOnScreen by viewModel.launchState.isAppOnScreen.collectAsStateWithLifecycle()
+    val isAppOnScreen by isAppOnScreenFlow.collectAsStateWithLifecycle()
     val controller = rememberAppUpdateController(isAppOnScreen = isAppOnScreen)
     val state = controller.state
-    val hasUnsavedEditorChanges by viewModel.editorSession.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
-    val isSyncing by viewModel.syncController.isSyncing.collectAsStateWithLifecycle()
+    val hasUnsavedEditorChanges by hasUnsavedEditorChangesFlow.collectAsStateWithLifecycle()
+    val isSyncing by isSyncingFlow.collectAsStateWithLifecycle()
     // A restart in the middle of a song being played along to cuts the click off, so it waits like it waits for a run.
-    val isMetronomePlaying = viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
+    val isMetronomePlaying = metronomePlaybackFlow.collectAsStateWithLifecycle().value is MetronomePlayback.Playing
     // A required update ends with the process being replaced, and the screen it puts up leaves no way back to
     // the app, so neither is allowed near an editor holding text that has not been written: both wait until it
     // has been saved or let go of. While the update stays required the screen stays up - the text can only become

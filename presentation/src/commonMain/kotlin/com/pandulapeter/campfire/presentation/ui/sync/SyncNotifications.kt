@@ -25,11 +25,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_notificati
 import com.pandulapeter.campfire.presentation.resources.settings_sync_notification_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Tells the platform shell what a running sync should look like while the app is not in front of the user, and that
@@ -42,15 +42,15 @@ import kotlinx.coroutines.flow.map
  * the system's.
  */
 @Composable
-internal fun rememberSyncNotifications(viewModel: CampfireViewModel): (SyncProgress) -> Unit {
+internal fun rememberSyncNotifications(syncState: StateFlow<SyncState>): (SyncProgress) -> Unit {
     val syncNotifier = LocalSyncNotifier.current
     // Whether a run is going rather than how far it has got: the shells keep the count moving on their own (see
     // SyncNotification), so a notification handed over for every file a run moves would be work on the main thread
     // for nothing. The count of the moment is read as the notification is handed over, which is what the Android
     // service starts with.
-    val isRunning by remember(viewModel) {
-        viewModel.syncController.syncState.map { it.progress != null }.distinctUntilChanged()
-    }.collectAsStateWithLifecycle(viewModel.syncController.syncState.value.progress != null)
+    val isRunning by remember(syncState) {
+        syncState.map { it.progress != null }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(syncState.value.progress != null)
     val channelName = stringResource(Res.string.settings_sync_notification_channel)
     val title = stringResource(Res.string.settings_sync_notification_title)
     val stopLabel = stringResource(Res.string.settings_sync_cancel)
@@ -76,7 +76,7 @@ internal fun rememberSyncNotifications(viewModel: CampfireViewModel): (SyncProgr
         }
     }
     LaunchedEffect(isRunning, show) {
-        val progress = viewModel.syncController.syncState.value.progress
+        val progress = syncState.value.progress
         if (isRunning && progress != null) {
             show(progress)
         } else if (hasShownNotification) {

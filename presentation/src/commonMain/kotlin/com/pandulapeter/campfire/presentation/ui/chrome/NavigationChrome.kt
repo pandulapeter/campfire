@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.chrome
 
 import com.pandulapeter.campfire.presentation.ui.CampfireScreens
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues

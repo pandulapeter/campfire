@@ -23,11 +23,12 @@ import com.pandulapeter.campfire.presentation.resources.metronome
 import com.pandulapeter.campfire.presentation.resources.metronome_notification_channel
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.KEY_SEPARATOR
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotification
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
+import com.pandulapeter.campfire.data.model.song.Song
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Hands a playing click to the shell in the language chosen in the app, see [MetronomeNotifier], and says it is over only
@@ -35,12 +36,15 @@ import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
  * shell of an activity recreated over a click that is still playing.
  */
 @Composable
-internal fun MetronomeNotificationEffect(viewModel: CampfireViewModel) {
+internal fun MetronomeNotificationEffect(
+    metronomeController: MetronomeController,
+    songsByFileNameFlow: StateFlow<Map<String, Song>>,
+) {
     val notifier = LocalMetronomeNotifier.current
-    val playback by viewModel.metronomeController.metronomePlayback.collectAsStateWithLifecycle()
-    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
+    val playback by metronomeController.metronomePlayback.collectAsStateWithLifecycle()
+    val songsByFileName by songsByFileNameFlow.collectAsStateWithLifecycle()
     val pattern = (playback as? MetronomePlayback.Playing)?.pattern
-    val songTitle = (viewModel.metronomeController.metronomeContext as? MetronomeContext.Song)?.let { songsByFileName[it.songFileName]?.title }
+    val songTitle = (metronomeController.metronomeContext as? MetronomeContext.Song)?.let { songsByFileName[it.songFileName]?.title }
     val notification = pattern?.let {
         MetronomeNotification(
             channelName = stringResource(Res.string.metronome_notification_channel),

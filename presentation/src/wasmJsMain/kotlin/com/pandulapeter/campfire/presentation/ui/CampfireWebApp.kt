@@ -70,8 +70,18 @@ fun CampfireWebApp(
     // while another one is in front is a hidden page, and that is no moment to have stopped listening.
     // In the composition rather than in an effect, which is what navigateOnLaunch asks of its caller: the launch
     // screen has to know it is waiting for the address before the library it waits for can have been read.
-    remember(viewModel) { viewModel.navigateToBrowserAddress() }
-    BrowserHistoryEffect(viewModel)
+    remember(viewModel) { navigateToBrowserAddress(launchState = viewModel.launchState, navigator = viewModel.navigator) }
+    BrowserHistoryEffect(
+        launchState = viewModel.launchState,
+        navigator = viewModel.navigator,
+        songListState = viewModel.songListState,
+        setlistsController = viewModel.setlistsController,
+        songSelection = viewModel.songSelection,
+        dialogHost = viewModel.dialogHost,
+        libraryState = viewModel.libraryState,
+        preferencesController = viewModel.preferencesController,
+        importReportState = viewModel.importReportState,
+    )
     SearchShortcutEffect(viewModel)
     EditShortcutEffect(viewModel)
     PasteShortcutEffect(viewModel)
@@ -105,7 +115,7 @@ fun CampfireWebApp(
         CampfireApp(
             viewModel = viewModel,
             urlOpener = ::openInNewTab,
-            filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.isDropAvailable } },
+            filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.preferencesController.isDropAvailable } },
             shareLinks = remember { sharedLinks() },
             onAppReady = ::dismissLoadingScreen,
         )
