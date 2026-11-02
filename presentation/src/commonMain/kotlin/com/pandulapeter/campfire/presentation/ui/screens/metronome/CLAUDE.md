@@ -10,24 +10,14 @@
 
 # :presentation — ui/screens/metronome
 
-The Metronome tab: the whole instrument. The click's lifecycle is in `ui/metronome/CLAUDE.md`.
+The Metronome tab. The click's lifecycle is in `ui/metronome/CLAUDE.md`.
 
-- **The song details screen's own `MetronomePanel` is pinned at the top and never hidden** (`isVisible` always true), so
-  the click is played the same way on both screens and can be stopped however far the page is scrolled. Drawn
-  `isProminent`: the beats start at a settings page's margin and are capped at `PageWidthLayout.pageMaxWidth`, while the
-  play button is the list screens' New button in size and place (`NEW_ITEM_BUTTON_END_INSET`, and
-  `NEW_ITEM_BUTTON_TOP_INSET`, under the tools' button group too, as the Tuner tab's play circle), at the window's end whatever
-  the cap.
-- The `BeatRow` uses shades of one color (the second accent), since every palette but the app's own has no second accent
-  apart from the primary. A tap cycles a beat through accent, plain, and muted, stored per signature here (a song's
-  panel stores them for that song alone).
-- Under it a `SettingsPage` of two titled sections (Rhythm, Playback) scrolls, side by side where there is room:
-  - What is played (`MetronomeBarOptions`): why nothing is heard (`audioIssue`); the tempo (`TempoSetting`: the song
-    details screen's `TempoStepper`, typed into too, never highlighted and with no reset, since it overrides nothing;
-    the Italian marking is not translated, being notation); the time signature; the subdivision as clicks per beat (1
-    to 4) rather than note names, which depend on the bar and do not fit a phone.
-  - How it reaches the player (`MetronomeSoundOptions`, which applies to a song's click too):
-    sound, volume (zero is the mute, so there is no mute switch), Animate, and Vibrate (only where
-    `rememberBeatHaptics` has a vibrator).
+- **The tab's `MetronomePanel` is never hidden**, so the click plays as on a song and can be stopped however far the
+  page is scrolled. Drawn `isProminent`, its play button sits where the list screens' New button does (under the tools'
+  button group too, as the Tuner's play circle), at the window's end whatever the page width cap.
+- A beat tap cycles accent, plain, and muted, stored per signature here (a song's panel stores them for that song).
+- Tempo: never highlighted and no reset, since it overrides nothing; the Italian marking is notation, not translated.
+  Subdivision is clicks per beat (1 to 4), not note names, which depend on the bar and do not fit a phone.
+- `MetronomeSoundOptions` applies to a song's click too. Volume zero is the mute (no mute switch); Vibrate shows only
+  where there is a vibrator.
 - The screen is kept on while a click plays. Every way onto the tab clears the back stack, so no song is behind it.
-- Performance mode leaves the tab fully usable.
