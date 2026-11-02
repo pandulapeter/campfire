@@ -143,6 +143,12 @@ internal object ChordSheetChordPlacement {
         // A chord is hung from its syllable by eye, or by the columns of a plain text, so the edge it hangs from is looked
         // for within an em of the lyric's type.
         val bidiTolerance = lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
+        // A layout that measures a chord's offset apart from drawing the lyric's glyphs rounds the two differently, so a
+        // chord meant for a glyph may start a hair before it, which is still the glyph and never the end of the one before.
+        // Only a glyph drawn where its own span starts is placed that exactly; one spaced evenly through a longer span is
+        // an estimate the rounding would only push further off.
+        val rounding = (lyrics.source.spans.firstOrNull { it.text.isNotBlank() }?.size ?: 1.0) * GLYPH_ROUNDING
+        val drawnStarts = lyrics.source.spans.map { it.start }.sorted()
         var isAttachedAtEnd = false
         // Bar lines and repeat counts mean nothing over a lyric, but "no chord" says where the playing stops.
         for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { it.index }) {
@@ -152,7 +158,9 @@ internal object ChordSheetChordPlacement {
             val x = if (lyrics.bidi != null) chords.positions.getOrNull(word.index) ?: 0.0 else {
                 word.text.indices.mapNotNull { chords.positions.getOrNull(word.index + it) }.minOrNull() ?: 0.0
             }
-            var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
+            val after = firstIndex(suffixMin.size) { suffixMin[it] > x }
+            var at = (after - 1).coerceAtLeast(0)
+            positions.getOrNull(after)?.takeIf { it - x <= rounding && isDrawnStart(drawnStarts, it) }?.let { at = after }
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
             // order they are read off the chord row, which is left to right.
             val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
@@ -299,6 +307,10 @@ internal object ChordSheetChordPlacement {
         return position + (span?.let { (it.end - it.start) / clean(it.text).length.coerceAtLeast(1) } ?: 0.0)
     }
 
+    /** Whether [position] is where a span of [starts] (sorted) begins, which only a glyph drawn on its own is exactly. */
+    private fun isDrawnStart(starts: List<Double>, position: Double) =
+        starts.getOrNull(firstIndex(starts.size) { starts[it] >= position - 0.001 })?.let { it <= position + 0.001 } == true
+
     /** An insertion or replacement must leave a supplementary character whole. */
     private fun splitsSurrogate(text: String, index: Int) = index > 0 && index < text.length &&
         text[index - 1].isHighSurrogate() && text[index].isLowSurrogate()
@@ -313,6 +325,9 @@ internal object ChordSheetChordPlacement {
         }
         return low
     }
+
+    /** How far before a glyph's start a chord still stands on it, as a share of the lyric's type size: far less than any glyph is wide. */
+    private const val GLYPH_ROUNDING = 0.01
 
     /** How far past a run of no-break spaces a chord may start and still be the one it pads for, as a share of the lyric's type size. */
     private const val PADDED_CHORD = 0.25
