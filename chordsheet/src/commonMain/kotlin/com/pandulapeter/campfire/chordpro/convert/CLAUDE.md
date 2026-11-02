@@ -41,9 +41,9 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
   taller line box on some platforms.
 - **The export and this reader share a contract**: a row opening with a word joiner
   (`ChordSheetCampfireLayout.CONTINUATION`) is the rest of the line above, wrapped by a narrow column; two word joiners
-  continue a word the column cut. The importer's `clean` drops the word joiner from any text. Labels, the playing
-  details row (read from the same labels as `strings.xml`, in every language the app prints), a sounding capo
-  (`print_capo_sounding`: imported as the capo chart, chords moved down, tab frets kept) and a capo's shapes' key
+  continue a word the column cut. The importer's `ChordSheetText.clean` drops the word joiner from any text. Labels,
+  the playing details row (read from the same labels as `strings.xml`, in every language the app prints), a sounding
+  capo (`print_capo_sounding`: imported as the capo chart, chords moved down, tab frets kept) and a capo's shapes' key
   (`song_details_capo_shapes`, from any sheet, written as `{key}`) are read by what the export prints; change both
   sides together.
 - A row holding right-to-left text arrives as one span in reading order over its glyphs (`ChordSheet.Span.pieces`), and
