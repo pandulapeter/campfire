@@ -206,7 +206,7 @@ internal class LibraryState(
     }
 
     /** Reads the library for the first time. */
-    fun startLoading() = scope.launch { loadScreenData(false) }
+    private fun startLoading() = scope.launch { loadScreenData(false) }
 
     /**
      * The state [isLoading] and [indexedSongs] are folded from.
@@ -258,5 +258,9 @@ internal class LibraryState(
 
     private companion object {
         val MIN_RESCAN_INTERVAL = 10.seconds
+    }
+
+    init {
+        startLoading()
     }
 }

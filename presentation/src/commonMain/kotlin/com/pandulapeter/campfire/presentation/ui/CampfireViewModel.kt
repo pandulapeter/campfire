@@ -732,7 +732,6 @@ class CampfireViewModel(
     )
 
     init {
-        libraryState.startLoading()
         viewModelScope.launch { firstRunController.plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { firstRunController.showWhatsNewOnVersionChange() }
         viewModelScope.launch { firstRunController.offerCrashReport() }
