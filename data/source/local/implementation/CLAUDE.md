@@ -79,7 +79,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
   `SongKeys.capoChartKeyOf`); the leading `{transpose}` travels with the key; tags are NFC-composed and merged. The scan
   publishes in batches. Unreadable or oversized files are skipped; an unlistable *directory* throws, so an unreachable
   library never looks empty.
-- Documents: 16 MiB limit.
+- Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
+  `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
 
 ## Documents (`model/`, `mapper/`)
 

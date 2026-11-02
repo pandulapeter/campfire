@@ -261,6 +261,9 @@ beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `
 checks, and compiles every platform (iOS on macOS), on every PR, on every push to `master` that changes more than
 `documentation/`, and before `publish-all.yml` builds anything.
 
+The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by
+`campfire.importCorpus` in `local.properties`; a worktree passes it with `-P`), never in CI.
+
 ## Build
 
 - **A shipped dependency is credited in the same change**, transitive ones included: an entry in

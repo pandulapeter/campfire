@@ -70,4 +70,5 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
 
 ## Tests
 
-End-to-end document goldens live in `:data:source:local:implementation`.
+End-to-end document goldens live in `:data:source:local:implementation`. An extraction change is judged by the same
+import corpus as a converter change (`chordpro/convert/CLAUDE.md`).

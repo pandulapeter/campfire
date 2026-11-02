@@ -9,9 +9,15 @@
 -->
 # chordpro/convert
 
+**A converter change is judged by the import corpus** (`ImportCorpusTest`, a private folder of other programs'
+documents named by `campfire.importCorpus`): run it before and after, and read `report.txt`. A change lands only if
+no document's overall score falls, unless the commit's author names the document and the owner accepts it. A document
+that shows a new problem goes into the corpus with its corrected `.cho` before the fix; a test pins the rule the fix
+adds. No rule names a producer or Campfire's export.
+
 `ChordSheetConverter` is one deterministic conversion for plain text, PDF, and Word; it knows no file format. Its
-heuristics and near misses are pinned in `ChordSheetConverterTest` and its siblings: a change belongs in a test first.
-What follows is what the tests cannot say: the principles, the contracts, and the limits kept on purpose.
+heuristics and near misses are pinned in `ChordSheetConverterTest` and its siblings. What follows is what the tests
+cannot say: the principles, the contracts, and the limits kept on purpose.
 
 ## Principles
 

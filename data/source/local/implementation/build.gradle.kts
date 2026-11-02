@@ -29,3 +29,10 @@ kotlin {
         }
     }
 }
+
+tasks.named<Test>("desktopTest") {
+    val corpus = project.property("campfire.importCorpus").toString()
+    systemProperty("campfire.importCorpus", corpus)
+    // The corpus lives outside the project, so Gradle is told to rerun when a document or its .cho changes.
+    if (corpus.isNotBlank()) inputs.files(fileTree(corpus) { exclude(".runs/**") }).withPropertyName("importCorpus")
+}
