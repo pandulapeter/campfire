@@ -49,7 +49,9 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelSortingToggle
@@ -85,7 +87,9 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableCont
  */
 @Composable
 internal fun LanguagesSheet(
-    viewModel: CampfireViewModel,
+    libraryLanguagesFlow: StateFlow<List<SongLanguage>>,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
     songs: List<Song>,
     sheetKey: String,
     subtitle: String,
@@ -94,8 +98,8 @@ internal fun LanguagesSheet(
     onSave: (BulkLabelDraft) -> Unit,
 ) {
     val appLanguageCode = currentLanguage.value.code
-    val libraryLanguages by viewModel.libraryState.languages.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val libraryLanguages by libraryLanguagesFlow.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
     // Saved, since the sheet outlives a recreated Activity and Save writes whatever is ticked at that moment.
@@ -103,7 +107,7 @@ internal fun LanguagesSheet(
     val languages = remember(songs, libraryLanguages, appLanguageCode, sortingMode) {
         val declared = songs.flatMap { it.languages }.distinct()
         val libraryCodes = libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
-        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = viewModel.songRenderer::normalize)
+        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = songRenderer::normalize)
         val leading = when (sortingMode) {
             UserPreferences.LabelSortingMode.BY_USAGE -> libraryCodes.distinct()
             UserPreferences.LabelSortingMode.ALPHABETICAL -> emptyList()
@@ -113,10 +117,10 @@ internal fun LanguagesSheet(
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val matches = remember(languages, query) {
-        val normalizedQuery = viewModel.songRenderer.normalize(query)
+        val normalizedQuery = songRenderer.normalize(query)
         // What was typed may be a code, and not the one the library files the language under: `HUN`, `hu-HU` and
         // `hu` all name Hungarian, and whichever of them a reader knows has to find the single row that is.
-        val queryCode = viewModel.songRenderer.languageCode(query)
+        val queryCode = songRenderer.languageCode(query)
         if (normalizedQuery.isEmpty()) {
             languages.filter { it.isListed }
         } else {
@@ -131,10 +135,7 @@ internal fun LanguagesSheet(
         subtitle = subtitle,
         retainHeight = true,
         startButton = {
-            LabelSortingToggle(
-                sortingMode = sortingMode,
-                onSortingModeSelected = viewModel.preferencesController::setLanguageSortingMode,
-            )
+            LabelSortingToggle(sortingMode = sortingMode, onSortingModeSelected = preferencesController::setLanguageSortingMode)
         },
         text = { contentPadding ->
             Column {
@@ -159,11 +160,7 @@ internal fun LanguagesSheet(
                 } else {
                     val listState = rememberLazyListState()
                     HideKeyboardWhenScrolledDown(listState)
-                    ScrollToStartWhenChanged(
-                        listState = listState,
-                        key = sortingMode to query,
-                        contents = matches,
-                    )
+                    ScrollToStartWhenChanged(listState = listState, key = sortingMode to query, contents = matches)
                     KeepChecklistRowsInPlace(listState, languageLayout)
                     LazyColumn(
                         modifier = Modifier.bounceScrollableContent(listState)

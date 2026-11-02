@@ -18,7 +18,11 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.save
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.song.Tag
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The tags of one song ([TagsSheet]). It names the song it tags under its title ([SheetHeader]) wherever it was opened
@@ -27,17 +31,23 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  */
 @Composable
 internal fun SongTagsDialog(
-    viewModel: CampfireViewModel,
+    libraryTags: StateFlow<List<Tag>>,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
+    songMetadataEditing: SongMetadataEditing,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongTags,
 ) = TagsSheet(
-    viewModel = viewModel,
+    libraryTagsFlow = libraryTags,
+    preferencesController = preferencesController,
+    songRenderer = songRenderer,
     tagsPerSong = listOf(dialog.song.tags),
     sheetKey = dialog.song.fileName,
     subtitle = songLabel(dialog.song),
     confirmLabel = stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save),
-    onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+    onDismiss = onDismiss,
     onSave = { draft, spellings ->
-        viewModel.songMetadataEditing.setSongTags(
+        songMetadataEditing.setSongTags(
             target = dialog.target,
             tags = draft.onKeys.mapNotNull(spellings::get),
             offeredTags = spellings.values.toList(),

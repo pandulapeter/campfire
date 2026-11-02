@@ -20,7 +20,11 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.import_review_tags_subtitle
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.song.Tag
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSummary
 
 /**
@@ -30,22 +34,28 @@ import com.pandulapeter.campfire.presentation.ui.state.importing.importReviewSum
  */
 @Composable
 internal fun ImportTagsSheet(
-    viewModel: CampfireViewModel,
+    libraryTags: StateFlow<List<Tag>>,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
+    importReportState: ImportReportState,
+    onDismiss: () -> Unit,
     dialog: DialogType.ImportTags,
 ) {
-    val tags = remember(dialog) { (viewModel.importReportState.importReport.value as? ImportReport.Review)?.choices?.tags.orEmpty() }
+    val tags = remember(dialog) { (importReportState.importReport.value as? ImportReport.Review)?.choices?.tags.orEmpty() }
     // Counted from the live review rather than when the sheet was opened, since a batch joining the review meanwhile
     // adds songs these tags go onto.
-    val report by viewModel.importReportState.importReport.collectAsStateWithLifecycle()
+    val report by importReportState.importReport.collectAsStateWithLifecycle()
     val songCount = remember(report) { (report as? ImportReport.Review)?.let { importReviewSummary(it.plan, it.choices).songCount } ?: 0 }
     TagsSheet(
-        viewModel = viewModel,
+        libraryTagsFlow = libraryTags,
+        preferencesController = preferencesController,
+        songRenderer = songRenderer,
         tagsPerSong = listOf(tags),
         sheetKey = IMPORT_TAGS_SHEET_KEY,
         subtitle = pluralTextResource(Res.plurals.import_review_tags_subtitle, songCount, songCount.toString()),
         confirmLabel = stringResource(Res.string.done),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-        onSave = { draft, spellings -> viewModel.importReportState.setImportTags(draft.onKeys.mapNotNull(spellings::get)) },
+        onDismiss = onDismiss,
+        onSave = { draft, spellings -> importReportState.setImportTags(draft.onKeys.mapNotNull(spellings::get)) },
     )
 }
 

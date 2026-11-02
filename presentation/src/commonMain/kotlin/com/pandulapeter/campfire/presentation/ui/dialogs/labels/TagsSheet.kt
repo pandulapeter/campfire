@@ -51,7 +51,10 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.song.Tag
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
@@ -91,7 +94,9 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun TagsSheet(
-    viewModel: CampfireViewModel,
+    libraryTagsFlow: StateFlow<List<Tag>>,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
     tagsPerSong: List<List<String>>,
     sheetKey: String,
     subtitle: String,
@@ -99,8 +104,8 @@ internal fun TagsSheet(
     onDismiss: () -> Unit,
     onSave: (draft: BulkLabelDraft, spellings: Map<String, String>) -> Unit,
 ) {
-    val libraryTags by viewModel.libraryState.tags.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val libraryTags by libraryTagsFlow.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     val tagColors = userPreferences?.tagColors.orEmpty()
     var query by rememberSaveable { mutableStateOf("") }
@@ -113,9 +118,9 @@ internal fun TagsSheet(
     val offeredTags = remember(tagsPerSong, createdTags, libraryTags, sortingMode) {
         offeredTagsOf(libraryTags = libraryTags, sortingMode = sortingMode, ownTags = tagsPerSong.flatten() + createdTags)
     }
-    val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.songRenderer.normalizeForSearch(it) } }
+    val searchableTags = remember(offeredTags) { offeredTags.map { it to songRenderer.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {
-        val normalizedQuery = viewModel.songRenderer.normalizeForSearch(query)
+        val normalizedQuery = songRenderer.normalizeForSearch(query)
         searchableTags.mapNotNull { (tag, name) -> tag.takeIf { normalizedQuery in name } }
     }
     val tagOrder = rememberChecklistOrder(draft.checkedKeys, sortingMode to query)
@@ -148,10 +153,7 @@ internal fun TagsSheet(
         subtitle = subtitle,
         retainHeight = true,
         startButton = {
-            LabelSortingToggle(
-                sortingMode = sortingMode,
-                onSortingModeSelected = viewModel.preferencesController::setTagSortingMode,
-            )
+            LabelSortingToggle(sortingMode = sortingMode, onSortingModeSelected = preferencesController::setTagSortingMode)
         },
         text = { contentPadding ->
             Column {
@@ -176,11 +178,7 @@ internal fun TagsSheet(
                 if (isCreatable || matches.isNotEmpty()) {
                     val listState = rememberLazyListState()
                     HideKeyboardWhenScrolledDown(listState)
-                    ScrollToStartWhenChanged(
-                        listState = listState,
-                        key = sortingMode to query,
-                        contents = matches,
-                    )
+                    ScrollToStartWhenChanged(listState = listState, key = sortingMode to query, contents = matches)
                     KeepChecklistRowsInPlace(listState, tagLayout)
                     LazyColumn(
                         modifier = Modifier.bounceScrollableContent(listState)
@@ -219,7 +217,7 @@ internal fun TagsSheet(
                                     TagColorButton(
                                         tag = tag,
                                         color = tagColorOf(tagColors, tag),
-                                        onColorSelected = { viewModel.setTagColor(tag, it) },
+                                        onColorSelected = { preferencesController.setTagColor(tag, it?.id) },
                                     )
                                 },
                                 onClick = { draft = draft.toggled(tag.lowercase()) },

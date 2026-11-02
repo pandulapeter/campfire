@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_choose
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentList
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -37,14 +36,14 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  */
 @Composable
 internal fun InstrumentSheet(
-    viewModel: CampfireViewModel,
-    dialog: DialogType.Instrument,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val preferences = userPreferences ?: return
     CampfireBottomSheet(
         title = stringResource(Res.string.instrument_choose),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }
@@ -60,7 +59,7 @@ internal fun InstrumentSheet(
             InstrumentList(
                 selected = preferences.instrument,
                 onSelected = { instrument ->
-                    viewModel.preferencesController.setInstrument(instrument)
+                    preferencesController.setInstrument(instrument)
                     closeSheet()
                 },
             )

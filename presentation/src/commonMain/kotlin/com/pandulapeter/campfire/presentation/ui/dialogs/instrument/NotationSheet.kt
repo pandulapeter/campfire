@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
@@ -27,7 +26,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.chords.description
 import com.pandulapeter.campfire.presentation.ui.chords.label
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
@@ -41,13 +40,14 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  */
 @Composable
 internal fun NotationSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_notation_choose),
-        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.Notation) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }
@@ -67,7 +67,7 @@ internal fun NotationSheet(
                     description = stringResource(notation.description),
                     isSelected = notation == selected,
                     onSelected = {
-                        viewModel.preferencesController.setNotation(notation)
+                        preferencesController.setNotation(notation)
                         closeSheet()
                     },
                 )

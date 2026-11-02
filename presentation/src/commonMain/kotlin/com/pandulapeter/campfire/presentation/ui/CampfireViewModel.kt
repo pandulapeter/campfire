@@ -26,7 +26,6 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
-import com.pandulapeter.campfire.presentation.ui.components.labels.TagColor
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
@@ -836,10 +835,6 @@ class CampfireViewModel(
 
     private suspend fun updateEditableSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
         setlistsController.updateEditableSetlist(fileName, transform)
-
-    // User preferences
-
-    internal fun setTagColor(tag: String, color: TagColor?) = preferencesController.setTagColor(tag, color?.id)
 
     // Sync
 

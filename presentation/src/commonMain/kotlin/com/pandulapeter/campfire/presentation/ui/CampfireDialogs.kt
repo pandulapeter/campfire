@@ -31,8 +31,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.ChordNamesS
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongLayoutSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TunerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TuningSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.CoverArtSearchSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.SongDetailsLookupSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.AppLanguageSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SelectionSetlistsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
@@ -40,14 +38,9 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionLanguagesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.ImportTagsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SelectionTagsSheet
-import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongLanguagesDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.labels.SongTagsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.NewSongDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDatePickerSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SetlistDetailsDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongMetadataDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongPlayingDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetCloseRequested
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -59,8 +52,6 @@ import com.pandulapeter.campfire.presentation.localization.plainTextResource
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
-import com.pandulapeter.campfire.presentation.resources.song_details_remove_cover_art_confirmation
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.confirm_exit_message
 import com.pandulapeter.campfire.presentation.resources.confirm_exit_title
@@ -218,16 +209,48 @@ private fun CampfireDialog(
         DialogType.SongFilters -> SongFiltersSheet(viewModel = viewModel)
 
         is DialogType.SongInfo -> SongInfoSheet(viewModel = viewModel, dialog = dialog, urlOpener = urlOpener)
-        is DialogType.ChordShape -> ChordShapeSheet(viewModel = viewModel, dialog = dialog)
-        is DialogType.ChordReference -> ChordReferenceSheet(viewModel = viewModel, dialog = dialog)
+        is DialogType.ChordShape -> ChordShapeSheet(
+            allSongs = viewModel.libraryState.allSongs,
+            songTextStore = viewModel.songTextStore,
+            preferencesController = viewModel.preferencesController,
+            overrides = viewModel.overrides,
+            songRenderer = viewModel.songRenderer,
+            dialogHost = viewModel.dialogHost,
+            dialog = dialog,
+        )
+
+        is DialogType.ChordReference -> ChordReferenceSheet(
+            preferencesController = viewModel.preferencesController,
+            dialogHost = viewModel.dialogHost,
+            dialog = dialog,
+        )
+
         is DialogType.Scale -> ScaleSheet(viewModel = viewModel, dialog = dialog)
-        DialogType.Instrument -> InstrumentSheet(viewModel = viewModel, dialog = DialogType.Instrument)
-        DialogType.Tuning -> TuningSheet(viewModel = viewModel, dialog = DialogType.Tuning)
-        DialogType.Notation -> NotationSheet(viewModel = viewModel)
+
+        DialogType.Instrument -> InstrumentSheet(
+            preferencesController = viewModel.preferencesController,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        )
+
+        DialogType.Tuning -> TuningSheet(
+            preferencesController = viewModel.preferencesController,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        )
+
+        DialogType.Notation -> NotationSheet(
+            preferencesController = viewModel.preferencesController,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        )
+
         DialogType.SongDisplay -> SongDisplaySheet(viewModel = viewModel)
         DialogType.SongLayout -> SongLayoutSheet(viewModel = viewModel)
         is DialogType.ChordNames -> ChordNamesSheet(viewModel = viewModel, dialog = dialog)
-        DialogType.Tuner -> TunerSheet(viewModel = viewModel, dialog = DialogType.Tuner)
+
+        DialogType.Tuner -> TunerSheet(
+            tunerController = viewModel.tunerController,
+            userPreferencesFlow = viewModel.userPreferences,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        )
 
         DialogType.AppLanguage -> AppLanguageSheet(viewModel = viewModel)
         DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(viewModel = viewModel)
@@ -244,12 +267,20 @@ private fun CampfireDialog(
         )
 
         is DialogType.SelectionTags -> SelectionTagsSheet(
-            viewModel = viewModel,
+            libraryState = viewModel.libraryState,
+            preferencesController = viewModel.preferencesController,
+            songRenderer = viewModel.songRenderer,
+            setSelectionTags = viewModel.selectionEditing::setSelectionTags,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
         is DialogType.SelectionLanguages -> SelectionLanguagesSheet(
-            viewModel = viewModel,
+            libraryState = viewModel.libraryState,
+            preferencesController = viewModel.preferencesController,
+            songRenderer = viewModel.songRenderer,
+            setSelectionLanguages = viewModel.selectionEditing::setSelectionLanguages,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 
@@ -263,53 +294,7 @@ private fun CampfireDialog(
             dialog = dialog,
         )
 
-        is DialogType.SongTags -> SongTagsDialog(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.SongMetadata -> SongMetadataDialog(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.SongDetailsLookup -> SongDetailsLookupSheet(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.SongLinks -> SongLinksDialog(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.SongLanguages -> SongLanguagesDialog(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.SongPlaying -> SongPlayingDialog(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.CoverArtSearch -> CoverArtSearchSheet(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
-
-        is DialogType.RemoveSongCoverArt -> ConfirmationDialog(
-            title = stringResource(Res.string.cover_art_search_remove),
-            text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
-            confirmLabel = stringResource(Res.string.cover_art_search_remove),
-            // Not removing the cover is not being done with it: the cover sheet the bin was tapped in is still under it.
-            onDismiss = { viewModel.dialogHost.dismissDialog() },
-            onConfirm = {
-                viewModel.songMetadataEditing.setSongCoverArt(target = dialog.target, url = null)
-                // The cover sheet under the question goes with it, sliding away: there is nothing left for it to change.
-                viewModel.dialogHost.dismissDialogAndSheetUnder()
-            },
-        )
+        is DialogType.SongEdit -> SongEditDialog(viewModel = viewModel, dialog = dialog)
 
         is DialogType.RemoveSongFromSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_remove_song),
@@ -396,7 +381,11 @@ private fun CampfireDialog(
         )
 
         is DialogType.ImportTags -> ImportTagsSheet(
-            viewModel = viewModel,
+            libraryTags = viewModel.libraryState.tags,
+            preferencesController = viewModel.preferencesController,
+            songRenderer = viewModel.songRenderer,
+            importReportState = viewModel.importReportState,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )
 

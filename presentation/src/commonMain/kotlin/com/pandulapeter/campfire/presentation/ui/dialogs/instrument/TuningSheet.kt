@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.instrument_tuning_choose
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -45,20 +44,20 @@ import com.pandulapeter.campfire.presentation.ui.tuner.tuningLabel
  */
 @Composable
 internal fun TuningSheet(
-    viewModel: CampfireViewModel,
-    dialog: DialogType.Tuning,
+    preferencesController: PreferencesController,
+    onDismiss: () -> Unit,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val preferences = userPreferences ?: return
     // Only an instrument with a choice of tunings has the chip that opens this, so any other has nothing to list here.
-    if (preferences.instrument.tunings.size <= 1) return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
+    if (preferences.instrument.tunings.size <= 1) return LaunchedEffect(Unit) { onDismiss() }
     val notation = preferences.chordSpelling.notation.toChordNotation()
     val selected = preferences.instrumentTuning
     CampfireBottomSheet(
         title = stringResource(Res.string.instrument_tuning_choose),
         // Named under the title, since the tunings are that instrument's and its chip is behind the sheet.
         subtitle = instrumentLabel(preferences.instrument),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         val closeSheet = { close() }
@@ -78,7 +77,7 @@ internal fun TuningSheet(
                     description = tuningStringsLabel(tuning, notation),
                     isSelected = tuning == selected,
                     onSelected = {
-                        viewModel.preferencesController.setTuning(tuning)
+                        preferencesController.setTuning(tuning)
                         closeSheet()
                     },
                 )

@@ -19,7 +19,9 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
  * The languages of the songs ticked in the selection mode ([LanguagesSheet]), saved the way [SelectionTagsSheet] saves
@@ -27,18 +29,24 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  */
 @Composable
 internal fun SelectionLanguagesSheet(
-    viewModel: CampfireViewModel,
+    libraryState: LibraryState,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
+    setSelectionLanguages: (fileNames: List<String>, added: Set<String>, removed: Set<String>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SelectionLanguages,
 ) {
-    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
+    val songsByFileName by libraryState.songsByFileName.collectAsStateWithLifecycle()
     val songs = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it] } }
     LanguagesSheet(
-        viewModel = viewModel,
+        libraryLanguagesFlow = libraryState.languages,
+        preferencesController = preferencesController,
+        songRenderer = songRenderer,
         songs = songs,
         sheetKey = dialog.songFileNames.joinToString(),
         subtitle = pluralTextResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size.toString()),
         confirmLabel = stringResource(Res.string.save),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
-        onSave = { draft -> viewModel.selectionEditing.setSelectionLanguages(fileNames = dialog.songFileNames, added = draft.added, removed = draft.removed) },
+        onDismiss = onDismiss,
+        onSave = { draft -> setSelectionLanguages(dialog.songFileNames, draft.added, draft.removed) },
     )
 }

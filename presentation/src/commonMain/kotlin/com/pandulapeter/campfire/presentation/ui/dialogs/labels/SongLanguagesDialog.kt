@@ -17,21 +17,31 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.save
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.song.SongLanguage
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
+import kotlinx.coroutines.flow.StateFlow
 
 /** The languages of one song ([LanguagesSheet]), named under the sheet's title the way its tags' sheet names it. */
 @Composable
 internal fun SongLanguagesDialog(
-    viewModel: CampfireViewModel,
+    libraryLanguages: StateFlow<List<SongLanguage>>,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
+    songMetadataEditing: SongMetadataEditing,
+    onDismiss: () -> Unit,
     dialog: DialogType.SongLanguages,
 ) = LanguagesSheet(
-    viewModel = viewModel,
+    libraryLanguagesFlow = libraryLanguages,
+    preferencesController = preferencesController,
+    songRenderer = songRenderer,
     songs = listOf(dialog.song),
     sheetKey = dialog.song.fileName,
     subtitle = songLabel(dialog.song),
     confirmLabel = stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save),
-    onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+    onDismiss = onDismiss,
     onSave = { draft ->
-        viewModel.songMetadataEditing.setSongLanguages(target = dialog.target, codes = draft.onKeys.toList(), offeredCodes = dialog.song.languages)
+        songMetadataEditing.setSongLanguages(target = dialog.target, codes = draft.onKeys.toList(), offeredCodes = dialog.song.languages)
     },
 )

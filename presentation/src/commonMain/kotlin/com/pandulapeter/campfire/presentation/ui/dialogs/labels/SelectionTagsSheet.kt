@@ -19,7 +19,9 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.songs_selection_count
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
  * The tags of the songs ticked in the selection mode ([TagsSheet]), subtitled with how many there are. Save puts the
@@ -28,24 +30,26 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  */
 @Composable
 internal fun SelectionTagsSheet(
-    viewModel: CampfireViewModel,
+    libraryState: LibraryState,
+    preferencesController: PreferencesController,
+    songRenderer: SongRenderer,
+    setSelectionTags: (fileNames: List<String>, added: List<String>, removed: Set<String>) -> Unit,
+    onDismiss: () -> Unit,
     dialog: DialogType.SelectionTags,
 ) {
-    val songsByFileName by viewModel.libraryState.songsByFileName.collectAsStateWithLifecycle()
+    val songsByFileName by libraryState.songsByFileName.collectAsStateWithLifecycle()
     val tagsPerSong = remember(dialog) { dialog.songFileNames.mapNotNull { songsByFileName[it]?.tags } }
     TagsSheet(
-        viewModel = viewModel,
+        libraryTagsFlow = libraryState.tags,
+        preferencesController = preferencesController,
+        songRenderer = songRenderer,
         tagsPerSong = tagsPerSong,
         sheetKey = dialog.songFileNames.joinToString(),
         subtitle = pluralTextResource(Res.plurals.songs_selection_count, dialog.songFileNames.size, dialog.songFileNames.size.toString()),
         confirmLabel = stringResource(Res.string.save),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
         onSave = { draft, spellings ->
-            viewModel.selectionEditing.setSelectionTags(
-                fileNames = dialog.songFileNames,
-                added = draft.added.mapNotNull(spellings::get),
-                removed = draft.removed,
-            )
+            setSelectionTags(dialog.songFileNames, draft.added.mapNotNull(spellings::get), draft.removed)
         },
     )
 }

@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.instrument
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import androidx.compose.animation.AnimatedVisibility
@@ -35,7 +34,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -68,15 +68,16 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  */
 @Composable
 internal fun TunerSheet(
-    viewModel: CampfireViewModel,
-    dialog: DialogType.Tuner,
+    tunerController: TunerController,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    onDismiss: () -> Unit,
 ) {
     // The state changes with every reading, thirty times a second, so it is handed down as a State for the display to
     // read, and the rest of the page only reads what changes with a note or a setting.
-    val state = viewModel.tunerController.tunerState.collectAsStateWithLifecycle()
-    val config by viewModel.tunerController.tunerConfig.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val hasRequested by viewModel.tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
+    val state = tunerController.tunerState.collectAsStateWithLifecycle()
+    val config by tunerController.tunerConfig.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
+    val hasRequested by tunerController.hasTurnedOnMicrophone.collectAsStateWithLifecycle()
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val permission = rememberMicrophonePermission()
     val status = permission.status
@@ -87,16 +88,16 @@ internal fun TunerSheet(
     val tone by remember { derivedStateOf { state.value.tone } }
     val issue by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.issue } }
     val heardNote by remember { derivedStateOf { (state.value.listening as? TunerListening.Hearing)?.reading?.note } }
-    val tunedNotes by viewModel.tunerController.tunedNotes.collectAsStateWithLifecycle()
-    val mode = viewModel.tunerController.tunerSettings.collectAsStateWithLifecycle().value.mode
+    val tunedNotes by tunerController.tunedNotes.collectAsStateWithLifecycle()
+    val mode = tunerController.tunerSettings.collectAsStateWithLifecycle().value.mode
     TunerListeningEffect(
         canListen = canListenWithoutTap(status = permission.status, hasRequested = hasRequested),
-        onListeningChanged = viewModel.tunerController::setTunerListening,
+        onListeningChanged = tunerController::setTunerListening,
     )
     TunerAskOnOpenEffect(
         notice = notice,
-        consumeOpenedByTap = viewModel.tunerController::consumeOpenedByTap,
-        ask = permission.request ?: viewModel.tunerController::requestMicrophone,
+        consumeOpenedByTap = tunerController::consumeOpenedByTap,
+        ask = permission.request ?: tunerController::requestMicrophone,
     )
     CampfireBottomSheet(
         title = stringResource(Res.string.tuner),
@@ -112,11 +113,11 @@ internal fun TunerSheet(
                     modifier = Modifier.padding(end = 12.dp),
                     mode = mode,
                     isEnabled = notice?.isMissingPermission != true,
-                    onModeSelected = { value -> viewModel.tunerController.updateTunerSettings { copy(mode = value) } },
+                    onModeSelected = { value -> tunerController.updateTunerSettings { copy(mode = value) } },
                 )
             }
         },
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
         Column(
@@ -145,7 +146,7 @@ internal fun TunerSheet(
                     notice = shownNotice,
                     permission = permission,
                     hasStrings = config.tuning != null,
-                    onListen = viewModel.tunerController::requestMicrophone,
+                    onListen = tunerController::requestMicrophone,
                 )
             }
             TunerInputIssueMessage(issue = issue, permission = permission)
@@ -156,7 +157,7 @@ internal fun TunerSheet(
                 heardNote = heardNote,
                 tunedNotes = tunedNotes,
                 isTitled = true,
-                onToggleTone = viewModel.tunerController::toggleTunerTone,
+                onToggleTone = tunerController::toggleTunerTone,
             )
         }
     }

@@ -23,7 +23,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_shape_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_chord_tuning
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.instrument.chordTuning
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.ui.chords.SelectedShape
@@ -47,11 +48,12 @@ import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
  */
 @Composable
 internal fun ChordReferenceSheet(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    dialogHost: DialogHost,
     dialog: DialogType.ChordReference,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val tuning = userPreferences?.chordTuning() ?: return LaunchedEffect(Unit) { viewModel.dialogHost.dismissSheet(dialog) }
+    val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
+    val tuning = userPreferences?.chordTuning() ?: return LaunchedEffect(Unit) { dialogHost.dismissSheet(dialog) }
     val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
     val storedShapes = userPreferences?.storedChordShapes(tuning).orEmpty()
     val chord = dialog.chord
@@ -61,7 +63,7 @@ internal fun ChordReferenceSheet(
     CampfireBottomSheet(
         title = textResource(Res.string.song_details_chord_shape_choose, chord.name),
         subtitle = chordNoteNames(chord, notation),
-        onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+        onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         key(chord.shapeChord.id, tuning) {
             ChordShapeGrid(
@@ -74,13 +76,13 @@ internal fun ChordReferenceSheet(
                 tuningLine = if (tuning.isStandard) null else textResource(Res.string.song_details_chord_tuning, chordTuningLabel(tuning, notation)),
                 capoLine = capoLine(chord, notation),
                 contentPadding = contentPadding,
-                onShapeSelected = { shape -> viewModel.preferencesController.setChordVoicing(tuning.voicingKey, chord.shapeChord.id, shape?.let(ChordVoicings::write)) },
+                onShapeSelected = { shape -> preferencesController.setChordVoicing(tuning.voicingKey, chord.shapeChord.id, shape?.let(ChordVoicings::write)) },
                 footer = if (dialog.showsScales && FeatureSwitches.of(userPreferences).areScaleSuggestionsEnabled) {
                     {
                         ScaleChipRow(
                             chord = chord,
                             notation = notation,
-                            onScaleSelected = { scaleId, rootName -> viewModel.dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false, capo = chord.capo)) },
+                            onScaleSelected = { scaleId, rootName -> dialogHost.showDialog(DialogType.Scale(scaleId, rootName, showsChords = false, capo = chord.capo)) },
                         )
                     }
                 } else {
