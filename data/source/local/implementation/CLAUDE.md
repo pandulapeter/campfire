@@ -35,10 +35,13 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - **Missing vs. failed**: a read returns null **only** for a file that is not there. A file that cannot be read,
   written, or deleted, or a directory that cannot be listed, throws `LibraryStorageException` everywhere, because sync
   plans a missing file as a deletion that reaches every device. iOS asks `dataWithContentsOfFile` for its `NSError` and
-  re-checks `fileExistsAtPath` on nil; the JVM catches `java.nio.file.NoSuchFileException` (not Kotlin's) and wraps
+  re-checks `fileExistsAtPath` on nil (a directory under the name is missing, as in a listing); the JVM catches `java.nio.file.NoSuchFileException` (not Kotlin's) and wraps
   other `IOException`s; OPFS folds only `NotFoundError` into null, and drops an entry that vanishes between listing and
   stat (sync deletes while the live rescan lists).
 - Every `catch (Exception)` around a read rethrows `CancellationException` first.
+- **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage` and on the iOS
+  simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job); what only the JVM does stays
+  in `JvmFileStorageTest`. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
 - **Names**: `canHoldFileName` refuses a path or nothing (`/`, `\`, `.`, `..`) everywhere, and on Windows `? : * " < >
   |`, a trailing space or dot, or a control character. Refused, never mapped: a mapping that failed to reverse would
   send a second copy of the song to every device. Windows device names (`con.cho`) are stored with a leading underscore

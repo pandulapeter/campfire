@@ -152,6 +152,11 @@ jobs:
       # Every library's iosMain and the framework the Xcode project embeds.
       - name: Compile the iOS framework
         run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
+      # The file storage contract (FileStorageContractTest) over the Foundation calls the app makes, on the simulator
+      # Kotlin boots by default; only this module's tests run here. A runner without that simulator is answered in the
+      # module's build file (testRuns["test"].deviceId), not here. Not in the pre-commit hook: the test link takes minutes.
+      - name: Run the storage tests on the iOS simulator
+        run: ./gradlew :data:source:local:implementation:iosSimulatorArm64Test
 
   test-windows:
     name: Run the unit tests on Windows

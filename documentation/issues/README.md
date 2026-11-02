@@ -20,7 +20,6 @@ improvised past that point.
 |---|---|---|---|
 | 01 | Replace the Linux-only golden renders | steps 1–3 | Step 4(a) expects "There is a house in New Orleans" on the demo song's first screen at 360 × 640 dp; it comes after Chords, Scales, Picking pattern, and Intro, off the first page. Steps 5–7 wait on a corrected step 4. |
 | 02 | Make the unit tests independent of the host | step 1 | Step 2 reads the Hebrew face with `preloadFont` from `commonMain`, but Compose resources 1.12.2 has it only in `webMain`; it needs an expect/actual the plan does not describe. |
-| 04 | Run the storage contract tests on the iOS simulator | nothing | Kotlin/Native rejects commas in backticked test names, and the module's `commonTest` has 18 (7 files), so `iosSimulatorArm64Test` cannot compile; rename them first, and add a rule against new ones. |
 | 07 | Restructure the converter into explicit stages | steps 1–2 | Step 3: `writeBody` / `BodyWriter` decide by what they already wrote, through private helpers on the private `Rendered`; reaching the nested `Song` / `Part` model byte-identically is a redesign the plan does not spell out. Steps 7–8 need Campfire exports in the corpus (no `campfire/` folder yet). Corpus score unchanged at 0.778. |
 
 Plan 13 left these starts in `CampfireViewModel`'s `init`, each needing a reorder or a parameter the size check refuses:
