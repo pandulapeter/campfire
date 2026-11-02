@@ -57,6 +57,15 @@ internal class ToolsItemTest {
         assertTrue(bottom <= LARGE_TEXT_RAIL_HEIGHT.value, "Settings ends at $bottom, below the window.")
     }
 
+    /** Settings out of reach on a phone on its side, where the rail is shortest, is what grouping the tools is for. */
+    @Test
+    fun `a phone on its side keeps settings on the rail inside the window`() = runAppTest(window = TestWindow.PHONE_ON_ITS_SIDE) {
+        val settings = onNode(hasText(string(Res.string.settings)) and hasClickAction())
+        settings.assertIsDisplayed()
+        val bottom = settings.fetchSemanticsNode().boundsInRoot.bottom
+        assertTrue(bottom <= TestWindow.PHONE_ON_ITS_SIDE.height.value, "Settings ends at $bottom, below the window.")
+    }
+
     private fun AppTestScope.tools() = listOf(string(Res.string.metronome), string(Res.string.tuner), string(Res.string.chords), string(Res.string.scales))
 }
 
