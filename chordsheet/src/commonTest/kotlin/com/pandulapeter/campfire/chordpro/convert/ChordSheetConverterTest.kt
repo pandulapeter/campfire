@@ -1523,6 +1523,42 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `margin labels I and O beside labels of a letter each are an intro and an outro, written as headings of no type are`() {
+        val sheet = listOf(
+            "        C            G",
+            "I       Hum hum hum hum",
+            "        G          C",
+            "A1      Santa baby slip a sable",
+            "        D                G",
+            "B1      Think of all the fun",
+            "        C              G",
+            "O       Hurry down the chimney",
+        ).joinToString("\n")
+        assertEquals(
+            "{comment: I}\n[C]Hum hum hum [G]hum\n{start_of_verse: A1}\n[G]Santa baby [C]slip a sable\n{end_of_verse}\n" +
+                "{start_of_bridge: B1}\n[D]Think of all the [G]fun\n{end_of_bridge}\n\n{comment: O}\n[C]Hurry down the [G]chimney\n",
+            convert(sheet),
+        )
+    }
+
+    @Test
+    fun `a margin label I beside II and III is the first verse`() {
+        val sheet = listOf(
+            "        C            G",
+            "I       Amazing grace how sweet",
+            "        G            C",
+            "II      Through many dangers",
+            "        D              G",
+            "III     When we've been there",
+        ).joinToString("\n")
+        assertEquals(
+            "{start_of_verse: I}\n[C]Amazing grace [G]how sweet\n{end_of_verse}\n{start_of_verse: II}\n[G]Through many [C]dangers\n{end_of_verse}\n" +
+                "{start_of_verse: III}\n[D]When we've been [G]there\n{end_of_verse}\n",
+            convert(sheet),
+        )
+    }
+
+    @Test
     fun `margin labels beside a second column open its sections, measured against that column's own body`() {
         fun column(index: Int, offset: Double, text: String) = ChordSheet.ofPlainText(text).pages.single().lines.map { line ->
             line.copy(spans = line.spans.map { it.copy(start = it.start + offset, end = it.end + offset) }, column = index)

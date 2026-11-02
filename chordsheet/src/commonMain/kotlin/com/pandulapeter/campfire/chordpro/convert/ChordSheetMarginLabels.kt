@@ -55,10 +55,22 @@ internal object ChordSheetMarginLabels {
         return result
     }
 
-    /** The ChordPro section a margin label opens: its heading word's, an abbreviation's, or a verse named by the label. */
-    fun type(label: String): String = ChordSheetHeadings.parse(label)?.type
-        ?: ChordSheetHeadings.abbreviatedType(label)
-        ?: "verse"
+    /**
+     * The ChordPro section a margin [label] opens among the song's [labels]: its heading word's, an abbreviation's, or a
+     * verse named by the label; null for one written as a comment, as any heading of no type is (`Intro`). `I` and `O`
+     * beside labels of a letter each, numbered or not (`V`, `C`, `A1`, `B2`), are an intro and an outro; beside numerals
+     * (`II`, `III`) `I` is the first verse.
+     */
+    fun type(label: String, labels: List<String>): String? {
+        val text = label.trim()
+        val others = labels.map { it.trim() }.filter { it !in introAndOutro }
+        if (text in introAndOutro && others.isNotEmpty() && others.all(letterLabel::matches)) return null
+        val heading = ChordSheetHeadings.parse(text)
+        return if (heading != null) heading.type else ChordSheetHeadings.abbreviatedType(text) ?: "verse"
+    }
+
+    private val introAndOutro = setOf("I", "O")
+    private val letterLabel = Regex("[A-Za-z][0-9]*")
 
     /** The labels of [lines], which are one column's, or null where they have none. */
     private fun labels(lines: List<ChordSheet.Line>): List<Label?>? {

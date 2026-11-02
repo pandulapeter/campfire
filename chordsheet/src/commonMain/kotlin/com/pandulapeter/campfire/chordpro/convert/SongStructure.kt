@@ -86,6 +86,7 @@ internal object SongStructure {
         )
         // A verse's number names its stanza alone, so a chorus set apart by its look ends it.
         fun openUnlabelled(at: Int) { if (at in unlabelled) { closeNumbered(); openChorus() } }
+        val marginLabels = lines.filter { it.isMarginLabel }.map { it.text }
         val verseNumbers = ChordSheetVerseNumbers.of(lines, kinds)
         val unopenedNumbers = verseNumbers.toMutableMap()
         fun lyricAt(at: Int) = if (at in verseNumbers) ChordSheetVerseNumbers.withoutNumber(lines[at]) else lines[at]
@@ -128,7 +129,7 @@ internal object SongStructure {
                     flushChanges()
                     val label = headerValue(headingLabel(line.text))
                     val type = when {
-                        line.isMarginLabel -> ChordSheetMarginLabels.type(line.text)
+                        line.isMarginLabel -> ChordSheetMarginLabels.type(line.text, marginLabels)
                         features[index].isLabel -> ChordSheetHeadings.sectionType(label)
                         else -> features[index].heading?.type
                     }
