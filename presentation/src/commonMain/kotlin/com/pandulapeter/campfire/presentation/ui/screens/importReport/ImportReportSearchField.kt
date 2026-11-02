@@ -80,7 +80,6 @@ import com.pandulapeter.campfire.presentation.resources.import_status_unknown_fa
 import com.pandulapeter.campfire.presentation.resources.import_status_unprocessed
 import com.pandulapeter.campfire.presentation.resources.import_status_unreadable
 import com.pandulapeter.campfire.presentation.resources.songs_clear
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery

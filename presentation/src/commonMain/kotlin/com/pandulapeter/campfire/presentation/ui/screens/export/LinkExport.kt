@@ -20,18 +20,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
+import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isCopyConfirmedBySystem
 import com.pandulapeter.campfire.presentation.ui.platform.plainTextClipEntry
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.qrCodeFileName
 import com.pandulapeter.campfire.presentation.ui.share.QrCode
+import com.pandulapeter.campfire.presentation.ui.share.ShareLinkController
 import com.pandulapeter.campfire.presentation.ui.share.ShareTarget
 import com.pandulapeter.campfire.presentation.ui.share.qrCodePng
+import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import kotlinx.coroutines.launch
 
@@ -60,15 +64,19 @@ internal class LinkExport(
  */
 @Composable
 internal fun rememberLinkExport(
-    viewModel: CampfireViewModel,
+    shareLinkController: ShareLinkController,
+    syncController: SyncController,
+    exportController: ExportController,
+    messageSink: MessageSink,
+    onConnectSyncProvider: (SyncProviderId, AuthorizationCompletionPage) -> Unit,
     dialog: DialogType.Export,
     target: ShareTarget,
     title: String,
     source: PrintSource?,
     isOpen: Boolean,
 ): LinkExport {
-    val controller = viewModel.shareLinkController
-    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+    val controller = shareLinkController
+    val syncState by syncController.syncState.collectAsStateWithLifecycle()
     val shares by controller.shares.collectAsStateWithLifecycle()
     val creations by controller.creations.collectAsStateWithLifecycle()
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
@@ -96,24 +104,24 @@ internal fun rememberLinkExport(
                     // A connection made again for the permission to make links is what the failure asked for, so it is
                     // not shown again once the account is back. It is asked again of the account's own provider.
                     controller.forgetCreation(target)
-                    ((syncState as? SyncState.Connected)?.account?.providerId ?: viewModel.syncController.offeredSyncProvider)
-                        ?.let { viewModel.connectSyncProvider(it, completionPage) }
+                    ((syncState as? SyncState.Connected)?.account?.providerId ?: syncController.offeredSyncProvider)
+                        ?.let { onConnectSyncProvider(it, completionPage) }
                 }
-                LinkAction.CANCEL -> viewModel.syncController.cancelSyncConnection()
+                LinkAction.CANCEL -> syncController.cancelSyncConnection()
                 LinkAction.CREATE, LinkAction.TRY_AGAIN -> controller.create(target, title)
                 LinkAction.COPY -> link?.let {
                     scope.launch {
                         clipboard.setClipEntry(plainTextClipEntry(it))
-                        if (!isCopyConfirmedBySystem) viewModel.messageSink.sendMessage(Message.LinkCopied)
+                        if (!isCopyConfirmedBySystem) messageSink.sendMessage(Message.LinkCopied)
                     }
                 }
             }
         },
-        onShare = { if (isOpenNow && link != null) viewModel.exportController.shareLink(filePicker, dialog, link = link, subject = title) },
+        onShare = { if (isOpenNow && link != null) exportController.shareLink(filePicker, dialog, link = link, subject = title) },
         onSaveQrCode = {
             val qrCode = link?.let { QrCode.encode(it) }
             if (isOpenNow && qrCode != null && source != null) {
-                viewModel.exportController.exportQrCode(filePicker, dialog, fileName = qrCodeFileName(source)) { qrCodePng(qrCode) }
+                exportController.exportQrCode(filePicker, dialog, fileName = qrCodeFileName(source)) { qrCodePng(qrCode) }
             }
         },
         onStopSharing = {

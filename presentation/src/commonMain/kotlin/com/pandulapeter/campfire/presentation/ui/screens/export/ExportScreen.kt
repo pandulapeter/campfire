@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -67,7 +66,6 @@ import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.navigation.FeatureSwitches
-import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.plainPluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -84,7 +82,6 @@ import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
@@ -96,8 +93,6 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 
 /**
  * The Share screen of a song or a setlist: the options on one side, the preview of what they make on the other, and Save
@@ -150,14 +145,7 @@ internal fun ExportScreen(
             state.failed = true
         }
     }
-    // The setlist's day as the setlist dialog shows it, in the app's language. The formatter counts in UTC midnights, so
-    // the day goes in as one: any other zone would print the day before or after it on one side of UTC.
-    val languageCode = currentLanguage.value.code
-    val locale = remember(languageCode) { calendarLocale(languageCode) }
-    val dateFormatter = remember { DatePickerDefaults.dateFormatter() }
-    val date = dialog.setlist?.date?.let { day ->
-        dateFormatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString()
-    }
+    val date = rememberSetlistDateText(dialog.setlist?.date)
     val songsCount = plainPluralTextResource(Res.plurals.songs_selection_count, dialog.songs.size, dialog.songs.size.toString())
     // Several songs have no title of their own, so the file is titled with how many of them it holds.
     val titledSource = remember(state.source, date, songsCount) {
@@ -217,7 +205,11 @@ internal fun ExportScreen(
     val isFirstShownAtOnce = state.pickedFormat == null
     val link = shareTargetOf(dialog)?.let { target ->
         rememberLinkExport(
-            viewModel = viewModel,
+            shareLinkController = viewModel.shareLinkController,
+            syncController = viewModel.syncController,
+            exportController = viewModel.exportController,
+            messageSink = viewModel.messageSink,
+            onConnectSyncProvider = viewModel::connectSyncProvider,
             dialog = dialog,
             target = target,
             title = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
