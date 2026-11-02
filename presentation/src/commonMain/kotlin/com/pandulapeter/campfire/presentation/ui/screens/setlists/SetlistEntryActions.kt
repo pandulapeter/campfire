@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenuState
@@ -26,6 +25,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.setlists.details
@@ -43,7 +43,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SetlistEntryActions(
     state: OverflowMenuState,
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
     songActions: SongActionHandler,
     entry: SetlistWithSongs.Entry,
     setlistFileName: String,
@@ -52,7 +52,7 @@ internal fun SetlistEntryActions(
     onMoveDown: (() -> Unit)?,
 ) {
     val onRemove: () -> Unit = {
-        viewModel.dialogHost.showDialog(
+        dialogHost.showDialog(
             DialogType.RemoveSongFromSetlist(
                 songFileName = entry.songFileName,
                 songTitle = (entry as? SetlistWithSongs.Entry.Present)?.song?.title ?: entry.songFileName,

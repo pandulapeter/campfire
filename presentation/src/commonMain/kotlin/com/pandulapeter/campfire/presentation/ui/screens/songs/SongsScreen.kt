@@ -63,7 +63,9 @@ import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.NewItemMenu
+import com.pandulapeter.campfire.presentation.ui.platform.ClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextReader
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 import com.pandulapeter.campfire.presentation.ui.components.appBar.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
@@ -151,7 +153,21 @@ internal fun SongsScreen(
             list = {
                 SongList(
                     modifier = Modifier.fillMaxSize().underAppBar { 1f - appBarOverlap().coverage },
-                    viewModel = viewModel,
+                    songListState = viewModel.songListState,
+                    libraryState = viewModel.libraryState,
+                    userPreferencesFlow = viewModel.userPreferences,
+                    preferencesController = viewModel.preferencesController,
+                    playingOverridesFlow = viewModel.overrides.playingOverrides,
+                    dialogHost = viewModel.dialogHost,
+                    editorSession = viewModel.editorSession,
+                    songFilesController = viewModel.songFilesController,
+                    importController = viewModel.importController,
+                    pastedSongController = viewModel.pastedSongController,
+                    firstRunController = viewModel.firstRunController,
+                    randomPicksDraw = viewModel.randomPicksDraw,
+                    songSelection = viewModel.songSelection,
+                    navigator = viewModel.navigator,
+                    songRenderer = viewModel.songRenderer,
                     listState = listState,
                     placeholder = placeholder,
                     isSearchOpen = isSearchOpen,
@@ -180,44 +196,15 @@ internal fun SongsScreen(
                     areClosedSearchActionsKeptInSearch = isSelecting,
                     areClosedSearchActionsDetached = !isSelecting,
                     closedSearchActions = {
-                        AnimatedContent(
-                            targetState = isSelecting,
-                            // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
-                            // menu, and scaled, so that it is out of the way of the menu fading in where it stood. Resized on the
-                            // search's spring, which the bar moves the search action and the pill's end on as the two swap.
-                            transitionSpec = {
-                                fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
-                                    fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
-                                    SizeTransform(clip = false) { _, _ -> searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold) }
-                            },
-                        ) { isShowingSelectionMenu ->
-                            if (isShowingSelectionMenu) {
-                                val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-                                val listedFileNames = remember(songGroups) { songGroups.groups.filterNot { it.isRandomPicks }.flatMap { group -> group.songs.map { it.fileName } } }
-                                val ticked = selection.orEmpty()
-                                SongSelectionMenu(
-                                    isRoomy = layout.columnCount > 1,
-                                    canSelectAll = listedFileNames.any { it !in ticked },
-                                    hasSelection = ticked.isNotEmpty(),
-                                    areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
-                                    areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-                                    onSelectAll = { viewModel.songSelection.select(listedFileNames) },
-                                    onDeselectAll = viewModel.songSelection::deselectAll,
-                                    onChooseSetlists = viewModel::showSelectionSetlists,
-                                    onManageTags = viewModel::showSelectionTags,
-                                    onManageLanguages = viewModel::showSelectionLanguages,
-                                    onExport = viewModel::exportSelection,
-                                )
-                            } else {
-                                NewItemMenu(
-                                    contentDescription = stringResource(Res.string.songs_new_song),
-                                    createLabel = stringResource(Res.string.songs_create_song),
-                                    onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
-                                    onImport = viewModel.importController::importFiles,
-                                    onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
-                                )
-                            }
-                        }
+                        ClosedSearchActions(
+                            viewModel = viewModel,
+                            isSelecting = isSelecting,
+                            songGroups = songGroups,
+                            selection = selection,
+                            layout = layout,
+                            isEditingSongs = isEditingSongs,
+                            clipboardReader = clipboardReader,
+                        )
                     },
                     actions = {
                         // Read here rather than by the screen, so that a preference changing recomposes the bar's
@@ -260,6 +247,55 @@ internal fun SongsScreen(
         isBackEnabled = isSelecting && !isSearchOpen && visibleDialog == null && !LocalOverlayState.current.isAnyMenuOpen,
         onBackCompleted = viewModel.songSelection::end,
     )
+}
+
+/** The New button, or in the selection mode the selection's menu, which the bar's closed search shows. */
+@Composable
+private fun ClosedSearchActions(
+    viewModel: CampfireViewModel,
+    isSelecting: Boolean,
+    songGroups: SongGroups,
+    selection: Set<String>?,
+    layout: ListLayout,
+    isEditingSongs: Boolean,
+    clipboardReader: ClipboardTextReader,
+) = AnimatedContent(
+    targetState = isSelecting,
+    // Unclipped, so that the New button's circle shrinks away whole rather than cut by the narrower
+    // menu, and scaled, so that it is out of the way of the menu fading in where it stood. Resized on the
+    // search's spring, which the bar moves the search action and the pill's end on as the two swap.
+    transitionSpec = {
+        fadeIn() + scaleIn(initialScale = SELECTION_MENU_SWAP_SCALE) togetherWith
+            fadeOut(tween(SELECTION_MENU_FADE_OUT_MILLIS)) + scaleOut(targetScale = SELECTION_MENU_SWAP_SCALE) using
+            SizeTransform(clip = false) { _, _ -> searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold) }
+    },
+) { isShowingSelectionMenu ->
+    if (isShowingSelectionMenu) {
+        val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+        val listedFileNames = remember(songGroups) { songGroups.groups.filterNot { it.isRandomPicks }.flatMap { group -> group.songs.map { it.fileName } } }
+        val ticked = selection.orEmpty()
+        SongSelectionMenu(
+            isRoomy = layout.columnCount > 1,
+            canSelectAll = listedFileNames.any { it !in ticked },
+            hasSelection = ticked.isNotEmpty(),
+            areActionsEnabled = ticked.isNotEmpty() && !isEditingSongs,
+            areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
+            onSelectAll = { viewModel.songSelection.select(listedFileNames) },
+            onDeselectAll = viewModel.songSelection::deselectAll,
+            onChooseSetlists = viewModel::showSelectionSetlists,
+            onManageTags = viewModel::showSelectionTags,
+            onManageLanguages = viewModel::showSelectionLanguages,
+            onExport = viewModel::exportSelection,
+        )
+    } else {
+        NewItemMenu(
+            contentDescription = stringResource(Res.string.songs_new_song),
+            createLabel = stringResource(Res.string.songs_create_song),
+            onCreate = { viewModel.dialogHost.showDialog(DialogType.NewSong) },
+            onImport = viewModel.importController::importFiles,
+            onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
+        )
+    }
 }
 
 /**

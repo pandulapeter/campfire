@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import org.jetbrains.compose.resources.painterResource
@@ -30,7 +30,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun songLabelActions(
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
     song: Song,
     target: SongEditTarget,
 ): List<ActionsMenuItem> = listOf(
@@ -38,12 +38,12 @@ internal fun songLabelActions(
         title = stringResource(Res.string.song_details_tags_manage),
         icon = painterResource(Res.drawable.ic_label),
         isAlwaysInMenu = true,
-        onClick = { viewModel.dialogHost.showDialog(DialogType.SongTags(song = song, target = target)) },
+        onClick = { dialogHost.showDialog(DialogType.SongTags(song = song, target = target)) },
     ),
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_languages_edit),
         icon = painterResource(Res.drawable.ic_language),
         isAlwaysInMenu = true,
-        onClick = { viewModel.dialogHost.showDialog(DialogType.SongLanguages(song = song, target = target)) },
+        onClick = { dialogHost.showDialog(DialogType.SongLanguages(song = song, target = target)) },
     ),
 )

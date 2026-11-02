@@ -13,27 +13,30 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.songs_filter
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.ResetFiltersAction
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterActions
+import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterUiState
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 
 /** The [SongFilters] of the songs screen, with the action that resets them all in the header. */
 @Composable
-internal fun SongFiltersSheet(viewModel: CampfireViewModel) {
-    val state = rememberSongFilterUiState(viewModel)
-    val actions = rememberSongFilterActions(viewModel)
+internal fun SongFiltersSheet(
+    state: SongFilterUiState,
+    actions: SongFilterActions,
+    normalizeForSearch: (String) -> String,
+    onDismiss: () -> Unit,
+) {
     CampfireBottomSheet(
         title = stringResource(Res.string.songs_filter),
         actions = { ResetFiltersAction(isVisible = state.isActive, onClick = actions::clearSongFilter) },
-        onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
+        onDismiss = onDismiss,
     ) { contentPadding ->
         SongFilters(
             state = state,
             actions = actions,
-            normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
+            normalizeForSearch = normalizeForSearch,
             contentPadding = contentPadding,
             uncoveredTopInset = uncoveredTopInset,
             fadeBackgroundColor = sheetContainerColor(),

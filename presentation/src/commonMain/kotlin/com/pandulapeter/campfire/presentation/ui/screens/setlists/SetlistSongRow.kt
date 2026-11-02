@@ -40,7 +40,6 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
 import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
@@ -59,6 +58,10 @@ import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapsho
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 
@@ -72,7 +75,10 @@ import sh.calvin.reorderable.ReorderableItem
  */
 @Composable
 internal fun LazyGridItemScope.SetlistSongRow(
-    viewModel: CampfireViewModel,
+    setlistsController: SetlistsController,
+    songRenderer: SongRenderer,
+    dialogHost: DialogHost,
+    navigator: Navigator,
     songActions: SongActionHandler,
     setlistWithSongs: SetlistWithSongs,
     row: SetlistRow,
@@ -121,10 +127,10 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
     // no step that way.
     val onMoveUp: (() -> Unit)? = if (canMove && rowIndex > 0) {
-        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = -1)) }
+        { setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = -1)) }
     } else null
     val onMoveDown: (() -> Unit)? = if (canMove && !isLastRow) {
-        { viewModel.setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = 1)) }
+        { setlistsController.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames().movedOnePlace(rowIndex, by = 1)) }
     } else null
     val moveActions = moveActionsSemantics(onMoveUp = onMoveUp, onMoveDown = onMoveDown)
     val onDragStarted: (Offset) -> Unit = { reorder.onDragStarted(setlistWithSongs.setlist.fileName) }
@@ -135,7 +141,7 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // transposition to work out.
     val renderedKey = (entry as? SetlistWithSongs.Entry.Present)?.let { present ->
         val playback = songPlaybackOf(song = present.song, setlistFileName = setlistWithSongs.setlist.fileName, overrides = playingOverrides)
-        rememberSongCardKey(viewModel.songRenderer, present.song, playback.soundingTransposition, cardOptions.chordSpelling)
+        rememberSongCardKey(songRenderer, present.song, playback.soundingTransposition, cardOptions.chordSpelling)
     }
     // ReorderableItem's drag tracking, and the elevation and color it animates while a row is
     // lifted, are only paid for while reorder mode is on. Every row of every setlist is wrapped
@@ -144,9 +150,6 @@ internal fun LazyGridItemScope.SetlistSongRow(
     // Outside the mode every row would otherwise carry an Animatable that never leaves its rest
     // value for as long as the row is on screen, which is the very per-row coroutine
     // draggedListItemContainerColor's own documentation says a list of this size cannot afford.
-    // scope is the ReorderableItem content's own receiver, which draggableHandle and
-    // longPressDraggableHandle are members of; it is null outside reorder mode, where isReorderable
-    // is always false and neither is ever called.
     val rowContent: @Composable (scope: ReorderableCollectionItemScope?, isBeingDragged: Boolean, itemModifier: Modifier) -> Unit = { scope, isBeingDragged, itemModifier ->
         SetlistRowContent(
             modifier = itemModifier.then(moveActions).fadingUnderListTop(topFade),
@@ -157,7 +160,8 @@ internal fun LazyGridItemScope.SetlistSongRow(
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             onDragStarted = onDragStarted,
             onDragStopped = reorder.onDragStopped,
-            viewModel = viewModel,
+            dialogHost = dialogHost,
+            navigator = navigator,
             songActions = songActions,
             setlistWithSongs = setlistWithSongs,
             row = row,
@@ -193,7 +197,8 @@ internal fun LazyGridItemScope.SetlistSongRow(
 
 /**
  * What a setlist's row draws, lifted by [scope] (the `ReorderableItem` content's own receiver, null outside reorder mode)
- * while [isBeingDragged].
+ * while [isBeingDragged]. [scope] is what `draggableHandle` and `longPressDraggableHandle` are members of; outside
+ * reorder mode [isReorderable] is always false and neither is ever called.
  */
 @Composable
 private fun SetlistRowContent(
@@ -205,7 +210,8 @@ private fun SetlistRowContent(
     isPerformanceModeEnabled: Boolean,
     onDragStarted: (Offset) -> Unit,
     onDragStopped: () -> Unit,
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
+    navigator: Navigator,
     songActions: SongActionHandler,
     setlistWithSongs: SetlistWithSongs,
     row: SetlistRow,
@@ -242,7 +248,7 @@ private fun SetlistRowContent(
     } else {
         {
             SetlistRowActions(
-                viewModel = viewModel,
+                dialogHost = dialogHost,
                 songActions = songActions,
                 setlistWithSongs = setlistWithSongs,
                 entry = row.entry,
@@ -261,7 +267,7 @@ private fun SetlistRowContent(
     }
     SetlistEntryCard(
         modifier = cardModifier,
-        viewModel = viewModel,
+        navigator = navigator,
         setlistWithSongs = setlistWithSongs,
         row = row,
         cardPadding = cardPadding,
@@ -279,7 +285,7 @@ private fun SetlistRowContent(
 /** The overflow menu of a setlist's row, with the grip that drags the row in front of it in reorder mode. */
 @Composable
 private fun SetlistRowActions(
-    viewModel: CampfireViewModel,
+    dialogHost: DialogHost,
     songActions: SongActionHandler,
     setlistWithSongs: SetlistWithSongs,
     entry: SetlistWithSongs.Entry,
@@ -308,7 +314,7 @@ private fun SetlistRowActions(
         }
         SetlistEntryActions(
             state = actionsMenuState,
-            viewModel = viewModel,
+            dialogHost = dialogHost,
             songActions = songActions,
             entry = entry,
             setlistFileName = setlistWithSongs.setlist.fileName,
@@ -323,7 +329,7 @@ private fun SetlistRowActions(
 @Composable
 private fun SetlistEntryCard(
     modifier: Modifier,
-    viewModel: CampfireViewModel,
+    navigator: Navigator,
     setlistWithSongs: SetlistWithSongs,
     row: SetlistRow,
     cardPadding: PaddingValues,
@@ -357,7 +363,7 @@ private fun SetlistEntryCard(
             shouldShowLabels = false,
             containerColor = containerColor,
             shadowElevation = elevation,
-            onClick = { viewModel.navigator.openSongInSetlist(setlistWithSongs, entry.song) },
+            onClick = { navigator.openSongInSetlist(setlistWithSongs, entry.song) },
             onContextClick = onContextClick,
             actions = actions,
         )

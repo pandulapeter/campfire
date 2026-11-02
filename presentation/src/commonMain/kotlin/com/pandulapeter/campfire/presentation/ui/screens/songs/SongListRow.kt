@@ -28,7 +28,6 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.SongFilter
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.labels.LabelsOnEverySong
@@ -46,6 +45,10 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
 import com.pandulapeter.campfire.presentation.ui.playing.songPlaybackOf
 import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
 
 /**
  * One song of the song list: its card, which opens it, or ticks it in the selection mode, and the menu hanging from it.
@@ -55,7 +58,10 @@ import com.pandulapeter.campfire.presentation.ui.playing.soundingTransposition
  */
 @Composable
 internal fun SongListRow(
-    viewModel: CampfireViewModel,
+    songRenderer: SongRenderer,
+    songSelection: SongSelection,
+    navigator: Navigator,
+    dialogHost: DialogHost,
     songActions: SongActionHandler,
     song: Song,
     itemKey: String,
@@ -85,7 +91,7 @@ internal fun SongListRow(
     val playback = songPlaybackOf(song = song, setlistFileName = null, overrides = playingOverrides)
     val tempo = playback.tempo
     val key = rememberSongCardKey(
-        songRenderer = viewModel.songRenderer,
+        songRenderer = songRenderer,
         song = song,
         transposition = playback.soundingTransposition,
         chordSpelling = cardOptions.chordSpelling,
@@ -105,11 +111,11 @@ internal fun SongListRow(
         onTagClicked = { onTagClicked(itemKey, it) },
         onLanguageClicked = { onLanguageClicked(itemKey, it) },
         onClick = if (isSelecting) {
-            { viewModel.songSelection.toggle(song.fileName) }
+            { songSelection.toggle(song.fileName) }
         } else {
             {
                 keyboardController?.hide()
-                viewModel.navigator.openSong(song)
+                navigator.openSong(song)
             }
         },
         // A shortcut to the row's own overflow menu, for a right click and, where holding a row is a
@@ -130,7 +136,8 @@ internal fun SongListRow(
         } else {
             {
                 SongRowActions(
-                    viewModel = viewModel,
+                    songSelection = songSelection,
+                    dialogHost = dialogHost,
                     songActions = songActions,
                     song = song,
                     actionsMenuState = actionsMenuState,
@@ -149,7 +156,8 @@ internal fun SongListRow(
 /** The star and the menu of a song's card, or, in the selection mode, the box that says whether it is ticked. */
 @Composable
 private fun SongRowActions(
-    viewModel: CampfireViewModel,
+    songSelection: SongSelection,
+    dialogHost: DialogHost,
     songActions: SongActionHandler,
     song: Song,
     actionsMenuState: OverflowMenuState,
@@ -196,14 +204,14 @@ private fun SongRowActions(
                 // mode, which starts with this song ticked.
                 fileEditItems = {
                     songLabelActions(
-                        viewModel = viewModel,
+                        dialogHost = dialogHost,
                         song = song,
                         target = SongEditTarget.File(song.fileName),
                     ) + ActionsMenuItem(
                         title = selectMultipleTitle,
                         icon = selectSongsIcon,
                         isAlwaysInMenu = true,
-                        onClick = { viewModel.songSelection.start(song.fileName) },
+                        onClick = { songSelection.start(song.fileName) },
                     )
                 },
             )

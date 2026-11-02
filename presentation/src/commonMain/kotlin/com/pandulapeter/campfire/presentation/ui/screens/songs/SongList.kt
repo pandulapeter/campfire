@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -52,7 +51,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.domain.api.library.SongSection
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
+import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
+import com.pandulapeter.campfire.presentation.ui.state.songs.RandomPicksDraw
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.measuresFastScrollerColumn
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberFastScrollerColumn
@@ -60,10 +74,8 @@ import com.pandulapeter.campfire.presentation.ui.components.list.withSectionStar
 import com.pandulapeter.campfire.presentation.ui.components.list.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.list.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
-import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
-import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.appBar.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.anchoredTransition
 import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderListTop
@@ -71,22 +83,33 @@ import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimati
 import com.pandulapeter.campfire.presentation.ui.components.list.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberListTopFade
-import com.pandulapeter.campfire.presentation.ui.components.list.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.rememberClipboardTextReader
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
-import kotlinx.coroutines.launch
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 import androidx.compose.material3.FloatingActionButtonDefaults
 
 @Composable
 internal fun SongList(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    songListState: SongListState,
+    libraryState: LibraryState,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    preferencesController: PreferencesController,
+    playingOverridesFlow: StateFlow<PlayingOverridesSnapshot>,
+    dialogHost: DialogHost,
+    editorSession: EditorSession,
+    songFilesController: SongFilesController,
+    importController: ImportController,
+    pastedSongController: PastedSongController,
+    firstRunController: FirstRunController,
+    randomPicksDraw: RandomPicksDraw,
+    songSelection: SongSelection,
+    navigator: Navigator,
+    songRenderer: SongRenderer,
     listState: LazyGridState,
     placeholder: Placeholder?,
     isSearchOpen: Boolean,
@@ -99,7 +122,7 @@ internal fun SongList(
     selection: Set<String>,
     sortChangeReveal: SortChangeReveal,
 ) {
-    val songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost)
+    val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
     val selectMultipleTitle = stringResource(Res.string.songs_select_multiple)
     val selectSongsIcon = painterResource(Res.drawable.ic_select)
     // An open search runs the sections together, so no section ends in a short row, keeping the card at the top left of
@@ -111,14 +134,14 @@ internal fun SongList(
     val coroutineScope = rememberCoroutineScope()
     val filterAnchor = remember { ListAnchor() }
     val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
-    val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val songFileNamesInSetlists by viewModel.libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    val librarySummary by viewModel.libraryState.librarySummary.collectAsStateWithLifecycle()
-    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
+    val songFilter by songListState.songFilter.collectAsStateWithLifecycle()
+    val playingOverrides by playingOverridesFlow.collectAsStateWithLifecycle()
+    val labelsOnEverySong by libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    val librarySummary by libraryState.librarySummary.collectAsStateWithLifecycle()
+    val isImporting by importController.isImporting.collectAsStateWithLifecycle()
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: CardDetails.SongsDefault)
     val filePicker = LocalFilePicker.current
     val clipboardReader = rememberClipboardTextReader()
@@ -151,16 +174,16 @@ internal fun SongList(
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
-    val onTagClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
+    val onTagClicked: (itemKey: String, String) -> Unit = remember(songListState, listState) {
         { itemKey, tag ->
             filterAnchor.set(listState, itemKey)
-            viewModel.songListState.toggleTagFilter(tag)
+            songListState.toggleTagFilter(tag)
         }
     }
-    val onLanguageClicked: (itemKey: String, String) -> Unit = remember(viewModel, listState) {
+    val onLanguageClicked: (itemKey: String, String) -> Unit = remember(songListState, listState) {
         { itemKey, language ->
             filterAnchor.set(listState, itemKey)
-            viewModel.songListState.toggleLanguageFilter(language)
+            songListState.toggleLanguageFilter(language)
         }
     }
     ScrollToTopWhenChanged(
@@ -215,7 +238,7 @@ internal fun SongList(
         }
     }
 
-    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.songListState.songsScrollPosition)
+    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = songListState.songsScrollPosition)
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column. Both follow the column's spring, so they are read while laid out.
     val layoutDirection = LocalLayoutDirection.current
@@ -239,63 +262,36 @@ internal fun SongList(
                     deferredExtraBottom = selectionBottomPadding,
                 ).withSectionStartRoom(appBarOverlap),
             ) {
-                placeholder?.let {
-                    item(
-                        key = "placeholder",
-                        span = { GridItemSpan(maxLineSpan) },
-                        contentType = "placeholder",
-                    ) {
-                        ListPlaceholder(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec).fillMaxWidth(),
-                            placeholder = it,
-                            onRetry = viewModel.libraryState::refresh,
-                            onNewSong = if (isPerformanceModeEnabled) null else {
-                                { viewModel.dialogHost.showDialog(DialogType.NewSong) }
-                            },
-                            onDemoLibrary = if (isPerformanceModeEnabled) null else {
-                                { viewModel.firstRunController.importDemoLibrary() }
-                            },
-                            onImport = if (isPerformanceModeEnabled) null else {
-                                { viewModel.importController.importFiles(filePicker) }
-                            },
-                            onPaste = if (isPerformanceModeEnabled) null else {
-                                { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) }
-                            },
-                        )
-                    }
-                }
+                songListPlaceholder(
+                    placeholder = placeholder,
+                    listState = listState,
+                    hasLoadedLibrary = hasLoadedLibrary,
+                    itemPlacementSpec = itemPlacementSpec,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                    libraryState = libraryState,
+                    dialogHost = dialogHost,
+                    firstRunController = firstRunController,
+                    importController = importController,
+                    pastedSongController = pastedSongController,
+                    filePicker = filePicker,
+                    clipboardReader = clipboardReader,
+                )
                 groups.forEachIndexed { groupIndex, group ->
                     // An open search takes the headers away, and the cards take their artists back from them.
                     val isArtistShown = isSearchOpen || (group.header as? SongGroupHeader.Section)?.header !is SongSection.Header.Artist
-                    group.header?.let { header ->
-                        stickyHeader(
-                            key = header.itemKey,
-                            contentType = SONG_HEADER_CONTENT_TYPE,
-                        ) { headerIndex ->
-                            val headerState = rememberSectionHeaderState(listState, headerIndex)
-                            SectionHeader(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
-                                    .anchoredTransition(filterAnchor, listState, header.itemKey),
-                                state = { headerState.value },
-                                endPadding = headerEndPadding,
-                                text = header.displayText(selectionCount = selection.size),
-                                onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
-                                action = if (header == SongGroupHeader.RandomPicks) {
-                                    { actionModifier, buttonModifier ->
-                                        RandomPicksRefreshButton(
-                                            modifier = actionModifier,
-                                            buttonModifier = buttonModifier,
-                                            onRefresh = viewModel.randomPicksDraw::reshuffle,
-                                        )
-                                    }
-                                } else {
-                                    null
-                                },
-                                opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
-                                appBarOverlap = appBarOverlap,
-                            )
-                        }
-                    }
+                    songGroupHeader(
+                        groupHeader = group.header,
+                        listState = listState,
+                        hasLoadedLibrary = hasLoadedLibrary,
+                        itemPlacementSpec = itemPlacementSpec,
+                        filterAnchor = filterAnchor,
+                        headerEndPadding = headerEndPadding,
+                        selection = selection,
+                        isSearchOpen = isSearchOpen,
+                        coroutineScope = coroutineScope,
+                        randomPicksDraw = randomPicksDraw,
+                        appBarOverlap = appBarOverlap,
+                    )
                     if (group.leadingGap > 0) {
                         item(
                             key = SEARCH_GAP_KEY,
@@ -318,7 +314,10 @@ internal fun SongList(
                             // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                             // alone rather than the set that is new on every write to any setlist.
                             SongListRow(
-                                viewModel = viewModel,
+                                songRenderer = songRenderer,
+                                songSelection = songSelection,
+                                navigator = navigator,
+                                dialogHost = dialogHost,
                                 songActions = songActions,
                                 song = song,
                                 itemKey = itemKey,
@@ -347,8 +346,8 @@ internal fun SongList(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
                                     .anchoredTransition(filterAnchor, listState, RANDOM_PICKS_QUESTION_KEY)
                                     .fadingUnderListTop(topFade),
-                                onKeep = { viewModel.preferencesController.setRandomPicksEnabled(true) },
-                                onTurnOff = { viewModel.preferencesController.setRandomPicksEnabled(false) },
+                                onKeep = { preferencesController.setRandomPicksEnabled(true) },
+                                onTurnOff = { preferencesController.setRandomPicksEnabled(false) },
                             )
                         }
                     }
@@ -387,8 +386,8 @@ internal fun SongList(
                             modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
                                 .fadingUnderListTop(topFade),
                             isEnabled = !isImporting,
-                            onPaste = { viewModel.pastedSongController.newSongFromClipboard(clipboardReader) },
-                            onImport = { viewModel.importController.importFiles(filePicker) },
+                            onPaste = { pastedSongController.newSongFromClipboard(clipboardReader) },
+                            onImport = { importController.importFiles(filePicker) },
                         )
                     }
                 }
@@ -413,7 +412,7 @@ internal fun SongList(
             ) {
                 SongSelectionDoneButton(
                     count = selection.size,
-                    onClick = viewModel.songSelection::end,
+                    onClick = songSelection::end,
                 )
             }
             // The track ends above the Done button, so that neither the thumb nor its letter bubble passes over it.

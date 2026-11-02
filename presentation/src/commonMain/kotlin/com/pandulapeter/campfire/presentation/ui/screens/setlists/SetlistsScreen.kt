@@ -100,7 +100,17 @@ internal fun SetlistsScreen(
         list = {
             SetlistList(
                 modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
-                viewModel = viewModel,
+                setlistsController = viewModel.setlistsController,
+                libraryState = viewModel.libraryState,
+                userPreferencesFlow = viewModel.userPreferences,
+                preferencesController = viewModel.preferencesController,
+                playingOverridesFlow = viewModel.overrides.playingOverrides,
+                dialogHost = viewModel.dialogHost,
+                editorSession = viewModel.editorSession,
+                songFilesController = viewModel.songFilesController,
+                importController = viewModel.importController,
+                songRenderer = viewModel.songRenderer,
+                navigator = viewModel.navigator,
                 listState = listState,
                 columnCount = columnCount,
                 contentPadding = contentPadding,

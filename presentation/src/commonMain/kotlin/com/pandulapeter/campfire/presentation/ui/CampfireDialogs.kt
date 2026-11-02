@@ -76,6 +76,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import com.pandulapeter.campfire.presentation.ui.screens.SongFiltersSheet
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterActions
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongFilterUiState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -189,7 +191,7 @@ private fun CampfireDialog(
             },
         )
 
-        DialogType.SongFilters -> SongFiltersSheet(viewModel = viewModel)
+        DialogType.SongFilters -> SongFiltersDialog(viewModel = viewModel)
 
         is DialogType.SongInfo -> SongInfoSheet(
             libraryState = viewModel.libraryState,
@@ -408,6 +410,19 @@ private fun CampfireDialog(
         }
     }
 }
+
+/** [SongFiltersSheet] over the song list's filters as the view model holds them. */
+@Composable
+private fun SongFiltersDialog(viewModel: CampfireViewModel) = SongFiltersSheet(
+    state = rememberSongFilterUiState(
+        userPreferencesFlow = viewModel.userPreferences,
+        songListState = viewModel.songListState,
+        libraryState = viewModel.libraryState,
+    ),
+    actions = rememberSongFilterActions(songListState = viewModel.songListState, preferencesController = viewModel.preferencesController),
+    normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
+    onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
+)
 
 /** How long What's new has to stay uncovered before it counts as seen. */
 private val WHATS_NEW_SEEN_DELAY = 3.seconds

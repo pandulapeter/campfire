@@ -14,21 +14,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterActions
 import com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilterUiState
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * What [com.pandulapeter.campfire.presentation.ui.components.songFilters.SongFilters] shows in the filters sheet, as
- * [viewModel] holds it.
+ * the song list and the preferences hold it.
  */
 @Composable
-internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilterUiState {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songListState.songFilter.collectAsStateWithLifecycle()
-    val tags by viewModel.libraryState.tags.collectAsStateWithLifecycle()
-    val languages by viewModel.libraryState.languages.collectAsStateWithLifecycle()
-    val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
+internal fun rememberSongFilterUiState(
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    songListState: SongListState,
+    libraryState: LibraryState,
+): SongFilterUiState {
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
+    val songFilter by songListState.songFilter.collectAsStateWithLifecycle()
+    val tags by libraryState.tags.collectAsStateWithLifecycle()
+    val languages by libraryState.languages.collectAsStateWithLifecycle()
+    val isSongFilterActive by songListState.isSongFilterActive.collectAsStateWithLifecycle()
     return remember(userPreferences, songFilter, tags, languages, isSongFilterActive) {
         SongFilterUiState(
             tags = tags,
@@ -44,44 +51,47 @@ internal fun rememberSongFilterUiState(viewModel: CampfireViewModel): SongFilter
     }
 }
 
-/** The [SongFilterActions] that hand every control of the song filters to [viewModel]. */
+/** The [SongFilterActions] that hand every control of the song filters to the holders that answer it. */
 @Composable
-internal fun rememberSongFilterActions(viewModel: CampfireViewModel): SongFilterActions = remember(viewModel) {
+internal fun rememberSongFilterActions(
+    songListState: SongListState,
+    preferencesController: PreferencesController,
+): SongFilterActions = remember(songListState, preferencesController) {
     object : SongFilterActions {
         override fun toggleTagFilter(tag: String) {
-            viewModel.songListState.toggleTagFilter(tag)
+            songListState.toggleTagFilter(tag)
         }
 
         override fun clearTagFilter() {
-            viewModel.songListState.clearTagFilter()
+            songListState.clearTagFilter()
         }
 
         override fun setTagMatchMode(value: UserPreferences.MatchMode) {
-            viewModel.songListState.setTagMatchMode(value)
+            songListState.setTagMatchMode(value)
         }
 
         override fun setTagSortingMode(value: UserPreferences.LabelSortingMode) {
-            viewModel.preferencesController.setTagSortingMode(value)
+            preferencesController.setTagSortingMode(value)
         }
 
         override fun toggleLanguageFilter(code: String) {
-            viewModel.songListState.toggleLanguageFilter(code)
+            songListState.toggleLanguageFilter(code)
         }
 
         override fun clearLanguageFilter() {
-            viewModel.songListState.clearLanguageFilter()
+            songListState.clearLanguageFilter()
         }
 
         override fun setLanguageMatchMode(value: UserPreferences.MatchMode) {
-            viewModel.songListState.setLanguageMatchMode(value)
+            songListState.setLanguageMatchMode(value)
         }
 
         override fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) {
-            viewModel.preferencesController.setLanguageSortingMode(value)
+            preferencesController.setLanguageSortingMode(value)
         }
 
         override fun clearSongFilter() {
-            viewModel.songListState.clearSongFilter()
+            songListState.clearSongFilter()
         }
     }
 }

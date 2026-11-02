@@ -38,7 +38,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
@@ -49,12 +48,21 @@ import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
-import com.pandulapeter.campfire.presentation.resources.ic_archive
-import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_choose_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
+import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverridesSnapshot
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
+import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.checklist.CheckboxListItem
@@ -65,8 +73,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.withSectionStar
 import com.pandulapeter.campfire.presentation.ui.components.list.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.list.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
-import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.actions.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SongCardOptions
 import com.pandulapeter.campfire.presentation.ui.components.appBar.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
@@ -76,7 +82,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderList
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberToday
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberHasLoadedLibrary
-import com.pandulapeter.campfire.presentation.ui.components.list.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -87,7 +92,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
@@ -96,7 +100,17 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 @Composable
 internal fun SetlistList(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    setlistsController: SetlistsController,
+    libraryState: LibraryState,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    preferencesController: PreferencesController,
+    playingOverridesFlow: StateFlow<PlayingOverridesSnapshot>,
+    dialogHost: DialogHost,
+    editorSession: EditorSession,
+    songFilesController: SongFilesController,
+    importController: ImportController,
+    songRenderer: SongRenderer,
+    navigator: Navigator,
     listState: LazyGridState,
     columnCount: Int,
     contentPadding: PaddingValues,
@@ -106,9 +120,9 @@ internal fun SetlistList(
     isScreenActive: Boolean,
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
-    val songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost)
-    val setlistActions = rememberSetlistActionHandler(viewModel)
-    val listedSetlists by viewModel.setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
+    val songActions = rememberSongActionHandler(editorSession, songFilesController, dialogHost)
+    val setlistActions = rememberSetlistActionHandler(dialogHost, setlistsController)
+    val listedSetlists by setlistsController.setlistsWithSongs.collectAsStateWithLifecycle()
     val setlistsWithSongs = listedSetlists.setlists
     // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
     var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
@@ -153,19 +167,19 @@ internal fun SetlistList(
         bringToTopPadding = 0.dp
         if (!isSetlistAtTop) listState.requestScrollToItem(0)
     }
-    val setlists by viewModel.libraryState.setlists.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val playingOverrides by viewModel.overrides.playingOverrides.collectAsStateWithLifecycle()
-    val labelsOnEverySong by viewModel.libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
+    val setlists by libraryState.setlists.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
+    val playingOverrides by playingOverridesFlow.collectAsStateWithLifecycle()
+    val labelsOnEverySong by libraryState.labelsOnEverySong.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading = !listedSetlists.isLibraryRead)
     val topFade = rememberListTopFade(listState, sectionHeaderContentType = SetlistItemKey.HEADER_CONTENT_TYPE)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
-    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read by the headers alone, so midnight recomposes the ones counting down and not the list around them.
     val today by rememberToday()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
-    val setlistsPlaceholder = viewModel.setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle().value
+    val setlistsPlaceholder = setlistsController.setlistsPlaceholder.collectAsStateWithLifecycle().value
     LaunchedEffect(isScreenActive, isPerformanceModeEnabled, setlistsWithSongs) {
         if (!isScreenActive || isPerformanceModeEnabled ||
             setlistsWithSongs.none { it.setlist.fileName == reorderingSetlistFileName && it.canReorder }
@@ -174,7 +188,7 @@ internal fun SetlistList(
         }
     }
     val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.setlistCardDetails ?: CardDetails.SetlistsDefault)
-    val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = viewModel.setlistsController::reorderSetlist)
+    val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = setlistsController::reorderSetlist)
     val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()
     val rowsCache = remember { SetlistRowsCache() }
@@ -196,7 +210,7 @@ internal fun SetlistList(
     // Read by its padding while it is laid out, never here: it changes on every frame of its spring.
     val doneButtonRoomState = animateDpAsState(if (isReordering) DONE_BUTTON_ROOM else 0.dp)
     val doneButtonRoom = remember(doneButtonRoomState) { { doneButtonRoomState.value } }
-    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = viewModel.setlistsController.setlistsScrollPosition)
+    val scrollerColumn = rememberFastScrollerColumn(gridState = listState, position = setlistsController.setlistsScrollPosition)
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
     // cards stop before the scroller's touch column. Both follow the column's spring, so they are read while laid out.
     val layoutDirection = LocalLayoutDirection.current
@@ -228,61 +242,30 @@ internal fun SetlistList(
                         ListPlaceholder(
                             modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
                             placeholder = placeholder,
-                            onRetry = viewModel.libraryState::refresh,
+                            onRetry = libraryState::refresh,
                             onNewSetlist = if (isPerformanceModeEnabled) null else {
-                                { viewModel.dialogHost.showDialog(DialogType.NewSetlist) }
+                                { dialogHost.showDialog(DialogType.NewSetlist) }
                             },
                             onImport = if (isPerformanceModeEnabled) null else {
-                                { viewModel.importController.importFiles(filePicker) }
+                                { importController.importFiles(filePicker) }
                             },
                         )
                     }
 
                     else -> shownSetlists.forEach { setlistWithSongs ->
-                        stickyHeader(
-                            key = SetlistItemKey.header(setlistWithSongs.setlist.fileName),
-                            contentType = SetlistItemKey.HEADER_CONTENT_TYPE,
-                        ) { headerIndex ->
-                            val headerState = rememberSectionHeaderState(listState, headerIndex)
-                            SectionHeader(
-                                // Sticky placement belongs to the grid. Animating it as a regular item can briefly
-                                // pull an already-pinned header away when entering reorder mode changes the list.
-                                // Keep only its appearance fades.
-                                modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
-                                state = { headerState.value },
-                                // The card fade and animated placement can settle on different frames near the top.
-                                // Keep the pinned row opaque throughout reordering.
-                                backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
-                                endPadding = headerEndPadding,
-                                text = setlistWithSongs.setlist.title,
-                                // A setlist is only ever on this screen archived because the filter was asked to show them,
-                                // so the mark is what tells it from the ones still in use.
-                                icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
-                                iconContentDescription = stringResource(Res.string.setlists_archived),
-                                onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
-                                action = if (isPerformanceModeEnabled) null else {
-                                    { actionModifier, buttonModifier ->
-                                        SetlistActions(
-                                            modifier = actionModifier,
-                                            buttonModifier = buttonModifier,
-                                            actions = setlistActions,
-                                            setlist = setlistWithSongs.setlist,
-                                            isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
-                                            onReorder = if (setlistWithSongs.entries.size > 1) {
-                                                {
-                                                    onReorderingSetlistChanged(
-                                                        if (reorderingSetlistFileName == setlistWithSongs.setlist.fileName) null
-                                                        else setlistWithSongs.setlist.fileName,
-                                                    )
-                                                }
-                                            } else null,
-                                        )
-                                    }
-                                },
-                                opacity = { if (headerState.value.visibleFraction < 1f) 0f else 1f },
-                                appBarOverlap = appBarOverlap,
-                            )
-                        }
+                        setlistHeader(
+                            setlistWithSongs = setlistWithSongs,
+                            listState = listState,
+                            hasLoadedLibrary = hasLoadedLibrary,
+                            isReordering = isReordering,
+                            headerEndPadding = headerEndPadding,
+                            coroutineScope = coroutineScope,
+                            isPerformanceModeEnabled = isPerformanceModeEnabled,
+                            setlistActions = setlistActions,
+                            reorderingSetlistFileName = reorderingSetlistFileName,
+                            onReorderingSetlistChanged = onReorderingSetlistChanged,
+                            appBarOverlap = appBarOverlap,
+                        )
                         // Under the header: the row names the setlist, then this is the first thing to read about it.
                         if (setlistWithSongs.hasSummary) {
                             item(
@@ -295,7 +278,7 @@ internal fun SetlistList(
                                     countdown = setlistWithSongs.setlist.countdownText(today),
                                     // An archived setlist is not edited, as its menu offers no Edit either.
                                     onCountdownClick = if (isPerformanceModeEnabled || setlistWithSongs.setlist.isArchived) null else {
-                                        { viewModel.dialogHost.showDialog(DialogType.SetlistDate(setlistWithSongs.setlist)) }
+                                        { dialogHost.showDialog(DialogType.SetlistDate(setlistWithSongs.setlist)) }
                                     },
                                     runningTime = setlistWithSongs.runningTimeText(),
                                     description = setlistWithSongs.setlist.description,
@@ -315,7 +298,10 @@ internal fun SetlistList(
                             // every move: there it would be a new lambda each time and keep every row from skipping the move.
                             val songFileNames = { rowsCache.rowsFor(setlistWithSongs, reorder.draggedSetlist).songFileNames }
                             SetlistSongRow(
-                                viewModel = viewModel,
+                                setlistsController = setlistsController,
+                                songRenderer = songRenderer,
+                                dialogHost = dialogHost,
+                                navigator = navigator,
                                 songActions = songActions,
                                 setlistWithSongs = setlistWithSongs,
                                 row = row,
@@ -353,7 +339,7 @@ internal fun SetlistList(
                                         modifier = Modifier.fadingUnderListTop(topFade),
                                         title = stringResource(Res.string.setlists_choose_songs),
                                         icon = painterResource(Res.drawable.ic_add),
-                                        onClick = { viewModel.dialogHost.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                        onClick = { dialogHost.showDialog(DialogType.SongPicker(setlistWithSongs.setlist)) },
                                     )
                                 }
                             }
@@ -370,7 +356,7 @@ internal fun SetlistList(
                             modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).fillMaxWidth(),
                             title = stringResource(Res.string.setlists_show_archived),
                             isChecked = userPreferences?.shouldShowArchivedSetlists == true,
-                            onCheckedChange = viewModel.setlistsController::setShouldShowArchivedSetlists,
+                            onCheckedChange = setlistsController::setShouldShowArchivedSetlists,
                         )
                     }
                 }
