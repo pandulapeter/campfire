@@ -19,6 +19,13 @@ step 8 would have committed red tests (the export tests and goldens pin the rule
 carries those test changes in the same commit and step 9 deletes only dead code; corpus runs in a worktree pass the
 property; references to plan 06 step 3 removed.
 
+**Replanned:** 2026-11-02 — steps 1–2 landed; step 3 stopped because the writer decides by text already written. Steps
+3–9 rewritten: a pure move of the body's helpers first (3), then the writer split with each output-reading decision
+mapped to a structural one and proven exact by a probe (4), header, title, and kinds as stages (5), one behaviour step
+for neighbour evidence and one median (6), then 7–9 as before; the Campfire exports enter the corpus (`campfire/`)
+before step 3; batches of one agent each; the new files are named in each step, superseding **Files** for the
+converter's own package; counts corrected (120 converter tests, six Campfire golden tests).
+
 ## Problem
 
 `ChordSheetConverter.kt` is 1,525 lines in which every decision is taken in the order the code happens to run:
@@ -60,98 +67,269 @@ other documents. Plan 05's corpus now does.
 
 ```
 convert(sheet)
-  ChordSheetProfile.of(sheet)              once per document: sizes, medians, tolerances, character-columned or not
+  ChordSheetProfile.of(sheet)              once per document: sizes, medians, tolerances            (landed, step 1)
   pages → lines → songs                    as today (header parts, margin labels, ChordSheetSongSplit with the profile)
   per song:
-    LineFeatures.of(lines, profile)        once per line: text, tokens, chord row, heading, metadata, labelled row,
-                                           staff/tab, look, start against its column, isSung, isBlank
-    LineKinds.classify(features)           pass 1: each rule gives a kind STRONG or WEAK evidence;
-                                           pass 2: a WEAK kind is kept or dropped by its neighbours' resolved kinds
-    SongStructure.of(features, kinds)      header, title, definitions, sections (type, label, lines), chorus by look,
-                                           recalls, tab and grid runs, key and tempo changes: every decision
-    SongWriter.write(structure)            ChordPro text; no decision, no state beyond the output
+    LineFeatures                           once per line: heading, metadata, labelled rows, look, isSung   (landed, step 2)
+    LineKinds.of(…)                        pass 1: named rules in today's order, each giving Evidence(kind, isStrong);
+                                           pass 2: a WEAK kind is kept or dropped by its neighbours' kinds
+    SongHeader.of(…)                       header, title, credit, definitions, tempo/time/key changes, sounding capo
+    SongStructure.of(…)                    every body decision: sections and where they open and close, chorus by look,
+                                           recalls, tab and grid runs, changes, blank lines, wrapped-row joins
+    SongWriter.write(song)                 ChordPro text; no decision, no state beyond the output
+  collapse, asCapoChart                    as today, after the writer
 ```
 
-- `ChordSheetProfile` (`internal data class`): `bodySize` (the document median `convert` computes today),
-  `TITLE_RATIO = 1.2`, `SAME_SIZE = 0.05`, `HEADER_LINES = 15` as named constants in its companion, and functions
-  `isLarger(size)`, `isSameSize(a, b)`, `isInHeader(index)` that every caller uses.
-- `LineFeatures` (`internal data class`, one per line): replaces `Rendered`'s derived parts; the line's source and
-  positions stay, every parse is a field computed once. Export state, until step 9, is one nullable
-  `CampfireMarks` field, so the general code reads no export field.
-- `LineKinds`: the `Kind` enum as today. Each current `when` branch becomes a named rule
-  `(features, index) -> Evidence?` with `Evidence(kind, isStrong)`. Pass 1 takes, per line, the strongest evidence
-  in rule order (so step 5 reproduces today's order exactly); pass 2 revisits WEAK evidence with the neighbours' kinds
-  (a chord row is kept only over a lyric, a sung-looking heading word only before a chord row or a blank line), which is
-  what the eleven-clause branch does with raw text today.
-- `SongStructure`: `Song(header: List<String>, parts: List<Part>)`, `Part = Section(type, label, lines) | Loose(lines)`,
-  `Line = Lyric(text, chords: List<PlacedChord>) | Chords(row) | Comment(text, isBoxed) | TabRun(lines) |
-  GridRun(lines) | Recall(type) | Change(directive)`. `BodyWriter`'s look-following (`follow`, `isSetApart`,
-  `returnsToVerses`, `isRecall`) becomes a function here that returns where sections open and close; `merge`, `inline`,
-  and the bidi anchoring set chords into `Lyric` here too.
-- `SongWriter`: a fold over `Song` that writes directives, `[chords]`, and blank lines; `collapse` and `asCapoChart`
-  stay after it as today.
+- `SongStructure` (decided by this replan; the types are step 4's):
+  `Song(header: List<String>, parts: List<Part>)`; `Part = Loose(lines) | Section(type, label: String?, lines)`;
+  `Line = Blank | Lyric(text) | Chords(text) | Comment(text, isBoxed) | Raw(text) | TabRun(label: String?, lines) |
+  GridRun(lines) | Recall | Change(directive)`. A `Lyric`'s `text` is the lyric with its chords already set in
+  (`[G]Hello`), not a list of placed chords: `merge` shifts the indent, carries a chord past a surrogate pair, and
+  converts parenthesized chords on the merged string, so a chord list would need those decisions moved into the
+  writer. The writer writes a line's text as it stands.
+- `BodyWriter`'s decisions by text already written become decisions on the structure built so far: "the last output
+  line is not blank" is "the song so far ends in something other than a `Blank`", "join onto the previous output line"
+  is "replace the open part's last `Lyric` or `Chords`", and "move the trailing blank lines out of a section a look
+  closes" is "move the open section's trailing `Blank`s into the loose part after it". Checked on 2026-11-02 (below)
+  that this is exact.
+
+### How a step is checked
+
+Every corpus run uses a copy, so that two lanes never write one `.runs/` and the owner's report shows only landed
+steps (`$S` is the agent's scratchpad, the build is in the agent's worktree):
+
+```sh
+rsync -a --delete --exclude .runs /Users/pandulapeter/Projects/CampfireImportCorpus/ $S/corpus/
+./gradlew :data:source:local:implementation:desktopTest --tests '*ImportCorpusTest*' --rerun -Pcampfire.importCorpus=$S/corpus
+```
+
+- **Byte-identical** (steps 3–5): run at the parent commit, `cp -R $S/corpus/.runs/out $S/before`, run with the change,
+  and `diff -r $S/before $S/corpus/.runs/out` prints nothing. Scores are not enough: a score can hold while text
+  moves. The `campfire/` members (batch A) make this cover the export's paths as well; `./gradlew desktopTest` (the
+  pre-commit hook runs it) covers the rest, `PdfRoundTripTest`'s 21 tests among them.
+- **Behaviour** (steps 6–8): the same before and after, then `report.txt` with the after run's `scores.tsv` against
+  the before run's: no document's overall score falls, unless the step names it and the owner accepts it. After
+  committing, one run on the real corpus (`-Pcampfire.importCorpus=/Users/pandulapeter/Projects/CampfireImportCorpus`)
+  leaves its report for the owner. A run printing "Import corpus not configured" judged nothing.
+- `check_sizes.py` (pre-commit): `ChordSheetConverter.kt` (1,522 lines now) must shrink or hold in every commit; a new
+  file stays under 500 lines and a new top-level function under 120 (members of an `object` or a class are not
+  counted, but keep them under 120 too); a new non-data class takes at most 12 constructor parameters.
+- Snippets below are quoted from `8e9598e08`; re-locate each by its text, not its line.
 
 ### Steps (one commit each; every step leaves all platforms compiling and every test green)
 
-Steps 1–4 are pure refactors: **every test passes unchanged and the corpus report shows no document changed** (a
-stronger check than the tests, since the corpus is real). Steps 5–8 change behaviour only where they say so and land
-only if no document's overall score falls (plan 05's rule). Every corpus run is plan 05's command with
-`-Pcampfire.importCorpus=<the owner's path>` (a worktree has no `local.properties`); a run that prints the skip line
-judged nothing. The commit message names the step; the report is not
-committed.
+Steps 1–5 change no output: every test passes unchanged and the corpus output is byte-identical. **Step 6 is the
+first that changes output on purpose**; from there, a step lands only if no corpus document's overall score falls
+(plan 05's rule), `campfire/` members included. The commit message names the step; reports are not committed.
 
-1. **Profile and thresholds.** Add `ChordSheetProfile`; replace every `1.2`, `0.05`, and `15` above with it in the
-   converter, `ChordSheetSongSplit`, and `ChordSheetLook`; compute the document median once in `convert` and pass the
-   profile to the split. The two "every other line" medians stay as they are, behind one named function on the
-   profile (`medianWithout(lines)`), since replacing them is behaviour (step 6).
-2. **Line features.** Add `LineFeatures`, computed once per song from `Rendered`; `classify`, `extractHeader`,
-   `extractTitle`, and `writeBody` read its fields instead of re-parsing. Move export state into `CampfireMarks?`.
-   **Size note (`check_sizes.py`):** `ChordSheetConverter.kt` (1,525 lines) may not grow in any step, so steps 1–2 offset added plumbing with
-   what they remove; and a `LineFeatures` of more than 12 constructor parameters fails as a new class (`Rendered` is
-   14 already and may not gain one): group its fields into small classes.
-3. **Structure out of the writer.** Split `writeBody` + `BodyWriter` into `SongStructure.of` (every decision, as
-   today's order takes them) and `SongWriter.write`. Check with the corpus that the output is byte-identical. This is the
-   largest step; if it cannot stay byte-identical, split it per part kind (tabs and grids first, then comments, then
-   sections and looks), each still byte-identical.
-4. **Header and title as structure.** `extractHeader`, `extractTitle`, and `extractPlainTitle` return values into
-   `Song.header` instead of filling the `header` and `omitted` lists they are handed.
-5. **Rules with evidence, same order.** Rewrite `classify` into `LineKinds` with named rules, pass 1 only, every
-   branch `STRONG`: same output. Then, one rule per commit, mark as `WEAK` the clauses that are neighbour guesses today
-   and move their neighbour test into pass 2 (behaviour may change: judged by the corpus).
-6. **One median.** Replace `medianWithout` by the profile's median where the corpus does not fall; also removes the
-   quadratic recomputation.
-7. **General rules the export needs.** Run the corpus with the export's detection switched off for one rule at a time
-   (a local edit, not committed) and read the `campfire/` members. For each rule whose loss lowers them, find the
-   general rule that reads the same thing from any producer (a label is a heading word in a smaller bold type; an
-   italic line among lyrics is a comment when the song's lyrics are not italic; a row wrapped by a narrow column
-   continues the line above when it starts at the column's edge and the line above reaches the other edge), add it with
-   a test on a non-Campfire sheet, and land it if no document falls. The rules to cover, from `convert/CLAUDE.md`: the
-   roles by type (`ChordSheetCampfireLayout.roles`), chords only in the chords' type, the padding under wide chords
-   (`dropsPadding`), the artist rows under the title (`HEADING_ROW`), the word-joiner continuations (`isContinuation`,
-   `isHardCut`, `isContinuedBelow`, `markRowsContinuedBelow`, `joinWrappedDetails`), a right-to-left song's chord rows
-   (`isSetFromRight`), the staff test, the exact chord position (`EXACT_POSITION`), and the header-parts split it skips.
-8. **Switch the export off, with the tests that pinned it** (one commit, so no commit is red). The converter ignores
-   `ChordSheet.isCampfireExport` (the field stays until step 9), and in the same commit: `ChordSheetCampfireLayoutTest`
-   (29) and the 9 converter tests that build `isCampfireExport = true` are deleted; the three Campfire goldens in
-   `DocumentGoldenTest` are regenerated from the general reader's output after checking it by hand against the PDF;
-   `PdfRoundTripTest` is cut to one test (below), which drops the narrow-column right-to-left test and any exclusion
-   plan 02 step 2 left in it. Land when the `campfire/` members' scores are at least what they were before step 7, or
-   the owner accepts the loss per document. If the kept single-column round trip fails, step 7 is not done: find the
-   general rule it misses first.
-9. **Delete what only the export used** (dead code after step 8, every test green throughout).
-   `ChordSheetCampfireLayout.kt`, `CampfireMarks`, `ChordSheet.isCampfireExport`, `PdfTextExtractor.CAMPFIRE_PRODUCER`
-   and its test, the word joiners `PrintRenderer` writes (`CONTINUATION_MARK`, `isContinuationMarked`, the hard-cut
-   pair) and the print tests that look for them, the export paragraphs of `convert/CLAUDE.md`, of `ui/print/CLAUDE.md`
-   (the word joiner sentences under Layout), and of `data/formats/CLAUDE.md` ("A PDF whose `/Producer` is Campfire is
-   flagged…"; the gutter's "since Campfire's own export leaves only 18 points" becomes "since a dense layout leaves less
-   than a word's gap", the rule unchanged). The importer's `clean` keeps dropping word joiners from any text: other
-   producers write them too. `PrintPdfWriter` keeps `/Producer (Campfire)`: it is the PDF's honest producer, only no
-   longer read. `ActualText` over right-to-left runs stays: it serves every reader.
+1. **Profile and thresholds.** *Landed in `326a4388e`.* Add `ChordSheetProfile`; replace every `1.2`, `0.05`, and
+   `15` above with it in the converter, `ChordSheetSongSplit`, and `ChordSheetLook`; compute the document median once
+   in `convert` and pass the profile to the split. The two "every other line" medians stay as they are, behind one
+   named function on the profile (`medianWithout(lines)`), since replacing them is behaviour (step 6).
+2. **Line features.** *Landed in `3f97477c9`* (corpus unchanged at 0.778). Add `LineFeatures`, computed once per song
+   from `Rendered`; `classify`, `extractHeader`, `extractTitle`, and `writeBody` read its fields instead of re-parsing.
+   Move export state into `CampfireMarks?`. `LineFeatures` holds `heading`, `metadata`, `headerRow`, `bodyRow`,
+   `look`, and `isSung`.
+
+#### Batch A (one agent): the Campfire exports into the corpus, then step 3
+
+**A0. Campfire exports in the corpus** (no commit; before step 3, so that every later byte-identical check and every
+behaviour check also reads Campfire's export). Owner's decision below on who writes the folder.
+
+- In the worktree, add a throwaway test (never committed; keep its source in the scratchpad and copy it in) to
+  `presentation/src/desktopTest/kotlin/com/pandulapeter/campfire/presentation/ui/print/`, built like
+  `PdfRoundTripTest`: the same `PrintRenderer(measurer, monospaceFontFamily, textFontFamily)` over the bundled fonts,
+  the same English `PrintLabels`, and `testSongRenderer()`. For each song:
+  `songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)`, then
+  `PrintSong(fileName, title, artist, song = songRenderer.notatedSong(song, spelling))`,
+  `layoutPrintDocument(PrintSource(title, songs = listOf(entry)), settings, labels, renderer::width, measureLyric = renderer::lyricLayout)`,
+  and `renderer.pdf(document, title)` written to `$S/export/<song>_<settings>.pdf`. Proven on 2026-11-02 with three
+  songs: the PDFs carry `/Producer (Campfire)` and score 0.79–1.00 with the source file as their expected `.cho`,
+  every other document unchanged.
+- Songs: about six of the corpus's own expected files with different shapes (`chordpro/because-of-jesus-b29`,
+  `guitartabs-cc/starman-david-bowie`, `mysongbook/ymca`, `generated-libreoffice/amazing_grace_capo`,
+  `doctoruke/clementine_the_whole_story`, `generated-chrome/house_of_the_rising_sun_pre`); and, if the owner agrees,
+  the songs of `chordpro/src/desktopTest/resources/corpus` (in git already) that hold what no corpus song does:
+  `04-tab`, `05-grid`, `09-capo-transpose`, `15-hebrew`, `21-modulation`, and `22-recalls-comments`. Each at two
+  settings: `PrintSettings()` (one column, 12 points) and `PrintSettings(columns = 3, fontSize = 11)` (narrow columns,
+  where rows wrap).
+- Each member gets the `.cho` a careful person would type from its PDF: the source with what the page does not show
+  taken out (its `{define}`s, which print as nothing without diagrams) and unnamed sections given the labels the page
+  prints. Never the converter's output. A `notes.md` beside it says what was taken out, like the other members'.
+- Copy into `/Users/pandulapeter/Projects/CampfireImportCorpus/campfire/`, adding files only, and run the corpus once
+  on the real folder: its report is the baseline (`campfire/` members new, every other document unchanged at 0.778
+  overall). Delete the throwaway test. The PDFs are today's export, word joiners included; they stay as they are
+  after step 9, an older Campfire's file being a real one.
+
+**3. Make the body's helpers shareable** (byte-identical; a move, no logic touched). `writeBody` cannot leave the
+converter while everything it calls is private to it. Move, unchanged but for visibility and qualification:
+
+- `RenderedLine.kt`: `private data class Rendered(` (with its `joint`), `private data class Token(val text: String,
+  val index: Int)`, and `private class ChordRow(val tokens: List<Token>, val annotation: String?, val notes:
+  List<Token>)`, each made `internal`. `private enum class Kind { BLANK, TAB, GRID, COMMENT, SECTION, METADATA, CHORD,
+  LYRIC }` becomes `internal enum class LineKind` in `LineKinds.kt` (a rename; step 5 fills the file).
+- `ChordSheetChordWords.kt`, `internal object ChordSheetChordWords`: `token`, `tokens`, `ascii`, `chord`,
+  `isChordOrLatinName`, `isBareLatinNote`, `isLatinChordBeyondNote`, `isPositioned`, `furniture`, `noChord`,
+  `rowChord`, `rowChordName`, `note`, both `chordRow` overloads and `chordTokens`, `isCharacterColumns`,
+  `isBareLetter`, and `parentheses`. The public `isChordLine` and internal `isChordRow` stay on `ChordSheetConverter`
+  and delegate, since `ChordSheetHeaderParts`, `ChordSheetMarginLabels`, `ChordSheetStructure`, `ChordSheetPlainText`,
+  `DocxTextExtractor`, `OnSongFile`, and `SharedTextName` call them there.
+- `ChordSheetChordPlacement.kt`, `internal object ChordSheetChordPlacement`: `merge`, `inline`, `bracketed`,
+  `withoutChordFill`, `chordEnd`, `isUnaligned`, `splitsSurrogate`, `firstIndex`, and `EXACT_POSITION`.
+- `ChordSheetText.kt`, `internal object ChordSheetText`: `clean`, `isExportFiller`, `headerValue`, `headingLabel`, and
+  `joinRows`.
+
+Callers use the objects' names or import their members (`import com.pandulapeter.campfire.chordpro.convert.
+ChordSheetChordWords.chord` is legal Kotlin for an object's member). `ChordSheetConverter.kt` falls to about 1,200
+lines. Byte-identical, every test unchanged.
+
+#### Batch B (one agent): step 4
+
+**4. Structure out of the writer** (byte-identical; the largest step). Replace `writeBody` and `BodyWriter` with three
+files; `convertSong`, `convertFragment`, and `setChordRows` call `SongWriter.write(SongStructure.of(…))` with
+`writeBody`'s parameters and get the same `List<String>`.
+
+- `SongStructure.kt`: the types of the target shape, `internal`. `Part.Section.label` is null only for the unlabelled
+  chorus; the writer writes `{start_of_$type}` for null and `{start_of_$type: $label}` for any other value, an empty
+  one included, as today. `TabRun.lines` and `GridRun.lines` hold `Raw` rows, and `Comment`s and `Change`s, since a
+  comment over a staff and a pending change are written inside an open run today.
+- `SongSections.kt`: `internal class SongSections`, the look-following half of `BodyWriter` moved verbatim
+  (`verseLooks`, `isVerseInterrupted`, `sectionLooks`, `sectionVerses`, `setApart`, `sectionWords`, `isRecall`,
+  `words`, `isSetApart`, `returnsToVerses`), with no output: `opened()` (today's `open` without `environment`),
+  `openedUnlabelled()` (also `sectionVerses = emptyList()`, as `openChorus` does), `endsAt(look): Boolean` (today's
+  `ends`, true only while a section with lyrics is open), `record(look, text, isInSection)` (the `if (environment ==
+  null)` half of `follow`), and `closed(type, isReturn)` (the `setApart.getOrPut` half of `closeSection`).
+- `SongStructure.of(lines, features, kinds, candidates, omitted, changes, convertParentheses)`: `writeBody`'s loop,
+  its lookaheads (`nextContent`, the recall's first lyric, `ChordSheetLook.unlabelled`) unchanged, writing into a
+  private builder that holds the closed parts, the open loose lines, the open section, the open tab or grid run, the
+  pending changes, and a `SongSections`. Each output-reading line of today becomes a structural one:
+
+  | Today (`BodyWriter`, `writeBody`) | Builder |
+  |---|---|
+  | `if (output.lastOrNull()?.isNotBlank() == true) output += ""` (4×) | `if (endsInText()) add(Line.Blank)`: false for an empty song; true where a run or section is open (its start is written), else where the open loose lines end in anything but `Blank`, or are empty after a closed section |
+  | `addLyric`: `if (continues && previous != null && previous.isNotBlank() && !previous.startsWith('{')) output[output.lastIndex] = "$previous$joint${line.trimStart()}"` | if `continues` and the open container's last line is a `Lyric` or `Chords` whose text does not start with `{` (an escaped lyric may, and today refuses the join), replace it with `Lyric(last.text + joint + line.trimStart())`; else add `Lyric(line)` |
+  | `follow`'s `val blanks = output.takeLastWhile { it.isBlank() }.size` … `closeSection(isReturn = true)` … `repeat(blanks) { output += "" }` | `closeByReturn()`: take the open section's trailing `Blank`s, close it, and start the loose lines with them |
+  | `closeTab()`, `closeGrid()` | the open run becomes a `TabRun`/`GridRun` line of the open section, or of the loose lines |
+  | `closeSection()` writing `{end_of_$it}` | the open section becomes a `Part.Section`; the loose lines before it became a `Part.Loose` when it opened (none when empty) |
+  | `flushChanges()` | `Change(directive)` lines into the innermost open container |
+  | `output += "{chorus}"`, `"{comment: $label}"`, `"{$directive: …}"`, `"{start_of_tab: $label}"` | `Recall`, `Comment(label, isBoxed = false)`, `Comment(text, isBoxed)`, a `TabRun` opened with its label |
+  | `output += line.text` (tab), `line.text.trimEnd()` (grid), `bracketed(…)`, `merge(…)`, `inline(…)` | `Raw`, `Raw`, `Chords`, `Lyric`, `Lyric` |
+
+- `SongWriter.kt`: `internal object SongWriter { fun write(parts: List<Part>): List<String> }`, a fold:
+  `Blank` → `""`, `Lyric`/`Chords`/`Raw` → its text, `Comment` → `{comment: …}` or `{comment_box: …}`, a run →
+  `{start_of_tab[: label]}` or `{start_of_grid}`, its lines, `{end_of_tab}` or `{end_of_grid}`, `Recall` →
+  `{chorus}`, `Change` → its directive, a section → its start, its lines, `{end_of_$type}`.
+- **Proven exact on 2026-11-02**: assertions added to `BodyWriter` held over `:chordsheet:desktopTest` (167 tests),
+  `PdfRoundTripTest` (21), and the corpus with six Campfire exports: `{start_of_…}`/`{end_of_…}` always nest, no
+  section opens or closes inside a tab or grid, no lyric or bracketed row is blank, and the blanks a look-return moves
+  never reach the section's start. No lyric or chord row opened with `{`. Re-add these four `check`s at the start of
+  the step if anything upstream changed since `8e9598e08`, then drop them.
+- `convertSong` keeps counting `{key: ` lines on the written output, and `collapse` and `asCapoChart` run after the
+  writer as today. `ChordSheetConverter.kt` falls by about 240 lines.
+
+#### Batch C (one agent): step 5
+
+**5. Header, title, and kinds as stages** (byte-identical).
+
+- `SongHeader.kt`: `extractHeader`, `extractTitle`, `extractPlainTitle`, `isTitle` (which `splitLines` keeps
+  calling), `isTitleContinuation`, `isCenteredUnder`, `addTitle`, `isChordSummary`, `HEADING_ROW`, and the regexes
+  only they read (`credit`, `creditYear`, `commaYear`, `pageWords`) move into `internal object SongHeader`; what
+  `metadata` shares with them (`capo`, `shapesKeyOf`, `timingNames`, and the `TRANSPOSITION`, `NO_CAPO`,
+  `CAPO_SOUNDING`, `CAPO_SHAPES`, and `CREDIT` names) becomes `internal` where it is. They return values instead of filling the lists they are handed (`header:
+  MutableList<String>, omitted: MutableSet<Int>`). The order today's insertions make is kept by the shape:
+  `HeaderFields(entries, omitted, changes, soundingCapo)` from `extractHeader`, its `shapesKey` replacement applied;
+  `TitleLines(leading, trailing, omitted)` from the title, where `leading` is what `addTitle` and
+  `header.add(if (named == null) 1 else 2, "{subtitle: …}")` put first (title, a split-off artist, a subtitle) and
+  `trailing` what `header += "{artist: …}"` appends (a credit, the export's artist rows). `convertSong` assembles
+  `leading + entries + trailing + definitions.values`, then `distinct()`, into `Song.header`, and `SongWriter`
+  writes the header and the body as `convertSong` does today.
+- `LineKinds.kt`: `classify` becomes `internal object LineKinds` with `fun of(lines, features, candidates):
+  List<LineKind>`, its `headings` and `isStaff` arrays computed as today, and a list of named rules each
+  `(context, index) -> Evidence?`, `internal data class Evidence(val kind: LineKind, val isStrong: Boolean)`, taken
+  first-match in today's branch order: `blank`, `exportLabel`, `exportGrid`, `exportComment`, `staff`, `heading`,
+  `metadata`, then the chord branch split into the clauses it ORs (`notesOnly`, `exportContinuation`,
+  `exportOverflow`, `severalChords`, `singleChordUnderHeading`, `chordOverLyric`), then `LYRIC`. Every rule is
+  `STRONG`; pass 2 does not exist yet. `isStyledChordLine`, `isKeyChange`, `isBracketedHeading`, and `tab` move with
+  it; `hasUnambiguousChords` and `hasStructure`, which `withoutInjections` reads too, become `internal`. The `export*` names keep the export's rules visible for step 8.
+- `ChordSheetConverter.kt` falls to roughly 600–700 lines.
+
+#### Batch D (one agent): step 6
+
+**6. Evidence by neighbours and one median** (changes output; corpus must not fall). One commit, measured as two
+changes (run the corpus after each, so the report says which one moved a document):
+
+- **WEAK evidence.** The rules that guess from a neighbour today give `isStrong = false`: an ambiguous heading
+  (`features[index].heading?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null ||
+  lines.getOrNull(index + 1)?.text?.isBlank() != false }`), `singleChordUnderHeading`, and `chordOverLyric` (the
+  clause ending `lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null &&
+  !headings[index + 1] && features[index + 1].metadata == null } == true`). In pass 1 they give their kind without
+  the neighbour test. Pass 2 walks from the last line to the first, so a line's next neighbour is already resolved and
+  its previous one still has its pass-1 kind: an ambiguous heading stays `SECTION` before a `CHORD` or a `BLANK` (or
+  at the end); a single chord stays `CHORD` under a `SECTION` and before a `BLANK`, a `SECTION`, or the end; a chord
+  row over a lyric stays `CHORD` before a `LYRIC`. A dropped kind falls to the next rule that gives evidence, in
+  order. The export rules stay `STRONG` (step 8 removes them).
+- **One median.** `isTitle`'s `ChordSheetProfile.medianWithout(lines.filter { it !== line }.map { it.source }) ?:
+  line.source.spans.maxOfOrNull { it.size } ?: 1.0` and `isTitleContinuation`'s
+  `ChordSheetProfile.medianWithout(lines.filter { it !== title && it !== line }.map { it.source }) ?: return false`
+  become `profile.bodySize`: `convert` keeps the profile it builds for the split in a `val` and hands it to
+  `splitLines` and `convertSong`. Also ends the quadratic recomputation. If any document falls with it and not
+  without it, keep `medianWithout` and say so in the commit.
+- Tests that change say which corpus documents gained. A new test pins each kept or dropped case on a plain-text
+  sheet.
+
+#### Batch E (one agent): step 7
+
+**7. General rules the export needs** (changes output; corpus must not fall). For each export rule, switch it off
+locally (not committed) and read the `campfire/` members' scores; for each loss, find the rule that reads the same
+thing from any producer, add it with a test on a sheet no producer is named for, and keep it if no document falls.
+The export's rules, all reached through `Rendered.marks`, `sheet.isCampfireExport`, or `ChordSheetCampfireLayout`:
+
+- types: `roles` (labels, grids, comments, boxed comments by type and place), chords only in the chords' type
+  (`chordRow`'s `isChord`), italic notes among chords (`isNote`, `allowsNotesOnly`), and the staff test by
+  `ChordProTokens.isStaffLine`;
+- geometry: the padding under wide chords (`dropsPadding`), the artist rows under the title (`HEADING_ROW`,
+  `isCampfireArtist`), the title read whole (no `ChordSheetTitles.split`), the exact chord position
+  (`EXACT_POSITION`, `lyricsEnd`), a right-to-left song's rows (`isSetFromRight`), and the header-parts split it
+  skips;
+- invisible marks: the word joiners (`isContinuation`, `isHardCut`, `isContinuedBelow`, `markRowsContinuedBelow`,
+  `joinWrappedDetails`, and the builder's join), and the key change read anywhere (`isKeyChange`, the `lines[index].marks
+  != null` branch of `extractHeader`).
+
+Candidates, as the old step said: a label is a heading word in a smaller bold type; an italic line among lyrics is a
+comment when the song's lyrics are not italic; a row wrapped by a narrow column continues the line above when it
+starts at the column's edge and the line above reaches the other edge. The capo phrases and the details row stay
+(owner's ruling: vocabulary, not export rules). A rule that finds no general form is recorded in this plan with the
+members it costs, for the owner to accept in step 8.
+
+#### Batch F (one agent; shares files with other lanes, see **Files**): steps 8 and 9
+
+**8. Switch the export off, with the tests that pinned it** (one commit, so no commit is red). `convert` treats
+`sheet.isCampfireExport` as false (the field stays until step 9), so no line has `marks`. In the same commit:
+`ChordSheetCampfireLayoutTest` (29) and the 9 converter tests that build `isCampfireExport = true` are deleted; the
+six Campfire tests of `DocumentGoldenTest` (eight `campfire*.pdf`, two `.cho` goldens, four expectations written in
+the test) get the general reader's output as their expectation after checking it by hand against each PDF;
+`PdfRoundTripTest` is cut to one test (below). Land when every `campfire/` member scores at least what it did after
+step 6, or the owner accepts the loss per document. If the kept single-column round trip fails, step 7 is not done:
+find the general rule it misses first.
+
+**9. Delete what only the export used** (dead code after step 8). `ChordSheetCampfireLayout.kt`, `CampfireMarks.kt`
+and `Rendered.marks`, every `export*` rule, the builder's join (`Rendered.joint`, `joinRows`' joint), `dropsPadding`
+and `isExportFiller`, `ChordSheet.isCampfireExport`, `PdfTextExtractor.CAMPFIRE_PRODUCER` and its
+`PdfTextExtractorTest` assertions, the word joiners `PrintRenderer` writes (`CONTINUATION_MARK`,
+`isContinuationMarked`, the hard-cut pair) and the print tests that look for them (`PrintRendererTest`,
+`PrintLayoutTest`, `ChordPaddingTest` name them; keep what they test besides), the padding marks
+(`padded(marksPadding = …)`, read only by `dropsPadding`) if nothing else reads them, the export paragraphs of
+`convert/CLAUDE.md`, of `ui/print/CLAUDE.md` (the word joiner sentences under Layout), and of `data/formats/CLAUDE.md`
+("A PDF whose `/Producer` is Campfire is flagged…"; the gutter's "since Campfire's own export leaves only 18 points"
+becomes "since a dense layout leaves less than a word's gap", the rule unchanged). The importer's `clean` keeps
+dropping word joiners from any text: other producers write them too. `PrintPdfWriter` keeps `/Producer (Campfire)`:
+it is the PDF's honest producer, only no longer read. `ActualText` over right-to-left runs stays: it serves every
+reader.
 
 ### What becomes of the tests
 
-- The 118 converter tests without `isCampfireExport` are behaviour tests of the public `convert` on text; they pass
-  through steps 1–4 unchanged and through 5–8 unless the corpus shows the old behaviour was wrong, in which case the test
+- The 120 converter tests without `isCampfireExport` are behaviour tests of the public `convert` on text; they pass
+  through steps 3–5 unchanged and through 6–8 unless the corpus shows the old behaviour was wrong, in which case the test
   changes in the same commit, saying which corpus documents gained.
 - `ChordSheetCampfireLayoutTest` (29) and the 9 export converter tests are deleted in step 8, the commit that stops
   applying their rules.
@@ -163,16 +341,33 @@ committed.
 
 ## Tests
 
-Steps 1–4: the existing tests and an unchanged corpus report. Step 5 onwards: each new general rule gets a converter
-test on a sheet no producer is named for; the corpus report decides landing. Step 8 deletes tests only together with switching
-off the rules they pinned; step 9 deletes only code nothing runs.
+Steps 3–5: the existing tests and a byte-identical corpus output. Step 6 onwards: each new general rule gets a
+converter test on a sheet no producer is named for; the corpus report decides landing. Step 8 deletes tests only
+together with switching off the rules they pinned; step 9 deletes only code nothing runs.
 
-## Decisions (taken by the owner)
+## Decisions
 
-- **Evidence, not order** (step 5): two-level evidence resolved by neighbours; step 5's first commit keeps today's
-  order exactly.
+Taken by the owner:
+
+- **Evidence, not order** (steps 5–6): two-level evidence resolved by neighbours; step 5 keeps today's order exactly.
 - **What counts as export-specific** (step 7): the capo phrases (`(chords as they sound)`, the shapes' key) and the
   details row read in the app's languages are words on the page and stay as vocabulary any sheet may use; only the
   type, geometry, and invisible-mark rules go.
 - **The Campfire goldens and `PdfRoundTripTest`** (step 8): goldens regenerated from the general reader;
   `PdfRoundTripTest` reduced to one single-column test, so CI keeps an end-to-end PDF import of a realistic layout.
+
+Taken by the replan (2026-11-02):
+
+- A `Lyric` holds its text with the chords set in, not a list of placed chords (see Target shape).
+- Step 3 is a pure move, so that step 4 changes only the writer; old step 4 (header and title) joins classification in
+  step 5; old step 5's second half and old step 6 are one behaviour step, measured as two changes.
+- The `campfire/` members come before step 3, so the byte-identical checks cover the export's paths too.
+
+Taken by the owner on 2026-11-02:
+
+- The batch A agent writes the `campfire/` members into the corpus itself, only into a new `campfire/` folder, each
+  with its `notes.md`; the owner skims the notes afterwards.
+- The members are the six corpus songs plus the six presentation-corpus songs (tab, grid, capo, Hebrew, key change,
+  recalls), each at one column 12 pt and three columns 11 pt.
+- The step 4 design (Target shape, batch B) is approved.
+- Still the owner's, at step 8: a score loss on a document where step 7 found no general replacement for an export rule.
