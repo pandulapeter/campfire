@@ -9,46 +9,37 @@
 -->
 # :data:model
 
-Pure Kotlin domain models, no dependencies; the layer-crossing currency (stored documents and bytes never leak past
-their own module). The one platform difference is `normalizedToNfc` (`library/Normalization.kt`, expect/actual).
-`DataState` and `Logger` are at the root, everything else in a feature package.
-`DataState<T>` (`Idle` with its data; `Loading` / `Failure` with the last data, if any) wraps everything out of a
-repository.
+Pure Kotlin domain models, no dependencies; stored documents and bytes never leak past their own module. The one
+platform difference is `normalizedToNfc` (expect/actual).
 
 ## Songs and setlists
 
-- `Song` is metadata only, read at scan time: its first `{tempo}`, `{time}`, and readable `{capo}` are there so a
-  metronome paged to the next setlist song has them before its text loads. `capoChartKey` (`chordsKey`) is a capo
-  chart's `{key}` read as its chords', so lists name the sounding key without the text. `canUpdateFileName` is computed once per scan
-  because every row asks.
-- **`Setlist.unknownFields`** (and each entry's) keep members this version does not know, as opaque JSON, so a later
-  version's field survives this one's save. Per-entry transposition, tempo, and capo, `isArchived`, and `description`
-  travel with the file.
-- Tags, languages, cover, and links live in the song text as directives (see `:chordpro`); `Tag` / `SongLanguage` are
-  counted views built per scan. `SongLanguage.UNKNOWN` (`und`, which `:chordpro` reads as no language, so no song
-  carries it) groups songs that declare none. Language display names are the platform's (`:presentation`).
+- `Song` is metadata read at scan time: its first `{tempo}`, `{time}`, and readable `{capo}` are there so a metronome
+  paged to the next setlist song has them before its text loads; `capoChartKey` (`chordsKey`) lets lists name the
+  sounding key without the text. `canUpdateFileName` is computed once per scan because every row asks.
+- **`Setlist.unknownFields`** (and each entry's) keep members this version does not know, so a later version's field
+  survives this one's save.
+- `SongLanguage.UNKNOWN` (`und`, which `:chordpro` reads as no language, so no song carries it) groups songs declaring
+  none. Language display names are the platform's (`:presentation`).
 
 ## Import
 
-`ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside
-is never kept (an unknown type is read only to check for a zip signature or text, kept flagged
-`isPlainTextByContent`), and an oversized one is reported rather than loaded (a text name over its limit is read only
-to be kept as a zip, `ImportLimits.isReadAsText`). Limits are in `ImportLimits` (sized for an Android heap).
-`ImportPlan` is computed before anything is written; `ImportChoices` answers it (unticked `ImportEntryKey`s, Keep both
-or Replace for all and per row; changing the for-all choice leaves per-row ones alone). `ExtractedDocument` is
-transient; no original file is stored with a song.
+`ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside is
+never kept (an unknown type is read only to check for a zip signature or text, flagged `isPlainTextByContent`), and an
+oversized one is reported, not loaded (a text name over its limit is read only to be kept as a zip,
+`ImportLimits.isReadAsText`). `ImportLimits` is sized for an Android heap. `ImportPlan` is computed before anything is
+written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
+song.
 
 ## Other
 
 - `AuthorizationCompletionPage` and `SystemBrowser` live here, not in `:data:source:remote:api`, so nothing above the
-  repositories sees the remote contracts to connect an account.
-- Cover search and song details lookup types (`CoverArtQuery`, `SongDetailsQuery`, …): only addresses are ever stored,
-  never images, and nothing of a lookup is kept.
-- `share/ShareLinks` is the one grammar of shared song and setlist links (the website's landing page copies its
-  regex): it reads every form a platform hands over, tells a newer format version (`SharedLink.FromNewerVersion`) from
-  text that is no link, and builds the download address itself from the validated parts, never from the link. A
-  title's control characters are read as spaces and its format characters, the joiners aside, are dropped.
-- `JsonBounds` is the one check of a JSON text from outside the app (depth, and tokens outside strings) made before it
-  is parsed.
-- `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. A run with
-  `SyncSummary.failed` files or `havePreferencesFailed` is not `isComplete`; `haveSharedCopiesFailed` never makes it so.
+  repositories sees the remote contracts.
+- Cover search and details lookup: only addresses are ever stored, never images; nothing of a lookup is kept.
+- `share/ShareLinks` is the one grammar of shared links (the website's landing page copies its regex): it reads every
+  form a platform hands over, tells a newer format (`SharedLink.FromNewerVersion`) from no link, and builds the download
+  address from the validated parts, never from the link. A title's control characters read as spaces; its format
+  characters, the joiners aside, are dropped.
+- `JsonBounds` is the one check (depth, tokens outside strings) of outside JSON before it is parsed.
+- `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. `SyncSummary.failed`
+  files or `havePreferencesFailed` make a run not `isComplete`; `haveSharedCopiesFailed` never does.
