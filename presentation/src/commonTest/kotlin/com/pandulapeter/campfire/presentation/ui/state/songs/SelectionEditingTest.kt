@@ -16,12 +16,7 @@ import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
 import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -47,21 +42,6 @@ class SelectionEditingTest {
     }
 
     @Test
-    fun `a bulk tag write carries on when the view model's scope is cancelled`() = runTest {
-        files += listOf("a.cho", "b.cho", "c.cho").associateWith { "{title: ${it.first()}}" }
-        val viewModelScope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
-        val gate = CompletableDeferred<Unit>()
-
-        editing(viewModelScope, gate).setSelectionTags(files.keys.toList(), added = listOf("Rock"), removed = emptySet())
-        runCurrent()
-        viewModelScope.cancel()
-        gate.complete(Unit)
-        advanceUntilIdle()
-
-        assertEquals(List(3) { listOf("Rock") }, files.values.map { ChordProParser.parse(it).metadata.tags })
-    }
-
-    @Test
     fun `a selection's language edit keeps the languages past the cap`() = runTest {
         val declared = (0..ChordProMetadata.MAX_LANGUAGES).map { "q$it" }
         files["a.cho"] = ChordProLanguages.setLanguages("{title: A}", declared)
@@ -72,14 +52,13 @@ class SelectionEditingTest {
         assertEquals(declared + "hu", ChordProLanguages.declaredIn(files.getValue("a.cho")))
     }
 
-    /** Edits [files], each file once [gate] lets it through, as the repository's lock would keep it waiting. */
-    private fun editing(scope: CoroutineScope, gate: CompletableDeferred<Unit>? = null) = SelectionEditing(
+    /** Edits [files]. */
+    private fun editing(scope: CoroutineScope) = SelectionEditing(
         scope = scope,
         messageSink = MessageSink(scope),
         editSongs = object : EditSongsUseCase {
             override suspend fun invoke(fileNames: List<String>, edit: (text: String) -> String): EditedSongs {
                 val changed = fileNames.filterTo(mutableSetOf()) { fileName ->
-                    gate?.await()
                     val text = files.getValue(fileName)
                     edit(text).also { files[fileName] = it } != text
                 }

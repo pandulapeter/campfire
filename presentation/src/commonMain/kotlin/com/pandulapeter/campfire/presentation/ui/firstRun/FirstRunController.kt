@@ -38,7 +38,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +45,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -312,7 +310,7 @@ internal class FirstRunController(
             _isClipboardLinkOffered.update { false }
             scope.launch {
                 try {
-                    withContext(NonCancellable) { updateUserPreferences { it.copy(isOnboardingPending = false) } }
+                    updateUserPreferences { it.copy(isOnboardingPending = false) }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -388,9 +386,7 @@ internal class FirstRunController(
 
     private suspend fun recordWhatsNewVersion() {
         try {
-            withContext(NonCancellable) {
-                updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME) }
-            }
+            updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME) }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {

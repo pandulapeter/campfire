@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.preferences
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -19,5 +21,6 @@ internal class UpdateUserPreferencesUseCaseImpl(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : UpdateUserPreferencesUseCase {
 
-    override suspend operator fun invoke(update: (UserPreferences) -> UserPreferences) = userPreferencesRepository.updateUserPreferences(update)
+    override suspend operator fun invoke(update: (UserPreferences) -> UserPreferences) =
+        withContext(NonCancellable) { userPreferencesRepository.updateUserPreferences(update) }
 }

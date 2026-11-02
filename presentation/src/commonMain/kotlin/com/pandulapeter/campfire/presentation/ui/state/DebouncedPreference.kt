@@ -31,8 +31,8 @@ internal typealias PreferencesWrite = suspend (update: (UserPreferences) -> User
  * stored value.
  *
  * A value is let go of after its write only if nothing newer arrived while it was being written, or that one would
- * never be saved. Whatever is still waiting when the owner goes is written by [flushAll], which every such preference
- * has to be passed to, or its last value is lost on quit.
+ * never be saved. Whatever is still waiting when the owner goes is written by [flushAll]; one is made through
+ * `PendingWrites.preference`, which passes it there.
  *
  * @param apply What the value changes in the preferences.
  */

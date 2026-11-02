@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.songs
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -20,5 +22,5 @@ internal class SaveSongContentUseCaseImpl(
 ) : SaveSongContentUseCase {
 
     override suspend operator fun invoke(content: SongContent, expectedText: String?) =
-        songRepository.saveSong(content = content, expectedText = expectedText)
+        withContext(NonCancellable) { songRepository.saveSong(content = content, expectedText = expectedText) }
 }

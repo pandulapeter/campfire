@@ -13,5 +13,6 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 
 interface SaveSetlistUseCase {
 
+    /** Writes [setlist] to its file. Once started, it finishes even if the caller is cancelled. */
     suspend operator fun invoke(setlist: Setlist)
 }

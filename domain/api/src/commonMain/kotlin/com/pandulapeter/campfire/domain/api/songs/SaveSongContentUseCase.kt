@@ -13,6 +13,9 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 
 interface SaveSongContentUseCase {
 
-    /** See `SongRepository.saveSong`: false when the file no longer holds [expectedText], and nothing was written. */
+    /**
+     * See `SongRepository.saveSong`: false when the file no longer holds [expectedText], and nothing was written. Once
+     * started, it finishes even if the caller is cancelled.
+     */
     suspend operator fun invoke(content: SongContent, expectedText: String? = null): Boolean
 }

@@ -14,6 +14,9 @@ import com.pandulapeter.campfire.data.model.song.EditedSongs
 /** See `SongRepository.editSongs`: the edit of many songs at once that announces itself to the library once. */
 interface EditSongsUseCase {
 
-    /** Applies [edit] to each file as it is on disk, writes the ones it changed and announces them together. */
+    /**
+     * Applies [edit] to each file as it is on disk, writes the ones it changed and announces them together. Once started,
+     * it finishes even if the caller is cancelled.
+     */
     suspend operator fun invoke(fileNames: List<String>, edit: (text: String) -> String): EditedSongs
 }

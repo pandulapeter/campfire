@@ -15,7 +15,8 @@ interface UpdateUserPreferencesUseCase {
 
     /**
      * Changes the preferences as they are when the change runs rather than as the caller last saw them, see
-     * `UserPreferencesRepository.updateUserPreferences`. [update] has to be pure, since it may run more than once.
+     * `UserPreferencesRepository.updateUserPreferences`. [update] has to be pure, since it may run more than once. Once
+     * started, it finishes even if the caller is cancelled.
      */
     suspend operator fun invoke(update: (UserPreferences) -> UserPreferences)
 }

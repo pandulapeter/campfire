@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.domain.implementation.songs
 
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -19,5 +21,5 @@ internal class EditSongsUseCaseImpl(
 ) : EditSongsUseCase {
 
     override suspend operator fun invoke(fileNames: List<String>, edit: (text: String) -> String) =
-        songRepository.editSongs(fileNames = fileNames, edit = edit)
+        withContext(NonCancellable) { songRepository.editSongs(fileNames = fileNames, edit = edit) }
 }

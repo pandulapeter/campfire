@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.setlists
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.domain.api.setlists.SaveSetlistUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -19,5 +21,5 @@ internal class SaveSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
 ) : SaveSetlistUseCase {
 
-    override suspend operator fun invoke(setlist: Setlist) = setlistRepository.saveSetlist(setlist)
+    override suspend operator fun invoke(setlist: Setlist) = withContext(NonCancellable) { setlistRepository.saveSetlist(setlist) }
 }
