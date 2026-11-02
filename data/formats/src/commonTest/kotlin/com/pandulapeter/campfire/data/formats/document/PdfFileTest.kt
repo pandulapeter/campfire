@@ -56,7 +56,8 @@ class PdfFileTest {
             append("x")
         }
         val elapsed = measureTime { PdfFile(text.encodeToByteArray()) }
-        assertTrue(elapsed < 2.seconds, "Took $elapsed")
+        // Quadratic is 5,000 lengths each scanning 2 MB, minutes; the bound leaves a slow CI runner room (2.9 s on Windows).
+        assertTrue(elapsed < 10.seconds, "Took $elapsed")
     }
 
     @Test
