@@ -13,16 +13,15 @@
   side only reads as a deletion. Anything else in the cloud folder is left alone.
 - Names match ignoring case and Unicode form: a remote name takes the local spelling, and an index entry neither listing
   has moves to the listed spelling that folds to it.
-- **What cannot be read is left out of the plan on both sides and named among the failures, never read as a
-  deletion**: a download above `MAXIMUM_FILE_SIZE`, a local file above it (its index entry too), a remote name this
-  device cannot hold (split off before name folding, named once), and a local file whose read fails (its index entry
-  kept). If no file at all can be read, the run ends as a storage failure.
+- **What cannot be read is left out of the plan on both sides and named among the failures, never read as a deletion**:
+  a download above `MAXIMUM_FILE_SIZE`, a local file above it (its index entry too), a remote name this device cannot
+  hold (split off before name folding, named once), and a local file whose read fails (its index entry kept). If no file
+  at all can be read, the run ends as a storage failure.
 - **Conflicts**: the incoming version is written next to the local one *before* the local one is uploaded, as ` (2)` or
   the first number free on both sides, and taken back if the service then says the remote file is still there, so the
-  losing version is never held only in memory. A copy that already holds the incoming bytes under a numbered variant of
-  the name is reused rather than written again, and is never taken back, so retries after network failures leave one
-  copy. Two exceptions take the folder's version with no copy, written only over
-  the bytes compared:
+  losing version is never held only in memory. A numbered copy already holding the incoming bytes is reused, never taken
+  back, so retries after network failures leave one copy. Two exceptions take the folder's version with no copy, written
+  only over the bytes compared:
   - a setlist whose versions differ only in the day, or whose only local change is the day a read gave an undated file
     (`SetlistComparison`, so the engine never sees the setlist format);
   - a demo file this device planted that still hashes to `UserPreferences.demoLibraryContentHashes` and has no index
@@ -39,7 +38,6 @@
     deletion is the one run started with an answer already given.
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard
     sees) as briefly as possible.
-- **Failures**: one file failing does not end a run; only `SyncRunEndingException`s do. `CancellationException` is
-  caught *first* and rethrown. A failed or still contested file keeps `lastSyncedAt` where it was. A run ending in a
-  non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
-  mid-write.
+- **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
+  failed or still contested file keeps `lastSyncedAt` where it was. A run ending in a non-`Exception` throwable rescans
+  the whole library if any operation had finished, since it may have come mid-write.
