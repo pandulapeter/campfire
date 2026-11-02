@@ -53,7 +53,7 @@ public object ChordSheetConverter {
                 val roles = ChordSheetCampfireLayout.roles(page.map { it.source }, isChordRowLine[pageIndex], typeSizes)
                 val isSetFromRight = ChordSheetCampfireLayout.isSetFromRight(page.map { it.source }, typeSizes.body)
                 page.mapIndexed { index, line ->
-                    line.copy(role = roles[index], isCampfire = true, bodySize = typeSizes.lyrics ?: 0.0, isSetFromRight = isSetFromRight[index])
+                    line.copy(marks = (line.marks ?: CampfireMarks()).copy(role = roles[index], bodySize = typeSizes.lyrics ?: 0.0, isSetFromRight = isSetFromRight[index]))
                 }
             }
         }
@@ -120,7 +120,8 @@ public object ChordSheetConverter {
         if (isChordPro(text)) return null
         val lines = expandLabels(ChordSheet.ofPlainText(text).pages.single().lines.map { render(it, normalize) })
         val candidates = chordCandidates(lines)
-        val kinds = classify(lines, candidates).map { if (it == Kind.METADATA) Kind.LYRIC else it }
+        val features = features(lines)
+        val kinds = classify(lines, features, candidates).map { if (it == Kind.METADATA) Kind.LYRIC else it }
         // A bracketed heading pasted as it is would read as a chord, so it is reason enough to convert lyrics with no chords.
         if (Kind.CHORD !in kinds && kinds.indices.none { kinds[it] == Kind.SECTION && lines[it].text.trimStart().startsWith('[') }) return null
         // The line breaks the paste ends with are kept after the section it opened rather than inside it, so that what
@@ -130,6 +131,7 @@ public object ChordSheetConverter {
         return (
             writeBody(
                 lines = lines.take(body),
+                features = features.take(body),
                 kinds = kinds.take(body),
                 candidates = candidates.take(body),
                 omitted = emptySet(),
@@ -156,14 +158,13 @@ public object ChordSheetConverter {
                 else -> Kind.LYRIC
             }
         }
-        return writeBody(lines, kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
+        return writeBody(lines, features(lines), kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
             .joinToString("\n")
     }
 
     /**
      * [isFromLabel] is the chord row a heading's label was followed by on its line, which no lyric is written under;
-     * [isContinuation] a lyric row of Campfire's export that continues the line above ([ChordSheetCampfireLayout.CONTINUATION]),
-     * and [isHardCut] one that continues a word of it, opening with two marks, which is joined back with no space.
+     * [marks] what Campfire's export says of the line, null for a line of any other sheet.
      */
     private data class Rendered(
         val text: String,
@@ -172,25 +173,12 @@ public object ChordSheetConverter {
         val isFromLabel: Boolean = false,
         val isMarginLabel: Boolean = false,
         val isHeaderPart: Boolean = false,
-        /** What the layout of Campfire's own export says the line is, where the sheet is one ([isCampfire]). */
-        val role: ChordSheetCampfireLayout.Role? = null,
-        val isCampfire: Boolean = false,
         /** Where the chords over a row holding right-to-left text in reading order hang from. */
         val bidi: ChordSheetBidiAnchors? = null,
-        /** The lyrics' size in Campfire's own export ([isCampfire]), which its chords are printed at; 0 where it is unknown. */
-        val bodySize: Double = 0.0,
-        val isContinuation: Boolean = false,
-        val isHardCut: Boolean = false,
-        /**
-         * Whether the row under this one in Campfire's export continues its line in the chords' or the lyrics' type, which
-         * makes a row of notes alone the chord row of that line.
-         */
-        val isContinuedBelow: Boolean = false,
-        /** Whether the line belongs to a song Campfire's export printed from the right, a row of its chords alone too. */
-        val isSetFromRight: Boolean = false,
+        val marks: CampfireMarks? = null,
     ) {
         /** What goes between the row this one continues and its text. */
-        val joint get() = if (isHardCut) "" else " "
+        val joint get() = if (marks?.isHardCut == true) "" else " "
     }
     private data class Token(val text: String, val index: Int)
     private val sungWord = Regex("\\p{L}{2}")
@@ -224,8 +212,8 @@ public object ChordSheetConverter {
     /**
      * The text of [line], spaced by where its words stand. Where it [dropsPadding] (Campfire's own export), the no-break
      * spaces padding a lyric under a wide chord are left out, and leave no gap that would read as a space: the export
-     * writes every space of the words as one. Its continuation marks are left out too, and kept as [Rendered.isContinuation]
-     * and [Rendered.isHardCut].
+     * writes every space of the words as one. Its continuation marks are left out too, and kept as [CampfireMarks.isContinuation]
+     * and [CampfireMarks.isHardCut].
      */
     private fun render(line: ChordSheet.Line, normalize: (String) -> String, dropsPadding: Boolean = false): Rendered {
         val text = StringBuilder()
@@ -264,17 +252,17 @@ public object ChordSheetConverter {
         val opening = if (dropsPadding) line.spans.firstOrNull { it.text.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION }?.text.orEmpty() else ""
         val isContinuation = opening.firstOrNull() == ChordSheetCampfireLayout.CONTINUATION
         val isHardCut = opening.startsWith("${ChordSheetCampfireLayout.CONTINUATION}${ChordSheetCampfireLayout.CONTINUATION}")
-        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), isContinuation = isContinuation, isHardCut = isHardCut)
+        return Rendered(result, positions.take(result.length), line, bidi = bidi?.build(), marks = if (dropsPadding) CampfireMarks(isContinuation = isContinuation, isHardCut = isHardCut) else null)
     }
 
     /**
      * [page] of Campfire's export with each row marked whose line the row under it continues in the chords' or the lyrics'
-     * type ([Rendered.isContinuedBelow]). A marked row set wholly in italics is the rest of a comment or of an italic
+     * type ([CampfireMarks.isContinuedBelow]). A marked row set wholly in italics is the rest of a comment or of an italic
      * lyric, which says nothing of the row above being a chord row.
      */
     private fun markRowsContinuedBelow(page: List<Rendered>) = page.mapIndexed { index, line ->
         val next = page.getOrNull(index + 1)
-        line.copy(isContinuedBelow = next != null && next.isContinuation && !next.source.spans.filter { it.text.isNotBlank() }.all { it.isItalic })
+        line.copy(marks = line.marks?.copy(isContinuedBelow = next != null && next.marks?.isContinuation == true && !next.source.spans.filter { it.text.isNotBlank() }.all { it.isItalic }))
     }
 
     private fun isExportFiller(character: Char) = character == ChordSheetCampfireLayout.PADDING || character == ChordSheetCampfireLayout.CONTINUATION
@@ -327,29 +315,29 @@ public object ChordSheetConverter {
     private class ChordRow(val tokens: List<Token>, val annotation: String?, val notes: List<Token>)
 
     /**
-     * Campfire's export ([isCampfire]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
+     * Campfire's export ([Rendered.marks]) prints a song's annotations (`[*twice]`) in italics among a row's bold chords, so
      * there a run of italic words is a note wherever it stands, in parentheses or not. A line set in italics throughout
      * is all notes, so it is never taken for chords, unless the row under it continues its line
-     * ([Rendered.isContinuedBelow]): it is then the chord row of a lyric's continuation, or an annotation opening a line,
+     * ([CampfireMarks.isContinuedBelow]): it is then the chord row of a lyric's continuation, or an annotation opening a line,
      * printed alone over the padding its width needs where a narrow column wraps the lyric right after that padding.
      * There a word is a chord only where it is printed in the chords' type, bold under the title's size, or in a tab's
      * monospaced chord line, so that a lyric `a b c d` and a title `A` stay what they are; where the lyrics' size is
      * unknown, the text alone decides.
      */
-    private fun chordRow(line: Rendered, isCampfire: Boolean = line.isCampfire): ChordRow? = chordRow(
+    private fun chordRow(line: Rendered, isCampfire: Boolean = line.marks != null): ChordRow? = chordRow(
         text = line.text,
-        allowsNotesOnly = isCampfire && line.isContinuedBelow,
+        allowsNotesOnly = isCampfire && line.marks?.isContinuedBelow == true,
         isNote = if (!isCampfire) null else { word ->
             word.text.indices.all { offset ->
                 val x = line.positions.getOrNull(word.index + offset)
                 x != null && line.source.spans.any { it.isItalic && x >= it.start && x < it.end }
             }
         },
-        isChord = if (!isCampfire || line.bodySize <= 0.0) null else { word ->
+        isChord = if (!isCampfire || (line.marks?.bodySize ?: 0.0) <= 0.0) null else { word ->
             word.text.indices.all { offset ->
                 val x = line.positions.getOrNull(word.index + offset)
                 x != null && line.source.spans.any {
-                    (it.isMonospace || it.isBold && it.size < line.bodySize * ChordSheetCampfireLayout.TITLE_SIZE_RATIO) && x >= it.start - 0.01 && x < it.end
+                    (it.isMonospace || it.isBold && it.size < line.marks!!.bodySize * ChordSheetCampfireLayout.TITLE_SIZE_RATIO) && x >= it.start - 0.01 && x < it.end
                 }
             }
         },
@@ -496,7 +484,7 @@ public object ChordSheetConverter {
      * a key change, so that it is metadata anywhere in the song, not only among the heading's rows.
      */
     private fun isKeyChange(line: Rendered, text: String) =
-        line.isCampfire && labelledRow(text, isHeader = true)?.singleOrNull()?.first == ChordProVocabulary.KEY
+        line.marks != null && labelledRow(text, isHeader = true)?.singleOrNull()?.first == ChordProVocabulary.KEY
 
     /** Whether a capo [value] is Campfire's PDF saying the chords under it are named as they sound (`2 (chords as they sound)`). */
     private fun isSoundingCapo(value: String) = parentheses.find(value)?.groupValues?.get(1)?.trim()?.lowercase() in soundingCapoMarkers
@@ -525,8 +513,8 @@ public object ChordSheetConverter {
     /**
      * [lines] with each row of labelled values that Campfire's export wrapped in a narrow column joined back into one: a
      * value wider than the column (`Capo: 2 (chords as they sound)`) goes on in the rows under it, each marked as a
-     * wrapped lyric's rest is ([Rendered.isContinuation]), and read apart its first row would name a bare value and the
-     * rest a lyric. A row continuing a word the column cut inside ([Rendered.isHardCut]) joins with no space.
+     * wrapped lyric's rest is ([CampfireMarks.isContinuation]), and read apart its first row would name a bare value and the
+     * rest a lyric. A row continuing a word the column cut inside ([CampfireMarks.isHardCut]) joins with no space.
      */
     private fun joinWrappedDetails(lines: List<Rendered>): List<Rendered> = lines.fold(mutableListOf()) { joined, line ->
         val previous = joined.lastOrNull()
@@ -534,8 +522,8 @@ public object ChordSheetConverter {
         val isHeader = ChordSheetProfile.isInHeader(joined.lastIndex)
         val indent = line.text.length - line.text.trimStart().length
         val text = previous?.let { "${it.text}${line.joint}${line.text.substring(indent)}" }
-        if (line.isContinuation && previous != null && text != null && (labelledRow(text, isHeader) != null || isKeyChange(line, text))) {
-            val space = if (line.isHardCut) DoubleArray(0) else doubleArrayOf(previous.positions.lastOrNull() ?: 0.0)
+        if (line.marks?.isContinuation == true && previous != null && text != null && (labelledRow(text, isHeader) != null || isKeyChange(line, text))) {
+            val space = if (line.marks.isHardCut) DoubleArray(0) else doubleArrayOf(previous.positions.lastOrNull() ?: 0.0)
             val positions = previous.positions + space + line.positions.copyOfRange(indent, line.positions.size)
             joined[joined.lastIndex] = previous.copy(text = text, positions = positions, bidi = null)
         } else {
@@ -601,7 +589,7 @@ public object ChordSheetConverter {
         val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
         return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
-            (line.isCampfire || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
+            (line.marks != null || spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) } })
     }
 
     /**
@@ -620,14 +608,15 @@ public object ChordSheetConverter {
     private fun convertSong(lines: List<Rendered>, guessesTitle: Boolean): String {
         val candidates = chordCandidates(lines)
         val convertParentheses = convertsParentheses(lines)
-        val kinds = classify(lines, candidates)
+        val features = features(lines)
+        val kinds = classify(lines, features, candidates)
         val styled = lines.any { line -> !isChordLine(line.text) && line.source.spans.any { (it.isBold || it.isRaised) && chord(it.text.trim()) } }
         if (kinds.none { it in listOf(Kind.CHORD, Kind.SECTION, Kind.TAB, Kind.GRID) } && !convertParentheses && !styled) {
             return collapse(lines.map { ChordProLiteralText.escape(it.text) })
         }
         val header = mutableListOf<String>()
         val omitted = mutableSetOf<Int>()
-        val (changes, soundingCapo) = extractHeader(lines, kinds, header, omitted)
+        val (changes, soundingCapo) = extractHeader(lines, features, kinds, header, omitted)
         if (guessesTitle) extractTitle(lines, kinds, header, omitted)
         val definitions = ChordSheetDefinitions.definitions(
             lines = lines.map { it.text },
@@ -637,7 +626,7 @@ public object ChordSheetConverter {
         )
         header += definitions.values
         omitted += definitions.keys
-        val output = writeBody(lines, kinds, candidates, omitted, changes, convertParentheses)
+        val output = writeBody(lines, features, kinds, candidates, omitted, changes, convertParentheses)
         // A credit printed both under the title and as a labelled line names the song once.
         val distinct = header.distinct()
         val keyChanges = output.count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
@@ -719,18 +708,29 @@ public object ChordSheetConverter {
     private fun hasStructure(lines: List<Rendered>, candidates: List<List<Token>?>) =
         hasUnambiguousChords(candidates) || lines.any { ChordSheetHeadings.parse(it.text) != null }
 
-    private fun classify(lines: List<Rendered>, candidates: List<List<Token>?>): List<Kind> {
+    /** What each of a song's [lines] says on its own, read once for every decision about the song. */
+    private fun features(lines: List<Rendered>) = lines.mapIndexed { index, line ->
+        LineFeatures(
+            heading = ChordSheetHeadings.parse(line.text),
+            metadata = metadata(line.text),
+            headerRow = labelledRow(line.text, isHeader = ChordSheetProfile.isInHeader(index)),
+            bodyRow = labelledRow(line.text, isHeader = false),
+            look = ChordSheetLook.of(line.source, line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })),
+            isSung = line.marks?.isContinuation != true && sungWord.containsMatchIn(line.text),
+        )
+    }
+
+    private fun classify(lines: List<Rendered>, features: List<LineFeatures>, candidates: List<List<Token>?>): List<Kind> {
         val hasUnambiguousChords = hasUnambiguousChords(candidates)
-        val parsed = lines.map { ChordSheetHeadings.parse(it.text) }
         val hasStructure = hasStructure(lines, candidates)
         // A word that is as likely sung is a heading where a chord row or a blank line follows it, as one does a heading.
         val headings = lines.indices.map { index ->
-            parsed[index]?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
+            features[index].heading?.let { !it.isAmbiguous || candidates.getOrNull(index + 1) != null || lines.getOrNull(index + 1)?.text?.isBlank() != false }
                 ?: (hasStructure && isBracketedHeading(lines[index].text))
         }
         // Campfire's own export is read by the test it engraves a staff by, which knows every instrument's strings.
         val isStaff = lines.indices.map { index ->
-            lines[index].isCampfire && ChordProTokens.isStaffLine(lines[index].text) ||
+            lines[index].marks != null && ChordProTokens.isStaffLine(lines[index].text) ||
                 tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
         }
@@ -738,30 +738,30 @@ public object ChordSheetConverter {
             val candidate = candidates[index]
             when {
                 line.text.isBlank() -> Kind.BLANK
-                line.role == ChordSheetCampfireLayout.Role.LABEL -> Kind.SECTION
-                line.role == ChordSheetCampfireLayout.Role.GRID -> Kind.GRID
-                line.role == ChordSheetCampfireLayout.Role.COMMENT || line.role == ChordSheetCampfireLayout.Role.BOX_COMMENT -> Kind.COMMENT
+                line.marks?.role == ChordSheetCampfireLayout.Role.LABEL -> Kind.SECTION
+                line.marks?.role == ChordSheetCampfireLayout.Role.GRID -> Kind.GRID
+                line.marks?.role == ChordSheetCampfireLayout.Role.COMMENT || line.marks?.role == ChordSheetCampfireLayout.Role.BOX_COMMENT -> Kind.COMMENT
                 // A row of chord names right over a staff names its bars, its columns the staff's, so it stays in the tab
                 // as it stands rather than being set over a lyric line it was never written for.
                 isStaff[index] || candidate != null && isStaff.getOrNull(index + 1) == true -> Kind.TAB
                 headings[index] || line.isMarginLabel -> Kind.SECTION
-                ChordSheetProfile.isInHeader(index) && (metadata(line.text)?.second?.isNotBlank() == true || labelledRow(line.text, isHeader = true) != null) ||
-                    metadata(line.text)?.first == "copyright" ||
-                    labelledRow(line.text, isHeader = false) != null || isKeyChange(line, line.text) -> Kind.METADATA
+                ChordSheetProfile.isInHeader(index) && (features[index].metadata?.second?.isNotBlank() == true || features[index].headerRow != null) ||
+                    features[index].metadata?.first == "copyright" ||
+                    features[index].bodyRow != null || isKeyChange(line, line.text) -> Kind.METADATA
                 // A row of notes alone is a candidate only where the row under it continues its line.
                 // A row of chords the export marks as the rest of a line is one whatever follows, and so is the row its
                 // chords overflowed from; only an export's chords in their own type are candidates, so a wrapped lyric's
                 // marked rest that reads as chord names (`a b`) is never taken for one.
                 candidate != null && (candidate.isEmpty() ||
-                    candidate.isNotEmpty() && line.isContinuation ||
-                    candidate.isNotEmpty() && lines.getOrNull(index + 1)?.let { it.isContinuation && candidates.getOrNull(index + 1) != null } == true ||
+                    candidate.isNotEmpty() && line.marks?.isContinuation == true ||
+                    candidate.isNotEmpty() && lines.getOrNull(index + 1)?.let { it.marks?.isContinuation == true && candidates.getOrNull(index + 1) != null } == true ||
                     candidate.count { rowChord(it.text) } > 1 ||
                     candidate.count { rowChord(it.text) } == 1 &&
                     candidate.filter { rowChord(it.text) }.all { it.text.first().isUpperCase() } &&
                     headings.getOrNull(index - 1) == true &&
                     lines.getOrNull(index + 1)?.let { it.text.isBlank() || headings[index + 1] } != false ||
                     (hasUnambiguousChords || isStyledChordLine(line, candidate, lines.getOrNull(index + 1))) &&
-                    lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && !headings[index + 1] && metadata(it.text) == null } == true) -> Kind.CHORD
+                    lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && !headings[index + 1] && features[index + 1].metadata == null } == true) -> Kind.CHORD
                 else -> Kind.LYRIC
             }
         }
@@ -775,6 +775,7 @@ public object ChordSheetConverter {
      */
     private fun extractHeader(
         lines: List<Rendered>,
+        features: List<LineFeatures>,
         kinds: List<Kind>,
         header: MutableList<String>,
         omitted: MutableSet<Int>,
@@ -789,11 +790,11 @@ public object ChordSheetConverter {
         var soundingCapo = 0
         var shapesKey: String? = null
         kinds.forEachIndexed { index, kind -> if (kind == Kind.METADATA) {
-            (labelledRow(lines[index].text, isHeader = ChordSheetProfile.isInHeader(index)) ?: listOf(metadata(lines[index].text)!!)).forEach { (name, value) ->
+            (features[index].headerRow ?: listOf(features[index].metadata!!)).forEach { (name, value) ->
                 when {
                     value.isBlank() || name == TRANSPOSITION || name == NO_CAPO -> Unit
                     name in timingNames && !declared.add(name) -> changes[index] = changes[index].orEmpty() + "{$name: ${headerValue(value)}}"
-                    name == ChordProVocabulary.KEY && lines[index].isCampfire && !declared.add(name) -> {
+                    name == ChordProVocabulary.KEY && lines[index].marks != null && !declared.add(name) -> {
                         val key = headerValue(ascii(value))
                         if (key != keyInForce) changes[index] = changes[index].orEmpty() + "{$name: $key}"
                         keyInForce = key
@@ -850,7 +851,7 @@ public object ChordSheetConverter {
         val first = kinds.indexOfFirst { it != Kind.BLANK }
         if (first < 0 || kinds[first] != Kind.LYRIC) return
         // The export's own test reads chords by their type, which a title naming a chord (`A`) is not printed in.
-        if (if (lines[first].isCampfire) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return
+        if (if (lines[first].marks != null) chordRow(lines[first]) != null else isChordLine(lines[first].text)) return
         if (!isTitle(lines[first], lines)) return extractPlainTitle(lines, kinds, first, header, omitted)
         // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
         // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
@@ -859,14 +860,14 @@ public object ChordSheetConverter {
         val title = joinRows(lines, first, last)
         // Campfire's export prints the file's title alone, its artist on a line of its own, so there is no page word or
         // credit in it to split off.
-        val (name, named) = if (lines[first].isCampfire) title to null else ChordSheetTitles.split(title)
+        val (name, named) = if (lines[first].marks != null) title to null else ChordSheetTitles.split(title)
         addTitle(header, name, named)
         omitted += first..last
         val artist = last + 1
         // Campfire's export sets the artist in the lyrics' type right under the title, at the heading's spacing, wrapped
         // onto as many rows as it takes, and its first block a heading gap further down: the rows at that spacing are the
         // artist, however many and however long, and nothing else is, not even a short first lyric under a long title.
-        if (named == null && lines.getOrNull(artist)?.isCampfire == true && lines[artist].source.baseline != null) {
+        if (named == null && lines.getOrNull(artist)?.marks != null && lines[artist].source.baseline != null) {
             val rows = generateSequence(artist) { it + 1 }.takeWhile { index ->
                 val line = lines.getOrNull(index)
                 val below = line?.source?.baseline
@@ -884,7 +885,7 @@ public object ChordSheetConverter {
         val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
         // Read without baselines, an export's artist is still told by the row of the song's key, tempo, and time under it,
         // where no lyric ever stands, so there a name longer than the title is the artist all the same.
-        val isCampfireArtist = lines.getOrNull(artist)?.isCampfire == true && kinds.getOrNull(artist + 1) == Kind.METADATA
+        val isCampfireArtist = lines.getOrNull(artist)?.marks != null && kinds.getOrNull(artist + 1) == Kind.METADATA
         if (named == null && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || isCampfireArtist || lines[artist].text.length < title.length &&
                 lines[artist].source.spans.maxOfOrNull { it.size }?.let { it < (lines[first].source.spans.maxOfOrNull { span -> span.size } ?: 1.0) } == true)) {
             header += "{artist: ${headerValue(credit?.groupValues?.get(1) ?: lines[artist].text.trim())}}"
@@ -954,19 +955,18 @@ public object ChordSheetConverter {
 
     private fun writeBody(
         lines: List<Rendered>,
+        features: List<LineFeatures>,
         kinds: List<Kind>,
         candidates: List<List<Token>?>,
         omitted: Set<Int>,
         changes: Map<Int, List<String>>,
         convertParentheses: Boolean,
     ): List<String> = with(BodyWriter()) {
-        fun look(at: Int) = lines[at].let { ChordSheetLook.of(it.source, it.positions.getOrNull(it.text.indexOfFirst { c -> !c.isWhitespace() })) }
-        fun isSung(at: Int) = !lines[at].isContinuation && sungWord.containsMatchIn(lines[at].text)
-        fun follow(at: Int) { if (isSung(at)) look(at)?.let { follow(it, lines[at].text) } }
+        fun follow(at: Int) { if (features[at].isSung) features[at].look?.let { follow(it, lines[at].text) } }
         val unlabelled = ChordSheetLook.unlabelled(
             // A line with no word (a tab's string or a stray accidental the reading took for a lyric) is not sung.
             looks = lines.indices.map { at ->
-                if (kinds[at] != Kind.LYRIC || at in omitted || !isSung(at)) null else look(at)
+                if (kinds[at] != Kind.LYRIC || at in omitted || !features[at].isSung) null else features[at].look
             },
             breaks = kinds.map { it == Kind.BLANK || it == Kind.SECTION || it == Kind.COMMENT || it == Kind.TAB || it == Kind.GRID },
             rows = kinds.map { it == Kind.CHORD },
@@ -984,7 +984,7 @@ public object ChordSheetConverter {
             // A change before a heading belongs to the section it heads rather than to the end of the one before.
             if (kinds[index] != Kind.SECTION && kinds[index] != Kind.BLANK) flushChanges()
             when (kinds[index]) {
-                Kind.SECTION if line.role == ChordSheetCampfireLayout.Role.LABEL -> {
+                Kind.SECTION if line.marks?.role == ChordSheetCampfireLayout.Role.LABEL -> {
                     closeSection()
                     flushChanges()
                     val label = headerValue(line.text)
@@ -1000,13 +1000,13 @@ public object ChordSheetConverter {
                 }
                 Kind.COMMENT -> {
                     var end = index
-                    while (end < lines.lastIndex && kinds[end + 1] == Kind.COMMENT && lines[end + 1].role == line.role && end + 1 !in omitted) end++
+                    while (end < lines.lastIndex && kinds[end + 1] == Kind.COMMENT && lines[end + 1].marks?.role == line.marks?.role && end + 1 !in omitted) end++
                     // A comment the next section (or the song's end) follows stands after the section it is printed under.
                     if (!inTab && nextContent(end)?.let { kinds[it] == Kind.SECTION } != false) {
                         closeSection()
                         if (output.lastOrNull()?.isNotBlank() == true) output += ""
                     }
-                    val directive = if (line.role == ChordSheetCampfireLayout.Role.BOX_COMMENT) "comment_box" else "comment"
+                    val directive = if (line.marks?.role == ChordSheetCampfireLayout.Role.BOX_COMMENT) "comment_box" else "comment"
                     output += "{$directive: ${headerValue(joinRows(lines, index, end))}}"
                     index = end
                 }
@@ -1015,12 +1015,12 @@ public object ChordSheetConverter {
                     closeSection()
                     flushChanges()
                     val label = headerValue(headingLabel(line.text))
-                    val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else ChordSheetHeadings.parse(line.text)?.type
+                    val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else features[index].heading?.type
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
                     // Under a chorus heading, lines neither set the way the song set its chorus apart nor singing its words
                     // are sung after it.
                     val lyric = ((index + 1)..lines.lastIndex).takeWhile { kinds[it] != Kind.SECTION }.firstOrNull { kinds[it] == Kind.LYRIC && it !in omitted }
-                    val isRecall = type != null && lyric != null && isRecall(type, look(lyric), lines[lyric].text)
+                    val isRecall = type != null && lyric != null && isRecall(type, features[lyric].look, lines[lyric].text)
                     if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION || isRecall)) output += "{chorus}"
                     else if (type != null) { output += "{start_of_$type: $label}"; open(type) }
                     else {
@@ -1033,21 +1033,21 @@ public object ChordSheetConverter {
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {
                     openUnlabelled(index + 1)
-                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && lines[index + 1].isContinuation
+                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && lines[index + 1].marks?.isContinuation == true
                     // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
                     // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
-                    if (line.isContinuation && !isUnderMarkedLyric) {
-                        addLyric(bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight), continues = true, isHardCut = false)
+                    if (line.marks?.isContinuation == true && !isUnderMarkedLyric) {
+                        addLyric(bracketed(candidates[index]!!, chordRow(line), line.marks.isSetFromRight), continues = true, isHardCut = false)
                     } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == Kind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
                         follow(index + 1)
-                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].isContinuation, lines[index + 1].isHardCut)
+                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].marks?.isContinuation == true, lines[index + 1].marks?.isHardCut == true)
                         index++
-                    } else output += bracketed(candidates[index]!!, chordRow(line), line.isSetFromRight)
+                    } else output += bracketed(candidates[index]!!, chordRow(line), line.marks?.isSetFromRight == true)
                 }
                 Kind.LYRIC -> {
                     openUnlabelled(index)
                     follow(index)
-                    addLyric(inline(line, convertParentheses), line.isContinuation, line.isHardCut)
+                    addLyric(inline(line, convertParentheses), line.marks?.isContinuation == true, line.marks?.isHardCut == true)
                 }
                 Kind.BLANK -> output += ""
                 Kind.METADATA -> Unit
@@ -1291,12 +1291,12 @@ public object ChordSheetConverter {
         val lyricsEnd = lyrics.source.spans.lastOrNull { it.text.isNotBlank() }?.end
         // Another producer than Campfire hangs a chord from its syllable by eye, or by the columns of a plain text, so
         // the edge it hangs from is looked for within an em of the lyric's type rather than at the export's exact point.
-        val bidiTolerance = if (lyrics.isCampfire) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
+        val bidiTolerance = if (lyrics.marks != null) EXACT_POSITION else lyrics.source.spans.firstOrNull { it.pieces.isNotEmpty() }?.size ?: 1.0
         var isAttachedAtEnd = false
         // Bar lines and repeat counts mean nothing over a lyric, but "no chord" says where the playing stops.
         // Chords set on one character, the line's end above all, are written in the order they are read, which in a row
         // set from the right runs from its right end.
-        val readsFromRight = chords.isSetFromRight && lyrics.bidi != null
+        val readsFromRight = chords.marks?.isSetFromRight == true && lyrics.bidi != null
         for (word in (row?.tokens.orEmpty().filter { rowChord(it.text) || it.text in noChord } + notes).sortedBy { if (readsFromRight) -it.index else it.index }) {
             // A right-to-left annotation is written in its reading order over its glyphs, its first character at its
             // right end: over a lyric read by its positions rather than by the edges of its glyphs, it stands where its
@@ -1305,7 +1305,7 @@ public object ChordSheetConverter {
                 word.text.indices.mapNotNull { chords.positions.getOrNull(word.index + it) }.minOrNull() ?: 0.0
             }
             var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
-            val exact = if (lyrics.isCampfire) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
+            val exact = if (lyrics.marks != null) positions.indices.firstOrNull { abs(positions[it] - x) <= EXACT_POSITION } else null
             // A row holding right-to-left text runs both ways, so its chords are set where they stand rather than in the
             // order they are read off the chord row, which is left to right.
             val bidi = lyrics.bidi?.indexOf(chordStart = x, chordEnd = chordEnd(chords, word), length = lyrics.text.length, tolerance = bidiTolerance)
@@ -1313,7 +1313,7 @@ public object ChordSheetConverter {
                 at = bidi.coerceAtMost(lyrics.text.length)
                 if (bidi == lyrics.text.length) isAttachedAtEnd = true
             } else if (exact != null) at = exact
-            else if (lyrics.isCampfire && lyricsEnd != null && abs(lyricsEnd - x) <= EXACT_POSITION) {
+            else if (lyrics.marks != null && lyricsEnd != null && abs(lyricsEnd - x) <= EXACT_POSITION) {
                 at = lyrics.text.length
                 isAttachedAtEnd = true
             } else if (lyrics.positions.isEmpty()) at = 0
@@ -1380,7 +1380,7 @@ public object ChordSheetConverter {
         val position = chords.positions.getOrNull(last) ?: return 0.0
         val span = chords.source.spans.lastOrNull { position >= it.start - 0.01 && position < it.end + 0.01 }
         // The span's width is shared by the characters render keeps of it, the export's fillers left out.
-        val kept = { span: ChordSheet.Span -> clean(if (chords.isCampfire) span.text.filterNot(::isExportFiller) else span.text) }
+        val kept = { span: ChordSheet.Span -> clean(if (chords.marks != null) span.text.filterNot(::isExportFiller) else span.text) }
         return position + (span?.let { (it.end - it.start) / kept(it).length.coerceAtLeast(1) } ?: 0.0)
     }
 
