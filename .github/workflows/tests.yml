@@ -149,3 +149,29 @@ jobs:
       # Every library's iosMain and the framework the Xcode project embeds.
       - name: Compile the iOS framework
         run: ./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64
+
+  test-windows:
+    name: Run the unit tests on Windows
+    runs-on: windows-latest
+    steps:
+      # The tree as committed: Git for Windows would turn every line ending into CRLF, which no user's file goes through.
+      - name: Keep the line endings as committed
+        run: git config --global core.autocrlf false
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      # The desktop app ships on the Microsoft Store, and paths, file locks, and atomic replaces behave differently on
+      # Windows; the UI tests stay on Linux, since what they draw does not depend on the file system.
+      - name: Run the unit tests
+        shell: bash
+        run: ./gradlew desktopTest --continue
+      - name: Upload failed unit test reports
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-unit-test-reports
+          path: |
+            **/build/reports/tests/desktopTest/**
+            **/build/test-results/desktopTest/*.xml
+          retention-days: 7
