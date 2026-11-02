@@ -12,7 +12,7 @@ or from growing one already past them.
 
 Main Kotlin sources (tests are left out) should be at most FILE_LINES lines long, a top-level function — a Composable
 above all — at most FUNCTION_LINES, and the primary constructor of a class, nested or not, should take at most
-CONSTRUCTOR_PARAMETERS parameters. A CLAUDE.md should be at most ROOT_WORDS words at the root, MODULE_WORDS in a module,
+CONSTRUCTOR_PARAMETERS parameters (a data class's are its fields and are not counted). A CLAUDE.md should be at most ROOT_WORDS words at the root, MODULE_WORDS in a module,
 `.github` or a source set, and PACKAGE_WORDS anywhere else. Data tables are exempt by name.
 
 A Kotlin file, function or constructor fails when the change takes it past its limit, or when it was already past it
@@ -57,7 +57,7 @@ DECLARATION = re.compile(
     r"^(?:(?:public|internal|private|protected|inline|suspend|operator|infix|override|actual|expect|tailrec|external)\s+)*fun\s"
 )
 FUNCTION_NAME = re.compile(r"fun\s+(?:<[^>]*>\s*)?([\w.`]+(?:<[^>]*>)?[\w.`]*)\s*\(")
-CLASS = re.compile(r"(?<![\w:.])class\s+([\w`]+)")
+CLASS = re.compile(r"(?<![\w:.])(data\s+)?class\s+([\w`]+)")
 PRIMARY_CONSTRUCTOR = re.compile(
     r"\s*(?:(?:@[\w.]+(?:\([^()]*\))?|public|internal|private|protected)\s*)*(?:constructor\s*)?\("
 )
@@ -153,6 +153,9 @@ def constructors(text):
     code = "\n".join(code_only(text.split("\n")))
     result = []
     for match in CLASS.finditer(code):
+        # A data class's parameters are its fields, not collaborators: a record with many of them is not a hub.
+        if match.group(1):
+            continue
         index = match.end()
         if code.startswith("<", index):
             depth = 0
@@ -178,7 +181,7 @@ def constructors(text):
             elif depth >= 0:
                 pieces[-1] += character
             index += 1
-        result.append((match.group(1), sum(1 for piece in pieces if PARAMETER.match(piece))))
+        result.append((match.group(2), sum(1 for piece in pieces if PARAMETER.match(piece))))
     return result
 
 

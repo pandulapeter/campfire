@@ -83,7 +83,11 @@ class Empty
 class ConstructorsTest(unittest.TestCase):
 
     def test_parameters_are_counted_past_commas_in_defaults_types_lambdas_and_strings(self):
-        self.assertEqual([("Holder", 5), ("Nested", 2), ("Mode", 1)], constructors(CLASSES))
+        self.assertEqual([("Holder", 5), ("Mode", 1)], constructors(CLASSES))
+
+    def test_a_data_class_is_not_measured_for_constructors(self):
+        record = "data class Settings(" + ", ".join(f"a{index}: Int" for index in range(20)) + ")\n"
+        self.assertEqual([], constructors(record))
 
     def test_tests_are_not_measured_for_constructors(self):
         many = "class Big(" + ", ".join(f"a{index}: Int" for index in range(20)) + ")\n"
