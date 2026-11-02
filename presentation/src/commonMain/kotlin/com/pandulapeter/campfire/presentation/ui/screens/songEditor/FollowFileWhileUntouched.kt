@@ -13,7 +13,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
@@ -27,16 +29,18 @@ import kotlinx.coroutines.flow.map
  */
 @Composable
 internal fun FollowFileWhileUntouched(
-    viewModel: CampfireViewModel,
+    editorSession: EditorSession,
+    songTexts: StateFlow<Map<String, String>>,
+    songRenderer: SongRenderer,
     fileName: String,
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) {
-    val notation = viewModel.editorSession.editorNotation
+    val notation = editorSession.editorNotation
     LaunchedEffect(textFieldState, fileName) {
-        val editorTextOf = { text: String -> viewModel.songRenderer.editorTextOf(text, notation) }
-        var previous = viewModel.songTextStore.songTexts.value[fileName]?.let(editorTextOf)
-        viewModel.songTextStore.songTexts.map { it[fileName]?.let(editorTextOf) }.distinctUntilChanged().collect { current ->
+        val editorTextOf = { text: String -> songRenderer.editorTextOf(text, notation) }
+        var previous = songTexts.value[fileName]?.let(editorTextOf)
+        songTexts.map { it[fileName]?.let(editorTextOf) }.distinctUntilChanged().collect { current ->
             val base = previous
             previous = current
             if (current != null && base != null && current != base && textFieldState.text.contentEquals(base)) {

@@ -13,7 +13,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Puts the file back into the field once the user has confirmed that is what they want. It goes through the field's
@@ -22,17 +24,19 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  */
 @Composable
 internal fun RevertOnRequest(
-    viewModel: CampfireViewModel,
+    editorSession: EditorSession,
+    songTexts: StateFlow<Map<String, String>>,
+    songRenderer: SongRenderer,
     fileName: String,
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) {
-    val notation = viewModel.editorSession.editorNotation
+    val notation = editorSession.editorNotation
     LaunchedEffect(textFieldState, fileName) {
-        viewModel.editorSession.editorRevertRequests.collect {
-            viewModel.songTextStore.songTexts.value[fileName]?.let { text ->
+        editorSession.editorRevertRequests.collect {
+            songTexts.value[fileName]?.let { text ->
                 summaryCache.clear()
-                textFieldState.replaceAll(viewModel.songRenderer.editorTextOf(text, notation), isSelectionMapped = false)
+                textFieldState.replaceAll(songRenderer.editorTextOf(text, notation), isSelectionMapped = false)
             }
         }
     }

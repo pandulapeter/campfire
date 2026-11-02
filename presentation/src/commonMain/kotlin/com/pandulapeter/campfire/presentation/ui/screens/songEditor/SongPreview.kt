@@ -38,8 +38,10 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.presentation.ui.songView.model.ChordDiagrams
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
+import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
+import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -72,7 +74,9 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun SongPreview(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    userPreferencesFlow: StateFlow<UserPreferences?>,
+    songRenderer: SongRenderer,
+    editorSession: EditorSession,
     text: State<String>,
     scrollState: ScrollState,
     fontScale: Float,
@@ -81,13 +85,12 @@ internal fun SongPreview(
     isSingleColumn: Boolean,
     songInfoEditing: SongInfoEditing,
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val labels = rememberDefaultSectionLabels(shouldNumberSections = userPreferences?.shouldNumberSections == true)
     // The tabs are named for the reader, as everything is spelled for them, but moved for nobody and none of them left out.
     val tabs = rememberTabReading(userPreferences, isMoved = false)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
-    val songRenderer = viewModel.songRenderer
-    val notation = viewModel.editorSession.editorNotation
+    val notation = editorSession.editorNotation
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
     // typed into the field opposite it have to appear, or the editor would answer an edit with nothing. The reader's
     // transposition is a way of reading it too, so the preview is in the key the field and the stepper name - the

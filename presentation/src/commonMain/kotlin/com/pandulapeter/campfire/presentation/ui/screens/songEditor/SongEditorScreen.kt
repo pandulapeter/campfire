@@ -119,7 +119,12 @@ internal fun SongEditorScreen(
             )
         } else {
             LoadedSongEditor(
-                viewModel = viewModel,
+                editorSession = viewModel.editorSession,
+                songTexts = viewModel.songTextStore.songTexts,
+                songRenderer = viewModel.songRenderer,
+                songMetadataEditing = viewModel.songMetadataEditing,
+                userPreferencesFlow = viewModel.userPreferences,
+                dialogHost = viewModel.dialogHost,
                 destination = destination,
                 initialText = text,
                 hasSavedText = songTexts[destination.fileName] != null,

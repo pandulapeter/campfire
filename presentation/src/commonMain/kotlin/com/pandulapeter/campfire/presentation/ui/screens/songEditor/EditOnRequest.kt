@@ -13,7 +13,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import kotlinx.coroutines.flow.filter
 
 /**
@@ -23,12 +23,12 @@ import kotlinx.coroutines.flow.filter
  */
 @Composable
 internal fun EditOnRequest(
-    viewModel: CampfireViewModel,
+    editorSession: EditorSession,
     fileName: String,
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) = LaunchedEffect(textFieldState, fileName) {
-    viewModel.editorSession.editorTextEdits.filter { it.fileName == fileName }.collect { request ->
+    editorSession.editorTextEdits.filter { it.fileName == fileName }.collect { request ->
         val text = textFieldState.text.toString()
         val edited = request.edit(text)
         if (edited != text) {

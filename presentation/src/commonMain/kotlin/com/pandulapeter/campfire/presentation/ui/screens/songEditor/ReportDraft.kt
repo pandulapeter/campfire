@@ -15,7 +15,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshotFlow
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 
 /**
  * Keeps the view model's copy of the text in step with the field, without writing any of it. It is what tells the
@@ -24,18 +24,18 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
  */
 @Composable
 internal fun ReportDraft(
-    viewModel: CampfireViewModel,
+    editorSession: EditorSession,
     fileName: String,
     text: State<String>,
     textFieldState: TextFieldState,
 ) {
     LaunchedEffect(text, fileName) {
-        snapshotFlow { text.value }.collect { viewModel.editorSession.onEditorTextChanged(fileName, it) }
+        snapshotFlow { text.value }.collect { editorSession.onEditorTextChanged(fileName, it) }
     }
     // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
     DisposableEffect(fileName, textFieldState) {
         // Metadata sheets read this field at the moment they open, including edits not yet reported as a draft.
-        viewModel.editorSession.retainEditorField(fileName, textFieldState)
-        onDispose { viewModel.editorSession.onEditorClosed(fileName) }
+        editorSession.retainEditorField(fileName, textFieldState)
+        onDispose { editorSession.onEditorClosed(fileName) }
     }
 }
