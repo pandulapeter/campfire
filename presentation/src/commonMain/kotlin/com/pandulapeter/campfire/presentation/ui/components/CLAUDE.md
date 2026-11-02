@@ -8,73 +8,34 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 
+
 # :presentation — ui/components
 
-The shared building blocks of the screens. Each subpackage with something non-obvious to say has a `CLAUDE.md` of its
-own (`songCard`, `list`, `appBar`, `menu`, `actions`, `songFilters`, `labels`, `controls`, `coverArt`); this file
-covers the generic pieces at the root.
+The shared building blocks of the screens; subpackages with something to say have their own `CLAUDE.md`.
 
-### `SaveShortcut.kt`
-
-- `Modifier.saveShortcut`: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt). In a `CampfireBottomSheet` it presses
-  the header's `BottomSheetConfirmButton` (`LocalSheetSaveShortcut`; library deletion opts out with `isSaveShortcut`),
-  nothing while disabled or closing.
-- Keys travel only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a
-  frame in and only if nothing has focus yet, so a form's first field keeps the caret. The key is always consumed.
-
-### `AddressTextField.kt`
-
-Every field for a web address (a song's links, a cover's address) selects all of it whenever it gains the focus, a tap
-included: an address is pasted over, not edited by hand. A tap's caret arrives in the frame the focus does and is
-dropped; later ones go through.
-
-### `WarningCard.kt`
-
-What a switch flipped elsewhere has done to a whole screen, on the onboarding note's card with a warning icon: the
-everything-off note in Settings → Features, and the import screen's warning about songs or setlists switched off.
-
-### `DelayedLoadingIndicator.kt`
-
-Song details, the editor, and the export screen and its preview: fades in after 300ms, since one local file is nearly
-always read before then. Lists keep the plain indicator (the launch screen covers their first read). A `label` under
-it (the Link format's "Creating link…") comes and goes with it.
-
-### Edge fades (`EdgeFade.kt`)
-
-- `fadingTopEdge`: over a **known opaque color**, paint that color over the edge rather than masking (a mask costs a
-  viewport-sized offscreen buffer every frame). The color must be the one directly behind (`sheetContainerColor()` for
-  sheets). Masks are kept only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
-- `fadingVerticalEdges`: lists inside a dialog; in a sheet only content above a row pinned under it (painted, the
-  questions' Confirm row), never a sheet's content that ends at the window's bottom.
-
-### `ShrinkToFit.kt`
-
-Auto-sized text with an ellipsis uses `ShrinkToFit`, never `TextAutoSize.StepBased`, which never shrinks on Skiko (its
-paragraphs never report an ellipsized line): the navigation labels, and `SegmentedChoice`'s, which shrink before they
-are cut.
-
-### `PlacementAnimation.kt`
-
-- `Modifier.animatePlacement`: a child of a wrapping row (chips, color discs) travels to where its parent now places it
-  instead of jumping, as a resized window or a wider neighbour sends it to another line. Only moves inside the parent
-  travel, so a start-aligned row follows a dragged window edge frame by frame; a new layout direction places them at
-  once, as the rest of the screen mirrors. First in the child's modifiers; never in lazy list items, whose reused nodes
-  would travel from the previous item's places.
-
-### Scrolling performance
-
-- Overscroll is Compose's own (none on desktop/web). Foundation skips it when content fits, so short containers use
-  `bounceScrollableContent` / `bounceVerticalScroll` / `bounceHorizontalScroll` (`ContentOverscroll.kt`),
-  offering drags to parents first so a fitting sheet still drags down. Installed whether or not the content fits (only
-  a measure knows, so a decision while composing would compose every list and label row twice); the connection asks at
-  each drag, and the clip is drawn only while it fits, since a scrolling container must not clip its cross axis. Never
-  a layer's clip: on Android it can keep the layer's first size while the content grows. The vertical form draws its own top fade while
-  pulled (scroll position stays zero, so `fadingTopEdge` is off); list screens pass their `ListTopFade`'s
-  `OverscrollPull` instead.
-
-### Floating controls
-
-- **Every floating control that comes and goes does so through `FloatingControlVisibility`** (the song page's step
-  and play buttons, the list screens' Done buttons, the import and export buttons, the export's page pill), which draws
-  the shadow itself and fades it with the control; the control's own elevation is zero. Never `AnimatedVisibility` with
-  `fadeIn` and `scaleIn` around one: the fade draws into a buffer that cuts the shadow off until it ends.
+- **`saveShortcut`**: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt); in a `CampfireBottomSheet` it presses
+  the header's `BottomSheetConfirmButton` (library deletion opts out), nothing while disabled or closing. Keys travel
+  only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a frame in and
+  only if nothing has focus yet, so a form's first field keeps the caret. The key is always consumed.
+- **`AddressTextField`**: an address is pasted over, not edited, so the field selects all of it on every focus, a tap
+  included (the tap's caret arriving with the focus is dropped; later ones go through).
+- **`DelayedLoadingIndicator`** (song details, editor, export): fades in after 300 ms, since one local file is nearly
+  always read before then; lists keep the plain indicator (the launch screen covers their first read).
+- **Edge fades** (`EdgeFade.kt`): over a **known opaque color**, `fadingTopEdge` paints that color (the one directly
+  behind, `sheetContainerColor()` in sheets) rather than masking, since a mask costs a viewport-sized offscreen buffer
+  every frame; masks only for alert dialogs, `ListTopFade`, `fadingUnderStartOverlay`, and overscroll.
+  `fadingVerticalEdges`: lists in a dialog; in a sheet only content above a pinned row, never content ending at the
+  window's bottom.
+- **`ShrinkToFit`**, never `TextAutoSize.StepBased`, which never shrinks on Skiko (no ellipsized line reported).
+- **`animatePlacement`**: a wrapping row's child travels to its new place instead of jumping; only moves inside the
+  parent travel (so a dragged window edge is followed frame by frame), a new layout direction places at once. First in
+  the child's modifiers; never in lazy list items, whose reused nodes would travel from the previous item's places.
+- **Overscroll** is Compose's own (none on desktop/web), which Foundation skips when content fits, so short containers
+  use the `bounce…` modifiers (`ContentOverscroll.kt`), offering drags to parents first so a fitting sheet still drags
+  down. Installed whether or not the content fits (deciding while composing would compose every row twice); the clip is
+  drawn only while it fits (a scrolling container must not clip its cross axis), and never as a layer's clip, which on
+  Android can keep the layer's first size. The vertical form draws its own top fade while pulled (`fadingTopEdge` is
+  off at scroll zero); list screens pass their `ListTopFade`'s `OverscrollPull`.
+- **Every floating control that comes and goes uses `FloatingControlVisibility`**, which draws and fades the shadow
+  itself (the control's elevation is zero); never `AnimatedVisibility` with `fadeIn` + `scaleIn`, whose buffer cuts the
+  shadow off until it ends.
