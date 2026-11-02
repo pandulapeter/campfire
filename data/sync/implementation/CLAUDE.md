@@ -43,5 +43,5 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
 
 A behaviour spanning devices (renames, conflicts, deletions, synced preferences) gets a case in `TwoDeviceSyncTest`. The
 upgrade-5.2.0 test resources, here and in `:data:source:local:implementation`, are what the 5.2.0 release's own code
-wrote; never regenerate them with today's code, which would agree with itself whatever it reads. A release worth
-checking the same way gets a folder of its own, written from a worktree at its tag.
+wrote; never regenerate them with today's code, which would agree with itself whatever it reads. Further fixtures
+follow the root `CLAUDE.md`'s Stored formats rule.

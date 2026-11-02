@@ -137,6 +137,29 @@ internal class SetlistDocumentFormatTest {
         assertEquals(500, SetlistDocumentFormat.decode("""{"title":"x","songs":[${songs.joinToString(",")}]}""").songs.size)
     }
 
+    @Test
+    fun `a setlist a newer format wrote is refused`() {
+        assertFailsWith<IllegalArgumentException> { SetlistDocumentFormat.decode("""{"version":2,"title":"S","songs":[{"file":"a.cho"}]}""") }
+    }
+
+    @Test
+    fun `a setlist of this format, of none named, or of a version that is not a number decodes`() {
+        listOf(""""version":1,""", "", """"version":"2",""").forEach { version ->
+            val document = SetlistDocumentFormat.decode("""{$version"title":"S","songs":[{"file":"a.cho"}]}""")
+
+            assertEquals("S", document.title)
+            assertEquals(listOf("a.cho"), document.songs.map { it.file })
+        }
+    }
+
+    @Test
+    fun `the version a setlist names is written back`() {
+        val text = """{"title":"S","version":1,"songs":[{"file":"a.cho"}]}"""
+        val rewritten = SetlistDocumentFormat.encode(SetlistDocumentFormat.decode(text).toModel("s.setlist.json", size = 0, undatedDay = DAY).toDocument())
+
+        assertEquals(JsonPrimitive(1), Json.parseToJsonElement(rewritten).jsonObject["version"])
+    }
+
     private companion object {
         val DAY = LocalDate(2026, 1, 1)
     }

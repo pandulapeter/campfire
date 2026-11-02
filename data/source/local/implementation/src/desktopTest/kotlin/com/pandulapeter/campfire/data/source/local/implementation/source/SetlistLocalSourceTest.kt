@@ -126,6 +126,18 @@ class SetlistLocalSourceTest {
         assertTrue(dated.isDated)
     }
 
+    @Test
+    fun `a setlist a newer format wrote is skipped and left as it is`() = runBlocking {
+        val newer = """{"version":2,"title":"Later","songs":[{"file":"a.cho"}]}"""
+        fileStorage.writeText(StorageDirectory.SETLISTS, "later.setlist.json", newer)
+        fileStorage.writeText(StorageDirectory.SETLISTS, "old.setlist.json", """{"title":"Old"}""")
+
+        val listed = setlistLocalSource.loadSetlists()
+
+        assertEquals(listOf("old.setlist.json"), listed.map { it.setlist.fileName })
+        assertEquals(newer, fileStorage.readText(StorageDirectory.SETLISTS, "later.setlist.json"))
+    }
+
     /** Read before and after the call under test: the source reads the clock itself, and a run may cross midnight. */
     private fun today() = Clock.System.todayIn(TimeZone.currentSystemDefault())
 

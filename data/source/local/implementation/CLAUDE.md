@@ -86,7 +86,7 @@ Skipped or unreadable files are logged to the injected `Logger`.
 No document type leaves this module.
 
 - Every field is defaulted and `null` reads as missing (`coerceInputValues`), so old or hand-edited files keep what they
-  carry.
+  carry; fields are only added (root `CLAUDE.md`, Stored formats).
 - `UserPreferencesDocumentFormat` falls back to field-by-field reading: a bad entry costs that entry, not the map. Such
   a file is copied to `preferences.json.bad` before anything can save over it. Text size, metronome volume and tempo,
   tuner reference pitch, the tools' capo, and stored tempos and capos are clamped or dropped to range on read.
@@ -96,7 +96,8 @@ No document type leaves this module.
   capo). Null tempo is omitted so untouched setlists stay byte-identical. A bad `date` costs only the date. Unknown
   members are written back after known ones; the old `priority` is declared so it is read and dropped. A setlist naming
   a song twice keeps the first mention, also in what a save returns (rows key by file name). One that does not decode is
-  skipped and left alone. `decode` refuses a document past 64 levels or a 100,000-token budget before parsing.
+  skipped and left alone, as is one whose `version` is a number above 1 (nothing writes the key yet). `decode` refuses a
+  document past 64 levels or a 100,000-token budget before parsing.
 
 ## Other apps' libraries
 

@@ -15,7 +15,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
@@ -38,6 +40,14 @@ internal object SetlistDocumentFormat {
     private val DOCUMENT_KEYS = SetlistDocument.serializer().descriptor.elementNames.toSet()
     private val SONG_KEYS = SetlistSongDocument.serializer().descriptor.elementNames.toSet()
     private const val SONGS_KEY = "songs"
+    private const val VERSION_KEY = "version"
+
+    /**
+     * The format this version reads and writes. A later version bumps it only for a change older ones cannot pass
+     * through, and it is that version that writes [VERSION_KEY]; nothing here writes it, so a file without it is this
+     * format. The key is not declared, so it is kept in `unknownFields` like any other member this version does not know.
+     */
+    private const val FORMAT_VERSION = 1
 
     /**
      * A song entry the app writes is at most about 9 tokens, so this holds over 10,000 songs, more than any library the
@@ -49,10 +59,16 @@ internal object SetlistDocumentFormat {
      * Throws [IllegalArgumentException] on a text that is not a setlist document, as the serializer does, and on one past
      * [JsonBounds]' depth or [MAX_SETLIST_TOKENS] before it is parsed: the launch-time loaders read every setlist in the
      * library through here, not only an imported one.
+     *
+     * Also throws on a document whose [VERSION_KEY] is a number above [FORMAT_VERSION]: one written by a later version in a
+     * format this one cannot keep what it carries through. Every caller skips a document that does not decode and
+     * leaves its file alone, so the gate only ever hides such a file from this version, never writes over it.
      */
     fun decode(text: String): SetlistDocument {
         require(JsonBounds.isWithin(text, maxTokens = MAX_SETLIST_TOKENS)) { "The setlist is too large or too deeply nested to read." }
         val element = json.parseToJsonElement(text)
+        val version = ((element as? JsonObject)?.get(VERSION_KEY) as? JsonPrimitive)?.takeUnless { it.isString }?.doubleOrNull
+        require(version == null || version <= FORMAT_VERSION) { "The setlist was written by a newer version of Campfire." }
         val document = json.decodeFromJsonElement<SetlistDocument>(element)
         // The songs decode one for one from the array, so the index is what pairs each with its own leftovers.
         val songs = (element.jsonObject[SONGS_KEY] as? JsonArray).orEmpty()

@@ -128,6 +128,13 @@ campfire.log / campfire.log.1          desktop only, here (the other platforms k
 - **A short window** (`SHORT_WINDOW_HEIGHT`, 480 dp: a phone on its side, or the smallest with the keyboard up) gives
   the keyboard everything it can; each screen's own short-window rules are in its package `CLAUDE.md`.
 
+### Stored formats
+
+- A stored document (setlist, preferences, synced preferences, sync index, shared links, credentials) only gains
+  fields: a rename or retype is a new key, the old one still read; a change older versions cannot pass through bumps
+  the document's `version`, which they refuse. A change to one comes with an `upgrade-<version>` fixture of the file as
+  the code before it writes it (from a worktree at the last tag, never regenerated) and a test reading it.
+
 ### Files and names
 
 - The file name is a song's and setlist's identity. Nothing is overwritten implicitly: a collision gets `_2`, `_3`…
