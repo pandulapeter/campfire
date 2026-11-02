@@ -38,11 +38,14 @@ import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.localization.pluralTemplate
 import com.pandulapeter.campfire.presentation.localization.withTexts
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jetbrains.compose.resources.PluralStringResource
@@ -166,6 +169,7 @@ private fun runApp(
         useStandardTestDispatcherForComposition = false,
     ).runTest {
         var isAppReady by mutableStateOf(false)
+        var viewModel: CampfireViewModel? = null
         val backInput = DirectNavigationEventInput()
         setContent {
             val dispatcher = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
@@ -177,14 +181,15 @@ private fun runApp(
                 filePicker = TestFilePicker(pickedFiles),
                 isPrepared = true,
                 keyboardHeight = keyboardHeight.value,
-                onViewModel = {},
+                onViewModel = { viewModel = it },
                 onAppReady = { isAppReady = true },
             )
         }
         waitUntil(timeoutMillis = LAUNCH_TIMEOUT_MILLIS) { isAppReady }
         AppTestScope(
             test = this,
-            library = File(host.dataDirectory, "library"),
+            dataDirectory = host.dataDirectory,
+            viewModel = checkNotNull(viewModel) { "The app was ready before its view model was made." },
             locale = AppLocale.findByCode(appearance.language.id),
             keyboardHeight = keyboardHeight,
             backInput = backInput,
@@ -199,21 +204,31 @@ private class KeyboardInsets(private val keyboardHeight: State<Dp>) : PlatformWi
 }
 
 /**
- * What a test drives the app with: the UI test's finders and actions, the library folder the app writes to, and the
- * on-screen keyboard, which is up while [keyboardHeight] is more than zero. The keyboard is the test's to raise: the
+ * What a test drives the app with: the UI test's finders and actions, the data directory the app writes to, its view
+ * model (whose holders a test calls inside `runOnIdle`, on the thread its scope runs on, and whose suspending members it
+ * calls with `runBlocking` outside it, since they resume there), and the on-screen keyboard, which is up while [keyboardHeight] is more than zero. The keyboard is the test's to raise: the
  * desktop has none, so focusing a text field opens nothing. Back is the test's to send too ([pressBack], [swipeBack]):
  * the scene has no window to turn Escape into one, which the desktop app's window does.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class AppTestScope(
     private val test: SkikoComposeUiTest,
-    val library: File,
+    val dataDirectory: File,
+    val viewModel: CampfireViewModel,
     private val locale: AppLocale,
     keyboardHeight: MutableState<Dp>,
     private val backInput: DirectNavigationEventInput,
 ) : ComposeUiTest by test {
 
     var keyboardHeight by keyboardHeight
+
+    val library get() = File(dataDirectory, "library")
+
+    /** The preferences document as it is on disk. */
+    fun storedPreferences() = Json.parseToJsonElement(File(dataDirectory, "preferences/preferences.json").readText()).jsonObject
+
+    /** The setlist file [fileName] as it is on disk. */
+    fun storedSetlist(fileName: String) = Json.parseToJsonElement(File(library, "setlists/$fileName").readText()).jsonObject
 
     /** A back as the desktop's Escape, Android's back button, and the browser's Back send it, at once and whole. */
     fun pressBack() {

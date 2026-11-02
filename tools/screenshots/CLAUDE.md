@@ -72,6 +72,9 @@ model, use cases, repositories, and files in a temporary home — and drives it 
   scene and `imePadding` reads its root's insets, not the composition's.
 - **Back** is the test's to send too (`pressBack`, `swipeBack`): only the desktop app's window turns Escape into a back
   event.
+- **`viewModel` and `dataDirectory`** reach the paths no screen drives, the exit and the pause (`AppExitTest`): a holder
+  is called inside `runOnIdle`, a suspending member with `runBlocking` outside it, and `storedPreferences()` /
+  `storedSetlist()` read what landed. Never `ViewModelStore.clear()` mid-test.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or deleted the
   same day, never retried.

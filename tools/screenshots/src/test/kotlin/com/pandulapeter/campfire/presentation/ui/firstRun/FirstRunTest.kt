@@ -23,6 +23,10 @@ import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOME_ON_THE_RANGE
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.runAppTest
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -43,7 +47,30 @@ internal class FirstRunTest {
         onNodeWithText(whatsNew).assertDoesNotExist()
         assertEquals(DEMO_LIBRARY, libraryFiles())
     }
+
+    @Test
+    fun `the onboarding stays owed until it is finished or skipped`() = runAppTest(isFirstRun = true) {
+        onNodeWithText(string(Res.string.onboarding_welcome_title)).assertExists()
+        waitForLibrary { isOnboardingPending() == true }
+        onNode(hasText(string(Res.string.onboarding_skip)) and hasClickAction()).performClick()
+        waitForLibrary { isOnboardingPending() == false }
+    }
+
+    @Test
+    fun `What's new is recorded as seen on a first run without being shown`() = runAppTest(isFirstRun = true) {
+        val version = System.getProperty("campfire.screenshots.versionName")
+        waitForLibrary { seenWhatsNewVersions().contains(version) }
+        onNodeWithText(string(Res.string.whats_new_title, version)).assertDoesNotExist()
+    }
 }
+
+/** Whether the stored preferences still owe the onboarding, null before the first run has written any. */
+private fun AppTestScope.isOnboardingPending() = preferencesOrNull()?.let { it["isOnboardingPending"]?.jsonPrimitive?.boolean ?: false }
+
+private fun AppTestScope.seenWhatsNewVersions() =
+    preferencesOrNull()?.get("seenWhatsNewVersions")?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
+
+private fun AppTestScope.preferencesOrNull() = if (File(dataDirectory, "preferences/preferences.json").isFile) storedPreferences() else null
 
 /** Every file of the library, as its path inside the library folder. */
 private fun AppTestScope.libraryFiles() =
