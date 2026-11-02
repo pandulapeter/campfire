@@ -11,8 +11,8 @@
 
 - Tags, languages, cover, and links are directives: `{tag}` one per value; `{meta: language en}`, `{meta: cover URL}`,
   `{meta: link URL Optional name}`. **Language codes are normalized** to one primary subtag, two letters where one
-  exists (a region or three-letter code would split a filter group); `und` and `zxx` mean no language. Values
-  cannot inject braces or line breaks.
+  exists (a region or three-letter code would split a filter group); `und` and `zxx` mean no language. Values cannot
+  inject braces or line breaks.
 - `ChordProMetadataFields.set` rewrites the line the parser reads, in its own spelling, **but never a body
   `{key}`/`{tempo}`/`{time}`**; a cleared header value the body still changes is kept as an empty line, so the song
   does not start in its first change.
@@ -21,21 +21,19 @@
 - `ChordProPrettifier` formats raw text, never re-serializes a model, so unsupported directives survive. **No blank line
   is added around a tab or grid, or inside a legacy heading section or implicit paragraph** — it would split or close
   it. `define` is deliberately not in `metadataOrder`.
-- `ChordProMarkupLines` is where markup is read, line by line, in one walk, by the parser's rule; `isLiteralAt` shares
-  its literal-line rule, as does `ChordProLineDirections`, the direction a line is written in by itself (the editor's
-  arrow keys).
-- `ChordProFormattingTags` finds the tags that set a style around a selection by the parser's own reading, and takes
-  the style off keeping every other byte: a span keeps its other attributes, and goes only once it has none.
+- Markup is read line by line in one walk, by the parser's rule (`ChordProMarkupLines`), which the editor's line
+  directions share. `ChordProFormattingTags` takes a style off keeping every other byte: a span keeps its other
+  attributes, and goes only once it has none.
 
 ### `ChordProHighlighter`
 
 Lives here so "what is a chord" is decided once. A directive the parser reads and drops is one `INVALID` token, decided
 by the parser's own functions; an *empty* value is not invalid. A `{key}` is kept by the parser whatever it says, but
-is marked where it does not start with a note (`ChordProChordRewriter.isKey`: `S` is, `a-moll` and `D dorian` are not),
-and still counts as the song's one key. `highlight(text, previous)` reads from the first changed line until a line past
-the edit is the old one in the same state (open environment, once-only kinds said, header key) and on the same side of
-the body's start, and must always equal `tokenize`: the tests type and delete through a song.
+is marked where it does not start with a note (`ChordProChordRewriter.isKey`), and still counts as the song's one key.
+`highlight(text, previous)` reads from the first changed line until a line past the edit is the old one in the same
+state and on the same side of the body's start, and must always equal `tokenize`: the tests type and delete through a
+song.
 
 Chords without brackets are `CHORD` too, each as its reader decides: a grid's cells, the names of a tab line the
-transposition renames (`ChordProTabTransposer.chordWords`), and an `abc` tune's quoted chord symbols, found by the walk
-the grid import reads them with (`AbcBars.chordSymbols`; a `%%begintext` block is skipped, so it is part of the state).
+transposition renames (`ChordProTabTransposer.chordWords`), and an `abc` tune's quoted chord symbols (`AbcBars.chordSymbols`;
+a `%%begintext` block is skipped, so it is part of the state).

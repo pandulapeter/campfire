@@ -9,18 +9,17 @@
 -->
 # chordpro/voicings
 
-- The tables (sources and notices in each file's KDoc): every shape
-  must sound exactly the chord it is filed under, below the twelfth fret, holdable (`ChordVoicingTablesTest`). **Table
-  order is written, not computed** (most comfortable first). The stored choice format arrives through sync, so `read`
-  is tolerant. A table is read on its first use (a `lazy`, which a second thread waits for); `ChordVoicings.prepare`
-  reads it ahead, off the main thread. Every table ends in shapes picked from the search for the chords a chart names
-  that it had none for (the rules in `ChordVoicingTables`' KDoc); no player has reviewed them. A table shape that leaves
-  out the root never sounds another note twice where its chord has a shape that does not (`ChordVoicingTablesTest`), and
-  the search offers rootless shapes only after every one that keeps the root.
+- Every table shape must sound exactly the chord it is filed under, below the twelfth fret, holdable
+  (`ChordVoicingTablesTest`, which also pins the rules on rootless shapes and five-fret spans). **Table order is
+  written, not computed** (most comfortable first). Adding to a table never changes the shape a chord was shown with
+  (a moved shape a new one would come before is filed under its chord). The search never goes past four frets and
+  offers rootless shapes only after every one that keeps the root.
+- Each table ends in shapes picked from the search for the chords a chart names that it had none for (the rules in
+  `ChordVoicingTables`' KDoc); no player has reviewed them.
 - **Every chord a seven-note scale stacks has a table shape in every key and fretted tuning** (`ScaleChordsTest`): the
-  scale sheet draws only the tables'. Adding to a table never changes the shape a chord was shown with (a moved shape
-  a new one would come before is filed under its chord). A table shape spans five frets only where its chord has no
-  shape within four (`ChordVoicingTablesTest`); the search never goes past four.
+  scale sheet draws only the tables'.
+- A table is read on its first use (a `lazy`); `ChordVoicings.prepare` reads it ahead, off the main thread. The stored
+  choice format arrives through sync, so `read` is tolerant.
 - `ChordTuning`: its `id` must match `:tuner:api`'s `InstrumentTuning` ids. **A chord name names the chord that
   sounds.** A tuning has its own table or shifts one by a single interval. `drawsDefinitions` (standard and ukulele low
   G) is where a `{define}`, which has no tuning, is drawn.
