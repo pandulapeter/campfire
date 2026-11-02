@@ -132,7 +132,8 @@ interface FileStorage {
     /**
      * Every one of [entries] read at once, one answer each and in the same order, with its size and date. A file larger
      * than [maxSize] is reported as [ScannedFile.TooLarge] without being read, and a file that fails is its own answer,
-     * never the batch's, as for [readTexts].
+     * never the batch's, as for [readTexts]. A size the listing knew is not proof the file is still there, so a file it
+     * calls too large is asked about once more: one deleted since is missing.
      */
     suspend fun readScan(directory: StorageDirectory, entries: List<ScanEntry>, maxSize: Long): List<ScannedFile> = coroutineScope {
         entries.map { entry ->
@@ -141,6 +142,7 @@ interface FileStorage {
                     val info = entry.info ?: info(directory, entry.name)
                     when {
                         info == null -> ScannedFile.Missing
+                        info.size > maxSize && entry.info != null && !exists(directory, entry.name) -> ScannedFile.Missing
                         info.size > maxSize -> ScannedFile.TooLarge(info)
                         else -> readText(directory, entry.name)?.let { ScannedFile.Text(info = info, text = it) } ?: ScannedFile.Missing
                     }
