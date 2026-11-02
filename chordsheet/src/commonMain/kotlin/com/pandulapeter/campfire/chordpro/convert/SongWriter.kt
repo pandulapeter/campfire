@@ -33,7 +33,7 @@ internal object SongWriter {
         is Line.Raw -> listOf(line.text)
         is Line.Comment -> listOf(if (line.isBoxed) "{comment_box: ${line.text}}" else "{comment: ${line.text}}")
         is Line.TabRun -> listOf(start(line)) + line.lines.flatMap(::write) + "{end_of_tab}"
-        is Line.GridRun -> listOf("{start_of_grid}") + line.lines.flatMap(::write) + "{end_of_grid}"
+        is Line.GridRun -> listOf(line.shape?.let { "{start_of_grid: $it}" } ?: "{start_of_grid}") + line.lines.flatMap(::write) + "{end_of_grid}"
         Line.Recall -> listOf("{chorus}")
         is Line.Change -> listOf(line.directive)
     }

@@ -27,6 +27,9 @@ internal object SongStructure {
     /** A whole song: its [header]'s directives, each written once, and the [parts] of its body. */
     data class Song(val header: List<String>, val parts: List<Part>)
 
+    /** A grid's shape as ChordPro writes it, its measures by beats with an optional margin each side (`1+4x2+4`). */
+    private val gridShape = Regex("(?:[0-9]+\\+)?[0-9]+[x\u00d7][0-9]+(?:\\+[0-9]+)?", RegexOption.IGNORE_CASE)
+
     sealed interface Part {
         data class Loose(val lines: List<Line>) : Part
 
@@ -50,8 +53,8 @@ internal object SongStructure {
         /** [lines] are [Raw] rows, and the comments over a staff and the changes that fall inside the run. */
         data class TabRun(val label: String?, val lines: List<Line>) : Line
 
-        /** [lines] are [Raw] rows, and the changes that fall inside the run. */
-        data class GridRun(val lines: List<Line>) : Line
+        /** [lines] are [Raw] rows, and the changes that fall inside the run; [shape] is the one printed over it (`4x4`). */
+        data class GridRun(val shape: String?, val lines: List<Line>) : Line
         data object Recall : Line
 
         /** A key, tempo, or time change, as its directive. */
@@ -93,6 +96,12 @@ internal object SongStructure {
             if (kinds[index] != LineKind.GRID) closeGrid()
             // A change before a heading belongs to the section it heads rather than to the end of the one before.
             if (kinds[index] != LineKind.SECTION && kinds[index] != LineKind.BLANK) flushChanges()
+            // A grid's shape printed over it, as ChordPro writes it in the grid's own directive, opens no section.
+            if (kinds[index] == LineKind.SECTION && gridShape.matches(headingLabel(line.text)) && nextContent(index)?.let { kinds[it] } == LineKind.GRID) {
+                pendingGridShape = headingLabel(line.text)
+                index++
+                continue
+            }
             when (kinds[index]) {
                 LineKind.COMMENT -> {
                     var end = index
@@ -172,7 +181,7 @@ internal object SongStructure {
         private class OpenSection(val type: String, val label: String?, val lines: MutableList<Line> = mutableListOf())
 
         private class OpenRun(val isTab: Boolean, val label: String?, val lines: MutableList<Line> = mutableListOf()) {
-            fun closed(): Line = if (isTab) Line.TabRun(label, lines.toList()) else Line.GridRun(lines.toList())
+            fun closed(): Line = if (isTab) Line.TabRun(label, lines.toList()) else Line.GridRun(label, lines.toList())
         }
 
         val isInTab get() = run?.isTab == true
@@ -208,8 +217,12 @@ internal object SongStructure {
             run = OpenRun(isTab = true, label = label)
         }
 
+        /** The shape printed over the next grid, which it opens with. */
+        var pendingGridShape: String? = null
+
         fun openGrid() {
-            run = OpenRun(isTab = false, label = null)
+            run = OpenRun(isTab = false, label = pendingGridShape)
+            pendingGridShape = null
         }
 
         fun closeTab() { if (isInTab) closeRun() }
