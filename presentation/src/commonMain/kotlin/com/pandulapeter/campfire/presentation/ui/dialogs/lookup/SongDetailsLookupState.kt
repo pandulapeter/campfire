@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.data.model.catalogue.CatalogueSearchResults
 import com.pandulapeter.campfire.data.model.catalogue.SongCreditsState
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsCandidate
 import com.pandulapeter.campfire.data.model.catalogue.SongDetailsQuery
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /** What the song details lookup shows under its fields, see `SongDetailsLookupController.songDetailsLookup`. */
 sealed interface SongDetailsLookupState {

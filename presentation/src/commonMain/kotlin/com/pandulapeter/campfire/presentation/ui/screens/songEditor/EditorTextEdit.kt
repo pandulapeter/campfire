@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-
 /**
  * One change of `EditorSession.editorTextEdits`: [edit] applied to the text the editor of [fileName] holds when it
  * arrives.

@@ -9,8 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SetlistPicker
-import com.pandulapeter.campfire.presentation.ui.dialogs.pickers.SongPicker
 import kotlinx.serialization.Serializable
 
 /**

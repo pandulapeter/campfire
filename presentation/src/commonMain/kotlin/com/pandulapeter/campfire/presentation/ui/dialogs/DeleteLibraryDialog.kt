@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.label
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.BottomSheetConfirmButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.LocalIsSheetClosing
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.TextFieldBottomSheet

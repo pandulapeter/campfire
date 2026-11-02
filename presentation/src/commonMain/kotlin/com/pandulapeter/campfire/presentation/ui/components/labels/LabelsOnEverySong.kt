@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
 import com.pandulapeter.campfire.data.model.song.Song
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 
 /**
  * What every song in the library is filed under, see `LibraryState.labelsOnEverySong`. The tags are lowercase,

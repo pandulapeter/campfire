@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -21,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Every shape of [chord] in [tuning] for a chord's sheet ([ChordShapeGrid]), none for a chord the song defines
+ * Every shape of [chord] in [tuning] for a chord's sheet (`ChordShapeGrid`), none for a chord the song defines
  * ([isDefined]), and null until they are found. The search is quick, but not quick enough for a frame, so it runs off
  * the main thread, and the sheet is put up once it is over: put up before, the sheet slid up with one empty frame and
  * grew to the whole grid on its way, composing every card in a frame of the slide. Shapes found in another tuning are

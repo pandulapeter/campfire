@@ -10,9 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.review
 
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReport
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.ImportReportSection
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.matching
-import com.pandulapeter.campfire.presentation.ui.screens.importReport.finished.sections
 import androidx.compose.ui.state.ToggleableState
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
@@ -22,7 +19,7 @@ import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 
 /**
- * One group of the review's list, under one heading. A type of its own rather than an [ImportReportSection], so that a
+ * One group of the review's list, under one heading. A type of its own rather than an `ImportReportSection`, so that a
  * row of the review, which may carry a box, can never be handed to the result's list, which has none.
  */
 internal data class ImportReviewSection(
@@ -175,7 +172,7 @@ private fun List<String>.toReviewRows(kind: ImportReviewSection.Kind): List<Impo
 /** The songs of the rows listed, in their order, as the places of their entries in the plan's songs: what a preview pages through. */
 internal val List<ImportReviewSection>.previewSongIndices get() = flatMap { section -> section.rows.mapNotNull { it.songIndex } }
 
-/** The sections with only the rows whose file name, title or artist holds [query], as [matching] narrows the result's. */
+/** The sections with only the rows whose file name, title or artist holds [query], as `matching` narrows the result's. */
 internal fun List<ImportReviewSection>.matchingReview(query: String, normalize: (String) -> String): List<ImportReviewSection> {
     val normalizedQuery = normalize(query)
     if (normalizedQuery.isEmpty()) return this

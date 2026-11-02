@@ -21,14 +21,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.preferences.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SETTINGS_CATEGORY_PANE_WIDTH
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsCategoryPane
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
 
 /**
  * What the settings screen decides from the width it settles at without its insets, rather than the one it is being
- * measured at, which follows the navigation chrome while that animates: whether the tabs are a [SettingsCategoryPane]
+ * measured at, which follows the navigation chrome while that animates: whether the tabs are a `SettingsCategoryPane`
  * or a row, and how many [MIN_COLUMN_WIDTH] wide columns a [SettingsPage] of the Metronome and the Tuner has room for
- * (the settings tabs themselves are always one column, see [SettingsTabPage]). The app's `CampfireScreens` works it out and hands it down in place of the width itself, so that a
+ * (the settings tabs themselves are always one column, see `SettingsTabPage`). The app's `CampfireScreens` works it out and hands it down in place of the width itself, so that a
  * window being resized recomposes the screen only in the frames one of these changes in.
  */
 @Immutable

@@ -32,7 +32,6 @@ import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPage
 
 /**
  * The scrolling body of one tab of the settings screen: its [section], and the [secondSection] where it has one, side
@@ -42,7 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTabPag
  *
  * A page holds no more than two sections, so the columns are either all of them or one: a section never moves to
  * another column because the one above it grew, which is what would happen to a staggered grid when a section changes
- * height. The settings tabs pass one column whatever the width (see [SettingsTabPage]); the Metronome and the Tuner,
+ * height. The settings tabs pass one column whatever the width (see `SettingsTabPage`); the Metronome and the Tuner,
  * whose two sections are both about the one instrument on screen, are the pages that spread out. A window resized
  * across the width that decides it slides the sections from one arrangement to the other, the header's width following
  * on the same spring, rather than having them jump to their new places.
