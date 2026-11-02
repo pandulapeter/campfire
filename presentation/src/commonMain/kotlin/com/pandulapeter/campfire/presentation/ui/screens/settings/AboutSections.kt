@@ -51,11 +51,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.processLogActionTitle
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
+import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
@@ -82,14 +82,15 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun AboutSections(
-    viewModel: CampfireViewModel,
+    showDialog: (DialogType) -> Unit,
+    onShareLink: (filePicker: FilePicker, link: String, subject: String) -> Unit,
     urlOpener: (String) -> Unit,
 ) {
     val filePicker = LocalFilePicker.current
     AppSection(
         urlOpener = urlOpener,
         onShareClicked = if (filePicker.canShare) {
-            { viewModel.exportController.shareLink(filePicker = filePicker, link = WEBSITE_URL, subject = "Campfire") }
+            { onShareLink(filePicker, WEBSITE_URL, "Campfire") }
         } else {
             null
         },
@@ -97,9 +98,9 @@ internal fun AboutSections(
     HelpSection(
         urlOpener = urlOpener,
         processLogTitle = processLogActionTitle(filePicker),
-        onProcessLogClicked = { viewModel.dialogHost.showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
+        onProcessLogClicked = { showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
     )
-    LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { viewModel.dialogHost.showDialog(DialogType.OpenSourceLicenses) })
+    LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { showDialog(DialogType.OpenSourceLicenses) })
 }
 
 @Composable

@@ -49,15 +49,18 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_offline_granted
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_online_only
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibraryOffer
+import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
+import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.state.LibrarySummary
+import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -72,28 +75,49 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun LibrarySections(
-    viewModel: CampfireViewModel,
+    firstRunController: FirstRunController,
+    showDialog: (DialogType) -> Unit,
+    onImportFiles: (FilePicker) -> Unit,
+    onExportLibrary: (FilePicker) -> Unit,
+    librarySummary: StateFlow<LibrarySummary?>,
+    libraryPersistence: StateFlow<LibraryPersistence?>,
+    coverArtCacheSize: StateFlow<Long?>,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
 ) {
-    ImportExportSection(viewModel = viewModel, isImporting = isImporting, isPerformanceModeEnabled = isPerformanceModeEnabled)
-    OnThisDeviceSection(viewModel = viewModel, isImporting = isImporting, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    ImportExportSection(
+        firstRunController = firstRunController,
+        onImportFiles = onImportFiles,
+        onExportLibrary = onExportLibrary,
+        isImporting = isImporting,
+        isPerformanceModeEnabled = isPerformanceModeEnabled,
+    )
+    OnThisDeviceSection(
+        showDialog = showDialog,
+        librarySummaryFlow = librarySummary,
+        libraryPersistenceFlow = libraryPersistence,
+        coverArtCacheSizeFlow = coverArtCacheSize,
+        isImporting = isImporting,
+        isPerformanceModeEnabled = isPerformanceModeEnabled,
+    )
 }
 
 @Composable
 private fun ImportExportSection(
-    viewModel: CampfireViewModel,
+    firstRunController: FirstRunController,
+    onImportFiles: (FilePicker) -> Unit,
+    onExportLibrary: (FilePicker) -> Unit,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_import_export)) {
-    val demoLibraryOffer by viewModel.firstRunController.demoLibraryOffer.collectAsStateWithLifecycle()
+    val demoLibraryOffer by firstRunController.demoLibraryOffer.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     ActionListItem(
         title = stringResource(Res.string.settings_import),
         icon = painterResource(Res.drawable.ic_import),
         isEnabled = !isImporting && !isPerformanceModeEnabled,
         isEmphasized = false,
-        onClick = { viewModel.importController.importFiles(filePicker) },
+        onClick = { onImportFiles(filePicker) },
     )
     // Only until they are all in the library, which is also what brings it back for the ones a user who wanted none
     // of them has deleted. Null while the library is still being read, so the offer never appears for a moment over
@@ -104,7 +128,7 @@ private fun ImportExportSection(
             icon = painterResource(Res.drawable.ic_songs),
             isEnabled = offer == DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
             isEmphasized = false,
-            onClick = viewModel.firstRunController::importDemoLibrary,
+            onClick = firstRunController::importDemoLibrary,
         )
     }
     ActionListItem(
@@ -112,27 +136,30 @@ private fun ImportExportSection(
         icon = painterResource(Res.drawable.ic_export),
         isEnabled = !isPerformanceModeEnabled,
         isEmphasized = false,
-        onClick = { viewModel.exportController.exportLibrary(filePicker) },
+        onClick = { onExportLibrary(filePicker) },
     )
 }
 
 @Composable
 private fun OnThisDeviceSection(
-    viewModel: CampfireViewModel,
+    showDialog: (DialogType) -> Unit,
+    librarySummaryFlow: StateFlow<LibrarySummary?>,
+    libraryPersistenceFlow: StateFlow<LibraryPersistence?>,
+    coverArtCacheSizeFlow: StateFlow<Long?>,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_on_this_device)) {
     // Null until the library has been read, so that the row arrives with real counts instead of showing zeroes.
-    val librarySummary by viewModel.libraryState.librarySummary.collectAsStateWithLifecycle()
-    val libraryPersistence by viewModel.preferencesController.libraryPersistence.collectAsStateWithLifecycle()
-    val coverArtCacheSize by viewModel.coverArtSearchController.coverArtCacheSize.collectAsStateWithLifecycle()
+    val librarySummary by librarySummaryFlow.collectAsStateWithLifecycle()
+    val libraryPersistence by libraryPersistenceFlow.collectAsStateWithLifecycle()
+    val coverArtCacheSize by coverArtCacheSizeFlow.collectAsStateWithLifecycle()
     AnimatedSettingsRow(value = librarySummary) { summary ->
         DeletableSettingsRow(
             title = stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount),
             description = stringResource(Res.string.settings_library_size, formattedSize(summary.size)),
             deleteLabel = stringResource(Res.string.settings_library_delete),
             isEnabled = summary.songCount + summary.setlistCount > 0 && !isImporting && !isPerformanceModeEnabled,
-            onClick = { viewModel.dialogHost.showDialog(DialogType.DeleteLibrary) },
+            onClick = { showDialog(DialogType.DeleteLibrary) },
         )
     }
     // Not while there is nothing in it: an empty cache says nothing a library without covers does not.
@@ -142,7 +169,7 @@ private fun OnThisDeviceSection(
             description = stringResource(Res.string.settings_library_size, formattedSize(size)),
             deleteLabel = stringResource(Res.string.settings_library_cover_art_cache_clear),
             isEnabled = !isPerformanceModeEnabled,
-            onClick = { viewModel.dialogHost.showDialog(DialogType.ClearCoverArtCache) },
+            onClick = { showDialog(DialogType.ClearCoverArtCache) },
         )
     }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the

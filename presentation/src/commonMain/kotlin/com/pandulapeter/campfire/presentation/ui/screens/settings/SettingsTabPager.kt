@@ -22,9 +22,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import kotlinx.coroutines.flow.collectLatest
@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun SettingsTabPager(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
+    navigator: Navigator,
     tabs: List<SettingsTab>,
     badgedTab: SettingsTab?,
     isImporting: Boolean,
@@ -56,18 +56,18 @@ internal fun SettingsTabPager(
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
-    val pagerState = rememberPagerState(initialPage = tabs.indexOf(viewModel.navigator.settingsTab).coerceAtLeast(0)) { tabs.size }
+    val pagerState = rememberPagerState(initialPage = tabs.indexOf(navigator.settingsTab).coerceAtLeast(0)) { tabs.size }
     val coroutineScope = rememberCoroutineScope()
     // Every time the pages come to rest rather than once as the screen is left, because the web build's address names
     // the tab that is open. The settled page, so that a swipe is one change of address rather than two.
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { viewModel.navigator.settingsTab = tabs[it] }
+        snapshotFlow { pagerState.settledPage }.collect { navigator.settingsTab = tabs[it] }
     }
     // The other direction: the wide layout's pane and the web build's address set the tab from outside, and the pager
     // has to follow it, which it only does for a value it did not settle on itself. Latest, so that a swipe interrupting
     // the animation ends that animation rather than the collector (see the settings screen's scroll to top requests).
     LaunchedEffect(pagerState) {
-        snapshotFlow { viewModel.navigator.settingsTab }.collectLatest {
+        snapshotFlow { navigator.settingsTab }.collectLatest {
             val page = tabs.indexOf(it)
             if (page >= 0 && page != pagerState.targetPage) pagerState.animateScrollToPage(page)
         }
@@ -79,7 +79,7 @@ internal fun SettingsTabPager(
     // has just made the tab, or back to the tab the gesture started on when it was cancelled.
     LaunchedEffect(pagerState) {
         snapshotFlow { backProgress() != null }.collectLatest { isGestureInProgress ->
-            val tabPage = tabs.indexOf(viewModel.navigator.settingsTab).coerceAtLeast(0)
+            val tabPage = tabs.indexOf(navigator.settingsTab).coerceAtLeast(0)
             if (isGestureInProgress) {
                 pagerState.scroll {
                     snapshotFlow { backProgress() }.filterNotNull().collect { progress ->
@@ -97,7 +97,7 @@ internal fun SettingsTabPager(
         // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
         // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
-            scrollState = rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.tabRow),
+            scrollState = rememberRetainedScrollState(navigator.settingsScrollPositions.tabRow),
             tabs = tabs,
             selectedTab = tabs[pagerState.targetPage],
             indicatorPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },

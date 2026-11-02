@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_lists
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards
 import com.pandulapeter.campfire.presentation.resources.settings_song_cards_description
 import com.pandulapeter.campfire.presentation.resources.songs
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.screens.settings.CardDetailsChoice
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.controls.LabeledControlRow
@@ -39,7 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  */
 @Composable
 internal fun SongListsSection(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_lists)) {
     // One row of chips per list, since a setlist's cards are where a set is timed and the library's where a song is found.
@@ -58,7 +58,7 @@ internal fun SongListsSection(
                 details = userPreferences?.songCardDetails ?: CardDetails.SongsDefault,
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
-                onDetailsChanged = viewModel.preferencesController::setSongCardDetails,
+                onDetailsChanged = preferencesController::setSongCardDetails,
             )
         }
         CardDetailsRow(
@@ -71,7 +71,7 @@ internal fun SongListsSection(
                 areChordsEnabled = areChordsEnabled,
                 isMetronomeEnabled = isMetronomeEnabled,
                 isEnabled = areSetlistsEnabled,
-                onDetailsChanged = viewModel.preferencesController::setSetlistCardDetails,
+                onDetailsChanged = preferencesController::setSetlistCardDetails,
             )
         }
     }

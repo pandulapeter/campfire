@@ -24,11 +24,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -66,7 +68,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.settings_sync_remote_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.Elapsed
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
@@ -76,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
+import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import com.pandulapeter.campfire.presentation.ui.sync.stage
 import kotlin.time.ExperimentalTime
 import kotlin.reflect.KClass
@@ -92,10 +94,12 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun ColumnScope.SyncSettings(
-    viewModel: CampfireViewModel,
+    syncController: SyncController,
+    showDialog: (DialogType) -> Unit,
+    onConnectSyncProvider: (SyncProviderId, AuthorizationCompletionPage) -> Unit,
     syncState: SyncState,
 ) {
-    if (viewModel.syncController.syncProviders.isEmpty()) {
+    if (syncController.syncProviders.isEmpty()) {
         SettingsMessage(text = stringResource(Res.string.settings_sync_unavailable))
         return
     }
@@ -107,9 +111,13 @@ internal fun ColumnScope.SyncSettings(
     ) { state ->
         Column {
             when (state) {
-                SyncState.Disconnected, is SyncState.ConnectionFailed -> DisconnectedSyncSettings(viewModel = viewModel, syncState = state)
-                is SyncState.Connecting -> ConnectingSyncSettings(viewModel = viewModel)
-                is SyncState.Connected -> ConnectedSyncSettings(viewModel = viewModel, syncState = state)
+                SyncState.Disconnected, is SyncState.ConnectionFailed -> DisconnectedSyncSettings(
+                    offeredSyncProvider = syncController.offeredSyncProvider,
+                    onConnectSyncProvider = onConnectSyncProvider,
+                    syncState = state,
+                )
+                is SyncState.Connecting -> ConnectingSyncSettings(onCancel = syncController::cancelSyncConnection)
+                is SyncState.Connected -> ConnectedSyncSettings(syncController = syncController, showDialog = showDialog, syncState = state)
             }
         }
     }
@@ -117,7 +125,8 @@ internal fun ColumnScope.SyncSettings(
 
 @Composable
 private fun ColumnScope.ConnectedSyncSettings(
-    viewModel: CampfireViewModel,
+    syncController: SyncController,
+    showDialog: (DialogType) -> Unit,
     syncState: SyncState.Connected,
 ) {
     ListItem(
@@ -140,12 +149,12 @@ private fun ColumnScope.ConnectedSyncSettings(
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_delete_locally),
                         icon = painterResource(Res.drawable.ic_delete),
-                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
+                        onClick = { syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
                     )
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_keep_and_upload),
                         icon = painterResource(Res.drawable.ic_cloud),
-                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
+                        onClick = { syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
                     )
                 }
 
@@ -153,12 +162,12 @@ private fun ColumnScope.ConnectedSyncSettings(
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_delete_remotely),
                         icon = painterResource(Res.drawable.ic_delete),
-                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_REMOTELY) },
+                        onClick = { syncController.synchronizeLibrary(SyncDeletionPolicy.DELETE_REMOTELY) },
                     )
                     ActionListItem(
                         title = stringResource(Res.string.settings_sync_keep_and_download),
                         icon = painterResource(Res.drawable.ic_cloud),
-                        onClick = { viewModel.syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_DOWNLOAD) },
+                        onClick = { syncController.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_DOWNLOAD) },
                     )
                 }
             }
@@ -173,21 +182,21 @@ private fun ColumnScope.ConnectedSyncSettings(
         icon = painterResource(Res.drawable.ic_sync),
         isEnabled = !syncState.isSyncing,
         isEmphasized = false,
-        onClick = { viewModel.syncController.synchronizeLibrary() },
+        onClick = { syncController.synchronizeLibrary() },
     )
     AnimatedSettingsRow(value = syncState.progress) {
         ActionListItem(
             title = stringResource(Res.string.settings_sync_cancel),
             icon = painterResource(Res.drawable.ic_clear),
             isEmphasized = false,
-            onClick = viewModel.syncController::cancelSynchronization,
+            onClick = syncController::cancelSynchronization,
         )
     }
     ActionListItem(
         title = stringResource(Res.string.settings_sync_disconnect),
         icon = painterResource(Res.drawable.ic_cloud_off),
         isEmphasized = false,
-        onClick = { viewModel.dialogHost.showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
+        onClick = { showDialog(DialogType.DisconnectSync(syncState.account.displayName)) },
     )
 }
 

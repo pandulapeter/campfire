@@ -39,7 +39,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.components.preferences.BackgroundWarmthSlider
 import com.pandulapeter.campfire.presentation.ui.components.preferences.LanguageChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
@@ -62,7 +62,8 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun GeneralSections(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
+    onOnboardingClicked: () -> Unit,
     userPreferences: UserPreferences?,
     isPerformanceModeEnabled: Boolean,
 ) {
@@ -74,12 +75,12 @@ internal fun GeneralSections(
         PerformanceSection(
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-            onPerformanceModeChanged = viewModel.preferencesController::setPerformanceModeEnabled,
+            onPerformanceModeChanged = preferencesController::setPerformanceModeEnabled,
         )
     }
-    SetupSection(onOnboardingClicked = viewModel::openOnboarding)
-    AppearanceSection(viewModel = viewModel, userPreferences = userPreferences)
-    LanguageSection(viewModel = viewModel, userPreferences = userPreferences)
+    SetupSection(onOnboardingClicked = onOnboardingClicked)
+    AppearanceSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    LanguageSection(preferencesController = preferencesController, userPreferences = userPreferences)
 }
 
 @Composable
@@ -114,20 +115,20 @@ private fun SetupSection(
 
 @Composable
 private fun AppearanceSection(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_appearance)) {
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
         UiModeChoice(
             selected = userPreferences?.uiMode,
-            onSelected = viewModel.preferencesController::setUiMode,
+            onSelected = preferencesController::setUiMode,
         )
     }
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
         ThemeColorChoice(
             uiMode = userPreferences?.uiMode,
             selected = userPreferences?.themeColor,
-            onSelected = viewModel.preferencesController::setThemeColor,
+            onSelected = preferencesController::setThemeColor,
         )
     }
     // Named after the icon it colors, which is a different one on every platform, and described with what that
@@ -144,24 +145,24 @@ private fun AppearanceSection(
             description = surface.description(),
             isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
             isEnabled = canColorAppIcon,
-            onCheckedChange = viewModel.preferencesController::setAppIconThemed,
+            onCheckedChange = preferencesController::setAppIconThemed,
         )
     }
     BackgroundWarmthSlider(
         warmth = userPreferences?.backgroundWarmth ?: 0,
         description = stringResource(Res.string.settings_background_warmth_description),
-        onWarmthChanged = viewModel.preferencesController::setBackgroundWarmth,
+        onWarmthChanged = preferencesController::setBackgroundWarmth,
     )
 }
 
 @Composable
 private fun LanguageSection(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_user_interface_language)) {
     LanguageChoice(
         selected = userPreferences?.language,
-        onSelected = viewModel.preferencesController::setLanguage,
+        onSelected = preferencesController::setLanguage,
     )
 }
 

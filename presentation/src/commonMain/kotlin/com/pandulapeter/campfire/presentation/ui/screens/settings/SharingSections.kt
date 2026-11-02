@@ -31,11 +31,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.share.Share
-import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.share.SharingFailure
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -54,7 +53,6 @@ import com.pandulapeter.campfire.presentation.resources.share_connect_again
 import com.pandulapeter.campfire.presentation.resources.share_newer_version
 import com.pandulapeter.campfire.presentation.resources.share_scope_missing
 import com.pandulapeter.campfire.presentation.resources.share_stop
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.dialogs.ConfirmationDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -66,7 +64,11 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRo
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.share.ShareLinkController
 import com.pandulapeter.campfire.presentation.ui.share.StopSharingConfirmation
+import com.pandulapeter.campfire.presentation.ui.share.exportDialogOf
+import com.pandulapeter.campfire.presentation.ui.state.LibraryState
+import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 import com.pandulapeter.campfire.presentation.ui.sync.rememberAuthorizationCompletionPage
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -80,9 +82,16 @@ import org.jetbrains.compose.resources.painterResource
  * the list this device last read is shown.
  */
 @Composable
-internal fun SharingSections(viewModel: CampfireViewModel) {
-    val controller = viewModel.shareLinkController
-    val syncState = viewModel.syncController.syncState.collectAsStateWithLifecycle()
+internal fun SharingSections(
+    controller: ShareLinkController,
+    syncController: SyncController,
+    libraryState: LibraryState,
+    showDialog: (DialogType) -> Unit,
+    sendMessage: (Message) -> Unit,
+    selectedTab: () -> SettingsTab,
+    onConnectSyncProvider: (SyncProviderId, AuthorizationCompletionPage) -> Unit,
+) {
+    val syncState = syncController.syncState.collectAsStateWithLifecycle()
     val shares by controller.shares.collectAsStateWithLifecycle()
     val stoppingShareIds by controller.stoppingShareIds.collectAsStateWithLifecycle()
     val isStoppingEverything by controller.isStoppingEverything.collectAsStateWithLifecycle()
@@ -91,7 +100,7 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
     val isConnected by remember(syncState) { derivedStateOf { syncState.value is SyncState.Connected } }
     val stage by remember(syncState) { derivedStateOf { sharingStageOf(syncState.value, refreshFailure, shares) } }
     // The pager composes every tab with the screen, so the tab being composed is no sign of anybody looking at it.
-    val isShown = viewModel.navigator.settingsTab == SettingsTab.SHARING
+    val isShown = selectedTab() == SettingsTab.SHARING
     LaunchedEffect(isShown, isConnected) {
         if (!isConnected) refreshFailure = null else if (isShown) refreshFailure = controller.refresh()
     }
@@ -114,11 +123,15 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
                 when (shown) {
                     SharingStage.NOT_CONNECTED -> {
                         SettingsMessage(text = stringResource(Res.string.settings_sharing_description))
-                        DisconnectedSyncSettings(viewModel = viewModel, syncState = syncState.value)
+                        DisconnectedSyncSettings(
+                            offeredSyncProvider = syncController.offeredSyncProvider,
+                            onConnectSyncProvider = onConnectSyncProvider,
+                            syncState = syncState.value,
+                        )
                     }
                     SharingStage.CONNECTING -> {
                         SettingsMessage(text = stringResource(Res.string.settings_sharing_description))
-                        ConnectingSyncSettings(viewModel = viewModel)
+                        ConnectingSyncSettings(onCancel = syncController::cancelSyncConnection)
                     }
                     SharingStage.CONNECT_AGAIN -> {
                         SettingsMessage(
@@ -130,13 +143,15 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
                             title = stringResource(Res.string.share_connect_again),
                             icon = painterResource(Res.drawable.ic_cloud),
                             onClick = {
-                                (syncState.value as? SyncState.Connected)?.let { viewModel.connectSyncProvider(it.account.providerId, completionPage) }
+                                (syncState.value as? SyncState.Connected)?.let { onConnectSyncProvider(it.account.providerId, completionPage) }
                             },
                         )
                     }
                     SharingStage.NOTHING_SHARED -> SettingsMessage(text = stringResource(Res.string.settings_sharing_nothing_shared))
                     SharingStage.SHARED -> SharedLinks(
-                        viewModel = viewModel,
+                        libraryState = libraryState,
+                        showDialog = showDialog,
+                        sendMessage = sendMessage,
                         shares = shares,
                         busyShareIds = if (isStoppingEverything) shares.mapTo(mutableSetOf()) { it.shareId } else stoppingShareIds,
                         onStop = { shareIdAskedToStop = it.shareId },
@@ -194,7 +209,9 @@ internal fun SharingSections(viewModel: CampfireViewModel) {
  */
 @Composable
 private fun ColumnScope.SharedLinks(
-    viewModel: CampfireViewModel,
+    libraryState: LibraryState,
+    showDialog: (DialogType) -> Unit,
+    sendMessage: (Message) -> Unit,
     shares: List<Share>,
     busyShareIds: Set<String>,
     onStop: (Share) -> Unit,
@@ -204,27 +221,14 @@ private fun ColumnScope.SharedLinks(
     SharedLinkList(
         shares = shares,
         busyShareIds = busyShareIds,
-        canShowQrCode = { exportDialogOf(viewModel, it) != null },
+        canShowQrCode = { exportDialogOf(it, libraryState.songsByFileName.value, libraryState.setlists.value) != null },
         onCopy = { share ->
             scope.launch {
                 clipboard.setClipEntry(plainTextClipEntry(share.link.landingUrl))
-                if (!isCopyConfirmedBySystem) viewModel.messageSink.sendMessage(Message.LinkCopied)
+                if (!isCopyConfirmedBySystem) sendMessage(Message.LinkCopied)
             }
         },
-        onShowQrCode = { share -> exportDialogOf(viewModel, share)?.let(viewModel.dialogHost::showDialog) },
+        onShowQrCode = { share -> exportDialogOf(share, libraryState.songsByFileName.value, libraryState.setlists.value)?.let(showDialog) },
         onStop = onStop,
     )
-}
-
-/**
- * The export screen of [share]'s item, opened on the Link format to show its QR code, for this opening only, the format
- * the user exports in kept, or null where the library lacks it.
- */
-private fun exportDialogOf(viewModel: CampfireViewModel, share: Share) = when (share.kind) {
-    SharedLinkKind.SONG -> viewModel.libraryState.songsByFileName.value.let { songs ->
-        songs[share.fileName] ?: songs.entries.firstOrNull { LibraryFiles.isSameLibraryName(it.key, share.fileName) }?.value
-    }?.let { DialogType.Export(song = it, format = PrintSettings.Format.LINK) }
-    SharedLinkKind.SETLIST -> viewModel.libraryState.setlists.value
-        .firstOrNull { LibraryFiles.isSameLibraryName(it.fileName, share.fileName) }
-        ?.let { DialogType.Export(setlist = it, format = PrintSettings.Format.LINK) }
 }

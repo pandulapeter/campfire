@@ -9,10 +9,16 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.rememberTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,17 +43,21 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
+import com.pandulapeter.campfire.presentation.ui.songDisplay.ChordsSection
+import com.pandulapeter.campfire.presentation.ui.songDisplay.SongPageSection
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -178,7 +188,7 @@ internal fun SettingsScreen(
                         modifier = Modifier.weight(1f),
                         animationSpec = fadeSpec,
                     ) { tab ->
-                        SettingsTabPage(
+                        SettingsTabContent(
                             viewModel = viewModel,
                             tab = tab,
                             scrollState = scrollStates[tab.ordinal],
@@ -193,7 +203,7 @@ internal fun SettingsScreen(
             }
         } else {
             SettingsTabPager(
-                viewModel = viewModel,
+                navigator = viewModel.navigator,
                 tabs = tabs,
                 badgedTab = badgedTab,
                 isImporting = isImporting,
@@ -202,7 +212,7 @@ internal fun SettingsScreen(
                 backProgress = backProgress,
                 onSelectedTabPressed = scrollTabToTop,
             ) { tab ->
-                SettingsTabPage(
+                SettingsTabContent(
                     viewModel = viewModel,
                     tab = tab,
                     scrollState = scrollStates[tab.ordinal],
@@ -216,3 +226,88 @@ internal fun SettingsScreen(
         }
     }
 }
+
+/** One [SettingsTabPage] with the sections of its [tab], each handed the parts of the view model it uses. */
+@Composable
+private fun SettingsTabContent(
+    viewModel: CampfireViewModel,
+    tab: SettingsTab,
+    scrollState: ScrollState,
+    contentPadding: PaddingValues,
+    isImporting: Boolean,
+    isPerformanceModeEnabled: Boolean,
+    userPreferences: UserPreferences?,
+    urlOpener: (String) -> Unit,
+) = SettingsTabPage(
+    scrollState = scrollState,
+    contentPadding = contentPadding,
+    section = {
+        when (tab) {
+            SettingsTab.GENERAL -> GeneralSections(
+                preferencesController = viewModel.preferencesController,
+                onOnboardingClicked = viewModel::openOnboarding,
+                userPreferences = userPreferences,
+                isPerformanceModeEnabled = isPerformanceModeEnabled,
+            )
+            SettingsTab.FEATURES -> FeaturesSections(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
+            SettingsTab.PREFERENCES -> {
+                // The lists lead, being the one section found nowhere else: the other two are also the song details
+                // screen's Preferences sheet.
+                AnimatedVisibility(
+                    visible = userPreferences?.areSongsEnabled != false,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    SongListsSection(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
+                }
+                ChordsSection(
+                    userPreferences = userPreferences,
+                    onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
+                    onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
+                    onChordNamesSelected = viewModel.preferencesController::setChordNames,
+                    onCapoKeepsKeyChanged = viewModel.preferencesController::setCapoKeepsKey,
+                )
+                // The chords are written the same way in the Chords and Scales tabs, while a song page is about songs.
+                AnimatedVisibility(
+                    visible = userPreferences?.areSongsEnabled != false,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
+                }
+            }
+            SettingsTab.LIBRARY -> {
+                SyncSection(
+                    syncController = viewModel.syncController,
+                    showDialog = viewModel.dialogHost::showDialog,
+                    onConnectSyncProvider = viewModel::connectSyncProvider,
+                )
+                LibrarySections(
+                    firstRunController = viewModel.firstRunController,
+                    showDialog = viewModel.dialogHost::showDialog,
+                    onImportFiles = viewModel.importController::importFiles,
+                    onExportLibrary = viewModel.exportController::exportLibrary,
+                    librarySummary = viewModel.libraryState.librarySummary,
+                    libraryPersistence = viewModel.preferencesController.libraryPersistence,
+                    coverArtCacheSize = viewModel.coverArtSearchController.coverArtCacheSize,
+                    isImporting = isImporting,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                )
+            }
+            SettingsTab.SHARING -> SharingSections(
+                controller = viewModel.shareLinkController,
+                syncController = viewModel.syncController,
+                libraryState = viewModel.libraryState,
+                showDialog = viewModel.dialogHost::showDialog,
+                sendMessage = viewModel.messageSink::sendMessage,
+                selectedTab = { viewModel.navigator.settingsTab },
+                onConnectSyncProvider = viewModel::connectSyncProvider,
+            )
+            SettingsTab.ABOUT -> AboutSections(
+                showDialog = viewModel.dialogHost::showDialog,
+                onShareLink = viewModel.exportController::shareLink,
+                urlOpener = urlOpener,
+            )
+        }
+    },
+)

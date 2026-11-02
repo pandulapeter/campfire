@@ -38,7 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_random_picks
 import com.pandulapeter.campfire.presentation.resources.settings_tuner_description
 import com.pandulapeter.campfire.presentation.resources.tuner
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.WarningCard
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -55,16 +55,16 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  */
 @Composable
 internal fun FeaturesSections(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) {
-    PlayingSection(viewModel = viewModel, userPreferences = userPreferences)
-    OnlineSection(viewModel = viewModel, userPreferences = userPreferences)
+    PlayingSection(preferencesController = preferencesController, userPreferences = userPreferences)
+    OnlineSection(preferencesController = preferencesController, userPreferences = userPreferences)
 }
 
 @Composable
 private fun PlayingSection(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_playing)) {
     // With every screen switched off Settings is the only one left, and the app opens on it (TopLevel.home).
@@ -78,7 +78,7 @@ private fun PlayingSection(
             if (userPreferences?.areSetlistsEnabled != false) Res.string.settings_songs_description else Res.string.settings_songs_description_without_setlists,
         ),
         isChecked = userPreferences?.areSongsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setSongsEnabled,
+        onCheckedChange = preferencesController::setSongsEnabled,
     )
     // Disabled with the songs off, as the setlists are: the picks are a part of the songs list.
     SwitchListItem(
@@ -86,7 +86,7 @@ private fun PlayingSection(
         description = stringResource(Res.string.settings_random_picks_description),
         isChecked = userPreferences?.isRandomPicksEnabled != false,
         isEnabled = userPreferences?.areSongsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setRandomPicksEnabled,
+        onCheckedChange = preferencesController::setRandomPicksEnabled,
     )
     // Disabled rather than hidden with the songs off: a setlist is a list of songs, so without them there is nothing it
     // could hold, and what it is set to is still what the app has once the songs are back.
@@ -95,20 +95,20 @@ private fun PlayingSection(
         description = stringResource(Res.string.settings_setlists_description),
         isChecked = userPreferences?.areSetlistsEnabled != false,
         isEnabled = userPreferences?.areSongsEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setSetlistsEnabled,
+        onCheckedChange = preferencesController::setSetlistsEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.metronome),
         description = stringResource(Res.string.settings_metronome_description),
         isChecked = userPreferences?.isMetronomeEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setMetronomeEnabled,
+        onCheckedChange = preferencesController::setMetronomeEnabled,
     )
     // Off, nothing in the app can ask for the microphone.
     SwitchListItem(
         title = stringResource(Res.string.tuner),
         description = stringResource(Res.string.settings_tuner_description),
         isChecked = userPreferences?.isTunerEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setTunerEnabled,
+        onCheckedChange = preferencesController::setTunerEnabled,
     )
     // The tab only: a song's chords and their diagrams are how it is read (SongPageSection), and a singer reading the
     // lyrics alone can still look a chord up for the band.
@@ -116,13 +116,13 @@ private fun PlayingSection(
         title = stringResource(Res.string.chords),
         description = stringResource(Res.string.settings_chord_library_description),
         isChecked = userPreferences?.isChordLibraryEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setChordLibraryEnabled,
+        onCheckedChange = preferencesController::setChordLibraryEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.scales),
         description = stringResource(Res.string.settings_scales_description),
         isChecked = userPreferences?.areScalesEnabled != false,
-        onCheckedChange = viewModel.preferencesController::setScalesEnabled,
+        onCheckedChange = preferencesController::setScalesEnabled,
     )
 }
 
@@ -136,7 +136,7 @@ private fun EverythingOffCard() = WarningCard(
 
 @Composable
 private fun OnlineSection(
-    viewModel: CampfireViewModel,
+    preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_online)) {
     // Both are about songs, so both are disabled while the songs are off, the way the setlists are.
@@ -147,7 +147,7 @@ private fun OnlineSection(
         description = stringResource(Res.string.settings_song_details_lookup_description),
         isChecked = userPreferences?.isSongDetailsLookupEnabled == true,
         isEnabled = areSongsEnabled,
-        onCheckedChange = viewModel.preferencesController::setSongDetailsLookupEnabled,
+        onCheckedChange = preferencesController::setSongDetailsLookupEnabled,
     )
     // Off, no cover is fetched from anywhere, which is what somebody who does not want a song file to make the app
     // contact a host turns it off for.
@@ -156,6 +156,6 @@ private fun OnlineSection(
         description = stringResource(Res.string.settings_cover_art_description),
         isChecked = userPreferences?.isCoverArtEnabled == true,
         isEnabled = areSongsEnabled,
-        onCheckedChange = viewModel.preferencesController::setCoverArtEnabled,
+        onCheckedChange = preferencesController::setCoverArtEnabled,
     )
 }

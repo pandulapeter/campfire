@@ -19,13 +19,12 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import org.jetbrains.compose.resources.painterResource
 
 /** A connection waiting for its consent page, and the way out of it: the Sync section's, and the Sharing tab's. */
 @Composable
-internal fun ConnectingSyncSettings(viewModel: CampfireViewModel) {
+internal fun ConnectingSyncSettings(onCancel: () -> Unit) {
     ListItem(
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
@@ -36,6 +35,6 @@ internal fun ConnectingSyncSettings(viewModel: CampfireViewModel) {
         title = stringResource(Res.string.cancel),
         icon = painterResource(Res.drawable.ic_clear),
         isEmphasized = false,
-        onClick = viewModel.syncController::cancelSyncConnection,
+        onClick = onCancel,
     )
 }

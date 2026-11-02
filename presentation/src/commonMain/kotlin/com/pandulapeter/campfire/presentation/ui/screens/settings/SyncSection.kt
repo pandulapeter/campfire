@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_group_sync
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
+import com.pandulapeter.campfire.presentation.ui.sync.SyncController
 
 /**
  * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.
@@ -24,8 +27,15 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  */
 @Composable
 internal fun SyncSection(
-    viewModel: CampfireViewModel,
+    syncController: SyncController,
+    showDialog: (DialogType) -> Unit,
+    onConnectSyncProvider: (SyncProviderId, AuthorizationCompletionPage) -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_sync)) {
-    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
-    SyncSettings(viewModel = viewModel, syncState = syncState)
+    val syncState by syncController.syncState.collectAsStateWithLifecycle()
+    SyncSettings(
+        syncController = syncController,
+        showDialog = showDialog,
+        onConnectSyncProvider = onConnectSyncProvider,
+        syncState = syncState,
+    )
 }
