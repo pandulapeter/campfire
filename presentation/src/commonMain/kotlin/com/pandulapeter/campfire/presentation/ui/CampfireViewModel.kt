@@ -651,6 +651,8 @@ class CampfireViewModel(
         userPreferences = userPreferences,
         updateUserPreferences = updateUserPreferences,
         writeDelayMillis = PREFERENCE_WRITE_DEBOUNCE_MILLIS,
+        backStack = navigator.backStack,
+        visibleDialog = dialogHost.visibleDialog,
     )
 
     internal val appExitController: AppExitController = AppExitController(
@@ -781,10 +783,6 @@ class CampfireViewModel(
         fontScaleController.startEcho(userPreferences)
         fontScaleController.startSettle()
         metronomeController.startStartableRule()
-        tunerController.startSettingsWriter()
-        tunerController.startFollowingSettings()
-        tunerController.startTrackingTunedNotes()
-        tunerController.startStartableRule(backStack = navigator.backStack, visibleDialog = dialogHost.visibleDialog)
     }
 
     // Navigation

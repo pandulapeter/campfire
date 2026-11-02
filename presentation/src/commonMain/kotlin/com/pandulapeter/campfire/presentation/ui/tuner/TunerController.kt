@@ -47,6 +47,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * screen as the app goes out of sight.
  *
  * @param writeDelayMillis How long the settings have to hold still before they are written to the preferences.
+ * @param backStack The navigator's back stack, whose top decides with [visibleDialog] whether the tones may start.
  */
 internal class TunerController(
     private val scope: CoroutineScope,
@@ -54,6 +55,8 @@ internal class TunerController(
     private val userPreferences: StateFlow<UserPreferences?>,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val writeDelayMillis: Long,
+    private val backStack: List<CampfireDestination>,
+    private val visibleDialog: StateFlow<DialogType?>,
 ) {
 
     /** Saved like the metronome's settings: a held stepper is a new reference pitch several times a second. */
@@ -186,19 +189,19 @@ internal class TunerController(
     fun updateTunerSettings(change: TunerSettings.() -> TunerSettings) = tunerSettingsPreference.update { (it ?: tunerSettings.value).change() }
 
     /** Follows what is heard with [tunedNotes]. */
-    fun startTrackingTunedNotes() = scope.launch {
+    private fun startTrackingTunedNotes() = scope.launch {
         tuner.state.collect { state -> _tunedNotes.update { tunedNotesAfter(it, state.listening) } }
     }
 
     /** Writes the settings once they have held still, see [tunerSettingsPreference]. */
-    fun startSettingsWriter() = tunerSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
+    private fun startSettingsWriter() = tunerSettingsPreference.start(scope, writeDelayMillis, updateUserPreferences::invoke)
 
     /**
      * Follows the settings and the instrument with what is listening and sounding: a listening tuner reads against the new
      * strings and pitch from its next window, a tone of strings that are no longer chosen ends, and one still chosen moves
      * to the new reference pitch.
      */
-    fun startFollowingSettings() = scope.launch {
+    private fun startFollowingSettings() = scope.launch {
         var previous: TunerConfig? = null
         tunerConfig.collect { config ->
             val last = previous
@@ -220,7 +223,7 @@ internal class TunerController(
      * [backStack], or the tuner sheet as [visibleDialog], while the tuner is switched on, and the scale sheet, whose notes
      * are its tones whether the tuner is switched on or not.
      */
-    fun startStartableRule(backStack: List<CampfireDestination>, visibleDialog: StateFlow<DialogType?>) = scope.launch {
+    private fun startStartableRule() = scope.launch {
         combine(
             snapshotFlow { backStack.lastOrNull() },
             visibleDialog,
@@ -230,6 +233,13 @@ internal class TunerController(
         }
             .distinctUntilChanged()
             .collect(tuner::setStartable)
+    }
+
+    init {
+        startSettingsWriter()
+        startFollowingSettings()
+        startTrackingTunedNotes()
+        startStartableRule()
     }
 }
 

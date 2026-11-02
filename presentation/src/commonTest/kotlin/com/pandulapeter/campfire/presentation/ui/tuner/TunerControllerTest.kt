@@ -54,6 +54,8 @@ class TunerControllerTest {
             override suspend fun invoke(update: (UserPreferences) -> UserPreferences) = Unit
         },
         writeDelayMillis = 0L,
+        backStack = emptyList(),
+        visibleDialog = MutableStateFlow(null),
     )
 
     /** Starts every tone it is asked for at once, or refuses each, as an output that will not play does. */
