@@ -9,15 +9,13 @@
 -->
 # :abc:api
 
-The contract of the staff notation engraver, and nothing else: depends on nothing, so no app type leaks in. Explicit
-API mode.
+The contract of the staff notation engraver: depends on nothing, so no app type leaks in.
 
-- `AbcRenderer.render(tune, width, transposition)` **never throws** (cancellation aside): anything that goes wrong is
-  `AbcRendering.Failed`, and the caller keeps the ABC text on screen.
+- `AbcRenderer.render` **never throws** (cancellation aside): anything that goes wrong is `AbcRendering.Failed`, and the
+  caller keeps the ABC text on screen.
 - A rendering is a list of `AbcSystem`s, one `<svg>` each (the tune's header first, then one per staff system), so a
   layout can keep a system whole. **The systems of one rendering are read together, in order**: abc2svg writes its
   `<style>` and `<defs>` once, into the first system needing them. Its class numbers (`fN`) keep counting across
   renders in one engine, so they mean nothing outside their rendering and never go into a cache key.
-- Chord symbols carry `AbcSystem.CHORD_SYMBOL_CLASS` (`gch`) so they can take the chords' colour. Lyrics carry
-  `AbcSystem.LYRICS_CLASS` (`lyr`), set `AbcSystem.LYRICS_ROOM` times larger than they are meant to be drawn, so the
-  notes are spaced for a typeface wider than the renderer's width tables (Inter's).
+- Lyrics (`AbcSystem.LYRICS_CLASS`) are set `AbcSystem.LYRICS_ROOM` times larger than they are meant to be drawn, so
+  the notes are spaced for a typeface wider than the renderer's width tables (Inter's).
