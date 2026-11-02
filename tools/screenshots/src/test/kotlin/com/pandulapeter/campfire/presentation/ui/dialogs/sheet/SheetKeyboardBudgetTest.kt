@@ -24,6 +24,7 @@ import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
@@ -44,7 +45,9 @@ import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.DATED_SETLIST
 import com.pandulapeter.campfire.screenshots.KEYBOARD_HEIGHT
+import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.TestWindow
+import com.pandulapeter.campfire.screenshots.isWhole
 import com.pandulapeter.campfire.screenshots.openAboutTheSong
 import com.pandulapeter.campfire.screenshots.openCoverSearch
 import com.pandulapeter.campfire.screenshots.openEditor
@@ -53,6 +56,7 @@ import com.pandulapeter.campfire.screenshots.openSetlistDetails
 import com.pandulapeter.campfire.screenshots.openSongMetadata
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
+import com.pandulapeter.campfire.screenshots.textLayout
 import org.jetbrains.compose.resources.StringResource
 import kotlin.test.Test
 import kotlin.test.fail
@@ -60,7 +64,8 @@ import kotlin.test.fail
 /**
  * Root `CLAUDE.md`'s pinned height budget, checked by semantics on every sheet with a text field: on the smallest phone
  * with the keyboard up, the header's finishing action and the field being typed into are both inside the room the
- * keyboard leaves. A golden only says a sheet changed; this says it broke, and runs on every system.
+ * keyboard leaves. New song is also checked in Hungarian's longer words at a large text size, where a longer title can
+ * push the header's Create off the sheet and the pinned header grow taller than that room.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class SheetKeyboardBudgetTest {
@@ -69,15 +74,12 @@ internal class SheetKeyboardBudgetTest {
     fun `every text field sheet keeps its finishing action and its focused field above the keyboard`() {
         val failures = mutableListOf<String>()
         cases.forEach { case ->
-            if (case.knownFailure != null) {
-                println("${case.name} is skipped: ${case.knownFailure}")
-                return@forEach
-            }
             runCatching {
                 runAppTest(
                     window = TestWindow.PHONE,
                     setlists = case.setlists,
                     isCoverArtEnabled = case.isCoverArtEnabled,
+                    appearance = case.appearance,
                 ) {
                     case.open(this)
                     onAllNodes(hasSetTextAction() and hasAnyAncestor(isDialog()))[0].performClick()
@@ -94,6 +96,11 @@ internal class SheetKeyboardBudgetTest {
                         outsideOf(room, "${case.name}: the header's ${string(case.action)}", action.fetchSemanticsNode().boundsInRoot),
                         outsideOf(room, "${case.name}: the focused field", field.fetchSemanticsNode().boundsInRoot),
                     )
+                    // A longer title at a large text size is what squeezes the header's action, so only those cases ask.
+                    if (case.appearance != TestAppearance() && case.action != Res.string.close) {
+                        val label = textLayout(hasText(string(case.action)) and hasAnyAncestor(isDialog()))
+                        if (!label.isWhole) failures += "${case.name}: the header's ${string(case.action)} is cut."
+                    }
                 }
             }.onFailure { failures += "${case.name} could not be checked: ${it.stackTraceToString()}" }
         }
@@ -102,6 +109,16 @@ internal class SheetKeyboardBudgetTest {
 
     private val cases = listOf(
         SheetCase(name = "New song", action = Res.string.create) { openNewSong() },
+        SheetCase(
+            name = "New song in Hungarian at 130%",
+            action = Res.string.create,
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 1.3f),
+        ) { openNewSong() },
+        SheetCase(
+            name = "New song in Hungarian at 200%",
+            action = Res.string.create,
+            appearance = TestAppearance(language = AppLanguage.HUNGARIAN, textScale = 2f),
+        ) { openNewSong() },
         SheetCase(name = "Edit song details", action = Res.string.save) { openSongMetadata() },
         SheetCase(name = "Cover search", action = Res.string.save, isCoverArtEnabled = true) { openCoverSearch() },
         SheetCase(name = "Edit setlist", action = Res.string.save, setlists = listOf(DATED_SETLIST)) { openSetlistDetails() },
@@ -137,16 +154,15 @@ internal class SheetKeyboardBudgetTest {
 }
 
 /**
- * One sheet with a text field: its [name] in a failure, how to [open] it over a library that also holds [setlists], and
- * the [action] that finishes it in its header (or its close, for a sheet with nothing to finish). [knownFailure] says why
- * a case that fails today is skipped until its fix lands.
+ * One sheet with a text field: its [name] in a failure, how to [open] it in [appearance] over a library that also holds
+ * [setlists], and the [action] that finishes it in its header (or its close, for a sheet with nothing to finish).
  */
 private class SheetCase(
     val name: String,
     val action: StringResource,
     val setlists: List<String> = emptyList(),
     val isCoverArtEnabled: Boolean = false,
-    val knownFailure: String? = null,
+    val appearance: TestAppearance = TestAppearance(),
     val open: AppTestScope.() -> Unit,
 )
 
