@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.BooleanVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
@@ -166,14 +167,15 @@ internal class FoundationFileStorage(
      * `dataWithContentsOfFile` answers nil for a file that is not there and for one it could not read alike, and only
      * the first of those may come back as null: a file reported as missing is a deletion as far as sync is concerned.
      * So the read comes first, and only a nil is asked about: a file that is not there is missing, and one that is
-     * there could not be read.
+     * there could not be read. A directory under the name is missing too, as it is to [list], which leaves it out.
      */
     private fun readData(directory: StorageDirectory, name: String): NSData? {
         val path = filePath(directory, name)
         return memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
             NSData.dataWithContentsOfFile(path, options = 0u, error = error.ptr) ?: run {
-                if (!fileManager.fileExistsAtPath(path)) return null
+                val isDirectory = alloc<BooleanVar>()
+                if (!fileManager.fileExistsAtPath(path, isDirectory = isDirectory.ptr) || isDirectory.value) return null
                 throw LibraryStorageException("Could not read \"$name\": ${error.value?.localizedDescription}")
             }
         }
