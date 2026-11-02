@@ -12,130 +12,93 @@
 
 The view model facade, the composition root, and the product rules every screen follows.
 
-### `ui/CampfireViewModel.kt`
+## `CampfireViewModel`
 
-- State lives in plain `internal` holders it builds (not Koin definitions), each taking `viewModelScope`, its use
-  cases and narrow lambdas for the holders it calls, so no cycles. Screens call holders through their `internal val`s;
-  its own members serve other modules or span holders. **Construction order is behaviour**: holders are declared, and
-  their `init` collectors started, in a fixed order.
-- Cross-holder reactions are listeners registered in order (`Navigator.addOnBackStackChanged`,
-  `DialogHost.addBeforeDialogChange` / `addAfterDialogChange`).
-- **Every state is kept up to date from the moment the view model exists** (`stateIn(viewModelScope, Eagerly)`), never
-  only while collected: a state started by its first collector shows its initial value for a frame and the screen
-  animates the real one in as a change. Several states are also *acted on* (`syncState`, `userPreferences`,
-  `setlists`, `hasUnsavedEditorChanges`, `isSyncing`) and must not go stale.
+- State lives in plain `internal` holders it builds (not Koin definitions), each taking `viewModelScope`, its use cases,
+  and narrow lambdas for the holders it calls, so no cycles. **Construction order is behaviour**: holders are declared,
+  their `init` collectors started, and cross-holder listeners (`Navigator.addOnBackStackChanged`,
+  `DialogHost.addBeforeDialogChange` / `addAfterDialogChange`) registered in a fixed order.
+- **Every state is `stateIn(viewModelScope, Eagerly)`**, never started by its first collector, which would show its
+  initial value for a frame and animate the real one in. Several (`syncState`, `userPreferences`, `setlists`,
+  `hasUnsavedEditorChanges`, `isSyncing`) are also acted on and must not go stale.
 - Theme and language come from `GetUserPreferencesUseCase`, not `ScreenData`, so they don't wait for the library scan.
-- `visibleDialog` is written through `setVisibleDialog`, which drops work parked behind a dialog (the exit behind the
-  unsaved changes question) once that dialog leaves; a dropped exit is reported to `requestExit`'s `onCancelled`,
-  because the macOS quit request must be answered. The song picker after a new setlist and What's new are shown only
-  over no dialog (`DialogHost.showIfNoneIsShown`).
+- `setVisibleDialog` drops work parked behind a dialog (the exit behind the unsaved changes question) once it leaves; a
+  dropped exit is reported to `requestExit`'s `onCancelled`, because the macOS quit request must be answered. The song
+  picker after a new setlist and What's new show only over no dialog (`DialogHost.showIfNoneIsShown`).
 - The import is parked on the import screen and dropped however that screen leaves the back stack.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
-  `Message.OperationFailed` snackbar instead of a crash. An import's writes and the selection's tag/language writes run
-  `NonCancellable` once started (no half-imported archive, no tag on half the songs); planning is still cancellable.
-- **Search**: runs over `indexedSongs` (`ui/search/SearchIndex.kt`), normalized once per library change, not per
-  keystroke. It also holds the *unfiltered* library by file name, which setlists and the details screen
-  (`songLookup`) read, since a setlist names its songs whatever the filters hide. A query that folds to nothing
-  (punctuation, emoji) is no search. Each list screen's `SearchState` (`components/SearchState.kt`) lives here so the
-  desktop's Escape handler, outside the composition, can close it; it holds a `TextFieldState` so text and caret
-  survive navigation, takes focus once per opening (`takeFocusOnOpen`), and `close` keeps the text so the field reads
-  right while animating away — so lists combine `activeQuery`, gated on `isOpen`, never the raw text.
-- **Renames** (`state/songs/SongFilesController.kt`; metronome and navigator follow themselves, `followSongRename`): entries on
+  snackbar, not a crash. An import's writes and the selection's tag/language writes run `NonCancellable` once started
+  (no half-imported archive, no tag on half the songs); planning stays cancellable.
+- **Search** runs over `indexedSongs`, normalized once per library change, not per keystroke. It also holds the
+  *unfiltered* library by file name (`songLookup`), since a setlist names its songs whatever the filters hide. A query
+  that folds to nothing (punctuation, emoji) is no search. Each list screen's `SearchState` lives here so the desktop's
+  Escape handler, outside the composition, can close it (field rules: `screens/CLAUDE.md`).
+- **Renames** (`state/songs/SongFilesController.kt`; metronome and navigator follow themselves): back stack entries on
   the old name are rewritten, not popped (each song once, or two pages would share a key). The file moves before
-  references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a
-  playing click's changes until its context names the new file (`metronomeRenames`). A state, not a wait: no emission
-  says it is the last.
-- Tags and languages are written into the file (`SetChordProTagUseCase`). Save in the tag sheet writes the whole set in
-  one rewrite, removing only tags it offered and left unticked. The tag/language *filter* (`songFilter`) is neither a
-  file nor a preference: view model and saved state only. `isSongFilterActive` is asked of the chips shown, not the raw
-  selection (which may hold a tag the library lost).
-- **Interrupted transitions**: every entry reports `transition.isRunning` (`ReportNavigationTransition`); a back stack
-  change during a running transition bumps `navigationGeneration` into the entry metadata so the new scene never equals
-  the one it started from. Without it, Navigation 3 takes its "predictive back cancelled" path and gets stuck halfway.
-- Top level screens keep their scroll here (`ScrollPosition`, read by `rememberRetainedLazyGridState` /
-  `rememberRetainedScrollState`), since Navigation 3 drops an entry's remembered state and tab selection rebuilds the
-  stack.
+  references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a playing
+  click's changes until its context names the new file (`metronomeRenames`). A state, not a wait: no emission says it is
+  the last.
+- The tag/language *filter* (`songFilter`) is neither a file nor a preference: view model and saved state only.
+  `isSongFilterActive` is asked of the chips shown, not the raw selection (which may hold a tag the library lost).
 
-### `ui/CampfireApp.kt`
+## `CampfireApp`
 
-- Snackbars are queued in the view model with a running number: two identical messages are the same object, so the
-  queue numbers them.
-- **Rescans** happen only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus
-  if the last rescan is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where
-  the library can change outside the app (`isLibraryEditableOutsideApp`: iOS, desktop). **No pull to refresh or refresh
-  button anywhere.** `isLoading` latches off after the first completed read.
+- Snackbars are queued with a running number: two identical messages are the same object.
+- **Rescans** only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus if the
+  last is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where the library
+  can change outside the app (`isLibraryEditableOutsideApp`: iOS, desktop). **No pull to refresh or refresh button
+  anywhere.** `isLoading` latches off after the first completed read.
 - **Nothing is composed until preferences are read** (`arePreferencesLoaded`; read, not read successfully; only ever
   turns on), else the first frame shows the wrong palette and language.
 
-### Performance mode
+## Read only mode
 
-- `UserPreferences.isPerformanceModeEnabled` ("Read only" in the UI, first row of Settings → General, shown only while
-  the songs are on). With the songs off the mode is off in effect (`PreferencesController.isPerformanceModeEnabled`),
-  the preference kept for when they return.
+- `UserPreferences.isPerformanceModeEnabled` (first row of Settings → General, shown only while the songs are on; with
+  the songs off it is off in effect, `PreferencesController.isPerformanceModeEnabled`, the preference kept).
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
-  controls — which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
-- Settings keeps every row (the mode is switched off there); its two library actions are disabled, not hidden.
-- Files opened with or shared to Campfire are still imported, and a shared one-song text still opens the editor (see
-  `presentation/CLAUDE.md`); paste and every drop are refused (`PastedSongController.isNewSongPasteAvailable`,
-  `state/importing/DropAvailability.kt`).
+  controls, which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
+- Settings keeps every row; its two library actions are disabled, not hidden.
+- Files opened with or shared to Campfire are still imported, and a shared one-song text still opens the editor; paste
+  and every drop are refused (`PastedSongController.isNewSongPasteAvailable`, `state/importing/DropAvailability.kt`).
 
 ## What a song carries in its file
 
-### Tags are part of the song file
+Tags, languages, cover, and links are directives in the song file, so they travel through export, import, and sync.
 
-- ChordPro `{tag}` directives, read into `Song.tags`, so a tag travels through export, import, and sync. The library's
-  tags are whatever the songs carry. Sorting (most used / alphabetical) is `UserPreferences.tagSortingMode` and
-  `languageSortingMode`, shared by the filters and the sheets.
-- A song shows its first `MAX_TAGS` tags and `MAX_LANGUAGES` languages; the file keeps the rest, and no edit drops them
-  (a language sheet takes off only the languages it offered).
-
-### A tag's color is the library's, not the song's
-
-- `UserPreferences.tagColors`, keyed by `tagKey` (case and Unicode form share one). Never pruned when the last song
-  loses the tag (see `data/model/preferences/CLAUDE.md`). Picked from the tag sheet's popup
-  (`dialogs/labels/TagColorButton.kt`) and written at once, not on Save. Drawn by `TagIcon` (see
-  `components/labels/CLAUDE.md`).
-
-### The language of a song is carried the same way, and is its own category rather than one more tag
-
-- `{meta: language en}` per language, read into `Song.languages` as lowercase ISO codes, 639-2 folded to 639-1 where one
-  exists (`eng` → `en`, `rom` kept). Its filter group appears only once the library holds more than one language, with
+- **Tags**: `{tag}`; the library's tags are whatever the songs carry. Save in the tag sheet writes the whole set in one
+  rewrite, removing only tags it offered and left unticked. Tag and language sorting are shared by filters and sheets.
+- **Languages**, a category of their own: `{meta: language en}` each, lowercase ISO codes, 639-2 folded to 639-1 where
+  one exists (`eng` → `en`, `rom` kept). The filter group appears only with more than one language in the library, with
   "Unknown" for songs declaring none.
-
-### The cover of a song is carried the same way too
-
-- `{meta: cover https://…}`, the first `http(s)` one, into `Song.coverArtUrl`. Any address is kept; only public
-  `https` ones are fetched; the search only recommends. See Cover art in the root `CLAUDE.md`.
-
-### Links about a song are carried the same way
-
-- `{meta: link https://… Optional name}` per link, into `ChordProMetadata.links`; nothing is ever fetched from them. Shown
-  in their saved order (tags and languages are always alphabetical), edited with order in Manage links, written on Save.
+- A song shows its first `MAX_TAGS` tags and `MAX_LANGUAGES` languages; the file keeps the rest, and no edit drops them
+  (a sheet takes off only what it offered).
+- **A tag's color is the library's** (`UserPreferences.tagColors`, keyed by `tagKey`: case and Unicode form share one),
+  written at once from the tag sheet's popup, not on Save.
+- **Cover**: the first `http(s)` `{meta: cover …}`. Any address is kept; only public `https` ones are fetched; the
+  search only recommends.
+- **Links**: `{meta: link https://… Optional name}` each; nothing is ever fetched from them. Shown in their saved order
+  (tags and languages always alphabetical), edited with order in Manage links, written on Save.
 
 ## How a song is played
 
-### How a song is played is set in the song itself
-
 - Transposition, capo, tempo, and time signature are the first section of the song details grid, after the instrument
-  pill (the unlabelled transposition stepper names the key it takes the page's chords to, see `ui/playing`; the tempo stepper ends in Tap,
-  followed only by a time signature other than 4/4). Layout: `songView/firstSection`. They scale with the text, hence the floor
+  pill (layout: `songView/firstSection`). The transposition stepper names the key it takes the page's chords to; the
+  tempo stepper ends in Tap, followed only by a time signature other than 4/4. They scale with the text, hence
   `UserPreferences.MIN_FONT_SCALE`.
-- Transposition, capo, and tempo are overridden per setlist or per device (see `ui/playing/CLAUDE.md`); **only the time
-  signature is written into the file** (`{time}`), and the click counts by it.
-- **Song defaults sheet** (from About the song's Song defaults tile only) edits the file's four values; empty means the
-  default.
-- Chords off removes key and capo; metronome off removes tempo and time — everywhere but the editor's preview.
-- Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the metronome
-  switch (`CardDetails.isTempoShown`) without writing anything.
+- Transposition, capo, and tempo are overridden per setlist or per device (`ui/playing`); **only the time signature is
+  written into the file** (`{time}`), and the click counts by it. The **Song defaults sheet** (only from About the song)
+  edits the file's four values; empty means the default.
+- Chords off removes key and capo; metronome off removes tempo and time, everywhere but the editor's preview.
+- Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the
+  metronome switch (`CardDetails.isTempoShown`) without writing anything.
 
 ## Haptics
 
-- Only what the eye cannot easily follow, through `LocalHapticFeedback` (platform feedback and its setting; nothing on
-  desktop; no app switch). Felt: the fast scroller, setlist reorder lift/pass/drop, each repeat of a held stepper (not a
-  tap), a `SwitchListItem` flip, and a song row's long press (`combinedClickable`; a missing song's row performs it too).
-- Not felt: plain buttons, menus, sheets, checkboxes, and **Tap tempo** (a buzz would compete with the beat). The
-  metronome's Vibrate is a feature, see `ui/platform/`.
+- Only what the eye cannot easily follow, through `LocalHapticFeedback` (no app switch; nothing on desktop). Felt: the
+  fast scroller, setlist reorder lift/pass/drop, each repeat of a held stepper (not a tap), a `SwitchListItem` flip, and
+  a song row's long press (a missing song's too).
+- Not felt: plain buttons, menus, sheets, checkboxes, and **Tap tempo** (a buzz would compete with the beat).
 
 ## Accessibility
 
@@ -145,58 +108,46 @@ The view model facade, the composition root, and the product rules every screen 
   start is not.
 - A row of `Role.RadioButton` chips is a `selectableGroup()`.
 
-## Features
+## Features and song preferences
 
-### Features are switched on and off as a whole
+Every switch is a `UserPreferences` field, never exported or synced, and **only hides**: nothing is written or deleted.
+What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
+neither named nor reset. How a disabled feature leaves the chrome and the back stack: `navigation/`.
 
-- **Settings → Features is what the app has** (a switch per tab, and the two that go online); **Settings → Preferences
-  is how a song is read** (`ui/songDisplay`: chords, their diagrams and degrees, scale suggestions, numbered sections),
-  the latter also from the song details menu's Preferences. Read only is in General. Every switch is a
-  `UserPreferences` field, never exported or synced, and **only hides**: nothing is written or deleted. Features:
-  - **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song
-    and editor screen, and paste (a dropped text too); disables the Setlists, Online song details, and Cover art rows.
-    Settings' Import, dropped files, and files or a text opened with or shared to the app are still imported, always
-    through the import screen's review and under a warning atop it (as are setlists with the Setlists switch off,
-    `ImportFeatureWarning`), but nothing opens a song, no preview or editor starts (`ImportController`'s
-    `areSongsEnabled`, the import screen's rows). The app opens on the first tool switched on (`TopLevel.home`).
-  - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): the five random songs atop a long songs
-    list (`screens/songs`); also answers the question under them.
-  - **Metronome**: takes its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
-  - **Tuner**: takes its tab and the sheet's entry, and with them every way to ask for the microphone.
-  - **Chords** (`isChordLibraryEnabled`): takes the Chords tab and the scale sheet's chord rows, whatever songs show.
-  - **Scales** (`areScalesEnabled`): takes the Scales tab and the scale sheet, and with them the scale suggestions.
-  - **Setlists**: takes their tab and every way into one; setlist files still travel through import, export, and sync.
-    Off with the songs too (`FeatureSwitches.areSetlistsEnabled`).
-  - **Online song details** (`isSongDetailsLookupEnabled`): takes the lookup button.
-  - **Cover art** (`isCoverArtEnabled`): cover fetching, drawing, and search.
-- Song preferences, each disabled rather than hidden while another takes what it adds:
-  - **Chords** (`areChordsEnabled`): takes a song's chords, key, transposition, and capo; the chord spelling rows are
-    disabled only once neither songs nor the Chords and Scales tabs name a chord.
-  - **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in
-    the PDF too; chosen shapes kept. The instrument pill stays (the tuner, the keyboard's sounding names).
-  - **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like
-    the notation gone wrong; disabled while no diagram it labels is drawn (a song's, in neither
-    numbering, which already names its chords by degree, or a scale sheet's chords, which need the Scales and Chords
-    tabs); takes the degree over each diagram's name, in the PDF too, and the scale sheet's numerals (`ui/chords`).
-  - **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off, since a suggestion
-    is read off the chords; takes the song's Scales section and the chord sheets' scales.
-  - **Chord names with a capo** (`chordNames`, in the Chords section after the accidentals): a song's chords named by
-    the shapes fingered above the capo (default) or by what sounds (`ui/playing/CLAUDE.md`); disabled with songs or
-    chords off and on the keyboard, which always reads what sounds, as its description says. Asked once, over the first
-    song a capo matters on (`screens/songDetails`), never with the layout question.
-  - **Capo keeps the key** (`capoKeepsKey`, after Chord names with a capo): a capo put on changes only the shapes, the
-    file's `{capo}` alone being pitch (`ui/playing/CLAUDE.md`). Enabled on the keyboard too, which then shows no capo,
-    since one changes nothing for it; the question's third answer.
-  - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column that scrolls
-    at the song's pace, asked once over the first song (`screens/songDetails/autoScroll`). The one choice here that
-    rearranges rather than hides.
-- What a switch takes is gone everywhere, Song defaults and About the song included; an override nobody is shown is
-  neither named nor reset.
-- A disabled tab leaves the chrome (`topLevelDestinations`, animated by `chrome/NavigationItemPresence.kt`); a restored
-  stack or opened address is cut at the first screen belonging to a disabled feature
-  (`NavigationState.withoutDisabledFeatures`), so `/metronome` with the metronome off opens the songs and rewrites the
-  address. The bottom of every stack is the home screen (`TopLevel.home`, the first top level screen switched on, so
-  Settings once everything is off, which the Features tab's first row then jokes about);
-  `Navigator.followFeatureSwitches` swaps it whenever the switches change (`rootedAt`), so code asking whether nothing
-  has been built on the stack asks for one entry, never for `[Songs]`. A switch never navigates: an old root that is
-  the tab on screen (Settings, everything else off) stays on top of the new one.
+Features (Settings → Features):
+
+- **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song and
+  editor screen, and paste (a dropped text too); disables the Setlists, Online song details, and Cover art rows. Imports
+  still happen, always through the review and under a warning atop it (as do setlists with Setlists off,
+  `ImportFeatureWarning`), but no preview or editor starts (`ImportController`'s `areSongsEnabled`).
+- **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
+- **Metronome**: its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
+- **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
+- **Chords** (`isChordLibraryEnabled`): the Chords tab and the scale sheet's chord rows, whatever songs show.
+- **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.
+- **Setlists**: their tab and every way into one; files still travel through import, export, and sync. Off with the
+  songs too (`FeatureSwitches.areSetlistsEnabled`).
+- **Online song details** (`isSongDetailsLookupEnabled`): the lookup button. **Cover art** (`isCoverArtEnabled`):
+  fetching, drawing, and search.
+
+Song preferences (Settings → Preferences, also the song details menu), each disabled rather than hidden while another
+takes what it adds:
+
+- **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
+  only once neither songs nor the Chords and Scales tabs name a chord.
+- **Chord diagrams** (`areChordDiagramsEnabled`): disabled while chords are off; takes a song's Chords section, in the
+  PDF too; chosen shapes kept. The instrument pill stays (the tuner, the keyboard's sounding names).
+- **Chord degrees** (`areChordDegreesEnabled`): off by default, since numerals a reader never asked for look like the
+  notation gone wrong; disabled while no diagram it labels is drawn (a song's in neither numbering, or a scale sheet's,
+  which needs the Scales and Chords tabs); takes the degree over each diagram's name, in the PDF too, and the scale
+  sheet's numerals.
+- **Scale suggestions** (`areScaleSuggestionsEnabled`): disabled while scales or chords are off (read off the chords);
+  takes the song's Scales section and the chord sheets' scales.
+- **Chord names with a capo** (`chordNames`, after the accidentals): shapes fingered above the capo (default) or what
+  sounds (`ui/playing`); disabled with songs or chords off and on the keyboard, which always reads what sounds, as its
+  description says. Asked once, over the first song a capo matters on, never with the layout question.
+- **Capo keeps the key** (`capoKeepsKey`, after it): a capo put on changes only the shapes, the file's `{capo}` alone
+  being pitch. Enabled on the keyboard too, which then shows no capo; the question's third answer.
+- **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column scrolling at the
+  song's pace, asked once over the first song (`screens/songDetails/autoScroll`). The one choice that rearranges rather
+  than hides.
