@@ -96,13 +96,18 @@ guards. Then delete the goldens and everything that exists only for them.
    `TestAppearance(isDark = true)`, on the songs list, song details (`openSong()`), the editor (`openEditor()`, whose
    demo text has directives, chords, and comments), and the New song sheet: capture `captureWindow()` (`AppTest.kt`, the
    whole scene: `onRoot()` would miss the sheet, a dialog layer of its own, and fails where there are two roots) once
-   settled (`waitForIdle`), and for each text node checked (card title, artist, key, tag; lyric line, chord; the editor field; the
-   sheet's header and fields) take the node's bounds' most frequent pixel as its background and the pixel farthest from
-   it in relative luminance as its ink, and assert a WCAG contrast ratio of at least 3:1. Anti-aliasing differs per OS,
-   the extreme ink pixel of a glyph does not, so this holds on every system. Chord diagrams: the same check over the
-   first diagram's bounds. If a pixel check proves noisy on one OS, the fallback is a `:presentation` desktop unit test
-   of the color pairs themselves (each `ChordProOutputTransformation` span color and the song text colors against
-   the dark scheme's surface), not a tolerance.
+   settled (`waitForIdle`), and for each area checked take its most frequent pixel as its background and the pixel
+   farthest from it in relative luminance as its ink, and assert a WCAG contrast ratio of at least 3:1. Anti-aliasing
+   differs per OS, the extreme ink pixel of a glyph does not, so this holds on every system. Amended, as landed: the
+   songs list checks every text of the first card and the navigation bar's labels; song details its title, the Chords
+   title, and the first row of diagrams on the first screen, then pedals (Down) to the page holding "There is a house in
+   New Orleans" (the first lyric is not on the first screen) and checks that line's chords (the room above its letters,
+   its line being 3 em tall) and its letters apart, since one area's farthest pixel would let either pass for the
+   other; the editor field's one area would only see its plainest text, so each span color of
+   `ChordProOutputTransformation` on the lines shown must be found among the drawn pixels and stand 3:1 against the
+   field's background; the sheet checks every text inside the dialog above the keyboard, except a disabled control's
+   (Create before a title), which WCAG exempts. If a pixel check proves noisy on one OS, the fallback is a
+   `:presentation` desktop unit test of the color pairs themselves, not a tolerance.
 7. **Delete** `GoldenRendersTest.kt`, `Goldens.kt`, `src/test/resources/goldens/` (`captureWindow()` stays: step 6
    uses it); in `tools/screenshots/build.gradle.kts` the
    `isUpdatingGoldens` val, its `outputs.upToDateWhen`, and the three `campfire.screenshots.golden*` /
