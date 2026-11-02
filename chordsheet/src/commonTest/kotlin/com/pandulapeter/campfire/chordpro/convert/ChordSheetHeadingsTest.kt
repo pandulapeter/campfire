@@ -37,4 +37,12 @@ class ChordSheetHeadingsTest {
         assertEquals("verse", ChordSheetHeadings.sectionType("Riffs and more"))
         assertEquals("solo", ChordSheetHeadings.sectionType("Organ solo"))
     }
+
+    @Test
+    fun `a label known to be one opens the section its abbreviation names, numbered or not`() {
+        assertEquals(
+            listOf("verse", "chorus", "chorus", "bridge", "bridge", "verse"),
+            listOf("V1", "Ch1", "Ch 2", "Br", "Br.", "Chimes").map { ChordSheetHeadings.sectionType(it) },
+        )
+    }
 }

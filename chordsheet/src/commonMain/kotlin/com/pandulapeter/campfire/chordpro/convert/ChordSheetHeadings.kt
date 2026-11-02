@@ -59,12 +59,27 @@ internal object ChordSheetHeadings {
 
     /**
      * The section a [label] known to be one opens: a verse, chorus, bridge, or pre-chorus by the heading word it opens
-     * with ([labelType]), any other kind by its last word (`Intro`, `Organ solo`), in English or in a language that spells
-     * it otherwise, and a verse under its own name where it names no kind (`V1`).
+     * with ([labelType]) or by its abbreviation ([abbreviatedType], `Ch1`), any other kind by its last word (`Intro`,
+     * `Organ solo`), in English or in a language that spells it otherwise, and a verse under its own name where it names
+     * no kind (`A1`).
      */
     fun sectionType(label: String): String = labelType(label)
+        ?: abbreviatedType(label)
         ?: label.trim().lowercase().split(' ').lastOrNull { it.isNotEmpty() }?.let { word -> word.takeIf { it in customTypes } ?: localizedTypes[word] }
         ?: "verse"
+
+    /**
+     * The type a [label] known to be one names by an abbreviation (`Ch1`, `Br`), numbered or not, which no heading in
+     * running text would be; null for any other label.
+     */
+    fun abbreviatedType(label: String): String? = abbreviations[label.trim().trimEnd { it.isDigit() || it.isWhitespace() || it == '.' }.lowercase()]
+
+    /** The abbreviations labels printed apart from the lyrics name their sections with. */
+    private val abbreviations = mapOf(
+        "v" to "verse", "vs" to "verse", "vrs" to "verse",
+        "c" to "chorus", "ch" to "chorus", "cho" to "chorus", "chor" to "chorus", "ref" to "chorus", "refr" to "chorus",
+        "b" to "bridge", "br" to "bridge", "brg" to "bridge", "pc" to "bridge", "pre" to "bridge",
+    )
 
     private val customTypes = setOf("intro", "outro", "solo", "interlude", "instrumental", "coda", "tag", "ending", "break", "riff")
 

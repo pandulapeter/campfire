@@ -18,12 +18,6 @@ import com.pandulapeter.campfire.chordpro.convert.PlacedLine.Companion.text
  * right of all of them, so that a lyric or a chord row set against the left edge never loses its first word.
  */
 internal object ChordSheetMarginLabels {
-    /** A section label written with the abbreviations margin labels use, which no heading in running text would be. */
-    private val abbreviations = mapOf(
-        "v" to "verse", "vs" to "verse", "vrs" to "verse",
-        "c" to "chorus", "ch" to "chorus", "cho" to "chorus", "chor" to "chorus", "ref" to "chorus", "refr" to "chorus",
-        "b" to "bridge", "br" to "bridge", "brg" to "bridge", "pc" to "bridge", "pre" to "bridge",
-    )
     private const val MAX_LENGTH = 12
 
     private class Label(
@@ -62,7 +56,7 @@ internal object ChordSheetMarginLabels {
 
     /** The ChordPro section a margin label opens: its heading word's, an abbreviation's, or a verse named by the label. */
     fun type(label: String): String = ChordSheetHeadings.parse(label)?.type
-        ?: abbreviations[label.trim().trimEnd { it.isDigit() || it.isWhitespace() || it == '.' }.lowercase()]
+        ?: ChordSheetHeadings.abbreviatedType(label)
         ?: "verse"
 
     /** The labels of [lines], which are one column's, or null where they have none. */
