@@ -213,7 +213,7 @@ internal class SongTextStore(
      * none of them can be lost while this is busy reading, and that state names no file. The texts are few (the
      * screens on the back stack), and those that did not change come out of the repository's cache.
      */
-    fun startFollowingFiles() = scope.launch {
+    private fun startFollowingFiles() = scope.launch {
         getSongContentInvalidations().drop(1).collect { rereadSongTexts() }
     }
 
@@ -226,6 +226,7 @@ internal class SongTextStore(
     }
 
     init {
+        startFollowingFiles()
         // Every way a song screen is pushed passes here, inside the click and before the screen's first frame, and the
         // pushed destination is on the back stack before pruneSongTexts can run, so a text read ahead is never pruned.
         addOnBackStackChanged { previousTop, stack ->

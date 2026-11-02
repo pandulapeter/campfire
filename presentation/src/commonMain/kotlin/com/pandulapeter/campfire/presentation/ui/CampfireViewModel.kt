@@ -748,7 +748,6 @@ class CampfireViewModel(
         syncController.startRestoring(isFirstLaunch = isFirstLaunch) {
             navigator.showSyncConsentAnswer(syncConsentOrigins.take(), savedDialogRestorer::reopenExport)
         }
-        songTextStore.startFollowingFiles()
         importController.startQueue(firstRunController.demoLibraryDecision)
         importReportState.startReportingInterruption(savedStateStore, messageSink)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
