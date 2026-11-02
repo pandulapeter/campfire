@@ -12,10 +12,6 @@ package com.pandulapeter.campfire.chordpro.convert
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.bracketed
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.inline
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.isUnaligned
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.merge
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.ascii
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
@@ -33,7 +29,6 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.clean
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
-import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headingLabel
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.isExportFiller
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.joinRows
 import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
@@ -150,14 +145,16 @@ public object ChordSheetConverter {
         val trailingBlanks = kinds.takeLastWhile { it == LineKind.BLANK }.size
         val body = lines.size - trailingBlanks
         return (
-            writeBody(
-                lines = lines.take(body),
-                features = features.take(body),
-                kinds = kinds.take(body),
-                candidates = candidates.take(body),
-                omitted = emptySet(),
-                changes = emptyMap(),
-                convertParentheses = convertsParentheses(lines),
+            SongWriter.write(
+                SongStructure.of(
+                    lines = lines.take(body),
+                    features = features.take(body),
+                    kinds = kinds.take(body),
+                    candidates = candidates.take(body),
+                    omitted = emptySet(),
+                    changes = emptyMap(),
+                    convertParentheses = convertsParentheses(lines),
+                ),
             ) + List(trailingBlanks) { "" }
             ).joinToString("\n")
     }
@@ -179,8 +176,8 @@ public object ChordSheetConverter {
                 else -> LineKind.LYRIC
             }
         }
-        return writeBody(lines, features(lines), kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
-            .joinToString("\n")
+        val parts = SongStructure.of(lines, features(lines), kinds, candidates, omitted = emptySet(), changes = emptyMap(), convertParentheses = false)
+        return SongWriter.write(parts).joinToString("\n")
     }
 
     private val sungWord = Regex("\\p{L}{2}")
@@ -514,7 +511,7 @@ public object ChordSheetConverter {
         )
         header += definitions.values
         omitted += definitions.keys
-        val output = writeBody(lines, features, kinds, candidates, omitted, changes, convertParentheses)
+        val output = SongWriter.write(SongStructure.of(lines, features, kinds, candidates, omitted, changes, convertParentheses))
         // A credit printed both under the title and as a labelled line names the song once.
         val distinct = header.distinct()
         val keyChanges = output.count { it.startsWith("{${ChordProVocabulary.KEY}: ") }
@@ -816,246 +813,6 @@ public object ChordSheetConverter {
         val colon = text.indexOf(':').takeIf { it >= 0 } ?: return false
         val words = tokens(text.substring(colon + 1))
         return words.isNotEmpty() && words.count { chord(it.text) } * 2 >= words.size
-    }
-
-    private fun writeBody(
-        lines: List<Rendered>,
-        features: List<LineFeatures>,
-        kinds: List<LineKind>,
-        candidates: List<List<Token>?>,
-        omitted: Set<Int>,
-        changes: Map<Int, List<String>>,
-        convertParentheses: Boolean,
-    ): List<String> = with(BodyWriter()) {
-        fun follow(at: Int) { if (features[at].isSung) features[at].look?.let { follow(it, lines[at].text) } }
-        val unlabelled = ChordSheetLook.unlabelled(
-            // A line with no word (a tab's string or a stray accidental the reading took for a lyric) is not sung.
-            looks = lines.indices.map { at ->
-                if (kinds[at] != LineKind.LYRIC || at in omitted || !features[at].isSung) null else features[at].look
-            },
-            breaks = kinds.map { it == LineKind.BLANK || it == LineKind.SECTION || it == LineKind.COMMENT || it == LineKind.TAB || it == LineKind.GRID },
-            rows = kinds.map { it == LineKind.CHORD },
-        )
-        fun openUnlabelled(at: Int) { if (at in unlabelled) openChorus() }
-        var index = 0
-        while (index < lines.size) {
-            changes[index]?.let { pendingChanges += it }
-            if (index in omitted) { index++; continue }
-            val line = lines[index]
-            fun nextContent(after: Int) = ((after + 1)..lines.lastIndex).firstOrNull { kinds[it] != LineKind.BLANK && kinds[it] != LineKind.COMMENT && it !in omitted }
-            // A comment over a staff is the tab's own, as a label over it is the tab's.
-            if (kinds[index] != LineKind.TAB && !(kinds[index] == LineKind.COMMENT && nextContent(index)?.let { kinds[it] } == LineKind.TAB)) closeTab()
-            if (kinds[index] != LineKind.GRID) closeGrid()
-            // A change before a heading belongs to the section it heads rather than to the end of the one before.
-            if (kinds[index] != LineKind.SECTION && kinds[index] != LineKind.BLANK) flushChanges()
-            when (kinds[index]) {
-                LineKind.SECTION if line.marks?.role == ChordSheetCampfireLayout.Role.LABEL -> {
-                    closeSection()
-                    flushChanges()
-                    val label = headerValue(line.text)
-                    if (output.lastOrNull()?.isNotBlank() == true) output += ""
-                    if (nextContent(index)?.let { kinds[it] } == LineKind.TAB) {
-                        output += "{start_of_tab: $label}"
-                        inTab = true
-                    } else {
-                        val type = ChordSheetCampfireLayout.sectionType(label)
-                        output += "{start_of_$type: $label}"
-                        open(type)
-                    }
-                }
-                LineKind.COMMENT -> {
-                    var end = index
-                    while (end < lines.lastIndex && kinds[end + 1] == LineKind.COMMENT && lines[end + 1].marks?.role == line.marks?.role && end + 1 !in omitted) end++
-                    // A comment the next section (or the song's end) follows stands after the section it is printed under.
-                    if (!inTab && nextContent(end)?.let { kinds[it] == LineKind.SECTION } != false) {
-                        closeSection()
-                        if (output.lastOrNull()?.isNotBlank() == true) output += ""
-                    }
-                    val directive = if (line.marks?.role == ChordSheetCampfireLayout.Role.BOX_COMMENT) "comment_box" else "comment"
-                    output += "{$directive: ${headerValue(joinRows(lines, index, end))}}"
-                    index = end
-                }
-                LineKind.GRID -> { if (!inGrid) { output += "{start_of_grid}"; inGrid = true }; output += line.text.trimEnd() }
-                LineKind.SECTION -> {
-                    closeSection()
-                    flushChanges()
-                    val label = headerValue(headingLabel(line.text))
-                    val type = if (line.isMarginLabel) ChordSheetMarginLabels.type(line.text) else features[index].heading?.type
-                    val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != LineKind.BLANK }
-                    // Under a chorus heading, lines neither set the way the song set its chorus apart nor singing its words
-                    // are sung after it.
-                    val lyric = ((index + 1)..lines.lastIndex).takeWhile { kinds[it] != LineKind.SECTION }.firstOrNull { kinds[it] == LineKind.LYRIC && it !in omitted }
-                    val isRecall = type != null && lyric != null && isRecall(type, features[lyric].look, lines[lyric].text)
-                    if (type == "chorus" && (next == null || kinds[next] == LineKind.SECTION || isRecall)) output += "{chorus}"
-                    else if (type != null) { output += "{start_of_$type: $label}"; open(type) }
-                    else {
-                        // A heading the parser does not take for a section ends the lyrics before it only after a blank
-                        // line; without one it would be a comment inside them, and what follows their continuation.
-                        if (output.lastOrNull()?.isNotBlank() == true) output += ""
-                        output += "{comment: $label}"
-                    }
-                }
-                LineKind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
-                LineKind.CHORD -> {
-                    openUnlabelled(index + 1)
-                    val isUnderMarkedLyric = kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && lines[index + 1].marks?.isContinuation == true
-                    // A chord row the export marks with no marked lyric under it holds the chords the line above overflowed
-                    // onto it, so it goes on that line, before the merge would set its chords into an unmarked lyric under it.
-                    if (line.marks?.isContinuation == true && !isUnderMarkedLyric) {
-                        addLyric(bracketed(candidates[index]!!, chordRow(line), line.marks.isSetFromRight), continues = true, isHardCut = false)
-                    } else if (!line.isFromLabel && kinds.getOrNull(index + 1) == LineKind.LYRIC && index + 1 !in omitted && !isUnaligned(line, candidates[index]!!, lines[index + 1])) {
-                        follow(index + 1)
-                        addLyric(merge(line, lines[index + 1], convertParentheses), lines[index + 1].marks?.isContinuation == true, lines[index + 1].marks?.isHardCut == true)
-                        index++
-                    } else output += bracketed(candidates[index]!!, chordRow(line), line.marks?.isSetFromRight == true)
-                }
-                LineKind.LYRIC -> {
-                    openUnlabelled(index)
-                    follow(index)
-                    addLyric(inline(line, convertParentheses), line.marks?.isContinuation == true, line.marks?.isHardCut == true)
-                }
-                LineKind.BLANK -> output += ""
-                LineKind.METADATA -> Unit
-            }
-            index++
-        }
-        closeTab()
-        closeGrid()
-        closeSection()
-        flushChanges()
-        output
-    }
-
-    /** The body of the song as it is written, with the environment and the changes still open around the next line. */
-    private class BodyWriter {
-        val output = mutableListOf<String>()
-
-        /**
-         * A lyric line, or where it [continues] the one before (a row the export wrapped), the rest of that line, with no
-         * space between where the row [isHardCut] inside a word.
-         */
-        fun addLyric(line: String, continues: Boolean, isHardCut: Boolean) {
-            val previous = output.lastOrNull()
-            val joint = if (isHardCut) "" else " "
-            if (continues && previous != null && previous.isNotBlank() && !previous.startsWith('{')) output[output.lastIndex] = "$previous$joint${line.trimStart()}"
-            else output += line
-        }
-        var environment: String? = null
-        var inTab = false
-        var inGrid = false
-        val pendingChanges = mutableListOf<String>()
-        fun closeTab() { if (inTab) { output += "{end_of_tab}"; inTab = false } }
-        fun closeGrid() { if (inGrid) { output += "{end_of_grid}"; inGrid = false } }
-
-        /** The lyrics outside a section since one last closed: the verses a section may be set apart from. */
-        private val verseLooks = mutableListOf<ChordSheetLook>()
-        private var isVerseInterrupted = false
-
-        /** The open section's lyrics so far, and the verses where it opened. */
-        private val sectionLooks = mutableListOf<ChordSheetLook>()
-        private var sectionVerses: List<ChordSheetLook> = emptyList()
-
-        /** The look each kind of section was first set apart from the verses in, and the words of its lines. */
-        private val setApart = mutableMapOf<String, Pair<ChordSheetLook, Set<String>>>()
-        private val sectionWords = mutableSetOf<String>()
-
-        /**
-         * Whether a heading of [type] whose first lyric is [text] set in [look] recalls the section: the song set that
-         * section apart before, and the lyric is neither set that way nor one of its lines written out again.
-         */
-        fun isRecall(type: String, look: ChordSheetLook?, text: String) = setApart[type]?.let { (setLook, words) ->
-            look != null && setLook.isSetApartFrom(look) && words(text) !in words
-        } == true
-
-        private fun words(text: String) = text.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }.joinToString(" ")
-
-        /** A chorus no heading names, set apart by its type alone, which a return to plain type ends. */
-        fun openChorus() {
-            if (environment != null || inTab || inGrid) return
-            if (output.lastOrNull()?.isNotBlank() == true) output += ""
-            output += "{start_of_chorus}"
-            open("chorus")
-            sectionVerses = emptyList()
-        }
-
-        fun open(type: String) {
-            environment = type
-            sectionLooks.clear()
-            sectionVerses = verseLooks.toList()
-            isVerseInterrupted = true
-            sectionWords.clear()
-        }
-
-        /**
-         * A lyric of [look]: a section set apart from the verses ends where the lyrics return to their look. With no verse
-         * before it to compare with, only a return from bold or italic to plain type ends it, since lines of a centred
-         * sheet each start somewhere else and a line in another type inside it is a backing vocal or an aside.
-         */
-        fun follow(look: ChordSheetLook, text: String) {
-            if (environment != null && sectionLooks.isNotEmpty()) {
-                val opened = sectionLooks.first()
-                // With no verse to compare with, plain type is the one look known to be the verses'.
-                val ends = if (sectionVerses.isEmpty()) (opened.isBold || opened.isItalic) && !look.isBold && !look.isItalic else {
-                    isSetApart(sectionVerses, sectionLooks) && returnsToVerses(look, sectionVerses)
-                }
-                if (ends) {
-                    // A section ending mid-song ends with its last stanza, before the blank lines parting it from the next.
-                    val blanks = output.takeLastWhile { it.isBlank() }.size
-                    repeat(blanks) { output.removeAt(output.lastIndex) }
-                    closeSection(isReturn = true)
-                    repeat(blanks) { output += "" }
-                }
-            }
-            if (environment == null) {
-                if (isVerseInterrupted) {
-                    verseLooks.clear()
-                    isVerseInterrupted = false
-                }
-                verseLooks += look
-            } else {
-                sectionLooks += look
-                sectionWords += words(text)
-            }
-        }
-
-        /**
-         * Whether [section] is set apart from [verses]: its first lyric in another type, or two lyrics or more all starting
-         * further in (or out) than the edge the verses share. A lyric alone shows no edge, so one indented by accident
-         * sets nothing apart, and a centred sheet's verses share none.
-         */
-        private fun isSetApart(verses: List<ChordSheetLook>, section: List<ChordSheetLook>): Boolean {
-            val verse = verses.last()
-            if (section.first().differsInType(verse)) return true
-            val edge = ChordSheetLook.sharedEdge(verses) ?: return false
-            if (section.size < 2) return false
-            val margin = maxOf(section.maxOf { it.size }, verse.size) * 1.5
-            val insets = section.map { it.left - edge }
-            return insets.all { it > margin } || insets.all { it < -margin }
-        }
-
-        /** Whether [look] is back in the verses' type and, where they share an edge, at it. */
-        private fun returnsToVerses(look: ChordSheetLook, verses: List<ChordSheetLook>): Boolean {
-            val verse = verses.last()
-            if (look.differsInType(verse)) return false
-            val edge = ChordSheetLook.sharedEdge(verses) ?: return true
-            return abs(look.left - edge) <= maxOf(look.size, verse.size) * 1.5
-        }
-
-        /**
-         * Closes the open section, recording its look only where the song showed it set apart: against verses outside any
-         * section, or by a lyric returning from it ([isReturn]). In a song that heads every section the next heading closes
-         * a chorus, so nothing is recorded and a later chorus heading over new words is that chorus written out.
-         */
-        fun closeSection(isReturn: Boolean = false) {
-            val type = environment
-            if (type != null && sectionLooks.isNotEmpty() && (isReturn || sectionVerses.isNotEmpty() && isSetApart(sectionVerses, sectionLooks))) {
-                setApart.getOrPut(type) { sectionLooks.first() to sectionWords.toSet() }
-            }
-            type?.let { output += "{end_of_$it}" }
-            environment = null
-            sectionLooks.clear()
-        }
-        fun flushChanges() { output += pendingChanges; pendingChanges.clear() }
     }
 
     private fun collapse(lines: List<String>): String {
