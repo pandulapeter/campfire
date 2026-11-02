@@ -28,12 +28,12 @@ internal data class ChordSheetLook(val isBold: Boolean, val isItalic: Boolean, v
 
     companion object {
         /**
-         * The left edge [looks] share within half a character; null where they start in different places, as a centred
-         * or right-aligned sheet's lines do.
+         * The left edge [looks] share within [within] of their size (half a character unless said otherwise); null where
+         * they start in different places, as a centred or right-aligned sheet's lines do.
          */
-        fun sharedEdge(looks: List<ChordSheetLook>): Double? {
+        fun sharedEdge(looks: List<ChordSheetLook>, within: Double = 0.5): Double? {
             val first = looks.firstOrNull() ?: return null
-            return first.left.takeIf { looks.all { abs(it.left - first.left) <= maxOf(it.size, first.size) * 0.5 } }
+            return first.left.takeIf { looks.all { abs(it.left - first.left) <= maxOf(it.size, first.size) * within } }
         }
 
         /**

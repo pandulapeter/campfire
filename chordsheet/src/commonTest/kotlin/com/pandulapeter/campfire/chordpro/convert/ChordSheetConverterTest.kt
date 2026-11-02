@@ -647,6 +647,37 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a headed chorus set in by less than a character ends where an unheaded verse returns to the verses' edge`() {
+        fun line(text: String, left: Double = 40.0, size: Double = 12.0) =
+            ChordSheet.Line(text.mapIndexed { index, c -> span(c.toString(), left + index * 6.0, left + (index + 1) * 6.0, size) })
+        fun chorus() = listOf(line("Chorus", left = 48.0), line("Oh my darling, oh my darling", left = 48.0), line("You are lost and gone forever", left = 48.0))
+        val lines = listOf(line("Song", size = 20.0), line("In a cavern, in a canyon"), line("Dwelt a miner, forty-niner")) +
+            chorus() + listOf(line("Light she was and like a fairy"), line("Herring boxes without topses")) + chorus()
+        val chorusText = "{start_of_chorus: Chorus}\nOh my darling, oh my darling\nYou are lost and gone forever\n{end_of_chorus}\n"
+        assertEquals(
+            "{title: Song}\n\nIn a cavern, in a canyon\nDwelt a miner, forty-niner\n$chorusText" +
+                "Light she was and like a fairy\nHerring boxes without topses\n$chorusText",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun `a chorus set in at the top of the next column ends where a verse returns to that column's edge`() {
+        fun line(text: String, column: Int, inset: Double = 0.0, size: Double = 12.0) = ChordSheet.Line(
+            text.mapIndexed { index, c -> span(c.toString(), 40.0 + column * 260.0 + inset + index * 6.0, 46.0 + column * 260.0 + inset + index * 6.0, size) },
+            column = column,
+        )
+        fun chorus(column: Int) = listOf("Chorus", "Oh my darling, oh my", "You are lost and gone").map { line(it, column, inset = 8.0) }
+        val lines = listOf(line("Song", column = 0, size = 20.0), line("In a cavern, a canyon", 0), line("Dwelt a miner, forty", 0)) +
+            chorus(0) + chorus(1) + listOf(line("Drove she ducklings", 1), line("Hit her foot against", 1))
+        val chorusText = "{start_of_chorus: Chorus}\nOh my darling, oh my\nYou are lost and gone\n{end_of_chorus}\n"
+        assertEquals(
+            "{title: Song}\n\nIn a cavern, a canyon\nDwelt a miner, forty\n$chorusText$chorusText" + "Drove she ducklings\nHit her foot against\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
     fun `a chorus whose first lyric alone starts further in is not set apart by an inset and keeps its lines`() {
         assertEquals(
             "Somebody told me\nWe were born to sing\n\n{start_of_chorus: Chorus}\n[G]Hey now [C]you're a star\nGet your game on, go play\n" +

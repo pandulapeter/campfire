@@ -24,7 +24,8 @@ import kotlin.math.abs
  * @property headerRow The values the line names as a row of labelled values, read as the header reads them where the
  *   line is in its reach ([ChordSheetProfile.isInHeader]), else as the body does.
  * @property bodyRow The values the line names as a row of labelled values read anywhere in the song.
- * @property look How the line's lyric is set, null for a line with nothing printed.
+ * @property look How the line's lyric is set, its left edge measured from where its column starts; null for a line with
+ *   nothing printed.
  * @property isSung Whether the line holds a sung word, which a tab's string or a stray accidental does not, and which the
  *   rest of a wrapped line is not counted as.
  * @property isLabel Whether the line is set as a section's label is in many layouts: a few words alone on their line in
@@ -53,7 +54,12 @@ internal data class LineFeatures(
             val first = lines.indexOfFirst { it.text.isNotBlank() }
             val last = lines.indexOfLast { it.text.isNotBlank() }
             val isWrapped = wrapped(lines, bodySize)
+            // Each column has edges of its own, so a look is placed from where its column starts: a chorus set in at the
+            // top of one column is then compared with the verses' edge in the column before.
+            val columnStarts = lines.filter { it.text.isNotBlank() && it.source.column != null }.groupBy { it.source.column!! }
+                .mapValues { (_, column) -> column.minOf(::start) }
             return lines.mapIndexed { index, line ->
+                val left = line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })
                 val metadata = metadata(line.text)
                 val headerRow = labelledRow(line.text, isHeader = ChordSheetProfile.isInHeader(index))
                 val bodyRow = labelledRow(line.text, isHeader = false)
@@ -62,7 +68,7 @@ internal data class LineFeatures(
                     metadata = metadata,
                     headerRow = headerRow,
                     bodyRow = bodyRow,
-                    look = ChordSheetLook.of(line.source, line.positions.getOrNull(line.text.indexOfFirst { c -> !c.isWhitespace() })),
+                    look = ChordSheetLook.of(line.source, left?.minus(columnStarts[line.source.column] ?: 0.0)),
                     isSung = !isWrapped[index] && sungWord.containsMatchIn(line.text),
                     isLabel = index != first && index != last && metadata == null && headerRow == null && bodyRow == null && isLabel(line, bodySize),
                     isWrapped = isWrapped[index],

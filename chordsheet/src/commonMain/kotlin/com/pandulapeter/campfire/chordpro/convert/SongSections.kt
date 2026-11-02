@@ -64,7 +64,7 @@ internal class SongSections {
         val opened = sectionLooks.first()
         // With no verse to compare with, plain type is the one look known to be the verses'.
         return if (sectionVerses.isEmpty()) (opened.isBold || opened.isItalic) && !look.isBold && !look.isItalic else {
-            isSetApart(sectionVerses, sectionLooks) && returnsToVerses(look, sectionVerses)
+            isSetApart(sectionVerses, sectionLooks) && returnsToVerses(look, sectionVerses, sectionLooks)
         }
     }
 
@@ -84,25 +84,48 @@ internal class SongSections {
 
     /**
      * Whether [section] is set apart from [verses]: its first lyric in another type, or two lyrics or more all starting
-     * further in (or out) than the edge the verses share. A lyric alone shows no edge, so one indented by accident
-     * sets nothing apart, and a centred sheet's verses share none.
+     * further in (or out) than the edge the verses share, by a character and a half, or by half a character where each
+     * side is set exactly to an edge of its own ([alignedEdges]). A lyric alone shows no edge, so one indented by
+     * accident sets nothing apart, and a centred sheet's verses share none.
      */
     private fun isSetApart(verses: List<ChordSheetLook>, section: List<ChordSheetLook>): Boolean {
         val verse = verses.last()
         if (section.first().differsInType(verse)) return true
         val edge = ChordSheetLook.sharedEdge(verses) ?: return false
         if (section.size < 2) return false
-        val margin = maxOf(section.maxOf { it.size }, verse.size) * 1.5
+        val size = maxOf(section.maxOf { it.size }, verse.size)
         val insets = section.map { it.left - edge }
-        return insets.all { it > margin } || insets.all { it < -margin }
+        if (insets.all { it > size * 1.5 } || insets.all { it < -size * 1.5 }) return true
+        val (verseEdge, sectionEdge) = alignedEdges(verses, section) ?: return false
+        return abs(sectionEdge - verseEdge) > size * 0.5
     }
 
-    /** Whether [look] is back in the verses' type and, where they share an edge, at it. */
-    private fun returnsToVerses(look: ChordSheetLook, verses: List<ChordSheetLook>): Boolean {
+    /**
+     * Whether [look] is back in the verses' type and, where they share an edge, at it: within a character and a half,
+     * and nearer it than the edge a section set in by less ([alignedEdges]) holds its own lines to, where that
+     * is more than half a character away.
+     */
+    private fun returnsToVerses(look: ChordSheetLook, verses: List<ChordSheetLook>, section: List<ChordSheetLook>): Boolean {
         val verse = verses.last()
         if (look.differsInType(verse)) return false
         val edge = ChordSheetLook.sharedEdge(verses) ?: return true
-        return abs(look.left - edge) <= maxOf(look.size, verse.size) * 1.5
+        if (abs(look.left - edge) > maxOf(look.size, verse.size) * 1.5) return false
+        val (verseEdge, sectionEdge) = alignedEdges(verses, section) ?: return true
+        return abs(sectionEdge - verseEdge) <= maxOf(look.size, verse.size) * 0.5 || abs(look.left - verseEdge) < abs(look.left - sectionEdge)
+    }
+
+    /**
+     * The edges [verses] and [section] are each set exactly to, within a tenth of a character, all in one size: a sheet
+     * that sets a chorus in by less than a character holds every line of both to its edge in the same type, which a
+     * lyric's own unevenness, a line typed a space out of place, and a title or a credit standing before the first
+     * section do not.
+     */
+    private fun alignedEdges(verses: List<ChordSheetLook>, section: List<ChordSheetLook>): Pair<Double, Double>? {
+        val size = section.first().size
+        if ((verses + section).any { !ChordSheetProfile.isSameSize(it.size, size) }) return null
+        val verseEdge = ChordSheetLook.sharedEdge(verses, within = 0.1) ?: return null
+        val sectionEdge = ChordSheetLook.sharedEdge(section, within = 0.1) ?: return null
+        return verseEdge to sectionEdge
     }
 
     /**
