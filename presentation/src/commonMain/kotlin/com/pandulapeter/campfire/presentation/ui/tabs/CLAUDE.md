@@ -8,16 +8,15 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 
+
 # :presentation — ui/tabs
 
-Tabs follow the instrument.
+Tabs follow the instrument; how a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
 
-- This package builds the `TabPlayer` and its notice text; `SongRenderer.transposedSong` applies them.
-- Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else the
-  guitar's. How a tab is moved, and which staffs get a notice, is `chordpro/tabs/CLAUDE.md`'s.
-- Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8) — unless its
+- Of multi-instrument tabs the player sees theirs, falling back (7/8/12-string → guitar, 5-string bass → bass), else
+  the guitar's.
+- Staff instrument: its selector, else the player's if string counts match, else bass (4–5) / guitar (6–8), unless its
   string names are another instrument's open strings (`A E C G` → ukulele).
 - Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
-- Details screen and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
-  button writes an empty staff in standard tuning (see `screens/songEditor/toolbar/CLAUDE.md`), stored in standard
-  notation on Save.
+- Details and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
+  button's staff is stored in standard notation on Save.

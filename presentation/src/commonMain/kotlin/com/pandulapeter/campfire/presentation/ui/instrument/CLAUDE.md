@@ -8,46 +8,34 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 
+
 # :presentation — ui/instrument
 
-One instrument for the whole app.
+One instrument for the whole app, with a tuning per instrument. This package is the one place joining `:data:model`'s
+instruments, the tuner's tunings, and `:chordpro`'s shapes; every caller goes through it. The scales read the tuning's
+strings directly (every stringed instrument, not only the five with shapes).
 
-- `UserPreferences.instrument` plus a tuning per instrument in `UserPreferences.tunings`. Diagrams, tuner, scales, and
-  the chord names (the keyboard's always sound) read it. The scales read `InstrumentTuning.strings` directly (every stringed instrument, not
-  only the five with shapes), as the tuner, the tab retuning, and the tuning names do.
-- This package is the one place joining `:data:model`'s instruments, the tuner's tunings, and `:chordpro`'s shapes;
-  every caller goes through it.
-- Picked by one `InstrumentPill` of two halves split by a divider (the tuning half only for an instrument with more than
-  one), opening `InstrumentSheet` / `TuningSheet`. No chevrons, one line (the tuning's name is cut short first, down to
-  40% of the pill, then the instrument's: `tuningHalfMaxWidth`; on a tool's line with trailing controls, the Tuner's
-  reference pitch or the tabs' capo, the pill takes the line to itself wherever it does not fit whole beside them:
-  `pillSharesLine`), and everywhere drawn exactly `songControlHeight` of its text style, so on a song it matches the
-  transposition stepper, and touched 48 dp tall (Compose's minimum touch target). It stands on the song details first
-  section (read only included, since it changes a device preference), the Tuner, the Chords, and the Scales tabs, and
-  the onboarding; never Settings. Other is what the tuner reads every note for, so the Tuner leaves its Strings /
-  Chromatic toggle out for it.
-- **The twelve-string is the guitar to everything but the tuner** (`Instrument.isTwelveString`): guitar tunings and
-  shapes, its own tuning pick, and the tuner hears each course's second string (`Instrument.courses`). So a tuning names
-  no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
+- `InstrumentPill`: two halves (the tuning half only for an instrument with more than one), no chevrons, one line: the
+  tuning's name is cut first, down to 40% of the pill, then the instrument's; on a tool's line with trailing controls
+  the pill takes the line to itself wherever it does not fit whole beside them (`pillSharesLine`). Always exactly
+  `songControlHeight`, matching the transposition stepper, touched 48 dp tall. On the song's first section (read only
+  included, since it changes a device preference), Tuner, Chords, Scales, and onboarding; never Settings.
+- Other is what the tuner reads every note for, so the Tuner leaves its Strings / Chromatic toggle out for it.
+- **The twelve-string is the guitar to everything but the tuner**, which hears each course's second string. So a
+  tuning names no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.
 
-## The tools' capo
+### The tools' capo
 
-- `UserPreferences.toolCapo`: one capo for the Chords and the Scales tabs, a device preference like the instrument
-  (local, never synced or exported), within `Song.CAPO_RANGE`, never touching a song's. Same meaning as a song's: names
-  stay as they sound, shapes are fingered above it, necks veiled below it.
-- `ToolCapoControls`, the song's `CapoControls` after its "Capo" label, is the trailing control of each tab's
-  `ToolInstrumentSetting`, placed right after the pill (`isTrailingAfterPill`; the Tuner's stays at the line's end) and
-  sliding under it, to the line's start, where the pill does not fit whole beside it (a 360 dp phone in most
-  languages; `pillSharesLine`, `toolLineTrailingX`). The line always measures one trailing child (a `Box`), so a
-  hidden capo, which emits nothing, keeps its height; it keeps the room of the bar's height above the pill but none
-  under it (`hasRoomUnder`), as a line without controls. Hidden (faded and folded) where the tab draws nothing it
-  changes: `chordLibraryCapo` (keyboard, no shapes) and `scaleLibraryCapo` (keyboard, Other, violin, no strings), both
-  tested; the value is kept.
+- `UserPreferences.toolCapo`: one capo for the Chords and Scales tabs, device-local like the instrument, never touching
+  a song's. Same meaning as a song's: names as they sound, shapes fingered above it, necks veiled below it.
+- Placed right after the pill (the Tuner's reference pitch stays at the line's end), sliding to the line's start under
+  it where the pill does not fit whole beside it (a 360 dp phone in most languages). The line always measures one
+  trailing child, so a hidden capo keeps its height (room above the pill, none under). Hidden (faded and folded) where
+  the tab draws nothing it changes (`chordLibraryCapo`, `scaleLibraryCapo`, tested); the value is kept.
 
-## How a song is played on the keyboard
+### The keyboard
 
-- The keyboard takes no capo (`playsWithoutCapo`, whatever the Chord diagrams switch says): its chords are always named
-  as they sound, whatever Chord names with a capo says (that row is disabled while it is picked), and its diagrams are
-  the sounding chords themselves, the effective capo counted in, since every capo is pitch. It still shows the capo
-  stepper and the capo line, a capo raising the band's pitch (see `ui/playing/CLAUDE.md`), except where the reader keeps
-  the key, when a capo changes nothing for it (`isCapoShownFor`). The PDF follows the screen.
+- Takes no capo (`playsWithoutCapo`): its chords are always named as they sound (the Chord names row is disabled
+  for it), its diagrams the sounding chords, the effective capo counted in. It still shows the capo stepper and line, a
+  capo raising the band's pitch, except where the reader keeps the key, when a capo changes nothing for it. The PDF
+  follows the screen.

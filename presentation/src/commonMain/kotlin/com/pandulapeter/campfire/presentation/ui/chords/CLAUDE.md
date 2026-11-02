@@ -8,108 +8,84 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 
+
 # :presentation — ui/chords
 
-Chord diagrams (`ui/chords/`, `songView/SongChordsSection.kt`, `dialogs/instrument/ChordShapeSheet.kt`). Nothing is
-shipped or fetched: `:chordpro` reads what notes a name means (`ChordProChords`) and finds shapes (`ChordVoicings`: a
-hand-typed table first, a search for the rest).
+Chord diagrams. Nothing is shipped or fetched: `:chordpro` reads what notes a name means and finds shapes (a hand-typed
+table first, a search for the rest).
 
-## Which instruments
+### Instruments
 
-Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams. Seven- and
-eight-string guitars, basses, violin, and Other draw none, as if the Chord diagrams switch were off. The instrument and tuning
-pill heads the song's first section for every song with chords, even an instrument without shapes, so the diagrams can
-be brought back (`RenderSection.Metadata.instrumentPill`).
+- Guitar (and the twelve-string, drawn as a guitar), ukulele, mandolin, banjo, and keyboard draw diagrams; the rest
+  draw none, as if Chord diagrams were off. The instrument pill heads the first section of every song with chords, even
+  an instrument without shapes, so the diagrams can be brought back.
+- **A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the sounding chord (notes,
+  degree, scales), named as it sounds or, where the reader names shapes, as its shape (key headings too);
+  `shapeChord` is the shape played above the capo, by which a shape is looked up, picked, and stored. A `{define}` is
+  moved down by the capo as a transposition moves one, so a file's shape comes back to where it was written under any
+  capo, moved by the reader's transposition alone.
+- The diagram draws the shape where it is played, frets numbered from the nut; the capo is a muted bar across the
+  window's first row where the shape sits right above it, its open strings ringed on the bar (they ring at the capo),
+  bar and string clipped out inside each ring so the card or page shows through; outside the window where it is higher.
+  The keyboard has no capo.
 
-**A chord is drawn as it is fingered** (`ui/playing/CLAUDE.md`): `SongChord.chord` is the
-sounding chord (its notes, degree, and scales), named as it sounds or, where the reader names shapes, as its shape
-(`namedAsShapes`, `SongChord.nameCapo`, matched by notes from the song moved down by the capo; key headings too), `shapeChord` the shape played above `capo` (`songChordsOf`'s `capo`), which
-a shape is looked up, picked, and stored by. A `{define}` is moved down by the capo as a transposition moves one, so a
-file's shape comes back to where it was written under any capo, moved by the reader's transposition alone. `ChordDiagramGeometry`
-draws the shape where it is played, frets numbered from the nut, the capo a muted bar across the window's first row
-(`capoRow`) where the shape sits right above it, its open strings ringed on the bar (they ring at the capo) as over the
-nut without one, the bar and string clipped out inside each ring so the card (or the PDF's page) shows through, outside
-the window where it is higher (the rings then over the window). The keyboard has no capo.
+### Which shape a chord is drawn with (`selectShape`, tested)
 
-## Which shape a chord is drawn with
+1. The song's own `{define}` / `{chord}` for that instrument (and tuning, below).
+2. The player's choice, **one per chord and instrument for the whole library** (a habit of the hands, not a reading of
+   one song), under the tuning's key, stored as the shape rather than its index and keyed by the chord's notes so every
+   spelling shares it; synced. Used only while it still reads as a shape of that instrument.
+3. The app's first shape.
 
-`selectShape` (`ChordSelection.kt`, tested), by `shapeChord`, in order:
-
-1. The song's own `{define}` / `{chord}` for that instrument (and tuning, below). 2. The player's choice, **one per
-chord and instrument for the whole library** (a habit of the hands, not a reading of one song):
-`UserPreferences.chordVoicings` under the tuning's `voicingKey`, stored as the shape rather than its index and keyed by
-the chord's notes so every spelling shares it; synced. Used only while it still reads as a shape of that instrument. 3.
-The app's first shape.
-
-Definitions:
-
-- One for another instrument is neither used nor translated (a guitar shape is another chord on a ukulele); which
-  instrument a definition is for, and how a banjo's is drawn, is `ChordProDefinitions`' (see `chordpro/voicings/CLAUDE.md`).
-- A definition follows its chord through every transposition (the reader's, the file's `{transpose}`, the editor's
-  transpose action) in whichever octave a hand can hold; one left needing a fifth finger gives way to the player's
-  shape.
+- A definition for another instrument is neither used nor translated (a guitar shape is another chord on a ukulele;
+  `chordpro/voicings/CLAUDE.md`).
+- A definition follows its chord through every transposition in whichever octave a hand can hold; one left needing a
+  fifth finger gives way to the player's shape.
 - **A definition is a standard tuning shape**: ChordPro gives `{define}` no tuning, so it is drawn only where a standard
-  shape sounds right (`ChordTuning.drawsDefinitions`), else kept as `SongChord.undrawnDefinition` and offered behind a
-  button in the chord's sheet.
+  shape sounds right, else offered behind a button in the chord's sheet.
 
-## Tunings
+### Tunings
 
-- One tuning per instrument (`UserPreferences.tunings`, device-only), written by `withTuning`, read by `tuningOf` /
-  `chordTuning()` in `ui/instrument/Instruments.kt`; an unknown or foreign id is standard.
-- A `ChordTuning` is the tuner's `InstrumentTuning` of the same id (`ui/instrument/InstrumentsTest` holds them together,
-  strings included): **every tuning the tuner knows for an instrument with shapes is one the diagrams know**.
-- **A chord name always names the chord that sounds**: half step down, an A is drawn `x 1 3 3 3 1`; roots are read
-  against the tuning's own strings. Player choices made in a tuning are kept under its own key.
-- On a tuning change the page keeps its cells until chords are re-collected for the new tuning off the main thread, so
-  it crossfades once, never drawing old shapes on new strings.
-- `PreferencesController` reads the player's tuning's table off the main thread, ahead of the first song's first page.
+- One tuning per instrument, device-only; an unknown or foreign id is standard. **Every tuning the tuner knows for an
+  instrument with shapes is one the diagrams know** (`InstrumentsTest`, strings included).
+- **A chord name always names the chord that sounds**: half step down, an A is drawn `x 1 3 3 3 1`. Player choices made
+  in a tuning are kept under its own key.
+- On a tuning change the page keeps its cells until chords are re-collected off the main thread, so it crossfades once,
+  never drawing old shapes on new strings. The player's tuning's table is read ahead of the first song's first page.
 
-## The Chords section
+### The Chords section
 
-- **Grouped by key** (`groupedByKey`, tested): where the chords are in more than one key, the home key's first, then
-  each key a key change reaches, in the order reached, every group (the home's too) starting a row of its own under a
-  "Key: A♭" line set as a label, not as a chord (`ChordCellLayouts.headings`, part of its row's slot; the PDF's too). On with or without degrees, never in a songbook.
-- `songChordsOf` (tested): every chord once however spelled, in first-played order, read from the song *before* notation
-  is applied (a numbering's step means nothing without its stretch's key), named as the page names it
-  (`ChordProNotation.shownNames`). **More than 48 chords (`MAX_SONG_CHORDS`) is a songbook and gets no section.**
-- A page's first model is built in place without the shapes only the search finds (`isShapePending`, empty frame); those
-  follow from `Dispatchers.Default` (`withSearchedShapes`), keeping the same sections so only the Chords section
-  re-measures.
-- **Cut between rows like any section**: drawn as slots (`chordSlotCount`, `ChordRows.kt`, tested), each holding the row
-  its index names at the measured width, the last holding the rest.
-- Rows are balanced (`balancedRowStarts`: nine where six fit is five over four); the PDF breaks rows the same way.
-- **Each cell names its chord's degree** after it, as a numbering's letters follow its step (`SongChord.degree`,
-  `withDegrees`, tested), in Roman notation's numerals (`ChordProNotation.romanNumeral`: `V7`, `♭VII`), counted against
-  `chordKeysOf`: the scale suggestions' home key, else the sounding `{key}` read by the one capo chart rule
-  (`SongKeys.ofChords`), else none. A chord first played after a key change, directed or written out (a verse played
-  again a minor third up), is counted from the key it moved to (`ChordKeys`, `SongKeys.keysOfChords`), as a numbering
-  names it; a chromatic chord by its step (`II7`, never `V/V`); none in a numbering. Either second name stands on a line over the name, as the scale sheet's
-  numerals do (three quarters of its size, normal weight), a line every cell keeps where any has one. Only this
-  section and the PDF's diagrams: lyrics and the chord sheet keep their names. Chord
-  degrees (on by default) takes it.
-- Folded per song (`CHORDS_FOLD_KEY` in `UserPreferences.foldedSections`), read only mode included.
-- **Every cell opens its chord's sheet** outside read only mode, an import preview's too (the sheet reads its text,
-  `DialogType.ChordShape.previewText`), hit-tested by `chordCellAt` (tested). The press highlight waits for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap
-  is consumed so it doesn't also turn the page. A screen reader gets one custom action per cell.
-- A cell whose chord changes shape (picked, retuned, a capo moved) crossfades (`ChordShapeCrossfade.kt`, `changedShapeCells` tested);
-  a searched shape arriving into the empty frame, or a cell that is now another chord, does not.
-- `ChordDiagramGeometry` (pure, tested) draws the shape: at least four frets, up to 24; the root in the second accent; a
-  keyboard of two to four octaves.
+- **Grouped by key** (`groupedByKey`, tested): where chords are in more than one key, the home key's first, then each
+  key a key change reaches in order, every group starting a row under a "Key: A♭" line set as a label, not a chord (the
+  PDF's too). With or without degrees, never in a songbook.
+- Every chord once however spelled, in first-played order, read *before* notation is applied (a numbering's step means
+  nothing without its key), named as the page names it. **More than `MAX_SONG_CHORDS` (48) is a songbook: no section.**
+- A page's first model is built without the shapes only the search finds (empty frames); those follow off the main
+  thread, keeping the same sections so only the Chords section re-measures.
+- **Cut between rows like any section** (slots, `ChordRows.kt`, tested). Rows are balanced (nine where six fit is five
+  over four), the PDF's too.
+- **Each cell names its chord's degree** in Roman numerals (`V7`, `♭VII`), counted from the scale suggestions' home,
+  else the sounding `{key}` by the capo chart rule, else none. A chord first played after a key change, directed or
+  written out, counts from the key it moved to, as a numbering names it; a chromatic chord by its step (`II7`, never
+  `V/V`); none in a numbering. The degree stands on a line over the name (three quarters size, normal weight), a line
+  every cell keeps where any has one. Only here and the PDF's diagrams: lyrics and the chord sheet keep their names.
+- Folded per song (`CHORDS_FOLD_KEY`), read only mode included.
+- **Every cell opens its chord's sheet** outside read only mode (an import preview's too). The press highlight waits
+  for the tap timeout (immediate for a mouse), so a scroll started on a diagram never lights it; the tap is consumed so
+  it doesn't turn the page. A screen reader gets one custom action per cell.
+- A cell whose chord changes shape (picked, retuned, capo moved) crossfades; a searched shape arriving into an empty
+  frame, or a cell now another chord, does not.
+- Diagrams: at least four frets, up to 24; the root in the second accent; a keyboard of two to four octaves.
 
-## The chord sheet
+### The chord sheet
 
-`ChordShapeSheet` (`DialogType.ChordShape`) finds the chord by name in the song as the page plays it, and closes if it
-is gone.
-
-- Shapes are searched before the sheet opens, so it slides up whole; a stored shape the app doesn't list goes first.
-- A tap writes the player's choice at once; picking the app's first shape removes the entry. No reset button.
-- A chord the song defines shows its definition alone, not pickable.
-- Under a capo the title names the chord as the page does, a line under it the shape and the capo (`G shape, capo 2`),
-  or what it sounds as where the title names the shape (`Sounds as A, capo 2`), the capo alone in a numbering, and every shape is drawn above the capo; a pick is the player's shape for the shape's chord.
-  Its scales open the scale sheet with the capo. The Chords tab's sheet (`ChordReferenceSheet`) does the same under the
-  tabs' capo (`capoLine`, shared).
-- Both chord sheets end in the scales built on the chord's root that hold its tones (`ScaleChipRow`), root
-  as the chord spells it, while Scales is on; a chip opens the scale sheet over the chord's.
-  **One hop only**: a chord sheet opened from a scale sheet offers no scales (`ChordReference.showsScales`), and a scale
-  sheet opened from a chord sheet no chords (`DialogType.Scale.showsChords`), so the two never chain.
-- Chord sheets offer scales only while Scale suggestions is on (`FeatureSwitches.areScaleSuggestionsEnabled`).
+- Finds the chord by name in the song as the page plays it, and closes if it is gone. Shapes are searched before it
+  opens, so it slides up whole; a stored shape the app doesn't list goes first.
+- A tap writes the player's choice at once; picking the app's first shape removes the entry. No reset button. A chord
+  the song defines shows its definition alone, not pickable.
+- Under a capo the title names the chord as the page does, a line under it the shape and capo (`G shape, capo 2`) or
+  what it sounds as where the title names the shape (`Sounds as A, capo 2`), the capo alone in a numbering; every shape
+  is drawn above the capo, a pick stored for the shape's chord. Its scales open with the capo. The Chords tab's sheet
+  does the same under the tabs' capo.
+- Both chord sheets end in the scales on the chord's root holding its tones, while Scales and Scale suggestions are on.
+  **One hop only**: a chord sheet from a scale sheet offers no scales, a scale sheet from a chord sheet no chords.
