@@ -294,7 +294,8 @@ size checks, and compiles every platform (iOS on macOS) on every PR, on every pu
   `check_store_listings.py`, limits in each listing's headings) so a commit never leaves them to CI, and
   refuses a `CLAUDE.md` line naming a backticked class or path the code lacks (`check_doc_names.py`) and a regex
   brace only the JVM accepts (`check_regexes.py`: Android's ICU wants `\{` and `\}` outside a count) and the deletion of
-  `.run/iOS.run.xml`, which the IDE drops now and then; with Kotlin staged it also runs `spotlessCheck`.
+  `.run/iOS.run.xml`, which the IDE drops now and then; with more than Markdown staged it also runs `spotlessCheck`
+  and `desktopTest`.
 - `.run/` holds the IDE-written run configurations (no license header, the IDE would drop it).
 
 Commands:

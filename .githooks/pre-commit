@@ -23,8 +23,9 @@ if git diff --cached --name-only --diff-filter=D | grep -qx '.run/iOS.run.xml'; 
     echo "The commit deletes .run/iOS.run.xml; restore it with git restore --staged --worktree .run/iOS.run.xml." >&2
     exit 1
 fi
-# Spotless needs Gradle, a few seconds with a warm daemon, so it runs only when Kotlin is staged. It checks the working
-# tree, which is what the staged files are unless a commit stages part of a file.
-if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.kts?$'; then
-    ./gradlew spotlessCheck --quiet
+# Spotless and the unit tests need Gradle, so they run only when the commit stages more than Markdown. Gradle reruns only
+# the modules a change reaches: a few seconds when none, under a minute for :presentation. Both read the working tree,
+# which is what the staged files are unless a commit stages part of a file. The UI tests take minutes and stay in CI.
+if git diff --cached --name-only --diff-filter=ACMRD | grep -qvE '\.md$'; then
+    ./gradlew spotlessCheck desktopTest --quiet
 fi
