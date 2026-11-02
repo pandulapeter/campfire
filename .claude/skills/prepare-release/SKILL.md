@@ -312,16 +312,12 @@ Mirror the existing releases:
   the editor's auto save being taken out.
 - **Always end the visible notes with the store badges**, after the bullets and a blank line, exactly as the README's
   "Get Campfire" section has them but with each image's address made absolute (a release body does not resolve the
-  README's relative paths). Copy them from `README.md` when writing the draft, so a store added or moved there is
-  carried over; as of this writing they are:
+  README's relative paths), all on one line, separated by single spaces, so they render side by side rather than one
+  under another. Copy them from `README.md` when writing the draft, so a store added or moved there is carried over;
+  as of this writing they are:
 
   ```html
-  <a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a>
-  <a href="https://apps.apple.com/app/id6815160850"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_ios.png" alt="Campfire for iOS and iPadOS" height="32px" /></a>
-  <a href="https://apps.apple.com/app/id6815160850"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
-  <a href="https://apps.microsoft.com/detail/9MSR62F288M1"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
-  <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
-  <a href="https://campfire-songbook.com/app/"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
+  <a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a> <a href="https://apps.apple.com/app/id6815160850"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_ios.png" alt="Campfire for iOS and iPadOS" height="32px" /></a> <a href="https://apps.apple.com/app/id6815160850"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a> <a href="https://apps.microsoft.com/detail/9MSR62F288M1"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a> <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a> <a href="https://campfire-songbook.com/app/"><img src="https://raw.githubusercontent.com/pandulapeter/campfire/master/documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
   ```
 
 ## Style — the store "what's new"
