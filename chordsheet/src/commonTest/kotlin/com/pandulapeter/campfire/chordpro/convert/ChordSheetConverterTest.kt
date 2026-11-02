@@ -1836,4 +1836,14 @@ class ChordSheetConverterTest {
         assertTrue(convert("Lyrics and music: Somebody Else").startsWith("{title: Hello}\n{artist: Somebody Else}\n\n"))
         assertTrue(convert("Music by Somebody Else").startsWith("{title: Hello}\n{artist: Somebody Else}\n\n"))
     }
+
+    @Test
+    fun `a line between the title and the song's key row is its artist, however long`() {
+        val lines = listOf(ChordSheet.Line(listOf(span("Hello", 0.0, 10.0, size = 2.0, bold = true)))) +
+            ChordSheet.ofPlainText("The Band With A Long Name\nKey: C\n\nAm    C\nHello world").pages.single().lines
+        assertEquals(
+            "{title: Hello}\n{key: C}\n{artist: The Band With A Long Name}\n\n[Am]Hello [C]world\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
 }
