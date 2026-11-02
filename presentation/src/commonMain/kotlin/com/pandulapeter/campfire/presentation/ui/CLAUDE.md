@@ -15,9 +15,12 @@ The view model facade, the composition root, and the product rules every screen 
 ## `CampfireViewModel`
 
 - State lives in plain `internal` holders it builds (not Koin definitions), each taking `viewModelScope`, its use cases,
-  and narrow lambdas for the holders it calls, so no cycles. **Construction order is behaviour**: holders are declared,
-  their `init` collectors started, and cross-holder listeners (`Navigator.addOnBackStackChanged`,
-  `DialogHost.addBeforeDialogChange` / `addAfterDialogChange`) registered in a fixed order.
+  and narrow lambdas for the holders it calls, so no cycles. Holders start their own collectors in one `init` at the end
+  of their class body and are built so that nothing they start reaches a holder built later; a listener that only calls
+  its own holder is registered by it. The cross-holder lifetime rules are policies registered in the view model in one
+  place, in the dialog host's and the navigator's `apply`: `SoundLifetime` (sound and listening end with their screen)
+  and `ModeEndings` (a mode ends with its screen). The starts still in the view model's `init` need a holder built after
+  theirs, wait on its arguments, or are what its tests start by hand (`EditorSession.startRecovery`).
 - **Every state is `stateIn(viewModelScope, Eagerly)`**, never started by its first collector, which would show its
   initial value for a frame and animate the real one in. Several (`syncState`, `userPreferences`, `setlists`,
   `hasUnsavedEditorChanges`, `isSyncing`) are also acted on and must not go stale.

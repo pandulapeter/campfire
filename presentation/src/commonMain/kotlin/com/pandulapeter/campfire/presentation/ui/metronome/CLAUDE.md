@@ -17,7 +17,8 @@ hands it complete patterns. Where a tempo is stored: `ui/playing/`.
 ### The click belongs to the screen it is played from
 
 Only the Metronome tab and song details play one. **A click never outlives the screen it was started on**, so nothing
-ever plays with no way on screen to stop it. Three rules stop it, and they are the whole lifecycle:
+ever plays with no way on screen to stop it. Three rules stop it, and they are the whole lifecycle (the first two are
+`SoundLifetime`'s):
 
 - `updateBackStack`: whenever the top is neither a song nor the Metronome tab (the editor over a song, a song closed or
   deleted, a tab selected, a song opened over the tab or another song).

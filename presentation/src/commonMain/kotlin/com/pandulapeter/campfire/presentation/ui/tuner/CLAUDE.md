@@ -17,10 +17,10 @@ What the Tuner tab and song details' tuner sheet share.
 
 - Listens for the player's instrument and tuning (the keyboard and Other read every note) plus the reference pitch,
   following changes made on any screen. `hasTurnedOnMicrophone` is device-only, never exported or synced.
-- **Nothing of the tuner outlives its screen**: the view model stops it whenever the top of the back stack changes,
-  whenever the tuner sheet stops being the visible dialog, and on exit; `TunerListeningEffect` follows the screen's
-  lifecycle (app hidden, screen locked, required update drawn over), so the recording indicator is lit exactly while a
-  tuner shows.
+- **Nothing of the tuner outlives its screen** (`metronome/SoundLifetime.kt`): it stops whenever the top of the back
+  stack changes, whenever the tuner sheet stops being the visible dialog, and on exit; `TunerListeningEffect` follows
+  the screen's lifecycle (app hidden, screen locked, required update drawn over), so the recording indicator is lit
+  exactly while a tuner shows.
 - The scale sheet's play steps through its notes as tones, each replacing the last; it ends with its sheet and with
   `stopTuner`; a note the platform refuses ends the run.
 
