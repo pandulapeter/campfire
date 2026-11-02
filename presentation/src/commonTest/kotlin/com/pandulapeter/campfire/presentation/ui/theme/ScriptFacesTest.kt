@@ -28,6 +28,14 @@ class ScriptFacesTest {
     }
 
     @Test
+    fun `the runs of a script are its words alone and keep an emoji's surrogate pair out whole`() {
+        assertEquals(listOf(11..16), hebrew.runsIn("Hallelujah הללויה"))
+        assertEquals(listOf(0..2, 4..6, 10..11), hebrew.runsIn("הבה נגי 🎸שׁ!"))
+        assertEquals(emptyList(), hebrew.runsIn("Kalinka 🎸"))
+        assertEquals(emptyList(), hebrew.runsIn(""))
+    }
+
+    @Test
     fun `a library needs the faces of the scripts its texts use and of the languages it is written in`() {
         assertEquals(setOf(hebrew), scriptFacesNeededBy(languages = listOf("en"), texts = sequenceOf("Hava Nagila", "הבה נגילה")))
         assertEquals(setOf(hebrew), scriptFacesNeededBy(languages = listOf("en", "yi"), texts = emptySequence()))

@@ -13,13 +13,14 @@ https://mozilla.org/MPL/2.0/.
 Reviewed at `c7807015a`; the angle and the full record are in the `54th-review` memory and in git history
 (`0b7e5c0a0..6c1d50019`, 38 commits). Executed on 2026-11-02: plans 03, 05, 08, 10, 11, 12, 13, 14, 15, 16, and 20
 landed, and 06 landed without `ChordSheetLook`'s per-column inset (it needed a field on `Rendered`, which the plan
-forbids). The plans below stopped where the plan itself was wrong or the lane ran out of room; none of them was
-improvised past that point.
+forbids). Plan 02's step 2 landed later with the Hebrew face read through an expect/actual `scriptFontFamilies()`
+(Compose resources' `Font` on Android, desktop, and iOS, `preloadFont` on the web, the only target that has it) rather
+than `preloadFont` from `commonMain`. The plans below stopped where the plan itself was wrong or the lane ran out of
+room; none of them was improvised past that point.
 
 | # | Plan | Landed | Why it stopped |
 |---|---|---|---|
 | 01 | Replace the Linux-only golden renders | steps 1–3 | Step 4(a) expects "There is a house in New Orleans" on the demo song's first screen at 360 × 640 dp; it comes after Chords, Scales, Picking pattern, and Intro, off the first page. Steps 5–7 wait on a corrected step 4. |
-| 02 | Make the unit tests independent of the host | step 1 | Step 2 reads the Hebrew face with `preloadFont` from `commonMain`, but Compose resources 1.12.2 has it only in `webMain`; it needs an expect/actual the plan does not describe. |
 | 07 | Restructure the converter into explicit stages | steps 1–2 | Step 3: `writeBody` / `BodyWriter` decide by what they already wrote, through private helpers on the private `Rendered`; reaching the nested `Song` / `Part` model byte-identically is a redesign the plan does not spell out. Steps 7–8 need Campfire exports in the corpus (no `campfire/` folder yet). Corpus score unchanged at 0.778. |
 
 Plan 13 left these starts in `CampfireViewModel`'s `init`, each needing a reorder or a parameter the size check refuses:

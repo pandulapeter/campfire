@@ -30,8 +30,11 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.formats.document.PdfTextExtractor
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.allFontResources
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.theme.scriptFaces
 import org.w3c.dom.Element
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
@@ -50,6 +53,9 @@ class PdfRoundTripTest {
         measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr),
         monospaceFontFamily = bundledFontFamily("jetbrains_mono_regular" to FontWeight.Normal, "jetbrains_mono_bold" to FontWeight.Bold),
         textFontFamily = bundledFontFamily("inter_regular" to FontWeight.Normal, "inter_medium" to FontWeight.Medium, "inter_bold" to FontWeight.Bold),
+        scriptFontFamilies = scriptFaces.map { face ->
+            face to bundledFontFamily(Res.allFontResources.entries.single { it.value == face.font }.key to FontWeight.Normal)
+        },
     )
     private val songRenderer = testSongRenderer()
     private val labels = PrintLabels(
@@ -174,8 +180,8 @@ class PdfRoundTripTest {
         val failures = listOf("60-generated-rtl-10.cho", "60-generated-rtl-15.cho").flatMap { name ->
             val original = songRenderer.transposedSong(corpus.getValue(name), transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
             // At 15 points this song's two-chord row over a short Hebrew lyric prints like a line of chords alone over the
-            // next line, which the import tells apart by no measure but the rows' spacing, and that depends on the
-            // fallback font the platform draws Hebrew in; this print is the import's known limit, not compared.
+            // next line, which the import tells apart by no measure but the rows' spacing. The Hebrew is set in the bundled
+            // face, so every platform prints it the same; this print is the import's known limit, not compared.
             fontSizes.filterNot { name == "60-generated-rtl-15.cho" && it == 15 }.mapNotNull { fontSize ->
                 val expected = summary(original)
                 val actual = summary(roundTrip(original, PrintSettings(columns = PrintSettings.MAX_COLUMNS, fontSize = fontSize)))

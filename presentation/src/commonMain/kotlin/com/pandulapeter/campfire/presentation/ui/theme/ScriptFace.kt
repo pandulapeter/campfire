@@ -12,7 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.theme
 import org.jetbrains.compose.resources.FontResource
 
 /**
- * A face bundled for a script the app's own fonts lack, a row of [scriptFaces]. It is never asked for by name: it is
+ * A face bundled for a script the app's own fonts lack, a row of [scriptFaces]. It is never asked for by name, except by
+ * the print, which sets the script's characters in it ([runsIn]) so that a PDF is the same on every platform: it is
  * registered as a fallback of the text engine (see [ProvideScriptFaces]), so a character of [ranges] in any text, set in
  * Inter or in JetBrains Mono, in any language of the interface, is drawn from it wherever the platform has no face of
  * its own for that script.
@@ -38,20 +39,40 @@ internal class ScriptFace(
 
     /** Whether [text] holds a character of the script, which is what makes the face needed on the web. */
     fun isNeededFor(text: String): Boolean {
-        var index = 0
-        while (index < text.length) {
-            val high = text[index]
-            val codePoint = if (high.isHighSurrogate() && index + 1 < text.length && text[index + 1].isLowSurrogate()) {
-                index++
-                0x10000 + ((high.code - 0xD800) shl 10) + (text[index].code - 0xDC00)
-            } else {
-                high.code
-            }
-            if (ranges.any { codePoint in it }) return true
-            index++
-        }
+        forEachCodePoint(text) { _, _, codePoint -> if (ranges.any { codePoint in it }) return true }
         return false
     }
 
+    /** The runs of [text]'s characters of the script, as ranges of its indices, a surrogate pair always whole. */
+    fun runsIn(text: String): List<IntRange> {
+        val runs = mutableListOf<IntRange>()
+        var runStart = -1
+        forEachCodePoint(text) { start, end, codePoint ->
+            val isInScript = ranges.any { codePoint in it }
+            if (isInScript && runStart < 0) runStart = start
+            if (!isInScript && runStart >= 0) {
+                runs.add(runStart until start)
+                runStart = -1
+            }
+            if (isInScript && end == text.length) runs.add(runStart until end)
+        }
+        return runs
+    }
+
     override fun toString() = script
+}
+
+/** Calls [action] with every code point of [text] and the indices it starts at and ends before. */
+private inline fun forEachCodePoint(text: String, action: (start: Int, end: Int, codePoint: Int) -> Unit) {
+    var index = 0
+    while (index < text.length) {
+        val high = text[index]
+        if (high.isHighSurrogate() && index + 1 < text.length && text[index + 1].isLowSurrogate()) {
+            action(index, index + 2, 0x10000 + ((high.code - 0xD800) shl 10) + (text[index + 1].code - 0xDC00))
+            index += 2
+        } else {
+            action(index, index + 1, high.code)
+            index++
+        }
+    }
 }

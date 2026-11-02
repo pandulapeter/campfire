@@ -79,7 +79,9 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
 
 ### Renderer
 
-- The file is the preview at 216 dpi, same fonts. **The layout measures the advance a text is drawn with**
+- The file is the preview at 216 dpi, same fonts. A script's characters are spanned with its bundled face
+  (`scriptFontFamilies`), never left to the platform's fallback, so a PDF is the same on every platform.
+- **The layout measures the advance a text is drawn with**
   (`PrintRenderer.width`), never the layout's size, rounded up to a whole point: each padding space's rounding adds up,
   and a chord after a padded lyric would hang a letter late.
 - Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts are cached by page

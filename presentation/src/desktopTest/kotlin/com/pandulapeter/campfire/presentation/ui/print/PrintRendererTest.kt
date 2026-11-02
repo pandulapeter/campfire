@@ -13,12 +13,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.createFontFamilyResolver
+import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
@@ -28,6 +31,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.theme.scriptFaces
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -428,5 +432,22 @@ internal class PrintRendererTest {
             File(directory, "chord-diagrams.pdf").writeBytes(renderer.pdf(PrintDocument(595.276f, 841.89f, pages), "Chord diagrams"))
         }
         Unit
+    }
+
+    @Test fun `a Hebrew text and a mixed Hebrew and Latin one measure as laid out in the bundled Hebrew face`() {
+        val hebrew = scriptFaces.single { it.script == "Hebrew" }
+        val hebrewFamily = FontFamily(Font("noto_sans_hebrew_regular", File("src/commonMain/composeResources/font/noto_sans_hebrew_regular.ttf").readBytes()))
+        val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+        val renderer = PrintRenderer(measurer, scriptFontFamilies = listOf(hebrew to hebrewFamily))
+        val textStyle = TextStyle(fontFamily = FontFamily.Default, fontSize = 14.sp, fontFeatureSettings = "liga=0")
+        listOf("הבה נגילה", "Hava נגילה now").forEach { text ->
+            val spanned = buildAnnotatedString {
+                append(text)
+                hebrew.runsIn(text).forEach { addStyle(SpanStyle(fontFamily = hebrewFamily), it.first, it.last + 1) }
+            }
+            val layout = measurer.measure(spanned, textStyle, softWrap = false, density = Density(1f), layoutDirection = LayoutDirection.Ltr)
+            val boxes = text.indices.map { layout.getBoundingBox(it) }
+            assertEquals(boxes.maxOf { it.right } - boxes.minOf { it.left }, renderer.width(text, PrintStyle(14f)), text)
+        }
     }
 }

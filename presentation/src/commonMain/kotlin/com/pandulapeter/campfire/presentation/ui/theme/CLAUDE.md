@@ -78,7 +78,8 @@ files lack (⌘ is written "Cmd").
 
 - `ScriptFaces.kt` is the table of faces for scripts Inter lacks, a row each; `tools/fonts/script_faces.py` subsets an
   upstream file to its row's ranges, so another script is a row, a run, and its license credited. No code asks for a
-  script by name.
+  script by name. Only the print names the faces (`scriptFontFamilies`, `ScriptFace.runsIn`), so a PDF is the same on
+  every platform; the web holds the layout until they are fetched, five seconds at most.
 - `ProvideScriptFaces` registers them as **fallbacks** of Skia's font collection. Skia asks the platform's fonts first,
   so the bundled face is what the web and a Linux desktop without one draw; it takes a fallback by character alone, the
   first registered face having it whatever the weight, so only Regular is bundled and no two rows may share a character

@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
 import com.pandulapeter.campfire.presentation.ui.notation.drawNotationSystem
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
+import com.pandulapeter.campfire.presentation.ui.theme.ScriptFace
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
@@ -49,12 +50,15 @@ import kotlin.math.ceil
 
 /**
  * Draws and measures the texts of a [PrintDocument]. [textFontFamily] is the face the viewer sets lyrics in, and
- * [monospaceFontFamily] the one of its tablature and grids, so that the page reads like the screen.
+ * [monospaceFontFamily] the one of its tablature and grids, so that the page reads like the screen. Every character of a
+ * script of [scriptFontFamilies] is set in that script's bundled face rather than in whatever face the platform's text
+ * engine falls back to, so that a PDF is the same on every platform.
  */
 internal class PrintRenderer(
     private val measurer: TextMeasurer,
     private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
     private val textFontFamily: FontFamily = FontFamily.Default,
+    private val scriptFontFamilies: List<Pair<ScriptFace, FontFamily>> = emptyList(),
 ) {
     /** The engraved tunes' outlines and words, laid out in [textFontFamily] in PDF points as the texts are. */
     private val notationPainter = NotationPainter(
@@ -81,7 +85,7 @@ internal class PrintRenderer(
     )
 
     private fun text(value: String, style: PrintStyle, formatting: List<Formatting> = emptyList()) = measurer.measure(
-        text = if (formatting.isEmpty()) AnnotatedString(value) else value.withSpans(formatting),
+        text = value.withSpans(formatting, scriptFontFamilies),
         style = style.toTextStyle(),
         softWrap = false,
         density = Density(1f, 1f),
@@ -265,15 +269,21 @@ internal class PrintRenderer(
     }
 }
 
-private fun String.withSpans(formatting: List<Formatting>) = buildAnnotatedString {
-    append(this@withSpans)
-    formatting.forEach { range ->
-        val span = when (range.style) {
-            Formatting.Style.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
-            Formatting.Style.ITALIC -> SpanStyle(fontStyle = FontStyle.Italic)
-            Formatting.Style.UNDERLINE -> SpanStyle(textDecoration = TextDecoration.Underline)
+/** The text with its formatting spans and, over each run of a script's characters, that script's face. */
+private fun String.withSpans(formatting: List<Formatting>, scriptFontFamilies: List<Pair<ScriptFace, FontFamily>>): AnnotatedString {
+    val scriptRuns = scriptFontFamilies.flatMap { (face, fontFamily) -> face.runsIn(this).map { it to fontFamily } }
+    if (formatting.isEmpty() && scriptRuns.isEmpty()) return AnnotatedString(this)
+    return buildAnnotatedString {
+        append(this@withSpans)
+        formatting.forEach { range ->
+            val span = when (range.style) {
+                Formatting.Style.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
+                Formatting.Style.ITALIC -> SpanStyle(fontStyle = FontStyle.Italic)
+                Formatting.Style.UNDERLINE -> SpanStyle(textDecoration = TextDecoration.Underline)
+            }
+            addStyle(span, range.start, range.end)
         }
-        addStyle(span, range.start, range.end)
+        scriptRuns.forEach { (run, fontFamily) -> addStyle(SpanStyle(fontFamily = fontFamily), run.first, run.last + 1) }
     }
 }
 

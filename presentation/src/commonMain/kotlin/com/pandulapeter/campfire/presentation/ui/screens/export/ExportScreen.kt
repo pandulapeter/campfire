@@ -54,12 +54,7 @@ import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -89,7 +84,7 @@ import com.pandulapeter.campfire.presentation.ui.print.withinFeatures
 import com.pandulapeter.campfire.presentation.ui.share.StopSharingConfirmation
 import com.pandulapeter.campfire.presentation.ui.share.shareTargetOf
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabNoticeLabels
-import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
+import com.pandulapeter.campfire.presentation.ui.theme.scriptFontFamilies
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -123,16 +118,10 @@ internal fun ExportScreen(
     val exportProgress by viewModel.exportController.pdfExportProgress.collectAsStateWithLifecycle()
     val isFileTransferActive by viewModel.exportController.isFileTransferActive.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
-    val fontResolver = LocalFontFamilyResolver.current
-    val fontFamily = LocalMonospaceFontFamily.current
-    // The face the viewer sets lyrics in, Inter rather than FontFamily.Default.
-    val textFontFamily = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
-    fun newRenderer() = PrintRenderer(
-        measurer = TextMeasurer(fontResolver, Density(1f), LayoutDirection.Ltr, cacheSize = 256),
-        monospaceFontFamily = fontFamily,
-        textFontFamily = textFontFamily,
-    )
-    val renderer = remember(fontResolver, fontFamily, textFontFamily) { newRenderer() }
+    // Null on the web until the faces of other scripts are in, which holds the layout back rather than lay it out twice.
+    val scriptFontFamilies = scriptFontFamilies()
+    val newRenderer = rememberPrintRendererFactory(scriptFontFamilies.orEmpty())
+    val renderer = remember(newRenderer) { newRenderer() }
     val tabNoticeLabels = rememberTabNoticeLabels()
     val labels = rememberPrintLabels(preferences)
     LaunchedEffect(dialog, state.attempt) {
@@ -173,11 +162,11 @@ internal fun ExportScreen(
     )
     val laidOut by produceLaidOutDocument(
         state = state,
-        source = printedSource,
+        source = printedSource.takeIf { scriptFontFamilies != null },
         settings = printedSettings,
         labels = labels,
         renderer = renderer,
-        newRenderer = ::newRenderer,
+        newRenderer = newRenderer,
         abcRenderer = LocalAbcRenderer.current,
     )
     // Only a document laid out from what the screen shows now may be saved: the producer restarts a frame after an option
