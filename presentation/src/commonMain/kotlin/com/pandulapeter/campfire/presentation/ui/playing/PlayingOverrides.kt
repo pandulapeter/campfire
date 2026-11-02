@@ -252,8 +252,12 @@ internal class PlayingOverrides(
     }
 
     /** Lets the tempos and capos set here go once the store says the same, see [PendingOverrides.start]. */
-    fun startSettling() {
+    private fun startSettling() {
         tempoOverrides.start()
         capoOverrides.start()
+    }
+
+    init {
+        startSettling()
     }
 }
