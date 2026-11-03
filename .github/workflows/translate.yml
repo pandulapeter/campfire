@@ -1,0 +1,146 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# An unattended run of the add-language skill: Claude Code adds the language given and translates the app into it, in
+# one commit, which the workflow pushes to a branch of its own and opens a pull request for. tests.yml is dispatched on
+# that branch (a push or pull request made with the workflow's token starts no workflow by itself). Dispatched by hand
+# only; opening the pull request needs "Allow GitHub Actions to create and approve pull requests" in the repository's
+# Actions settings.
+
+name: 'Translate the app'
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: 'The language to add, in English (for example: Polish)'
+        required: true
+      budget:
+        description: 'The most the run may spend on the Anthropic API, in US dollars'
+        default: '40'
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: translate-${{ inputs.language }}
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    name: Translate the app
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      LANGUAGE: ${{ inputs.language }}
+      BUDGET: ${{ inputs.budget }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Set up git and the pre-commit hook
+        run: |
+          git config user.name 'Pandula Péter'
+          git config user.email 'pandulapeter@gmail.com'
+          git config core.hooksPath .githooks
+          echo "START=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          slug="$(printf '%s' "$LANGUAGE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')"
+          echo "BRANCH=translate-${slug:-language}-${{ github.run_id }}" >> "$GITHUB_ENV"
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+      - name: Translate the app
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUMMARY: ${{ runner.temp }}/summary.md
+        run: |
+          cat > "$RUNNER_TEMP/prompt.md" <<'PROMPT'
+          Add this language to Campfire with the add-language skill, following it step by step: $LANGUAGE
+
+          The line above is the whole request; if it names several languages, take the first and say so in the report.
+
+          You are running unattended in a GitHub Actions job (Ubuntu, 4 cores, 16 GB, no display, no device, no Xcode,
+          no Dropbox account). Nobody can answer a question until the run is over: never use AskUserQuestion and never
+          wait for an answer. These overrides of the skill hold for this run:
+          - If the preflight exits 2, make no changes: write the report (the ABORT lines and the groundwork each needs)
+            and end the run.
+          - There is no memory directory here; skip memory reads and writes.
+          - Hard cap: $BUDGET US dollars for this whole run (enforced by --max-budget-usd; past it the run stops
+            mid-work). The skill's subagents (one per strings chunk, one for the store listings) are allowed, on Opus;
+            start no others, and read only what a step needs.
+          - You run in print mode: ending your turn ends the run. Never end it before the report is written.
+          - Gradle: one build at a time.
+          - macOS tools are missing: lint the two plists with Python's `plistlib` instead of `plutil`, and check the
+            new `.strings` files and the `project.pbxproj` edits by reading them. iOS cannot be compiled here; the
+            workflow runs tests.yml afterwards, which compiles it on macOS.
+          - The CampfireWebsite repository is not checked out: say in the report that the website's translation should
+            use the Play title.
+          - Never change anything under `.github/workflows/`.
+          - When step 7 passes, commit everything as one commit (load the `commit-messages` skill first). The
+            pre-commit hook is installed and must pass; never bypass it with --no-verify. Do not branch or push; the
+            workflow pushes the commit to a branch and opens the pull request.
+
+          Finally, write the skill's step 8 report as Markdown to the file named by the SUMMARY environment variable; it
+          becomes the pull request's description. Say there that the commit is on the pull request's branch rather than
+          that nothing was committed. Use the Oxford comma in every list of three or more.
+          PROMPT
+          template="$(cat "$RUNNER_TEMP/prompt.md")"
+          prompt="${template//\$LANGUAGE/$LANGUAGE}"
+          prompt="${prompt//\$BUDGET/$BUDGET}"
+          claude -p "$prompt" \
+            --model claude-opus-5-5 \
+            --dangerously-skip-permissions \
+            --max-budget-usd "$BUDGET" \
+            --output-format stream-json \
+            --verbose \
+            | tee "$RUNNER_TEMP/translate.jsonl" \
+            | jq -r --unbuffered 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' || true
+      # The commit, before any push, so nothing is lost if the push is refused.
+      - name: Bundle the commit
+        if: ${{ always() }}
+        run: |
+          if [ "$(git rev-list --count "$START..HEAD")" != "0" ]; then
+            git branch --force translation HEAD
+            git bundle create "$RUNNER_TEMP/translation.bundle" "$START..translation"
+          fi
+      - name: Keep the transcript, the report, and the commit
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: translate
+          path: |
+            ${{ runner.temp }}/translate.jsonl
+            ${{ runner.temp }}/summary.md
+            ${{ runner.temp }}/translation.bundle
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Open the pull request and run the tests
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -s "$RUNNER_TEMP/summary.md" ]; then
+            cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "The run wrote no report." > "$RUNNER_TEMP/summary.md"
+          fi
+          if [ "$(git rev-list --count "$START..HEAD")" = "0" ]; then
+            echo "::warning::The run committed nothing; see the report."
+            exit 0
+          fi
+          git push origin "HEAD:refs/heads/$BRANCH"
+          gh pr create \
+            --base master \
+            --head "$BRANCH" \
+            --title "$(git log -1 --format=%s)" \
+            --body-file "$RUNNER_TEMP/summary.md"
+          gh workflow run tests.yml --ref "$BRANCH"
