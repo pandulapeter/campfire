@@ -12,7 +12,7 @@
 # no workflow by itself). A plan that changes .github/workflows is left for a normal checkout, since the workflow's
 # token cannot push such a change. Dispatched by hand only.
 
-name: 'Fix the issues'
+name: 'Fix pending issues'
 
 on:
   workflow_dispatch:

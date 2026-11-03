@@ -13,7 +13,7 @@
 # changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
 # platform that does not compile stops every store's release rather than one of them.
 
-name: 'Tests'
+name: 'Run all tests'
 
 on:
   pull_request:
