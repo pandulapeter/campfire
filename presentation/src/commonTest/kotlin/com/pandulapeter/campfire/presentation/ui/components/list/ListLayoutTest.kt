@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,20 +42,6 @@ class ListLayoutTest {
     }
 
     @Test
-    fun `the setlists screen fits as many columns as the songs screen sorted by title`() {
-        val column = MIN_SONG_COLUMN_WIDTH
-        (300..3000).map { it.dp }.forEach { width ->
-            val layout = ListLayout.of(
-                settledWidth = width,
-                contentPadding = noPadding,
-                layoutDirection = LayoutDirection.Ltr,
-                songColumnWidth = column,
-            )
-            assertEquals(layout.columnCount, layout.setlistColumnCount)
-        }
-    }
-
-    @Test
     fun `cards without covers are given a narrower column`() {
         val narrow = minSongColumnWidth(isCoverArtEnabled = false)
         assertTrue(narrow < MIN_SONG_COLUMN_WIDTH)
@@ -65,29 +50,6 @@ class ListLayoutTest {
         assertEquals(
             3,
             ListLayout.of(settledWidth = width, contentPadding = noPadding, layoutDirection = LayoutDirection.Ltr, songColumnWidth = narrow).columnCount,
-        )
-    }
-
-    @Test
-    fun `sorted by artist the songs fit more columns while the setlists keep theirs`() {
-        val byArtist = songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_ARTIST)
-        assertEquals(MIN_SONG_COLUMN_WIDTH, songGridColumnWidth(MIN_SONG_COLUMN_WIDTH, UserPreferences.SortingMode.BY_TITLE))
-        (300..3000).map { it.dp }.forEach { width ->
-            val byTitleLayout = layout(width)
-            val byArtistLayout = ListLayout.of(
-                settledWidth = width,
-                contentPadding = noPadding,
-                layoutDirection = LayoutDirection.Ltr,
-                songGridColumnWidth = byArtist,
-            )
-            assertTrue(byArtistLayout.columnCount >= byTitleLayout.columnCount)
-            assertEquals(byTitleLayout.setlistColumnCount, byArtistLayout.setlistColumnCount)
-        }
-        val width = byArtist * 3 + FAST_SCROLLER_WIDTH
-        assertEquals(2, layout(width).columnCount)
-        assertEquals(
-            3,
-            ListLayout.of(settledWidth = width, contentPadding = noPadding, layoutDirection = LayoutDirection.Ltr, songGridColumnWidth = byArtist).columnCount,
         )
     }
 

@@ -14,7 +14,7 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 ## Chrome
 
 - Kind (`navigationChromeKind`): bar under 600dp, rail above, expanded `WideNavigationRail` where three Songs columns
-  still fit beside it, the fast scroller counted (from `minSongColumnWidth`, not the sorted grid's).
+  still fit beside it, the fast scroller counted (from `minSongColumnWidth`).
 - **Transitions** (`NavigationTransitions.kt`, every platform): tabs fade through in place, no slide; cards
   (`SongDetails`, `SongEditor`, and the export screen's hand-rolled slide) enter and leave at the end edge (the left in
   RTL) whatever the predictive gesture's edge, the screen beneath moving 12% under a scrim (theme `scrim` at 32%,

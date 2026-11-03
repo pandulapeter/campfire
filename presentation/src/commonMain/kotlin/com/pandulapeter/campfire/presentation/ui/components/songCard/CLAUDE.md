@@ -32,5 +32,5 @@
   follow (`SONG_CARD_TEXT_KEYLINE`). **In a window under 480dp wide** titles get two lines; touch targets stay.
 - **Column width** (`minSongColumnWidth`): 336dp, +68dp while covers are on (whether or not a song has one, so arriving
   covers never change the count), so a phone on its side stays one column. The details line adds nothing. Setlists use
-  the same width, so both screens fit the same columns. Sorted by artist, the Songs grid (not the expanded rail, so
-  sorting never moves the chrome) takes 8dp off, the room the artist line no longer needs.
+  the same width, so both screens fit the same columns. Either sort keeps it too, though one sorted by artist leaves the
+  artist off its cards: a change of sort never reflows the grid.

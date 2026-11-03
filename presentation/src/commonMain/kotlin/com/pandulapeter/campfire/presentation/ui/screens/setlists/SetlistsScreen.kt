@@ -78,7 +78,7 @@ internal fun SetlistsScreen(
     LaunchedEffect(userPreferences?.setlistSortingMode) {
         viewModel.setlistsController.reorderingSetlistFileName = null
     }
-    val columnCount = layout.setlistColumnCount
+    val columnCount = layout.columnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.

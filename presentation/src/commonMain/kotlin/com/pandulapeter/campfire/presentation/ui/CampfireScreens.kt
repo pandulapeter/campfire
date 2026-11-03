@@ -68,7 +68,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.tuner.TunerScreen
 import com.pandulapeter.campfire.presentation.ui.screens.chords.ChordsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.scales.ScalesScreen
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
-import com.pandulapeter.campfire.presentation.ui.components.list.songGridColumnWidth
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -177,22 +176,17 @@ internal fun CampfireScreens(
     // decide from it, which stays equal between two breakpoints and lets them skip those frames. The song details
     // screen keeps the width itself: its lyrics use the difference between the settled width and the one they are
     // measured at inside their layout, which no discrete decision stands in for.
-    // The Songs screen's column width is worked out by the caller (see minSongColumnWidth), which decides the expanded
-    // rail from the same width, and the Setlists screen's cards are laid out by it too.
+    // The column width is worked out by the caller (see minSongColumnWidth), which decides the expanded rail from the
+    // same width.
     // Derived from the rest of the preferences, so that a transposition or a fold written while a song is read does not
     // compose every screen's entry again.
     val userPreferences = viewModel.userPreferences.collectAsStateWithLifecycle()
     val isKeyboard by remember(userPreferences) { derivedStateOf { userPreferences.value?.instrument == UserPreferences.Instrument.KEYBOARD } }
-    val sortingMode by remember(userPreferences) { derivedStateOf { userPreferences.value?.sortingMode ?: UserPreferences.SortingMode.BY_TITLE } }
     val listLayout = ListLayout.of(
         settledWidth = settledListWidth,
         contentPadding = shellContentPadding,
         layoutDirection = layoutDirection,
         songColumnWidth = songColumnWidth,
-        songGridColumnWidth = songGridColumnWidth(
-            songColumnWidth = songColumnWidth,
-            sortingMode = sortingMode,
-        ),
     )
     val settingsLayout = PageWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
     val screenChrome: (CampfireDestination.TopLevel) -> (@Composable () -> Unit)? = { destination ->

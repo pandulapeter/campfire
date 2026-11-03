@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * The columns of the song lists: [count] equally wide columns filling the available width, so that wide windows show
@@ -55,21 +54,8 @@ internal fun columnCountForWidth(
  */
 internal fun minSongColumnWidth(isCoverArtEnabled: Boolean) = CARD_BASE_WIDTH + if (isCoverArtEnabled) CARD_COVER_WIDTH else 0.dp
 
-/**
- * The narrowest column of the Songs screen's grid: [songColumnWidth], less the artist's room while the list is sorted by
- * artist, where the cards leave the artist to the header above them. Only the grid is laid out by it; the expanded rail
- * is decided by [songColumnWidth], so that a change of sort never moves the chrome around the list.
- * The room taken off is only what the card's artist line no longer needs, so a column is gained only where the window is
- * within that much of fitting one more.
- */
-internal fun songGridColumnWidth(
-    songColumnWidth: Dp,
-    sortingMode: UserPreferences.SortingMode,
-) = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) songColumnWidth - CARD_ARTIST_WIDTH else songColumnWidth
-
 // Declared before the default below, which is worked out from them as the file is initialized.
 private val CARD_BASE_WIDTH = 336.dp
-private val CARD_ARTIST_WIDTH = 8.dp
 
 /** The cover thumbnail and the gap after it (`CenteredSongCardContent`). */
 private val CARD_COVER_WIDTH = 68.dp

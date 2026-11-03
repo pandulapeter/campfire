@@ -48,8 +48,7 @@ internal data class NavigationChromeSize(
 
 /**
  * Whether a window this wide has the room for the expanded navigation rail, with the Songs screen's cards
- * [songColumnWidth] wide (its own [com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth], not the
- * narrower one its grid takes while sorted by artist, so that a change of sort never moves the chrome). The fast
+ * [songColumnWidth] wide (its [com.pandulapeter.campfire.presentation.ui.components.list.minSongColumnWidth]). The fast
  * scroller's column is taken off as `ListLayout` takes it off, so that the columns promised are the ones laid out.
  *
  * Material decides the expanded rail's width from its items, [EXPANDED_NAVIGATION_RAIL_MIN_WIDTH] being where it
