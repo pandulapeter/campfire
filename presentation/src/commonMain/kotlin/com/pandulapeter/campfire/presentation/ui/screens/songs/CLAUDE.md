@@ -22,7 +22,8 @@ The songs screen.
 ## Random picks
 
 - Over `RANDOM_PICKS_MIN_SONGS` songs (after the filters), both sorts are led by five random ones, as copies with keys of
-  their own, then a divider. Gone while a search is open and in selection mode. Drawn only from a library read whole,
+  their own, then a divider. Gone while a search is open; in selection mode they stay above the Selection group, which
+  takes no songs out of them. Drawn only from a library read whole,
   never from a first read's partial batches, which would swap them under the reader; the launch screen waits meanwhile.
 - The seed is device-local, never synced: stored with its draw time in the preferences (`randomPicksSeed`), so a launch
   within the hour shows the same picks, and in a restored process's saved state with the stop time, so its first start
@@ -61,7 +62,7 @@ The songs screen.
   then exported.
 - Cards show a crossfaded box in place of star and menu; a screen reader hears one checkbox. A tag or language tapped
   under a song still filters.
-- **Ticked songs lead the list** (as in Choose songs) under a counting header ("✓" on the fast scroller), always
+- **Ticked songs lead the list** (as in Choose songs), below only the random picks, under a counting header ("✓" on the fast scroller), always
   followed by a divider, counted as an item by the indices.
   - At a refresh (a change of search, sort, or filter, or Select all), ticked songs lead in list order, taken out of
     their sections (an emptied section goes).

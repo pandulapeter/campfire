@@ -355,7 +355,7 @@ internal fun SongList(
                     // header there is, the Selection one included, which leaves the divider the only thing between them.
                     if (groups.hasDividerAfter(groupIndex)) {
                         item(
-                            key = LEADING_GROUP_DIVIDER_KEY,
+                            key = group.dividerKey,
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "leading_group_divider",
                         ) {
@@ -363,7 +363,7 @@ internal fun SongList(
                             // the bar's pill as it scrolls under them.
                             HorizontalDivider(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
-                                    .anchoredTransition(filterAnchor, listState, LEADING_GROUP_DIVIDER_KEY)
+                                    .anchoredTransition(filterAnchor, listState, group.dividerKey)
                                     .fadingUnderListTop(topFade)
                                     .padding(horizontal = SONG_CARD_OUTER_PADDING, vertical = LEADING_GROUP_DIVIDER_PADDING),
                             )
@@ -430,8 +430,17 @@ internal fun SongList(
 /** The key of the empty cells that keep a card in its column as the search opens ([SongGroup.leadingGap]). */
 private const val SEARCH_GAP_KEY = "search_gap"
 
-/** The key of the divider under a leading group, the Selection or the random picks ([hasDividerAfter]). */
-private const val LEADING_GROUP_DIVIDER_KEY = "leading_group_divider"
+/**
+ * The key of the divider under this leading group ([hasDividerAfter]). The random picks keep one of their own above the
+ * Selection's, so neither is a key the grid sees twice.
+ */
+private val SongGroup.dividerKey get() = if (isRandomPicks) RANDOM_PICKS_DIVIDER_KEY else SELECTION_DIVIDER_KEY
+
+/** The key of the divider under the Selection. */
+private const val SELECTION_DIVIDER_KEY = "leading_group_divider"
+
+/** The key of the divider under the random picks, which the Selection can follow. */
+private const val RANDOM_PICKS_DIVIDER_KEY = "random_picks_divider"
 
 /** The key of [RandomPicksQuestionCard]. */
 private const val RANDOM_PICKS_QUESTION_KEY = "random_picks_question"

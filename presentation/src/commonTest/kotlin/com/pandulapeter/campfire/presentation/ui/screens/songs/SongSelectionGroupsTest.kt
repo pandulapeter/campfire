@@ -75,6 +75,15 @@ class SongSelectionGroupsTest {
     }
 
     @Test
+    fun `the random picks stay above the selection and their songs stay picks`() {
+        val picks = SongGroup(header = SongGroupHeader.RandomPicks, songs = listOf(song("b1"), song("c2")))
+        val result = (listOf(picks) + groups).withSelectionLeading(ChecklistOrder(setOf("b1.cho")))
+        assertEquals(listOf(SongGroupHeader.RandomPicks, SongGroupHeader.Selection), result.take(2).map { it.header })
+        assertEquals(listOf("b1", "c2"), result.first().songs.map { it.title })
+        assertEquals(listOf("b1"), result[1].songs.map { it.title })
+    }
+
+    @Test
     fun `a ticked song the list does not hold is not listed`() {
         val result = groups.withSelectionLeading(ChecklistOrder(setOf("gone.cho", "b1.cho")))
         assertEquals(listOf("b1"), result.first().songs.map { it.title })
