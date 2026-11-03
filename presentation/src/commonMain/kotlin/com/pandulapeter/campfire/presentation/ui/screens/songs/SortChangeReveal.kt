@@ -19,11 +19,10 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
 
 /**
  * Shows a sort picked from the menu at work where the random picks that lead the list would hide it: they are drawn
- * whatever the order, so on a short screen they are all the sort would leave in sight. A list read from its very top
- * glides down to its first section once the new order arrives. A list still resting where that glide left it, nobody
- * having scrolled it since, is put straight onto the new order's first section ([topIndex]) rather than sent back
- * up over the picks to glide down again. A list scrolled anywhere else goes to the top as the sort sends it
- * ([ScrollToTopWhenChanged]), and a sort that arrives any other way than from the menu moves nothing.
+ * whatever the order, so on a short screen they are all the sort would leave in sight. Wherever it is picked, the list
+ * ends on the new order's first section: one read from its very top glides down to it once the new order arrives,
+ * one scrolled anywhere else is put straight onto it ([topIndex]) rather than sent up over the picks, as
+ * [ScrollToTopWhenChanged] would send it. A sort that arrives any other way than from the menu moves nothing.
  */
 internal class SortChangeReveal {
 
@@ -32,34 +31,23 @@ internal class SortChangeReveal {
 
     private var pending: Pending? = null
 
-    /** Where the last reveal left the list, as its first visible item and that item's offset. */
-    private var revealedAt: Pair<Int, Int>? = null
-
     /**
      * For a sort picked from the menu, before it is written. [isRevealed] is false for the sort already applied, which
      * changes nothing, and under an open search, whose list has no picks.
      */
     fun onSortPicked(listState: LazyGridState, orderKey: String, isRevealed: Boolean) {
-        val position = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
-        pending = when {
-            !isRevealed -> null
-            position == (0 to 0) -> Pending(orderKey = orderKey, isGlide = true)
-            position == revealedAt -> Pending(orderKey = orderKey, isGlide = false)
-            else -> null
-        }
+        val isAtTop = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        pending = if (isRevealed) Pending(orderKey = orderKey, isGlide = isAtTop) else null
     }
 
     /**
      * Where the list built for [orderKey] out of [groups] starts, for [ScrollToTopWhenChanged] to put it there as the
-     * order arrives: the first section for a sort picked over a list resting where the last reveal left it, the top
-     * otherwise.
+     * order arrives: the first section for a sort picked below the very top, the top otherwise.
      */
     fun topIndex(orderKey: String, groups: List<SongGroup>): Int {
         val pending = pending?.takeIf { !it.isGlide && it.orderKey != orderKey } ?: return 0
         this.pending = null
-        val index = groups.firstSectionAfterRandomPicksIndex() ?: return 0
-        revealedAt = index to 0
-        return index
+        return groups.firstSectionAfterRandomPicksIndex() ?: 0
     }
 
     /** Whether the list built for [orderKey] is the one a sort picked over the very top led to; asked once. */
@@ -67,11 +55,6 @@ internal class SortChangeReveal {
         val pending = pending?.takeIf { it.isGlide && it.orderKey != orderKey } ?: return false
         this.pending = null
         return true
-    }
-
-    /** Where the glide left [listState], so that the next sort picked over it, untouched, is revealed too. */
-    fun onGlided(listState: LazyGridState) {
-        revealedAt = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
     }
 }
 
@@ -88,6 +71,5 @@ internal fun RevealSortChange(
         // A frame first, so that the scroll to the top the new order asked for is laid out before this one starts.
         withFrameNanos {}
         listState.animateScrollToItem(index)
-        reveal.onGlided(listState)
     }
 }

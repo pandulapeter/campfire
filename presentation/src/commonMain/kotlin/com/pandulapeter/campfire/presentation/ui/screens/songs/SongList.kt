@@ -431,7 +431,7 @@ internal fun SongList(
 private const val SEARCH_GAP_KEY = "search_gap"
 
 /**
- * The key of the divider under this leading group ([hasDividerAfter]). The random picks keep one of their own above the
+ * The key of the divider under this leading group ([hasDividerAfter]). The random picks keep one of their own under the
  * Selection's, so neither is a key the grid sees twice.
  */
 private val SongGroup.dividerKey get() = if (isRandomPicks) RANDOM_PICKS_DIVIDER_KEY else SELECTION_DIVIDER_KEY
@@ -439,7 +439,7 @@ private val SongGroup.dividerKey get() = if (isRandomPicks) RANDOM_PICKS_DIVIDER
 /** The key of the divider under the Selection. */
 private const val SELECTION_DIVIDER_KEY = "leading_group_divider"
 
-/** The key of the divider under the random picks, which the Selection can follow. */
+/** The key of the divider under the random picks, which can follow the Selection. */
 private const val RANDOM_PICKS_DIVIDER_KEY = "random_picks_divider"
 
 /** The key of [RandomPicksQuestionCard]. */

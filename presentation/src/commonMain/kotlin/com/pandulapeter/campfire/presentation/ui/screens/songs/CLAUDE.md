@@ -22,8 +22,8 @@ The songs screen.
 ## Random picks
 
 - Over `RANDOM_PICKS_MIN_SONGS` songs (after the filters), both sorts are led by five random ones, as copies with keys of
-  their own, then a divider. Gone while a search is open; in selection mode they stay above the Selection group, which
-  takes no songs out of them. Drawn only from a library read whole,
+  their own, then a divider. Gone while a search is open; in selection mode they follow the Selection group, which takes
+  no songs out of them. Drawn only from a library read whole,
   never from a first read's partial batches, which would swap them under the reader; the launch screen waits meanwhile.
 - The seed is device-local, never synced: stored with its draw time in the preferences (`randomPicksSeed`), so a launch
   within the hour shows the same picks, and in a restored process's saved state with the stop time, so its first start
@@ -32,9 +32,8 @@ The songs screen.
   reader; Refresh draws at once. Each song is ranked on its own, so a sync run's change moves one pick.
 - Under the first picks shown a card asks whether to keep them, saying the switch is in Settings; either answer, or the
   switch flipped, answers it for good.
-- A sort picked over the very top of the list glides down to the first section once the new order arrives, since the
-  picks in sight do not show the change; picked over a list still resting there, the new order opens on its first
-  section. From anywhere else the sort sends the list to the top.
+- A sort picked from the menu ends the list on the new order's first section after the picks, since the picks in sight
+  do not show the change: glided down to from the very top, put straight onto from anywhere else.
 
 ## Back resets the filters
 
@@ -62,7 +61,7 @@ The songs screen.
   then exported.
 - Cards show a crossfaded box in place of star and menu; a screen reader hears one checkbox. A tag or language tapped
   under a song still filters.
-- **Ticked songs lead the list** (as in Choose songs), below only the random picks, under a counting header ("✓" on the fast scroller), always
+- **Ticked songs lead the list** (as in Choose songs), the random picks after them, under a counting header ("✓" on the fast scroller), always
   followed by a divider, counted as an item by the indices.
   - At a refresh (a change of search, sort, or filter, or Select all), ticked songs lead in list order, taken out of
     their sections (an emptied section goes).

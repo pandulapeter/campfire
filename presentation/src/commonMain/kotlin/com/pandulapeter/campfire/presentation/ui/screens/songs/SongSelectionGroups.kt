@@ -29,10 +29,9 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
  * as a copy - the card that was tapped stays where it is, so the list never moves under the finger. A section the
  * refresh emptied goes, header and all. A song unticked since the last refresh stays in the group until the next one.
  *
- * The random picks stay above it all, each pick its own card that a tick leaves where it is, so that the list does not
- * move under the reader as the mode starts; the selection follows them. Their songs are not among the ones it leads
- * with, since every pick is a copy of a song still listed in its own section. With nothing to lead, the list is the one
- * it was given, the same instance.
+ * The random picks follow the selection, in front of the sections, each pick its own card that a tick leaves where it
+ * is. Their songs are not among the ones the selection leads with, since every pick is a copy of a song still listed in
+ * its own section. With nothing to lead, the list is the one it was given, the same instance.
  */
 internal fun List<SongGroup>.withSelectionLeading(order: ChecklistOrder): List<SongGroup> {
     val picks = filter { it.isRandomPicks }
@@ -44,7 +43,7 @@ internal fun List<SongGroup>.withSelectionLeading(order: ChecklistOrder): List<S
         songs = selected,
         copiedFileNames = selected.mapNotNullTo(hashSetOf()) { song -> song.fileName.takeIf { it !in order.heldKeys } },
     )
-    return picks + selection + sections.mapNotNull { group ->
+    return listOf(selection) + picks + sections.mapNotNull { group ->
         group.songs.filterNot { it.fileName in order.heldKeys }.takeIf { it.isNotEmpty() }?.let { group.copy(songs = it) }
     }
 }
