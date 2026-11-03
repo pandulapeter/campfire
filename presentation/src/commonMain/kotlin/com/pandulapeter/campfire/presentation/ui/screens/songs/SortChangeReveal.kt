@@ -12,6 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroup
@@ -22,7 +25,9 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongGroups
  * whatever the order, so on a short screen they are all the sort would leave in sight. Wherever it is picked, the list
  * ends on the new order's first section: one read from its very top glides down to it once the new order arrives,
  * one scrolled anywhere else is put straight onto it ([topIndex]) rather than sent up over the picks, as
- * [ScrollToTopWhenChanged] would send it. A sort that arrives any other way than from the menu moves nothing.
+ * [ScrollToTopWhenChanged] would send it. The sort already applied, picked again while the picks are in sight, glides
+ * there too; picked once the first section's header has reached the top, it moves nothing, the reader being in the
+ * sections already. A sort that arrives any other way than from the menu moves nothing.
  */
 internal class SortChangeReveal {
 
@@ -31,13 +36,27 @@ internal class SortChangeReveal {
 
     private var pending: Pending? = null
 
+    /** A glide to the first section that no new order will start, the sort picked being the one already applied. */
+    class Reselection(val index: Int)
+
+    /** The latest [Reselection], for [RevealSortChange] to glide by; a new instance for every pick, so each one glides. */
+    var reselection by mutableStateOf<Reselection?>(null)
+        private set
+
     /**
-     * For a sort picked from the menu, before it is written. [isRevealed] is false for the sort already applied, which
-     * changes nothing, and under an open search, whose list has no picks.
+     * For a sort picked from the menu out of [songGroups], before it is written. [isRevealed] is false under an open
+     * search, whose list has no picks; [isReselected] is true for the sort already applied, which changes no order.
      */
-    fun onSortPicked(listState: LazyGridState, orderKey: String, isRevealed: Boolean) {
-        val isAtTop = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
-        pending = if (isRevealed) Pending(orderKey = orderKey, isGlide = isAtTop) else null
+    fun onSortPicked(listState: LazyGridState, songGroups: SongGroups, isRevealed: Boolean, isReselected: Boolean) {
+        pending = null
+        if (!isRevealed) return
+        if (isReselected) {
+            // Only while the first section's header has not reached the top, where it would stick: before then the picks
+            // are in sight, after it the reader is in the sections already.
+            songGroups.groups.firstSectionAfterRandomPicksIndex()?.takeIf { listState.firstVisibleItemIndex < it }?.let { reselection = Reselection(it) }
+        } else {
+            pending = Pending(orderKey = songGroups.orderKey, isGlide = listState.isAtTop)
+        }
     }
 
     /**
@@ -58,6 +77,8 @@ internal class SortChangeReveal {
     }
 }
 
+private val LazyGridState.isAtTop get() = firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0
+
 /** Glides the list down to its first section when [reveal] says the new order of [songGroups] calls for it. */
 @Composable
 internal fun RevealSortChange(
@@ -65,6 +86,9 @@ internal fun RevealSortChange(
     listState: LazyGridState,
     songGroups: SongGroups,
 ) {
+    LaunchedEffect(reveal.reselection) {
+        reveal.reselection?.let { listState.animateScrollToItem(it.index) }
+    }
     LaunchedEffect(songGroups.orderKey) {
         if (!reveal.takeGlide(songGroups.orderKey)) return@LaunchedEffect
         val index = songGroups.groups.firstSectionAfterRandomPicksIndex() ?: return@LaunchedEffect

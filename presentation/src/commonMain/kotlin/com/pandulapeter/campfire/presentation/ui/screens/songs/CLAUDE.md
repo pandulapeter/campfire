@@ -33,7 +33,8 @@ The songs screen.
 - Under the first picks shown a card asks whether to keep them, saying the switch is in Settings; either answer, or the
   switch flipped, answers it for good.
 - A sort picked from the menu ends the list on the new order's first section after the picks, since the picks in sight
-  do not show the change: glided down to from the very top, put straight onto from anywhere else.
+  do not show the change: glided down to from the very top, put straight onto from anywhere else. The sort already
+  applied, picked again while the picks are in sight, glides there too; once the first section's header sticks, nothing.
 
 ## Back resets the filters
 

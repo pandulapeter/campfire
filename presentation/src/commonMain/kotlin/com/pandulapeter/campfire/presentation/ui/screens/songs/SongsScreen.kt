@@ -216,8 +216,8 @@ internal fun SongsScreen(
                             onSelected = { sortingMode ->
                                 sortChangeReveal.onSortPicked(
                                     listState = listState,
-                                    orderKey = shownSongGroups.orderKey,
-                                    isRevealed = sortingMode != userPreferences?.sortingMode && !isSearchOpen,
+                                    songGroups = shownSongGroups,
+                                    isRevealed = !isSearchOpen, isReselected = sortingMode == userPreferences?.sortingMode,
                                 )
                                 viewModel.preferencesController.setSortingMode(sortingMode)
                             },
