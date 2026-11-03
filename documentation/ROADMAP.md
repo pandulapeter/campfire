@@ -16,7 +16,6 @@ What's planned for Campfire, grouped by area.
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - ChordPro / Zip export: "As played here" should become a segmented control to offer more context
-- Songs screen: cards should have the same minimum width, no matter if they are sorted by artist or by title
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 
 ## Short-term
