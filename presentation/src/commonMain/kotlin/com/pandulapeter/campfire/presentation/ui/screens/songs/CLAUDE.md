@@ -24,10 +24,11 @@ The songs screen.
 - Over `RANDOM_PICKS_MIN_SONGS` songs (after the filters), both sorts are led by five random ones, as copies with keys of
   their own, then a divider. Gone while a search is open and in selection mode. Drawn only from a library read whole,
   never from a first read's partial batches, which would swap them under the reader; the launch screen waits meanwhile.
-- The seed is device-local, never synced or kept beyond a restored process (saved with its draw and stop times, so a
-  restored process judges its first start as a return). New picks once an hour has gone by on the wall clock, taken only
-  as the screen is opened (the app back in front on it after at least five minutes away, or another tab left for it),
-  never under a reader; Refresh draws at once. Each song is ranked on its own, so a sync run's change moves one pick.
+- The seed is device-local, never synced: stored with its draw time in the preferences (`randomPicksSeed`), so a launch
+  within the hour shows the same picks, and in a restored process's saved state with the stop time, so its first start
+  is judged as a return. New picks once an hour has gone by on the wall clock, taken only as the screen is opened (the
+  launch, the app back in front on it after at least five minutes away, or another tab left for it), never under a
+  reader; Refresh draws at once. Each song is ranked on its own, so a sync run's change moves one pick.
 - Under the first picks shown a card asks whether to keep them, saying the switch is in Settings; either answer, or the
   switch flipped, answers it for good.
 - A sort picked over the very top of the list glides down to the first section once the new order arrives, since the

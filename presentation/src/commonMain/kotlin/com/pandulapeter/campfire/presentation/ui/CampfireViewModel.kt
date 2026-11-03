@@ -147,11 +147,10 @@ import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.songs.SelectionEditing
-import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.RANDOM_PICKS_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.Companion.SONG_FILTER_KEY
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore.SavedSongFilter
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistsController
-import com.pandulapeter.campfire.presentation.ui.state.songs.RandomPicksDraw
+import com.pandulapeter.campfire.presentation.ui.state.songs.randomPicksDraw
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongListState
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
@@ -172,8 +171,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.random.Random
-import kotlin.time.Clock
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -262,12 +259,7 @@ class CampfireViewModel(
             ?: SongFilter()
     )
 
-    internal val randomPicksDraw = RandomPicksDraw(
-        clock = Clock.System,
-        random = Random.Default,
-        restored = savedStateStore.restore<RandomPicksDraw.SavedDraw>(RANDOM_PICKS_KEY),
-        persist = { savedStateStore.persist(RANDOM_PICKS_KEY, it) },
-    )
+    internal val randomPicksDraw = randomPicksDraw(savedStateStore)
 
     internal val libraryState: LibraryState = LibraryState(
         scope = viewModelScope,
@@ -747,6 +739,7 @@ class CampfireViewModel(
         editorSession.startRecovery()
         savedDialogRestorer.start()
         modeEndings.start(viewModelScope, preferencesController.isPerformanceModeEnabled)
+        randomPicksDraw.start(viewModelScope, preferencesController.userPreferences, preferencesController::changeUserPreferences)
         viewModelScope.launch {
             // From the first read on, so that a start with the songs switched off opens on the first tool rather than
             // on a songs screen that is not there.

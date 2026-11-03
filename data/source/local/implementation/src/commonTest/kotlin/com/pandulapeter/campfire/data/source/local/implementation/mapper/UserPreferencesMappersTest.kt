@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.data.model.preferences.RandomPicksSeed
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
@@ -65,6 +66,15 @@ internal class UserPreferencesMappersTest {
             mapOf("link" to listOf("songs/a.cho")),
             UserPreferencesDocument(sharedLinkImports = mapOf("link" to listOf("songs/a.cho", " "), " " to listOf("songs/b.cho"), "empty" to listOf(""))).toModel().sharedLinkImports,
         )
+    }
+
+    @Test
+    fun `the last random picks draw survives saving and reloading`() {
+        val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
+        assertEquals(null, legacy.randomPicksSeed)
+        val draw = RandomPicksSeed(value = -42L, drawnAtMillis = 1_800_000_000_000L)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(legacy.copy(randomPicksSeed = draw).toDocument())).document.toModel()
+        assertEquals(draw, reloaded.randomPicksSeed)
     }
 
     @Test

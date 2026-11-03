@@ -48,6 +48,11 @@ data class UserPreferences(
     /** Whether keeping [isRandomPicksEnabled] was asked under the picks (or the switch flipped): asked only once. */
     val isRandomPicksQuestionAnswered: Boolean = false,
     /**
+     * The last draw of the random picks, so that a launch within the hour shows the ones the last run showed. Never
+     * exported or synced: two devices of one library pick on their own.
+     */
+    val randomPicksSeed: RandomPicksSeed? = null,
+    /**
      * Whether the app has setlists at all: their tab and every way of putting a song into one. Off, the files stay in
      * the library and keep travelling through imports, exports and sync runs; they are only out of sight.
      */

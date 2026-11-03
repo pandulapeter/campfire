@@ -62,7 +62,7 @@ internal class SongListState(
     private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val changeUserPreferences: (UserPreferences.() -> UserPreferences) -> Unit,
     userPreferences: StateFlow<UserPreferences?>,
-    randomPicksSeed: StateFlow<Long>,
+    randomPicksSeed: StateFlow<Long?>,
 ) {
 
     val songsScrollPosition = ScrollPosition()
@@ -117,7 +117,7 @@ internal class SongListState(
                 sections = indexed.sections,
                 filtered = indexed.search.filtered,
                 normalizedQuery = normalizedQuery,
-                randomPicksSeed = seed.takeIf { randomPicksPreferences.isEnabled && indexed.isLibraryRead },
+                randomPicksSeed = seed?.takeIf { randomPicksPreferences.isEnabled && indexed.isLibraryRead },
                 isRandomPicksQuestionAsked = !randomPicksPreferences.isQuestionAnswered,
             ),
             isLibraryRead = indexed.isLibraryRead,

@@ -27,6 +27,8 @@ internal data class UserPreferencesDocument(
     val areSongsEnabled: Boolean = true,
     val isRandomPicksEnabled: Boolean = true,
     val isRandomPicksQuestionAnswered: Boolean = false,
+    val randomPicksSeed: Long? = null,
+    val randomPicksDrawnAtMillis: Long = 0,
     val areSetlistsEnabled: Boolean = true,
     val isMetronomeEnabled: Boolean = true,
     val isTunerEnabled: Boolean = true,

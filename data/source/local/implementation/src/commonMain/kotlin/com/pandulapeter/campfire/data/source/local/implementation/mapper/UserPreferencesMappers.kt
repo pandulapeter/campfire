@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
+import com.pandulapeter.campfire.data.model.preferences.RandomPicksSeed
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
@@ -30,6 +31,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     areSongsEnabled = areSongsEnabled,
     isRandomPicksEnabled = isRandomPicksEnabled,
     isRandomPicksQuestionAnswered = isRandomPicksQuestionAnswered,
+    randomPicksSeed = randomPicksSeed?.let { RandomPicksSeed(value = it, drawnAtMillis = randomPicksDrawnAtMillis) },
     areSetlistsEnabled = areSetlistsEnabled,
     isMetronomeEnabled = isMetronomeEnabled,
     isTunerEnabled = isTunerEnabled,
@@ -104,6 +106,8 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     areSongsEnabled = areSongsEnabled,
     isRandomPicksEnabled = isRandomPicksEnabled,
     isRandomPicksQuestionAnswered = isRandomPicksQuestionAnswered,
+    randomPicksSeed = randomPicksSeed?.value,
+    randomPicksDrawnAtMillis = randomPicksSeed?.drawnAtMillis ?: 0,
     areSetlistsEnabled = areSetlistsEnabled,
     isMetronomeEnabled = isMetronomeEnabled,
     isTunerEnabled = isTunerEnabled,
