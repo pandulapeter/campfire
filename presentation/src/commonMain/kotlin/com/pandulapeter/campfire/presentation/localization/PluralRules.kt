@@ -53,6 +53,16 @@ private val PLURAL_RULES: Map<String, (Int) -> PluralCategory> = mapOf(
             else -> OTHER
         }
     },
+    // Every whole count from 0 up is one, few, or many in Polish ("1 piosenka", "2 piosenki", "5 piosenek"): CLDR keeps
+    // other for fractions, so a table's other item has to read as its many does, which is the item a missing many reads.
+    "pl" to { n ->
+        when {
+            n == 1 -> ONE
+            n < 0 -> OTHER
+            n % 10 in 2..4 && n % 100 !in 12..14 -> FEW
+            else -> MANY
+        }
+    },
 )
 
 /** The `many` of the Romance languages, which a whole million takes ("un million de chansons"). */

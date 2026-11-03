@@ -98,6 +98,12 @@ def plural_categories(code):
     return [category for category in CATEGORIES if category == "other" or re.search(rf"\b{category.upper()}\b", row)]
 
 
+PLURAL_NOTES = {
+    "pl": "Every whole count is one, few, or many (1 piosenka, 2 piosenki, 5 piosenek); other is only CLDR's fractions, "
+          "which the app never shows, so write `other` in the many form (\"%1$s piosenek\") and add a `few` item; a "
+          "`many` item is then never needed.",
+}
+
 CASING_NOTES = {
     "tr": "Kotlin's lowercase()/titlecase() are locale-insensitive: a scale name or section label starting with i/ı/İ "
           "is cased the English way (standaloneScaleName, SectionNumbering). Avoid such leading letters where a "
@@ -183,7 +189,7 @@ def preflight(code, sample):
     else:
         notes.append(f"Plurals: the language's rule picks {', '.join(categories)}; give every <plurals> an item for each "
                      "(only `one` and `other` are required: a missing category reads `other`), and a `zero` item where "
-                     "0 reads apart (\"No songs\").")
+                     "0 reads apart (\"No songs\")." + (" " + PLURAL_NOTES[code] if code in PLURAL_NOTES else ""))
     if code in CASING_NOTES:
         notes.append("Casing: " + CASING_NOTES[code])
     for script, _, languages, font in faces_for(sample):

@@ -60,6 +60,22 @@ class PluralRulesTest {
     }
 
     @Test
+    fun `polish reads counts ending in 2 to 4 as few, outside the teens, and every other count but 1 as many`() {
+        assertEquals(PluralCategory.ONE, pluralCategoryOf("pl", 1))
+        listOf(2, 4, 22, 104, 1_002).forEach { assertEquals(PluralCategory.FEW, pluralCategoryOf("pl", it), it.toString()) }
+        listOf(0, 5, 11, 12, 14, 21, 25, 112, 1_000_000).forEach {
+            assertEquals(PluralCategory.MANY, pluralCategoryOf("pl", it), it.toString())
+        }
+    }
+
+    @Test
+    fun `a polish plural without a many item reads its other for many counts`() {
+        val items = mapOf("one" to "piosenka", "few" to "piosenki", "other" to "piosenek")
+        assertEquals("piosenki", pluralItemOf(items, "pl", 3))
+        assertEquals("piosenek", pluralItemOf(items, "pl", 5))
+    }
+
+    @Test
     fun `a language without a rule reads like english`() {
         assertEquals(PluralCategory.ONE, pluralCategoryOf("xx", 1))
         assertEquals(PluralCategory.OTHER, pluralCategoryOf("xx", 2))
