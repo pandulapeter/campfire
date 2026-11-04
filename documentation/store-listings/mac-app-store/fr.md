@@ -20,7 +20,7 @@ Paste into App Store Connect's French localizations: fr-FR and fr-CA.
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.2.2 : accords avec capo nommés par doigté ou son réel, cinq chansons au hasard, diagrammes dans chaque tonalité pour plus d'instruments, meilleur import PDF.
+Nouveau en 5.2.3 : accords avec capo nommés par doigté ou son réel, cinq chansons au hasard, diagrammes dans chaque tonalité pour plus d'instruments, meilleur import PDF.
 ```
 
 ## Description (4,000 characters max)

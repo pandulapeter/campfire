@@ -1197,7 +1197,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Újdonságok a Campfire %1$s verziójában</string>
-    <string name="whats_new_message">• **Akkordnevek capóval** A capo mostantól megtartja a fogásokat és emeli a hangmagasságot, te pedig eldöntöd, hogy az akkordok a fogás vagy a hangzás szerint szerepeljenek.\n• **Véletlen válogatás** A 20 dalnál nagyobb könyvtárak öt véletlen dallal kezdődnek, óránként vagy kérésre újakkal.\n• **Több akkordábra** Minden gyakori akkord minden hangnemben, ukulelén, mandolinon, bendzsón és alternatív gitárhangolásokban.\n• **Jobb PDF-importálás** A daloskönyvek gyakrabban bomlanak dalaikra, a refrének pedig félkövér, dőlt vagy behúzott soraikról ismerhetők fel.\n• **Dalok exportálása úgy, ahogy játszod** Az exportált ChordPro-fájlok megőrzik a transzponálást, a capót és a tempót, és a listához adott dal is megtartja őket.</string>
+    <string name="whats_new_message">• **Egy óráig tart a véletlen válogatás** A dallista öt véletlen dala már nem cserélődik minden alkalommal, amikor megnyitod az appot, és felül marad, amíg dalokat jelölsz ki.\n• **Jobb akkordlap-importálás** Az importált PDF-ek és akkordlapok megtartják a versszakok közti térközt és az akkordokat a szótagjaik fölött, és felismerik a számozott versszakokat, a Ch1-hez hasonló jelöléseket és az akkordrácsokat.\n• **Javított megosztott linkek** Egy megosztott link megnyitása néhány eszközön már nem jelez sérült fájlt, egy már meglévő listád pedig a listáid között nyílik meg.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Kihagyás</string>

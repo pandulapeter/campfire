@@ -21,7 +21,7 @@ in `../app-store/es.md`; the review notes and App Sandbox information are single
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.2.2: acordes con capo por forma o por sonido, cinco canciones al azar, diagramas en todas las tonalidades para más instrumentos y mejor importación de PDF.
+Novedad en 5.2.3: acordes con capo por forma o por sonido, cinco canciones al azar, diagramas en todas las tonalidades para más instrumentos y mejor importación de PDF.
 ```
 
 ## Description (4,000 characters max)

@@ -1198,7 +1198,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Neuigkeiten in Campfire %1$s</string>
-    <string name="whats_new_message">• **Akkordnamen mit Capo** Ein Capo behält jetzt die Griffe und hebt die Tonhöhe an, und du wählst, ob Akkorde nach Griff oder nach Klang benannt werden.\n• **Zufallsauswahl** Bibliotheken mit mehr als 20 Songs beginnen mit fünf zufälligen Songs, jede Stunde oder auf Wunsch neu.\n• **Mehr Akkorddiagramme** Jeder gängige Akkord in jeder Tonart, auf Ukulele, Mandoline, Banjo und in alternativen Gitarrenstimmungen.\n• **Besserer PDF-Import** Liederbücher werden öfter in ihre Songs aufgeteilt, und Refrains werden an fetten, kursiven oder eingerückten Zeilen erkannt.\n• **Songs exportieren, wie du sie spielst** Exportierte ChordPro-Dateien behalten deine Transposition, deinen Capo und dein Tempo, ebenso ein Song, den du einer Setlist hinzufügst.</string>
+    <string name="whats_new_message">• **Zufallsauswahl hält eine Stunde** Die fünf zufälligen Songs der Songliste wechseln nicht mehr bei jedem Öffnen der App und bleiben oben, während du Songs auswählst.\n• **Besserer Import von Akkordblättern** Importierte PDFs und Akkordblätter behalten Strophenabstände und Akkorde über ihren Silben und erkennen nummerierte Strophen, Kürzel wie Ch1 und Akkordraster.\n• **Geteilte Links repariert** Ein geteilter Link meldet auf manchen Geräten keine defekte Datei mehr, und eine Setlist, die du schon hast, öffnet sich in deiner Liste.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Überspringen</string>

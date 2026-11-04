@@ -1246,7 +1246,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Noutăți în Campfire %1$s</string>
-    <string name="whats_new_message">• **Numele acordurilor cu capodastru** Capodastrul păstrează acum pozițiile și urcă tonul, iar tu alegi dacă acordurile sunt numite după poziție sau după cum sună.\n• **Alegeri aleatorii** Bibliotecile cu peste 20 de cântece încep cu cinci cântece alese la întâmplare, noi în fiecare oră sau când ceri.\n• **Mai multe diagrame de acorduri** Fiecare acord uzual în fiecare tonalitate, la ukulele, mandolină, banjo și în acordaje alternative de chitară.\n• **Import PDF îmbunătățit** Cântecarele se împart mai des în cântecele lor, iar refrenele sunt recunoscute după rândurile îngroșate, cursive sau indentate.\n• **Exportă cântecele cum le cânți** Fișierele ChordPro exportate păstrează transpunerea, capodastrul și tempoul tău, la fel ca adăugarea unui cântec într-o listă.</string>
+    <string name="whats_new_message">• **Alegerile aleatorii țin o oră** Cele cinci cântece aleatorii din listă nu se mai schimbă de fiecare dată când deschizi aplicația și rămân sus cât timp selectezi cântece.\n• **Import îmbunătățit al foilor cu acorduri** PDF-urile și foile cu acorduri importate păstrează spațiul dintre strofe și acordurile deasupra silabelor lor și recunosc strofele numerotate, etichete ca Ch1 și grilele de acorduri.\n• **Linkuri partajate reparate** Deschiderea unui link partajat nu mai raportează un fișier deteriorat pe unele dispozitive, iar o listă pe care o ai deja se deschide în lista ta.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Omite</string>

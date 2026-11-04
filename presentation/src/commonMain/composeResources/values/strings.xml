@@ -1198,7 +1198,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">What's new in Campfire %1$s</string>
-    <string name="whats_new_message">• **Chord names with a capo** A capo now keeps the shapes and raises the pitch, and you pick whether chords are named by shape or by sound.\n• **Random picks** Libraries of over 20 songs start with five random songs, new every hour or when you ask.\n• **More chord diagrams** Every common chord in every key, on ukulele, mandolin, banjo, and alternate guitar tunings.\n• **PDF import improvements** Songbooks split into their songs more often, and choruses are found by their bold, italic, or indented lines.\n• **Export songs as you play them** Exported ChordPro files keep your transposition, capo, and tempo, as does adding a song to a setlist.</string>
+    <string name="whats_new_message">• **Random picks last an hour** The songs list\'s five random songs no longer change every time you open the app, and stay at the top while you select songs.\n• **Chord sheet import improvements** Imported PDFs and chord sheets keep stanza breaks and chords over their syllables, and read numbered verses, labels like Ch1, and chord grids.\n• **Shared links fixed** Opening a shared link no longer reports a broken file on some devices, and a setlist you already have opens in your list.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Skip</string>

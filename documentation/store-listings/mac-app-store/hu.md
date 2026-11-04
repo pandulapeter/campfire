@@ -20,7 +20,7 @@ Paste into the App Store Connect localization hu (macOS).
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.2.2-es verzióban: akkordnevek capóval fogás vagy hangzás szerint, öt véletlen dal, akkordábrák minden hangnemben több hangszerre és jobb PDF-import.
+Újdonságok az 5.2.3-as verzióban: akkordnevek capóval fogás vagy hangzás szerint, öt véletlen dal, akkordábrák minden hangnemben több hangszerre és jobb PDF-import.
 ```
 
 ## Description (4,000 characters max)

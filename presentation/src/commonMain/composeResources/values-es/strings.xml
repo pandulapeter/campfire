@@ -1198,7 +1198,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Novedades de Campfire %1$s</string>
-    <string name="whats_new_message">• **Nombres de acordes con capo** El capo ahora mantiene las formas y sube el tono, y tú eliges si los acordes se nombran por la forma o por cómo suenan.\n• **Selección aleatoria** Las bibliotecas de más de 20 canciones empiezan con cinco canciones al azar, nuevas cada hora o cuando lo pidas.\n• **Más diagramas de acordes** Todos los acordes comunes en todas las tonalidades, en ukelele, mandolina, banjo y afinaciones alternativas de guitarra.\n• **Mejoras en la importación de PDF** Los cancioneros se dividen en sus canciones más a menudo, y los estribillos se reconocen por sus líneas en negrita, cursiva o con sangría.\n• **Exporta las canciones como las tocas** Los archivos ChordPro exportados conservan tu transposición, capo y tempo, igual que al añadir una canción a un repertorio.</string>
+    <string name="whats_new_message">• **La selección aleatoria dura una hora** Las cinco canciones aleatorias de la lista ya no cambian cada vez que abres la app y se quedan arriba mientras seleccionas canciones.\n• **Mejoras al importar hojas de acordes** Los PDF y hojas de acordes importados conservan la separación entre estrofas y los acordes sobre sus sílabas, y reconocen estrofas numeradas, etiquetas como Ch1 y cuadrículas de acordes.\n• **Enlaces compartidos corregidos** Abrir un enlace compartido ya no muestra un archivo dañado en algunos dispositivos, y un repertorio que ya tienes se abre en tu lista.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Omitir</string>

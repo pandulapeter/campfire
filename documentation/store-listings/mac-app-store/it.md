@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.2.2: accordi con capotasto per diteggiatura o per suono, cinque canzoni a caso, diagrammi in ogni tonalità per più strumenti e import PDF migliore.
+Novità della 5.2.3: accordi con capotasto per diteggiatura o per suono, cinque canzoni a caso, diagrammi in ogni tonalità per più strumenti e import PDF migliore.
 ```
 
 ## Description (4,000 characters max)

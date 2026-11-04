@@ -21,7 +21,7 @@ Information stay as in the English file.
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.2.2: Akkorde mit Capo nach Griff oder Klang benannt, fünf Zufallssongs, Akkorddiagramme in jeder Tonart für mehr Instrumente und besserer PDF-Import.
+Neu in 5.2.3: Akkorde mit Capo nach Griff oder Klang benannt, fünf Zufallssongs, Akkorddiagramme in jeder Tonart für mehr Instrumente und besserer PDF-Import.
 ```
 
 ## Description (4,000 characters max)

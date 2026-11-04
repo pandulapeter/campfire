@@ -1198,7 +1198,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Novità di Campfire %1$s</string>
-    <string name="whats_new_message">• **Nomi degli accordi con il capotasto** Il capotasto ora mantiene le diteggiature e alza l\'intonazione, e scegli tu se gli accordi prendono il nome dalla diteggiatura o da come suonano.\n• **Scelte a caso** Le librerie con più di 20 canzoni si aprono con cinque canzoni a caso, nuove ogni ora o quando lo chiedi.\n• **Più diagrammi degli accordi** Ogni accordo comune in ogni tonalità, su ukulele, mandolino, banjo e accordature alternative della chitarra.\n• **Importazione PDF migliorata** I canzonieri si dividono più spesso nelle loro canzoni, e i ritornelli si riconoscono dalle righe in grassetto, corsivo o rientrate.\n• **Esporta le canzoni come le suoni** I file ChordPro esportati conservano trasposizione, capotasto e tempo, e così anche una canzone aggiunta a una scaletta.</string>
+    <string name="whats_new_message">• **Le scelte a caso durano un\'ora** Le cinque canzoni a caso dell\'elenco non cambiano più ogni volta che apri l\'app e restano in cima mentre selezioni le canzoni.\n• **Importazione degli spartiti migliorata** PDF e spartiti importati mantengono lo spazio tra le strofe e gli accordi sulle loro sillabe, e riconoscono strofe numerate, etichette come Ch1 e griglie di accordi.\n• **Link condivisi corretti** Aprire un link condiviso non segnala più un file danneggiato su alcuni dispositivi, e una scaletta che hai già si apre nel tuo elenco.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Salta</string>
