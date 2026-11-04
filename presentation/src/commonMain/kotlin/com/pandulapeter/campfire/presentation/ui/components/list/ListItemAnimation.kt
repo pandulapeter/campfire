@@ -180,10 +180,14 @@ internal class ListAnchor {
  * since a jump is ordinarily a scroll and a scroll is not a change of the list. What the change looks like is then
  * drawn on top of the grid's own layout, which is final from the first frame, so nothing is measured twice and the
  * rows only move in their layers. The items the change takes away are gone at once, since nothing draws them any more.
+ *
+ * @param canBePushedOff Whether the item can still be listed after a change that pushes it off screen
+ *   ([ListAnchor.animateFrom]'s `listedAfter`), and so keeps what it last drew for that ([AnchorSnapshots]): the items
+ *   that never are skip the cost.
  */
-internal fun Modifier.anchoredTransition(anchor: ListAnchor, listState: LazyGridState, key: Any) = graphicsLayer {
-    with(anchor) { applyTransition(listState, key) }
-}.anchorSnapshot(anchor.snapshots, key)
+internal fun Modifier.anchoredTransition(anchor: ListAnchor, listState: LazyGridState, key: Any, canBePushedOff: Boolean = false) =
+    graphicsLayer { with(anchor) { applyTransition(listState, key) } }
+        .then(if (canBePushedOff) Modifier.anchorSnapshot(anchor.snapshots, key) else Modifier)
 
 /** An item of the grid, how far below the start of the viewport its top was, in pixels, and where the rest were. */
 internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: Map<Any, IntOffset>)

@@ -309,7 +309,7 @@ internal fun SongList(
                         // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                         Box(
                             modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = itemPlacementSpec)
-                                .anchoredTransition(filterAnchor, listState, itemKey),
+                                .anchoredTransition(filterAnchor, listState, itemKey, canBePushedOff = true),
                         ) {
                             // Worked out here rather than inside the row's actions, so that they capture what changes for this row
                             // alone rather than the set that is new on every write to any setlist.
