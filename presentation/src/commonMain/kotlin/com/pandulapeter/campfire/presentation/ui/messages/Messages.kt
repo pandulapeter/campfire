@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.export_songs_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_disconnected
 import com.pandulapeter.campfire.presentation.resources.metronome_stopped_failed
@@ -51,7 +52,8 @@ import com.pandulapeter.campfire.presentation.resources.import_converted
 import com.pandulapeter.campfire.presentation.resources.import_details
 import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_preview_already_there
-import com.pandulapeter.campfire.presentation.resources.import_result_already_there
+import com.pandulapeter.campfire.presentation.resources.import_result_setlists_already_there
+import com.pandulapeter.campfire.presentation.resources.import_result_songs_already_there
 import com.pandulapeter.campfire.presentation.resources.import_result_nothing
 import com.pandulapeter.campfire.presentation.resources.import_result_setlists
 import com.pandulapeter.campfire.presentation.resources.import_result_skipped
@@ -245,7 +247,9 @@ private const val MAXIMUM_NAMED_FILES = 3
 private fun importCounts(result: ImportResult) = listOf(
     Res.plurals.import_result_songs to result.importedSongFileNames.size,
     Res.plurals.import_result_setlists to result.importedSetlistFileNames.size,
-    Res.plurals.import_result_already_there to result.duplicateFileNames.size,
+    // One list holds both, and a bare count beside "1 setlist imported" would read as that many setlists.
+    Res.plurals.import_result_songs_already_there to result.duplicateFileNames.count { !LibraryFiles.isSetlistFileName(it) },
+    Res.plurals.import_result_setlists_already_there to result.duplicateFileNames.count(LibraryFiles::isSetlistFileName),
     Res.plurals.import_result_skipped to result.skippedFileNames.size,
 ).filter { (_, count) -> count > 0 }
     .map { (resource, count) -> pluralTextResource(resource, count, count.toString()) }

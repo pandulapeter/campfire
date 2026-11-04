@@ -100,9 +100,13 @@
         <item quantity="one">%1$d scaletta importata</item>
         <item quantity="other">%1$d scalette importate</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">%1$d già nella tua libreria</item>
-        <item quantity="other">%1$d già nella tua libreria</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d canzone già nella tua libreria</item>
+        <item quantity="other">%1$d canzoni già nella tua libreria</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d scaletta già nella tua libreria</item>
+        <item quantity="other">%1$d scalette già nella tua libreria</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d saltato</item>

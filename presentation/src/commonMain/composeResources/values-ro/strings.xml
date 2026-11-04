@@ -113,10 +113,15 @@
         <item quantity="few">%1$d liste importate</item>
         <item quantity="other">%1$d de liste importate</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">%1$d deja în bibliotecă</item>
-        <item quantity="few">%1$d deja în bibliotecă</item>
-        <item quantity="other">%1$d deja în bibliotecă</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d cântec deja în bibliotecă</item>
+        <item quantity="few">%1$d cântece deja în bibliotecă</item>
+        <item quantity="other">%1$d de cântece deja în bibliotecă</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d listă deja în bibliotecă</item>
+        <item quantity="few">%1$d liste deja în bibliotecă</item>
+        <item quantity="other">%1$d de liste deja în bibliotecă</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d omis</item>

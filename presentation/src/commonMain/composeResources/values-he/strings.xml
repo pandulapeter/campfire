@@ -112,10 +112,15 @@
         <item quantity="two">שני סט־ליסטים יובאו</item>
         <item quantity="other">%1$d סט־ליסטים יובאו</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">אחד כבר נמצא בספרייה</item>
-        <item quantity="two">שניים כבר נמצאים בספרייה</item>
-        <item quantity="other">%1$d כבר נמצאים בספרייה</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">שיר אחד כבר נמצא בספרייה</item>
+        <item quantity="two">שני שירים כבר נמצאים בספרייה</item>
+        <item quantity="other">%1$d שירים כבר נמצאים בספרייה</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">סט־ליסט אחד כבר נמצא בספרייה</item>
+        <item quantity="two">שני סט־ליסטים כבר נמצאים בספרייה</item>
+        <item quantity="other">%1$d סט־ליסטים כבר נמצאים בספרייה</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">אחד דולג</item>

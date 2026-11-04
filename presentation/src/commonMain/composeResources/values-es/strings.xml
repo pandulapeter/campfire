@@ -100,9 +100,13 @@
         <item quantity="one">%1$d repertorio importado</item>
         <item quantity="other">%1$d repertorios importados</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">%1$d ya estaba en tu biblioteca</item>
-        <item quantity="other">%1$d ya estaban en tu biblioteca</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d canción ya estaba en tu biblioteca</item>
+        <item quantity="other">%1$d canciones ya estaban en tu biblioteca</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d repertorio ya estaba en tu biblioteca</item>
+        <item quantity="other">%1$d repertorios ya estaban en tu biblioteca</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d omitido</item>

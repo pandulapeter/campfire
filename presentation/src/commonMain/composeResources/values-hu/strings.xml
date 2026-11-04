@@ -100,9 +100,13 @@
         <item quantity="one">%1$d lista importálva</item>
         <item quantity="other">%1$d lista importálva</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">%1$d már megvolt</item>
-        <item quantity="other">%1$d már megvolt</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d dal már megvolt</item>
+        <item quantity="other">%1$d dal már megvolt</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d lista már megvolt</item>
+        <item quantity="other">%1$d lista már megvolt</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d kihagyva</item>

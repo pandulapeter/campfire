@@ -100,9 +100,13 @@
         <item quantity="one">%1$d Setlist importiert</item>
         <item quantity="other">%1$d Setlists importiert</item>
     </plurals>
-    <plurals name="import_result_already_there">
-        <item quantity="one">%1$d schon in deiner Bibliothek</item>
-        <item quantity="other">%1$d schon in deiner Bibliothek</item>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d Song schon in deiner Bibliothek</item>
+        <item quantity="other">%1$d Songs schon in deiner Bibliothek</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d Setlist schon in deiner Bibliothek</item>
+        <item quantity="other">%1$d Setlists schon in deiner Bibliothek</item>
     </plurals>
     <plurals name="import_result_skipped">
         <item quantity="one">%1$d übersprungen</item>
