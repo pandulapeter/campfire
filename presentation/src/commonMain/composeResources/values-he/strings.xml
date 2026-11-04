@@ -1299,6 +1299,8 @@
     <string name="print_files_song_description">מילים ואקורדים כטקסט פשוט שנשאר ניתן לעריכה ולהעברת טונליות, לכל אפליקציה שקוראת ChordPro, כולל Campfire.</string>
     <string name="print_as_played">כפי שמנוגן כאן</string>
     <string name="print_as_played_songs_description">כל שיר עם הטרנספוזיציה, הקאפו והטמפו שבהם הוא מנוגן כאן, כפי שה-PDF מדפיס אותו</string>
+    <string name="print_as_written">כפי שנכתב</string>
+    <string name="print_as_written_description">כל קובץ בדיוק כפי שהוא בספרייה שלך, כפי שקישור משתף אותו</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">השיר היחיד בסט־ליסט כקובץ ChordPro לכל אפליקציית שירים, עם סדר ההופעה ש-Campfire קורא בחזרה כסט־ליסט.</item>
         <item quantity="two">שני השירים בסט־ליסט כקובצי ChordPro לכל אפליקציית שירים, עם סדר ההופעה ש-Campfire קורא בחזרה כסט־ליסט.</item>

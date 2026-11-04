@@ -29,7 +29,8 @@ exported (Settings' Export library as zip). The code keeps the export names. The
   shown; `{capo}` that capo, else the file's; `{tempo}` the one played, later changes scaled), so any app sounds as
   Campfire does under either capo reading, leaving out what a switch hides. Offered only where a file would change,
   never for a setlist, whose manifest already carries how each song is played (both would apply twice on a reimport).
-  A link shares the file as stored.
+  A link shares the file as stored. Chosen with As written / As played here segments, never a switch, whose off side
+  named no file; the line under them describes the chosen one.
 - **Every song goes out**: no song ticks or choice of a setlist's content, which only cluttered the screen. A setlist's
   PDF is its sheets after its running order, or either alone (never both off: each box is disabled while the other is
   unticked); its zip holds the stored manifest unchanged. Original slot numbers and each entry's transposition are kept;

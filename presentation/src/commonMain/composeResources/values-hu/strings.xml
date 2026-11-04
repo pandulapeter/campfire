@@ -1253,6 +1253,8 @@
     <string name="print_files_song_description">A dalszöveg és az akkordok egyszerű szövegként, szerkeszthetően és transzponálhatóan, bármely ChordPro-t olvasó alkalmazásnak, a Campfire-t is beleértve.</string>
     <string name="print_as_played">Ahogy itt játszod</string>
     <string name="print_as_played_songs_description">Minden dal azzal a transzponálással, capóval és tempóval, amellyel itt játszod, ahogy a PDF is nyomtatja</string>
+    <string name="print_as_written">Ahogy le van írva</string>
+    <string name="print_as_written_description">Minden fájl pontosan úgy, ahogy a könyvtáradban van, ahogy egy link is megosztja</string>
     <plurals name="print_files_setlist_description">
         <item quantity="one">A lista %1$d dala ChordPro-fájlként bármely daloskönyv-alkalmazásnak, a sorrenddel együtt, amelyből a Campfire visszaállítja a listát.</item>
         <item quantity="other">A lista %1$d dala ChordPro-fájlokként bármely daloskönyv-alkalmazásnak, a sorrenddel együtt, amelyből a Campfire visszaállítja a listát.</item>

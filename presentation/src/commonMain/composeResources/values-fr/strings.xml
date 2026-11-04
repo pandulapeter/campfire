@@ -1259,6 +1259,8 @@
     <string name="print_files_song_description">Paroles et accords en texte brut, toujours modifiable et transposable, pour toute application qui lit le ChordPro, Campfire compris.</string>
     <string name="print_as_played">Tel que joué ici</string>
     <string name="print_as_played_songs_description">Chaque morceau avec la transposition, le capo et le tempo avec lesquels tu le joues ici, comme le PDF l\'imprime</string>
+    <string name="print_as_written">Tel qu\'écrit</string>
+    <string name="print_as_written_description">Chaque fichier tel qu\'il est dans ta bibliothèque, comme un lien le partage</string>
     <plurals name="print_files_setlist_description">
         <item quantity="zero">Aucune chanson de la setlist en fichier ChordPro pour toute application de chansonnier, avec l\'ordre de passage que Campfire relit comme la setlist.</item>
         <item quantity="one">%1$d chanson de la setlist en fichier ChordPro pour toute application de chansonnier, avec l\'ordre de passage que Campfire relit comme la setlist.</item>
