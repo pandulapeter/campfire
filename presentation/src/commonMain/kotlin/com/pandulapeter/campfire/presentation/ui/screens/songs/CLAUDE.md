@@ -17,7 +17,8 @@ The songs screen.
 - An open search runs the sections together, so cards fill the columns a section's last row left open; the Selection
   group loses its header too and keeps the divider.
 - **The top left card in sight stays where it is on screen** as the search opens and closes; closing unscrolled over the
-  same songs puts it back where it was. A random pick there gives way to the first card after the picks.
+  same songs puts it back where it was. A random pick there gives way to the first card after the picks. Cards coming
+  into sight past the screen's edges travel in with their neighbours, as from a list really scrolled.
 
 ## Random picks
 

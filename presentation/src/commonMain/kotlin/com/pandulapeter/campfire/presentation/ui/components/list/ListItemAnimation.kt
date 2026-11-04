@@ -18,6 +18,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridLayoutInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -91,16 +92,25 @@ internal class ListAnchor {
      * Narrates a jump from [visibleOffsets], the items' offsets before it, on [animationSpec]: a change that the list
      * also moves under, as the app bar fills in, is narrated on that movement's spring, so that what stands still on
      * screen does. Called before [listState] measures the change, whose layout until then is the one before it.
+     *
+     * @param arrivalsTravel Whether the items that come on screen past either end of the ones that were travel in with
+     *   them ([arrivalShift]) rather than fade in where they are: a change that reads as the list moving, which the
+     *   search opening and closing does, and not one that reads as the list being rebuilt, which a filter does.
      */
     fun animateFrom(
         listState: LazyGridState,
         visibleOffsets: Map<Any, IntOffset>,
         coroutineScope: CoroutineScope,
         animationSpec: AnimationSpec<Float> = ITEM_FADE_SPEC,
+        arrivalsTravel: Boolean = false,
     ) {
         transitionJob?.cancel()
         transitionNumber++
-        val newTransition = AnchorTransition(previousLayoutInfo = listState.layoutInfo, previousOffsets = visibleOffsets)
+        val newTransition = AnchorTransition(
+            previousLayoutInfo = listState.layoutInfo,
+            previousOffsets = visibleOffsets,
+            arrivalsTravel = arrivalsTravel,
+        )
         transition = newTransition
         transitionJob = coroutineScope.launch {
             try {
@@ -121,14 +131,16 @@ internal class ListAnchor {
 
     /**
      * Where the item with [key] is drawn from, relative to where the grid placed it, and how opaque it is: an item
-     * that was on screen before the change slides in from where it was, and one that was not fades in where it is.
+     * that was on screen before the change slides in from where it was, and one that was not fades in where it is,
+     * unless it travels in from past an edge ([animateFrom]'s `arrivalsTravel`).
      */
     fun GraphicsLayerScope.applyTransition(listState: LazyGridState, key: Any) {
         val transition = transition ?: return
         val progress = transition.progress.value
         val previousOffset = transition.previousOffsets[key]
         if (previousOffset == null) {
-            alpha = progress
+            val shift = transition.arrivalShiftOf(listState, key)
+            if (shift == null) alpha = progress else translationY = shift * (1f - progress)
         } else {
             val offset = transition.offsetOf(listState, key) ?: return
             translationX = (previousOffset.x - offset.x) * (1f - progress)
@@ -154,10 +166,12 @@ internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: M
 private class AnchorTransition(
     private val previousLayoutInfo: LazyGridLayoutInfo,
     val previousOffsets: Map<Any, IntOffset>,
+    private val arrivalsTravel: Boolean,
 ) {
     val progress = Animatable(0f)
     private var layoutInfo: LazyGridLayoutInfo? = null
     private val offsets = mutableMapOf<Any, IntOffset>()
+    private val arrivalShifts = mutableMapOf<Any, Int>()
 
     /**
      * Where the grid first placed the item with [key] after the change, kept for the rest of it rather than read off every
@@ -177,9 +191,31 @@ private class AnchorTransition(
         if (currentLayoutInfo === previousLayoutInfo) return null
         if (currentLayoutInfo !== layoutInfo) {
             layoutInfo = currentLayoutInfo
+            val arrivals = currentLayoutInfo.visibleItemsInfo.filter { it.key !in offsets && it.key !in previousOffsets }
             currentLayoutInfo.visibleItemsInfo.forEach { offsets.getOrPut(it.key) { it.offset } }
+            if (arrivalsTravel && arrivals.isNotEmpty()) recordArrivals(currentLayoutInfo, arrivals)
         }
         return offsets[key]
+    }
+
+    /** How far up the item with [key], which was not on screen before the change, travels to its place, if it does. */
+    fun arrivalShiftOf(listState: LazyGridState, key: Any): Int? = offsetOf(listState, key)?.let { arrivalShifts[key] }
+
+    /** Like the offsets, kept from the layout an arrival is first placed in, measured against the items' first ones. */
+    private fun recordArrivals(layoutInfo: LazyGridLayoutInfo, arrivals: List<LazyGridItemInfo>) {
+        val shifts = layoutInfo.visibleItemsInfo.mapNotNull { item ->
+            previousOffsets[item.key]?.let { previous -> ItemShift(index = item.index, shift = previous.y - offsets.getValue(item.key).y) }
+        }
+        arrivals.forEach { item ->
+            arrivalShift(
+                index = item.index,
+                top = item.offset.y,
+                height = item.size.height,
+                shifts = shifts,
+                previousViewportStart = previousLayoutInfo.viewportStartOffset,
+                previousViewportEnd = previousLayoutInfo.viewportEndOffset,
+            )?.let { arrivalShifts[item.key] = it }
+        }
     }
 }
 
