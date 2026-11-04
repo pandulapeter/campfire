@@ -51,14 +51,19 @@ internal fun rememberSearchOpening(
         Snapshot.withoutReadObservation {
             val layoutInfo = listState.layoutInfo
             // The pinned header's row covers the cards under it, so the one the eye is on is the first below it.
-            layoutInfo.visibleItemsInfo.topLeftCard(visibleTop = headerRowHeightPx - layoutInfo.beforeContentPadding)?.let { card ->
-                songGroups.groups.slotOf(card.key, columnCount)?.let { slot ->
-                    SearchOpening(
-                        songGroups = songGroups,
-                        slot = slot,
-                        cardOffset = card.offset.y,
-                    )
-                }
+            val cardsInSight = layoutInfo.visibleItemsInfo.cardsInSight(visibleTop = headerRowHeightPx - layoutInfo.beforeContentPadding)
+            val topLeftCard = cardsInSight.firstOrNull() ?: return@withoutReadObservation null
+            val keptKey = songGroups.groups.cardKeptAcrossSearch(cardsInSight.map { it.key }) ?: return@withoutReadObservation null
+            songGroups.groups.slotOf(keptKey, columnCount)?.let { slot ->
+                SearchOpening(
+                    songGroups = songGroups,
+                    slot = slot,
+                    // A card kept from past picks that fill the screen was below its bottom edge, at least, and is taken
+                    // to have been just there: the cards that come into sight fade in where they land.
+                    cardOffset = cardsInSight.firstOrNull { it.key == keptKey }?.offset?.y ?: layoutInfo.viewportEndOffset,
+                    returnKey = topLeftCard.key,
+                    returnOffset = topLeftCard.offset.y,
+                )
             }
         }
     }
@@ -147,7 +152,7 @@ internal fun KeepCardsInPlaceAcrossSearch(
         state.opening = null
         if (listState.isScrollInProgress) return@SideEffect
         if (last != null && !last.hasBeenScrolled && !last.hasShownOtherSongs && last.songGroups == songGroups) {
-            groups.itemIndexOf(last.slot.key, hasPlaceholder)?.let { index -> keep(last.slot.key, index, -last.cardOffset) }
+            groups.itemIndexOf(last.returnKey, hasPlaceholder)?.let { index -> keep(last.returnKey, index, -last.returnOffset) }
         } else {
             val card = layoutInfo.visibleItemsInfo.topLeftCard(visibleTop = 0) ?: return@SideEffect
             groups.itemIndexOf(card.key, hasPlaceholder)?.let { index -> keep(card.key, index, listShift - card.offset.y) }
@@ -167,7 +172,11 @@ private val SEARCH_LIST_SHIFT = LIST_APP_BAR_HEIGHT - SECTION_START_ROOM
 /**
  * The songs the search opened over, and the card at the top left of them and where it was ([rememberSearchOpening]).
  *
+ * The card kept is the top left one unless that is one of the random picks, which an open search does not show
+ * ([cardKeptAcrossSearch]); closing goes back to the top left one ([returnKey]) all the same.
+ *
  * @property cardOffset Where the card was laid out, in the grid's content coordinates.
+ * @property returnKey The card at the top left as the search opened, which closing puts back at [returnOffset].
  * @property hasBeenScrolled Whether the list has been scrolled since, which leaves the card's old place nobody's.
  * @property hasShownOtherSongs Whether the search has shown other songs since, which sent the list to the top: neither
  *   the gap that kept the card in its column ([slotFor]) nor the card's old place is brought back by a query cleared
@@ -177,6 +186,8 @@ internal class SearchOpening(
     val songGroups: SongGroups,
     val slot: SongCardSlot,
     val cardOffset: Int,
+    val returnKey: Any,
+    val returnOffset: Int,
 ) {
     var hasBeenScrolled = false
     var hasShownOtherSongs = false
@@ -191,6 +202,9 @@ private class SearchTransitionState(var wasOpen: Boolean) {
     var opening: SearchOpening? = null
 }
 
-/** The first card more than half of which is below [visibleTop], in the grid's content coordinates. */
-private fun List<LazyGridItemInfo>.topLeftCard(visibleTop: Int) =
-    firstOrNull { it.contentType == SONG_CONTENT_TYPE && it.offset.y + it.size.height / 2 >= visibleTop }
+/** The cards more than half of which are below [visibleTop], in the grid's content coordinates, in item order. */
+private fun List<LazyGridItemInfo>.cardsInSight(visibleTop: Int) =
+    filter { it.contentType == SONG_CONTENT_TYPE && it.offset.y + it.size.height / 2 >= visibleTop }
+
+/** The first of [cardsInSight]. */
+private fun List<LazyGridItemInfo>.topLeftCard(visibleTop: Int) = cardsInSight(visibleTop).firstOrNull()

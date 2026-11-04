@@ -93,6 +93,29 @@ class SearchSongGroupsTest {
     fun `a slot is where a card is in its section`() =
         assertEquals(1, listOf(section('A', "a1", "a2", "a3")).slotOf(songItemKey(song("a2")), columnCount = 2)?.column)
 
+    @Test
+    fun `the card kept across a search is the top left one in sight`() {
+        val groups = listOf(section('A', "a1", "a2"))
+        assertEquals(songItemKey(song("a2")), groups.cardKeptAcrossSearch(listOf(songItemKey(song("a2")), songItemKey(song("a1")))))
+    }
+
+    @Test
+    fun `random picks in sight give way to the first card after them`() {
+        val picks = SongGroup(header = SongGroupHeader.RandomPicks, songs = listOf(song("a2")))
+        val groups = listOf(picks, section('A', "a1", "a2"))
+        assertEquals(songItemKey(song("a1")), groups.cardKeptAcrossSearch(listOf(picks.itemKey(song("a2")), songItemKey(song("a1")))))
+    }
+
+    @Test
+    fun `random picks that fill the screen give way to the card they are followed by`() {
+        val picks = SongGroup(header = SongGroupHeader.RandomPicks, songs = listOf(song("a2")))
+        val groups = listOf(picks, section('A', "a1", "a2"))
+        assertEquals(songItemKey(song("a1")), groups.cardKeptAcrossSearch(listOf(picks.itemKey(song("a2")))))
+    }
+
+    @Test
+    fun `no card in sight keeps none`() = assertEquals(null, listOf(section('A', "a1")).cardKeptAcrossSearch(emptyList()))
+
     private fun song(name: String) = Song(
         fileName = "$name.cho",
         title = name,

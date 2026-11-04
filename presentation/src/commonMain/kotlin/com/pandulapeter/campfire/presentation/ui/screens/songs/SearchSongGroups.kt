@@ -44,3 +44,17 @@ internal data class SongCardSlot(val key: Any, val column: Int, val columnCount:
 internal fun List<SongGroup>.slotOf(key: Any, columnCount: Int): SongCardSlot? = firstNotNullOfOrNull { group ->
     group.indexOfItem(key).takeIf { it >= 0 }?.let { position -> SongCardSlot(key = key, column = (group.leadingGap + position) % columnCount, columnCount = columnCount) }
 }
+
+/**
+ * The card an open search keeps where it is on screen, given the keys of the cards in sight in item order: the first of
+ * them, unless the random picks lead it, which the search takes away. Then it is the first card in sight after them, or,
+ * where the picks fill the screen, the first card they are followed by: kept from the top left of a pick, the card would
+ * be nowhere in the results, and the grid would hold the index it was at instead, a row of other songs.
+ */
+internal fun List<SongGroup>.cardKeptAcrossSearch(cardsInSight: List<Any>): Any? {
+    val picksIndex = indexOfFirst { it.isRandomPicks }
+    if (picksIndex < 0) return cardsInSight.firstOrNull()
+    if (cardsInSight.isEmpty()) return null
+    return cardsInSight.firstOrNull { this[picksIndex].indexOfItem(it) < 0 }
+        ?: getOrNull(picksIndex + 1)?.let { group -> group.songs.firstOrNull()?.let(group::itemKey) }
+}
