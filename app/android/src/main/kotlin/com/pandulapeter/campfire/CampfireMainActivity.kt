@@ -11,7 +11,6 @@ package com.pandulapeter.campfire
 
 import android.app.ActivityManager
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -134,16 +133,9 @@ class CampfireMainActivity : ComponentActivity() {
         when {
             address == null -> importFrom(intent)
             isSyncRedirect(address.toString()) -> onSyncRedirectReceived(address.toString())
-            address.isShareLinkAddress() -> ShareLinks.parse(address.toString())?.let(::importShareLink)
+            ShareLinks.isLinkAddress(address.toString()) -> ShareLinks.parse(address.toString())?.let(::importShareLink)
             else -> importFrom(intent)
         }
-    }
-
-    /** Whether [this] is one of the addresses the manifest's link filters claim, see `ShareLinks`. */
-    private fun Uri.isShareLinkAddress() = when (scheme) {
-        "https" -> host == "campfire-songbook.com" && path.orEmpty().startsWith("/s/")
-        "campfire" -> host == "s"
-        else -> false
     }
 
     /**

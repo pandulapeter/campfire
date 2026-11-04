@@ -69,10 +69,13 @@ internal val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limite
 fun openUrl(url: NSURL) {
     val address = url.absoluteString.orEmpty()
     if (isSyncRedirect(address)) return
-    if (url.isShareLinkAddress()) {
+    if (ShareLinks.isLinkAddress(address)) {
         ShareLinks.parse(address)?.let { link -> inboxScope.launch { pendingShareLinks.send(link) } }
         return
     }
+    // Only a file is read as one: NSData would download any other address, on the queue every later import waits on,
+    // and from outside the one module that may go online.
+    if (!url.fileURL) return
     inboxScope.launch {
         val file = url.readImportedFile(ImportBudget())
         pendingImports.send(listOf(file ?: ImportedFile.unread(url.lastPathComponent.orEmpty())))
@@ -80,13 +83,6 @@ fun openUrl(url: NSURL) {
             NSFileManager.defaultManager.removeItemAtURL(url, error = null)
         }
     }
-}
-
-/** Whether this is one of the addresses the associated domain and the `campfire` scheme claim, see `ShareLinks`. */
-private fun NSURL.isShareLinkAddress() = when (scheme) {
-    "https" -> host == "campfire-songbook.com" && path.orEmpty().startsWith("/s/")
-    "campfire" -> host == "s"
-    else -> false
 }
 
 /**

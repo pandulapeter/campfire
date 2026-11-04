@@ -61,6 +61,17 @@ object ShareLinks {
      */
     private val laterVersionPayload = Regex("""([1-9][0-9]{0,5})\.[A-Za-z0-9._~%-]+""")
 
+    /**
+     * The addresses the app's link claims (the associated domain's `/s/` and the `campfire://s/` scheme) take in, the
+     * ones too broken to [parse] included: those only bring the app to the front, never reach the file import, which
+     * would report them as an unreadable file. Matched on the text, since the platforms' URL types disagree about the
+     * path: iOS's `NSURL.path` gives the landing page's `/s/` as `/s`.
+     */
+    private val linkAddress = Regex("""(?:https://campfire-songbook\.com/|campfire://)s(?:[/?#]\S*)?""")
+
+    /** Whether [address] is one the app's link claims bring in, a shared link or not, see [linkAddress]. */
+    fun isLinkAddress(address: String) = linkAddress.matches(address.trim())
+
     /** Reads a shared link in any of its forms, or returns `null` for anything that is not one. */
     fun parse(address: String): SharedLink? {
         val trimmed = address.trim()

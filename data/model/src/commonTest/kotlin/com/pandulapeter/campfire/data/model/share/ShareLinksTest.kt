@@ -11,8 +11,10 @@ package com.pandulapeter.campfire.data.model.share
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ShareLinksTest {
 
@@ -127,6 +129,29 @@ class ShareLinksTest {
         assertNull(ShareLinks.create(SharedLinkKind.SONG, "k3jq7abcdz2m5x6y", "a".repeat(65), "r", "t"))
         assertNull(ShareLinks.create(SharedLinkKind.SONG, "k3jq7abcdz2m5x6y", "f", "r/../x", "t"))
         assertNull(ShareLinks.create(SharedLinkKind.SONG, "short", "f", "r", "t"))
+    }
+
+    @Test
+    fun `every address the link claims bring in is told from a file, a broken link included`() {
+        listOf(
+            link.landingUrl,
+            "https://campfire-songbook.com/s/",
+            "https://campfire-songbook.com/s",
+            "https://campfire-songbook.com/s#${link.payload}",
+            "https://campfire-songbook.com/s/?fbclid=abc#${link.payload}",
+            "https://campfire-songbook.com/s/#1.setlist.cut-short",
+            "campfire://s/${link.payload}",
+            "campfire://s",
+        ).forEach { assertTrue(ShareLinks.isLinkAddress(it), it) }
+        listOf(
+            "",
+            "file:///private/var/mobile/Documents/Inbox/s",
+            "https://campfire-songbook.com/",
+            "https://campfire-songbook.com/songs/",
+            "https://campfire-songbook.com/app/#${link.payload}",
+            "https://campfire-songbook.com.example/s/",
+            "campfire://oauth?code=abc123",
+        ).forEach { assertFalse(ShareLinks.isLinkAddress(it), it) }
     }
 
     @Test

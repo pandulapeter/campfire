@@ -32,8 +32,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
   thread; an unreadable file is passed on empty (reported as skipped).
 - **Shared links** reach `openUrl` too: the Universal Link (`https://campfire-songbook.com/s/…`, which a SwiftUI app
   gets in `.onOpenURL`; never add `.onContinueUserActivity` beside it, or a link imports twice) and `campfire://s/…`.
-  An address `ShareLinks.parse` doesn't read only brings the app forward. `iosApp.entitlements` names
-  `applinks:campfire-songbook.com`, so the App ID needs the Associated Domains capability before a signed build.
+  Which address is one is `ShareLinks.isLinkAddress`, on the text, since `NSURL.path` gives `/s/` as `/s`. One
+  `ShareLinks.parse` doesn't read only brings the app forward, and no other non-file URL is read (NSData would download
+  it). `iosApp.entitlements` names `applinks:campfire-songbook.com`, so the App ID needs the Associated Domains
+  capability before a signed build.
 - Files from AirDrop, Mail, or Messages are copies in `Documents/Inbox`, deleted after reading — only there, since a
   file opened in place is the user's original. Originals are read through an `NSFileCoordinator`, which downloads an
   iCloud file and waits for a writer.
