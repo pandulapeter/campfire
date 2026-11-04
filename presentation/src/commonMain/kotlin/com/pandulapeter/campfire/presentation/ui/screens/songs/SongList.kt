@@ -78,10 +78,12 @@ import com.pandulapeter.campfire.presentation.ui.components.Placeholder
 import com.pandulapeter.campfire.presentation.ui.components.list.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.appBar.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.list.anchoredTransition
+import com.pandulapeter.campfire.presentation.ui.components.list.drawingAnchorDepartures
 import com.pandulapeter.campfire.presentation.ui.components.list.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.list.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.list.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.list.ListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.list.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.songCard.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.appBar.searchTravelSpec
@@ -168,9 +170,7 @@ internal fun SongList(
     )
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val searchCardHold = remember { SearchCardHold() }
-    val gridModifier = remember(topFade) {
-        Modifier.fillMaxSize().listTopFadeViewport(topFade).holdingSearchCard(searchCardHold, listState, filterAnchor)
-    }
+    val gridModifier = remember(topFade) { songGridModifier(topFade, searchCardHold, listState, filterAnchor) }
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list keeping whichever row happened to be first.
@@ -434,6 +434,13 @@ private const val SEARCH_GAP_KEY = "search_gap"
  * The key of the divider under this leading group ([hasDividerAfter]). The random picks keep one of their own under the
  * Selection's, so neither is a key the grid sees twice.
  */
+/** The grid's own modifier: its top fade, the card the search keeps in place, and the cards a change pushes off screen. */
+private fun songGridModifier(topFade: ListTopFade, searchCardHold: SearchCardHold, listState: LazyGridState, anchor: ListAnchor) = Modifier
+    .fillMaxSize()
+    .listTopFadeViewport(topFade)
+    .holdingSearchCard(searchCardHold, listState, anchor)
+    .drawingAnchorDepartures(anchor, listState)
+
 private val SongGroup.dividerKey get() = if (isRandomPicks) RANDOM_PICKS_DIVIDER_KEY else SELECTION_DIVIDER_KEY
 
 /** The key of the divider under the Selection. */

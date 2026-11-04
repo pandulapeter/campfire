@@ -12,7 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.list
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class AnchorArrivalTest {
+class AnchorTravelTest {
 
     private fun arrival(index: Int, top: Int, vararg shifts: Pair<Int, Int>) = arrivalShift(
         index = index,
@@ -43,4 +43,41 @@ class AnchorArrivalTest {
 
     @Test
     fun `an item with nothing on screen before it fades in`() = assertEquals(null, arrival(index = 5, top = 900))
+
+    @Test
+    fun `an item below travels up at least as far as any of the ones on screen before it`() =
+        assertEquals(500, arrival(index = 5, top = 700, 3 to 500, 4 to 400))
+
+    private fun departure(index: Int, top: Int, vararg shifts: Pair<Int, Int>) = departureShift(
+        index = index,
+        top = top,
+        height = 100,
+        shifts = shifts.map { (index, shift) -> ItemShift(index = index, shift = shift) },
+        viewportStart = 0,
+        viewportEnd = 1000,
+    )
+
+    @Test
+    fun `an item pushed off the bottom travels down with the ones still on screen`() =
+        assertEquals(-400, departure(index = 5, top = 700, 3 to -400, 4 to -400))
+
+    @Test
+    fun `an item pushed off the bottom ends below the screen`() = assertEquals(-200, departure(index = 5, top = 800, 4 to -50))
+
+    @Test
+    fun `an item pushed off the bottom travels down at least as far as any of the ones before it`() =
+        assertEquals(-500, departure(index = 5, top = 700, 3 to -500, 4 to -400))
+
+    @Test
+    fun `an item pushed off the top travels up with the ones still on screen`() = assertEquals(300, departure(index = 1, top = 50, 2 to 300))
+
+    @Test
+    fun `an item pushed off the top ends above the screen`() = assertEquals(150, departure(index = 1, top = 50, 2 to 20))
+
+    @Test
+    fun `an item that leaves from among the ones on screen does not travel`() =
+        assertEquals(null, departure(index = 3, top = 500, 2 to -100, 4 to -100))
+
+    @Test
+    fun `an item below a list moving up does not travel`() = assertEquals(null, departure(index = 5, top = 900, 4 to 100))
 }

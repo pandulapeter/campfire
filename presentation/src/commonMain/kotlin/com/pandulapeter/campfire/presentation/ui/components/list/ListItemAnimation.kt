@@ -30,6 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +71,9 @@ internal class ListAnchor {
     private var transition by mutableStateOf<AnchorTransition?>(null)
     private var transitionJob: Job? = null
 
+    /** What the items last drew, for the ones a change pushes off screen ([animateFrom]'s `listedAfter`). */
+    val snapshots = AnchorSnapshots()
+
     /**
      * Counts the transitions [animateFrom] has started, so that whoever started one can tell whether the one running is
      * still theirs. Not state: it is read by effects, never drawn.
@@ -93,23 +100,25 @@ internal class ListAnchor {
      * also moves under, as the app bar fills in, is narrated on that movement's spring, so that what stands still on
      * screen does. Called before [listState] measures the change, whose layout until then is the one before it.
      *
-     * @param arrivalsTravel Whether the items that come on screen past either end of the ones that were travel in with
-     *   them ([arrivalShift]) rather than fade in where they are: a change that reads as the list moving, which the
-     *   search opening and closing does, and not one that reads as the list being rebuilt, which a filter does.
+     * @param listedAfter Set for a change that reads as the list moving, which the search opening and closing does, and
+     *   not as it being rebuilt, which a filter does: the items that come on screen past either end of the ones that
+     *   were travel in with them ([arrivalShift]) rather than fade in where they are, and the ones still listed after
+     *   the change that leave by an edge travel off with them ([departureShift]) rather than vanish.
      */
     fun animateFrom(
         listState: LazyGridState,
         visibleOffsets: Map<Any, IntOffset>,
         coroutineScope: CoroutineScope,
         animationSpec: AnimationSpec<Float> = ITEM_FADE_SPEC,
-        arrivalsTravel: Boolean = false,
+        listedAfter: ((key: Any) -> Boolean)? = null,
     ) {
         transitionJob?.cancel()
         transitionNumber++
         val newTransition = AnchorTransition(
             previousLayoutInfo = listState.layoutInfo,
             previousOffsets = visibleOffsets,
-            arrivalsTravel = arrivalsTravel,
+            listedAfter = listedAfter,
+            departing = if (listedAfter == null) emptyMap() else snapshots.hold(visibleOffsets.keys),
         )
         transition = newTransition
         transitionJob = coroutineScope.launch {
@@ -117,6 +126,7 @@ internal class ListAnchor {
                 newTransition.progress.animateTo(1f, animationSpec)
             } finally {
                 if (transition === newTransition) transition = null
+                snapshots.release(newTransition.departing.keys)
             }
         }
     }
@@ -132,7 +142,7 @@ internal class ListAnchor {
     /**
      * Where the item with [key] is drawn from, relative to where the grid placed it, and how opaque it is: an item
      * that was on screen before the change slides in from where it was, and one that was not fades in where it is,
-     * unless it travels in from past an edge ([animateFrom]'s `arrivalsTravel`).
+     * unless it travels in from past an edge ([animateFrom]'s `listedAfter`).
      */
     fun GraphicsLayerScope.applyTransition(listState: LazyGridState, key: Any) {
         val transition = transition ?: return
@@ -147,6 +157,21 @@ internal class ListAnchor {
             translationY = (previousOffset.y - offset.y) * (1f - progress)
         }
     }
+
+    /**
+     * Draws the items the running change pushes off screen where they travel, from what they last drew: the grid no
+     * longer has them. Clipped to the grid, past whose edges they go.
+     */
+    fun DrawScope.drawDepartures(listState: LazyGridState) {
+        val transition = transition ?: return
+        val progress = transition.progress.value
+        val departures = transition.departuresOf(listState).takeIf { it.isNotEmpty() } ?: return
+        clipRect {
+            departures.forEach { (snapshot, shift) ->
+                translate(left = snapshot.position.x, top = snapshot.position.y - shift * progress) { drawLayer(snapshot.layer) }
+            }
+        }
+    }
 }
 
 /**
@@ -158,7 +183,7 @@ internal class ListAnchor {
  */
 internal fun Modifier.anchoredTransition(anchor: ListAnchor, listState: LazyGridState, key: Any) = graphicsLayer {
     with(anchor) { applyTransition(listState, key) }
-}
+}.anchorSnapshot(anchor.snapshots, key)
 
 /** An item of the grid, how far below the start of the viewport its top was, in pixels, and where the rest were. */
 internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: Map<Any, IntOffset>)
@@ -166,12 +191,14 @@ internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: M
 private class AnchorTransition(
     private val previousLayoutInfo: LazyGridLayoutInfo,
     val previousOffsets: Map<Any, IntOffset>,
-    private val arrivalsTravel: Boolean,
+    private val listedAfter: ((Any) -> Boolean)?,
+    val departing: Map<Any, AnchorSnapshot>,
 ) {
     val progress = Animatable(0f)
     private var layoutInfo: LazyGridLayoutInfo? = null
     private val offsets = mutableMapOf<Any, IntOffset>()
     private val arrivalShifts = mutableMapOf<Any, Int>()
+    private val departureShifts = mutableMapOf<Any, Int?>()
 
     /**
      * Where the grid first placed the item with [key] after the change, kept for the rest of it rather than read off every
@@ -186,16 +213,57 @@ private class AnchorTransition(
      *
      * Worked out once per layout rather than once per item, since every visible item asks while the change runs.
      */
-    fun offsetOf(listState: LazyGridState, key: Any): IntOffset? {
+    fun offsetOf(listState: LazyGridState, key: Any): IntOffset? = measuredLayoutInfo(listState)?.let { offsets[key] }
+
+    /** The layout of the moment, recorded, or null while it is still the one from before the change. */
+    private fun measuredLayoutInfo(listState: LazyGridState): LazyGridLayoutInfo? {
         val currentLayoutInfo = listState.layoutInfo
         if (currentLayoutInfo === previousLayoutInfo) return null
         if (currentLayoutInfo !== layoutInfo) {
             layoutInfo = currentLayoutInfo
             val arrivals = currentLayoutInfo.visibleItemsInfo.filter { it.key !in offsets && it.key !in previousOffsets }
             currentLayoutInfo.visibleItemsInfo.forEach { offsets.getOrPut(it.key) { it.offset } }
-            if (arrivalsTravel && arrivals.isNotEmpty()) recordArrivals(currentLayoutInfo, arrivals)
+            if (listedAfter != null && arrivals.isNotEmpty()) recordArrivals(currentLayoutInfo, arrivals)
+            if (listedAfter != null) recordDepartures(currentLayoutInfo, listedAfter)
         }
-        return offsets[key]
+        return currentLayoutInfo
+    }
+
+    /** The items pushed off screen that the layout of the moment does not show, and how far up each travels. */
+    fun departuresOf(listState: LazyGridState): List<Pair<AnchorSnapshot, Int>> {
+        if (departing.isEmpty()) return emptyList()
+        val visibleKeys = measuredLayoutInfo(listState)?.visibleItemsInfo?.mapTo(HashSet()) { it.key } ?: return emptyList()
+        return departureShifts.mapNotNull { (key, shift) ->
+            if (shift == null || key in visibleKeys) null else departing[key]?.let { it to shift }
+        }
+    }
+
+    /**
+     * Decided once for each item, in the first layout that does not show it, against the offsets the items still shown
+     * were first placed at, as the arrivals are. One no longer listed (a header an open search takes away, a random pick)
+     * did not leave by an edge and is gone at once.
+     */
+    private fun recordDepartures(layoutInfo: LazyGridLayoutInfo, listedAfter: (Any) -> Boolean) {
+        val visibleKeys = layoutInfo.visibleItemsInfo.mapTo(HashSet()) { it.key }
+        val left = previousLayoutInfo.visibleItemsInfo.filter { it.key !in visibleKeys && it.key !in departureShifts && it.key in departing }
+        if (left.isEmpty()) return
+        val shifts = previousLayoutInfo.visibleItemsInfo.mapNotNull { item ->
+            offsets[item.key]?.takeIf { item.key in visibleKeys }?.let { offset -> ItemShift(index = item.index, shift = item.offset.y - offset.y) }
+        }
+        left.forEach { item ->
+            departureShifts[item.key] = if (!listedAfter(item.key)) {
+                null
+            } else {
+                departureShift(
+                    index = item.index,
+                    top = item.offset.y,
+                    height = item.size.height,
+                    shifts = shifts,
+                    viewportStart = layoutInfo.viewportStartOffset,
+                    viewportEnd = layoutInfo.viewportEndOffset,
+                )
+            }
+        }
     }
 
     /** How far up the item with [key], which was not on screen before the change, travels to its place, if it does. */

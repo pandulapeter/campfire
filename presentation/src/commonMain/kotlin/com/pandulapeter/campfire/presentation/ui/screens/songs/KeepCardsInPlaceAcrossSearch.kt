@@ -77,7 +77,7 @@ internal fun rememberSearchOpening(
  * bar fills in at the same time and moves the list down by the room a pinned header's row took ([SEARCH_LIST_SHIFT]), so
  * the card's row is asked for that much higher in the list, and the jump is narrated by [anchor] on the bar's own spring
  * ([searchTravelSpec]): every card slides from where it was by as much as the list moves under it, and the card stands
- * still, while the cards that come into sight past the screen's edges travel in with their neighbours. A request is a
+ * still, while the cards that come into sight or leave it past the screen's edges travel with their neighbours. A request is a
  * jump the grid forgets every item animation over, which leaves the headers to vanish at once rather than fade; the
  * grid's own animation would keep the first row it has by key, moving the card down with the bar.
  *
@@ -131,7 +131,15 @@ internal fun KeepCardsInPlaceAcrossSearch(
             val isJump = index != listState.firstVisibleItemIndex || offset != listState.firstVisibleItemScrollOffset
             listState.requestScrollToItem(index = index, scrollOffset = offset)
             if (isJump) {
-                anchor.animateFrom(listState, visibleOffsets, coroutineScope, animationSpec = searchTravelSpec(), arrivalsTravel = true)
+                anchor.animateFrom(
+                    listState = listState,
+                    visibleOffsets = visibleOffsets,
+                    coroutineScope = coroutineScope,
+                    animationSpec = searchTravelSpec(),
+                    // Every song shown before is listed after, the search's results or the whole list; the headers an open
+                    // search takes away and the random picks are not, and those are gone at once rather than pushed.
+                    listedAfter = { key -> groups.itemIndexOf(key, hasPlaceholder) != null },
+                )
                 hold.hold(
                     HeldSearchCard(
                         index = index,
