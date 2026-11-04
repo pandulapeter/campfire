@@ -67,8 +67,7 @@ import kotlin.time.Duration.Companion.seconds
  * [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each other
  * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
- * @param openImportedSong Opens the library's own song that a batch of one song turned out to be, see
- *   `Navigator.openImportedSong`.
+ * @param openLibraryItem Opens the library's own song or setlist that a batch turned out to be, see [LibraryItemToOpen].
  * @param loadSongText Reads the text of a song just written, which the preview it was imported from becomes the screen of.
  * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
  *   `EditorSession.openNewSongEditor`.
@@ -84,7 +83,7 @@ internal class ImportController(
     private val messageSink: MessageSink,
     private val backStack: List<CampfireDestination>,
     private val reportState: ImportReportState,
-    private val openImportedSong: (fileName: String) -> Unit,
+    private val openLibraryItem: (LibraryItemToOpen) -> Unit,
     private val loadSongText: suspend (fileName: String) -> Unit,
     private val openNewSongEditor: suspend (text: String, suggestion: SharedTextTitle?) -> Unit,
     private val areSongsEnabled: () -> Boolean,
@@ -450,8 +449,8 @@ internal class ImportController(
                     // and it is the queue that opens it, since it may have to wait for whatever is on screen.
                     _isImporting.value = false
                     return newSong
-                } else if (request.shouldReview && areSongsEnabled && plan.librarySong != null) {
-                    // The library holds the song as it is, so there is nothing to preview and nothing to write: it is opened.
+                } else if (request.shouldReview && areSongsEnabled && (plan.librarySong != null || plan.librarySetlist != null)) {
+                    // The library holds the song or the setlist as it is, so there is nothing to review and nothing to write: it is opened.
                     activeRequest = null
                     applyImportPlan(
                         plan = plan,
@@ -459,7 +458,7 @@ internal class ImportController(
                         request = request,
                         sharedLinkParts = listOfNotNull(request.sharedLinkFileId?.let { SharedLinkPart(it, plan.songs.indices, plan.setlists.indices) }),
                         isReported = isReviewed,
-                        opensLoneSong = true,
+                        opensLibraryItem = true,
                     )
                 } else if (request.shouldReview || plan.hasConflicts) {
                     activeRequest = request
@@ -625,8 +624,8 @@ internal class ImportController(
      *   where its outcome goes for as long as that screen has not been left, unless it went clean: the user has just
      *   read the list, and reading it again as a result is one tap more than it is worth. Otherwise the outcome is a
      *   snackbar, unless something was left out or went wrong, which is what the import screen is put up for.
-     * @param opensLoneSong Whether the one song of the plan is opened once the import is over whatever the request asked,
-     *   which is what a batch of one song the library already holds is for, converted or not.
+     * @param opensLibraryItem Whether the one song or setlist of the plan is opened once the import is over whatever the
+     *   request asked, which is what a batch of one song or setlist the library already holds is for, converted or not.
      * @param preview The preview of a batch of one song the import was started from, which becomes the screen of the song
      *   once it is written, and is put back for the user to try again where nothing could be.
      */
@@ -636,7 +635,7 @@ internal class ImportController(
         request: ImportRequest,
         sharedLinkParts: List<SharedLinkPart>,
         isReported: Boolean,
-        opensLoneSong: Boolean = false,
+        opensLibraryItem: Boolean = false,
         preview: ImportReport.Review? = null,
     ) {
         try {
@@ -649,9 +648,11 @@ internal class ImportController(
             val songToOpen = songToOpen(
                 plan = plan,
                 result = result,
-                shouldOpenSong = (request.shouldOpenSong || request.isNewSongFromText || opensLoneSong) && areSongsEnabled(),
-                isConvertedSongOpened = request.isNewSongFromText || opensLoneSong,
+                shouldOpenSong = (request.shouldOpenSong || request.isNewSongFromText || opensLibraryItem) && areSongsEnabled(),
+                isConvertedSongOpened = request.isNewSongFromText || opensLibraryItem,
             )
+            val itemToOpen = plan.librarySetlist?.takeIf { opensLibraryItem && !result.isFailed && areSongsEnabled() }
+                ?.let { LibraryItemToOpen.Setlist(it.fileName) } ?: songToOpen?.let(LibraryItemToOpen::Song)
             val isReportShown = isReported && reportState.isOnBackStack
             val previewedSong = result.importedSongFileNames.singleOrNull()?.takeIf { !result.isFailed }
             when {
@@ -664,9 +665,9 @@ internal class ImportController(
                     messageSink.sendMessage(Message.ImportFinished(result, hasDetails = true))
                 }
 
-                // The one song the system handed over is what the user was after, and the review has been answered:
-                // the import screen gives way to it rather than reporting on one file.
-                songToOpen != null -> {
+                // The one song or setlist the system handed over is what the user was after, and the review has been
+                // answered: the import screen gives way to it rather than reporting on one file.
+                itemToOpen != null -> {
                     // Let go of first, since a report that still says it is being written outlives its screen.
                     if (isReported) reportState.report = null
                     if (isReportShown) reportState.close()
@@ -676,8 +677,8 @@ internal class ImportController(
                         // could find the library read and its song not in it yet. One pushed before the library is read
                         // waits for it by itself. Should the song never arrive (synced away meanwhile), it is not opened
                         // at all rather than out of nowhere much later.
-                        withTimeoutOrNull(SONG_LOOKUP_TIMEOUT) {
-                            songLookup.first { !it.isLibraryRead || songToOpen in it.songsByFileName }
+                        if (itemToOpen is LibraryItemToOpen.Song) withTimeoutOrNull(SONG_LOOKUP_TIMEOUT) {
+                            songLookup.first { !it.isLibraryRead || itemToOpen.fileName in it.songsByFileName }
                         } ?: return@launch
                         // A first run opens the onboarding over a file the app was opened with; the song follows it, as an
                         // import screen would, rather than going on top of its pages. Finishing the onboarding puts it in
@@ -689,12 +690,12 @@ internal class ImportController(
                         } finally {
                             reportState.songAfterOnboarding = null
                         }
-                        openImportedSong(songToOpen)
+                        openLibraryItem(itemToOpen)
                     }
                     if (request.shouldAnnounceResult) {
-                        // A lone song opened from the library wrote nothing, which one sentence says better than counts.
+                        // A lone song or setlist opened from the library wrote nothing, which one sentence says better than counts.
                         messageSink.sendMessage(
-                            if (opensLoneSong) Message.SongAlreadyInLibrary else Message.ImportFinished(result, hasDetails = false),
+                            if (opensLibraryItem) Message.AlreadyInLibrary else Message.ImportFinished(result, hasDetails = false),
                         )
                     }
                 }
@@ -812,12 +813,6 @@ internal class ImportController(
         } finally {
             isDeletingLibrary.value = false
         }
-    }
-
-    /** What [prepare] came to: a plan to review or write, or why there is none. */
-    private sealed interface Preparation {
-        class Planned(val plan: ImportPlan) : Preparation
-        class Failed(val reason: ImportFailure) : Preparation
     }
 
     /**

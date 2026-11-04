@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.setlist.Setlist
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -89,6 +91,18 @@ class ImportOutcomeTest {
     }
 
     @Test
+    fun `a batch of one setlist the library holds as it is, songs and all, is the library's setlist`() {
+        val setlist = setlistEntry(ImportPlan.Status.IDENTICAL)
+
+        assertEquals(setlist, ImportPlan(songs = listOf(entry(ImportPlan.Status.IDENTICAL)), setlists = listOf(setlist)).librarySetlist)
+        assertNull(ImportPlan(songs = listOf(entry(ImportPlan.Status.CONFLICTING)), setlists = listOf(setlist)).librarySetlist)
+        assertNull(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW)), setlists = listOf(setlist)).librarySetlist)
+        assertNull(ImportPlan(setlists = listOf(setlistEntry(ImportPlan.Status.CONFLICTING))).librarySetlist)
+        assertNull(ImportPlan(setlists = listOf(setlist, setlist)).librarySetlist)
+        assertNull(ImportPlan(setlists = listOf(setlist), skippedFileNames = listOf("a.txt")).librarySetlist)
+    }
+
+    @Test
     fun `a batch of one song with anything else in it is reviewed rather than previewed`() {
         assertFalse(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW), entry(ImportPlan.Status.NEW))).isPreviewed)
         assertFalse(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW)), skippedFileNames = listOf("a.txt")).isPreviewed)
@@ -96,6 +110,21 @@ class ImportOutcomeTest {
     }
 
     private fun entry(status: ImportPlan.Status) = ImportPlan.SongEntry(fileName = "a.cho", text = "{title: A}", status = status, sourceFileName = "a.cho")
+
+    private fun setlistEntry(status: ImportPlan.Status) = ImportPlan.SetlistEntry(
+        fileName = "gig.setlist.json",
+        setlist = Setlist(
+            fileName = "gig.setlist.json",
+            title = "Gig",
+            description = "",
+            date = LocalDate(2026, 11, 4),
+            isArchived = false,
+            entries = listOf(Setlist.Entry(songFileName = "a.cho")),
+            size = 0,
+        ),
+        status = status,
+        sourceFileName = "gig.setlist.json",
+    )
 
     private fun requestOf(vararg names: String, shouldOpenSong: Boolean, shouldReview: Boolean = true) = ImportRequest(
         source = ImportSource.Files(names.map { ImportedFile(name = it, bytes = ByteArray(0)) }),

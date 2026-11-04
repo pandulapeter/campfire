@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSetlistFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSongFileNamesWrittenBy
+import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -48,6 +49,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -67,6 +69,7 @@ class ImportControllerQueueTest {
     private var prepareCount = 0
     private var importCount = 0
     private val openedSongs = mutableListOf<String>()
+    private val openedSetlists = mutableListOf<String>()
     private val loadedSongTexts = mutableListOf<String>()
     private val newSongTexts = mutableListOf<String>()
     private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
@@ -75,6 +78,7 @@ class ImportControllerQueueTest {
     private var areSongsEnabled = true
     private var onPrepare: () -> Unit = {}
     private var plannedSongs = listOf(songEntry("new.cho"))
+    private var plannedSetlists = emptyList<ImportPlan.SetlistEntry>()
 
     /** What the plans leave out, which makes a batch of one song more than that song, and so reviewed rather than previewed. */
     private var plannedSkipped = emptyList<String>()
@@ -113,7 +117,12 @@ class ImportControllerQueueTest {
             messageSink = messageSink,
             backStack = backStack,
             reportState = reportState,
-            openImportedSong = { openedSongs += it },
+            openLibraryItem = { item ->
+                when (item) {
+                    is LibraryItemToOpen.Song -> openedSongs += item.fileName
+                    is LibraryItemToOpen.Setlist -> openedSetlists += item.fileName
+                }
+            },
             loadSongText = { loadedSongTexts += it },
             openNewSongEditor = { text, suggestion ->
                 newSongTexts += text
@@ -133,7 +142,7 @@ class ImportControllerQueueTest {
                     prepareCount++
                     preparedFiles += files
                     onPrepare()
-                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, skippedFileNames = plannedSkipped)
+                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped)
                 }
             },
             applyImport = object : ApplyImportUseCase {
@@ -502,7 +511,7 @@ class ImportControllerQueueTest {
         assertEquals(listOf("new.cho"), openedSongs)
         assertNull(reportState.importReport.value)
         assertTrue(backStack.none { it.isSongPreview })
-        assertEquals(listOf<Message>(Message.SongAlreadyInLibrary), messageSink.messageQueue.value.map { it.value })
+        assertEquals(listOf<Message>(Message.AlreadyInLibrary), messageSink.messageQueue.value.map { it.value })
     }
 
     @Test
@@ -656,6 +665,33 @@ class ImportControllerQueueTest {
         controller.resolveImport()
         settle()
         assertEquals(listOf(sharedLink.fileId to listOf("riverlight.cho")), rememberedSharedLinkImports)
+    }
+
+    @Test
+    fun `a shared setlist the library holds as it is, songs and all, is opened rather than reviewed, and said to be there`() = runTest {
+        download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
+        plannedSongs = listOf(songEntry("riverlight.cho", status = ImportPlan.Status.IDENTICAL))
+        plannedSetlists = listOf(setlistEntry("gig.setlist.json", status = ImportPlan.Status.IDENTICAL))
+        startController()
+        controller.importSharedLink(sharedLink)
+        settle()
+        assertEquals(listOf("gig.setlist.json"), openedSetlists)
+        assertTrue(openedSongs.isEmpty())
+        assertNull(reportState.importReport.value)
+        assertTrue(CampfireDestination.ImportReport !in backStack)
+        assertEquals(listOf<Message>(Message.AlreadyInLibrary), messageSink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a shared setlist the library holds with one of its songs changed is reviewed`() = runTest {
+        download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
+        plannedSongs = listOf(songEntry("riverlight.cho", status = ImportPlan.Status.CONFLICTING))
+        plannedSetlists = listOf(setlistEntry("gig.setlist.json", status = ImportPlan.Status.IDENTICAL))
+        startController()
+        controller.importSharedLink(sharedLink)
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(openedSetlists.isEmpty())
     }
 
     @Test
@@ -846,6 +882,21 @@ private fun songEntry(
     status = status,
     sourceFileName = fileName,
     isConverted = isConverted,
+)
+
+private fun setlistEntry(fileName: String, status: ImportPlan.Status) = ImportPlan.SetlistEntry(
+    fileName = fileName,
+    setlist = Setlist(
+        fileName = fileName,
+        title = fileName,
+        description = "",
+        date = LocalDate(2026, 11, 4),
+        isArchived = false,
+        entries = listOf(Setlist.Entry(songFileName = "riverlight.cho")),
+        size = 0,
+    ),
+    status = status,
+    sourceFileName = fileName,
 )
 
 private val ZIP_BYTES = byteArrayOf(0x50, 0x4b, 3, 4, 20, 0)

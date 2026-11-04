@@ -73,13 +73,14 @@ internal data class DraggedSetlist(
 
 /**
  * The index the grid holds a setlist's header at, counted the way [SetlistList] emits the items of the setlists before
- * it while performance mode is off, which it is whenever a setlist is being reordered.
+ * it: each one's header, summary, and rows, and the button that adds songs to it unless [isPerformanceModeEnabled],
+ * which is off whenever a setlist is being reordered.
  */
-internal fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?): Int? {
+internal fun List<SetlistWithSongs>.headerIndexOf(setlistFileName: String?, isPerformanceModeEnabled: Boolean = false): Int? {
     var index = 0
     forEach { setlistWithSongs ->
         if (setlistWithSongs.setlist.fileName == setlistFileName) return index
-        index += 2 + setlistWithSongs.entries.size + if (setlistWithSongs.hasSummary) 1 else 0
+        index += (if (isPerformanceModeEnabled) 1 else 2) + setlistWithSongs.entries.size + if (setlistWithSongs.hasSummary) 1 else 0
     }
     return null
 }

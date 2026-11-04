@@ -80,6 +80,7 @@ internal fun SetlistsScreen(
     }
     val columnCount = layout.columnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
+    SetlistRevealEffect(listState, listedSetlists, isPerformanceModeEnabled, viewModel.setlistsController)
     LaunchedEffect(viewModel, listState) {
         // Latest, for the reason the settings screen gives.
         viewModel.navigator.scrollToTopRequests.collectLatest { if (it.destination == CampfireDestination.Setlists) listState.animateScrollToTop() }

@@ -31,8 +31,8 @@ sealed interface Message {
     /** The song a preview showed has been written into the library, and the preview has become that song's screen. */
     data object PreviewedSongImported : Message
 
-    /** A batch of one song the library already holds as it is, which was opened rather than imported. */
-    data object SongAlreadyInLibrary : Message
+    /** A batch of one song or setlist the library already holds as it is, which was opened rather than imported. */
+    data object AlreadyInLibrary : Message
     data object ExportFailed : Message
     data object PdfSaved : Message
     data object SongExported : Message

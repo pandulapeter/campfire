@@ -51,6 +51,10 @@ class SetlistRowsTest {
     }
 
     @Test
+    fun `a header in read only mode counts no button for adding songs before it`() =
+        assertEquals(3, listOf(second, first).headerIndexOf("first.setlist.json", isPerformanceModeEnabled = true))
+
+    @Test
     fun `a countdown counts as a summary before a header even without a description`() {
         val counted = setlistWithSongs("counted", description = "", "a", "b", "c", isCountdownShown = true)
         assertEquals(6, listOf(counted, second).headerIndexOf("second.setlist.json"))

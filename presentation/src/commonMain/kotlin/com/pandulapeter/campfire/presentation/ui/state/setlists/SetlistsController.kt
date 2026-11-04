@@ -93,6 +93,21 @@ internal class SetlistsController(
     val isSetlistReordering: Boolean
         get() = backStack.lastOrNull() == CampfireDestination.Setlists && reorderingSetlistFileName != null
 
+    /** The setlist the screen is to bring into sight once it lists it, see [revealSetlist]. */
+    var revealedSetlist by mutableStateOf<SetlistReveal?>(null)
+
+    /**
+     * Brings the setlist [fileName] into sight on the screen: the one a shared link turned out to be, already in the
+     * library as it is. Everything that would keep it off the list goes first: the reorder mode, which shows one setlist
+     * alone, the search, and the archive filter, which the toggle at the end of the list shows switched on.
+     */
+    fun revealSetlist(fileName: String, isAnimated: Boolean) {
+        reorderingSetlistFileName = null
+        setlistsSearch.close()
+        if (setlists.value.any { it.fileName == fileName && it.isArchived }) setShouldShowArchivedSetlists(true)
+        revealedSetlist = SetlistReveal(fileName = fileName, isAnimated = isAnimated)
+    }
+
     private val shouldShowArchivedSetlists = userPreferences.map { it?.shouldShowArchivedSetlists == true }.distinctUntilChanged()
 
     /**

@@ -513,7 +513,7 @@ class CampfireViewModel(
         messageSink = messageSink,
         backStack = navigator.backStack,
         reportState = importReportState,
-        openImportedSong = { navigator.openImportedSong(it) },
+        openLibraryItem = { openLibraryItem(it) },
         loadSongText = { songTextStore.loadSongContent(it).join() },
         openNewSongEditor = { text, suggestion -> editorSession.openNewSongEditor(text, suggestion) },
         areSongsEnabled = { preferencesController.areSongsEnabled.value },

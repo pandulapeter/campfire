@@ -160,7 +160,7 @@ private fun messageText(current: Message?): String? =
         Message.ImportFailed -> stringResource(Res.string.import_failed)
         Message.ImportInterrupted -> stringResource(Res.string.import_interrupted)
         Message.PreviewedSongImported -> stringResource(Res.string.import_preview_imported)
-        Message.SongAlreadyInLibrary -> stringResource(Res.string.import_preview_already_there)
+        Message.AlreadyInLibrary -> stringResource(Res.string.import_preview_already_there)
         Message.ExportFailed -> stringResource(Res.string.export_failed)
         Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
         Message.SongExported -> stringResource(Res.string.export_song_saved)

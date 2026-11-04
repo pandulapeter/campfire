@@ -32,6 +32,17 @@ internal val ImportPlan.isPreviewed get() = newSongOf() != null
 /** The one song [plan] is where the library already holds it as it is, which is opened rather than previewed. */
 internal val ImportPlan.librarySong get() = loneSong?.takeIf { it.status == ImportPlan.Status.IDENTICAL }
 
+/**
+ * The one setlist [plan] is where the library already holds it and every song it brings as they are, which is shown where
+ * it is rather than reviewed with nothing to import: a shared setlist's link opened again with nothing changed, by its
+ * recipient or by whoever shared it.
+ */
+internal val ImportPlan.librarySetlist
+    get() = setlists.singleOrNull()?.takeIf { setlist ->
+        setlist.status == ImportPlan.Status.IDENTICAL && songs.all { it.status == ImportPlan.Status.IDENTICAL } &&
+            skippedFileNames.isEmpty() && oversizedFileNames.isEmpty() && unreadableDocumentFileNames.isEmpty()
+    }
+
 /** The entry the preview of a batch of one song is about, see [ImportPreview.singleSong]. */
 internal val PREVIEWED_SONG_KEY = ImportEntryKey(ImportEntryKey.Kind.SONG, 0)
 

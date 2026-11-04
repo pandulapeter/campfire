@@ -24,6 +24,9 @@
   has songs.
 - A search sends the list to the top when the list narrowed by it arrives (the folded query travels with the setlists),
   so the screen never reads the field's text.
+- A shared link to a setlist the library holds as it is brings that setlist to the top (`SetlistRevealEffect`): the
+  reorder mode and the search end and an archived one's toggle turns on first; a screen already on top scrolls, one
+  arriving starts there.
 
 ## Rows are dragged only in reorder mode
 
