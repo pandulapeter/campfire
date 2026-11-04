@@ -13,6 +13,8 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- Add tooltips that mention keyboard shortcuts
+- Performance mode is not clearly communicated, accidentally turning it on results in confusion
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
