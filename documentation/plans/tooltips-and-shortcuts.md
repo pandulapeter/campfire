@@ -42,14 +42,14 @@ acts on first (`LocalKeysLeftToShell`). What follows is what remains.
 | Ctrl+Z, Ctrl+Shift+Z / Y   | Song editor                   | The editor's own Undo / Redo history      |
 | Enter / Shift+Enter, F3 / Shift+F3 | Editor search         | Find next / previous                      |
 | Ctrl+A                     | Songs, selection mode         | Select all                                |
-| Ctrl+P                     | Song details, setlist         | Print and export                          |
+| Ctrl+S                     | Setlist                       | Share or export, as song details has it   |
 | Ctrl+Shift+↑ / ↓           | Song details                  | Transpose up / down                       |
 | T                          | Metronome tab, song details   | Tap tempo (same rules as M)               |
 | Ctrl+1 … Ctrl+6            | Main screens (desktop, web)   | Switch to the n-th visible main screen    |
 | Ctrl+,                     | Anywhere (desktop, web)       | Settings                                  |
 | Ctrl+/                     | Anywhere                      | The keyboard shortcuts sheet              |
 
-Nothing that deletes gets a shortcut. On the web, each new shortcut that the browser also uses (Ctrl+P, Ctrl+1 … 6,
+Nothing that deletes gets a shortcut. On the web, each new shortcut that the browser also uses (Ctrl+1 … 6,
 Ctrl+,, Ctrl+A, Ctrl+Y, and F3) has its default blocked only while the app handles that key, the way
 `EditShortcutEffect` does today. Chrome lets a page block all of these, but never Ctrl+N, which always opens a new
 window before the page sees it (tested in Chrome 157 on macOS with real key presses, November 2026). So the web build
