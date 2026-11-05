@@ -203,6 +203,7 @@ private class AnchorTransition(
 ) {
     val progress = Animatable(0f)
     private var layoutInfo: LazyGridLayoutInfo? = null
+    private var visibleKeys = emptySet<Any>()
     private val offsets = mutableMapOf<Any, IntOffset>()
     private val arrivals = mutableMapOf<Any, ItemArrival>()
     private val departureShifts = mutableMapOf<Any, Int?>()
@@ -228,6 +229,7 @@ private class AnchorTransition(
         if (currentLayoutInfo === previousLayoutInfo) return null
         if (currentLayoutInfo !== layoutInfo) {
             layoutInfo = currentLayoutInfo
+            visibleKeys = currentLayoutInfo.visibleItemsInfo.mapTo(HashSet()) { it.key }
             val newItems = currentLayoutInfo.visibleItemsInfo.filter { it.key !in offsets && it.key !in previousOffsets }
             currentLayoutInfo.visibleItemsInfo.forEach { offsets.getOrPut(it.key) { it.offset } }
             if (listedAfter != null && newItems.isNotEmpty()) recordArrivals(currentLayoutInfo, newItems)
@@ -238,8 +240,7 @@ private class AnchorTransition(
 
     /** The items pushed off screen that the layout of the moment does not show, and how far up each travels. */
     fun departuresOf(listState: LazyGridState): List<Pair<AnchorSnapshot, Int>> {
-        if (departing.isEmpty()) return emptyList()
-        val visibleKeys = measuredLayoutInfo(listState)?.visibleItemsInfo?.mapTo(HashSet()) { it.key } ?: return emptyList()
+        if (departing.isEmpty() || measuredLayoutInfo(listState) == null) return emptyList()
         return departureShifts.mapNotNull { (key, shift) ->
             if (shift == null || key in visibleKeys) null else departing[key]?.let { it to shift }
         }
@@ -251,7 +252,6 @@ private class AnchorTransition(
      * did not leave by an edge and is gone at once.
      */
     private fun recordDepartures(layoutInfo: LazyGridLayoutInfo, listedAfter: (Any) -> Boolean) {
-        val visibleKeys = layoutInfo.visibleItemsInfo.mapTo(HashSet()) { it.key }
         val left = previousLayoutInfo.visibleItemsInfo.filter { it.key !in visibleKeys && it.key !in departureShifts && it.key in departing }
         if (left.isEmpty()) return
         val shifts = previousLayoutInfo.visibleItemsInfo.mapNotNull { item ->

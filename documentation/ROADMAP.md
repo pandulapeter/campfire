@@ -14,13 +14,11 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Add tooltips that mention keyboard shortcuts
-- Search transition glitch: sticky headers should move together with the cards
 - Support multi-line sticky headers (setlist titles)
 - Song title font on card should have smaller line spacing, and that should be consistent between the two card display modes
 - Random picks refresh button could be a dice icon
 - Minimum card width should be reduced so that 2 columns are displayed on an unfolded Fold 8 / iPhone Duo
 - Add option to switch metronome tempo from the next beat instead of from the next bar
-- When a tag chip is selected on a song card, other cards should slide in insetad of appearing in place
 - The chord shape picker bottom sheet performs an unnecessary horizontal animation on Hebrew only
 - Full Preferences redesign: currently accidentally turning Performance mode on results in confusion + settings don't have a centralized place
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
