@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -63,6 +64,7 @@ import org.jetbrains.compose.resources.painterResource
  *   languages) and then the way into the selection mode.
  * @param isAfterButton Whether a [SetlistAssignmentsButton] stands right before the menu, see [ActionsMenu].
  * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
+ * @param editShortcut The keys that open the editor where the menu is, which the song details screen has.
  */
 @Composable
 internal fun SongActions(
@@ -78,13 +80,14 @@ internal fun SongActions(
     fileEditItems: @Composable () -> List<ActionsMenuItem> = { emptyList() },
     isAfterButton: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
+    editShortcut: KeyShortcut? = null,
 ) = ActionsMenu(
     modifier = modifier,
     state = state,
     isAfterButton = isAfterButton,
     menuFooter = menuFooter,
 ) {
-    val editItems = listOf(editSongAction(actions = actions, song = song)) + if (isEditAndExportOnly) emptyList() else fileEditItems()
+    val editItems = listOf(editSongAction(actions = actions, song = song, shortcut = editShortcut)) + if (isEditAndExportOnly) emptyList() else fileEditItems()
     leadingItems() + editItems + listOfNotNull(
         // Only where it would do something: a file already named after its own metadata, or one with no title to
         // be named after, has nothing to update and the action would be an offer that never comes to anything.
@@ -128,11 +131,13 @@ internal fun SongActions(
 }
 
 @Composable
-internal fun editSongAction(
+private fun editSongAction(
     actions: SongActionHandler,
     song: Song,
+    shortcut: KeyShortcut?,
 ) = ActionsMenuItem(
     title = stringResource(Res.string.songs_edit_song),
     icon = painterResource(Res.drawable.ic_edit),
+    shortcut = shortcut,
     onClick = { actions.edit(song) },
 )

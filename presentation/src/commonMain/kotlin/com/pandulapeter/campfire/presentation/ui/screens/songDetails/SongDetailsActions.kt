@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHa
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.actions.setlistAssignmentsAction
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import kotlinx.coroutines.flow.StateFlow
@@ -127,6 +128,7 @@ internal fun RowScope.SongDetailsActions(
                     isEditAndExportOnly = isReadOnly,
                     setlistFileName = setlistFileName,
                     isAfterButton = showsSetlistAssignmentsInBar,
+                    editShortcut = KeyShortcut.EDIT,
                     leadingItems = {
                         listOfNotNull(
                             aboutSongAction,

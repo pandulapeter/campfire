@@ -49,6 +49,9 @@ The view model facade, the composition root, and the product rules every screen 
 
 ## `CampfireApp`
 
+- **App-wide shortcuts** (`AppKeyboardShortcuts.kt`): Ctrl / Cmd + F, V, plus, minus, zero, Space, and M are heard at
+  the root after everything under it, on every platform with a keyboard; the root takes the focus whenever nothing
+  under it holds it (not under a dialog or menu), since keys travel only along the focus path. A held key acts once.
 - Snackbars are queued with a running number: two identical messages are the same object.
 - **Rescans** only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus if the
   last is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where the library

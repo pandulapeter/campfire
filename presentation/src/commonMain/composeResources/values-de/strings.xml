@@ -1373,4 +1373,8 @@
     <string name="settings_sync_disconnect_pending_stops">Einige auf diesem Gerät gelöschte Songs oder Setlists sind noch nicht synchronisiert. Ist eines davon geteilt, funktioniert sein Link weiter, außer du synchronisierst vor dem Trennen.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Dropbox konnte nicht erneut verbunden werden. Die bisherige Verbindung funktioniert weiterhin.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Strg</string>
+    <string name="key_shift">Umschalt</string>
+    <string name="key_space">Leertaste</string>
 </resources>

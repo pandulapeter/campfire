@@ -13,9 +13,21 @@ Every action drawn as an icon alone gets a tooltip naming it, followed by its ke
 buttons and menu items show their shortcuts too, a few new shortcuts are added, and one sheet lists every shortcut,
 including those that belong to no button at all (arrows, Space, M, and Esc).
 
-**Status (November 2026): the tooltips are in** (step 2 below and the tooltip half of step 6), each naming its action
-only. Nothing about shortcuts is done yet: no `KeyShortcut` table, no hints, no new shortcuts, no sheet. The rest of
-this plan builds on the tooltips as they landed, described under *Tooltips*.
+**Status (November 2026): steps 1 to 3 are in.** The tooltips, the `KeyShortcut` table (`ui/components/shortcuts`)
+with its formatter, the root handler (`ui/AppKeyboardShortcuts.kt`) that makes the app-wide shortcuts work with a
+hardware keyboard on Android and iOS, and the hints on tooltips, menu entries, and the text buttons that save. Left: the
+new shortcuts (step 4), the sheet, Android's system list, and iOS's `UIKeyCommand` list (step 5).
+
+**How step 1 landed**, which the rest builds on:
+
+- The table holds today's shortcuts only; the print preview's keys and the song's arrows join it with the sheet, which
+  is what lists them. A platform column comes with the first shortcut a platform cannot have (Ctrl+N on the web).
+- The root handler is a focus target at the app's root that takes the focus whenever nothing under it holds it, and
+  hears keys after everything under it (`onKeyEvent`): Compose delivers keys only along the focus path.
+- The web keeps its capture listeners for find, paste, zoom, Space, and M (the browser acts first, and Cmd+F there
+  works); they are `LocalKeysLeftToShell`, which the root handler skips. The desktop window answers only Escape.
+- Hints show only where there is a hardware keyboard (`rememberHasHardwareKeyboard`: Android's configuration, iOS's
+  `GCKeyboard`, always on the desktop and a desktop browser), so a phone's long press names no keys.
 
 ## Decided
 
@@ -112,13 +124,14 @@ leaves out Ctrl+N and hides its hint; New stays one click away in the list's hea
 
 ## Order of work
 
-1. The `KeyShortcut` table, the formatter and its tests, and the key name strings in every language. Move today's
-   handlers onto the table, and the app-wide ones to the common root handler, so they work on Android and iOS.
+1. ~~The `KeyShortcut` table, the formatter and its tests, and the key name strings in every language. Move today's
+   handlers onto the table, and the app-wide ones to the common root handler, so they work on Android and iOS.~~ Done.
 2. ~~`CampfireTooltip`, `CampfireIconButton`, and the central wrappers; then the raw call sites, screen by screen.~~
    Done; step 1 then gives `CampfireTooltip` its hint.
-3. Menu item hints and tooltips on text buttons that have a shortcut.
+3. ~~Menu item hints and tooltips on text buttons that have a shortcut.~~ Done.
 4. The new shortcuts, and the navigation items' tooltips with their `Ctrl+1` … `Ctrl+6` hints.
 5. The shortcuts sheet and Android's system list.
-6. One UI test (`tools/screenshots`): hovering an icon button shows its label and shortcut. `TooltipTest` already checks
-   the label on hover and on a long press; extend it with the shortcut. Update the CLAUDE.md files of the packages
+6. One UI test (`tools/screenshots`): hovering an icon button shows its label and shortcut. `TooltipTest` checks the
+   label on hover and on a long press, and that a phone without a keyboard is shown no keys; the UI tests impersonate
+   Android, so the hint itself needs a run impersonating the desktop. Update the CLAUDE.md files of the packages
    touched.

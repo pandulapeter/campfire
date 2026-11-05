@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
@@ -40,12 +41,9 @@ import kotlin.js.unsafeCast
 internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
     val listener: (Event) -> Unit = { event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
-        // code, as Compose goes by it (Key.F is the physical key); key for a virtual keyboard, which has none.
-        val isF = keyEvent.code == "KeyF" || keyEvent.key == "f" || keyEvent.key == "F"
-        val shortcut = if (isF) appShortcutOf(ShortcutKey.F, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey) else null
-        if (shortcut is AppShortcut.OpenSearch && viewModel.perform(shortcut)) {
+        if (keyEvent.isShortcut(KeyShortcut.FIND) && viewModel.navigator.searches.openCurrentSearch()) {
             keyEvent.preventDefault()
-        } else if (isEditorShortcutKey(keyEvent) && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongEditor) {
+        } else if (EDITOR_SHORTCUTS.any(keyEvent::isShortcut) && viewModel.navigator.backStack.lastOrNull() is CampfireDestination.SongEditor) {
             keyEvent.preventDefault()
         }
     }
@@ -54,14 +52,7 @@ internal fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
 }
 
 /**
- * Ctrl / Cmd + F, R, B, I, or U without Alt, by the physical key as Compose goes by it, or by the character a virtual
- * keyboard sends. B, I, and U only without Shift, as the editor hears them, so the browser keeps Ctrl + Shift + I
- * (its developer tools) and the others it gives those keys.
+ * The editor's shortcuts the browser has a use of its own for. B, I, and U only without Shift, as the editor hears
+ * them, so the browser keeps Ctrl + Shift + I (its developer tools) and the others it gives those keys.
  */
-private fun isEditorShortcutKey(keyEvent: KeyboardEvent) = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey &&
-    (keyEvent.isOneOf(SEARCH_KEYS) || (!keyEvent.shiftKey && keyEvent.isOneOf(FORMATTING_KEYS)))
-
-private fun KeyboardEvent.isOneOf(keys: Set<String>) = code.removePrefix("Key").lowercase() in keys || key.lowercase() in keys
-
-private val SEARCH_KEYS = setOf("f", "r")
-private val FORMATTING_KEYS = setOf("b", "i", "u")
+private val EDITOR_SHORTCUTS = listOf(KeyShortcut.FIND, KeyShortcut.REPLACE, KeyShortcut.BOLD, KeyShortcut.ITALIC, KeyShortcut.UNDERLINE)

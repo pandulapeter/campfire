@@ -77,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInstruments
 import com.pandulapeter.campfire.presentation.ui.instrument.chordInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.keyShortcut
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 import org.jetbrains.compose.resources.painterResource
 
@@ -172,6 +173,7 @@ private fun EditorToolbarRow(
                     EditorToolbarButton(
                         label = insertion.label,
                         icon = insertion.icon?.let { painterResource(it) },
+                        shortcut = insertion.formatting?.keyShortcut,
                         onClick = { onInsert(insertion) },
                     )
                 } else {

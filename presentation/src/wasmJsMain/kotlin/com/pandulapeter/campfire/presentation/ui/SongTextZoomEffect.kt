@@ -49,14 +49,15 @@ internal fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         if (keyEvent.key == KEY_CONTROL) isControlKeyDown = true
         // key rather than code, as the browser's own zoom goes by it: the plus of a Hungarian layout is Shift + 3.
-        val key = when (keyEvent.key) {
-            "+", "=" -> ShortcutKey.PLUS
-            "-", "_" -> ShortcutKey.MINUS
-            "0" -> ShortcutKey.ZERO
+        val zoom = when (keyEvent.key) {
+            "+", "=" -> AppShortcut.ZoomSongText(1)
+            "-", "_" -> AppShortcut.ZoomSongText(-1)
+            "0" -> AppShortcut.ZoomSongText(null)
             else -> return@listener
         }
-        val shortcut = appShortcutOf(key, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey)
-        if (shortcut is AppShortcut.ZoomSongText && viewModel.perform(shortcut)) {
+        val chord = zoom.keyShortcut.chord
+        val isZoom = chord.matches(key = chord.key, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isShift = keyEvent.shiftKey, isAlt = keyEvent.altKey)
+        if (isZoom && viewModel.fontScaleController.zoomSongText(zoom.steps)) {
             keyEvent.preventDefault()
         }
     }

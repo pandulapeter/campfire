@@ -30,7 +30,9 @@ import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * Asked when the editor is left with text in it that has not been written yet. Three answers rather than the usual
@@ -67,10 +69,12 @@ internal fun UnsavedChangesDialog(
         },
         text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
         confirmButton = {
-            TextButton(
-                enabled = !isSaving,
-                onClick = onSave,
-            ) { Text(stringResource(Res.string.save)) }
+            CampfireTooltip(label = null, shortcut = KeyShortcut.SAVE) {
+                TextButton(
+                    enabled = !isSaving,
+                    onClick = onSave,
+                ) { Text(stringResource(Res.string.save)) }
+            }
         },
         dismissButton = {
             Row {

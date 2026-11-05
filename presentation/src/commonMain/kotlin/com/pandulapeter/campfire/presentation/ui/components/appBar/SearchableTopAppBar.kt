@@ -91,6 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.menu.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingAction
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.songCard.SONG_CARD_OUTER_PADDING
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import kotlinx.coroutines.flow.collectLatest
@@ -549,15 +550,12 @@ private fun SearchAction(
     PillIconButton(
         modifier = modifier,
         tooltip = label,
+        shortcut = KeyShortcut.FIND.takeUnless { isOpen },
         enabled = isEnabled,
         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
         onClick = {
-            if (isOpen) {
-                keyboardController?.hide()
-                searchState.close()
-            } else {
-                searchState.open()
-            }
+            if (isOpen) keyboardController?.hide()
+            if (isOpen) searchState.close() else searchState.open()
         },
     ) {
         SearchToCloseIcon(isClose = isOpen, backProgress = searchState.backProgress, contentDescription = label)

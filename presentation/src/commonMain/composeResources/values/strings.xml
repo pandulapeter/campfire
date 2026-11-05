@@ -1373,4 +1373,8 @@
     <string name="settings_sync_disconnect_pending_stops">Some songs or setlists deleted on this device have not been synced yet. If any of them is shared, its link keeps working unless you sync before disconnecting.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Couldn't connect Dropbox again. The connection you had still works.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_space">Space</string>
 </resources>

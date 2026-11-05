@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * A round button of the song's own first section, opening a tool the song is played with — the metronome panel, the
@@ -46,6 +47,7 @@ internal fun SongToolButton(
     modifier: Modifier = Modifier,
     height: Dp,
     label: String,
+    shortcut: KeyShortcut? = null,
     isSelected: Boolean = false,
     onClick: () -> Unit,
     icon: @Composable () -> Unit,
@@ -55,7 +57,7 @@ internal fun SongToolButton(
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
-        CampfireTooltip(label = label) {
+        CampfireTooltip(label = label, shortcut = shortcut) {
             Surface(
                 modifier = modifier.size(height),
                 onClick = onClick,

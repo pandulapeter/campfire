@@ -37,6 +37,8 @@ and most dialogs open with a field focused.
 - **Escape** (`startForwardingEscapeKey`): a press Compose hasn't seen (its listener `preventDefault`s what it handles)
   is re-dispatched on the canvas, so the innermost back handler answers it. Don't decide its meaning here as the desktop
   does: that can't tell a dialog from the sheet under it. Held repeats are stopped in the capture phase.
+- The shortcuts answered here (find, paste, zoom, Space and M) are `LocalKeysLeftToShell`, which the app's own root
+  handler (`appKeyboardShortcuts`) leaves alone, so none is handled twice.
 - **Ctrl/Cmd + S**: default prevented in the capture phase, or "Save page as" opens on every shortcut save.
 - **Ctrl/Cmd + F** (a Kotlin listener, since the view model decides synchronously): prevents the find bar only if
   `openCurrentSearch` opened something. In the editor, F and R are always prevented (Find / Find and replace; R would

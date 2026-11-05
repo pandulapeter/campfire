@@ -12,12 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * Answers Ctrl / Cmd + F with [onFind] and Ctrl / Cmd + R with [onReplace], on the editor and on its search sheet alike,
@@ -28,11 +26,9 @@ import androidx.compose.ui.input.key.type
  * on top, since a key pressed in the hidden input of a text field reaches Compose only after the browser has acted on it.
  */
 internal fun Modifier.editorSearchShortcuts(onFind: () -> Unit, onReplace: () -> Unit) = onPreviewKeyEvent { keyEvent ->
-    val isShortcut = (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed
     val action = when {
-        !isShortcut -> null
-        keyEvent.key == Key.F -> onFind
-        keyEvent.key == Key.R -> onReplace
+        KeyShortcut.FIND.matches(keyEvent) -> onFind
+        KeyShortcut.REPLACE.matches(keyEvent) -> onReplace
         else -> null
     }
     if (action != null && keyEvent.type == KeyEventType.KeyDown) action()

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ScrollState
@@ -168,6 +169,7 @@ internal fun SongDetailsAppBar(
                 isFlashEnabled = panel.isFlashEnabled,
                 onBeatLevelsChanged = { levels -> metronomeController.setBeatLevels(panel.timeSignature, levels) },
                 onPlayStop = metronomeController::toggleMetronome,
+                playShortcut = KeyShortcut.METRONOME,
                 isVisible = isMetronomePanelVisible,
                 contentPadding = contentPadding,
                 visibleState = metronomePanelState,

@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
@@ -30,16 +31,21 @@ internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableE
     val listener: (Event) -> Unit = listener@{ event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         if (keyEvent.defaultPrevented || isTypingTarget(keyEvent)) return@listener
-        val key = when (keyEvent.code) {
-            "Space" -> ShortcutKey.SPACE
-            "KeyM" -> ShortcutKey.M
+        val shortcut = when (keyEvent.code) {
+            "Space" -> KeyShortcut.PLAY
+            "KeyM" -> KeyShortcut.METRONOME
             else -> return@listener
         }
-        val shortcut = appShortcutOf(key, isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey, isAlt = keyEvent.altKey)
+        val isShortcut = shortcut.chord.matches(
+            key = shortcut.chord.key,
+            isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey,
+            isShift = keyEvent.shiftKey,
+            isAlt = keyEvent.altKey,
+        )
         // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
         // thirty times a second.
-        if (shortcut !is AppShortcut.ToggleMetronome || keyEvent.repeat) return@listener
-        if (viewModel.perform(shortcut)) keyEvent.preventDefault()
+        if (!isShortcut || keyEvent.repeat) return@listener
+        if (viewModel.metronomeController.toggleMetronomeByKey(isSpace = shortcut == KeyShortcut.PLAY)) keyEvent.preventDefault()
     }
     window.addEventListener(EVENT_KEY_DOWN, listener)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener) }

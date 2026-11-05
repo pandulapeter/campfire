@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import com.pandulapeter.campfire.presentation.ui.components.horizontalArrowStep
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import kotlinx.coroutines.launch
 
 /**
@@ -125,12 +126,12 @@ internal fun Modifier.songKeyboardShortcuts(
         .onPreviewKeyEvent { keyEvent ->
             // Before the check for modifiers below, so that a key released with one of them down is still released.
             if (keyEvent.type == KeyEventType.KeyUp) heldStepKeys.remove(keyEvent.key)
-            if (onEdit != null && keyEvent.key == Key.E && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+            if (onEdit != null && KeyShortcut.EDIT.matches(keyEvent)) {
                 // The key-up is taken too, so that nothing under this sees half a shortcut.
                 if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onEdit()
                 return@onPreviewKeyEvent true
             }
-            if (onSave != null && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+            if (onSave != null && KeyShortcut.SAVE.matches(keyEvent)) {
                 if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onSave()
                 return@onPreviewKeyEvent true
             }

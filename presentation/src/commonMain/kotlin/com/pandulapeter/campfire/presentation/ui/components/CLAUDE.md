@@ -22,6 +22,11 @@ The shared building blocks of the screens; subpackages with something to say hav
   the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`); a label the control sometimes shows
   itself turns it off (`isEnabled`). A toggle's tooltip names what a press does. Drawn as the app's tonal pills are,
   not Material's dark slab. Settings → General's Tooltips switch turns every one off (`LocalAreTooltipsEnabled`).
+- **Every keyboard shortcut is an entry of `shortcuts/KeyShortcut.kt`**, matched through it (`KeyShortcut.X.matches`),
+  never by comparing keys by hand, and the control it presses names it (`shortcut` on `CampfireTooltip`,
+  `CampfireIconButton`, `PillIconButton`, `ActionsMenuItem`; `menuShortcutHint` in a `DropdownMenuItem`'s trailing
+  slot), so a hint is written from the keys that work. Hints show only with a hardware keyboard
+  (`LocalShowsShortcutHints`), Apple's symbols on an Apple keyboard (`⌘S`), names translated elsewhere (`Strg+S`).
 - **`saveShortcut`**: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt); in a `CampfireBottomSheet` it presses
   the header's `BottomSheetConfirmButton` (library deletion opts out), nothing while disabled or closing. Keys travel
   only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a frame in and

@@ -144,6 +144,9 @@ wrong or undo it".
   buttons, toggles, a clickable `Surface`): never a raw `IconButton`. Its tooltip is the string it gives screen readers,
   a toggle's naming what a press does; a parent's `weight` goes on the wrapper. The rules are in
   `ui/components/CLAUDE.md`.
+- **Every keyboard shortcut is an entry of `KeyShortcut`** (`ui/components/shortcuts`), matched through it, never by
+  comparing keys by hand; the control it presses passes it as `shortcut`, so its tooltip or menu entry shows the keys.
+  An app-wide one goes into `appShortcutOf`, heard at the app's root on every platform.
 
 ## Composable structure
 

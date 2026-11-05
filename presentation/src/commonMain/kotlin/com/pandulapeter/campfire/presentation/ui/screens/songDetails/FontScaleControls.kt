@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_BUT
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_RESET_MARK_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_VALUE_MIN_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.fontScale.FONT_SCALE_STEP
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
@@ -54,6 +55,7 @@ internal fun FontScaleControls(
         onIncrease = { onFontScaleAdjusted(1) },
         resetLabel = stringResource(Res.string.song_details_text_size_reset),
         onReset = onFontScaleReset,
+        shortcuts = KeyShortcut.ZOOM_OUT to KeyShortcut.ZOOM_IN,
     )
 }
 

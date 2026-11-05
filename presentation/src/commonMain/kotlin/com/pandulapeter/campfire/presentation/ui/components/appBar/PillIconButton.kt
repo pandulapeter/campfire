@@ -20,23 +20,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * An icon button that, standing on the tonal pill of a list screen's app bar, leaves its ripple to the pill: Material's
  * round ripple on a pill leaves its ends and the corners between the buttons untouched, so the pill draws each press
  * across the button's whole share of it instead (see [SearchPillPresses]). Anywhere else it is Material's icon button.
  *
- * @param tooltip What the button does, shown in a [CampfireTooltip] (the content description of its icon).
+ * @param tooltip What the button does, shown in a [CampfireTooltip] (the content description of its icon), with
+ *   [shortcut]'s keys.
  */
 @Composable
 internal fun PillIconButton(
     modifier: Modifier = Modifier,
     tooltip: String,
+    shortcut: KeyShortcut? = null,
     onClick: () -> Unit,
     enabled: Boolean = true,
     colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
     content: @Composable () -> Unit,
-) = CampfireTooltip(label = tooltip) {
+) = CampfireTooltip(label = tooltip, shortcut = shortcut) {
     val pill = LocalSearchPill.current
     if (pill == null) {
         IconButton(modifier = modifier, onClick = onClick, enabled = enabled, colors = colors, content = content)

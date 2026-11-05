@@ -1422,4 +1422,8 @@
     <string name="settings_sync_disconnect_pending_stops">חלק מהשירים או הסט־ליסטים שנמחקו במכשיר הזה עדיין לא סונכרנו. אם אחד מהם משותף, הקישור שלו ימשיך לעבוד אלא אם מסנכרנים לפני הניתוק.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">לא ניתן היה לחבר מחדש את Dropbox. החיבור הקודם עדיין עובד.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_space">רווח</string>
 </resources>

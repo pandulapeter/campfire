@@ -10,16 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * Answers Ctrl / Cmd + B, I, and U with [onToggle] and the style they stand for everywhere, while [isEnabled] (the
@@ -30,14 +25,15 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
  * kept from these keys by the shell while the editor is on top.
  */
 internal fun Modifier.editorFormattingShortcuts(isEnabled: Boolean, onToggle: (Formatting.Style) -> Unit) = onPreviewKeyEvent { keyEvent ->
-    val isShortcut = isEnabled && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed && !keyEvent.isShiftPressed
-    val style = when {
-        !isShortcut -> null
-        keyEvent.key == Key.B -> Formatting.Style.BOLD
-        keyEvent.key == Key.I -> Formatting.Style.ITALIC
-        keyEvent.key == Key.U -> Formatting.Style.UNDERLINE
-        else -> null
-    }
+    val style = if (isEnabled) Formatting.Style.entries.firstOrNull { it.keyShortcut.matches(keyEvent) } else null
     if (style != null && keyEvent.type == KeyEventType.KeyDown) onToggle(style)
     style != null
 }
+
+/** The shortcut that toggles this style, on the toolbar's buttons as well. */
+internal val Formatting.Style.keyShortcut
+    get() = when (this) {
+        Formatting.Style.BOLD -> KeyShortcut.BOLD
+        Formatting.Style.ITALIC -> KeyShortcut.ITALIC
+        Formatting.Style.UNDERLINE -> KeyShortcut.UNDERLINE
+    }

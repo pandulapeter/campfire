@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
@@ -30,8 +31,7 @@ import kotlin.js.unsafeCast
 internal fun EditShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
     val listener: (Event) -> Unit = { event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
-        // code, as Compose goes by it (Key.E is the physical key); key for a virtual keyboard, which has none.
-        val isEdit = (keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && (keyEvent.code == "KeyE" || keyEvent.key.lowercase() == "e")
+        val isEdit = keyEvent.isShortcut(KeyShortcut.EDIT)
         val top = viewModel.navigator.backStack.lastOrNull()
         if (isEdit && top is CampfireDestination.SongDetails && top.importPreview == null &&
             !viewModel.preferencesController.isPerformanceModeEnabled.value

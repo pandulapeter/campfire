@@ -19,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * The filled confirmation action shared by forms in a sheet's header. It does nothing once the sheet has started
@@ -46,10 +48,13 @@ internal fun BottomSheetConfirmButton(
             onDispose { if (saveShortcut.action === action) saveShortcut.action = null }
         }
     }
-    Button(
-        modifier = Modifier.padding(start = 4.dp, end = 8.dp),
-        onClick = { if (!isClosing()) onClick() },
-        enabled = enabled,
-        colors = colors,
-    ) { content() }
+    // Named by its own text, so the tooltip is only the keys, where they press it.
+    CampfireTooltip(label = null, shortcut = KeyShortcut.SAVE.takeIf { saveShortcut != null && isSaveShortcut }) {
+        Button(
+            modifier = Modifier.padding(start = 4.dp, end = 8.dp),
+            onClick = { if (!isClosing()) onClick() },
+            enabled = enabled,
+            colors = colors,
+        ) { content() }
+    }
 }

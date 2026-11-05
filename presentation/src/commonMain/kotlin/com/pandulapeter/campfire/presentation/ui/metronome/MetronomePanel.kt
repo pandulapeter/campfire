@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.metronome_stop
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -67,6 +68,7 @@ import kotlinx.coroutines.flow.Flow
  * @param beats One item per click as it is heard, which the flash follows.
  * @param onBeatLevelsChanged Called with the bar's accents once one of its beats is tapped.
  * @param onPlayStop Starts or stops the click.
+ * @param playShortcut The key that does the same where the panel is (Space on the tab, M over a song).
  * @param isProminent Draws the accents as tall as the button rather than inside a bar's own row, starting at a settings
  * page's margin and the button where the list screens keep their New button: the tab's, where the panel is what the
  * screen is for and heads the rows under it.
@@ -85,6 +87,7 @@ internal fun MetronomePanel(
     isFlashEnabled: Boolean,
     onBeatLevelsChanged: (List<BeatLevel>) -> Unit,
     onPlayStop: () -> Unit,
+    playShortcut: KeyShortcut,
     isVisible: Boolean,
     isProminent: Boolean = false,
     pageMaxWidth: Dp = Dp.Infinity,
@@ -148,7 +151,7 @@ internal fun MetronomePanel(
             )
         }
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
-        CampfireTooltip(label = label) {
+        CampfireTooltip(label = label, shortcut = playShortcut) {
             FilledIconButton(
                 modifier = Modifier
                     .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)

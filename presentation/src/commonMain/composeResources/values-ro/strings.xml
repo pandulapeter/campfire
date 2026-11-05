@@ -1425,4 +1425,8 @@
     <string name="settings_sync_disconnect_pending_stops">Unele cântece sau liste șterse pe acest dispozitiv nu au fost încă sincronizate. Dacă vreunul dintre ele este partajat, linkul lui funcționează în continuare, dacă nu sincronizezi înainte de deconectare.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Dropbox nu a putut fi reconectat. Conexiunea pe care o aveai funcționează în continuare.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_space">Spațiu</string>
 </resources>

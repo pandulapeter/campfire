@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_create
 import com.pandulapeter.campfire.presentation.resources.share_try_again
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
@@ -99,7 +100,9 @@ internal fun ExportActionButton(
         val label = stringResource(current.label)
         // From the action kept while the button leaves, so that it does not grow again as it fades out.
         val isExpanded = !(isInShortPane && current == ExportButtonAction.Link(LinkAction.COPY))
-        CampfireTooltip(label = label, isEnabled = !isExpanded) {
+        // Its label only where the button has shrunk to its icon; Save's keys wherever they save.
+        val shortcut = KeyShortcut.SAVE.takeIf { current is ExportButtonAction.Save && current.progress == null }
+        CampfireTooltip(label = label.takeUnless { isExpanded }, shortcut = shortcut) {
             ExtendedFloatingActionButton(
                 text = {
                     AnimatedContent(

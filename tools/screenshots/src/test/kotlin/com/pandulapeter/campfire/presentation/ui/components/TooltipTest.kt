@@ -22,11 +22,17 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.key_ctrl
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_tooltips
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyNames
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.label
+import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
@@ -67,6 +73,15 @@ internal class TooltipTest {
         sortButton().performTouchInput { longClick() }
         // No tooltip takes the press, so the sort menu opens and lists its orders.
         waitUntil { onAllNodes(hasText(string(Res.string.songs_sorting_mode_by_title))).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `on a phone without a keyboard a tooltip names no keys`() = runAppTest {
+        val searchName = string(Res.string.songs_search)
+        onNodeWithContentDescription(searchName).performTouchInput { longClick() }
+        waitUntil { onAllNodes(hasText(searchName)).fetchSemanticsNodes().isNotEmpty() }
+        val keys = KeyShortcut.FIND.chord.label(isApple = isAppleKeyboard, names = KeyNames(ctrl = string(Res.string.key_ctrl), shift = "", space = ""))
+        assertFalse(onAllNodes(hasText(keys, substring = true)).fetchSemanticsNodes().isNotEmpty(), "A phone without a keyboard is shown \"$keys\".")
     }
 
     private fun AppTestScope.sortButton() = onNodeWithContentDescription(string(Res.string.songs_sort))

@@ -32,7 +32,13 @@ import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationExceptio
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.hint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -45,7 +51,9 @@ import kotlin.time.TimeSource
  * in. Nothing at all while the user has switched tooltips off ([LocalAreTooltipsEnabled]).
  *
  * [label] is the string the control already gives screen readers as its content description, so the two never say
- * different things. A toggle's label names what pressing it does, not the state it is in.
+ * different things. A toggle's label names what pressing it does, not the state it is in. [shortcut]'s keys follow it,
+ * quieter, where there is a keyboard to press them on ([hint]); a control that names itself with its own text (Save)
+ * passes no label, and then has a tooltip only where the keys are shown.
  *
  * Material's own input handling is off, and the two gestures are this box's instead, for three reasons. `TooltipBox`
  * puts its modifier on a box inside a bare one, so a `weight` or an `align` given to it never reaches the parent; here
@@ -64,22 +72,24 @@ import kotlin.time.TimeSource
 @Composable
 internal fun CampfireTooltip(
     modifier: Modifier = Modifier,
-    label: String,
+    label: String?,
+    shortcut: KeyShortcut? = null,
     isEnabled: Boolean = true,
     isShownOnLongPress: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val state = rememberTooltipState()
+    val hint = shortcut?.hint()
     Box(
         modifier = when {
-            !isEnabled || !LocalAreTooltipsEnabled.current -> modifier
+            !isEnabled || !LocalAreTooltipsEnabled.current || (label == null && hint == null) -> modifier
             isShownOnLongPress -> modifier.showsOnLongPress(state).showsOnHover(state)
             else -> modifier.showsOnHover(state)
         },
     ) {
         TooltipBox(
             positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip = { TooltipBubble(label = label) },
+            tooltip = { TooltipBubble(label = label, hint = hint) },
             state = state,
             enableUserInput = false,
             content = content,
@@ -93,7 +103,7 @@ internal fun CampfireTooltip(
  * section headers' shadow so that it holds up over a surface of the same tone.
  */
 @Composable
-private fun TooltipBubble(label: String) = Surface(
+private fun TooltipBubble(label: String?, hint: String?) = Surface(
     // The popup is only as large as what it holds, so the shadow is given room inside it.
     modifier = Modifier.padding(TOOLTIP_ELEVATION * 2),
     shape = CircleShape,
@@ -101,11 +111,19 @@ private fun TooltipBubble(label: String) = Surface(
     contentColor = MaterialTheme.colorScheme.onSurface,
     shadowElevation = TOOLTIP_ELEVATION,
 ) {
+    val hintColor = MaterialTheme.colorScheme.onSurfaceVariant
     Text(
         modifier = Modifier
             .widthIn(max = TOOLTIP_MAX_WIDTH)
             .padding(horizontal = 12.dp, vertical = 6.dp),
-        text = label,
+        text = buildAnnotatedString {
+            label?.let(::append)
+            if (hint != null) {
+                if (label != null) append(HINT_SEPARATOR)
+                // Keys are written left to right in every language, Hebrew's menus included.
+                withStyle(SpanStyle(color = hintColor)) { append(hint.isolatedLeftToRight()) }
+            }
+        },
         style = MaterialTheme.typography.labelLarge,
     )
 }
@@ -194,6 +212,8 @@ private const val WARM_WINDOW_MILLIS = 600L
 
 /** How long a tooltip shown by a long press stays after the finger lifts, long enough to read a short label. */
 private const val TOUCH_TOOLTIP_LINGER_MILLIS = 1500L
+
+private const val HINT_SEPARATOR = "   "
 
 private val TOOLTIP_ELEVATION = 2.dp
 private val TOOLTIP_MAX_WIDTH = 240.dp

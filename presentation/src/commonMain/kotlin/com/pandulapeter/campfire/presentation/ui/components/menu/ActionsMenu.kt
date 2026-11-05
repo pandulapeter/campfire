@@ -46,6 +46,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.components.appBar.LocalSearchPill
 import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.menuShortcutHint
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -205,6 +207,7 @@ private fun ActionsRow(
                         icon = item.icon,
                         animateIconChange = item.animateIconChange,
                         contentDescription = item.title,
+                        shortcut = item.shortcut,
                         isEnabled = item.isEnabled,
                         isDecorative = isDecorative,
                         size = buttonWidth,
@@ -285,6 +288,7 @@ private fun OverflowButton(
                 DropdownMenuItem(
                     text = { Text(item.title) },
                     leadingIcon = { ActionIcon(icon = item.icon, contentDescription = null, animateIconChange = item.animateIconChange) },
+                    trailingIcon = menuShortcutHint(item.shortcut),
                     enabled = item.isEnabledInMenu?.invoke() ?: item.isEnabled,
                     onClick = { select(item.onClick) },
                 )
@@ -302,6 +306,7 @@ private fun OverflowButton(
  * @param animateIconChange Crossfades icon changes while preserving the button's position.
  * @param isAlwaysInMenu Keeps the action in the menu however much room there is: one that deletes or throws something
  *   away, and one that is rarely wanted (archiving, duplicating, exporting), which a button would only advertise.
+ * @param shortcut The keys that do what the action does on its screen, shown on its button and in its entry.
  * @param isEnabledInMenu Read only while the menu is open, in place of [isEnabled], for an item whose answer is expensive
  *   to work out: the open menu is all that subscribes to what it reads, so nothing works it out while the menu is
  *   closed (the editor's Prettify, which would otherwise prettify the whole song on every keystroke). A button never
@@ -317,6 +322,7 @@ internal class ActionsMenuItem(
     val key: String = title,
     val animateIconChange: Boolean = false,
     val isEnabledInMenu: (() -> Boolean)? = null,
+    val shortcut: KeyShortcut? = null,
     val onClick: () -> Unit,
 )
 
@@ -335,6 +341,7 @@ private fun ActionButton(
     animateIconChange: Boolean = false,
     isEnabled: Boolean = true,
     isDecorative: Boolean = false,
+    shortcut: KeyShortcut? = null,
     size: Dp,
     onClick: () -> Unit = {},
 ) = if (isDecorative) {
@@ -348,6 +355,7 @@ private fun ActionButton(
     PillIconButton(
         modifier = modifier,
         tooltip = contentDescription,
+        shortcut = shortcut,
         enabled = isEnabled,
         onClick = onClick,
     ) {

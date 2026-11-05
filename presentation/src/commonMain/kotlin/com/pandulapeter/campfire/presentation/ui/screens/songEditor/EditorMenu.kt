@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_chordpro_reference
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -58,11 +59,13 @@ internal fun EditorMenu(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_find),
             icon = painterResource(Res.drawable.ic_search),
+            shortcut = KeyShortcut.FIND,
             onClick = onFind,
         ),
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_find_and_replace),
             icon = painterResource(Res.drawable.ic_find_replace),
+            shortcut = KeyShortcut.REPLACE,
             onClick = onFindAndReplace,
         ),
         ActionsMenuItem(

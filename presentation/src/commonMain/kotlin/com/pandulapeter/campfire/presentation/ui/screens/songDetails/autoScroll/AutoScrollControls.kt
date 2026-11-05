@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_GAP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_SIZE
 import androidx.compose.animation.AnimatedVisibility
@@ -159,7 +160,7 @@ private fun PlayButtonContent(
     val description = stringResource(if (isPlaying) Res.string.song_details_auto_scroll_pause else Res.string.song_details_auto_scroll_play)
     // Filled as the metronome's play button is, so that it reads as something that plays rather than as one more step.
     val colors = IconButtonDefaults.filledIconButtonColors()
-    CampfireTooltip(label = description) {
+    CampfireTooltip(label = description, shortcut = KeyShortcut.PLAY) {
         SmallFloatingActionButton(
             // Pressed by Space too, which the screen hears wherever the focus is, so the button takes none, as the step
             // buttons take none.

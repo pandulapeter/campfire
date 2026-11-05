@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import kotlinx.coroutines.delay
 
 /**
@@ -86,6 +87,7 @@ import kotlinx.coroutines.delay
  * @param trailing A second way to the very same value, drawn inside the pill after the increase button and behind a
  * divider: the tempo's Tap button, which sets the number the stepper steps rather than a value of its own, and so
  * belongs to this control instead of standing next to it.
+ * @param shortcuts The keys that step the value too (decrease, then increase), shown in the buttons' tooltips.
  */
 @Composable
 internal fun Stepper(
@@ -109,6 +111,7 @@ internal fun Stepper(
     onReset: (() -> Unit)?,
     repeatsOnHold: Boolean = false,
     entry: StepperEntry? = null,
+    shortcuts: Pair<KeyShortcut, KeyShortcut>? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     // Where the pill is, for the press outside it that ends typing into its value (StepperField).
@@ -129,6 +132,7 @@ internal fun Stepper(
                 StepperButton(
                     icon = decreaseIcon,
                     label = decreaseLabel,
+                    shortcut = shortcuts?.first,
                     stateDescription = spokenValue,
                     isEnabled = canDecrease,
                     repeatsOnHold = repeatsOnHold,
@@ -169,6 +173,7 @@ internal fun Stepper(
                 StepperButton(
                     icon = increaseIcon,
                     label = increaseLabel,
+                    shortcut = shortcuts?.second,
                     stateDescription = spokenValue,
                     isEnabled = canIncrease,
                     repeatsOnHold = repeatsOnHold,
@@ -201,6 +206,7 @@ internal fun Stepper(
 private fun StepperButton(
     icon: Painter,
     label: String,
+    shortcut: KeyShortcut?,
     stateDescription: String,
     isEnabled: Boolean,
     repeatsOnHold: Boolean,
@@ -239,6 +245,7 @@ private fun StepperButton(
             .semantics { this.stateDescription = stateDescription },
         label = label,
         enabled = isEnabled,
+        shortcut = shortcut,
         // Held, the button steps on its own, which a tooltip's long press would take away from it.
         isTooltipShownOnLongPress = !repeatsOnHold,
         interactionSource = interactionSource,

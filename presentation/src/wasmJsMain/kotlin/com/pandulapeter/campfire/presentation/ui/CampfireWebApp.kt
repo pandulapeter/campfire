@@ -17,6 +17,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.refreshMicrophoneStatus
@@ -111,14 +112,20 @@ fun CampfireWebApp(
     DisposableEffect(Unit) {
         onDispose { stopWarningBeforeUnload() }
     }
+    // A browser acts on these keys before Compose hears them, so the shell's own listeners answer them and keep the
+    // browser from its find bar, its page zoom where the song's text is zoomed instead, and from reading a paste, which
+    // arrives as an event of its own; the metronome's listen on the whole page, which has the keys before the canvas
+    // has the focus.
     ProvideKeyboardInsets {
-        CampfireApp(
-            viewModel = viewModel,
-            urlOpener = ::openInNewTab,
-            filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.preferencesController.isDropAvailable } },
-            shareLinks = remember { sharedLinks() },
-            onAppReady = ::dismissLoadingScreen,
-        )
+        CompositionLocalProvider(LocalKeysLeftToShell provides KEYS_LEFT_TO_BROWSER) {
+            CampfireApp(
+                viewModel = viewModel,
+                urlOpener = ::openInNewTab,
+                filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.preferencesController.isDropAvailable } },
+                shareLinks = remember { sharedLinks() },
+                onAppReady = ::dismissLoadingScreen,
+            )
+        }
     }
 }
 
@@ -287,3 +294,13 @@ private fun stopForwardingEscapeKey() {
         })()"""
     )
 }
+
+private val KEYS_LEFT_TO_BROWSER = setOf(
+    KeyShortcut.FIND,
+    KeyShortcut.PASTE,
+    KeyShortcut.PLAY,
+    KeyShortcut.METRONOME,
+    KeyShortcut.ZOOM_IN,
+    KeyShortcut.ZOOM_OUT,
+    KeyShortcut.ZOOM_RESET,
+)

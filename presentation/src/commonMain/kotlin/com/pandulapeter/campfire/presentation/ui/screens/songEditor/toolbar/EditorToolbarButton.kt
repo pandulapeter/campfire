@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -46,9 +47,10 @@ internal fun EditorToolbarButton(
     label: String,
     hasMenu: Boolean = false,
     icon: Painter? = null,
+    shortcut: KeyShortcut? = null,
     onClick: () -> Unit,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-    CampfireTooltip(label = label, isEnabled = icon != null) {
+    CampfireTooltip(label = label.takeIf { icon != null }, shortcut = shortcut) {
         Surface(
             modifier = modifier.focusProperties { canFocus = false },
             onClick = onClick,

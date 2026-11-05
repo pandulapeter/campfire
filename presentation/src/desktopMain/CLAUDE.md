@@ -35,18 +35,15 @@
 
 ## Keys (`CampfireViewModel.handleKeyEvent`)
 
-- Which keys are shortcuts is one common, tested table for desktop and web (`ui/AppShortcuts.kt`); each shell only names
-  its keys.
+The shortcuts are the common root handler's (`ui/AppKeyboardShortcuts.kt`); the window answers only Escape, which only
+it turns into a back event.
+
 - **Escape**, in order: dismiss what is open on top, close the top screen's search, pop the back stack, reset the
   filters of a songs screen left last (`EscapeStep.CLEAR_FILTERS`), or ask `DialogType.ConfirmExit` (an extra Escape is
-  a habit, not a decision; the close button and system quit don't ask).
+  a habit, not a decision; the close button and system quit don't ask). Not with Ctrl / Cmd.
   - "Open on top" is `visibleDialog` plus `overlayState.isAnyMenuOpen` (`LocalOverlayState`, also given to sheets a
     screen hosts itself, like the editor's search). A window key handler runs before Compose turns Escape into a back
     event, so missing one here pops the stack behind the modal.
   - Search before the back stack (the Chords tab's query included, which is emptied): selecting a tab rebuilds the stack
     with the songs under it, so Escape would otherwise leave the tab with its search open.
   - `handlePreviewKeyEvent` swallows held-Escape repeats, which would close every screen and then the app.
-- **Ctrl/Cmd + F** → `openCurrentSearch` (or refocuses an open one with its text selected), not under a dialog, sheet,
-  or menu. It must be a window handler: nothing on a list screen is focused while its search is closed.
-- **Ctrl/Cmd + plus (or equals), minus, zero** → `zoomSongText` on song details.
-- **Ctrl/Cmd + V** → `newSongFromClipboard` where `isNewSongPasteAvailable`; a focused field takes its paste first.

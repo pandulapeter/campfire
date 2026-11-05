@@ -12,12 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.components
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * Answers Ctrl / Cmd + S with [onSave], the same save as the button of whatever this is on - the editor, a sheet, the
@@ -29,7 +27,7 @@ import androidx.compose.ui.input.key.type
  * pressed in the hidden input of a text field reaches Compose only after the browser has acted on it.
  */
 internal fun Modifier.saveShortcut(onSave: () -> Unit) = onPreviewKeyEvent { keyEvent ->
-    val isSave = keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed
+    val isSave = KeyShortcut.SAVE.matches(keyEvent)
     // The key-up is taken too, so that nothing under this sees half a shortcut.
     if (isSave && keyEvent.type == KeyEventType.KeyDown) onSave()
     isSave

@@ -34,8 +34,8 @@ What every screen shares; each destination's package has its own notes.
 
 ## Searching the list screens
 
-- Searched from a button, not an ever-present field; on the desktop and the web Ctrl / Cmd + F opens it, in place of the
-  browser's find bar.
+- Searched from a button, not an ever-present field; Ctrl / Cmd + F opens it on any keyboard (a tablet's too), in place
+  of the browser's find bar on the web.
 - `SearchState` holds a `TextFieldState` so text and caret survive navigation, takes focus once per opening
   (`takeFocusOnOpen`), and `close` keeps the text so the field reads right while animating away, so lists combine
   `activeQuery`, gated on `isOpen`, never the raw text.

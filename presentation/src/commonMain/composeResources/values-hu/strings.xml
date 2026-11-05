@@ -1372,4 +1372,8 @@
     <string name="settings_sync_disconnect_pending_stops">Az ezen az eszközön törölt dalok vagy listák egy része még nincs szinkronizálva. Ha valamelyiknek van megosztott linkje, az továbbra is működik, hacsak nem szinkronizálsz a leválasztás előtt.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Nem sikerült újra csatlakoztatni a Dropboxot. A meglévő kapcsolat továbbra is működik.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_space">Szóköz</string>
 </resources>

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbarToggle
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.AnimatedVisibility
@@ -88,6 +89,7 @@ internal fun RowScope.EditorAppBarActions(
         modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
         icon = painterResource(Res.drawable.ic_save),
         label = stringResource(Res.string.save),
+        shortcut = KeyShortcut.SAVE,
         enabled = canSave,
         onClick = onSave,
     )

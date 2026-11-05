@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBa
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.components.LocalAreTooltipsEnabled
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalMenuRoom
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShowsShortcutHints
+import com.pandulapeter.campfire.presentation.ui.platform.rememberHasHardwareKeyboard
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberMenuRoom
 import com.pandulapeter.campfire.presentation.ui.components.labels.LocalTagColors
@@ -132,6 +134,7 @@ fun CampfireApp(
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
         LocalAreTooltipsEnabled provides (userPreferences?.areTooltipsEnabled != false),
+        LocalShowsShortcutHints provides rememberHasHardwareKeyboard(),
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
         LocalNotationCache provides remember { NotationCache() },
     ) {
@@ -149,6 +152,7 @@ fun CampfireApp(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .appKeyboardShortcuts(viewModel)
                     // In the initial pass and never consumed, so that the press still does whatever it does underneath:
                     // a tap or the start of a scroll elsewhere is what tells a stepper's field that typing is over.
                     .pointerInput(overlayState) {

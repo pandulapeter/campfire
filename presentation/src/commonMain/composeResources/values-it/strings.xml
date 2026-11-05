@@ -1373,4 +1373,8 @@
     <string name="settings_sync_disconnect_pending_stops">Alcune canzoni o scalette eliminate su questo dispositivo non sono ancora state sincronizzate. Se una di esse è condivisa, il suo link continua a funzionare a meno che tu non sincronizzi prima di disconnetterti.</string>
     <!-- Settings screen: sync, a reconnect that did not go through -->
     <string name="settings_sync_reconnect_failed">Impossibile connettere di nuovo Dropbox. La connessione che avevi funziona ancora.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Maiusc</string>
+    <string name="key_space">Spazio</string>
 </resources>

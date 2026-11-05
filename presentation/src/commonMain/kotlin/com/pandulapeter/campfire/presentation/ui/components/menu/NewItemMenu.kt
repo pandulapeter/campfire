@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.import_files
 import com.pandulapeter.campfire.presentation.resources.songs_paste_from_clipboard
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.menuShortcutHint
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
@@ -103,6 +105,7 @@ internal fun NewItemMenu(
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.songs_paste_from_clipboard)) },
                 leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_content_paste), contentDescription = null) },
+                trailingIcon = menuShortcutHint(KeyShortcut.PASTE),
                 onClick = {
                     select {
                         onItemSelected()

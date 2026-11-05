@@ -36,8 +36,6 @@ import com.pandulapeter.campfire.presentation.ui.navigation.EscapeStep
 import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.awtClipboardText
-import com.pandulapeter.campfire.presentation.ui.platform.clipboardTextOf
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
@@ -139,37 +137,20 @@ fun CampfireDesktopApp(
 }
 
 /**
- * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
- * search of the list screen that is on top (`ScreenSearches.openCurrentSearch`); it is answered here because this
- * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
- * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
- * (`FontScaleController.zoomSongText`), the shortcuts a browser zooms a page with. Space and M start and stop the
- * metronome (`MetronomeController.toggleMetronomeByKey`), which a focused button or field takes first, since only what
- * nothing focused took reaches this handler. Ctrl / Cmd + V on the song list makes a new song of the clipboard's text,
- * as Paste from clipboard does (`PastedSongController.isNewSongPasteAvailable`).
+ * To be wired into the window's key event handler. Returns true if the event was consumed. It answers Escape alone,
+ * which only the window turns into a back event; the shortcuts are the app's own (`appKeyboardShortcuts`), heard at the
+ * root of the composition on every platform alike.
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from and the question that
  *   follows has been answered with Close, and only once a save that is still being written has finished, see
  *   `AppExitController.confirmExit` and [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
-    if (keyEvent.type == KeyEventType.KeyDown) {
-        val isCtrlOrMeta = keyEvent.isCtrlPressed || keyEvent.isMetaPressed
-        // A focused field takes its own paste before this hears it, so Ctrl / Cmd + V here is one on the song list.
-        if (keyEvent.key == Key.V && isCtrlOrMeta && !keyEvent.isAltPressed && pastedSongController.isNewSongPasteAvailable) {
-            pastedSongController.newSongFromClipboard { clipboardTextOf(awtClipboardText()) }
-            return true
-        }
-        keyEvent.key.toShortcutKey()?.let { appShortcutOf(it, isCtrlOrMeta = isCtrlOrMeta, isAlt = keyEvent.isAltPressed) }?.let { shortcut ->
-            // A held key repeats its key-down; only the first press is a request, the rest would start and stop the
-            // click thirty times a second.
-            return if (shortcut is AppShortcut.ToggleMetronome && isMetronomeKeyRepeat) false else perform(shortcut)
-        }
-        // Any other key with Ctrl or Cmd and without Alt is not this handler's, Ctrl / Cmd + Escape included, which
-        // neither goes back nor asks to close the app.
-        if (isCtrlOrMeta && !keyEvent.isAltPressed) return false
-    }
-    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
+    // The shortcuts are the app's own root handler's (appKeyboardShortcuts), which every platform shares. Escape with Ctrl
+    // or Cmd and without Alt neither goes back nor asks to close the app.
+    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape &&
+        !((keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed)
+    ) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
@@ -195,17 +176,6 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
     return false
 }
 
-/** The app-wide shortcut key this physical key is, see [appShortcutOf]. */
-private fun Key.toShortcutKey() = when (this) {
-    Key.F -> ShortcutKey.F
-    Key.Equals, Key.Plus, Key.NumPadAdd -> ShortcutKey.PLUS
-    Key.Minus, Key.NumPadSubtract -> ShortcutKey.MINUS
-    Key.Zero, Key.NumPad0 -> ShortcutKey.ZERO
-    Key.Spacebar -> ShortcutKey.SPACE
-    Key.M -> ShortcutKey.M
-    else -> null
-}
-
 /**
  * To be wired into the window's preview key handler, which sees every key event before anything in the window does.
  * Swallows the Escapes a held key repeats: AWT sends one `KEY_PRESSED` per repeat with no release in between, and every
@@ -213,23 +183,11 @@ private fun Key.toShortcutKey() = when (this) {
  * app, and in the editor it opened and dismissed the unsaved changes question over and over.
  *
  * A release is recognised however it reaches the window, so a press that was consumed by something else still ends.
- * It also notes whether a Space or an M is a held key's repeat, for [handleKeyEvent] to start or stop the metronome on
- * the first press only, without consuming either here: a focused text field must still get a held Space's repeats.
  *
  * Where the platform reports a repeat as a release and a press (X11 without detectable auto-repeat), a repeat looks
  * like a new press and nothing can be done about it here.
  */
 fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
-    if (keyEvent.key == Key.Spacebar || keyEvent.key == Key.M) {
-        when (keyEvent.type) {
-            KeyEventType.KeyDown -> {
-                isMetronomeKeyRepeat = heldMetronomeKey == keyEvent.key
-                heldMetronomeKey = keyEvent.key
-            }
-            KeyEventType.KeyUp -> if (heldMetronomeKey == keyEvent.key) heldMetronomeKey = null
-        }
-        return false
-    }
     if (keyEvent.key != Key.Escape) return false
     return when (keyEvent.type) {
         KeyEventType.KeyDown -> isEscapeHeld.also { isEscapeHeld = true }
@@ -239,19 +197,12 @@ fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
 }
 
 /**
- * Forgets a held Escape, Space or M. A window that loses the focus while the key is down never gets its release, and
- * without this the first press after coming back would be taken for a repeat and swallowed.
+ * Forgets a held Escape. A window that loses the focus while the key is down never gets its release, and without this
+ * the first press after coming back would be taken for a repeat and swallowed.
  */
 fun resetEscapeKey() {
     isEscapeHeld = false
-    heldMetronomeKey = null
 }
 
 /** One window, only ever touched on the AWT event thread, so a top-level flag is all the state [handlePreviewKeyEvent] needs. */
 private var isEscapeHeld = false
-
-/** The Space or M that is down, if any, kept the same way as [isEscapeHeld]. */
-private var heldMetronomeKey: Key? = null
-
-/** Whether the last Space or M key-down was a repeat of [heldMetronomeKey], read by [handleKeyEvent]. */
-private var isMetronomeKeyRepeat = false
