@@ -65,6 +65,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param isAfterButton Whether a [SetlistAssignmentsButton] stands right before the menu, see [ActionsMenu].
  * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
  * @param editShortcut The keys that open the editor where the menu is, which the song details screen has.
+ * @param exportShortcut The keys that open Share or export where the menu is, the song details screen's too.
  */
 @Composable
 internal fun SongActions(
@@ -81,6 +82,7 @@ internal fun SongActions(
     isAfterButton: Boolean = false,
     menuFooter: (@Composable () -> Unit)? = null,
     editShortcut: KeyShortcut? = null,
+    exportShortcut: KeyShortcut? = null,
 ) = ActionsMenu(
     modifier = modifier,
     state = state,
@@ -115,6 +117,7 @@ internal fun SongActions(
             title = stringResource(Res.string.share_or_export),
             icon = painterResource(Res.drawable.ic_export),
             isAlwaysInMenu = true,
+            shortcut = exportShortcut,
             onClick = { actions.export(song, setlistFileName) },
         ),
         if (isDeletable && !isEditAndExportOnly) {

@@ -72,7 +72,8 @@ import kotlinx.coroutines.launch
  *   then left alone.
  * @param onEdit Opens the editor on the song being read, or null where it cannot be edited; the key is then left alone.
  * @param onSave Ctrl / Cmd + S, for a preview of songs an import has not written yet to press its button with, as the
- *   import sheets' and the editor's Save are pressed; null where there is nothing to press, which leaves the key alone.
+ *   import sheets' and the editor's Save are pressed, and for a song of the library to open Share or export with, as
+ *   its menu entry says; null where there is neither, which leaves the key alone.
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
  * @param onNextSong Null when the current song is the last one, the same way.

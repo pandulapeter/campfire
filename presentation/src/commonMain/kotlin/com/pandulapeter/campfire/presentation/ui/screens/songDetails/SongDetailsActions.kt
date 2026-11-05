@@ -129,6 +129,7 @@ internal fun RowScope.SongDetailsActions(
                     setlistFileName = setlistFileName,
                     isAfterButton = showsSetlistAssignmentsInBar,
                     editShortcut = KeyShortcut.EDIT,
+                    exportShortcut = KeyShortcut.SAVE,
                     leadingItems = {
                         listOfNotNull(
                             aboutSongAction,

@@ -61,6 +61,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 import kotlinx.coroutines.launch
 
 /**
@@ -258,11 +259,11 @@ internal fun SongDetailsScreen(
                 stepBack = stepBackAction,
                 stepForward = stepForwardAction,
                 onToggleAutoScroll = autoScrolling::togglePlaying.takeIf { isContinuous },
-                onEdit = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview }?.let { song -> { viewModel.editorSession.openEditor(song.fileName) } },
-                onSave = importPreview?.let { preview ->
-                    // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
-                    preview.actions?.takeIf { preview.canImport(primary = it.primary, isAddingToReview = false) }?.saveShortcutAction
-                }?.let { action -> { viewModel.importController.importFromPreview(action) } },
+                songActions = rememberSongActionHandler(viewModel.editorSession, viewModel.songFilesController, viewModel.dialogHost),
+                librarySong = currentSong?.takeIf { !isPerformanceModeEnabled && !isImportPreview },
+                setlistFileName = destination.setlistFileName,
+                importPreview = importPreview,
+                importController = viewModel.importController,
             ),
     ) {
         SongDetailsAppBar(

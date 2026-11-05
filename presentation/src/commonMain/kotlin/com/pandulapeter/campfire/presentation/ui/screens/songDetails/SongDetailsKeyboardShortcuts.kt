@@ -15,7 +15,10 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -27,6 +30,8 @@ import kotlinx.coroutines.launch
  *
  * @param hasPreviousSong Whether there is a song before the one being headed for. The target page only decides whether
  *   the key does anything; the step itself is decided at the time of the press.
+ * @param librarySong The song being read where its menu has Edit and Share or export, which Ctrl / Cmd + E and S then
+ *   open: not in read only mode, nor in a preview, whose Ctrl / Cmd + S presses its import button instead.
  */
 @Composable
 internal fun Modifier.songDetailsKeyboardShortcuts(
@@ -41,8 +46,11 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
     stepBack: (from: Int?) -> Unit,
     stepForward: (from: Int?) -> Unit,
     onToggleAutoScroll: (() -> Unit)?,
-    onEdit: (() -> Unit)?,
-    onSave: (() -> Unit)?,
+    songActions: SongActionHandler,
+    librarySong: Song?,
+    setlistFileName: String?,
+    importPreview: ImportPreviewState?,
+    importController: ImportController,
 ) = songKeyboardShortcuts(
     onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
     onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
@@ -58,8 +66,11 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
     },
     isUncovered = isUncovered,
     onToggleAutoScroll = onToggleAutoScroll,
-    onEdit = onEdit,
-    onSave = onSave,
+    onEdit = librarySong?.let { song -> { songActions.edit(song) } },
+    onSave = importPreview?.let { preview ->
+        // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
+        preview.actions?.takeIf { preview.canImport(primary = it.primary, isAddingToReview = false) }?.saveShortcutAction
+    }?.let { action -> { importController.importFromPreview(action) } } ?: librarySong?.let { song -> { songActions.export(song, setlistFileName) } },
     onPreviousSong = if (hasPreviousSong) {
         { pageStepper.step(-1) }
     } else {
