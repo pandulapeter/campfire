@@ -18,9 +18,9 @@ The shared building blocks of the screens; subpackages with something to say hav
   floating button, a toggle, a clickable `Surface`) is wrapped in `CampfireTooltip`, a parent's `weight` or `align` on
   the wrapper. Hover and long press are the wrapper's own, Material's off: its `TooltipBox` drops a parent's modifier,
   opens on keyboard focus for good (eating Escape), and opens the moment a pointer passes. Hover waits 500 ms, none
-  right after another tooltip went (a pointer moving along a toolbar); a press hides it. A long press that is already
-  the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`); a label the control sometimes shows
-  itself turns it off (`isEnabled`). A toggle's tooltip names what a press does. Drawn as the app's tonal pills are,
+  within 300 ms of another tooltip going (a pointer moving along a toolbar; timed by a coroutine, not a clock); a press
+  hides it. A long press that is already the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`);
+  a label the control sometimes shows itself turns it off (`isEnabled`). A toggle's tooltip names what a press does. Drawn as the app's tonal pills are,
   not Material's dark slab. Settings → General's Tooltips switch turns every one off (`LocalAreTooltipsEnabled`).
 - **Every keyboard shortcut is an entry of `shortcuts/KeyShortcut.kt`**, matched through it (`KeyShortcut.X.matches`),
   never by comparing keys by hand, and the control it presses names it (`shortcut` on `CampfireTooltip`,

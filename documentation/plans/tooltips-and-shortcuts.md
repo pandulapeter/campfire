@@ -70,8 +70,8 @@ new shortcuts (step 4), the sheet, Android's system list, and iOS's `UIKeyComman
   the control fills it (the Tools group); `CampfireIconButton`'s own `modifier` is the button's. A tooltip on keyboard
   focus, if wanted with the shortcut hints, is added there deliberately.
 - **Look and timing**: a tonal pill (`surfaceContainerHighest`, the steppers' and app bar pill's tone) with the
-  section headers' 2dp shadow, not Material's dark slab. Hover waits 500 ms; right after another tooltip went (600 ms)
-  the next shows at once, as along a toolbar; a press hides it.
+  section headers' 2dp shadow, not Material's dark slab. Hover waits 500 ms; within 300 ms of another tooltip going
+  the next shows at once, as along a toolbar (Radix's defaults are 700 and 300 ms); a press hides it.
 - **Optional**: Settings → General → Appearance has a Tooltips switch (`UserPreferences.areTooltipsEnabled`, on by
   default, device-local), read through `LocalAreTooltipsEnabled`. Off, no tooltip shows and a long press presses the
   control. The shortcut hints live in the tooltips, so they go with it; the shortcuts sheet and the menus' hints stay.

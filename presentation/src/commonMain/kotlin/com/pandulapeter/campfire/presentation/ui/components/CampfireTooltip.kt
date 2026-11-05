@@ -43,7 +43,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.TimeSource
 
 /**
  * Names the action of a control drawn as an icon alone: a tooltip over [content], shown once a mouse has rested on it
@@ -139,7 +138,7 @@ private fun Modifier.showsOnHover(state: TooltipState) = pointerInput(state) {
         fun hide() {
             pending?.cancel()
             pending = null
-            if (state.isVisible) TooltipWarmth.onHidden()
+            if (state.isVisible) launch { TooltipWarmth.coolDown() }
             state.dismiss()
         }
         awaitPointerEventScope {
@@ -185,18 +184,30 @@ private fun Modifier.showsOnLongPress(state: TooltipState) = pointerInput(state)
 }
 
 /**
- * When the last hovered tooltip went away, so that a pointer moving along a row of buttons after one of them has named
- * itself is answered by each at once, the way a desktop's toolbars do, rather than waiting out the delay at every one.
- * Only ever touched on the main thread, by the pointer handlers.
+ * Whether a hovered tooltip has only just gone, so that a pointer moving straight on to the next button of a row is
+ * answered at once, as a desktop's toolbars do, rather than waiting out the delay at every one. Warm only for
+ * [WARM_WINDOW_MILLIS] after a tooltip goes: a pointer that rests anywhere else for longer starts cold again.
+ *
+ * Timed by a coroutine on the UI's own clock rather than by reading a time source, which behaves alike on every platform;
+ * the cooling is the hiding anchor's, and an anchor that leaves the screen before it ends leaves it cold. Only ever
+ * touched on the main thread, by the pointer handlers.
  */
 private object TooltipWarmth {
 
-    private var hiddenAt: TimeSource.Monotonic.ValueTimeMark? = null
+    var isWarm = false
+        private set
 
-    val isWarm get() = hiddenAt?.let { it.elapsedNow().inWholeMilliseconds < WARM_WINDOW_MILLIS } == true
+    /** Which cooling is the latest, so that an earlier one ending does not cool a later one's window. */
+    private var generation = 0
 
-    fun onHidden() {
-        hiddenAt = TimeSource.Monotonic.markNow()
+    suspend fun coolDown() {
+        val cooling = ++generation
+        isWarm = true
+        try {
+            delay(WARM_WINDOW_MILLIS)
+        } finally {
+            if (generation == cooling) isWarm = false
+        }
     }
 }
 
@@ -207,13 +218,16 @@ private object TooltipWarmth {
  */
 private const val HOVER_DELAY_MILLIS = 500L
 
-/** How soon after one tooltip goes the next is shown without [HOVER_DELAY_MILLIS], a pointer crossing the gap between two buttons. */
-private const val WARM_WINDOW_MILLIS = 600L
+/**
+ * How soon after one tooltip goes the next is shown without [HOVER_DELAY_MILLIS]: long enough for a pointer to cross
+ * from one button to its neighbour, too short to carry over a pause. Radix's default, and Windows' reshow is shorter.
+ */
+private const val WARM_WINDOW_MILLIS = 300L
 
 /** How long a tooltip shown by a long press stays after the finger lifts, long enough to read a short label. */
 private const val TOUCH_TOOLTIP_LINGER_MILLIS = 1500L
 
-private const val HINT_SEPARATOR = "   "
+private const val HINT_SEPARATOR = "  "
 
 private val TOOLTIP_ELEVATION = 2.dp
 private val TOOLTIP_MAX_WIDTH = 240.dp

@@ -55,6 +55,20 @@ internal class TooltipTest {
     }
 
     @Test
+    fun `a pointer that rested elsewhere waits out the delay again after a tooltip`() = runAppTest {
+        sortButton().performMouseInput { enter(center) }
+        waitUntil { isTooltipShown() }
+        sortButton().performMouseInput { exit() }
+        waitUntil { !isTooltipShown() }
+        mainClock.autoAdvance = false
+        mainClock.advanceTimeBy(RESTING_MILLIS)
+        val search = onNodeWithContentDescription(string(Res.string.songs_search))
+        search.performMouseInput { enter(center) }
+        mainClock.advanceTimeBy(PASSING_MILLIS)
+        assertFalse(onAllNodes(hasText(string(Res.string.songs_search))).fetchSemanticsNodes().isNotEmpty(), "The delay was skipped.")
+    }
+
+    @Test
     fun `a long press on an icon button shows its name instead of pressing it`() = runAppTest {
         sortButton().performTouchInput { longClick() }
         waitUntil { isTooltipShown() }
@@ -92,3 +106,6 @@ internal class TooltipTest {
 
 /** Well short of the hover delay: a pointer on its way across the button. */
 private const val PASSING_MILLIS = 200L
+
+/** A pause between two buttons, well past the moment after a tooltip in which the next one shows at once. */
+private const val RESTING_MILLIS = 1000L
