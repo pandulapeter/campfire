@@ -18,7 +18,7 @@ What's planned for Campfire, grouped by area.
 - Song title font on card should have smaller line spacing, and that should be consistent between the two card display modes
 - Minimum card width should be reduced so that 2 columns are displayed on an unfolded Fold 8 / iPhone Duo
 - The chord shape picker bottom sheet performs an unnecessary horizontal animation on Hebrew only
-- Full Preferences redesign: currently accidentally turning Performance mode on results in confusion + settings don't have a centralized place
+- Full Preferences redesign. Plan: [preferences-sheet.md](plans/preferences-sheet.md)
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
