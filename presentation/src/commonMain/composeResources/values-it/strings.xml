@@ -708,7 +708,7 @@
     <string name="tuner_reference_pitch_decrease">Abbassa la frequenza di riferimento</string>
     <string name="tuner_reference_pitch_increase">Alza la frequenza di riferimento</string>
     <string name="tuner_reference_pitch_reset">Riporta la frequenza di riferimento a 440 Hz</string>
-    <string name="tuner_play_reference">Suona la nota di riferimento %1$s</string>
+    <string name="tuner_play_reference">Suona il %1$s di riferimento</string>
     <string name="tuner_notice_not_asked">Campfire ascolta attraverso il microfono per sentire lo strumento. Il suono viene analizzato su questo dispositivo e non viene mai registrato né inviato altrove.</string>
     <string name="tuner_notice_refused">Il microfono è disattivato per Campfire. I toni qui sotto si possono comunque suonare.</string>
     <string name="tuner_notice_refused_web">Il microfono è disattivato per Campfire. Puoi consentirlo nelle impostazioni del sito del browser, accanto all\'indirizzo. I toni qui sotto si possono comunque suonare.</string>

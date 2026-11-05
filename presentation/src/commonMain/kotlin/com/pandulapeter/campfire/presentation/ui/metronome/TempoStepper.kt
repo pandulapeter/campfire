@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_ICON_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_SEGMENT_PADDING
@@ -99,19 +100,22 @@ private fun TapTempoSegment(
     onTempo: (bpm: Int) -> Unit,
 ) {
     val tapTempo = remember { TapTempo() }
-    Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            .clickable(role = Role.Button) {
-                tapTempo.tap()?.let(onTempo)
-            }
-            .padding(horizontal = STEPPER_SEGMENT_PADDING),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            modifier = Modifier.size(STEPPER_ICON_SIZE * fontScale),
-            painter = painterResource(Res.drawable.ic_tap_tempo),
-            contentDescription = stringResource(Res.string.metronome_tap_description),
-        )
+    val description = stringResource(Res.string.metronome_tap_description)
+    CampfireTooltip(label = description) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .clickable(role = Role.Button) {
+                    tapTempo.tap()?.let(onTempo)
+                }
+                .padding(horizontal = STEPPER_SEGMENT_PADDING),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(STEPPER_ICON_SIZE * fontScale),
+                painter = painterResource(Res.drawable.ic_tap_tempo),
+                contentDescription = description,
+            )
+        }
     }
 }

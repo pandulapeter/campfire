@@ -713,7 +713,7 @@
     <string name="tuner_reference_pitch_decrease">Baisser le diapason</string>
     <string name="tuner_reference_pitch_increase">Monter le diapason</string>
     <string name="tuner_reference_pitch_reset">Remettre le diapason à 440 Hz</string>
-    <string name="tuner_play_reference">Jouer la référence %1$s</string>
+    <string name="tuner_play_reference">Jouer le %1$s de référence</string>
     <string name="tuner_notice_not_asked">Campfire écoute ton instrument par le micro. Le son est analysé sur cet appareil, et n\'est jamais enregistré ni envoyé nulle part.</string>
     <string name="tuner_notice_refused">Le micro est désactivé pour Campfire. Tu peux quand même jouer les sons ci-dessous.</string>
     <string name="tuner_notice_refused_web">Le micro est désactivé pour Campfire. Tu peux l\'autoriser dans les paramètres du site du navigateur, à côté de l\'adresse. Tu peux quand même jouer les sons ci-dessous.</string>

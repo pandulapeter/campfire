@@ -47,7 +47,8 @@ internal fun MetronomeButton(
 ) = SongToolButton(
     modifier = modifier,
     height = height,
-    label = metronomePanelLabel(isPanelShown = isPanelShown, bpm = bpm),
+    // The tempo is beside the button already, so only a screen reader is told it.
+    label = stringResource(if (isPanelShown) Res.string.song_details_metronome_hide else Res.string.song_details_metronome_show),
     isSelected = isPanelShown,
     onClick = onClick,
 ) {
@@ -58,7 +59,10 @@ internal fun MetronomeButton(
     )
 }
 
-/** What showing or hiding the panel is called, with the tempo a click started from it would play at while it is hidden. */
+/**
+ * What showing or hiding the panel is called for a screen reader, with the tempo a click started from it would play at
+ * while it is hidden.
+ */
 @Composable
 private fun metronomePanelLabel(isPanelShown: Boolean, bpm: Int) = if (isPanelShown) {
     stringResource(Res.string.song_details_metronome_hide)

@@ -747,7 +747,7 @@
     <string name="tuner_reference_pitch_decrease">Coboară diapazonul</string>
     <string name="tuner_reference_pitch_increase">Urcă diapazonul</string>
     <string name="tuner_reference_pitch_reset">Readu diapazonul la 440 Hz</string>
-    <string name="tuner_play_reference">Redă nota de referință %1$s</string>
+    <string name="tuner_play_reference">Redă nota %1$s de referință</string>
     <string name="tuner_notice_not_asked">Campfire ascultă prin microfon ca să audă instrumentul. Sunetul e analizat pe acest dispozitiv și nu e niciodată înregistrat sau trimis nicăieri.</string>
     <string name="tuner_notice_refused">Microfonul este dezactivat pentru Campfire. Tonurile de mai jos pot fi redate în continuare.</string>
     <string name="tuner_notice_refused_web">Microfonul este dezactivat pentru Campfire. Îl poți permite din setările site-ului în browser, lângă adresă. Tonurile de mai jos pot fi redate în continuare.</string>

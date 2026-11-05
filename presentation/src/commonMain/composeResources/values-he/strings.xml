@@ -745,7 +745,7 @@
     <string name="tuner_reference_pitch_decrease">הנמכת גובה הייחוס</string>
     <string name="tuner_reference_pitch_increase">הגבהת גובה הייחוס</string>
     <string name="tuner_reference_pitch_reset">איפוס גובה הייחוס ל־440 Hz</string>
-    <string name="tuner_play_reference">השמעת צליל הייחוס %1$s</string>
+    <string name="tuner_play_reference">השמעת %1$s כצליל ייחוס</string>
     <string name="tuner_notice_not_asked">Campfire מקשיב דרך המיקרופון כדי לשמוע את הכלי. הצליל מנותח במכשיר הזה, ואף פעם לא מוקלט או נשלח לשום מקום.</string>
     <string name="tuner_notice_refused">המיקרופון כבוי עבור Campfire. עדיין אפשר להשמיע את הצלילים שלמטה.</string>
     <string name="tuner_notice_refused_web">המיקרופון כבוי עבור Campfire. אפשר להתיר אותו בהגדרות האתר של הדפדפן, ליד הכתובת. עדיין אפשר להשמיע את הצלילים שלמטה.</string>
