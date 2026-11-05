@@ -13,9 +13,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.AppBuild
 
 /**
  * What Campfire is made of that somebody else wrote, as the Open-source licenses sheet lists it: every library the
- * builds ship, the transitive ones included, the fonts the app bundles, the runtime the desktop builds bundle,
- * and the chord shapes the tables were filled from, each with the builds it is part of, since a build lists only what
- * it ships. The names, the holders and the licenses' names are proper names, so they are not translated.
+ * builds ship, the transitive ones included, the fonts the app bundles, the runtime the desktop builds bundle, the
+ * icons drawn from Pictogrammers' set, and the chord shapes the tables were filled from, each with the builds it is part
+ * of, since a build lists only what it ships. The names, the holders and the licenses' names are proper names, so they are not translated.
  *
  * Kept by hand rather than read off the build: a new dependency that ships in a build gets an entry here in the same
  * change, its license text, and its NOTICE where it has one, under `composeResources/files/licenses` of the source set
@@ -305,6 +305,7 @@ internal val openSourceComponents = listOf(
         noticeFile = "$LICENSES/libwebp_patents.txt",
         builds = SKIA,
     ),
+    apache("Material Design Icons", "Pictogrammers", "https://pictogrammers.com/library/mdi/"),
     OpenSourceComponent(
         name = "musl",
         holder = "Rich Felker, et al.",

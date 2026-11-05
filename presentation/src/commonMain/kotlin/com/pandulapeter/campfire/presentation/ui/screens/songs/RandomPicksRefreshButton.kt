@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_dice
 import com.pandulapeter.campfire.presentation.resources.songs_random_picks_refresh
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
@@ -40,6 +40,6 @@ internal fun RandomPicksRefreshButton(
         contentDescription = title,
         isOnPill = true,
         isDecorative = isDecorative,
-        items = listOf(ActionsMenuItem(title = title, icon = painterResource(Res.drawable.ic_refresh), onClick = onRefresh)),
+        items = listOf(ActionsMenuItem(title = title, icon = painterResource(Res.drawable.ic_dice), onClick = onRefresh)),
     )
 }
