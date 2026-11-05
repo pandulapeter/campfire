@@ -298,7 +298,6 @@ private fun stopForwardingEscapeKey() {
 private val KEYS_LEFT_TO_BROWSER = setOf(
     KeyShortcut.FIND,
     KeyShortcut.PASTE,
-    KeyShortcut.PLAY,
     KeyShortcut.METRONOME,
     KeyShortcut.ZOOM_IN,
     KeyShortcut.ZOOM_OUT,

@@ -105,7 +105,7 @@ internal fun MetronomeScreen(
             isFlashEnabled = panel.isFlashEnabled,
             onBeatLevelsChanged = { levels -> viewModel.metronomeController.setBeatLevels(panel.timeSignature, levels) },
             onPlayStop = viewModel.metronomeController::toggleMetronome,
-            playShortcut = KeyShortcut.PLAY,
+            playShortcut = KeyShortcut.METRONOME,
             isVisible = true,
             isProminent = true,
             // As wide as the page under it, so that the bar ends where the rows it heads end.

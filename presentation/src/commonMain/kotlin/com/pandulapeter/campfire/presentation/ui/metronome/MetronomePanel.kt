@@ -68,7 +68,7 @@ import kotlinx.coroutines.flow.Flow
  * @param beats One item per click as it is heard, which the flash follows.
  * @param onBeatLevelsChanged Called with the bar's accents once one of its beats is tapped.
  * @param onPlayStop Starts or stops the click.
- * @param playShortcut The key that does the same where the panel is (Space on the tab, M over a song).
+ * @param playShortcut The key that does the same where the panel is.
  * @param isProminent Draws the accents as tall as the button rather than inside a bar's own row, starting at a settings
  * page's margin and the button where the list screens keep their New button: the tab's, where the panel is what the
  * screen is for and heads the rows under it.

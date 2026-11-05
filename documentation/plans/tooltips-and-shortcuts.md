@@ -44,7 +44,7 @@ acts on first (`LocalKeysLeftToShell`). What follows is what remains.
 | Ctrl+A                     | Songs, selection mode         | Select all                                |
 | Ctrl+P                     | Song details, setlist         | Print and export                          |
 | Ctrl+Shift+↑ / ↓           | Song details                  | Transpose up / down                       |
-| T                          | Metronome tab, song details   | Tap tempo (same rules as Space and M)     |
+| T                          | Metronome tab, song details   | Tap tempo (same rules as M)               |
 | Ctrl+1 … Ctrl+6            | Main screens (desktop, web)   | Switch to the n-th visible main screen    |
 | Ctrl+,                     | Anywhere (desktop, web)       | Settings                                  |
 | Ctrl+/                     | Anywhere                      | The keyboard shortcuts sheet              |

@@ -38,13 +38,11 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Space and M toggle the metronome only without Ctrl, Cmd or Alt`() {
-        assertEquals(AppShortcut.ToggleMetronome(isSpace = true), shortcut(Key.Spacebar))
-        assertEquals(AppShortcut.ToggleMetronome(isSpace = false), shortcut(Key.M))
-        listOf(Key.Spacebar, Key.M).forEach { key ->
-            assertNull(shortcut(key, isCtrlOrMeta = true))
-            assertNull(shortcut(key, isAlt = true))
-        }
+    fun `M toggles the metronome only without Ctrl, Cmd or Alt, and Space is no app-wide shortcut`() {
+        assertEquals(AppShortcut.ToggleMetronome, shortcut(Key.M))
+        assertNull(shortcut(Key.M, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.M, isAlt = true))
+        assertNull(shortcut(Key.Spacebar))
     }
 
     @Test

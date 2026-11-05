@@ -31,10 +31,13 @@ internal enum class KeyShortcut(val chord: KeyChord) {
     ITALIC(KeyChord.command(Key.I, "I", shift = KeyChord.Shift.ABSENT)),
     UNDERLINE(KeyChord.command(Key.U, "U", shift = KeyChord.Shift.ABSENT)),
 
-    /** Plays and stops: the Metronome tab's click, a song scrolling by itself. */
+    /** Starts and stops a song scrolling by itself. */
     PLAY(KeyChord.plain(Key.Spacebar, label = null)),
 
-    /** Starts and stops the click from a song as well as from the Metronome tab. */
+    /**
+     * Starts and stops the click, on a song and on the Metronome tab alike. Not Space, which a focused button takes as its
+     * press, and a click on the tab leaves a beat, a chip or the navigation rail focused.
+     */
     METRONOME(KeyChord.plain(Key.M, "M")),
     ;
 

@@ -152,17 +152,17 @@ internal class MetronomeController(
     )
 
     /**
-     * The keyboard's way to [toggleMetronome], asked from the desktop window and the web page: Space on the Metronome tab,
-     * and M there and on the song details screen, while nothing is drawn over either and no tempo is being typed. Pedals
+     * The keyboard's way to [toggleMetronome], asked from the desktop window and the web page: M on the Metronome tab and on
+     * the song details screen, while nothing is drawn over either and no tempo is being typed. Pedals
      * send only arrows, so this is for keyboards. Answers whether it did, so that anywhere else the key is left alone.
      */
-    fun toggleMetronomeByKey(isSpace: Boolean): Boolean {
+    fun toggleMetronomeByKey(): Boolean {
         val overlayState = dialogHost.overlayState
         if (dialogHost.visibleDialog.value != null || overlayState.isAnyMenuOpen || overlayState.isValueBeingTyped) return false
         val isAccepted = when (val top = backStack.lastOrNull()) {
             CampfireDestination.Metronome -> true
             // A preview shows no metronome, so nothing would be on screen to stop the click with.
-            is CampfireDestination.SongDetails -> !isSpace && top.importPreview == null && userPreferences.value?.isMetronomeEnabled != false
+            is CampfireDestination.SongDetails -> top.importPreview == null && userPreferences.value?.isMetronomeEnabled != false
             else -> false
         }
         if (!isAccepted) return false

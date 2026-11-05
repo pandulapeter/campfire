@@ -33,9 +33,9 @@ internal sealed interface AppShortcut {
         }
     }
 
-    /** Space or M, see `MetronomeController.toggleMetronomeByKey`. */
-    data class ToggleMetronome(val isSpace: Boolean) : AppShortcut {
-        override val keyShortcut = if (isSpace) KeyShortcut.PLAY else KeyShortcut.METRONOME
+    /** M, see `MetronomeController.toggleMetronomeByKey`. */
+    data object ToggleMetronome : AppShortcut {
+        override val keyShortcut = KeyShortcut.METRONOME
     }
 
     /** Ctrl / Cmd + V on the song list, see `PastedSongController.newSongFromClipboard`. */
@@ -54,8 +54,7 @@ internal fun appShortcutOf(key: Key, isCtrlOrMeta: Boolean, isShift: Boolean, is
         KeyShortcut.ZOOM_IN -> AppShortcut.ZoomSongText(1)
         KeyShortcut.ZOOM_OUT -> AppShortcut.ZoomSongText(-1)
         KeyShortcut.ZOOM_RESET -> AppShortcut.ZoomSongText(null)
-        KeyShortcut.PLAY -> AppShortcut.ToggleMetronome(isSpace = true)
-        KeyShortcut.METRONOME -> AppShortcut.ToggleMetronome(isSpace = false)
+        KeyShortcut.METRONOME -> AppShortcut.ToggleMetronome
         KeyShortcut.PASTE -> AppShortcut.PasteSong
         else -> null
     }
@@ -67,7 +66,7 @@ internal fun appShortcutOf(key: Key, isCtrlOrMeta: Boolean, isShift: Boolean, is
 internal fun CampfireViewModel.perform(shortcut: AppShortcut, clipboard: ClipboardTextReader): Boolean = when (shortcut) {
     AppShortcut.OpenSearch -> navigator.searches.openCurrentSearch()
     is AppShortcut.ZoomSongText -> fontScaleController.zoomSongText(shortcut.steps)
-    is AppShortcut.ToggleMetronome -> metronomeController.toggleMetronomeByKey(isSpace = shortcut.isSpace)
+    AppShortcut.ToggleMetronome -> metronomeController.toggleMetronomeByKey()
     AppShortcut.PasteSong -> pastedSongController.isNewSongPasteAvailable.also { isAvailable ->
         if (isAvailable) pastedSongController.newSongFromClipboard(clipboard)
     }
