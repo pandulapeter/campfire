@@ -55,7 +55,7 @@ internal fun columnCountForWidth(
 internal fun minSongColumnWidth(isCoverArtEnabled: Boolean) = CARD_BASE_WIDTH + if (isCoverArtEnabled) CARD_COVER_WIDTH else 0.dp
 
 // Declared before the default below, which is worked out from them as the file is initialized.
-private val CARD_BASE_WIDTH = 336.dp
+private val CARD_BASE_WIDTH = 292.dp
 
 /** The cover thumbnail and the gap after it (`CenteredSongCardContent`). */
 private val CARD_COVER_WIDTH = 68.dp

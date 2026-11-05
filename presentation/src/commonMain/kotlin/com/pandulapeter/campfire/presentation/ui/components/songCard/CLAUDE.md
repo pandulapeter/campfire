@@ -30,7 +30,8 @@
   unless nothing else is under the title, and is still read out.
 - Card text (or the cover) starts 8dp in, as far as a three-line card's cover stands from its top and bottom; headers
   follow (`SONG_CARD_TEXT_KEYLINE`). **In a window under 480dp wide** titles get two lines; touch targets stay.
-- **Column width** (`minSongColumnWidth`): 336dp, +68dp while covers are on (whether or not a song has one, so arriving
-  covers never change the count), so a phone on its side stays one column. The details line adds nothing. Setlists use
+- **Column width** (`minSongColumnWidth`): 292dp, +68dp while covers are on (whether or not a song has one, so arriving
+  covers never change the count), so an unfolded iPhone Duo or Galaxy Z Fold8 on its side fits two columns beside the
+  rail (the Duo's 84pt trailing inset included), and so does a large phone on its side. The details line adds nothing. Setlists use
   the same width, so both screens fit the same columns. Either sort keeps it too, though one sorted by artist leaves the
   artist off its cards: a change of sort never reflows the grid.

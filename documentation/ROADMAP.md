@@ -13,11 +13,10 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Tooltips that mention keyboard shortcuts, more shortcuts, and every shortcut on every platform. Plan: [tooltips-and-shortcuts.md](plans/tooltips-and-shortcuts.md)
+- Add tooltips: [tooltips-and-shortcuts.md](plans/tooltips-and-shortcuts.md)
+- Full Preferences redesign: [preferences-sheet.md](plans/preferences-sheet.md)
 - Support multi-line sticky headers (setlist titles)
 - Song title line spacing should be consistent between the two card display modes
-- Minimum card width should be reduced so that 2 columns are displayed on an unfolded Fold 8 / iPhone Duo
-- Full Preferences redesign. Plan: [preferences-sheet.md](plans/preferences-sheet.md)
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
