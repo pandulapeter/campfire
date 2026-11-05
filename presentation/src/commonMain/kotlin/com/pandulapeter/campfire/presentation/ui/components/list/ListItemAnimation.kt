@@ -149,8 +149,9 @@ internal class ListAnchor {
         val progress = transition.progress.value
         val previousOffset = transition.previousOffsets[key]
         if (previousOffset == null) {
-            val shift = transition.arrivalShiftOf(listState, key)
-            if (shift == null) alpha = progress else translationY = shift * (1f - progress)
+            val arrival = transition.arrivalOf(listState, key)
+            if (arrival == null || arrival.fadesIn) alpha = progress
+            if (arrival != null) translationY = arrival.shift * (1f - progress)
         } else {
             val offset = transition.offsetOf(listState, key) ?: return
             translationX = (previousOffset.x - offset.x) * (1f - progress)
@@ -201,7 +202,7 @@ private class AnchorTransition(
     val progress = Animatable(0f)
     private var layoutInfo: LazyGridLayoutInfo? = null
     private val offsets = mutableMapOf<Any, IntOffset>()
-    private val arrivalShifts = mutableMapOf<Any, Int>()
+    private val arrivals = mutableMapOf<Any, ItemArrival>()
     private val departureShifts = mutableMapOf<Any, Int?>()
 
     /**
@@ -225,9 +226,9 @@ private class AnchorTransition(
         if (currentLayoutInfo === previousLayoutInfo) return null
         if (currentLayoutInfo !== layoutInfo) {
             layoutInfo = currentLayoutInfo
-            val arrivals = currentLayoutInfo.visibleItemsInfo.filter { it.key !in offsets && it.key !in previousOffsets }
+            val newItems = currentLayoutInfo.visibleItemsInfo.filter { it.key !in offsets && it.key !in previousOffsets }
             currentLayoutInfo.visibleItemsInfo.forEach { offsets.getOrPut(it.key) { it.offset } }
-            if (listedAfter != null && arrivals.isNotEmpty()) recordArrivals(currentLayoutInfo, arrivals)
+            if (listedAfter != null && newItems.isNotEmpty()) recordArrivals(currentLayoutInfo, newItems)
             if (listedAfter != null) recordDepartures(currentLayoutInfo, listedAfter)
         }
         return currentLayoutInfo
@@ -270,15 +271,15 @@ private class AnchorTransition(
         }
     }
 
-    /** How far up the item with [key], which was not on screen before the change, travels to its place, if it does. */
-    fun arrivalShiftOf(listState: LazyGridState, key: Any): Int? = offsetOf(listState, key)?.let { arrivalShifts[key] }
+    /** How the item with [key], which was not on screen before the change, travels to its place, if it does. */
+    fun arrivalOf(listState: LazyGridState, key: Any): ItemArrival? = offsetOf(listState, key)?.let { arrivals[key] }
 
     /** Like the offsets, kept from the layout an arrival is first placed in, measured against the items' first ones. */
-    private fun recordArrivals(layoutInfo: LazyGridLayoutInfo, arrivals: List<LazyGridItemInfo>) {
+    private fun recordArrivals(layoutInfo: LazyGridLayoutInfo, newItems: List<LazyGridItemInfo>) {
         val shifts = layoutInfo.visibleItemsInfo.mapNotNull { item ->
             previousOffsets[item.key]?.let { previous -> ItemShift(index = item.index, shift = previous.y - offsets.getValue(item.key).y) }
         }
-        arrivals.forEach { item ->
+        newItems.forEach { item ->
             arrivalShift(
                 index = item.index,
                 top = item.offset.y,
@@ -286,7 +287,7 @@ private class AnchorTransition(
                 shifts = shifts,
                 previousViewportStart = previousLayoutInfo.viewportStartOffset,
                 previousViewportEnd = previousLayoutInfo.viewportEndOffset,
-            )?.let { arrivalShifts[item.key] = it }
+            )?.let { arrivals[item.key] = it }
         }
     }
 }

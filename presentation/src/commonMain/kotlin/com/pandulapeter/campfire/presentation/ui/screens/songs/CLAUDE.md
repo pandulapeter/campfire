@@ -19,7 +19,8 @@ The songs screen.
 - **The top left card in sight stays where it is on screen** as the search opens and closes; closing unscrolled over the
   same songs puts it back where it was. A random pick there gives way to the first card after the picks. Cards coming
   into sight or pushed out of it past the screen's edges travel with their neighbours, as in a list really scrolled; the
-  ones pushed out are drawn from what they last drew (`AnchorSnapshots`), since the grid no longer has them.
+  ones pushed out are drawn from what they last drew (`AnchorSnapshots`), since the grid no longer has them. A header
+  coming back between cards travels with the card after it, fading in.
 
 ## Random picks
 

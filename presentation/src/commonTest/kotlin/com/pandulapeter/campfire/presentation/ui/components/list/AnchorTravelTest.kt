@@ -21,7 +21,7 @@ class AnchorTravelTest {
         shifts = shifts.map { (index, shift) -> ItemShift(index = index, shift = shift) },
         previousViewportStart = 0,
         previousViewportEnd = 1000,
-    )
+    )?.also { assertEquals(false, it.fadesIn) }?.shift
 
     @Test
     fun `an item below the ones on screen travels up with the last of them`() = assertEquals(400, arrival(index = 5, top = 700, 3 to 400, 4 to 400))
@@ -36,7 +36,20 @@ class AnchorTravelTest {
     fun `an item above comes in from no lower than the top of the screen`() = assertEquals(-150, arrival(index = 1, top = 50, 2 to -10))
 
     @Test
-    fun `an item in among the ones on screen fades in`() = assertEquals(null, arrival(index = 3, top = 500, 2 to 100, 4 to 100))
+    fun `an item in among the ones on screen travels with the first one after it and fades in`() = assertEquals(
+        ItemArrival(shift = -80, fadesIn = true),
+        arrivalShift(
+            index = 3,
+            top = 500,
+            height = 100,
+            shifts = listOf(ItemShift(index = 2, shift = -20), ItemShift(index = 4, shift = -80), ItemShift(index = 5, shift = -90)),
+            previousViewportStart = 0,
+            previousViewportEnd = 1000,
+        ),
+    )
+
+    @Test
+    fun `an item below a list standing still comes in from below the screen`() = assertEquals(300, arrival(index = 5, top = 700, 4 to 0))
 
     @Test
     fun `an item below a list moving down fades in`() = assertEquals(null, arrival(index = 5, top = 900, 4 to -100))
