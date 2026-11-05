@@ -286,8 +286,8 @@ internal class MetronomeController(
     private fun startFollowingPattern() = scope.launch {
         // One collector for everything that changes what a playing click plays, so that a context change and the
         // pattern it brings are one update: paging to another song (or another stretch of one) moves the click to
-        // it once the bar being played has ended, from beat one, and anything else - a tempo stepped, a setting, a
-        // song's {tempo} saved or synced - is applied from the next beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
+        // it once the bar being played has ended, from beat one (from the next beat where the settings say so), and
+        // anything else - a tempo stepped, a setting, a song's {tempo} saved or synced - is applied from the next beat. Leaving the song is not among them, since a click does not outlive the screen it is played from.
         // The first value is only remembered: a view model built again while a click plays (an activity recreated)
         // starts from a back stack it has not moved. What was applied is compared rather than the values repeating,
         // since a pattern that changed while the click was held is emitted again unchanged once the hold ends.
@@ -323,7 +323,7 @@ internal class MetronomeController(
             if (last != null) {
                 val isMoved = isMetronomeContextMoved(last = last, context = context, renames = metronomeRenames)
                 if (last is MetronomeContext.Song && context != last) metronomeRenames.remove(last.songFileName)
-                if (context != last || pattern != applied) metronome.update(pattern, fromNextBar = isMoved)
+                if (context != last || pattern != applied) metronome.update(pattern, fromNextBar = isMoved && metronomeSettings.value.isChangeOnNextBar)
             }
             applied = pattern
         }

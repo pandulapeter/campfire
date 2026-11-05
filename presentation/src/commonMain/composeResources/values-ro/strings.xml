@@ -657,6 +657,10 @@
     <string name="metronome_level_muted">amuțită</string>
     <string name="metronome_subdivision">Subdiviziune</string>
     <string name="metronome_subdivision_description">Clicuri pe bătaie</string>
+    <string name="metronome_change_timing">Schimbare de tempo</string>
+    <string name="metronome_change_timing_description">La trecerea la alt cântec sau la o schimbare din el</string>
+    <string name="metronome_change_next_bar">Măsura următoare</string>
+    <string name="metronome_change_next_beat">Bătaia următoare</string>
     <string name="metronome_sound">Sunet</string>
     <string name="metronome_sound_click">Clic</string>
     <string name="metronome_sound_woodblock">Woodblock</string>

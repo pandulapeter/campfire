@@ -621,6 +621,10 @@
     <string name="metronome_level_muted">néma</string>
     <string name="metronome_subdivision">Felosztás</string>
     <string name="metronome_subdivision_description">Kattanások ütésenként</string>
+    <string name="metronome_change_timing">Tempóváltás</string>
+    <string name="metronome_change_timing_description">Másik dalhoz vagy egy dalon belüli váltáshoz érve</string>
+    <string name="metronome_change_next_bar">Következő ütem</string>
+    <string name="metronome_change_next_beat">Következő ütés</string>
     <string name="metronome_sound">Hang</string>
     <string name="metronome_sound_click">Kattanás</string>
     <string name="metronome_sound_woodblock">Fadob</string>

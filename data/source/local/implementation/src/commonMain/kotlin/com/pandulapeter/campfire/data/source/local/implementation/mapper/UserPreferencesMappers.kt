@@ -227,6 +227,7 @@ internal fun MetronomeSettingsDocument.toModel() = MetronomeSettings(
     bpm = bpm.coerceIn(MetronomeSettings.TEMPO_RANGE),
     timeSignature = timeSignature,
     isSongPanelShown = isSongPanelShown,
+    isChangeOnNextBar = isChangeOnNextBar,
 )
 
 internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
@@ -239,6 +240,7 @@ internal fun MetronomeSettings.toDocument() = MetronomeSettingsDocument(
     bpm = bpm,
     timeSignature = timeSignature,
     isSongPanelShown = isSongPanelShown,
+    isChangeOnNextBar = isChangeOnNextBar,
 )
 
 /** Whether this document was written before the tuner and the chord diagrams shared one instrument: it names none. */

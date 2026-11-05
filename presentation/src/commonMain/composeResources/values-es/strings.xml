@@ -621,6 +621,10 @@
     <string name="metronome_level_muted">silenciado</string>
     <string name="metronome_subdivision">Subdivisión</string>
     <string name="metronome_subdivision_description">Clics por pulso</string>
+    <string name="metronome_change_timing">Cambio de tempo</string>
+    <string name="metronome_change_timing_description">Al llegar a otra canción o a un cambio dentro de ella</string>
+    <string name="metronome_change_next_bar">Siguiente compás</string>
+    <string name="metronome_change_next_beat">Siguiente pulso</string>
     <string name="metronome_sound">Sonido</string>
     <string name="metronome_sound_click">Clic</string>
     <string name="metronome_sound_woodblock">Caja china</string>

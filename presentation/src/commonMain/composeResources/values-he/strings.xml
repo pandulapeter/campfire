@@ -656,6 +656,10 @@
     <string name="metronome_level_muted">מושתקת</string>
     <string name="metronome_subdivision">חלוקה</string>
     <string name="metronome_subdivision_description">קליקים בכל פעמה</string>
+    <string name="metronome_change_timing">שינוי טמפו</string>
+    <string name="metronome_change_timing_description">במעבר לשיר אחר או לשינוי בתוכו</string>
+    <string name="metronome_change_next_bar">התיבה הבאה</string>
+    <string name="metronome_change_next_beat">הפעמה הבאה</string>
     <string name="metronome_sound">צליל</string>
     <string name="metronome_sound_click">קליק</string>
     <string name="metronome_sound_woodblock">וודבלוק</string>

@@ -151,6 +151,7 @@ internal data class MetronomeSettingsDocument(
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
     val isSongPanelShown: Boolean = false,
+    val isChangeOnNextBar: Boolean = true,
 )
 
 /**

@@ -26,6 +26,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
+import com.pandulapeter.campfire.presentation.resources.metronome_change_timing
+import com.pandulapeter.campfire.presentation.resources.metronome_change_timing_description
 import com.pandulapeter.campfire.presentation.resources.metronome_group_playback
 import com.pandulapeter.campfire.presentation.resources.metronome_group_rhythm
 import com.pandulapeter.campfire.presentation.resources.metronome_animate
@@ -172,8 +174,9 @@ private fun MetronomeBarOptions(
 }
 
 /**
- * How a click reaches the player: what it sounds like, how loud, and whether it is seen and felt. Unlike the section
- * before it none of this is the tab's own: it is how every click is played, a song's included.
+ * How a click reaches the player: what it sounds like, how loud, where a song's click takes up a new tempo, and whether
+ * it is seen and felt. Unlike the section before it none of this is the tab's own: it is how every click is played, a
+ * song's included (the tempo change only there, since the tab plays one tempo).
  */
 @Composable
 private fun MetronomeSoundOptions(
@@ -193,6 +196,15 @@ private fun MetronomeSoundOptions(
         VolumeSlider(
             volume = settings.volume,
             onVolumeChanged = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(volume = value) } },
+        )
+    }
+    SettingsSubsection(
+        title = stringResource(Res.string.metronome_change_timing),
+        description = stringResource(Res.string.metronome_change_timing_description),
+    ) {
+        ChangeTimingChoice(
+            isChangeOnNextBar = settings.isChangeOnNextBar,
+            onSelected = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isChangeOnNextBar = value) } },
         )
     }
     SwitchListItem(

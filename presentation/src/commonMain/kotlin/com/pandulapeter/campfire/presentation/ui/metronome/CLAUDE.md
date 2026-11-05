@@ -37,8 +37,9 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
   that page (a step's or fling's target, never a finger still dragging; a song paged back to reports its last stretch);
   or the tab's own pattern. A song's pattern: its tempo and `{time}` (4/4 where none), accents for that signature, the
   rest from the settings.
-- **A new song or stretch takes effect from beat one of the next bar**, anything else from the next beat; a rebuilt view
-  model does not stop a playing click.
+- **A new song or stretch takes effect from beat one of the next bar** (from the next beat where the tab's Tempo change
+  says so, `MetronomeSettings.isChangeOnNextBar`), anything else from the next beat; a rebuilt view model does not stop
+  a playing click.
 - Only the tab's or a song's taps, with the feature on, may open the web's audio device (`Metronome.setStartable`).
 - Starting over a song opens its panel. A click that stops on its own is a snackbar naming why.
 - Space (tab) and M (tab and song, not an import preview) toggle it on desktop and web, under no dialog or menu, only on

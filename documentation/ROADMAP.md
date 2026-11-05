@@ -17,7 +17,6 @@ What's planned for Campfire, grouped by area.
 - Support multi-line sticky headers (setlist titles)
 - Song title font on card should have smaller line spacing, and that should be consistent between the two card display modes
 - Minimum card width should be reduced so that 2 columns are displayed on an unfolded Fold 8 / iPhone Duo
-- Add option to switch metronome tempo from the next beat instead of from the next bar
 - The chord shape picker bottom sheet performs an unnecessary horizontal animation on Hebrew only
 - Full Preferences redesign: currently accidentally turning Performance mode on results in confusion + settings don't have a centralized place
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations

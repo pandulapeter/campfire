@@ -621,6 +621,10 @@
     <string name="metronome_level_muted">muto</string>
     <string name="metronome_subdivision">Suddivisione</string>
     <string name="metronome_subdivision_description">Clic per movimento</string>
+    <string name="metronome_change_timing">Cambio di tempo</string>
+    <string name="metronome_change_timing_description">Arrivando a un altro brano o a un cambio al suo interno</string>
+    <string name="metronome_change_next_bar">Battuta successiva</string>
+    <string name="metronome_change_next_beat">Movimento successivo</string>
     <string name="metronome_sound">Suono</string>
     <string name="metronome_sound_click">Clic</string>
     <string name="metronome_sound_woodblock">Woodblock</string>

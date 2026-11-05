@@ -621,6 +621,10 @@
     <string name="metronome_level_muted">stumm</string>
     <string name="metronome_subdivision">Unterteilung</string>
     <string name="metronome_subdivision_description">Klicks pro Schlag</string>
+    <string name="metronome_change_timing">Tempowechsel</string>
+    <string name="metronome_change_timing_description">Beim Wechsel zu einem anderen Song oder zu einem Wechsel darin</string>
+    <string name="metronome_change_next_bar">Nächster Takt</string>
+    <string name="metronome_change_next_beat">Nächster Schlag</string>
     <string name="metronome_sound">Klang</string>
     <string name="metronome_sound_click">Klick</string>
     <string name="metronome_sound_woodblock">Woodblock</string>
