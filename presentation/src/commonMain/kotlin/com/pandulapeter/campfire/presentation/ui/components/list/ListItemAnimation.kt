@@ -126,7 +126,7 @@ internal class ListAnchor {
                 newTransition.progress.animateTo(1f, animationSpec)
             } finally {
                 if (transition === newTransition) transition = null
-                snapshots.release(newTransition.departing.keys)
+                snapshots.release(newTransition.departing.values)
             }
         }
     }
@@ -165,8 +165,10 @@ internal class ListAnchor {
      */
     fun DrawScope.drawDepartures(listState: LazyGridState) {
         val transition = transition ?: return
-        val progress = transition.progress.value
         val departures = transition.departuresOf(listState).takeIf { it.isNotEmpty() } ?: return
+        // Read only with something to draw: a change that pushes nothing off draws the grid again only as it is laid out
+        // again, not on every frame of its spring.
+        val progress = transition.progress.value
         clipRect {
             departures.forEach { (snapshot, shift) ->
                 translate(left = snapshot.position.x, top = snapshot.position.y - shift * progress) { drawLayer(snapshot.layer) }
