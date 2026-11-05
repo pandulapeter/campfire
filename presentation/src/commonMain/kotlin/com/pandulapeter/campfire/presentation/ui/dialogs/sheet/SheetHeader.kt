@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.sheet
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,12 +58,11 @@ internal fun SheetHeader(
     verticalAlignment = Alignment.CenterVertically,
 ) {
     if (onClose != null) {
-        IconButton(onClick = onClose) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_clear),
-                contentDescription = stringResource(Res.string.close),
-            )
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_clear),
+            label = stringResource(Res.string.close),
+            onClick = onClose,
+        )
     }
     Column(
         modifier = Modifier.weight(1f),

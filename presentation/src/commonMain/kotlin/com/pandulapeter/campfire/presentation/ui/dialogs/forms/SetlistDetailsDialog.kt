@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.rememberSingleConfirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.BottomSheetConfirmButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.TextFieldBottomSheet
@@ -28,8 +29,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -294,9 +293,11 @@ private fun SetlistDateField(
         singleLine = true,
         label = { Text(stringResource(Res.string.setlists_date)) },
         trailingIcon = {
-            IconButton(onClick = onPickerRequested) {
-                Icon(painter = painterResource(Res.drawable.ic_calendar), contentDescription = stringResource(Res.string.setlists_pick_date))
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_calendar),
+                label = stringResource(Res.string.setlists_pick_date),
+                onClick = onPickerRequested,
+            )
         },
         interactionSource = interactionSource,
     )

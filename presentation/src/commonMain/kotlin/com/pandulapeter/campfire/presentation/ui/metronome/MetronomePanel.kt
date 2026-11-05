@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_start
 import com.pandulapeter.campfire.presentation.resources.metronome_stop
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_END_INSET
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import kotlinx.coroutines.flow.Flow
@@ -147,18 +148,20 @@ internal fun MetronomePanel(
             )
         }
         val label = stringResource(if (isPlaying) Res.string.metronome_stop else Res.string.metronome_start)
-        FilledIconButton(
-            modifier = Modifier
-                .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)
-                // The row already squashes it vertically, so this is what keeps the button round as it scales down.
-                .graphicsLayer { scaleX = contentProgress.value }
-                .semantics { contentDescription = label },
-            onClick = onPlayStop,
-        ) {
-            PlayStopMark(
-                isPlaying = isPlaying,
-                size = PLAY_MARK_SIZE,
-            )
+        CampfireTooltip(label = label) {
+            FilledIconButton(
+                modifier = Modifier
+                    .then(if (isProminent) Modifier.size(PROMINENT_PANEL_HEIGHT) else Modifier)
+                    // The row already squashes it vertically, so this is what keeps the button round as it scales down.
+                    .graphicsLayer { scaleX = contentProgress.value }
+                    .semantics { contentDescription = label },
+                onClick = onPlayStop,
+            ) {
+                PlayStopMark(
+                    isPlaying = isPlaying,
+                    size = PLAY_MARK_SIZE,
+                )
+            }
         }
     }
 }

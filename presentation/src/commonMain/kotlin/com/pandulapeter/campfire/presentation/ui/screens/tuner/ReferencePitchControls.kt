@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_de
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_increase
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_reset
 import com.pandulapeter.campfire.presentation.resources.tuner_reference_pitch_value
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_GAP
@@ -86,22 +87,24 @@ internal fun ReferencePitchControls(
         entry = StepperEntry(number = referencePitch, range = Pitch.REFERENCE_PITCH_RANGE, onEntered = onReferencePitchChanged),
     )
     val description = stringResource(Res.string.tuner_play_reference, noteName(REFERENCE_NOTE, notation))
-    FilledIconToggleButton(
-        modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
-        checked = isReferenceTonePlaying,
-        onCheckedChange = { onToggleReferenceTone() },
-        colors = IconButtonDefaults.filledIconToggleButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            checkedContainerColor = MaterialTheme.colorScheme.primary,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-        ),
-    ) {
-        PlayStopMark(
-            modifier = Modifier.semantics { contentDescription = description },
-            isPlaying = isReferenceTonePlaying,
-            size = 20.dp,
-            color = LocalContentColor.current,
-        )
+    CampfireTooltip(label = description) {
+        FilledIconToggleButton(
+            modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
+            checked = isReferenceTonePlaying,
+            onCheckedChange = { onToggleReferenceTone() },
+            colors = IconButtonDefaults.filledIconToggleButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+        ) {
+            PlayStopMark(
+                modifier = Modifier.semantics { contentDescription = description },
+                isPlaying = isReferenceTonePlaying,
+                size = 20.dp,
+                color = LocalContentColor.current,
+            )
+        }
     }
 }

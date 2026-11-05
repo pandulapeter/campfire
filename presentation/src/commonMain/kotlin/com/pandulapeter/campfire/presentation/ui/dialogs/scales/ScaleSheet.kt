@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +64,8 @@ import com.pandulapeter.campfire.presentation.resources.scales_mode_of
 import com.pandulapeter.campfire.presentation.resources.scales_play
 import com.pandulapeter.campfire.presentation.resources.scales_relative_minor
 import com.pandulapeter.campfire.presentation.resources.scales_sevenths
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
@@ -249,8 +250,9 @@ private fun ScaleLabelsToggle(
     onLabelsSelected: (ScaleLabels) -> Unit,
 ) {
     val shownLabel = stringResource(if (labels == ScaleLabels.DEGREES) Res.string.scales_labels_degrees else Res.string.scales_labels_notes)
-    IconButton(
+    CampfireIconButton(
         modifier = Modifier.semantics { stateDescription = shownLabel },
+        label = stringResource(if (labels == ScaleLabels.DEGREES) Res.string.scales_labels_show_notes else Res.string.scales_labels_show_degrees),
         onClick = { onLabelsSelected(if (labels == ScaleLabels.DEGREES) ScaleLabels.NOTES else ScaleLabels.DEGREES) },
     ) {
         Crossfade(
@@ -317,23 +319,25 @@ private fun ScalePlayButton(
     onTogglePlaying: () -> Unit,
 ) {
     val description = stringResource(Res.string.scales_play)
-    FilledIconToggleButton(
-        modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
-        checked = isPlaying,
-        onCheckedChange = { onTogglePlaying() },
-        colors = IconButtonDefaults.filledIconToggleButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            checkedContainerColor = MaterialTheme.colorScheme.primary,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-        ),
-    ) {
-        PlayStopMark(
-            modifier = Modifier.semantics { contentDescription = description },
-            isPlaying = isPlaying,
-            size = 20.dp,
-            color = LocalContentColor.current,
-        )
+    CampfireTooltip(label = description) {
+        FilledIconToggleButton(
+            modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE),
+            checked = isPlaying,
+            onCheckedChange = { onTogglePlaying() },
+            colors = IconButtonDefaults.filledIconToggleButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+        ) {
+            PlayStopMark(
+                modifier = Modifier.semantics { contentDescription = description },
+                isPlaying = isPlaying,
+                size = 20.dp,
+                color = LocalContentColor.current,
+            )
+        }
     }
 }
 

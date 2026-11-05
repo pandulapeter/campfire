@@ -20,19 +20,23 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.tap
 
-/** Opens the song titled [title] from the songs list, scrolling the list to it, and waits for its page to be laid out. */
+/**
+ * Opens the song titled [title] from the songs list, scrolling the list to it, and waits for its page to be laid out. The
+ * row is tapped as a finger does, since a mouse would be left hovering over whatever the song puts under it, a tooltip
+ * and all.
+ */
 @OptIn(ExperimentalTestApi::class)
 internal fun AppTestScope.openSong(title: String) {
     onNode(hasScrollToNodeAction()).performScrollToNode(hasText(title))
-    onNode(hasText(title) and hasClickAction()).performClick()
+    tap(hasText(title) and hasClickAction())
     waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { songViewport() != null }
     waitForIdle()
 }

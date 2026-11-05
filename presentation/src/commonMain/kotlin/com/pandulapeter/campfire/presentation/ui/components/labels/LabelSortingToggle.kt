@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.labels
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_ICON_SIZE
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +22,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_sort_by_alpha
 import com.pandulapeter.campfire.presentation.resources.ic_sort_by_usage
+import com.pandulapeter.campfire.presentation.resources.songs_labels_sort_alphabetically
+import com.pandulapeter.campfire.presentation.resources.songs_labels_sort_by_usage
 import com.pandulapeter.campfire.presentation.resources.songs_labels_sorted_alphabetically
 import com.pandulapeter.campfire.presentation.resources.songs_labels_sorted_by_usage
 import org.jetbrains.compose.resources.painterResource
@@ -29,15 +31,21 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Switches the values of a group between the two [UserPreferences.LabelSortingMode]s: most used first, or
  * alphabetical. The icon shows the order the list is in rather than the one a tap would put it in, the way a column
- * header's sort indicator does, and so does what a screen reader announces.
+ * header's sort indicator does, and so does what a screen reader announces; its tooltip names what a press does.
  */
 @Composable
 internal fun LabelSortingToggle(
     modifier: Modifier = Modifier,
     sortingMode: UserPreferences.LabelSortingMode,
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
-) = IconButton(
+) = CampfireIconButton(
     modifier = modifier,
+    label = stringResource(
+        when (sortingMode) {
+            UserPreferences.LabelSortingMode.BY_USAGE -> Res.string.songs_labels_sort_alphabetically
+            UserPreferences.LabelSortingMode.ALPHABETICAL -> Res.string.songs_labels_sort_by_usage
+        }
+    ),
     onClick = {
         onSortingModeSelected(
             when (sortingMode) {

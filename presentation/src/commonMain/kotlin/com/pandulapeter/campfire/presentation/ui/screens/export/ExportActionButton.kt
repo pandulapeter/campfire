@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.share_connect_again
 import com.pandulapeter.campfire.presentation.resources.share_copy
 import com.pandulapeter.campfire.presentation.resources.share_create
 import com.pandulapeter.campfire.presentation.resources.share_try_again
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.print.PdfExportProgress
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
@@ -70,8 +71,8 @@ internal sealed interface ExportButtonAction {
  * by the label it shows, since Material's extended floating button clears the semantics of its text, and so it is still
  * described where it is collapsed to its icon. That is Copy link's alone, and only [isInShortPane] (a short window, the
  * options beside the preview), where the QR code takes the pane's height beside it ([linkPreviewPaddingFor]) and says
- * what it copies; any other action's bare icon would not say what it does. Where [isFilled] ([isActionButtonFilledFor]) it
- * is filled with the primary color, the change animated across a resize.
+ * what it copies, and a tooltip names it; any other action's bare icon would not say what it does. Where [isFilled]
+ * ([isActionButtonFilledFor]) it is filled with the primary color, the change animated across a resize.
  */
 @Composable
 internal fun ExportActionButton(
@@ -96,34 +97,37 @@ internal fun ExportActionButton(
     ) {
         val current = shown ?: return@FloatingControlVisibility
         val label = stringResource(current.label)
-        ExtendedFloatingActionButton(
-            text = {
-                AnimatedContent(
-                    targetState = current.label,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-                ) { shownLabel ->
-                    Text(stringResource(shownLabel))
-                }
-            },
-            icon = {
-                // Keyed by the icon, so that the ring counts on as the pages are drawn rather than crossfading every page.
-                AnimatedContent(
-                    targetState = current,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    contentKey = { it.iconKey },
-                ) { shownAction ->
-                    ButtonIcon(shownAction)
-                }
-            },
-            onClick = { action?.let(onClick) },
-            containerColor = containerColor,
-            contentColor = contentColorFor(containerColor),
-            modifier = Modifier.semantics { contentDescription = label },
-            // From the action kept while the button leaves, so that it does not grow again as it fades out.
-            expanded = !(isInShortPane && current == ExportButtonAction.Link(LinkAction.COPY)),
-            // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
-            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-        )
+        // From the action kept while the button leaves, so that it does not grow again as it fades out.
+        val isExpanded = !(isInShortPane && current == ExportButtonAction.Link(LinkAction.COPY))
+        CampfireTooltip(label = label, isEnabled = !isExpanded) {
+            ExtendedFloatingActionButton(
+                text = {
+                    AnimatedContent(
+                        targetState = current.label,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+                    ) { shownLabel ->
+                        Text(stringResource(shownLabel))
+                    }
+                },
+                icon = {
+                    // Keyed by the icon, so that the ring counts on as the pages are drawn rather than crossfading every page.
+                    AnimatedContent(
+                        targetState = current,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        contentKey = { it.iconKey },
+                    ) { shownAction ->
+                        ButtonIcon(shownAction)
+                    }
+                },
+                onClick = { action?.let(onClick) },
+                containerColor = containerColor,
+                contentColor = contentColorFor(containerColor),
+                modifier = Modifier.semantics { contentDescription = label },
+                expanded = isExpanded,
+                // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+            )
+        }
     }
 }
 

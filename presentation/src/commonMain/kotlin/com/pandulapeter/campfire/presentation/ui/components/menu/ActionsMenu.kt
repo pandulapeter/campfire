@@ -264,7 +264,7 @@ private fun OverflowButton(
     if (isDecorative) {
         ActionButton(
             icon = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             isDecorative = true,
             size = buttonWidth,
         )
@@ -331,7 +331,7 @@ private fun actionButtonWidth(): Dp = maxOf(LocalMinimumInteractiveComponentSize
 private fun ActionButton(
     modifier: Modifier = Modifier,
     icon: Painter,
-    contentDescription: String?,
+    contentDescription: String,
     animateIconChange: Boolean = false,
     isEnabled: Boolean = true,
     isDecorative: Boolean = false,
@@ -347,6 +347,7 @@ private fun ActionButton(
 } else {
     PillIconButton(
         modifier = modifier,
+        tooltip = contentDescription,
         enabled = isEnabled,
         onClick = onClick,
     ) {

@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +23,7 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_bo
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_preview_choices
 import com.pandulapeter.campfire.presentation.resources.import_preview_include
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverflowMenu
 import org.jetbrains.compose.resources.painterResource
 
@@ -45,9 +44,11 @@ internal fun ImportPreviewChoicesMenu(
 ) = OverflowMenu(
     modifier = modifier,
     button = { open ->
-        IconButton(onClick = open) {
-            Icon(painter = painterResource(Res.drawable.ic_tune), contentDescription = stringResource(Res.string.import_preview_choices))
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_tune),
+            label = stringResource(Res.string.import_preview_choices),
+            onClick = open,
+        )
     },
 ) {
     DropdownMenuItem(

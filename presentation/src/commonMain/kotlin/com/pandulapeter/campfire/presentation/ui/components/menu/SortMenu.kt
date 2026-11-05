@@ -43,7 +43,7 @@ internal fun <T> SortMenu(
 ) = OverflowMenu(
     modifier = modifier,
     button = { open ->
-        PillIconButton(onClick = open, enabled = isEnabled) {
+        PillIconButton(tooltip = title, onClick = open, enabled = isEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.ic_sort),
                 contentDescription = title,

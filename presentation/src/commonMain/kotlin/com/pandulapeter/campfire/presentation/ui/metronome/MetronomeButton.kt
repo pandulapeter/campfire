@@ -47,6 +47,7 @@ internal fun MetronomeButton(
 ) = SongToolButton(
     modifier = modifier,
     height = height,
+    label = metronomePanelLabel(isPanelShown = isPanelShown, bpm = bpm),
     isSelected = isPanelShown,
     onClick = onClick,
 ) {

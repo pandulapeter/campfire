@@ -88,6 +88,11 @@ data class UserPreferences(
      */
     val isAppIconThemed: Boolean,
     /**
+     * Whether a control drawn as an icon alone names what it does in a tooltip, shown once a mouse has rested on it or a
+     * finger has held it.
+     */
+    val areTooltipsEnabled: Boolean = true,
+    /**
      * Whether the songs' cover images are shown. Off, nothing is fetched or drawn, which is also what keeps the app from
      * asking any host a song's `{meta: cover …}` names for anything.
      */

@@ -366,6 +366,8 @@
     <string name="songs_languages_match_mode_all">Toate limbile</string>
     <string name="songs_labels_sorted_by_usage">Sortate după utilizare</string>
     <string name="songs_labels_sorted_alphabetically">Sortate alfabetic</string>
+    <string name="songs_labels_sort_by_usage">Sortează după utilizare</string>
+    <string name="songs_labels_sort_alphabetically">Sortează alfabetic</string>
     <string name="songs_filters_reset">Resetează</string>
 
     <!-- Setlists screen -->
@@ -570,6 +572,8 @@
     <string name="settings_app_icon_window_description">Pictograma ferestrei preia culoarea de mai sus cât timp Campfire este deschis</string>
     <string name="settings_app_icon_browser_tab">Colorează pictograma filei</string>
     <string name="settings_app_icon_browser_tab_description">Pictograma filei din browser preia culoarea de mai sus</string>
+    <string name="settings_tooltips">Sfaturi ecran</string>
+    <string name="settings_tooltips_description">Arată ce face un buton afișat doar ca pictogramă când zăbovești asupra lui</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
     <string name="settings_user_interface_theme_color_gray">Gri</string>
     <string name="settings_user_interface_theme_color_system">Sistem</string>

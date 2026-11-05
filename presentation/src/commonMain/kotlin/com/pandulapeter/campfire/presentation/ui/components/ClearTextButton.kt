@@ -15,8 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -58,17 +56,14 @@ internal fun rememberClearTextButton(
             // The text field would otherwise show the text cursor over the button on desktop. It takes no focus, so that
             // the keyboard's Next and Tab go from field to field rather than stopping at the button of the field they
             // are leaving.
-            IconButton(
+            CampfireIconButton(
                 modifier = Modifier
                     .pointerHoverIcon(PointerIcon.Default, overrideDescendants = true)
                     .focusProperties { canFocus = false },
+                icon = painterResource(Res.drawable.ic_clear),
+                label = stringResource(Res.string.songs_clear),
                 onClick = onClear,
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_clear),
-                    contentDescription = stringResource(Res.string.songs_clear),
-                )
-            }
+            )
         }
     }
 }

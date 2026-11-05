@@ -9,11 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.labels
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.songInfo.label
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,8 +72,9 @@ internal fun TagColorButton(
     OverflowMenu(
         modifier = modifier,
         button = { open ->
-            IconButton(
+            CampfireIconButton(
                 modifier = Modifier.semantics { contentDescription = description },
+                label = description,
                 onClick = open,
             ) {
                 TagIcon(fill = animatedTagFill(color))

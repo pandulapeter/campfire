@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,6 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_hide_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcuts
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.controls.ExpandChevron
 
 @Composable
@@ -33,10 +33,11 @@ internal fun EditorToolbarToggle(
     isEnabled: Boolean,
     onToggled: () -> Unit,
 ) {
+    val label = stringResource(if (isExpanded) Res.string.song_editor_hide_shortcuts else Res.string.song_editor_show_shortcuts)
     val icon: @Composable () -> Unit = {
         ExpandChevron(
             isExpanded = isExpanded,
-            contentDescription = stringResource(if (isExpanded) Res.string.song_editor_hide_shortcuts else Res.string.song_editor_show_shortcuts),
+            contentDescription = label,
         )
     }
     if (isLabeled) {
@@ -53,8 +54,9 @@ internal fun EditorToolbarToggle(
             icon()
         }
     } else {
-        IconButton(
+        CampfireIconButton(
             modifier = modifier,
+            label = label,
             enabled = isEnabled,
             onClick = onToggled,
             content = icon,

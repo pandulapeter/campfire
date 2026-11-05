@@ -16,7 +16,7 @@ crossfade across the breakpoint, as do the wide layout's pages. A build without 
 ## Tab contents
 
 - **General**: Performance (the Read only switch) leads, since General is the tab Settings opens on, and only while the
-  songs are on (it fades out with them).
+  songs are on (it fades out with them). Appearance ends with the Tooltips switch.
 - **Preferences**: how a song is read, where Features is what the app has. Lists first, the one section found nowhere
   else; the chord-writing rows are disabled only while nothing names a chord (the Chords and Scales tabs do too). Lists
   and Song page leave with the Songs switch. No instrument row: it is picked where it is used (`ui/instrument`).

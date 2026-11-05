@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.controls
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import androidx.compose.animation.AnimatedContent
@@ -29,7 +30,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -231,13 +231,16 @@ private fun StepperButton(
             }
         }
     }
-    IconButton(
+    CampfireIconButton(
         modifier = Modifier
             .size(width = buttonLength, height = height)
             // The value is what a step changes, so the button says it: a screen reader re-reads the state of the node
             // it is on, and the value is a node of its own the focus is not on.
             .semantics { this.stateDescription = stateDescription },
+        label = label,
         enabled = isEnabled,
+        // Held, the button steps on its own, which a tooltip's long press would take away from it.
+        isTooltipShownOnLongPress = !repeatsOnHold,
         interactionSource = interactionSource,
         onClick = { if (holdState.hasRepeated) holdState.hasRepeated = false else onClick() },
     ) {

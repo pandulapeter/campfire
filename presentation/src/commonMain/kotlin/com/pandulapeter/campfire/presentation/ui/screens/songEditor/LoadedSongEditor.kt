@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorChordShapes
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
@@ -36,8 +37,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -254,12 +253,11 @@ internal fun LoadedSongEditor(
         CampfireTopAppBar(
             isCompact = isTypingInShortWindow,
             navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_clear),
-                        contentDescription = stringResource(Res.string.close),
-                    )
-                }
+                CampfireIconButton(
+                    icon = painterResource(Res.drawable.ic_clear),
+                    label = stringResource(Res.string.close),
+                    onClick = onBack,
+                )
             },
             title = {
                 EditorTitle(

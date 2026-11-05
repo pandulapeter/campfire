@@ -365,6 +365,8 @@
     <string name="songs_languages_match_mode_all">בכל השפות</string>
     <string name="songs_labels_sorted_by_usage">ממוין לפי שימוש</string>
     <string name="songs_labels_sorted_alphabetically">ממוין לפי א״ב</string>
+    <string name="songs_labels_sort_by_usage">מיון לפי שימוש</string>
+    <string name="songs_labels_sort_alphabetically">מיון לפי א״ב</string>
     <string name="songs_filters_reset">איפוס</string>
 
     <!-- Setlists screen -->
@@ -569,6 +571,8 @@
     <string name="settings_app_icon_window_description">סמל החלון מקבל את הצבע שלמעלה כל עוד Campfire פתוח</string>
     <string name="settings_app_icon_browser_tab">צביעת סמל הלשונית</string>
     <string name="settings_app_icon_browser_tab_description">הסמל של לשונית הדפדפן מקבל את הצבע שלמעלה</string>
+    <string name="settings_tooltips">תיאורי כלים</string>
+    <string name="settings_tooltips_description">מציג מה עושה כפתור שמוצג כסמל בלבד כשמתעכבים עליו</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
     <string name="settings_user_interface_theme_color_gray">אפור</string>
     <string name="settings_user_interface_theme_color_system">מערכת</string>

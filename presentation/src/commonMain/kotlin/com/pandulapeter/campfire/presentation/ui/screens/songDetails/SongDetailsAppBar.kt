@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.songView.firstSection.SongPlayingTools
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ScrollState
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -121,12 +120,11 @@ internal fun SongDetailsAppBar(
     CampfireTopAppBar(
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = stringResource(Res.string.back),
-                )
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_back),
+                label = stringResource(Res.string.back),
+                onClick = onBack,
+            )
         },
         title = {
             SongDetailsTitle(

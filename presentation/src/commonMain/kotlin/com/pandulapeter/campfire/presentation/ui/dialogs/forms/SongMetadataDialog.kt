@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
@@ -21,8 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -107,12 +106,11 @@ internal fun SongMetadataDialog(
         startButton = if (userPreferences?.isSongDetailsLookupEnabled == true) {
             {
                 val isClosing = LocalIsSheetClosing.current
-                IconButton(onClick = { if (!isClosing()) showSongDetailsLookup(dialog, values) }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_manage_search),
-                        contentDescription = stringResource(Res.string.song_details_lookup),
-                    )
-                }
+                CampfireIconButton(
+                    icon = painterResource(Res.drawable.ic_manage_search),
+                    label = stringResource(Res.string.song_details_lookup),
+                    onClick = { if (!isClosing()) showSongDetailsLookup(dialog, values) },
+                )
             }
         } else {
             null

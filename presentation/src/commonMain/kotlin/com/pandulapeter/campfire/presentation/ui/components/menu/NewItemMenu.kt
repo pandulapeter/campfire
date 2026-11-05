@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.menu
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.list.allowsNewItemMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -68,11 +69,13 @@ internal fun NewItemMenu(
         button = { open ->
             // Filled in the accent color, unlike the bar's other actions: it is the way to fill the list, and a plain
             // icon among search, sort, and filter is the one that gets overlooked.
-            FilledIconButton(modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE), onClick = open, enabled = isEnabled) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_add),
-                    contentDescription = contentDescription,
-                )
+            CampfireTooltip(label = contentDescription) {
+                FilledIconButton(modifier = Modifier.size(NEW_ITEM_BUTTON_SIZE), onClick = open, enabled = isEnabled) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_add),
+                        contentDescription = contentDescription,
+                    )
+                }
             }
         },
     ) { select ->

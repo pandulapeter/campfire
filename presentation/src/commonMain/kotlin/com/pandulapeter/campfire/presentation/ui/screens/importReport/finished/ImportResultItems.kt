@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.importReport.finished
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.WarningCard
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportFeatureWarning
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ItemWidth
@@ -25,8 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -181,13 +180,12 @@ private fun ImportReportRowItem(
     },
     trailingContent = if (canEdit) {
         {
-            IconButton(onClick = onEdit) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_edit),
-                    contentDescription = stringResource(Res.string.import_report_edit),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_edit),
+                label = stringResource(Res.string.import_report_edit),
+                onClick = onEdit,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     } else {
         null

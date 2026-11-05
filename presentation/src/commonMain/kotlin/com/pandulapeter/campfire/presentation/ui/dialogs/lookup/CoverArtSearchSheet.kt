@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.lookup
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
@@ -22,8 +23,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -234,12 +233,11 @@ private fun CoverArtSearchActions(
 ) {
     if (canRemove) {
         val isClosing = LocalIsSheetClosing.current
-        IconButton(onClick = { if (!isClosing()) onRemove() }) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_delete),
-                contentDescription = stringResource(Res.string.cover_art_search_remove),
-            )
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_delete),
+            label = stringResource(Res.string.cover_art_search_remove),
+            onClick = { if (!isClosing()) onRemove() },
+        )
     }
     BottomSheetConfirmButton(
         enabled = canSave,

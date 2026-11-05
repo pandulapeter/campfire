@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -43,8 +44,9 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param onReset Makes the icon itself the reset where a tap on the value does something else (typing into a
  * [StepperField]), with a round ripple and a touch area in a box as wide as the stepper's buttons, since a miss on
- * either side of it would start typing or step the value; beside a plain value the icon only marks it, since the value and the icon take the tap together. It cannot take the focus, so a click on it
- * while typing does not end the typing on the press.
+ * either side of it would start typing or step the value, and with [resetLabel] as its tooltip; beside a plain value
+ * the icon only marks it, since the value and the icon take the tap together. It cannot take the focus, so a click on
+ * it while typing does not end the typing on the press.
  */
 @Composable
 internal fun StepperResetMark(
@@ -58,37 +60,39 @@ internal fun StepperResetMark(
     enter = fadeIn() + expandHorizontally(),
     exit = fadeOut() + shrinkHorizontally(),
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            .then(
-                if (onReset == null) {
-                    Modifier
-                } else {
-                    Modifier
-                        .focusProperties { canFocus = false }
-                        .clickable(
-                            interactionSource = null,
-                            indication = ripple(bounded = false, radius = STEPPER_RESET_MARK_SIZE * fontScale),
-                            enabled = isShown,
-                            role = Role.Button,
-                            onClick = onReset,
-                        )
-                        .semantics { if (isShown && resetLabel != null) contentDescription = resetLabel }
-                },
-            )
-            .width(stepperResetMarkWidth(fontScale = fontScale, isPressable = onReset != null)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
+    CampfireTooltip(label = resetLabel.orEmpty(), isEnabled = onReset != null && resetLabel != null) {
+        Box(
             modifier = Modifier
-                .size(STEPPER_RESET_MARK_SIZE * fontScale)
-                // Mirrored, so that the arrow turns back the way a value is put back rather than on as a refresh does.
-                .graphicsLayer { scaleX = -1f },
-            painter = painterResource(Res.drawable.ic_refresh),
-            contentDescription = null,
-            tint = color,
-        )
+                .fillMaxHeight()
+                .then(
+                    if (onReset == null) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .focusProperties { canFocus = false }
+                            .clickable(
+                                interactionSource = null,
+                                indication = ripple(bounded = false, radius = STEPPER_RESET_MARK_SIZE * fontScale),
+                                enabled = isShown,
+                                role = Role.Button,
+                                onClick = onReset,
+                            )
+                            .semantics { if (isShown && resetLabel != null) contentDescription = resetLabel }
+                    },
+                )
+                .width(stepperResetMarkWidth(fontScale = fontScale, isPressable = onReset != null)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(STEPPER_RESET_MARK_SIZE * fontScale)
+                    // Mirrored, so that the arrow turns back the way a value is put back rather than on as a refresh does.
+                    .graphicsLayer { scaleX = -1f },
+                painter = painterResource(Res.drawable.ic_refresh),
+                contentDescription = null,
+                tint = color,
+            )
+        }
     }
 }
 

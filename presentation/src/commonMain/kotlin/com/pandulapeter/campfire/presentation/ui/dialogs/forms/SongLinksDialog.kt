@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.forms
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
@@ -27,8 +28,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -151,12 +150,11 @@ internal fun SongLinksDialog(
         },
         // Keep Add link compact so the header has room for the song and Save.
         startButton = {
-            IconButton(onClick = ::add) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_add),
-                    contentDescription = stringResource(Res.string.song_details_link_add),
-                )
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_add),
+                label = stringResource(Res.string.song_details_link_add),
+                onClick = ::add,
+            )
         },
         confirmButton = { close ->
             val linksToSave = songLinksToSave(draft = rows.map { it.link }, offered = dialog.links)
@@ -242,30 +240,23 @@ private fun SongLinkFields(
         }
         val label = linkLabel(link)
         Column {
-            IconButton(
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_move_up),
+                label = textResource(Res.string.song_details_link_move_up, label),
                 enabled = onMoveUp != null,
                 onClick = { onMoveUp?.invoke() },
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_move_up),
-                    contentDescription = textResource(Res.string.song_details_link_move_up, label),
-                )
-            }
-            IconButton(
+            )
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_move_down),
+                label = textResource(Res.string.song_details_link_move_down, label),
                 enabled = onMoveDown != null,
                 onClick = { onMoveDown?.invoke() },
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_move_down),
-                    contentDescription = textResource(Res.string.song_details_link_move_down, label),
-                )
-            }
-            IconButton(onClick = onRemove) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_delete),
-                    contentDescription = textResource(Res.string.song_details_link_remove, label),
-                )
-            }
+            )
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_delete),
+                label = textResource(Res.string.song_details_link_remove, label),
+                onClick = onRemove,
+            )
         }
     }
 }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -22,8 +23,6 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -77,15 +76,12 @@ internal fun SongPagerControls(
             .height(PAGER_CONTROLS_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_previous),
+            label = stringResource(Res.string.song_details_previous_song),
             enabled = targetPage > 0,
             onClick = { onStep(-1) },
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_previous),
-                contentDescription = stringResource(Res.string.song_details_previous_song),
-            )
-        }
+        )
         // The label takes whatever the two buttons leave. Only the setlist name gives way when that is not enough:
         // the position is short and always worth showing in full.
         Row(
@@ -126,15 +122,12 @@ internal fun SongPagerControls(
                 )
             }
         }
-        IconButton(
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_next),
+            label = stringResource(Res.string.song_details_next_song),
             enabled = targetPage < pageCount - 1,
             onClick = { onStep(1) },
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_next),
-                contentDescription = stringResource(Res.string.song_details_next_song),
-            )
-        }
+        )
     }
 }
 

@@ -32,7 +32,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +79,7 @@ import com.pandulapeter.campfire.presentation.resources.import_status_unknown_fa
 import com.pandulapeter.campfire.presentation.resources.import_status_unprocessed
 import com.pandulapeter.campfire.presentation.resources.import_status_unreadable
 import com.pandulapeter.campfire.presentation.resources.songs_clear
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.appBar.TruncateSearchQuery
@@ -153,12 +153,11 @@ internal fun ImportReportSearchField(
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
         ) {
-            IconButton(onClick = { searchState.textFieldState.clearText() }) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_clear),
-                    contentDescription = stringResource(Res.string.songs_clear),
-                )
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_clear),
+                label = stringResource(Res.string.songs_clear),
+                onClick = { searchState.textFieldState.clearText() },
+            )
         }
     }
 }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.AutoScrollControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScroller
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll.SongAutoScrolling
@@ -305,22 +306,24 @@ private fun StepButton(
     LaunchedEffect(iconRotation, isVisible) {
         if (isVisible) rotation.animateTo(iconRotation)
     }
-    SmallFloatingActionButton(
-        // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
-        // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They
-        // are pressed by the same keys the screen hears anyway.
-        modifier = Modifier
-            .size(STEP_BUTTON_SIZE)
-            .focusProperties { canFocus = false },
-        onClick = onClick,
-        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
-        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-    ) {
-        Icon(
-            modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
-            painter = icon,
-            contentDescription = contentDescription,
-        )
+    CampfireTooltip(label = contentDescription) {
+        SmallFloatingActionButton(
+            // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
+            // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They
+            // are pressed by the same keys the screen hears anyway.
+            modifier = Modifier
+                .size(STEP_BUTTON_SIZE)
+                .focusProperties { canFocus = false },
+            onClick = onClick,
+            // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+        ) {
+            Icon(
+                modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
+                painter = icon,
+                contentDescription = contentDescription,
+            )
+        }
     }
 }
 

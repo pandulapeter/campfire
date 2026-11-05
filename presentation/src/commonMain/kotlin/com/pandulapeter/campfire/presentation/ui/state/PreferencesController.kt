@@ -214,6 +214,8 @@ internal class PreferencesController(
 
     fun setAppIconThemed(value: Boolean) = changeUserPreferences { copy(isAppIconThemed = value) }
 
+    fun setTooltipsEnabled(value: Boolean) = changeUserPreferences { copy(areTooltipsEnabled = value) }
+
     fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }
 
     fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }

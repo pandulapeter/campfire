@@ -332,6 +332,8 @@
     <string name="songs_languages_match_mode_all">Allen Sprachen</string>
     <string name="songs_labels_sorted_by_usage">Nach Häufigkeit sortiert</string>
     <string name="songs_labels_sorted_alphabetically">Alphabetisch sortiert</string>
+    <string name="songs_labels_sort_by_usage">Nach Häufigkeit sortieren</string>
+    <string name="songs_labels_sort_alphabetically">Alphabetisch sortieren</string>
     <string name="songs_filters_reset">Zurücksetzen</string>
 
     <!-- Setlists screen -->
@@ -534,6 +536,8 @@
     <string name="settings_app_icon_window_description">Das Fenstersymbol übernimmt die Farbe oben, solange Campfire geöffnet ist</string>
     <string name="settings_app_icon_browser_tab">Tab-Symbol einfärben</string>
     <string name="settings_app_icon_browser_tab_description">Das Symbol des Browser-Tabs übernimmt die Farbe oben</string>
+    <string name="settings_tooltips">Kurzinfos</string>
+    <string name="settings_tooltips_description">Zeigt, was eine Schaltfläche, die nur ein Symbol ist, tut, wenn du kurz auf ihr verweilst</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
     <string name="settings_user_interface_theme_color_gray">Grau</string>
     <string name="settings_user_interface_theme_color_system">System</string>

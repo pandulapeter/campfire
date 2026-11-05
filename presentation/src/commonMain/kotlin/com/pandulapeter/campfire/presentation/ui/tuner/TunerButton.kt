@@ -37,6 +37,7 @@ internal fun TunerButton(
 ) = SongToolButton(
     modifier = modifier,
     height = height,
+    label = stringResource(Res.string.tuner),
     isSelected = isSheetShown,
     onClick = onClick,
 ) {

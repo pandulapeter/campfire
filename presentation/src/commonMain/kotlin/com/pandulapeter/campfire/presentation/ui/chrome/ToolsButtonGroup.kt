@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
@@ -54,7 +55,8 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_M
  *
  * Each button carries its tool's icon, the one its navigation item would have ([DestinationIcon]), since the chrome's
  * own item shows only the wrench; only the selected one also shows its name, widening as it does, since four names
- * side by side would cut "Metronome" short on a 360dp phone. The others are named for accessibility services instead.
+ * side by side would cut "Metronome" short on a 360dp phone. The others are named for accessibility services and by a
+ * tooltip instead.
  * Each button is a top level screen of its own, selected as its item would be, so the one already open scrolls its
  * screen to the top.
  *
@@ -89,38 +91,41 @@ internal fun ToolsButtonGroup(
             targetValue = if (isSelected) SELECTED_BUTTON_WEIGHT else 1f,
             animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         )
-        ToggleButton(
-            modifier = Modifier
-                .weight(weight)
-                .height(ToggleButtonDefaults.MinHeight)
-                // One choice of several, as Material's single-select group reads, not a checkbox each.
-                .semantics {
-                    role = Role.RadioButton
-                    if (!isSelected) contentDescription = label
+        // The tooltip's anchor stands between the row and the button, so it takes the weight and the button fills it.
+        CampfireTooltip(modifier = Modifier.weight(weight), label = label, isEnabled = !isSelected) {
+            ToggleButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ToggleButtonDefaults.MinHeight)
+                    // One choice of several, as Material's single-select group reads, not a checkbox each.
+                    .semantics {
+                        role = Role.RadioButton
+                        if (!isSelected) contentDescription = label
+                    },
+                checked = isSelected,
+                onCheckedChange = { onSelected(tool) },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    tools.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-            checked = isSelected,
-            onCheckedChange = { onSelected(tool) },
-            shapes = when (index) {
-                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                tools.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-            },
-            contentPadding = BUTTON_CONTENT_PADDING,
-        ) {
-            DestinationIcon(destination = tool, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard)
-            AnimatedVisibility(
-                visible = isSelected,
-                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
-                exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    shrinkHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                contentPadding = BUTTON_CONTENT_PADDING,
             ) {
-                Text(
-                    modifier = Modifier.padding(start = ToggleButtonDefaults.IconSpacing),
-                    text = label,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                DestinationIcon(destination = tool, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard)
+                AnimatedVisibility(
+                    visible = isSelected,
+                    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                        expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                    exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                        shrinkHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                ) {
+                    Text(
+                        modifier = Modifier.padding(start = ToggleButtonDefaults.IconSpacing),
+                        text = label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

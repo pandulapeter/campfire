@@ -15,8 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +23,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import org.jetbrains.compose.resources.painterResource
 
@@ -39,12 +38,11 @@ internal fun ImportReportTopAppBar(
     onClose: () -> Unit,
 ) = CampfireTopAppBar(
     navigationIcon = {
-        IconButton(onClick = onClose) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_clear),
-                contentDescription = stringResource(Res.string.close),
-            )
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_clear),
+            label = stringResource(Res.string.close),
+            onClick = onClose,
+        )
     },
     title = {
         AnimatedContent(

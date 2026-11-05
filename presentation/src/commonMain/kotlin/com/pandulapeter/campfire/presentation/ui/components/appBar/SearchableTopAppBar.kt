@@ -545,8 +545,10 @@ private fun SearchAction(
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val label = if (isOpen) stringResource(Res.string.close) else placeholder
     PillIconButton(
         modifier = modifier,
+        tooltip = label,
         enabled = isEnabled,
         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
         onClick = {
@@ -558,11 +560,7 @@ private fun SearchAction(
             }
         },
     ) {
-        SearchToCloseIcon(
-            isClose = isOpen,
-            backProgress = searchState.backProgress,
-            contentDescription = if (isOpen) stringResource(Res.string.close) else placeholder,
-        )
+        SearchToCloseIcon(isClose = isOpen, backProgress = searchState.backProgress, contentDescription = label)
     }
 }
 

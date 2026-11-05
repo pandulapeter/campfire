@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songFilters
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.controls.CONTROLS_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.controls.SORTING_TOGGLE_ICON_SIZE
@@ -29,7 +30,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -118,18 +118,15 @@ internal fun FilterSearchField(
             // The pill is as tall as the title row, and a reserved touch target would make it taller. The button takes
             // no focus, so that Tab goes from the field to the chips rather than stopping at it.
             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                IconButton(
+                CampfireIconButton(
                     modifier = Modifier
                         .size(SECTION_ACTION_HEIGHT)
                         .focusProperties { canFocus = false },
+                    icon = painterResource(Res.drawable.ic_clear),
+                    label = stringResource(Res.string.songs_clear),
                     onClick = { onQueryChange("") },
-                ) {
-                    Icon(
-                        modifier = Modifier.size(SORTING_TOGGLE_ICON_SIZE),
-                        painter = painterResource(Res.drawable.ic_clear),
-                        contentDescription = stringResource(Res.string.songs_clear),
-                    )
-                }
+                    iconModifier = Modifier.size(SORTING_TOGGLE_ICON_SIZE),
+                )
             }
         }
     }

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.actions
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import androidx.compose.animation.core.Animatable
@@ -17,7 +18,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,8 +53,9 @@ internal fun SetlistAssignmentsButton(
     song: Song,
     isInSetlist: Boolean,
     setlistFileName: String? = null,
-) = IconButton(
+) = CampfireIconButton(
     modifier = modifier,
+    label = stringResource(Res.string.songs_choose_setlists),
     onClick = { actions.chooseSetlists(song, setlistFileName) },
 ) {
     // Both stars are drawn on top of each other and the one being left fades out as the other fades in, the pair turning

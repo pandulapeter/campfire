@@ -15,8 +15,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +24,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_share
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAppBar
 import org.jetbrains.compose.resources.painterResource
 
@@ -40,9 +39,11 @@ internal fun PrintTopAppBar(
     onClose: () -> Unit,
 ) = CampfireTopAppBar(
     navigationIcon = {
-        IconButton(onClick = onClose) {
-            Icon(painter = painterResource(Res.drawable.ic_clear), contentDescription = stringResource(Res.string.close))
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_clear),
+            label = stringResource(Res.string.close),
+            onClick = onClose,
+        )
     },
     title = {
         Column {
@@ -61,9 +62,11 @@ internal fun PrintTopAppBar(
     actions = {
         // One Cancel, on the save button, stands for both while the pages are drawn, whichever of the two started it.
         AnimatedVisibility(canShare, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-            IconButton(onClick = onShare) {
-                Icon(painter = painterResource(Res.drawable.ic_share), contentDescription = shareLabel)
-            }
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_share),
+                label = shareLabel,
+                onClick = onShare,
+            )
         }
     },
 )

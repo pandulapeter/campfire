@@ -52,7 +52,9 @@ as in the root `CLAUDE.md`.
 - The reading position is screen-local: `pageScrollStates` (`SongDetailsScreen.kt`), the `SongStepper`
   (`screens/songDetails/stepping/`), and the pager's state. Only the settled song reaches shared state
   (`Navigator.onSongDetailsPageSettled`). Step 2 publishes the visible line range too.
-- The keys: `songKeyboardShortcuts` (`SongKeyboardShortcuts.kt`); Blackout gets `B`, as in presentation software.
+- The keys: `songKeyboardShortcuts` (`SongKeyboardShortcuts.kt`); Blackout gets `B`, as in presentation software. If
+  the `KeyShortcut` table of `tooltips-and-shortcuts.md` has landed by then, `B` is declared there and listed in its
+  shortcuts sheet.
 - Feature switches: `UserPreferences`, `UserPreferencesDocument` and its mappers, `PreferencesController`,
   `FeaturesSections.kt`, `FeatureSwitches.kt`, with `isTunerEnabled` as the template.
 - Desktop: one `SwingWindow` in `CampfireDesktopApplication.kt`; the window owns the `ViewModelStore`, so the second
@@ -118,7 +120,8 @@ The spike ends in a note added here: the receiver verdict, versions, sizes, and 
   found, with "Searching…" while discovery runs. With one connected display and no Cast device, picking it is one tap.
 - While presenting, a pill in the song details bar names the target and the mode, and opens a dropdown: Lyrics, Lyrics
   and chords, Blackout, Stop. `B` toggles Blackout. The pill fits the bar within its existing height (the bar budget in
-  `ui/chrome`); on a short window it shrinks to an icon.
+  `ui/chrome`); on a short window it shrinks to an icon, then named by a `CampfireTooltip` with `isEnabled` (as the
+  export button is, `ui/components/CLAUDE.md`).
 - A display unplugged or a Cast session dropped ends presenting with a snackbar; nothing reconnects by itself.
 - The Features switch, strings in English and Hungarian (plurals where counted), and the "Audience screen" entry in the
   onboarding's features page only if the onboarding lists every switch.

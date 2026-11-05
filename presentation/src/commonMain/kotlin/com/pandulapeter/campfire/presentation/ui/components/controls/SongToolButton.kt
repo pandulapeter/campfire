@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.controls
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Box
@@ -37,12 +38,14 @@ import androidx.compose.ui.unit.dp
  *
  * @param isSelected Draws the circle in the secondary container color, the way a toggle that is on is drawn, for the
  * metronome while its panel is up and the tuner while its sheet is open.
+ * @param label What the button does, shown in a [CampfireTooltip]; the [icon] gives screen readers its own.
  * @param icon Drawn at [songToolIconSize] for the same [fontScale].
  */
 @Composable
 internal fun SongToolButton(
     modifier: Modifier = Modifier,
     height: Dp,
+    label: String,
     isSelected: Boolean = false,
     onClick: () -> Unit,
     icon: @Composable () -> Unit,
@@ -52,14 +55,16 @@ internal fun SongToolButton(
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides height) {
-        Surface(
-            modifier = modifier.size(height),
-            onClick = onClick,
-            shape = CircleShape,
-            color = containerColor,
-            contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
-        ) {
-            Box(contentAlignment = Alignment.Center) { icon() }
+        CampfireTooltip(label = label) {
+            Surface(
+                modifier = modifier.size(height),
+                onClick = onClick,
+                shape = CircleShape,
+                color = containerColor,
+                contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
+            ) {
+                Box(contentAlignment = Alignment.Center) { icon() }
+            }
         }
     }
 }

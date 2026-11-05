@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails.autoScroll
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_GAP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.STEP_BUTTON_SIZE
 import androidx.compose.animation.AnimatedVisibility
@@ -158,26 +159,28 @@ private fun PlayButtonContent(
     val description = stringResource(if (isPlaying) Res.string.song_details_auto_scroll_pause else Res.string.song_details_auto_scroll_play)
     // Filled as the metronome's play button is, so that it reads as something that plays rather than as one more step.
     val colors = IconButtonDefaults.filledIconButtonColors()
-    SmallFloatingActionButton(
-        // Pressed by Space too, which the screen hears wherever the focus is, so the button takes none, as the step
-        // buttons take none.
-        modifier = Modifier
-            .size(STEP_BUTTON_SIZE)
-            .focusProperties { canFocus = false }
-            .semantics { contentDescription = description },
-        onClick = onClick,
-        containerColor = colors.containerColor,
-        contentColor = colors.contentColor,
-        // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
-        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-    ) {
-        // The triangle points down, the way playing moves the song, which also tells the button apart from the
-        // metronome's, the same mark pointing the way it reads.
-        PlayStopMark(
-            modifier = Modifier.graphicsLayer { rotationZ = PLAY_MARK_ROTATION },
-            isPlaying = isPlaying,
-            size = PLAY_MARK_SIZE,
-        )
+    CampfireTooltip(label = description) {
+        SmallFloatingActionButton(
+            // Pressed by Space too, which the screen hears wherever the focus is, so the button takes none, as the step
+            // buttons take none.
+            modifier = Modifier
+                .size(STEP_BUTTON_SIZE)
+                .focusProperties { canFocus = false }
+                .semantics { contentDescription = description },
+            onClick = onClick,
+            containerColor = colors.containerColor,
+            contentColor = colors.contentColor,
+            // The shadow is drawn around the button by FloatingControlVisibility, which fades it with the button.
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+        ) {
+            // The triangle points down, the way playing moves the song, which also tells the button apart from the
+            // metronome's, the same mark pointing the way it reads.
+            PlayStopMark(
+                modifier = Modifier.graphicsLayer { rotationZ = PLAY_MARK_ROTATION },
+                isPlaying = isPlaying,
+                size = PLAY_MARK_SIZE,
+            )
+        }
     }
 }
 

@@ -332,6 +332,8 @@
     <string name="songs_languages_match_mode_all">Mindegyik nyelven</string>
     <string name="songs_labels_sorted_by_usage">Gyakoriság szerint rendezve</string>
     <string name="songs_labels_sorted_alphabetically">Betűrendbe rendezve</string>
+    <string name="songs_labels_sort_by_usage">Rendezés gyakoriság szerint</string>
+    <string name="songs_labels_sort_alphabetically">Rendezés betűrend szerint</string>
     <string name="songs_filters_reset">Visszaállítás</string>
 
     <!-- Setlists screen -->
@@ -534,6 +536,8 @@
     <string name="settings_app_icon_window_description">Az ablak ikonja felveszi a fenti színt, amíg a Campfire nyitva van</string>
     <string name="settings_app_icon_browser_tab">Lapikon színezése</string>
     <string name="settings_app_icon_browser_tab_description">A böngészőlap ikonja felveszi a fenti színt</string>
+    <string name="settings_tooltips">Súgóbuborékok</string>
+    <string name="settings_tooltips_description">Megmutatja, mit csinál egy csak ikonnal jelölt gomb, ha elidőzöl rajta</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
     <string name="settings_user_interface_theme_color_gray">Szürke</string>
     <string name="settings_user_interface_theme_color_system">Rendszer</string>

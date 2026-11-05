@@ -24,7 +24,8 @@ wraps, so a column of the text is a column on screen.
   supported, so no autocorrect or suggestion strip has to be replayed. A hardware keyboard's composition (macOS dead
   keys: ´ then e is é, which Hungarian typing uses all the time) is replayed (step 3).
 - **IntelliJ's default keymaps**, the macOS keymap on a Mac (desktop app and browser), the Windows/Linux keymap
-  elsewhere. This needs a new `expect val isMacKeymap` in `ui/platform` (desktop: `os.name`; web:
+  elsewhere (`tooltips-and-shortcuts.md` needs the same answer to write keys as `⌘`; whichever lands first adds it,
+  the other reuses it). This needs a new `expect val isMacKeymap` in `ui/platform` (desktop: `os.name`; web:
   `navigator.userAgentData.platform`, else `navigator.platform`). The app treats Ctrl and Cmd as one today, which
   stays true for every existing shortcut.
 - **The field's own selection is the primary caret.** `TextFieldState` holds exactly one selection, so the others

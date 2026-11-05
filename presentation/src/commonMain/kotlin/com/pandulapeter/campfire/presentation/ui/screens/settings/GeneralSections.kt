@@ -37,6 +37,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
+import com.pandulapeter.campfire.presentation.resources.settings_tooltips
+import com.pandulapeter.campfire.presentation.resources.settings_tooltips_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
@@ -152,6 +154,12 @@ private fun AppearanceSection(
         warmth = userPreferences?.backgroundWarmth ?: 0,
         description = stringResource(Res.string.settings_background_warmth_description),
         onWarmthChanged = preferencesController::setBackgroundWarmth,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.settings_tooltips),
+        description = stringResource(Res.string.settings_tooltips_description),
+        isChecked = userPreferences?.areTooltipsEnabled != false,
+        onCheckedChange = preferencesController::setTooltipsEnabled,
     )
 }
 

@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,6 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.print_next
 import com.pandulapeter.campfire.presentation.resources.print_page
 import com.pandulapeter.campfire.presentation.resources.print_previous
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
@@ -85,18 +84,24 @@ private fun PageButtonsPill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(PAGE_BUTTONS_GAP),
     ) {
-        IconButton(enabled = page > 0, onClick = { onTurn(page - 1) }) {
-            Icon(painterResource(Res.drawable.ic_previous), contentDescription = stringResource(Res.string.print_previous))
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_previous),
+            label = stringResource(Res.string.print_previous),
+            enabled = page > 0,
+            onClick = { onTurn(page - 1) },
+        )
         Text(
             text = stringResource(Res.string.print_page, page + 1, pageCount),
             modifier = Modifier.widthIn(min = textWidth),
             style = pageCountStyle(),
             textAlign = TextAlign.Center,
         )
-        IconButton(enabled = page + 1 < pageCount, onClick = { onTurn(page + 1) }) {
-            Icon(painterResource(Res.drawable.ic_next), contentDescription = stringResource(Res.string.print_next))
-        }
+        CampfireIconButton(
+            icon = painterResource(Res.drawable.ic_next),
+            label = stringResource(Res.string.print_next),
+            enabled = page + 1 < pageCount,
+            onClick = { onTurn(page + 1) },
+        )
     }
 }
 

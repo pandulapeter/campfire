@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.appBar
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
@@ -36,8 +37,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.foundation.text.input.selectAll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -235,16 +234,13 @@ private fun SearchField(
                 // section header pills' actions are.
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     // The text field would otherwise show the text cursor over the button on desktop.
-                    IconButton(
+                    CampfireIconButton(
                         modifier = Modifier.size(CLEAR_BUTTON_SIZE).pointerHoverIcon(PointerIcon.Default, overrideDescendants = true),
+                        icon = painterResource(Res.drawable.ic_clear),
+                        label = stringResource(Res.string.songs_clear),
                         onClick = { searchState.textFieldState.clearText() },
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(CLEAR_ICON_SIZE),
-                            painter = painterResource(Res.drawable.ic_clear),
-                            contentDescription = stringResource(Res.string.songs_clear),
-                        )
-                    }
+                        iconModifier = Modifier.size(CLEAR_ICON_SIZE),
+                    )
                 }
             }
         }

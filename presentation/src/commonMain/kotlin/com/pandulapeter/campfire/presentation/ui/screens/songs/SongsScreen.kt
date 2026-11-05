@@ -313,6 +313,7 @@ private fun SongFiltersAction(
     onClick: () -> Unit,
 ) = PillIconButton(
     modifier = modifier,
+    tooltip = stringResource(Res.string.songs_filter),
     onClick = onClick,
 ) {
     BadgedBox(

@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
+import com.pandulapeter.campfire.presentation.ui.components.LocalAreTooltipsEnabled
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalMenuRoom
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberMenuRoom
@@ -130,6 +131,7 @@ fun CampfireApp(
         LocalOverlayState provides viewModel.dialogHost.overlayState,
         LocalMenuRoom provides rememberMenuRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
+        LocalAreTooltipsEnabled provides (userPreferences?.areTooltipsEnabled != false),
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
         LocalNotationCache provides remember { NotationCache() },
     ) {

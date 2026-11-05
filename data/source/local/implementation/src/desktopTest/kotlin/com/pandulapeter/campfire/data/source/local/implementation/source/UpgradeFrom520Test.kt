@@ -169,6 +169,8 @@ class UpgradeFrom520Test {
             themeColor = UserPreferences.ThemeColor.TEAL,
             backgroundWarmth = 3,
             isAppIconThemed = false,
+            // Newer than 5.2.0, so its default.
+            areTooltipsEnabled = true,
             isCoverArtEnabled = false,
             isSongDetailsLookupEnabled = false,
             songLayout = SongLayout.CONTINUOUS,

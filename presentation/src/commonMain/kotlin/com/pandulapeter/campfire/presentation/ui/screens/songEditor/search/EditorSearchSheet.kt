@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.ChordProTextField
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.replaceAll
 import androidx.compose.animation.AnimatedContent
@@ -29,7 +30,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -100,25 +100,19 @@ internal fun EditorSearchSheet(
     CampfireBottomSheet(
         title = stringResource(if (isReplacing) Res.string.song_editor_find_and_replace else Res.string.song_editor_find),
         actions = {
-            IconButton(
+            CampfireIconButton(
+                icon = painterResource(Res.drawable.ic_move_up),
+                label = stringResource(Res.string.song_editor_find_previous),
                 enabled = hasMatches,
                 onClick = search::selectPrevious,
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_move_up),
-                    contentDescription = stringResource(Res.string.song_editor_find_previous),
-                )
-            }
-            IconButton(
+            )
+            CampfireIconButton(
                 modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                icon = painterResource(Res.drawable.ic_move_down),
+                label = stringResource(Res.string.song_editor_find_next),
                 enabled = hasMatches,
                 onClick = search::selectNext,
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_move_down),
-                    contentDescription = stringResource(Res.string.song_editor_find_next),
-                )
-            }
+            )
         },
         // Only while the search is open: the sheet's window can be laid out once more after the close, and a top left behind
         // by it would keep the room the field makes after its last line for a sheet that is gone.

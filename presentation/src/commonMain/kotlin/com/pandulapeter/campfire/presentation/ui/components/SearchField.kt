@@ -27,7 +27,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -167,19 +166,16 @@ private fun ClearButton(
     // focus, so that Tab leaves the field for what follows it rather than stopping at the button.
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         // The text field would otherwise show the text cursor over the button on desktop.
-        IconButton(
+        CampfireIconButton(
             modifier = Modifier
                 .size(CLEAR_BUTTON_SIZE)
                 .pointerHoverIcon(PointerIcon.Default, overrideDescendants = true)
                 .focusProperties { canFocus = false },
+            icon = painterResource(Res.drawable.ic_clear),
+            label = stringResource(Res.string.songs_clear),
             onClick = onClear,
-        ) {
-            Icon(
-                modifier = Modifier.size(CLEAR_ICON_SIZE),
-                painter = painterResource(Res.drawable.ic_clear),
-                contentDescription = stringResource(Res.string.songs_clear),
-            )
-        }
+            iconModifier = Modifier.size(CLEAR_ICON_SIZE),
+        )
     }
 }
 

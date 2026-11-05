@@ -70,7 +70,8 @@ on by accident without noticing.
   current preference entries. No new button on any bar.
 - **The Metronome tab has no entry**: its page is already on screen.
 - **The screens Performance mode locks show that it is on**, with a small indicator (on song details, on its bar) that
-  opens the sheet, so an accidental switch-on is noticed and undone where it happened.
+  opens the sheet, so an accidental switch-on is noticed and undone where it happened. Drawn as an icon alone, it is a
+  `CampfireIconButton` whose tooltip says what it opens (`ui/components/CLAUDE.md`).
 
 ### Metronome tab
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbarToggle
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.AnimatedVisibility
@@ -19,8 +20,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -72,35 +71,26 @@ internal fun RowScope.EditorAppBarActions(
             onToggled = onToolbarToggled,
         )
     }
-    IconButton(
+    CampfireIconButton(
+        icon = painterResource(Res.drawable.ic_undo),
+        label = stringResource(Res.string.song_editor_undo),
         enabled = textFieldState.undoState.canUndo,
         onClick = { textFieldState.undoState.undo() },
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_undo),
-            contentDescription = stringResource(Res.string.song_editor_undo),
-        )
-    }
-    IconButton(
+    )
+    CampfireIconButton(
         modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+        icon = painterResource(Res.drawable.ic_redo),
+        label = stringResource(Res.string.song_editor_redo),
         enabled = textFieldState.undoState.canRedo,
         onClick = { textFieldState.undoState.redo() },
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_redo),
-            contentDescription = stringResource(Res.string.song_editor_redo),
-        )
-    }
-    IconButton(
+    )
+    CampfireIconButton(
         modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+        icon = painterResource(Res.drawable.ic_save),
+        label = stringResource(Res.string.save),
         enabled = canSave,
         onClick = onSave,
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_save),
-            contentDescription = stringResource(Res.string.save),
-        )
-    }
+    )
     EditorMenu(
         modifier = Modifier
             .overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp)
