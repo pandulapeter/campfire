@@ -60,6 +60,7 @@ What every screen shares; each destination's package has its own notes.
   (`SongGroups.orderKey`) changes. A filter does not; the grid follows its first visible key.
 - A tag or language tapped on a song row keeps that row in place (`ListAnchor`). The filter key travels with the list
   (`SongGroups.filterKey`), so key and list arrive together and a no-op filter still consumes the anchor. The jump is
-  narrated by `anchoredTransition`: visible rows slide, the rest fade in, removed ones vanish.
+  narrated by `anchoredTransition`: visible rows slide, the rest travel in with them, removed ones vanish, and rows still
+  listed that leave by an edge travel off it.
 - In the composition new contents arrive, lists hold by index: otherwise a grid following its first row down and then
   sent to the top takes the jump for a scroll and forgets item positions.

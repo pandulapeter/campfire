@@ -100,10 +100,10 @@ internal class ListAnchor {
      * also moves under, as the app bar fills in, is narrated on that movement's spring, so that what stands still on
      * screen does. Called before [listState] measures the change, whose layout until then is the one before it.
      *
-     * @param listedAfter Set for a change that reads as the list moving, which the search opening and closing does, and
-     *   not as it being rebuilt, which a filter does: the items that come on screen past either end of the ones that
-     *   were travel in with them ([arrivalShift]) rather than fade in where they are, and the ones still listed after
-     *   the change that leave by an edge travel off with them ([departureShift]) rather than vanish.
+     * @param listedAfter Set for a change that reads as the list moving around what stays, which the search opening and
+     *   closing and a filter tapped on a row do, and not for a tick, which moves nothing on screen: the items that come
+     *   on screen travel in with the ones that were ([arrivalShift]) rather than fade in where they are, and the ones
+     *   still listed after the change that leave by an edge travel off with them ([departureShift]) rather than vanish.
      */
     fun animateFrom(
         listState: LazyGridState,

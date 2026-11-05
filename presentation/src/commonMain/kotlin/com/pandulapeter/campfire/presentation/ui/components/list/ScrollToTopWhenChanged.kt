@@ -94,7 +94,12 @@ internal fun ScrollToTopWhenChanged(
                     listState.requestScrollToItem(0)
                 } else {
                     listState.requestScrollToItem(index = index, scrollOffset = -anchoredItem.offset)
-                    anchor?.animateFrom(listState, anchoredItem.visibleOffsets, coroutineScope)
+                    anchor?.animateFrom(
+                        listState = listState,
+                        visibleOffsets = anchoredItem.visibleOffsets,
+                        coroutineScope = coroutineScope,
+                        listedAfter = { key -> itemIndex(key) != null },
+                    )
                 }
             }
         } else if (shouldScrollToTop) {
