@@ -83,9 +83,11 @@ shortcut is shown anywhere.
 | Ctrl+,                     | Anywhere (desktop, web)       | Settings                                  |
 | Ctrl+/                     | Anywhere                      | The keyboard shortcuts sheet              |
 
-Nothing that deletes gets a shortcut. On the web, each new shortcut that the browser also uses (Ctrl+N, Ctrl+P,
-Ctrl+1 … 6) has its default blocked only while the app handles that key, the way `EditShortcutEffect` does today.
-Ctrl+N and Ctrl+1 … 6 can't be blocked in Chrome, so the web build skips them and hides their hints.
+Nothing that deletes gets a shortcut. On the web, each new shortcut that the browser also uses (Ctrl+P, Ctrl+1 … 6,
+Ctrl+,, Ctrl+A, Ctrl+Y, and F3) has its default blocked only while the app handles that key, the way
+`EditShortcutEffect` does today. Chrome lets a page block all of these, but never Ctrl+N, which always opens a new
+window before the page sees it (tested in Chrome 157 on macOS with real key presses, November 2026). So the web build
+leaves out Ctrl+N and hides its hint; New stays one click away in the list's header.
 
 ## Order of work
 
