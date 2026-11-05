@@ -60,6 +60,9 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - What the ChordPro app prints is read back too: margin section labels (`ChordSheetMarginLabels`, only where every
   other line of their column starts right of them, so a lyric against the left edge keeps its first word) and
   header lines printed in left, centre, and right parts (`ChordSheetHeaderParts`).
+- A page whose chords lose their places on copy, leaving each on a row of its own and its spoken name in the lyric
+  (`(C sharp minor)These`), is set back into chord rows over the lyric by `ChordSheetSpelledChords`, only where every
+  spoken name's root is the next chord's.
 - Genius's injected `You might also like` and closing `12Embed` are left out of a song (never of prose). Ultimate
   Guitar's page furniture is many lines in no fixed shape and is deliberately not filtered.
 - **Documented limits**: `Artist - Title` is read artist first, since both orders are common on the web; a title

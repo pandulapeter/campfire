@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.chordpro.language.writingDirectionOf
  */
 internal object ChordSheetPlainText {
     fun lines(text: String): List<ChordSheet.Line> {
-        val lines = text.replace("\r\n", "\n").replace('\r', '\n').split('\n')
+        val lines = ChordSheetSpelledChords.lines(text.replace("\r\n", "\n").replace('\r', '\n').split('\n'))
         // Chord names are music, written from the left in any sheet, and would otherwise outvote a short Hebrew lyric.
         val words = lines.filterNot(ChordSheetConverter::isChordLine).joinToString("\n")
         if (writingDirectionOf(words) == WritingDirection.LEFT_TO_RIGHT) return lines.map(::leftToRight)
