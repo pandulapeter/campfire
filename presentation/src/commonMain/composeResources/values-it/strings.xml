@@ -1206,7 +1206,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Novità di Campfire %1$s</string>
-    <string name="whats_new_message">• **Le scelte a caso durano un\'ora** Le cinque canzoni a caso dell\'elenco non cambiano più ogni volta che apri l\'app e restano in cima mentre selezioni le canzoni.\n• **Importazione degli spartiti migliorata** PDF e spartiti importati mantengono lo spazio tra le strofe e gli accordi sulle loro sillabe, e riconoscono strofe numerate, etichette come Ch1 e griglie di accordi.\n• **Link condivisi corretti** Aprire un link condiviso non segnala più un file danneggiato su alcuni dispositivi, e una scaletta che hai già si apre nel tuo elenco.</string>
+    <string name="whats_new_message">• **Cambio di tempo al battito successivo** Il metronomo può passare al tempo di una nuova canzone o sezione al battito successivo invece che alla battuta successiva.\n• **Suggerimenti sui pulsanti con icona** Soffermati su un pulsante disegnato solo come icona per vedere cosa fa; nelle Impostazioni puoi disattivarli.\n• **Scorciatoie da tastiera su telefoni e tablet** Le scorciatoie ora funzionano con una tastiera collegata a un telefono o a un tablet, e i suggerimenti e i menu ne mostrano i tasti.\n• **Importa i nomi degli accordi scritti per esteso** I fogli di accordi copiati da pagine che scrivono il nome di ogni accordo nel testo, come (C sharp minor), ora si importano con gli accordi sopra le parole.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Salta</string>

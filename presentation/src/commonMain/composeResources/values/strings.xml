@@ -1206,7 +1206,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">What's new in Campfire %1$s</string>
-    <string name="whats_new_message">• **Random picks last an hour** The songs list\'s five random songs no longer change every time you open the app, and stay at the top while you select songs.\n• **Chord sheet import improvements** Imported PDFs and chord sheets keep stanza breaks and chords over their syllables, and read numbered verses, labels like Ch1, and chord grids.\n• **Shared links fixed** Opening a shared link no longer reports a broken file on some devices, and a setlist you already have opens in your list.</string>
+    <string name="whats_new_message">• **Tempo changes on the next beat** The Metronome screen can now switch to a new song\'s or section\'s tempo on the next beat instead of the next bar.\n• **Tooltips on icon buttons** Linger on a button drawn as an icon alone to see what it does; Settings has a switch to turn them off.\n• **Keyboard shortcuts on phones and tablets** Shortcuts now work with a keyboard attached to a phone or a tablet, and tooltips and menus show each one\'s keys.\n• **Import spelled-out chord names** Chord sheets copied from pages that write each chord\'s name in the lyrics, like (C sharp minor), now import with the chords above the words.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Skip</string>

@@ -1205,7 +1205,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Újdonságok a Campfire %1$s verziójában</string>
-    <string name="whats_new_message">• **Egy óráig tart a véletlen válogatás** A dallista öt véletlen dala már nem cserélődik minden alkalommal, amikor megnyitod az appot, és felül marad, amíg dalokat jelölsz ki.\n• **Jobb akkordlap-importálás** Az importált PDF-ek és akkordlapok megtartják a versszakok közti térközt és az akkordokat a szótagjaik fölött, és felismerik a számozott versszakokat, a Ch1-hez hasonló jelöléseket és az akkordrácsokat.\n• **Javított megosztott linkek** Egy megosztott link megnyitása néhány eszközön már nem jelez sérült fájlt, egy már meglévő listád pedig a listáid között nyílik meg.</string>
+    <string name="whats_new_message">• **Tempóváltás a következő ütésnél** A metronóm egy új dal vagy szakasz tempójára már a következő ütésnél is átválthat a következő ütem helyett.\n• **Súgóbuborékok az ikonos gombokon** Időzz el egy csak ikonnal rajzolt gombon, hogy lásd, mit csinál; a Beállításokban kikapcsolhatók.\n• **Billentyűparancsok telefonon és tableten** A billentyűparancsok már a telefonhoz vagy tablethez csatlakoztatott billentyűzettel is működnek, a súgóbuborékok és a menük pedig mutatják a billentyűket.\n• **Kiírt akkordnevek importálása** A szövegben minden akkord nevét kiírő oldalakról másolt akkordlapok, például (C sharp minor), már a szavak fölé írt akkordokkal töltődnek be.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Kihagyás</string>

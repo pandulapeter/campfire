@@ -1206,7 +1206,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Neuigkeiten in Campfire %1$s</string>
-    <string name="whats_new_message">• **Zufallsauswahl hält eine Stunde** Die fünf zufälligen Songs der Songliste wechseln nicht mehr bei jedem Öffnen der App und bleiben oben, während du Songs auswählst.\n• **Besserer Import von Akkordblättern** Importierte PDFs und Akkordblätter behalten Strophenabstände und Akkorde über ihren Silben und erkennen nummerierte Strophen, Kürzel wie Ch1 und Akkordraster.\n• **Geteilte Links repariert** Ein geteilter Link meldet auf manchen Geräten keine defekte Datei mehr, und eine Setlist, die du schon hast, öffnet sich in deiner Liste.</string>
+    <string name="whats_new_message">• **Tempowechsel auf dem nächsten Schlag** Das Metronom wechselt zum Tempo eines neuen Songs oder Abschnitts jetzt auf Wunsch mit dem nächsten Schlag statt mit dem nächsten Takt.\n• **Tooltips für Symbol-Schaltflächen** Verweile auf einer Schaltfläche, die nur ein Symbol zeigt, um zu sehen, was sie tut; in den Einstellungen lassen sie sich ausschalten.\n• **Tastenkürzel auf Handys und Tablets** Tastenkürzel funktionieren jetzt mit einer an ein Handy oder Tablet angeschlossenen Tastatur, und Tooltips und Menüs zeigen die Tasten an.\n• **Ausgeschriebene Akkordnamen importieren** Akkordblätter von Seiten, die jeden Akkordnamen im Text ausschreiben, etwa (C sharp minor), werden jetzt mit den Akkorden über den Wörtern importiert.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Überspringen</string>

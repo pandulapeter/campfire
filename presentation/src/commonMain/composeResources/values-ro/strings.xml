@@ -1254,7 +1254,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Noutăți în Campfire %1$s</string>
-    <string name="whats_new_message">• **Alegerile aleatorii țin o oră** Cele cinci cântece aleatorii din listă nu se mai schimbă de fiecare dată când deschizi aplicația și rămân sus cât timp selectezi cântece.\n• **Import îmbunătățit al foilor cu acorduri** PDF-urile și foile cu acorduri importate păstrează spațiul dintre strofe și acordurile deasupra silabelor lor și recunosc strofele numerotate, etichete ca Ch1 și grilele de acorduri.\n• **Linkuri partajate reparate** Deschiderea unui link partajat nu mai raportează un fișier deteriorat pe unele dispozitive, iar o listă pe care o ai deja se deschide în lista ta.</string>
+    <string name="whats_new_message">• **Schimbare de tempo la bătaia următoare** Metronomul poate trece la tempoul unui cântec sau al unei secțiuni noi la bătaia următoare, în loc de măsura următoare.\n• **Sfaturi pe butoanele cu pictogramă** Oprește-te pe un buton desenat doar ca pictogramă ca să vezi ce face; din Setări le poți dezactiva.\n• **Comenzi rapide de la tastatură pe telefoane și tablete** Comenzile rapide funcționează acum cu o tastatură conectată la un telefon sau la o tabletă, iar sfaturile și meniurile le arată tastele.\n• **Import de nume de acorduri scrise** Foile cu acorduri copiate de pe pagini care scriu numele fiecărui acord în versuri, precum (C sharp minor), se importă acum cu acordurile deasupra cuvintelor.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Omite</string>

@@ -1211,7 +1211,7 @@
 
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Nouveautés de Campfire %1$s</string>
-    <string name="whats_new_message">• **La sélection au hasard dure une heure** Les cinq chansons au hasard de la liste ne changent plus à chaque ouverture de l\'app et restent en haut pendant que tu sélectionnes des chansons.\n• **Import des grilles d\'accords amélioré** Les PDF et grilles d\'accords importés gardent l\'espace entre les strophes et les accords sur leurs syllabes, et lisent les couplets numérotés, les repères comme Ch1 et les grilles de mesures.\n• **Liens partagés corrigés** Ouvrir un lien partagé ne signale plus un fichier endommagé sur certains appareils, et une setlist que tu as déjà s\'ouvre dans ta liste.</string>
+    <string name="whats_new_message">• **Changement de tempo au temps suivant** Le métronome peut passer au tempo d\'une nouvelle chanson ou section au temps suivant plutôt qu\'à la mesure suivante.\n• **Info-bulles sur les boutons à icône** Attarde-toi sur un bouton qui n\'affiche qu\'une icône pour voir ce qu\'il fait ; les réglages permettent de les désactiver.\n• **Raccourcis clavier sur téléphone et tablette** Les raccourcis fonctionnent désormais avec un clavier relié à un téléphone ou à une tablette, et les info-bulles et menus affichent leurs touches.\n• **Import des noms d\'accords écrits en toutes lettres** Les grilles d\'accords copiées de pages qui écrivent le nom de chaque accord dans les paroles, comme (C sharp minor), s\'importent désormais avec les accords au-dessus des mots.</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Passer</string>
