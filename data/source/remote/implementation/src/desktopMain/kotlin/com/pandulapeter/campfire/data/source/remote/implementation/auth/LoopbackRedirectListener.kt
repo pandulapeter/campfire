@@ -120,7 +120,12 @@ internal class LoopbackRedirectListener(
                 // "GET /?code=... HTTP/1.1" is all that is needed; the rest of the request is not read.
                 val target = BufferedReader(InputStreamReader(accepted.getInputStream())).readLine().orEmpty().split(' ').getOrNull(1)
                 if (target != null && (target.contains("code=") || target.contains("error="))) {
-                    accepted.respond(completionPage.toResponse())
+                    // The code has arrived whether or not the browser is still there to be told so.
+                    try {
+                        accepted.respond(completionPage.toResponse())
+                    } catch (exception: IOException) {
+                        logger.log("Could not show the completion page: ${exception.message}")
+                    }
                     return SyncAuthenticator.AuthorizationOutcome.Received(loopbackRedirectUri(localPort) + target)
                 }
                 // A request that is not the redirect, or a connection that closed without one. Answering it is a

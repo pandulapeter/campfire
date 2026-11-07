@@ -154,6 +154,26 @@ class LoopbackRedirectListenerTest {
         )
     }
 
+    /** The code is what matters: a browser that hangs up before it is shown the completion page has still delivered it. */
+    @Test
+    fun `a redirect is returned even when the browser leaves before the page is written`() = runBlocking {
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
+        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        awaitAccept(isBlocking = true)
+        Socket("127.0.0.1", port).use { socket ->
+            socket.setSoLinger(true, 0)
+            PrintWriter(socket.getOutputStream(), true).apply {
+                print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
+                flush()
+            }
+        }
+        assertEquals(
+            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:$port/?code=abc123&state=deadbeef"),
+            actual = withTimeout(5_000) { authorization.await() },
+        )
+    }
+
     /**
      * A browser that never opened means nothing will ever arrive: waiting out the five minute timeout for it is
      * telling the user nothing for five minutes.
