@@ -41,7 +41,10 @@ fun installProcessLog(directory: File) {
         installedWriter = writer
         System.setOut(mirrored(console = originalOut, writer = writer))
         System.setErr(mirrored(console = originalErr, writer = writer))
-    } catch (exception: Exception) {
+    } catch (exception: Throwable) {
+        // A Throwable rather than an Exception: this runs in Application.onCreate on Android, before anything is on
+        // screen, where a platform method the device's API level lacks (a NoSuchMethodError) ends the process on every
+        // launch. A missing log is the price, never the app.
         originalErr.println("Could not open the log file: ${exception.message}")
     }
     val marker = File(directory, CRASH_MARKER_NAME)
@@ -104,6 +107,10 @@ internal fun String.withoutUserName(home: String?, userName: String?): String {
     return text
 }
 
+/**
+ * The charset is passed by name: the constructor taking a `Charset` is Java 10's, which Android has only from API 33,
+ * below the app's minimum.
+ */
 private fun mirrored(console: PrintStream, writer: ProcessLogWriter) = PrintStream(
     object : OutputStream() {
         override fun write(value: Int) = write(byteArrayOf(value.toByte()), 0, 1)
@@ -116,7 +123,7 @@ private fun mirrored(console: PrintStream, writer: ProcessLogWriter) = PrintStre
         override fun flush() = console.flush()
     },
     true,
-    Charsets.UTF_8,
+    Charsets.UTF_8.name(),
 )
 
 private class FileProcessLogStore(directory: File) : ProcessLogStore {
