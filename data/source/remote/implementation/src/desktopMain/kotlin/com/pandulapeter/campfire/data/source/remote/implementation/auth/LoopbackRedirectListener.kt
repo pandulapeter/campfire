@@ -19,7 +19,6 @@ import java.net.InetAddress
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -131,8 +130,10 @@ internal class LoopbackRedirectListener(
                 } catch (exception: IOException) {
                     logger.log("Could not answer a stray authorization request: ${exception.message}")
                 }
-            } catch (exception: SocketTimeoutException) {
-                // A connection that never spoke: the browser's speculative one.
+            } catch (exception: IOException) {
+                // A connection that never spoke or was reset before it did, such as the browser's speculative one or a
+                // port probe: nothing to give up the authorization over, the redirect is still to come. Closing the
+                // socket to cancel ends the wait in `accept`, which is outside this block, so it is not swallowed here.
             } finally {
                 connection = null
                 accepted.close()

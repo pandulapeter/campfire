@@ -133,6 +133,27 @@ class LoopbackRedirectListenerTest {
         assertFalse(isPortOpen(port), "The port should be released once the redirect has arrived.")
     }
 
+    /** A probe that is reset instead of closed politely, which Linux does to one dropped with data unread. */
+    @Test
+    fun `a connection that is reset does not end the authorization`() = runBlocking {
+        val authenticator = listener(systemBrowser = { true })
+        val port = authenticator.prepareRedirectUri().port()
+        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        awaitAccept(isBlocking = true)
+        Socket("127.0.0.1", port).use { it.setSoLinger(true, 0) }
+        Socket("127.0.0.1", port).use { socket ->
+            PrintWriter(socket.getOutputStream(), true).apply {
+                print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
+                flush()
+            }
+            socket.getInputStream().readBytes()
+        }
+        assertEquals(
+            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:$port/?code=abc123&state=deadbeef"),
+            actual = withTimeout(5_000) { authorization.await() },
+        )
+    }
+
     /**
      * A browser that never opened means nothing will ever arrive: waiting out the five minute timeout for it is
      * telling the user nothing for five minutes.
