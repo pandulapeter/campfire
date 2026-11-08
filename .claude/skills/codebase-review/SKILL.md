@@ -149,7 +149,7 @@ after that lane merged, not from `START`; its cherry-pick range then starts at t
 
 Every lane prompt keeps the lanes apart — subagents share the session scratchpad, and one lane once ran another's
 same-named helper scripts and committed into the wrong worktree:
-- scratch files go to `<scratchpad>/lane-<x>/` only, and no lane runs a script it did not write;
+- scratch files go to `<scratchpad>/lane-<x>/` only, and no lane runs a script from another lane's folder (the repository's own scripts are fine);
 - every command starts with `cd <absolute worktree> &&` or uses `git -C <absolute worktree>`;
 - after every commit, `git show --stat HEAD` confirms the commit touched only that plan's files;
 - never `git stash` — the worktree is the isolation.
