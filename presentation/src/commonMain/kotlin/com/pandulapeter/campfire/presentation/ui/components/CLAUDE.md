@@ -36,9 +36,9 @@ The shared building blocks of the screens; subpackages with something to say hav
   overlay, `systemShortcutGroups`) show them under; `description` is an exhaustive `when`, so a new entry is described,
   and `rowLead` puts a pair in one row. Keys meaning something else elsewhere (Page Down on a song and in the print
   preview) are an entry each; the root asks only the app-wide ones. Lists show only what works with the features on
-  (`ShortcutFeatures`: no song keys with the songs off, nothing that edits in read only mode, Space's auto-scroll only in
-  the continuous song layout), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the scroll wheel, which is no
-  key, in the sheet only. `?` is Shift + slash
+  (`ShortcutFeatures`: no song keys with the songs off, nothing whose control read only mode hides, Space's
+  auto-scroll only in the continuous song layout), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the
+  scroll wheel, which is no key, in the sheet only. `?` is Shift + slash
   (`Shift.IN_LABEL`, written as the character): a US layout's key, so elsewhere Ctrl / Cmd + slash, the numpad's
   slash, or Settings → About open the sheet.
 - **`saveShortcut`**: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt); in a `CampfireBottomSheet` it presses

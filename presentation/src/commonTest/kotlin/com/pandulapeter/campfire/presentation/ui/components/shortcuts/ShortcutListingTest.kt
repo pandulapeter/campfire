@@ -75,14 +75,15 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `a feature switched off takes its keys, and read only mode every way to change the library`() {
+    fun `a feature switched off takes its keys, and read only mode every key whose control it hides`() {
         val withoutSongs = listed(AppBuild.WINDOWS, everything.copy(areSongsEnabled = false))
         assertEquals(listOf(ShortcutScope.APP, ShortcutScope.METRONOME), withoutSongs.map { it.scope })
         assertFalse(ShortcutScope.METRONOME in listed(AppBuild.WINDOWS, everything.copy(isMetronomeEnabled = false)).map { it.scope })
         val readOnly = listed(AppBuild.WINDOWS, everything.copy(isReadOnly = true))
         assertFalse(ShortcutScope.EDITOR in readOnly.map { it.scope })
         val readOnlyShortcuts = readOnly.flatMap { group -> group.rows.flatMap { it.shortcuts } }
-        assertTrue(readOnlyShortcuts.none { it == KeyShortcut.EDIT || it == KeyShortcut.NEW || it == KeyShortcut.PASTE })
+        val hidden = listOf(KeyShortcut.EDIT, KeyShortcut.NEW, KeyShortcut.PASTE, KeyShortcut.TRANSPOSE_UP, KeyShortcut.TRANSPOSE_DOWN, KeyShortcut.SELECT_ALL)
+        assertTrue(readOnlyShortcuts.none { it in hidden })
         assertTrue(KeyShortcut.SONG_DOWN in readOnlyShortcuts)
     }
 
