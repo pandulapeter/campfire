@@ -1668,6 +1668,7 @@ class ChordSheetConverterTest {
         assertTrue(convert("John Newton (1725\u20131807)").startsWith("{title: Auld Lang Syne}\n{artist: John Newton}\n"), convert("John Newton (1725\u20131807)"))
         assertTrue(convert("(The Ballad of 1788)").startsWith("{title: Auld Lang Syne}\n{subtitle: (The Ballad of 1788)}\n"), convert("(The Ballad of 1788)"))
         assertTrue(convert("Live at the Fillmore (1971)").startsWith("{title: Auld Lang Syne}\n{subtitle: Live at the Fillmore (1971)}\n"), convert("Live at the Fillmore (1971)"))
+        assertTrue(convert("Extended Mix (1984)").startsWith("{title: Auld Lang Syne}\n{subtitle: Extended Mix (1984)}\n"), convert("Extended Mix (1984)"))
     }
 
     @Test

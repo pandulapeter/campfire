@@ -246,9 +246,17 @@ internal object SongHeader {
     /**
      * The name a credit line gives: `by Someone`, or a name dated in parentheses, `Robert Burns (1788)` or
      * `John Newton (1725–1807)`. A date in parentheses after a name is when its author wrote or lived, not the song's
-     * year, so it is left out; a subtitle is a phrase, its words not all capitalized like a name's.
+     * year, so it is left out; a subtitle is a phrase, its words not all capitalized like a name's, or a recording's
+     * version, `Extended Mix (1984)`, capitalized like a name but naming one of [versionWords].
      */
-    private fun creditName(text: String) = credit.matchEntire(text)?.groupValues?.get(1) ?: datedName.matchEntire(text)?.groupValues?.get(1)
+    private fun creditName(text: String) = credit.matchEntire(text)?.groupValues?.get(1)
+        ?: datedName.matchEntire(text)?.groupValues?.get(1)?.takeIf { name -> name.lowercase().split(' ').none { it in versionWords } }
+
+    /** The words a recording's version is named with, which no author's name is. */
+    private val versionWords = setOf(
+        "mix", "remix", "version", "edit", "live", "remaster", "remastered", "demo", "acoustic", "single", "radio", "mono",
+        "stereo", "session", "sessions", "unplugged", "instrumental",
+    )
 
     private val pageWords = setOf("chords", "tab", "lyrics")
     /** A credit naming its author, `by Someone`, `Words and music by Someone`, or `Words: Someone`. */
