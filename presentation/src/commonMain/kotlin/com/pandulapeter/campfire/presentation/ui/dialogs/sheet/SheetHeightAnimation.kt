@@ -36,8 +36,9 @@ import kotlinx.coroutines.launch
  * since Material anchors the sheet by it.
  *
  * Only the content's own changes are animated. A change of the room offered (the keyboard sliding, which arrives as a
- * new maximum on every frame of its own animation, or the window being resized) is followed at once, or the sheet
- * would trail behind the keyboard and leave a gap over it. While the sheet is growing the content is already measured
+ * new maximum on every frame of its own animation, or the window being resized) is followed at once where it bounds the
+ * content, or the sheet would trail behind the keyboard and leave a gap over it; a running animation towards content that
+ * fits goes on through it, since the shrink itself changes the room (the status bar's padding). While the sheet is growing the content is already measured
  * at its new height and placed under the animated one, so the content is uncovered from the sheet's bottom edge, which
  * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.heightLag].
  *
@@ -58,7 +59,13 @@ internal fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation, unc
         val targetHeight = if (fillsTallestSheet) constraints.maxHeight else placeable.height
         val animatable = state.animatable
         val snappedHeight = state.snappedHeight
-        val height = if (animatable == null || constraints.maxHeight != state.maxHeight) {
+        val isRoomChanged = constraints.maxHeight != state.maxHeight
+        state.maxHeight = constraints.maxHeight
+        // A change of the room is followed at once only where the room bounds the content, or where nothing is animating
+        // anyway. A sheet shrinking from its tallest moves its top edge off the status bar, which changes the padding
+        // Material gives it and so the room offered on every frame of the shrink; followed at once, that would cut the
+        // shrink short in its first frame, towards content that fits and is not bounded by the room at all.
+        val height = if (animatable == null || isRoomChanged && (fillsTallestSheet || !animatable.isRunning)) {
             // The first measure opens the sheet at its full height, which Material slides in on its own.
             if (animatable == null) {
                 state.animatable = Animatable(targetHeight.toFloat())
@@ -67,7 +74,6 @@ internal fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation, unc
                 state.snappedHeight = targetHeight
                 coroutineScope.launch { animatable.snapTo(targetHeight.toFloat()) }
             }
-            state.maxHeight = constraints.maxHeight
             targetHeight
         } else if (snappedHeight == targetHeight && animatable.value.roundToInt() != snappedHeight) {
             snappedHeight
