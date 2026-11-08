@@ -46,6 +46,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # The agent runs with every permission granted, so the token that can push and dispatch is handed to git
+          # only in the step that pushes.
+          persist-credentials: false
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
       - name: Set up git and the pre-commit hook
@@ -137,6 +140,7 @@ jobs:
             echo "::warning::The run committed nothing; see the report."
             exit 0
           fi
+          gh auth setup-git
           git push origin "HEAD:refs/heads/$BRANCH"
           gh pr create \
             --base master \
