@@ -15,13 +15,10 @@ crossfade across the breakpoint, as do the wide layout's pages. A build without 
 
 ## Tab contents
 
-- **General**: Performance (the Read only switch) leads, since General is the tab Settings opens on, and only while the
-  songs are on (it fades out with them). Appearance ends with the Tooltips switch.
-- **Preferences**: how a song is read, where Features is what the app has. Lists first, the one section found nowhere
-  else; the chord-writing rows are disabled only while nothing names a chord (the Chords and Scales tabs do too). Lists
-  and Song page leave with the Songs switch. No instrument row: it is picked where it is used (`ui/instrument`).
-  Accidentals stay enabled under a numbering (they still spell its key). Examples are written in the picked notation,
-  never in the language.
+- **General**: Setup, Appearance (ending with the Tooltips switch), Language. Read only mode is not here.
+- **Preferences**: `PreferencesContent` (`ui/preferences/CLAUDE.md`), the same as the sheet: read only mode, then the
+  pages under a secondary tab row, every page there (minus switched-off features), the open one kept for the session
+  (`SettingsSession`). The wide layout's pane shows the same content, inner row included.
 - **Library**: On this device last, since its rows can't be undone. Deleting the library wants `DELETE` typed in every
   language (into a capitalizing field).
 - **Sharing**: there while disconnected too. Stages crossfade, except the list arriving over "Nothing shared yet".

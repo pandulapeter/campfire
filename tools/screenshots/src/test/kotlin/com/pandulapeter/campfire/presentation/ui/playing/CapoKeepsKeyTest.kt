@@ -17,6 +17,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_capo_keeps_key
@@ -28,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_r
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.openChordsPreferences
 import com.pandulapeter.campfire.screenshots.openSong
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
@@ -63,10 +65,12 @@ internal class CapoKeepsKeyTest {
         assertFalse(hasTranspositionReset())
     }
 
-    /** Switches the setting or picks the choice named [label] in the song's Preferences sheet, and closes it. */
+    /** Switches the setting or picks the choice named [label] on the song's Preferences sheet's Chords page, and closes it. */
     private fun AppTestScope.changePreference(label: StringResource) {
         tap(hasContentDescription(string(Res.string.songs_actions)))
         tap(hasText(string(Res.string.settings_preferences)) and hasClickAction())
+        openChordsPreferences()
+        onNode(hasText(string(label))).performScrollTo()
         tap(hasText(string(label)))
         pressBack()
     }

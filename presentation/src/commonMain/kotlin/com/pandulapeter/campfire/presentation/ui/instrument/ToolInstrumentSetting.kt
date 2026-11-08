@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -53,7 +54,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * `toolLineTrailingX`). A [trailing] that emits nothing (the capo hidden) keeps the line's height. A page with nothing
  * at the end, or with [trailing] after the pill, keeps the room above the pill all the same, so that the pill stands at
  * one spot whichever tool is picked, but not the room under it, which only parted it from what comes next by more than
- * the page's other groups are parted.
+ * the page's other groups are parted. An [endAction] (the Chords and the Scales tabs' way into the Preferences) stands at
+ * the line's very end, centred on the pill's line, and the pill and [trailing] share what is left beside it.
  */
 @Composable
 internal fun ToolInstrumentSetting(
@@ -65,6 +67,7 @@ internal fun ToolInstrumentSetting(
     onInstrumentClicked: () -> Unit,
     onTuningClicked: () -> Unit,
     isTrailingAfterPill: Boolean = false,
+    endAction: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val pill = @Composable { pillModifier: Modifier ->
@@ -89,7 +92,7 @@ internal fun ToolInstrumentSetting(
         ) {
             pill(Modifier.weight(1f, fill = false).padding(end = NEW_ITEM_BUTTON_GAP))
         }
-    } else {
+    } else if (endAction == null) {
         ToolInstrumentLine(
             modifier = modifier
                 .fillMaxWidth()
@@ -98,6 +101,28 @@ internal fun ToolInstrumentSetting(
             pill = { pill(Modifier) },
             trailing = trailing,
         )
+    } else {
+        // Outside the line's own layout, so that the line decides whether the pill and the controls share it from the
+        // room the action leaves, and the action stays on the pill's line when the controls slide under it.
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = NEW_ITEM_BUTTON_END_INSET),
+            verticalAlignment = Alignment.Top,
+        ) {
+            ToolInstrumentLine(
+                modifier = Modifier.weight(1f).padding(end = NEW_ITEM_BUTTON_GAP),
+                isTrailingAfterPill = isTrailingAfterPill,
+                pill = { pill(Modifier) },
+                trailing = trailing,
+            )
+            Box(
+                modifier = Modifier.height(LIST_APP_BAR_HEIGHT),
+                contentAlignment = Alignment.Center,
+            ) {
+                endAction()
+            }
+        }
     }
 }
 

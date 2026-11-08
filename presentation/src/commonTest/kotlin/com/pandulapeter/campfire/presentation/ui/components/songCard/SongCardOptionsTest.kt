@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
-import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.playing.testPreferences
 import kotlin.test.Test
@@ -19,11 +18,9 @@ import kotlin.test.assertTrue
 
 class SongCardOptionsTest {
 
-    private val details = CardDetails(isKeyShown = true, isTempoShown = null, isDurationShown = true)
-
     @Test
     fun `preferences not read yet show the chords and the tempo, but no cover`() {
-        val options = SongCardOptions.of(userPreferences = null, details = details)
+        val options = SongCardOptions.forSongs(userPreferences = null)
 
         assertTrue(options.shouldShowChords)
         assertTrue(options.isTempoShown)
@@ -32,32 +29,27 @@ class SongCardOptionsTest {
     }
 
     @Test
-    fun `a tempo the reader never picked goes with the metronome`() {
-        val options = SongCardOptions.of(userPreferences = testPreferences().copy(isMetronomeEnabled = false), details = details)
+    fun `the tempo goes with the metronome`() {
+        val preferences = testPreferences().copy(isMetronomeEnabled = false)
 
-        assertFalse(options.isTempoShown)
+        assertFalse(SongCardOptions.forSongs(userPreferences = preferences).isTempoShown)
+        assertFalse(SongCardOptions.forSetlists(userPreferences = preferences).isTempoShown)
+        assertTrue(SongCardOptions.forSetlists(userPreferences = testPreferences()).isTempoShown)
     }
 
     @Test
-    fun `a tempo the reader picked stays whatever the metronome is`() {
-        val options = SongCardOptions.of(
-            userPreferences = testPreferences().copy(isMetronomeEnabled = false),
-            details = details.copy(isTempoShown = true),
-        )
-
-        assertTrue(options.isTempoShown)
+    fun `only a setlist's cards show the duration`() {
+        assertFalse(SongCardOptions.forSongs(userPreferences = testPreferences()).isDurationShown)
+        assertTrue(SongCardOptions.forSetlists(userPreferences = testPreferences()).isDurationShown)
     }
 
     @Test
-    fun `the list's details and the feature switches are read as they are`() {
-        val options = SongCardOptions.of(
+    fun `the feature switches are read as they are`() {
+        val options = SongCardOptions.forSetlists(
             userPreferences = testPreferences().copy(areChordsEnabled = false, isCoverArtEnabled = true),
-            details = details.copy(isKeyShown = false, isDurationShown = false),
         )
 
         assertFalse(options.shouldShowChords)
-        assertFalse(options.isKeyShown)
-        assertFalse(options.isDurationShown)
         assertTrue(options.isCoverArtEnabled)
     }
 }

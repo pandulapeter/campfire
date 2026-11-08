@@ -187,11 +187,10 @@ internal fun ChordsScreen(
                     instrument = instrument,
                     instrumentTuning = userPreferences?.instrumentTuning,
                     notation = notation,
-                    onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
                     capo = shownCapo,
                     onCapoStep = viewModel.preferencesController::stepToolCapo,
                     onCapoReset = viewModel.preferencesController::resetToolCapo,
+                    showDialog = viewModel.dialogHost::showDialog,
                 )
             }
             pinnedSearchField(

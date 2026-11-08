@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -27,13 +22,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launch
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
 import com.pandulapeter.campfire.presentation.resources.settings_background_warmth_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_appearance
-import com.pandulapeter.campfire.presentation.resources.settings_group_performance
 import com.pandulapeter.campfire.presentation.resources.settings_group_setup
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding
 import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
-import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode
-import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description
-import com.pandulapeter.campfire.presentation.resources.settings_read_only_mode_description_without_setlists
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
@@ -56,50 +47,20 @@ import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The General tab: read only mode, then the way back into the first run's steps, then how the app looks, then which
- * language it speaks. Read only mode leads, since General is the tab Settings opens on: it decides what the rest of the
- * app is still allowed to do and is the only way back out of the mode, so it must never be something to go looking for.
- * It is only there while the songs are, since everything it locks is about them. Setting the app up again comes next,
- * although it walks through every tab's first questions rather than this one's.
+ * The General tab: the way back into the first run's steps, then how the app looks, then which language it speaks.
+ * Setting the app up again leads, although it walks through every tab's first questions rather than this one's. Read
+ * only mode is not here but at the top of the Preferences, the sheet's as well as the tab's, so that it is switched off
+ * where it is noticed.
  */
 @Composable
 internal fun GeneralSections(
     preferencesController: PreferencesController,
     onOnboardingClicked: () -> Unit,
     userPreferences: UserPreferences?,
-    isPerformanceModeEnabled: Boolean,
 ) {
-    AnimatedVisibility(
-        visible = userPreferences?.areSongsEnabled != false,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        PerformanceSection(
-            isPerformanceModeEnabled = isPerformanceModeEnabled,
-            areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-            onPerformanceModeChanged = preferencesController::setPerformanceModeEnabled,
-        )
-    }
     SetupSection(onOnboardingClicked = onOnboardingClicked)
     AppearanceSection(preferencesController = preferencesController, userPreferences = userPreferences)
     LanguageSection(preferencesController = preferencesController, userPreferences = userPreferences)
-}
-
-@Composable
-private fun PerformanceSection(
-    isPerformanceModeEnabled: Boolean,
-    areSetlistsEnabled: Boolean,
-    onPerformanceModeChanged: (Boolean) -> Unit,
-) = SettingsSection(title = stringResource(Res.string.settings_group_performance)) {
-    SwitchListItem(
-        title = stringResource(Res.string.settings_read_only_mode),
-        // Reordering is a setlist's, so with the setlists off there is none to lock.
-        description = stringResource(
-            if (areSetlistsEnabled) Res.string.settings_read_only_mode_description else Res.string.settings_read_only_mode_description_without_setlists,
-        ),
-        isChecked = isPerformanceModeEnabled,
-        onCheckedChange = onPerformanceModeChanged,
-    )
 }
 
 /** The steps the first run opens with, which start from what everything is set to now. */

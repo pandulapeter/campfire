@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.CampfireTopAp
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.tuner.tunerAction
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
@@ -113,6 +114,7 @@ internal fun SongDetailsAppBar(
     // The metronome and the tuner are buttons of the song's first section (SongPlayingTools), which is there wherever
     // the chords or the metronome are switched on; with both off there is nothing to put the tuner next to, so the menu
     // holds it then.
+    val openPreferences = { dialogHost.showDialog(DialogType.Preferences(PreferencesContext.SONG_DETAILS)) }
     val tunerAction = if (isTunerEnabled && !shouldShowChords && !isMetronomeEnabled) {
         tunerAction(isAlwaysInMenu = isReadOnly, onClick = onTunerClicked)
     } else {
@@ -157,7 +159,8 @@ internal fun SongDetailsAppBar(
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,
                 aboutSongAction = openCurrentSongInfo?.let { aboutSongAction(onClick = it) },
                 tunerAction = tunerAction,
-                songDisplayAction = songDisplayAction(onClick = { dialogHost.showDialog(DialogType.SongDisplay) }),
+                preferencesAction = preferencesAction(onClick = openPreferences),
+                onReadOnlyMarkClicked = openPreferences,
             )
         },
         bottomContent = {

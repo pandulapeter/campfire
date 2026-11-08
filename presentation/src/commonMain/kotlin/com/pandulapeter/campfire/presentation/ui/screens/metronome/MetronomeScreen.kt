@@ -26,32 +26,23 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_accent_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
-import com.pandulapeter.campfire.presentation.resources.metronome_change_timing
-import com.pandulapeter.campfire.presentation.resources.metronome_change_timing_description
-import com.pandulapeter.campfire.presentation.resources.metronome_group_playback
 import com.pandulapeter.campfire.presentation.resources.metronome_group_rhythm
-import com.pandulapeter.campfire.presentation.resources.metronome_animate
-import com.pandulapeter.campfire.presentation.resources.metronome_sound
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision
 import com.pandulapeter.campfire.presentation.resources.metronome_subdivision_description
 import com.pandulapeter.campfire.presentation.resources.metronome_time_signature
-import com.pandulapeter.campfire.presentation.resources.metronome_vibrate
-import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.ScrollToTopOnRequest
-import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTTON_TOP_INSET
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePanel
 import com.pandulapeter.campfire.presentation.ui.metronome.TimeSignaturePicker
-import com.pandulapeter.campfire.presentation.ui.metronome.sound
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePlaybackSection
 import com.pandulapeter.campfire.presentation.ui.metronome.subdivision
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomePanelState
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsMessage
@@ -66,7 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
  * on both screens and can be stopped wherever the page has been scrolled to; and under it, scrolling, the rest of what
  * a click is, as rows of a settings page ([SettingsPage]) in two titled sections that a wide window sets side by side,
  * as every settings page does: what is played ([MetronomeBarOptions]) and how it reaches the player
- * ([MetronomeSoundOptions]).
+ * ([MetronomePlaybackSection], also the Preferences' Metronome page).
  *
  * The tab always shows and plays its own tempo and time signature: every way onto it clears the back stack, so no song
  * is open behind it, and a click played for a song is stopped with the song long before this screen is shown.
@@ -123,7 +114,7 @@ internal fun MetronomeScreen(
                     playback = playback,
                 )
             },
-            secondSection = { MetronomeSoundOptions(viewModel = viewModel) },
+            secondSection = { MetronomePlaybackSection(metronomeController = viewModel.metronomeController) },
         )
     }
 }
@@ -171,54 +162,6 @@ private fun MetronomeBarOptions(
         SubdivisionChoice(
             selected = settings.subdivision,
             onSelected = { viewModel.metronomeController.updateMetronomeSettings { copy(subdivisionId = it.id) } },
-        )
-    }
-}
-
-/**
- * How a click reaches the player: what it sounds like, how loud, where a song's click takes up a new tempo, and whether
- * it is seen and felt. Unlike the section before it none of this is the tab's own: it is how every click is played, a
- * song's included (the tempo change only there, since the tab plays one tempo).
- */
-@Composable
-private fun MetronomeSoundOptions(
-    viewModel: CampfireViewModel,
-) = SettingsSection(title = stringResource(Res.string.metronome_group_playback)) {
-    val settings by viewModel.metronomeController.metronomeSettings.collectAsStateWithLifecycle()
-    SettingsSubsection(title = stringResource(Res.string.metronome_sound)) {
-        SoundChoice(
-            selected = settings.sound,
-            onSelected = { sound ->
-                viewModel.metronomeController.updateMetronomeSettings { copy(soundId = sound.id) }
-                viewModel.metronomeController.previewMetronomeSound(sound)
-            },
-        )
-    }
-    SettingsSubsection(title = stringResource(Res.string.metronome_volume)) {
-        VolumeSlider(
-            volume = settings.volume,
-            onVolumeChanged = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(volume = value) } },
-        )
-    }
-    SettingsSubsection(
-        title = stringResource(Res.string.metronome_change_timing),
-        description = stringResource(Res.string.metronome_change_timing_description),
-    ) {
-        ChangeTimingChoice(
-            isChangeOnNextBar = settings.isChangeOnNextBar,
-            onSelected = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isChangeOnNextBar = value) } },
-        )
-    }
-    SwitchListItem(
-        title = stringResource(Res.string.metronome_animate),
-        isChecked = settings.isVisualBeatEnabled,
-        onCheckedChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isVisualBeatEnabled = value) } },
-    )
-    if (rememberBeatHaptics() != null) {
-        SwitchListItem(
-            title = stringResource(Res.string.metronome_vibrate),
-            isChecked = settings.isHapticBeatEnabled,
-            onCheckedChange = { value -> viewModel.metronomeController.updateMetronomeSettings { copy(isHapticBeatEnabled = value) } },
         )
     }
 }

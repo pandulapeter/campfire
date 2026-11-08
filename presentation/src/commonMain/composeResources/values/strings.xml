@@ -454,8 +454,12 @@
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_group_song_page">Song page</string>
-    <string name="settings_group_lists">Lists</string>
-    <string name="settings_group_chords">Chords</string>
+    <string name="preferences_page_song">Song</string>
+    <string name="settings_group_diagrams">Diagrams</string>
+    <string name="settings_group_chord_names">Names</string>
+    <string name="settings_instrument">Instrument</string>
+    <string name="settings_instrument_description">The instrument in your hands and its tuning, which the diagrams, the tabs, and the tuner follow</string>
+    <string name="read_only_mark">Read only is on: open Preferences</string>
     <string name="settings_group_setup">Setup</string>
     <string name="settings_group_appearance">Appearance</string>
     <string name="settings_group_playing">Playing</string>
@@ -470,11 +474,6 @@
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">Pages fit the most of a song on the screen at once. Continuous is one column that can scroll by itself at the song\'s pace.</string>
-    <string name="settings_song_cards">Song cards</string>
-    <string name="settings_song_cards_description">What each song shows under its artist in the lists.</string>
-    <string name="card_detail_key">Key</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Duration</string>
     <string name="settings_notation">Chord notation</string>
     <string name="settings_notation_description">How chords are written while you read and edit songs. Songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_notation_choose">Choose notation</string>

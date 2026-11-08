@@ -27,8 +27,8 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `a common phone keeps the text size stepper in the performance bar`() {
-        assertTrue(showsFontScaleInPerformanceBar(412.dp))
+    fun `a large phone keeps the text size stepper in the performance bar beside the read only mark`() {
+        assertTrue(showsFontScaleInPerformanceBar(448.dp))
     }
 
     @Test

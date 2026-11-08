@@ -454,8 +454,12 @@
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_group_song_page">Daloldal</string>
-    <string name="settings_group_lists">Listanézet</string>
-    <string name="settings_group_chords">Akkordok</string>
+    <string name="preferences_page_song">Dal</string>
+    <string name="settings_group_diagrams">Ábrák</string>
+    <string name="settings_group_chord_names">Nevek</string>
+    <string name="settings_instrument">Hangszer</string>
+    <string name="settings_instrument_description">A kezedben lévő hangszer és a hangolása, amelyhez az ábrák, a tabulatúrák és a hangoló igazodnak</string>
+    <string name="read_only_mark">Csak olvasás bekapcsolva: Preferenciák megnyitása</string>
     <string name="settings_group_setup">Kezdeti beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
     <string name="settings_group_playing">Zenélés</string>
@@ -470,11 +474,6 @@
     <string name="settings_number_sections_description">A saját név nélküli, ismétlődő szakaszok sorszámot kapnak, például Versszak 1 és Versszak 2</string>
     <string name="settings_song_layout">Elrendezés</string>
     <string name="settings_song_layout_description">Az oldalak egyszerre a legtöbbet mutatják a dalból. A folyamatos nézet egy hasáb, amely magától is görgethető a dal tempójában.</string>
-    <string name="settings_song_cards">Dalkártyák</string>
-    <string name="settings_song_cards_description">Mi jelenjen meg az előadó alatt az egyes dalokon a listákban.</string>
-    <string name="card_detail_key">Hangnem</string>
-    <string name="card_detail_tempo">Tempó</string>
-    <string name="card_detail_duration">Időtartam</string>
     <string name="settings_notation">Akkordjelölés</string>
     <string name="settings_notation_description">Hogyan legyenek írva az akkordok a dalok olvasásakor és szerkesztésekor. A dalok mindig szabványos jelöléssel mentődnek, így minden alkalmazásban ugyanúgy olvashatók.</string>
     <string name="settings_notation_choose">Jelölés kiválasztása</string>

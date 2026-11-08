@@ -17,6 +17,9 @@ import com.pandulapeter.campfire.presentation.ui.components.TOOL_PAGE_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.bleedHorizontally
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolCapoControls
 import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSetting
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesButton
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
@@ -32,19 +35,19 @@ internal fun ScaleLibraryControls(
     instrument: UserPreferences.Instrument,
     instrumentTuning: InstrumentTuning?,
     notation: ChordNotation,
-    onInstrumentClicked: () -> Unit,
-    onTuningClicked: () -> Unit,
     capo: Int?,
     onCapoStep: (frets: Int) -> Unit,
     onCapoReset: () -> Unit,
+    showDialog: (DialogType) -> Unit,
 ) = ToolInstrumentSetting(
     modifier = modifier.bleedHorizontally(TOOL_PAGE_PADDING),
     instrument = instrument,
     tuning = instrumentTuning,
     notation = notation,
-    onInstrumentClicked = onInstrumentClicked,
-    onTuningClicked = onTuningClicked,
+    onInstrumentClicked = { showDialog(DialogType.Instrument) },
+    onTuningClicked = { showDialog(DialogType.Tuning) },
     isTrailingAfterPill = true,
+    endAction = { PreferencesButton(onClick = { showDialog(DialogType.Preferences(PreferencesContext.CHORD_TOOLS)) }) },
 ) {
     ToolCapoControls(
         capo = capo,

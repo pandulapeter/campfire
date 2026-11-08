@@ -166,9 +166,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names with a capo; the keyboard always
   sounds), the diagrams the shapes fingered above it; with Capo keeps the key, a capo put on changes only the shapes
   and the file's capo alone is pitch: `ui/playing`, `ui/chords`.
-- Settings → Features switches what the app has (its screens and what goes online), Settings → Preferences how a song
-  is read (chords, diagrams, degrees, scale suggestions), also from the song details menu; both only hide, never write
-  or delete: `ui`.
+- Settings → Features switches what the app has (its screens and what goes online), the Preferences how a song is read,
+  played, and clicked (one component, Settings' tab and the sheet the screens it affects open, read only mode above its
+  pages); both only hide, never write or delete: `ui/preferences`.
 - Songs can be switched off (Settings only), taking the setlists. The root is always the first main screen switched
   on, Settings once every one is off (Features then says so, with a wink): `ui`.
 - Haptics only where the eye cannot follow (the fast scroller), through the platform's feedback: `ui`.

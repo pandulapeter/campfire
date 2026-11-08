@@ -229,11 +229,10 @@ private fun LazyGridScope.controlsItem(
         instrument = instrument,
         instrumentTuning = instrumentTuning,
         notation = notation,
-        onInstrumentClicked = { viewModel.dialogHost.showDialog(DialogType.Instrument) },
-        onTuningClicked = { viewModel.dialogHost.showDialog(DialogType.Tuning) },
         capo = capo,
         onCapoStep = viewModel.preferencesController::stepToolCapo,
         onCapoReset = viewModel.preferencesController::resetToolCapo,
+        showDialog = viewModel.dialogHost::showDialog,
     )
 }
 

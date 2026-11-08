@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.components.TOOL_GROUP_GAP
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
 import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
+import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchControls
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerAskOnOpenEffect
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerDisplay
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerListeningEffect
@@ -75,8 +76,8 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  * ([TunerDisplay]), all pinned, as wide as a page of two sections like the Metronome tab's bar, and under them,
  * scrolling, the strings ([TunerStringsSetting]), centered under the display they are played against. Under the
  * play circle, whether it reads the strings or every note ([TunerModeToggle]); chromatic, the instrument is dimmed and
- * does not open. The instrument and the reference pitch are offered here rather than on the sheet
- * over a song, which tunes to what they are set to. While the microphone cannot be listened to, the display gives way
+ * does not open. The instrument is offered here rather than on the sheet over a song, which tunes
+ * to what it is set to; the reference pitch is offered on both. While the microphone cannot be listened to, the display gives way
  * to a notice that is the page's first item ([TunerNoticeCard]) and scrolls with it, which costs a short window
  * nothing; its tones still play then.
  *

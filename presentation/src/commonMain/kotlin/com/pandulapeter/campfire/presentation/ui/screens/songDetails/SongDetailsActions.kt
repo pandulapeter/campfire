@@ -59,43 +59,19 @@ internal fun RowScope.SongDetailsActions(
     showsSetlistAssignmentsInBar: Boolean,
     aboutSongAction: ActionsMenuItem?,
     tunerAction: ActionsMenuItem?,
-    songDisplayAction: ActionsMenuItem,
+    preferencesAction: ActionsMenuItem,
+    onReadOnlyMarkClicked: () -> Unit,
 ) {
     val songFileNamesInSetlists by songFileNamesInSetlistsFlow.collectAsStateWithLifecycle()
     // Read only mode's menu: nothing in it changes the library.
-    val performanceItems = listOfNotNull(aboutSongAction, tunerAction, songDisplayAction)
-    // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
-    // performance mode leaves the bar with nothing else in it, and elsewhere it is the first of the bar's
-    // controls to go back into the menu as the bar narrows. Both are there, one leaving as the other arrives,
-    // so that a window resized across the width that decides it hands the stepper over the way the song's
-    // actions move in and out of their menu.
-    AnimatedVisibility(
-        visible = showsFontScaleInBar,
-        enter = fadeIn() + expandHorizontally(),
-        exit = fadeOut() + shrinkHorizontally(),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            LiveFontScaleControls(fontScaleController = fontScaleController)
-            // The overflow button is the bar's last, after the stepper, as the song's own menu is outside read only mode.
-            ActionsMenu(items = if (isPerformanceModeEnabled) performanceItems else emptyList())
-        }
-    }
-    // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
-    // rather than a second overflow button standing next to this one.
-    AnimatedVisibility(
-        visible = isPerformanceModeEnabled && !showsFontScaleInBar,
-        enter = fadeIn() + expandHorizontally(),
-        exit = fadeOut() + shrinkHorizontally(),
-    ) {
-        ActionsMenu(
-            items = performanceItems,
-            menuFooter = {
-                MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                    LiveFontScaleControls(fontScaleController = fontScaleController)
-                }
-            },
-        )
-    }
+    val performanceItems = listOfNotNull(aboutSongAction, tunerAction, preferencesAction)
+    ReadOnlyActions(
+        fontScaleController = fontScaleController,
+        isPerformanceModeEnabled = isPerformanceModeEnabled,
+        showsFontScaleInBar = showsFontScaleInBar,
+        performanceItems = performanceItems,
+        onReadOnlyMarkClicked = onReadOnlyMarkClicked,
+    )
     // Animated, since a preview that has been imported turns into its song's screen in place, and gains the song's actions.
     AnimatedVisibility(
         visible = !isPerformanceModeEnabled,
@@ -144,7 +120,7 @@ internal fun RowScope.SongDetailsActions(
                                 )
                             },
                             tunerAction,
-                            songDisplayAction,
+                            preferencesAction,
                         )
                     },
                     // The transposition, the capo and the tempo are set in the song's own first section now; what
@@ -160,6 +136,62 @@ internal fun RowScope.SongDetailsActions(
                     },
                 )
             }
+        }
+    }
+}
+
+/**
+ * The text size stepper where it is in the bar, and read only mode's actions: its mark and its menu, which holds the
+ * stepper where the bar has no room for it.
+ */
+@Composable
+private fun RowScope.ReadOnlyActions(
+    fontScaleController: FontScaleController,
+    isPerformanceModeEnabled: Boolean,
+    showsFontScaleInBar: Boolean,
+    performanceItems: List<ActionsMenuItem>,
+    onReadOnlyMarkClicked: () -> Unit,
+) {
+    // The text size is in the bar wherever the title leaves it the room, and at the end of a menu where not:
+    // performance mode leaves the bar with nothing else in it, and elsewhere it is the first of the bar's
+    // controls to go back into the menu as the bar narrows. Both are there, one leaving as the other arrives,
+    // so that a window resized across the width that decides it hands the stepper over the way the song's
+    // actions move in and out of their menu.
+    AnimatedVisibility(
+        visible = showsFontScaleInBar,
+        enter = fadeIn() + expandHorizontally(),
+        exit = fadeOut() + shrinkHorizontally(),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            LiveFontScaleControls(fontScaleController = fontScaleController)
+            AnimatedVisibility(
+                visible = isPerformanceModeEnabled,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                ReadOnlyMark(onClick = onReadOnlyMarkClicked)
+            }
+            // The overflow button is the bar's last, after the stepper, as the song's own menu is outside read only mode.
+            ActionsMenu(items = if (isPerformanceModeEnabled) performanceItems else emptyList())
+        }
+    }
+    // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
+    // rather than a second overflow button standing next to this one.
+    AnimatedVisibility(
+        visible = isPerformanceModeEnabled && !showsFontScaleInBar,
+        enter = fadeIn() + expandHorizontally(),
+        exit = fadeOut() + shrinkHorizontally(),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ReadOnlyMark(onClick = onReadOnlyMarkClicked)
+            ActionsMenu(
+                items = performanceItems,
+                menuFooter = {
+                    MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                        LiveFontScaleControls(fontScaleController = fontScaleController)
+                    }
+                },
+            )
         }
     }
 }

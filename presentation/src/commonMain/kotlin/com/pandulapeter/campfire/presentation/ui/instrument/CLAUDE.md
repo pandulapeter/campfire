@@ -19,7 +19,9 @@ tuning's strings directly (every stringed instrument, not only the five with sha
   tuning's name is cut first, down to 40% of the pill, then the instrument's; on a tool's line with trailing controls
   the pill takes the line to itself wherever it does not fit whole beside them (`pillSharesLine`). Always exactly
   `songControlHeight`, matching the transposition stepper, touched 48 dp tall. On the song's first section (read only
-  included, since it changes a device preference), Tuner, Chords, Scales, and onboarding; never Settings.
+  included, since it changes a device preference), Tuner, Chords, Scales, onboarding, and the Preferences' Chords page.
+- The Chords and Scales tabs end the line with the Preferences button (`endAction`), outside the line's own layout, so
+  the pill and the capo share what it leaves and the button stays on the pill's line.
 - Other is what the tuner reads every note for, so the Tuner leaves its Strings / Chromatic toggle out for it.
 - **The twelve-string is the guitar to everything but the tuner**, which hears each course's second string. So a
   tuning names no instrument: `withTuning` tunes the picked instrument, and the pill asks `isStandard`.

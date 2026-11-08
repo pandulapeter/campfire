@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -135,14 +136,17 @@ sealed interface DialogType {
     /** The tuning of the instrument in the player's hands, opened from the instrument pill's tuning half. */
     data object Tuning : DialogType
 
-    /** The notation chords are written in, opened from its chip in Settings and in the [SongDisplay] sheet. */
+    /** The notation chords are written in, opened from its chip in Settings and in the [Preferences] sheet. */
     data object Notation : DialogType
 
     /**
-     * How songs are read on this device (the Preferences tab's Chords and Song page sections), opened from the song
-     * details menu so that a reader changes them while looking at a song.
+     * The Preferences (`PreferencesContent`), opened from the screens they affect so that a reader changes them while
+     * looking at what they change: the song details menu and its read only mode mark, and the Chords and the Scales
+     * tabs. The [context] decides which of the pages are there.
      */
-    data object SongDisplay : DialogType
+    data class Preferences(
+        val context: PreferencesContext,
+    ) : DialogType
 
     /** Pages or one column that scrolls by itself, asked over the first song opened, see `AskForSongLayoutOnce`. */
     data object SongLayout : DialogType

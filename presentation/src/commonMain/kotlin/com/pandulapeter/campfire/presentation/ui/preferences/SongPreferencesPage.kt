@@ -7,17 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.songDisplay
+package com.pandulapeter.campfire.presentation.ui.preferences
 
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
-import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
-import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
 import com.pandulapeter.campfire.presentation.resources.settings_group_song_page
@@ -36,15 +32,15 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
- * How a song's page is read, in the Preferences tab and in the song display sheet: first its layout, pages or one column
- * that scrolls by itself, the one choice here that changes how the page is used rather than what is on it, and so a
- * segmented control rather than one more switch; then whether a reader sees the chords at all, and what the app adds to
- * them and to the song's sections. Each only hides, and each is
- * disabled rather than hidden while another takes what it adds, since what it is set to is still what the songs will
- * open with once that is back.
+ * The Preferences' Song page, the same in Settings and in the song details screen's sheet, which opens on it: first a
+ * song's layout, pages or one column that scrolls by itself, the one choice here that changes how the page is used rather
+ * than what is on it, and so a segmented control rather than one more switch; then whether a reader sees the chords at
+ * all (how they are drawn and written is the Chords page's), and what the app adds to them and to the song's sections.
+ * Each only hides, and each is disabled rather than hidden while another takes what it adds, since what it is set to is
+ * still what the songs will open with once that is back.
  */
 @Composable
-internal fun SongPageSection(
+internal fun SongPreferencesPage(
     userPreferences: UserPreferences?,
     preferencesController: PreferencesController,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_song_page)) {
@@ -62,31 +58,11 @@ internal fun SongPageSection(
         )
     }
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
-    val areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false
     SwitchListItem(
         title = stringResource(Res.string.settings_chords),
         description = stringResource(Res.string.settings_chords_description),
         isChecked = areChordsEnabled,
         onCheckedChange = preferencesController::setChordsEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_diagrams),
-        description = stringResource(Res.string.settings_chord_diagrams_description),
-        isChecked = areChordDiagramsEnabled,
-        isEnabled = areChordsEnabled,
-        onCheckedChange = preferencesController::setChordDiagramsEnabled,
-    )
-    // A degree labels a diagram, a song's or one of the chords a scale sheet lists (which needs both the Scales and the
-    // Chords tab), so it is disabled only where neither is drawn. A numbering already names a song's chords by their
-    // degrees, so its diagrams carry none, while a scale sheet's chords keep their letters and their numerals.
-    val isNumbering = userPreferences?.chordSpelling?.notation?.isNumbering == true
-    SwitchListItem(
-        title = stringResource(Res.string.settings_chord_degrees),
-        description = stringResource(Res.string.settings_chord_degrees_description),
-        isChecked = userPreferences?.areChordDegreesEnabled == true,
-        isEnabled = (areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
-            (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled),
-        onCheckedChange = preferencesController::setChordDegreesEnabled,
     )
     // A suggestion is read off a song's chords and opens a scale's sheet, so it needs both the chords and the scales.
     SwitchListItem(

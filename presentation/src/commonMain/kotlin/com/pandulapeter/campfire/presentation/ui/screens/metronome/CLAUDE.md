@@ -18,7 +18,7 @@ The Metronome tab. The click's lifecycle is in `ui/metronome/CLAUDE.md`.
 - A beat tap cycles accent, plain, and muted, stored per signature here (a song's panel stores them for that song).
 - Tempo: never highlighted and no reset, since it overrides nothing; the Italian marking is notation, not translated.
   Subdivision is clicks per beat (1 to 4), not note names, which depend on the bar and do not fit a phone.
-- `MetronomeSoundOptions` applies to a song's click too, Tempo change (next bar or next beat for a new song or
-  stretch) only to it. Volume zero is the mute (no mute switch); Vibrate shows only
-  where there is a vibrator.
+- `MetronomePlaybackSection` (`ui/metronome`, also the Preferences' Metronome page, drawn the same) applies to a song's
+  click too, Tempo change (next bar or next beat for a new song or stretch) only to it. Volume zero is the mute (no mute
+  switch); Vibrate shows only where there is a vibrator.
 - The screen is kept on while a click plays. Every way onto the tab clears the back stack, so no song is behind it.

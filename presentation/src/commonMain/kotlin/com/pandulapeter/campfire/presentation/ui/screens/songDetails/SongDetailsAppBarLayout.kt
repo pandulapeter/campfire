@@ -18,11 +18,12 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.APP_BAR_COV
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, beside the
- * back and the overflow buttons it always holds ([APP_BAR_FIXED_CONTENT_WIDTH]): wherever it leaves the title
+ * back button, the read only mark, and the overflow button it always holds then ([PERFORMANCE_FIXED_CONTENT_WIDTH]):
+ * wherever it leaves the title
  * [MIN_TITLE_WIDTH], since the title is what tells the player which song is up. Where it does not, the stepper is at the
  * end of the menu. The cover is not counted, since it is the first to leave ([showsCoverInPerformanceMode]).
  */
-internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH
+internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - PERFORMANCE_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH >= MIN_TITLE_WIDTH
 
 /**
  * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
@@ -30,7 +31,7 @@ internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP
  * the title is still left [MIN_TITLE_WIDTH] beside both.
  */
 internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
-    appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+    appBarWidth - PERFORMANCE_FIXED_CONTENT_WIDTH - FONT_SCALE_STEPPER_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
 
 /** What the song details app bar has the room for outside read only mode, see [appBarButtons]. */
 internal data class AppBarButtons(
@@ -65,5 +66,8 @@ private val APP_BAR_OVERLAPPING_ACTION_WIDTH = APP_BAR_ACTION_WIDTH - ACTION_BUT
 
 /** The back button, the bar's paddings and the overflow button. */
 private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH
+
+/** What performance mode's bar always holds: the same, and the read only mark reaching into the overflow button. */
+private val PERFORMANCE_FIXED_CONTENT_WIDTH = APP_BAR_FIXED_CONTENT_WIDTH + APP_BAR_OVERLAPPING_ACTION_WIDTH
 
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.

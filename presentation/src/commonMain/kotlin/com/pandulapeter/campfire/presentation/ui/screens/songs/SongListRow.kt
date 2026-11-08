@@ -100,7 +100,7 @@ internal fun SongListRow(
         modifier = Modifier.fadingUnderListTop(topFade),
         song = song,
         cardPadding = cardPadding,
-        key = key.takeIf { cardOptions.isKeyShown },
+        key = key,
         tempo = tempo.bpm.takeIf { cardOptions.isTempoShown },
         shouldShowChords = cardOptions.shouldShowChords,
         duration = song.duration?.takeIf { cardOptions.isDurationShown },

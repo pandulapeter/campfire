@@ -50,7 +50,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
  * The parts of the app a reader can do without, each a switch that takes it out of every screen it is on, so that a
  * singer is not handed a metronome and a band that plays from one list is not handed a setlist tab. They follow the
  * tabs of the navigation in their order - songs, setlists, metronome, tuner, chords, scales - and how a song is read is
- * none of theirs: that is the Preferences tab's (SongPageSection). The two switches that let the app reach the network
+ * none of theirs: that is the Preferences' (`PreferencesContent`). The two switches that let the app reach the network
  * are a group of their own, so that what can make a request is found in one place rather than among the rest.
  */
 @Composable
@@ -110,7 +110,7 @@ private fun PlayingSection(
         isChecked = userPreferences?.isTunerEnabled != false,
         onCheckedChange = preferencesController::setTunerEnabled,
     )
-    // The tab only: a song's chords and their diagrams are how it is read (SongPageSection), and a singer reading the
+    // The tab only: a song's chords and their diagrams are how it is read (`SongPreferencesPage`), and a singer reading the
     // lyrics alone can still look a chord up for the band.
     SwitchListItem(
         title = stringResource(Res.string.chords),

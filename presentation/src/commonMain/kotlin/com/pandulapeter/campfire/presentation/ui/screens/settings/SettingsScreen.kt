@@ -9,15 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.rememberTransition
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -50,14 +45,14 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
-import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContent
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
+import com.pandulapeter.campfire.presentation.ui.preferences.preferencesPages
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
-import com.pandulapeter.campfire.presentation.ui.songDisplay.ChordsSection
-import com.pandulapeter.campfire.presentation.ui.songDisplay.SongPageSection
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -97,7 +92,7 @@ internal fun SettingsScreen(
     LaunchedEffect(tabs) {
         snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.GENERAL }
     }
-    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsScrollPositions.pages.getValue(it)) }
+    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsSession.pages.getValue(it)) }
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
     LaunchedEffect(viewModel, scrollStates) {
@@ -247,35 +242,18 @@ private fun SettingsTabContent(
                 preferencesController = viewModel.preferencesController,
                 onOnboardingClicked = viewModel::openOnboarding,
                 userPreferences = userPreferences,
-                isPerformanceModeEnabled = isPerformanceModeEnabled,
             )
             SettingsTab.FEATURES -> FeaturesSections(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
-            SettingsTab.PREFERENCES -> {
-                // The lists lead, being the one section found nowhere else: the other two are also the song details
-                // screen's Preferences sheet.
-                AnimatedVisibility(
-                    visible = userPreferences?.areSongsEnabled != false,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    SongListsSection(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
-                }
-                ChordsSection(
-                    userPreferences = userPreferences,
-                    onNotationClicked = { viewModel.dialogHost.showDialog(DialogType.Notation) },
-                    onAccidentalsSelected = viewModel.preferencesController::setAccidentals,
-                    onChordNamesSelected = viewModel.preferencesController::setChordNames,
-                    onCapoKeepsKeyChanged = viewModel.preferencesController::setCapoKeepsKey,
-                )
-                // The chords are written the same way in the Chords and Scales tabs, while a song page is about songs.
-                AnimatedVisibility(
-                    visible = userPreferences?.areSongsEnabled != false,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    SongPageSection(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
-                }
-            }
+            SettingsTab.PREFERENCES -> PreferencesContent(
+                preferencesController = viewModel.preferencesController,
+                metronomeController = viewModel.metronomeController,
+                userPreferences = userPreferences,
+                isPerformanceModeEnabled = isPerformanceModeEnabled,
+                pages = preferencesPages(context = PreferencesContext.SETTINGS, userPreferences = userPreferences),
+                selectedPage = viewModel.navigator.settingsSession.preferencesPage,
+                onPageSelected = { viewModel.navigator.settingsSession.preferencesPage = it },
+                showDialog = viewModel.dialogHost::showDialog,
+            )
             SettingsTab.LIBRARY -> {
                 SyncSection(
                     syncController = viewModel.syncController,

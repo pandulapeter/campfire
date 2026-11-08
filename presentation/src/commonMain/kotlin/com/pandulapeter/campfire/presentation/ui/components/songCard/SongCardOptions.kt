@@ -9,29 +9,32 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components.songCard
 
-import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
- * What the song cards of a list say after the artist: what the reader picked for the list ([of]'s `details`,
- * `UserPreferences.songCardDetails` or `setlistCardDetails`), within the features switched on. The chords switched off
- * take them out of the viewer, and the key is the shortest way of writing them down; the tempo is what the click plays,
- * so unless the reader picked it, it goes with the metronome.
+ * What the song cards of a list say after the artist, within the features switched on: the key, which goes with the
+ * chords ([shouldShowChords]), since the chords switched off take them out of the viewer and the key is the shortest way
+ * of writing them down; the tempo, which is what the click plays, so it goes with the metronome; and, on a setlist's
+ * cards alone, where a set is timed, the duration.
  */
 internal data class SongCardOptions(
     val shouldShowChords: Boolean,
-    val isKeyShown: Boolean,
     val isTempoShown: Boolean,
     val isDurationShown: Boolean,
     val isCoverArtEnabled: Boolean,
     val chordSpelling: UserPreferences.ChordSpelling,
 ) {
     companion object {
-        fun of(userPreferences: UserPreferences?, details: CardDetails) = SongCardOptions(
+        /** The cards of the Songs screen, where a song is found. */
+        fun forSongs(userPreferences: UserPreferences?) = of(userPreferences = userPreferences, isDurationShown = false)
+
+        /** The cards of the Setlists screen, where a set is timed. */
+        fun forSetlists(userPreferences: UserPreferences?) = of(userPreferences = userPreferences, isDurationShown = true)
+
+        private fun of(userPreferences: UserPreferences?, isDurationShown: Boolean) = SongCardOptions(
             shouldShowChords = userPreferences?.areChordsEnabled != false,
-            isKeyShown = details.isKeyShown,
-            isTempoShown = details.isTempoShown(isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false),
-            isDurationShown = details.isDurationShown,
+            isTempoShown = userPreferences?.isMetronomeEnabled != false,
+            isDurationShown = isDurationShown,
             isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true,
             chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default,
         )

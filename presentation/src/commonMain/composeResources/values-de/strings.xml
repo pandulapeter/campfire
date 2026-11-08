@@ -454,8 +454,12 @@
     <string name="settings_cover_art">Cover</string>
     <string name="settings_cover_art_description">Zeigt neben einem Song das Albumcover, das er nennt; es wird einmal heruntergeladen und als Kopie auf diesem Gerät behalten</string>
     <string name="settings_group_song_page">Song-Seite</string>
-    <string name="settings_group_lists">Listen</string>
-    <string name="settings_group_chords">Akkorde</string>
+    <string name="preferences_page_song">Song</string>
+    <string name="settings_group_diagrams">Diagramme</string>
+    <string name="settings_group_chord_names">Namen</string>
+    <string name="settings_instrument">Instrument</string>
+    <string name="settings_instrument_description">Das Instrument in deinen Händen und seine Stimmung, nach denen sich die Diagramme, die Tabs und das Stimmgerät richten</string>
+    <string name="read_only_mark">Nur lesen ist an: Vorlieben öffnen</string>
     <string name="settings_group_setup">Einrichtung</string>
     <string name="settings_group_appearance">Darstellung</string>
     <string name="settings_group_playing">Spielen</string>
@@ -470,11 +474,6 @@
     <string name="settings_number_sections_description">Unterscheidet wiederholte Abschnitte ohne eigenen Namen, etwa Strophe 1 und Strophe 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">„Seiten“ zeigt so viel vom Song wie möglich auf einmal. „Fortlaufend“ ist eine Spalte, die im Tempo des Songs von selbst scrollen kann.</string>
-    <string name="settings_song_cards">Song-Karten</string>
-    <string name="settings_song_cards_description">Was jeder Song in den Listen unter seinem Interpreten zeigt.</string>
-    <string name="card_detail_key">Tonart</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Dauer</string>
     <string name="settings_notation">Akkordschreibweise</string>
     <string name="settings_notation_description">Wie Akkorde beim Lesen und Bearbeiten von Songs geschrieben werden. Gespeichert werden Songs immer in der Standardschreibweise, damit sie in jeder App gleich aussehen.</string>
     <string name="settings_notation_choose">Schreibweise wählen</string>

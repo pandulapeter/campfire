@@ -490,8 +490,12 @@
     <string name="settings_cover_art">Coperte</string>
     <string name="settings_cover_art_description">Arată lângă cântec coperta de album pe care o indică, descărcând-o o singură dată și păstrând o copie pe acest dispozitiv</string>
     <string name="settings_group_song_page">Pagina cântecului</string>
-    <string name="settings_group_lists">Liste</string>
-    <string name="settings_group_chords">Acorduri</string>
+    <string name="preferences_page_song">Cântec</string>
+    <string name="settings_group_diagrams">Diagrame</string>
+    <string name="settings_group_chord_names">Nume</string>
+    <string name="settings_instrument">Instrument</string>
+    <string name="settings_instrument_description">Instrumentul din mâinile tale și acordajul lui, după care se iau diagramele, tabulaturile și acordorul</string>
+    <string name="read_only_mark">Doar citire este activat: deschide Preferințe</string>
     <string name="settings_group_setup">Configurare</string>
     <string name="settings_group_appearance">Aspect</string>
     <string name="settings_group_playing">Cântat</string>
@@ -506,11 +510,6 @@
     <string name="settings_number_sections_description">Deosebește secțiunile repetate care nu au un nume propriu, de exemplu Strofa 1 și Strofa 2</string>
     <string name="settings_song_layout">Aspect</string>
     <string name="settings_song_layout_description">Paginile încap cât mai mult din cântec pe ecran deodată. Continuu înseamnă o singură coloană care se poate derula singură în ritmul cântecului.</string>
-    <string name="settings_song_cards">Cardurile cântecelor</string>
-    <string name="settings_song_cards_description">Ce arată fiecare cântec sub artist în liste.</string>
-    <string name="card_detail_key">Tonalitate</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Durată</string>
     <string name="settings_notation">Notația acordurilor</string>
     <string name="settings_notation_description">Cum sunt scrise acordurile cât citești și editezi cântece. Cântecele sunt salvate mereu în notația standard, ca să arate la fel în orice aplicație.</string>
     <string name="settings_notation_choose">Alege notația</string>

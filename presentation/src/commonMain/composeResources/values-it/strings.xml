@@ -454,8 +454,12 @@
     <string name="settings_cover_art">Copertine</string>
     <string name="settings_cover_art_description">Mostra accanto a una canzone la copertina dell\'album che indica, scaricandola una volta e tenendone una copia su questo dispositivo</string>
     <string name="settings_group_song_page">Pagina della canzone</string>
-    <string name="settings_group_lists">Elenchi</string>
-    <string name="settings_group_chords">Accordi</string>
+    <string name="preferences_page_song">Canzone</string>
+    <string name="settings_group_diagrams">Diagrammi</string>
+    <string name="settings_group_chord_names">Nomi</string>
+    <string name="settings_instrument">Strumento</string>
+    <string name="settings_instrument_description">Lo strumento che hai in mano e la sua accordatura, che seguono i diagrammi, le intavolature e l\'accordatore</string>
+    <string name="read_only_mark">Sola lettura attiva: apri Preferenze</string>
     <string name="settings_group_setup">Configurazione</string>
     <string name="settings_group_appearance">Aspetto</string>
     <string name="settings_group_playing">Suonare</string>
@@ -470,11 +474,6 @@
     <string name="settings_number_sections_description">Distingui le sezioni ripetute che non hanno un nome proprio, come Strofa 1 e Strofa 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">Le pagine mostrano sullo schermo la parte più ampia possibile di una canzone. Continuo è una sola colonna che può scorrere da sola al ritmo della canzone.</string>
-    <string name="settings_song_cards">Schede delle canzoni</string>
-    <string name="settings_song_cards_description">Cosa mostra ogni canzone sotto il suo artista negli elenchi.</string>
-    <string name="card_detail_key">Tonalità</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Durata</string>
     <string name="settings_notation">Notazione degli accordi</string>
     <string name="settings_notation_description">Come vengono scritti gli accordi mentre leggi e modifichi le canzoni. Le canzoni vengono sempre salvate in notazione standard, così si leggono allo stesso modo in ogni app.</string>
     <string name="settings_notation_choose">Scegli notazione</string>

@@ -11,7 +11,7 @@
 
 # :presentation — ui/components/songCard
 
-- Beside the cover: title, artist, and details (as the list's `CardDetails` picks); a missing line closes up, labels go
+- Beside the cover: title, artist, and details (as the list's `SongCardOptions` say); a missing line closes up, labels go
   under all of it. With three lines the title takes `bodyMedium`'s line height (its own leaves a wider gap under it) and
   the cover is 56dp; with two the cover is 44dp and the card lower; both animate.
 - A song inside a setlist prefixes its one-based place, missing files included.

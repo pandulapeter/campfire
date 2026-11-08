@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.isWhole
+import com.pandulapeter.campfire.screenshots.openChordsPreferences
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import com.pandulapeter.campfire.screenshots.textLayout
@@ -44,6 +45,7 @@ internal class LabelsFitTest {
         listOf(1f, 1.3f).forEach { textScale ->
             runAppTest(appearance = TestAppearance(language = language, textScale = textScale)) {
                 openSettingsTab(string(Res.string.settings_preferences))
+                openChordsPreferences()
                 assertSegmentsWhole(
                     case = "${language.id} at $textScale",
                     labels = listOf(Res.string.settings_accidentals_original, Res.string.settings_accidentals_flats, Res.string.settings_accidentals_sharps).map { string(it) },

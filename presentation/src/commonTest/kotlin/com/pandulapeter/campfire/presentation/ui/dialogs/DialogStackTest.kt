@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.lookup.filledForm
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.chordpro.model.Chord
 import com.pandulapeter.campfire.presentation.ui.chords.SongChord
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -61,9 +62,12 @@ class DialogStackTest {
     }
 
     @Test
-    fun `the notation's choice stacks over the song display sheet, and replaces anything else`() {
-        assertEquals(listOf(DialogType.SongDisplay), nextUnderlyingDialogs(openDialogs = listOf(DialogType.SongDisplay), next = DialogType.Notation))
-        assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = DialogType.Notation))
+    fun `the choices the Preferences sheet's chips open stack over it, and replace anything else`() {
+        val preferences = DialogType.Preferences(PreferencesContext.SONG_DETAILS)
+        listOf(DialogType.Notation, DialogType.Instrument, DialogType.Tuning).forEach { choice ->
+            assertEquals(listOf(preferences), nextUnderlyingDialogs(openDialogs = listOf(preferences), next = choice))
+            assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info), next = choice))
+        }
     }
 
     @Test

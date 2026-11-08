@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_layout_message
 import com.pandulapeter.campfire.presentation.resources.song_layout_title
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
-import com.pandulapeter.campfire.presentation.ui.songDisplay.SongLayoutChoices
+import com.pandulapeter.campfire.presentation.ui.preferences.SongLayoutChoices
 
 /**
  * The question the first song opened asks once, over that song, of a reader who has not picked a layout: pages, or one

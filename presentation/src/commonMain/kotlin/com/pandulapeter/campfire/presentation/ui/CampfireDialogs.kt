@@ -28,7 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordShapeSh
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.InstrumentSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.NotationSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.slotKey
-import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongDisplaySheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.PreferencesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.ChordNamesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay.SongLayoutSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.TunerSheet
@@ -228,12 +228,8 @@ private fun CampfireDialog(
             dialog = dialog,
         )
 
-        DialogType.Instrument -> InstrumentSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
-        DialogType.Tuning -> TuningSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
-        DialogType.Notation -> NotationSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
-        DialogType.SongDisplay -> SongDisplaySheet(preferencesController = preferencesController, dialogHost = dialogHost)
-        DialogType.SongLayout -> SongLayoutSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
-        is DialogType.ChordNames -> ChordNamesSheet(preferencesController = preferencesController, onDismiss = dismissSheet, dialog = dialog)
+        DialogType.Instrument, DialogType.Tuning, DialogType.Notation, is DialogType.Preferences, DialogType.SongLayout, is DialogType.ChordNames,
+        -> PreferenceDialog(viewModel = viewModel, dialog = dialog, dismissSheet = dismissSheet)
 
         DialogType.Tuner -> TunerSheet(tunerController = viewModel.tunerController, userPreferencesFlow = viewModel.userPreferences, onDismiss = dismissSheet)
 
@@ -424,3 +420,30 @@ private fun SongFiltersDialog(viewModel: CampfireViewModel) = SongFiltersSheet(
 
 /** How long What's new has to stay uncovered before it counts as seen. */
 private val WHATS_NEW_SEEN_DELAY = 3.seconds
+
+/**
+ * The sheets that set a preference of this device: the Preferences themselves, the choices their chips open over them,
+ * and the two questions asked once over a song, which are answered there too.
+ */
+@Composable
+private fun PreferenceDialog(
+    viewModel: CampfireViewModel,
+    dialog: DialogType,
+    dismissSheet: () -> Unit,
+) {
+    val preferencesController = viewModel.preferencesController
+    when (dialog) {
+        DialogType.Instrument -> InstrumentSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.Tuning -> TuningSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.Notation -> NotationSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        is DialogType.Preferences -> PreferencesSheet(
+            preferencesController = preferencesController,
+            metronomeController = viewModel.metronomeController,
+            dialogHost = viewModel.dialogHost,
+            dialog = dialog,
+        )
+        DialogType.SongLayout -> SongLayoutSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        is DialogType.ChordNames -> ChordNamesSheet(preferencesController = preferencesController, onDismiss = dismissSheet, dialog = dialog)
+        else -> Unit
+    }
+}

@@ -97,7 +97,7 @@ internal fun SettingsTabPager(
         // The tab being headed for rather than the one on screen, so that its name lights up the moment it is pressed
         // instead of waiting for the pages to pass the halfway point; the indicator follows the pages themselves.
         SettingsTabRow(
-            scrollState = rememberRetainedScrollState(navigator.settingsScrollPositions.tabRow),
+            scrollState = rememberRetainedScrollState(navigator.settingsSession.tabRow),
             tabs = tabs,
             selectedTab = tabs[pagerState.targetPage],
             indicatorPosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },

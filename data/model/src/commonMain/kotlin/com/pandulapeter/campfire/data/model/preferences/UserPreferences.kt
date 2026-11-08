@@ -153,13 +153,6 @@ data class UserPreferences(
      */
     val areScaleSuggestionsEnabled: Boolean = true,
     /**
-     * What the cards of the Songs screen say after the artist. Never the song details screen, which always shows the key
-     * and the tempo a song is played in, since that is where they are changed.
-     */
-    val songCardDetails: CardDetails = CardDetails.SongsDefault,
-    /** What the cards of the Setlists screen say after the artist, the twin of [songCardDetails]. */
-    val setlistCardDetails: CardDetails = CardDetails.SetlistsDefault,
-    /**
      * The instrument in the player's hands: what the chord diagrams are drawn for, what the tuner listens for, and what
      * decides whether a capo is read as a transposition ([Instrument.KEYBOARD]). Kept on the device and never synced,
      * since one player of a shared library plays the bass and another the guitar.

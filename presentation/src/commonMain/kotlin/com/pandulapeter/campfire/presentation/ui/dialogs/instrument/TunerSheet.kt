@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,8 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.tuner
+import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
+import com.pandulapeter.campfire.presentation.ui.tuner.ReferencePitchControls
 import com.pandulapeter.campfire.presentation.ui.tuner.TunerController
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
@@ -61,9 +64,8 @@ import com.pandulapeter.campfire.tuner.api.model.TunerListening
  * (compact only in a short window, as on the tab), giving way to its notice the same way, and under them the strings of
  * the instrument in the player's hands, with whether it reads them or every note ([TunerModeToggle]) in the header,
  * all of it scrolling under the sheet's header. The instrument is the app's one, set from the instrument chip of
- * the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the song's first section, and the
- * reference pitch is set on the tab alone, the way the metronome panel plays with the Metronome tab's presets without
- * offering them. It listens while it is up and the app is in front,
+ * the Tuner tab, the Chords tab, Settings, the onboarding, or the chips at the top of the song's first section,, and last,
+ * scrolling with the rest since it is set once, the reference pitch ([ReferencePitchControls]) the tab offers. It listens while it is up and the app is in front,
  * and the view model stops it as the sheet closes.
  */
 @Composable
@@ -158,6 +160,17 @@ internal fun TunerSheet(
                 tunedNotes = tunedNotes,
                 isTitled = true,
                 onToggleTone = tunerController::toggleTunerTone,
+            )
+            ReferencePitchControls(
+                // Under the strings, centered as they are, since it is set once and the strings are what is reached for.
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp),
+                referencePitch = config.referencePitch,
+                notation = notation,
+                isReferenceTonePlaying = tone == REFERENCE_NOTE,
+                onReferencePitchChanged = { value -> tunerController.updateTunerSettings { copy(referencePitch = value) } },
+                onToggleReferenceTone = { tunerController.toggleTunerTone(REFERENCE_NOTE) },
             )
         }
     }

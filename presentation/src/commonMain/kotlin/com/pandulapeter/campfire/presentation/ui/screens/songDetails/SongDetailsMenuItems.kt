@@ -32,9 +32,12 @@ internal fun aboutSongAction(onClick: () -> Unit) = ActionsMenuItem(
     onClick = onClick,
 )
 
-/** The song display sheet, never let out of the menu: it is changed now and then, not while a song is played. */
+/**
+ * The Preferences sheet, never let out of the menu: it is changed now and then, not while a song is played. Read only
+ * mode's mark opens it too, being the way out of the mode.
+ */
 @Composable
-internal fun songDisplayAction(onClick: () -> Unit) = ActionsMenuItem(
+internal fun preferencesAction(onClick: () -> Unit) = ActionsMenuItem(
     title = stringResource(Res.string.settings_preferences),
     icon = painterResource(Res.drawable.ic_tune),
     isAlwaysInMenu = true,

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.songDisplay
+package com.pandulapeter.campfire.presentation.ui.preferences
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -27,7 +27,14 @@ import com.pandulapeter.campfire.presentation.resources.settings_chord_names
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_description
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_shapes
 import com.pandulapeter.campfire.presentation.resources.settings_chord_names_sounding
-import com.pandulapeter.campfire.presentation.resources.settings_group_chords
+import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees
+import com.pandulapeter.campfire.presentation.resources.settings_chord_degrees_description
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams
+import com.pandulapeter.campfire.presentation.resources.settings_chord_diagrams_description
+import com.pandulapeter.campfire.presentation.resources.settings_group_chord_names
+import com.pandulapeter.campfire.presentation.resources.settings_group_diagrams
+import com.pandulapeter.campfire.presentation.resources.settings_instrument
+import com.pandulapeter.campfire.presentation.resources.settings_instrument_description
 import com.pandulapeter.campfire.presentation.resources.settings_notation
 import com.pandulapeter.campfire.presentation.resources.settings_notation_choose
 import com.pandulapeter.campfire.presentation.resources.settings_notation_description
@@ -39,23 +46,86 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLI
 import com.pandulapeter.campfire.presentation.ui.components.controls.PickerChip
 import com.pandulapeter.campfire.presentation.ui.components.controls.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.instrument.InstrumentPill
+import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 
 /**
- * How the chords are written, in the Preferences tab and first in the song display sheet: their notation, their
- * accidentals, whether a song's chords name the shapes fingered above its capo or what sounds, and whether its capo
- * stepper keeps the key. The instrument is not here: it is picked where it is used (song details, the Tuner, the Chords
- * and the Scales tabs, and the onboarding).
+ * The Preferences' Chords page, the same in Settings and in the sheet the song details, the Chords, and the Scales tabs
+ * open: first how the chords are drawn (the instrument in the player's hands, then whether a song shows its diagrams and
+ * their degrees), then how they are written (their notation, their accidentals, whether a song's chords name the shapes
+ * fingered above its capo or what sounds, and whether its capo stepper keeps the key). The instrument is also picked
+ * where it is used (song details, the Tuner, the Chords and the Scales tabs, and the onboarding): this is the one place
+ * that finds it with the rest of how a chord is shown.
  */
 @Composable
-internal fun ChordsSection(
+internal fun ChordsPreferencesPage(
     userPreferences: UserPreferences?,
-    onNotationClicked: () -> Unit,
-    onAccidentalsSelected: (UserPreferences.Accidentals) -> Unit,
-    onChordNamesSelected: (ChordNames) -> Unit,
-    onCapoKeepsKeyChanged: (Boolean) -> Unit,
-) = SettingsSection(title = stringResource(Res.string.settings_group_chords)) {
+    preferencesController: PreferencesController,
+    showDialog: (DialogType) -> Unit,
+) {
+    ChordDiagramsSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
+    ChordNamesSection(userPreferences = userPreferences, preferencesController = preferencesController, showDialog = showDialog)
+}
+
+/** The instrument the diagrams are drawn for, whether a song shows them, and whether they carry their degrees. */
+@Composable
+private fun ChordDiagramsSection(
+    userPreferences: UserPreferences?,
+    preferencesController: PreferencesController,
+    showDialog: (DialogType) -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_diagrams)) {
+    val notation = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation.toChordNotation()
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_instrument),
+        description = stringResource(Res.string.settings_instrument_description),
+    ) {
+        InstrumentPill(
+            modifier = Modifier.padding(horizontal = LIST_ITEM_KEYLINE),
+            instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR,
+            tuning = userPreferences?.instrumentTuning,
+            notation = notation,
+            // Over this page's sheet rather than in its place, so that picking one comes back here (DialogStack).
+            onInstrumentClicked = { showDialog(DialogType.Instrument) },
+            onTuningClicked = { showDialog(DialogType.Tuning) },
+        )
+    }
+    val areChordsEnabled = userPreferences?.areChordsEnabled != false
+    val areChordDiagramsEnabled = userPreferences?.areChordDiagramsEnabled != false
+    val areSongsEnabled = userPreferences?.areSongsEnabled != false
+    SwitchListItem(
+        title = stringResource(Res.string.settings_chord_diagrams),
+        description = stringResource(Res.string.settings_chord_diagrams_description),
+        isChecked = areChordDiagramsEnabled,
+        isEnabled = areSongsEnabled && areChordsEnabled,
+        onCheckedChange = preferencesController::setChordDiagramsEnabled,
+    )
+    // A degree labels a diagram, a song's or one of the chords a scale sheet lists (which needs both the Scales and the
+    // Chords tab), so it is disabled only where neither is drawn. A numbering already names a song's chords by their
+    // degrees, so its diagrams carry none, while a scale sheet's chords keep their letters and their numerals.
+    val isNumbering = userPreferences?.chordSpelling?.notation?.isNumbering == true
+    SwitchListItem(
+        title = stringResource(Res.string.settings_chord_degrees),
+        description = stringResource(Res.string.settings_chord_degrees_description),
+        isChecked = userPreferences?.areChordDegreesEnabled == true,
+        isEnabled = (areSongsEnabled && areChordsEnabled && areChordDiagramsEnabled && !isNumbering) ||
+            (userPreferences.isChordLibraryEnabled && userPreferences.areScalesEnabled),
+        onCheckedChange = preferencesController::setChordDegreesEnabled,
+    )
+}
+
+/**
+ * How the chords are written: their notation, their accidentals, whether a song's chords name the shapes fingered above
+ * its capo or what sounds, and whether its capo stepper keeps the key.
+ */
+@Composable
+private fun ChordNamesSection(
+    userPreferences: UserPreferences?,
+    preferencesController: PreferencesController,
+    showDialog: (DialogType) -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_group_chord_names)) {
     // The notation and the accidentals only decide how a chord or a key is written, so with nothing on that names one
     // they have nothing to say. They stay in the section rather than disappearing from it: what they are set to is still
     // what the chords will look like as soon as they are shown again. The accidentals stay enabled under a numbering,
@@ -66,7 +136,8 @@ internal fun ChordsSection(
     NotationChoice(
         selected = (userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default).notation,
         isEnabled = isEnabled,
-        onClicked = onNotationClicked,
+        // Over this page's sheet rather than in its place, so that picking one comes back here (DialogStack).
+        onClicked = { showDialog(DialogType.Notation) },
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),
@@ -85,7 +156,7 @@ internal fun ChordsSection(
             ),
             selected = userPreferences?.chordSpelling?.accidentals,
             isEnabled = isEnabled,
-            onSelected = onAccidentalsSelected,
+            onSelected = preferencesController::setAccidentals,
         )
     }
     // Only a song's chords are named by their shapes, so it says nothing with the songs' chords off, and nothing on the
@@ -104,7 +175,7 @@ internal fun ChordsSection(
             ),
             selected = userPreferences?.chordNames,
             isEnabled = canNameShapes,
-            onSelected = onChordNamesSelected,
+            onSelected = preferencesController::setChordNames,
         )
     }
     // Unlike the names, this moves what the band hears, so it applies on the keyboard too, whose capo stepper is the
@@ -114,7 +185,7 @@ internal fun ChordsSection(
         description = stringResource(Res.string.settings_capo_keeps_key_description),
         isChecked = userPreferences?.capoKeepsKey == true,
         isEnabled = userPreferences?.areSongsEnabled != false && userPreferences?.areChordsEnabled != false,
-        onCheckedChange = onCapoKeepsKeyChanged,
+        onCheckedChange = preferencesController::setCapoKeepsKey,
     )
 }
 

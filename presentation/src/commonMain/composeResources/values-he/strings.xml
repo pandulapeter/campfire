@@ -489,8 +489,12 @@
     <string name="settings_cover_art">תמונות עטיפה</string>
     <string name="settings_cover_art_description">הצגת עטיפת האלבום ששיר מציין לצידו, בהורדה חד־פעמית ושמירת עותק במכשיר הזה</string>
     <string name="settings_group_song_page">עמוד השיר</string>
-    <string name="settings_group_lists">רשימות</string>
-    <string name="settings_group_chords">אקורדים</string>
+    <string name="preferences_page_song">שיר</string>
+    <string name="settings_group_diagrams">דיאגרמות</string>
+    <string name="settings_group_chord_names">שמות</string>
+    <string name="settings_instrument">כלי נגינה</string>
+    <string name="settings_instrument_description">הכלי שבידיך והכיוון שלו, שלפיהם מוצגים הדיאגרמות, הטאבים והטיונר</string>
+    <string name="read_only_mark">קריאה בלבד מופעלת: פתיחת העדפות</string>
     <string name="settings_group_setup">הגדרה</string>
     <string name="settings_group_appearance">מראה</string>
     <string name="settings_group_playing">נגינה</string>
@@ -505,11 +509,6 @@
     <string name="settings_number_sections_description">הבחנה בין קטעים חוזרים שאין להם שם משלהם, כמו בית 1 ובית 2</string>
     <string name="settings_song_layout">פריסה</string>
     <string name="settings_song_layout_description">“עמודים” מציג על המסך כמה שיותר מהשיר בבת אחת. “רציף” הוא טור אחד שיכול לגלול מעצמו בקצב של השיר.</string>
-    <string name="settings_song_cards">כרטיסי שירים</string>
-    <string name="settings_song_cards_description">מה מוצג ברשימות מתחת לאמן של כל שיר.</string>
-    <string name="card_detail_key">טונליות</string>
-    <string name="card_detail_tempo">טמפו</string>
-    <string name="card_detail_duration">משך</string>
     <string name="settings_notation">כתיב אקורדים</string>
     <string name="settings_notation_description">איך האקורדים כתובים בזמן קריאה ועריכה של שירים. השירים תמיד נשמרים בכתיב הרגיל, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
     <string name="settings_notation_choose">בחירת כתיב</string>

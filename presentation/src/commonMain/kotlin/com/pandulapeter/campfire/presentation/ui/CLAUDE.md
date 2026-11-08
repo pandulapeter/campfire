@@ -65,8 +65,9 @@ The view model facade, the composition root, and the product rules every screen 
 
 ## Read only mode
 
-- `UserPreferences.isPerformanceModeEnabled` (first row of Settings → General, shown only while the songs are on; with
-  the songs off it is off in effect, `PreferencesController.isPerformanceModeEnabled`, the preference kept).
+- `UserPreferences.isPerformanceModeEnabled` (atop the Preferences, `ui/preferences`, shown only while the songs are
+  on; with the songs off it is off in effect, `PreferencesController.isPerformanceModeEnabled`, the preference kept).
+  Song details' bar shows a mark while it is on, opening the Preferences.
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls, which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
@@ -102,8 +103,8 @@ Tags, languages, cover, and links are directives in the song file, so they trave
   written into the file** (`{time}`), and the click counts by it. The **Song defaults sheet** (only from About the song)
   edits the file's four values; empty means the default.
 - Chords off removes key and capo; metronome off removes tempo and time, everywhere but the editor's preview.
-- Card details after the artist are chosen per list (`songCardDetails`, `setlistCardDetails`); tempo follows the
-  metronome switch (`CardDetails.isTempoShown`) without writing anything.
+- Card details after the artist are fixed per list (`SongCardOptions`): key and tempo on Songs, plus the duration on
+  Setlists; the key goes with the chords switch and the tempo with the metronome's, nothing written.
 
 ## Haptics
 
@@ -142,8 +143,8 @@ Features (Settings → Features):
 - **Online song details** (`isSongDetailsLookupEnabled`): the lookup button. **Cover art** (`isCoverArtEnabled`):
   fetching, drawing, and search.
 
-Song preferences (Settings → Preferences, also the song details menu), each disabled rather than hidden while another
-takes what it adds:
+Song preferences (the Preferences' Song and Chords pages, `ui/preferences`), each disabled rather than hidden while
+another takes what it adds:
 
 - **Chords** (`areChordsEnabled`): a song's chords, key, transposition, and capo; the chord spelling rows are disabled
   only once neither songs nor the Chords and Scales tabs name a chord.

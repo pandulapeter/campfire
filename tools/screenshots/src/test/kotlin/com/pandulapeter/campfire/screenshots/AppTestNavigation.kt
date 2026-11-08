@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.screenshots
 
+import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.resources.preferences_page_song
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
@@ -38,6 +40,10 @@ internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
     onNode(matcher).performTouchInput { click() }
     waitForIdle()
 }
+
+/** Picks the Preferences' Chords page, in Settings or in the sheet: its tab is the one beside the Song page's. */
+internal fun AppTestScope.openChordsPreferences() =
+    tap(hasText(string(Res.string.chords)) and hasClickAction() and hasAnySibling(hasText(string(Res.string.preferences_page_song))))
 
 internal fun AppTestScope.openSong() = tap(hasText(RISING_SUN_TITLE) and hasClickAction())
 

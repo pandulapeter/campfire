@@ -57,7 +57,8 @@ What the Tuner tab and song details' tuner sheet share.
   Paired-string instruments get a second row of partners; a unison pair is one note, so its segments act together. None
   for the keyboard and Other. Another instrument's strings crossfade in while their room resizes unclipped; a row
   leaving is drawn as it was but plays nothing.
-- **The tab alone** offers the instrument pill and the reference pitch. Both offer the Strings / Chromatic toggle,
+- **The tab alone** offers the instrument pill. Both offer the reference pitch (`ReferencePitchControls`) and the
+  Strings / Chromatic toggle,
   stored as `mode` (an older document's `isChromatic` is a dropped switch's, ignored). Chromatic dims the pill without
   changing the instrument, which the diagrams and scales share. The toggle is hidden for the keyboard and Other (pill
   never dimmed); on the tab it only fades, keeping its line, so the display never moves. Without microphone permission
@@ -74,4 +75,5 @@ What the Tuner tab and song details' tuner sheet share.
   line grows only on width, never on the keyboard. No label.
 - The display follows, above a `SettingsPage` that is all header, as wide as the display: the notice, the issue line,
   and the strings, untitled but with their hint (the sheet keeps the title). It keeps the screen on while it hears.
-- The sheet scrolls everything under its header: the same display at the same size (compact only in a short window).
+- The sheet scrolls everything under its header: the same display at the same size (compact only in a short window),
+  then the strings, then the reference pitch, centered, last since it is set once.

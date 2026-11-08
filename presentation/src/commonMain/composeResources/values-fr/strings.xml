@@ -458,8 +458,12 @@
     <string name="settings_cover_art">Pochettes</string>
     <string name="settings_cover_art_description">Affiche à côté d\'une chanson la pochette d\'album qu\'elle indique, téléchargée une seule fois et conservée sur cet appareil</string>
     <string name="settings_group_song_page">Page de chanson</string>
-    <string name="settings_group_lists">Listes</string>
-    <string name="settings_group_chords">Accords</string>
+    <string name="preferences_page_song">Chanson</string>
+    <string name="settings_group_diagrams">Diagrammes</string>
+    <string name="settings_group_chord_names">Noms</string>
+    <string name="settings_instrument">Instrument</string>
+    <string name="settings_instrument_description">L\'instrument entre tes mains et son accordage, que suivent les diagrammes, les tablatures et l\'accordeur</string>
+    <string name="read_only_mark">Lecture seule activée : ouvrir les Préférences</string>
     <string name="settings_group_setup">Configuration</string>
     <string name="settings_group_appearance">Apparence</string>
     <string name="settings_group_playing">Pour jouer</string>
@@ -474,11 +478,6 @@
     <string name="settings_number_sections_description">Distingue les sections répétées qui n\'ont pas de nom propre, comme Couplet 1 et Couplet 2</string>
     <string name="settings_song_layout">Mise en page</string>
     <string name="settings_song_layout_description">En pages, l\'écran montre le plus possible d\'une chanson à la fois. En continu, c\'est une seule colonne qui peut défiler toute seule au rythme de la chanson.</string>
-    <string name="settings_song_cards">Cartes de chanson</string>
-    <string name="settings_song_cards_description">Ce que chaque chanson affiche sous son artiste dans les listes.</string>
-    <string name="card_detail_key">Tonalité</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Durée</string>
     <string name="settings_notation">Notation des accords</string>
     <string name="settings_notation_description">La façon dont les accords s\'écrivent quand tu lis et modifies des chansons. Les chansons sont toujours enregistrées en notation standard, pour se lire de la même façon dans toutes les apps.</string>
     <string name="settings_notation_choose">Choisir la notation</string>

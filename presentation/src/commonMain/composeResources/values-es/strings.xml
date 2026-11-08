@@ -454,8 +454,12 @@
     <string name="settings_cover_art">Portadas</string>
     <string name="settings_cover_art_description">Muestra junto a cada canción la portada del álbum que indica, descargándola una vez y guardando una copia en este dispositivo</string>
     <string name="settings_group_song_page">Página de la canción</string>
-    <string name="settings_group_lists">Listas</string>
-    <string name="settings_group_chords">Acordes</string>
+    <string name="preferences_page_song">Canción</string>
+    <string name="settings_group_diagrams">Diagramas</string>
+    <string name="settings_group_chord_names">Nombres</string>
+    <string name="settings_instrument">Instrumento</string>
+    <string name="settings_instrument_description">El instrumento que tienes en las manos y su afinación, que siguen los diagramas, las tablaturas y el afinador</string>
+    <string name="read_only_mark">Solo lectura activado: abrir Preferencias</string>
     <string name="settings_group_setup">Configuración</string>
     <string name="settings_group_appearance">Apariencia</string>
     <string name="settings_group_playing">Para tocar</string>
@@ -470,11 +474,6 @@
     <string name="settings_number_sections_description">Distingue las secciones repetidas que no tienen nombre propio, como Estrofa 1 y Estrofa 2</string>
     <string name="settings_song_layout">Disposición</string>
     <string name="settings_song_layout_description">«Páginas» muestra a la vez la mayor parte posible de la canción. «Continua» es una sola columna que puede desplazarse sola al ritmo de la canción.</string>
-    <string name="settings_song_cards">Tarjetas de canciones</string>
-    <string name="settings_song_cards_description">Lo que muestra cada canción bajo su artista en las listas.</string>
-    <string name="card_detail_key">Tonalidad</string>
-    <string name="card_detail_tempo">Tempo</string>
-    <string name="card_detail_duration">Duración</string>
     <string name="settings_notation">Notación de acordes</string>
     <string name="settings_notation_description">Cómo se escriben los acordes mientras lees y editas canciones. Las canciones se guardan siempre en notación estándar, para que se lean igual en cualquier app.</string>
     <string name="settings_notation_choose">Elegir notación</string>

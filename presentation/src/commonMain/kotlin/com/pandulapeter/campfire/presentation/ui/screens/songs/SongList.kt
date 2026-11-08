@@ -49,7 +49,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.preferences.CardDetails
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -144,7 +143,7 @@ internal fun SongList(
     val songFileNamesInSetlists by libraryState.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val librarySummary by libraryState.librarySummary.collectAsStateWithLifecycle()
     val isImporting by importController.isImporting.collectAsStateWithLifecycle()
-    val cardOptions = SongCardOptions.of(userPreferences = userPreferences, details = userPreferences?.songCardDetails ?: CardDetails.SongsDefault)
+    val cardOptions = SongCardOptions.forSongs(userPreferences = userPreferences)
     val filePicker = LocalFilePicker.current
     val clipboardReader = rememberClipboardTextReader()
     val keyboardController = LocalSoftwareKeyboardController.current

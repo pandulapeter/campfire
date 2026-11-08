@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.screens.tuner
+package com.pandulapeter.campfire.presentation.ui.tuner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -40,9 +40,6 @@ import com.pandulapeter.campfire.presentation.ui.components.appBar.NEW_ITEM_BUTT
 import com.pandulapeter.campfire.presentation.ui.components.menu.NEW_ITEM_BUTTON_SIZE
 import com.pandulapeter.campfire.presentation.ui.metronome.PlayStopMark
 import com.pandulapeter.campfire.presentation.ui.songView.songControlHeight
-import com.pandulapeter.campfire.presentation.ui.tuner.REFERENCE_NOTE
-import com.pandulapeter.campfire.presentation.ui.tuner.noteName
-import com.pandulapeter.campfire.presentation.ui.tuner.noteNameWithOctave
 import com.pandulapeter.campfire.tuner.api.Pitch
 import org.jetbrains.compose.resources.painterResource
 
@@ -50,8 +47,8 @@ import org.jetbrains.compose.resources.painterResource
  * The frequency of A4 everything is tuned from, stepped by a hertz or typed the way the tempo is (and reset to 440 from
  * the focused value the same way), and a toggle that plays that A until it is tapped again: the pill and the filled
  * circle of the list screens' bar, where they stand on the Tuner tab (see `ToolInstrumentSetting`), under the instrument
- * where the line is too narrow for both, the pill as tall as the instrument's beside it, as on a song's page. There is no label to read; a screen reader hears the note with the
- * frequency.
+ * where the line is too narrow for both, the pill as tall as the instrument's beside it, as on a song's page, and under the strings of song details' tuner sheet. There is no label to read; a
+ * screen reader hears the note with the frequency.
  */
 @Composable
 internal fun ReferencePitchControls(

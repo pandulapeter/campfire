@@ -14,6 +14,11 @@ import kotlinx.serialization.Serializable
 /**
  * The on-disk shape of `preferences.json`. Every field is defaulted, so a document written by an older version keeps
  * loading instead of being discarded; the enums are stored by their stable `id` rather than by ordinal.
+ *
+ * The song cards' details were once chosen per list, under `isKeyShown`, `isTempoShown`, `isDurationShownOnSongCards`,
+ * `isKeyShownOnSetlistCards`, `isTempoShownOnSetlistCards`, `isDurationShownOnSetlistCards`, `tempoOnSongCards`, and
+ * `tempoOnSetlistCards`. They are no longer read, and are never given to another field: an older version still reads
+ * what it wrote there.
  */
 @Serializable
 internal data class UserPreferencesDocument(
@@ -58,20 +63,6 @@ internal data class UserPreferencesDocument(
     val isChordLibraryEnabled: Boolean = true,
     val areScalesEnabled: Boolean = true,
     val areScaleSuggestionsEnabled: Boolean = true,
-    // What the cards of the Songs screen show, under the names of the two switches that once decided the song details
-    // screen and the cards of both lists at once; the Setlists screen's cards follow them where a document has no
-    // switches of their own yet, since that is what they showed when it was written.
-    val isKeyShown: Boolean = true,
-    val isTempoShown: Boolean = true,
-    val isDurationShownOnSongCards: Boolean = false,
-    val isKeyShownOnSetlistCards: Boolean? = null,
-    val isTempoShownOnSetlistCards: Boolean? = null,
-    val isDurationShownOnSetlistCards: Boolean = true,
-    // The tempo picked for each list's cards, null where it has not been and the cards follow the metronome switch. Only
-    // these are written now, the two above (true by default, and so never a choice) only read for a document that has
-    // neither: a false there was picked, and a true is what the cards showed with the metronome on and only then.
-    val tempoOnSongCards: Boolean? = null,
-    val tempoOnSetlistCards: Boolean? = null,
     val instrument: String = "",
     val tunings: Map<String, String> = emptyMap(),
     val toolCapo: Int = 0,

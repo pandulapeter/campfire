@@ -104,7 +104,7 @@ internal class Navigator(
 
     val tunerScrollPosition = ScrollPosition()
 
-    val settingsScrollPositions = SettingsScrollPositions()
+    val settingsSession = SettingsSession()
 
     /**
      * Which tab of the settings screen is open, kept here so that the screen's own recompositions and the sync consent

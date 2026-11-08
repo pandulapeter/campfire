@@ -349,7 +349,7 @@ private fun SetlistEntryCard(
             song = entry.song,
             index = row.index,
             cardPadding = cardPadding,
-            key = renderedKey.takeIf { cardOptions.isKeyShown },
+            key = renderedKey,
             // And the setlist's own tempo, for the same reason.
             tempo = songPlaybackOf(
                 song = entry.song,

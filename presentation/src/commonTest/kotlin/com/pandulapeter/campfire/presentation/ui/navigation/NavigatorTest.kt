@@ -385,10 +385,10 @@ class NavigatorTest {
     fun `returning to settings from another screen keeps where each tab was scrolled to`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
-        navigator.settingsScrollPositions.pages.getValue(SettingsTab.LIBRARY).offset = 420
+        navigator.settingsSession.pages.getValue(SettingsTab.LIBRARY).offset = 420
         navigator.selectTopLevelDestination(CampfireDestination.Songs)
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
-        assertEquals(420, navigator.settingsScrollPositions.pages.getValue(SettingsTab.LIBRARY).offset)
+        assertEquals(420, navigator.settingsSession.pages.getValue(SettingsTab.LIBRARY).offset)
     }
 
     @Test
