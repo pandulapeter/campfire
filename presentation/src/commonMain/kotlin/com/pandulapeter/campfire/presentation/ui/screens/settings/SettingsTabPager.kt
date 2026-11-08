@@ -39,9 +39,9 @@ import kotlinx.coroutines.launch
  * Every page is composed with the screen ([HorizontalPager]'s `beyondViewportPageCount` covers them all), so a tab is
  * never first composed as it is swiped to.
  *
- * @param backProgress How far a predictive back gesture towards General has come, or null while there is none. The
- *   pages follow it the whole way from the open tab to General, the tabs between them passing by the way a press on
- *   General's tab passes them.
+ * @param backProgress How far a predictive back gesture towards the first tab has come, or null while there is none. The
+ *   pages follow it the whole way from the open tab to the first, the tabs between them passing by the way a press on
+ *   the first tab passes them.
  */
 @Composable
 internal fun SettingsTabPager(
@@ -74,8 +74,8 @@ internal fun SettingsTabPager(
     }
     // The gesture scrolls the pages inside one scroll that lasts as long as it does, rather than snapping them frame by
     // frame, since the settled page only stays put while a scroll is in progress and would otherwise write every tab
-    // passed on the way into settingsTab - General among them, which would end the gesture's handler halfway through.
-    // Letting go ends that scroll wherever the pages are, and they animate on from there: to General, which the handler
+    // passed on the way into settingsTab - the first tab among them, which would end the gesture's handler halfway through.
+    // Letting go ends that scroll wherever the pages are, and they animate on from there: to the first tab, which the handler
     // has just made the tab, or back to the tab the gesture started on when it was cancelled.
     LaunchedEffect(pagerState) {
         snapshotFlow { backProgress() != null }.collectLatest { isGestureInProgress ->

@@ -16,34 +16,30 @@ import kotlin.test.assertEquals
 class PreferencesPagesTest {
 
     @Test
-    fun `settings and song details show every page, opening on the song's`() {
-        listOf(PreferencesContext.SETTINGS, PreferencesContext.SONG_DETAILS).forEach { context ->
-            assertEquals(
-                listOf(PreferencesPage.SONG, PreferencesPage.CHORDS, PreferencesPage.METRONOME),
-                preferencesPages(context = context, userPreferences = testPreferences()),
-            )
-        }
+    fun `song details shows every page, general first`() = assertEquals(
+        listOf(PreferencesPage.GENERAL, PreferencesPage.SONG, PreferencesPage.CHORDS, PreferencesPage.METRONOME),
+        preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = testPreferences()),
+    )
+
+    @Test
+    fun `the chord tools show the general and the chords pages`() {
+        assertEquals(listOf(PreferencesPage.GENERAL, PreferencesPage.CHORDS), preferencesPages(context = PreferencesContext.CHORD_TOOLS, userPreferences = testPreferences()))
     }
 
     @Test
-    fun `the chord tools show only the chords page`() {
-        assertEquals(listOf(PreferencesPage.CHORDS), preferencesPages(context = PreferencesContext.CHORD_TOOLS, userPreferences = testPreferences()))
-    }
-
-    @Test
-    fun `a page whose feature is switched off is left out, the chords page always staying`() {
+    fun `a page whose feature is switched off is left out, the general and the chords pages always staying`() {
         val everythingOff = testPreferences().copy(areSongsEnabled = false, isMetronomeEnabled = false)
         PreferencesContext.entries.forEach { context ->
-            assertEquals(listOf(PreferencesPage.CHORDS), preferencesPages(context = context, userPreferences = everythingOff))
+            assertEquals(listOf(PreferencesPage.GENERAL, PreferencesPage.CHORDS), preferencesPages(context = context, userPreferences = everythingOff))
         }
         assertEquals(
-            listOf(PreferencesPage.SONG, PreferencesPage.CHORDS),
+            listOf(PreferencesPage.GENERAL, PreferencesPage.SONG, PreferencesPage.CHORDS),
             preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = testPreferences().copy(isMetronomeEnabled = false)),
         )
     }
 
     @Test
     fun `preferences not yet read show every page`() {
-        assertEquals(PreferencesPage.entries, preferencesPages(context = PreferencesContext.SETTINGS, userPreferences = null))
+        assertEquals(PreferencesPage.entries, preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = null))
     }
 }

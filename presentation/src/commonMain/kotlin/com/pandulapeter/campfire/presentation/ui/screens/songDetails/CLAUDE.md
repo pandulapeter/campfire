@@ -72,7 +72,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   beside all three (about 434dp), the cover only where it keeps 160dp beside all four. **The overflow button is always
   the bar's last.**
 - Both menus (read only mode's too) hold About the song (never in a preview) and Preferences (the sheet with every page,
-  opening on Song; written at once, so the song changes behind it), never let out as buttons.
+  opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 
 ## The questions asked once over a song
 

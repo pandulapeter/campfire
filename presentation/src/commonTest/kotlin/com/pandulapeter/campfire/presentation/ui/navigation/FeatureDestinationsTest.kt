@@ -94,7 +94,7 @@ internal class FeatureDestinationsTest {
 
     @Test
     fun `an address of a feature switched off opens the songs`() {
-        val songs = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.GENERAL)
+        val songs = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.HOME)
         val metronome = songs.copy(backStack = songs.backStack + CampfireDestination.Metronome)
         val setlistsSearch = songs.copy(backStack = songs.backStack + CampfireDestination.Setlists, isSetlistsSearchOpen = true)
 
@@ -119,7 +119,7 @@ internal class FeatureDestinationsTest {
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists, setlistSong, CampfireDestination.SongEditor(fileName = "a.cho")),
             isSongsSearchOpen = false,
             isSetlistsSearchOpen = false,
-            settingsTab = SettingsTab.GENERAL,
+            settingsTab = SettingsTab.HOME,
         )
 
         assertEquals(listOf(CampfireDestination.Songs), state.withoutDisabledFeatures(features(areSetlistsEnabled = false)).backStack)
@@ -180,7 +180,7 @@ internal class FeatureDestinationsTest {
 
     @Test
     fun `an address of any screen switched off opens the home screen alone`() {
-        val home = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.GENERAL)
+        val home = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = false, isSetlistsSearchOpen = false, settingsTab = SettingsTab.HOME)
         val allOff = features(
             areSongsEnabled = false,
             areSetlistsEnabled = false,
@@ -206,7 +206,7 @@ internal class FeatureDestinationsTest {
 
     @Test
     fun `an address with the songs switched off opens on the first tool, its search closed`() {
-        val search = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = true, isSetlistsSearchOpen = false, settingsTab = SettingsTab.GENERAL)
+        val search = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = true, isSetlistsSearchOpen = false, settingsTab = SettingsTab.HOME)
         val tuner = search.copy(backStack = search.backStack + CampfireDestination.Tuner, isSongsSearchOpen = false)
         val songsOff = features(areSongsEnabled = false, areSetlistsEnabled = false)
 

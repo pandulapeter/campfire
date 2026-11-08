@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding
+import com.pandulapeter.campfire.presentation.resources.settings_onboarding_description
 import com.pandulapeter.campfire.presentation.resources.ic_bug
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
@@ -91,6 +94,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun AboutSections(
     showDialog: (DialogType) -> Unit,
+    onOnboardingClicked: () -> Unit,
     onShareLink: (filePicker: FilePicker, link: String, subject: String) -> Unit,
     urlOpener: (String) -> Unit,
 ) {
@@ -108,6 +112,7 @@ internal fun AboutSections(
         processLogTitle = processLogActionTitle(filePicker),
         onProcessLogClicked = { showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
         onKeyboardShortcutsClicked = { showDialog(DialogType.KeyboardShortcuts) },
+        onOnboardingClicked = onOnboardingClicked,
     )
     LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { showDialog(DialogType.OpenSourceLicenses) })
 }
@@ -169,7 +174,16 @@ private fun HelpSection(
     processLogTitle: String,
     onProcessLogClicked: () -> Unit,
     onKeyboardShortcutsClicked: () -> Unit,
+    onOnboardingClicked: () -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_help)) {
+    // The steps the first run opens with, which start from what everything is set to now: help with setting the app up,
+    // rather than a preference of its own.
+    LinkListItem(
+        title = stringResource(Res.string.settings_onboarding),
+        description = stringResource(Res.string.settings_onboarding_description),
+        icon = painterResource(Res.drawable.ic_campfire),
+        onClick = onOnboardingClicked,
+    )
     // A desktop or a web build always lists them, the keyboard being how it is used; a phone or a tablet only while one
     // is attached, and the row comes and goes with it.
     AnimatedSettingsRow(isVisible = LocalShowsShortcutHints.current || ShortcutPlatforms.DESKTOP_AND_WEB.includes(appBuild)) {

@@ -172,12 +172,12 @@ class NavigatorTest {
     }
 
     @Test
-    fun `back from another settings tab goes to General first`() = runTest {
+    fun `back from another settings tab goes to the first tab first`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         navigator.settingsTab = SettingsTab.ABOUT
         navigator.navigateBack()
-        assertEquals(SettingsTab.GENERAL, navigator.settingsTab)
+        assertEquals(SettingsTab.HOME, navigator.settingsTab)
         assertEquals(2, navigator.backStack.size)
     }
 
@@ -415,7 +415,7 @@ class NavigatorTest {
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings),
             isSongsSearchOpen = false,
             isSetlistsSearchOpen = false,
-            settingsTab = SettingsTab.GENERAL,
+            settingsTab = SettingsTab.HOME,
         )
         assertFalse(navigator.restoreNavigationState(state))
         assertTrue(navigator.backStack.last() is CampfireDestination.SongEditor)

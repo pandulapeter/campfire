@@ -495,7 +495,6 @@
     <string name="settings_instrument">כלי נגינה</string>
     <string name="settings_instrument_description">הכלי שבידיך והכיוון שלו, שלפיהם מוצגים הדיאגרמות, הטאבים והטיונר</string>
     <string name="read_only_mark">קריאה בלבד מופעלת: פתיחת העדפות</string>
-    <string name="settings_group_setup">הגדרה</string>
     <string name="settings_group_appearance">מראה</string>
     <string name="settings_group_playing">נגינה</string>
     <string name="settings_group_online">ברשת</string>

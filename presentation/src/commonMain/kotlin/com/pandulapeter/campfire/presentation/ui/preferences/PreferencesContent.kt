@@ -10,12 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.preferences
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -34,75 +31,60 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
- * The Preferences, drawn the same as Settings' Preferences tab and as the sheet the screens they affect open: read only
- * mode ([PerformanceSection]) above everything, since it affects everything, then the [pages] under a secondary tab row
- * ([PreferencesPageRow]), lighter than Settings' own so that the one reads as nested in the other. A single page has no
- * row. Emits its two parts as siblings, so the caller's column spaces them as it spaces its sections.
+ * The page of the Preferences sheet that is picked, the same component Settings shows as the tab of that name, sliding
+ * in from the side of its button as another is picked; the sheet scrolls it above those buttons ([PreferencesFrame]).
  *
  * @param selectedPage Shown only while it is one of [pages]; a page whose feature has just been switched off gives way
- *   to the first one.
+ *   to the first one (see [shownPreferencesPage]).
  */
 @Composable
 internal fun PreferencesContent(
+    modifier: Modifier = Modifier,
     preferencesController: PreferencesController,
     metronomeController: MetronomeController,
     userPreferences: UserPreferences?,
     isPerformanceModeEnabled: Boolean,
     pages: List<PreferencesPage>,
     selectedPage: PreferencesPage,
-    onPageSelected: (PreferencesPage) -> Unit,
     showDialog: (DialogType) -> Unit,
 ) {
-    // Only there while the songs are, since everything it locks is about them.
-    AnimatedVisibility(
-        visible = userPreferences?.areSongsEnabled != false,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        PerformanceSection(
-            isPerformanceModeEnabled = isPerformanceModeEnabled,
-            areSetlistsEnabled = userPreferences?.areSetlistsEnabled != false,
-            onPerformanceModeChanged = preferencesController::setPerformanceModeEnabled,
-        )
-    }
-    val shownPage = selectedPage.takeIf { it in pages } ?: pages.first()
-    Column(modifier = Modifier.fillMaxWidth()) {
-        AnimatedVisibility(
-            visible = pages.size > 1,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            PreferencesPageRow(pages = pages, selectedPage = shownPage, onPageSelected = onPageSelected)
-        }
-        val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-        val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-        // The pages slide in the direction of their tabs, the outgoing one leaving as the next arrives, and the height
-        // follows from one page to the next, so that the sheet they are in grows and shrinks with them rather than
-        // jumping to the new page's height.
-        AnimatedContent(
+    val shownPage = shownPreferencesPage(pages, selectedPage)
+    val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    // The pages slide in the direction of their buttons, the outgoing one leaving as the next arrives, and the height
+    // follows from one page to the next, so that the sheet they are in grows and shrinks with them rather than jumping
+    // to the new page's height.
+    AnimatedContent(
+        modifier = modifier.fillMaxWidth(),
+        targetState = shownPage,
+        transitionSpec = {
+            val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+            (slideInHorizontally(slideSpec) { it * direction } + fadeIn(fadeSpec))
+                .togetherWith(slideOutHorizontally(slideSpec) { -it * direction } + fadeOut(fadeSpec))
+                .using(SizeTransform())
+        },
+    ) { page ->
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            targetState = shownPage,
-            transitionSpec = {
-                val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                (slideInHorizontally(slideSpec) { it * direction } + fadeIn(fadeSpec))
-                    .togetherWith(slideOutHorizontally(slideSpec) { -it * direction } + fadeOut(fadeSpec))
-                    .using(SizeTransform())
-            },
-        ) { page ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
-            ) {
-                when (page) {
-                    PreferencesPage.SONG -> SongPreferencesPage(userPreferences = userPreferences, preferencesController = preferencesController)
-                    PreferencesPage.CHORDS -> ChordsPreferencesPage(
-                        userPreferences = userPreferences,
-                        preferencesController = preferencesController,
-                        showDialog = showDialog,
-                    )
-                    PreferencesPage.METRONOME -> MetronomePlaybackSection(metronomeController = metronomeController)
-                }
+            verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
+        ) {
+            when (page) {
+                PreferencesPage.GENERAL -> GeneralPreferencesPage(
+                    userPreferences = userPreferences,
+                    preferencesController = preferencesController,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                )
+                PreferencesPage.SONG -> SongPreferencesPage(userPreferences = userPreferences, preferencesController = preferencesController)
+                PreferencesPage.CHORDS -> ChordsPreferencesPage(
+                    userPreferences = userPreferences,
+                    preferencesController = preferencesController,
+                    showDialog = showDialog,
+                )
+                PreferencesPage.METRONOME -> MetronomePlaybackSection(metronomeController = metronomeController)
             }
         }
     }
 }
+
+/** [selectedPage] while it is one of [pages], else the first of them. */
+internal fun shownPreferencesPage(pages: List<PreferencesPage>, selectedPage: PreferencesPage) = selectedPage.takeIf { it in pages } ?: pages.first()

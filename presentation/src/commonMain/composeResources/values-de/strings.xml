@@ -460,7 +460,6 @@
     <string name="settings_instrument">Instrument</string>
     <string name="settings_instrument_description">Das Instrument in deinen Händen und seine Stimmung, nach denen sich die Diagramme, die Tabs und das Stimmgerät richten</string>
     <string name="read_only_mark">Nur lesen ist an: Vorlieben öffnen</string>
-    <string name="settings_group_setup">Einrichtung</string>
     <string name="settings_group_appearance">Darstellung</string>
     <string name="settings_group_playing">Spielen</string>
     <string name="settings_group_online">Online</string>

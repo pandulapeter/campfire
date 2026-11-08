@@ -460,7 +460,6 @@
     <string name="settings_instrument">Hangszer</string>
     <string name="settings_instrument_description">A kezedben lévő hangszer és a hangolása, amelyhez az ábrák, a tabulatúrák és a hangoló igazodnak</string>
     <string name="read_only_mark">Csak olvasás bekapcsolva: Preferenciák megnyitása</string>
-    <string name="settings_group_setup">Kezdeti beállítás</string>
     <string name="settings_group_appearance">Megjelenés</string>
     <string name="settings_group_playing">Zenélés</string>
     <string name="settings_group_online">Online</string>

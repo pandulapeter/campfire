@@ -13,8 +13,8 @@
 The Metronome tab. The click's lifecycle is in `ui/metronome/CLAUDE.md`.
 
 - **The tab's `MetronomePanel` is never hidden**, so the click plays as on a song and can be stopped however far the
-  page is scrolled. Drawn `isProminent`, its play button sits where the list screens' New button does (under the tools'
-  button group too, as the Tuner's play circle), at the window's end whatever the page width cap.
+  page is scrolled. Drawn `isProminent`, its play button sits where the list screens' New button does (as the Tuner's
+  play circle), at the window's end whatever the page width cap.
 - A beat tap cycles accent, plain, and muted, stored per signature here (a song's panel stores them for that song).
 - Tempo: never highlighted and no reset, since it overrides nothing; the Italian marking is notation, not translated.
   Subdivision is clicks per beat (1 to 4), not note names, which depend on the bar and do not fit a phone.

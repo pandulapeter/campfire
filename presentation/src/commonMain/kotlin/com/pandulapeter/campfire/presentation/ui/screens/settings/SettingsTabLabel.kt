@@ -12,11 +12,13 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.chords
+import com.pandulapeter.campfire.presentation.resources.metronome
+import com.pandulapeter.campfire.presentation.resources.preferences_page_song
 import com.pandulapeter.campfire.presentation.resources.settings_about
 import com.pandulapeter.campfire.presentation.resources.settings_features
-import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_library
-import com.pandulapeter.campfire.presentation.resources.settings_preferences
+import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_sharing
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 
@@ -25,8 +27,10 @@ import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
 internal fun SettingsTab.label() = stringResource(
     when (this) {
         SettingsTab.GENERAL -> Res.string.settings_general
+        SettingsTab.SONG -> Res.string.preferences_page_song
+        SettingsTab.CHORDS -> Res.string.chords
+        SettingsTab.METRONOME -> Res.string.metronome
         SettingsTab.FEATURES -> Res.string.settings_features
-        SettingsTab.PREFERENCES -> Res.string.settings_preferences
         SettingsTab.LIBRARY -> Res.string.settings_library
         SettingsTab.SHARING -> Res.string.settings_sharing
         SettingsTab.ABOUT -> Res.string.settings_about

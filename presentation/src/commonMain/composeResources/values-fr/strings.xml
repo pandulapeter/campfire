@@ -464,7 +464,6 @@
     <string name="settings_instrument">Instrument</string>
     <string name="settings_instrument_description">L\'instrument entre tes mains et son accordage, que suivent les diagrammes, les tablatures et l\'accordeur</string>
     <string name="read_only_mark">Lecture seule activée : ouvrir les Préférences</string>
-    <string name="settings_group_setup">Configuration</string>
     <string name="settings_group_appearance">Apparence</string>
     <string name="settings_group_playing">Pour jouer</string>
     <string name="settings_group_online">En ligne</string>

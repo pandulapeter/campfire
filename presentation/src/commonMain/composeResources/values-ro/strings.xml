@@ -496,7 +496,6 @@
     <string name="settings_instrument">Instrument</string>
     <string name="settings_instrument_description">Instrumentul din mâinile tale și acordajul lui, după care se iau diagramele, tabulaturile și acordorul</string>
     <string name="read_only_mark">Doar citire este activat: deschide Preferințe</string>
-    <string name="settings_group_setup">Configurare</string>
     <string name="settings_group_appearance">Aspect</string>
     <string name="settings_group_playing">Cântat</string>
     <string name="settings_group_online">Online</string>

@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.overlappingActi
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Says on the song's bar that read only mode is on, and opens the Preferences, where it is switched off: a mode switched
+ * Says on the song's bar that read only mode is on, and opens the Preferences on their General page, where it is switched off: a mode switched
  * on by accident hides every way to change a song, and without a mark the player would only notice the edit actions
  * missing, with nothing on screen saying why. It stands right before the overflow button and reaches into it, as the
  * bar's other buttons do (`overlappingAction`).

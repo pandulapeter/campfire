@@ -47,9 +47,10 @@ import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContent
-import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
-import com.pandulapeter.campfire.presentation.ui.preferences.preferencesPages
+import com.pandulapeter.campfire.presentation.ui.metronome.MetronomePlaybackSection
+import com.pandulapeter.campfire.presentation.ui.preferences.ChordsPreferencesPage
+import com.pandulapeter.campfire.presentation.ui.preferences.GeneralPreferencesPage
+import com.pandulapeter.campfire.presentation.ui.preferences.SongPreferencesPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsPage
 import com.pandulapeter.campfire.presentation.ui.settingsPage.PageWidthLayout
@@ -84,13 +85,12 @@ internal fun SettingsScreen(
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
 ) {
-    // A build without sync leaves the Sharing tab out rather than offering a tab that cannot work, and an address that
-    // names it there opens General.
-    val tabs = remember(viewModel) {
-        SettingsTab.entries.filter { it != SettingsTab.SHARING || viewModel.syncController.syncProviders.isNotEmpty() }
-    }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    // A tab that cannot work is left out, and an address that names it, or a tab whose feature is switched off while it
+    // is open, opens the first tab.
+    val tabs = settingsTabs(hasSync = viewModel.syncController.syncProviders.isNotEmpty(), userPreferences = userPreferences)
     LaunchedEffect(tabs) {
-        snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.GENERAL }
+        snapshotFlow { viewModel.navigator.settingsTab }.collect { if (it !in tabs) viewModel.navigator.settingsTab = SettingsTab.HOME }
     }
     val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.navigator.settingsSession.pages.getValue(it)) }
     val coroutineScope = rememberCoroutineScope()
@@ -100,15 +100,15 @@ internal fun SettingsScreen(
         // the animation it interrupts ends in a CancellationException, which inside a plain collect would end the whole
         // collector, and every later press of the item with it, without a word. collectLatest runs each request in a
         // child of its own, so an interruption ends that request alone.
-        // A tab scrolled down is first taken to its top, and only a tab already there goes on to General.
+        // A tab scrolled down is first taken to its top, and only a tab already there goes on to the first tab.
         viewModel.navigator.scrollToTopRequests.collectLatest {
             if (it.destination == CampfireDestination.Settings) {
                 val currentScrollState = scrollStates[viewModel.navigator.settingsTab.ordinal]
                 if (currentScrollState.canScrollBackward) {
                     currentScrollState.animateScrollTo(0)
-                } else if (viewModel.navigator.settingsTab != SettingsTab.GENERAL) {
-                    viewModel.navigator.settingsTab = SettingsTab.GENERAL
-                    scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)
+                } else if (viewModel.navigator.settingsTab != SettingsTab.HOME) {
+                    viewModel.navigator.settingsTab = SettingsTab.HOME
+                    scrollStates[SettingsTab.HOME.ordinal].animateScrollTo(0)
                 }
             }
         }
@@ -119,10 +119,10 @@ internal fun SettingsScreen(
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
         state = backGesture,
-        isBackEnabled = viewModel.navigator.isSettingsBackToGeneral,
+        isBackEnabled = viewModel.navigator.isSettingsBackToHome,
         onBackCompleted = viewModel.navigator::navigateBack,
     )
-    // How far a predictive back gesture towards General has come, or null while there is none: both layouts preview
+    // How far a predictive back gesture towards the first tab has come, or null while there is none: both layouts preview
     // the step with it, so that the drag says what letting go will do, and the animation that follows a release picks
     // up from wherever the drag left the pages.
     val backProgress = remember(backGesture) {
@@ -135,7 +135,6 @@ internal fun SettingsScreen(
     }
     val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Read through a derived state, so that a run reporting every file it moves recomposes the sync section alone
     // rather than the whole screen for the one thing the tabs want to know about it.
     val syncState = viewModel.syncController.syncState.collectAsStateWithLifecycle()
@@ -167,13 +166,13 @@ internal fun SettingsScreen(
                         label = { it.label() },
                         onTabSelected = { if (it == viewModel.navigator.settingsTab) scrollTabToTop(it) else viewModel.navigator.settingsTab = it },
                     )
-                    // Seekable, so that a back gesture can hold the fade to General at the fraction the finger has
-                    // reached; letting go carries it on to General, and a cancelled gesture fades back from there.
+                    // Seekable, so that a back gesture can hold the fade to the first tab at the fraction the finger has
+                    // reached; letting go carries it on to the first tab, and a cancelled gesture fades back from there.
                     val pageTransition = remember { SeekableTransitionState(viewModel.navigator.settingsTab) }
                     LaunchedEffect(pageTransition) {
                         snapshotFlow { viewModel.navigator.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
-                            if (progress != null && tab != SettingsTab.GENERAL) {
-                                pageTransition.seekTo(fraction = progress, targetState = SettingsTab.GENERAL)
+                            if (progress != null && tab != SettingsTab.HOME) {
+                                pageTransition.seekTo(fraction = progress, targetState = SettingsTab.HOME)
                             } else {
                                 pageTransition.animateTo(tab)
                             }
@@ -238,22 +237,18 @@ private fun SettingsTabContent(
     contentPadding = contentPadding,
     section = {
         when (tab) {
-            SettingsTab.GENERAL -> GeneralSections(
-                preferencesController = viewModel.preferencesController,
-                onOnboardingClicked = viewModel::openOnboarding,
+            SettingsTab.GENERAL -> GeneralPreferencesPage(
                 userPreferences = userPreferences,
-            )
-            SettingsTab.FEATURES -> FeaturesSections(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
-            SettingsTab.PREFERENCES -> PreferencesContent(
                 preferencesController = viewModel.preferencesController,
-                metronomeController = viewModel.metronomeController,
-                userPreferences = userPreferences,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
-                pages = preferencesPages(context = PreferencesContext.SETTINGS, userPreferences = userPreferences),
-                selectedPage = viewModel.navigator.settingsSession.preferencesPage,
-                onPageSelected = { viewModel.navigator.settingsSession.preferencesPage = it },
+            )
+            SettingsTab.SONG -> SongPreferencesPage(userPreferences = userPreferences, preferencesController = viewModel.preferencesController)
+            SettingsTab.CHORDS -> ChordsPreferencesPage(
+                userPreferences = userPreferences,
+                preferencesController = viewModel.preferencesController,
                 showDialog = viewModel.dialogHost::showDialog,
             )
+            SettingsTab.METRONOME -> MetronomePlaybackSection(metronomeController = viewModel.metronomeController)
             SettingsTab.LIBRARY -> {
                 SyncSection(
                     syncController = viewModel.syncController,
@@ -281,8 +276,10 @@ private fun SettingsTabContent(
                 selectedTab = { viewModel.navigator.settingsTab },
                 onConnectSyncProvider = viewModel::connectSyncProvider,
             )
+            SettingsTab.FEATURES -> FeaturesSections(preferencesController = viewModel.preferencesController, userPreferences = userPreferences)
             SettingsTab.ABOUT -> AboutSections(
                 showDialog = viewModel.dialogHost::showDialog,
+                onOnboardingClicked = viewModel::openOnboarding,
                 onShareLink = viewModel.exportController::shareLink,
                 urlOpener = urlOpener,
             )

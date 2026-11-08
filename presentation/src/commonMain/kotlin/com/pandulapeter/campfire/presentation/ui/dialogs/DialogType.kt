@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
@@ -142,10 +143,12 @@ sealed interface DialogType {
     /**
      * The Preferences (`PreferencesContent`), opened from the screens they affect so that a reader changes them while
      * looking at what they change: the song details menu and its read only mode mark, and the Chords and the Scales
-     * tabs. The [context] decides which of the pages are there.
+     * tabs. The [context] decides which of the pages are there, and [page] is the one it opens on: the one the screen
+     * is about, or General, where read only mode is, for the mark that says the mode is on.
      */
     data class Preferences(
         val context: PreferencesContext,
+        val page: PreferencesPage,
     ) : DialogType
 
     /** Pages or one column that scrolls by itself, asked over the first song opened, see `AskForSongLayoutOnce`. */

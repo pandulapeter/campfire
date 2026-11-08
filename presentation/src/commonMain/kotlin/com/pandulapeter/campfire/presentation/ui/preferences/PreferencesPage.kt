@@ -13,39 +13,40 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 
 /**
  * One page of the Preferences, grouped by what it is about rather than by the screen it changes, so that one page serves
- * every screen it affects. The order is the tab row's everywhere.
+ * every screen it affects. The order is the same in the sheet's buttons and in Settings' tabs.
  */
 enum class PreferencesPage {
+    GENERAL,
     SONG,
     CHORDS,
     METRONOME,
 }
 
 /**
- * Where the Preferences are shown, which decides the pages they have: Settings has every one, and the sheet only those
- * that change something on the screen it is opened from, a page that would change nothing there being left out rather
- * than disabled. The Metronome tab opens no sheet, its page being on the tab itself.
+ * Where the Preferences sheet is opened from, which decides the pages it has: only those that change something on that
+ * screen, a page that would change nothing there being left out rather than disabled (Settings has a tab for every
+ * one). General changes every screen, so it is always there. The Metronome tab opens no sheet, its page being on the
+ * tab itself.
  */
 enum class PreferencesContext(
     val pages: List<PreferencesPage>,
 ) {
-    SETTINGS(PreferencesPage.entries),
     SONG_DETAILS(PreferencesPage.entries),
-    CHORD_TOOLS(listOf(PreferencesPage.CHORDS)),
+    CHORD_TOOLS(listOf(PreferencesPage.GENERAL, PreferencesPage.CHORDS)),
 }
 
 /**
  * The pages [context] shows, without the ones whose feature is switched off in Settings → Features: the Song page goes
- * with the songs, the Metronome page with the metronome. The Chords page always stays, since the Chords and the Scales
- * tabs name chords too. The first one is the page the sheet opens on.
+ * with the songs, the Metronome page with the metronome. General always stays, and so does the Chords page, since the
+ * Chords and the Scales tabs name chords too.
  */
 internal fun preferencesPages(
     context: PreferencesContext,
     userPreferences: UserPreferences?,
 ) = context.pages.filter { page ->
     when (page) {
+        PreferencesPage.GENERAL, PreferencesPage.CHORDS -> true
         PreferencesPage.SONG -> userPreferences?.areSongsEnabled != false
-        PreferencesPage.CHORDS -> true
         PreferencesPage.METRONOME -> userPreferences?.isMetronomeEnabled != false
     }
 }

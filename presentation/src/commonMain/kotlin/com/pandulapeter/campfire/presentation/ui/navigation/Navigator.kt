@@ -111,7 +111,7 @@ internal class Navigator(
      * can reach it. Like the scroll positions above it lasts for the session. The screen only reads it as it is composed,
      * but it is a state because the web build's address names the tab, and follows it.
      */
-    var settingsTab by mutableStateOf(SettingsTab.GENERAL)
+    var settingsTab by mutableStateOf(SettingsTab.HOME)
 
     /**
      * The tool that was on screen last, which the chrome's Tools item opens again (see `toolsItemDestination`),
@@ -139,12 +139,12 @@ internal class Navigator(
     val isOnboardingOnLastStep get() = nextOnboardingStep(onboardingStep, onboardingSteps()) == null
 
     /**
-     * Whether a way back out of the settings screen goes to its General tab rather than leaving it: the tabs are the
-     * first thing on the screen, and General is the one it opens on, so a Back from any other one is taken as a step back
-     * through them before it is a step back to the songs.
+     * Whether a way back out of the settings screen goes to its first tab rather than leaving it: the tabs are the
+     * first thing on the screen, and [SettingsTab.HOME] is the one it opens on, so a Back from any other one is taken as a
+     * step back through them before it is a step back to the songs.
      */
-    val isSettingsBackToGeneral
-        get() = backStack.lastOrNull() == CampfireDestination.Settings && settingsTab != SettingsTab.GENERAL
+    val isSettingsBackToHome
+        get() = backStack.lastOrNull() == CampfireDestination.Settings && settingsTab != SettingsTab.HOME
 
     /**
      * The song each song details screen on the back stack has settled on, by [CampfireDestination.SongDetails.id]: the
@@ -452,8 +452,8 @@ internal class Navigator(
     /**
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
      * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
-     * is thrown away without being asked about it first, and why a settings tab other than General goes back to that
-     * one before the screen is left ([isSettingsBackToGeneral]).
+     * is thrown away without being asked about it first, and why a settings tab other than the first goes back to that
+     * one before the screen is left ([isSettingsBackToHome]).
      *
      * @param isPredictiveBackCompleted Whether this is the pop a predictive back gesture ends in, see
      *   [navigationGeneration].
@@ -477,7 +477,7 @@ internal class Navigator(
             hasUnsavedEditorChanges() && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
                 dialogHost.showDialog(DialogType.UnsavedChanges)
             }
-            isSettingsBackToGeneral -> settingsTab = SettingsTab.GENERAL
+            isSettingsBackToHome -> settingsTab = SettingsTab.HOME
             isOnboardingBackToPreviousStep -> previousOnboardingStep(onboardingStep, onboardingSteps())?.let { showOnboardingStep(it) }
             else -> popBackStack(isPredictiveBackCompleted)
         }

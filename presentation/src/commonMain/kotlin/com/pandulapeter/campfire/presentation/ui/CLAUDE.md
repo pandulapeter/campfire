@@ -65,9 +65,9 @@ The view model facade, the composition root, and the product rules every screen 
 
 ## Read only mode
 
-- `UserPreferences.isPerformanceModeEnabled` (atop the Preferences, `ui/preferences`, shown only while the songs are
-  on; with the songs off it is off in effect, `PreferencesController.isPerformanceModeEnabled`, the preference kept).
-  Song details' bar shows a mark while it is on, opening the Preferences.
+- `UserPreferences.isPerformanceModeEnabled` (first row of the Preferences' General page, `ui/preferences`, shown only
+  while the songs are on; with the songs off it is off in effect, `PreferencesController.isPerformanceModeEnabled`, the
+  preference kept). Song details' bar shows a mark while it is on, opening the Preferences on General.
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls, which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.

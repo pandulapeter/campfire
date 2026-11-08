@@ -162,6 +162,27 @@ internal fun Modifier.fadingVerticalEdges(
     }
 }
 
+/**
+ * The painted bottom fade of [fadingVerticalEdges] for a page that ends above a control pinned under it (the tools'
+ * buttons) rather than one it scrolls behind, so that what reaches its bottom edge fades out as it would under a bar, as
+ * strongly as [strength] says, read while drawing: 0 while there is no control, 1 once it is all the way in.
+ */
+internal fun Modifier.fadingBottomEdge(strength: () -> Float, backgroundColor: Color) = drawWithCache {
+    val height = EDGE_FADE_SIZE.toPx()
+    val gradient = Brush.verticalGradient(
+        colors = listOf(backgroundColor.copy(alpha = 0f), backgroundColor),
+        startY = size.height - height,
+        endY = size.height,
+    )
+    onDrawWithContent {
+        drawContent()
+        val alpha = strength().coerceIn(0f, 1f)
+        if (alpha > 0f) {
+            drawRect(brush = gradient, topLeft = Offset(0f, size.height - height), size = Size(size.width, height), alpha = alpha)
+        }
+    }
+}
+
 /** [fadingVerticalEdges] for a container scrolled by [scrollState]. */
 internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState) = fadingVerticalEdges(
     scrolledFromTop = { scrollState.value },

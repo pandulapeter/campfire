@@ -763,7 +763,7 @@ class CampfireViewModel(
     /**
      * The chrome's Tools item (the navigation bar's, or a rail's too short for every item), opening [destination] (see
      * `toolsItemDestination`): pressed again on a tool at its top, it goes on to the first tool switched on, as the Settings
-     * item goes on to General.
+     * item goes on to its first tab.
      */
     fun selectToolsItem(destination: CampfireDestination.TopLevel) = selectTopLevelDestination(
         destination = destination,

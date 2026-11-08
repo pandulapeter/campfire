@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
  * @property areSetlistsEnabled Whether the Setlists tab is there, which needs the songs as well: a setlist is a list of
  *   them.
  * @property isChordLibraryEnabled Whether the Chords tab is there: a switch of its own, as the Scales one is, since how a
- *   song is read (its chords and their diagrams, Settings → Preferences) says nothing of whether a player looks chords up.
+ *   song is read (its chords and their diagrams, Settings → Song and Chords) says nothing of whether a player looks chords up.
  * @property areScalesEnabled Whether the Scales tab is there, and with it the scales a chord sheet suggests: a switch of
  *   its own, since a scale is played on any instrument, chords or not.
  * @property areScaleSuggestionsEnabled Whether songs and chord sheets suggest scales, which follows the Scale suggestions

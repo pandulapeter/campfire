@@ -460,7 +460,6 @@
     <string name="settings_instrument">Strumento</string>
     <string name="settings_instrument_description">Lo strumento che hai in mano e la sua accordatura, che seguono i diagrammi, le intavolature e l\'accordatore</string>
     <string name="read_only_mark">Sola lettura attiva: apri Preferenze</string>
-    <string name="settings_group_setup">Configurazione</string>
     <string name="settings_group_appearance">Aspetto</string>
     <string name="settings_group_playing">Suonare</string>
     <string name="settings_group_online">Online</string>

@@ -48,7 +48,7 @@ import kotlin.math.roundToInt
  *   own once the page being headed for changes. Read while laying the indicator out, so a swipe moves it without
  *   recomposing the row.
  * @param scrollState Where the row is scrolled, kept by the caller for the session: the row animates to the selected tab
- *   on its first layout unless it is already there, and a state made with the row would start at General every time.
+ *   on its first layout unless it is already there, and a state made with the row would start at the first tab every time.
  * @param startPadding The window insets on the start edge, so the tabs start after the cutout rather than under it.
  */
 @Composable

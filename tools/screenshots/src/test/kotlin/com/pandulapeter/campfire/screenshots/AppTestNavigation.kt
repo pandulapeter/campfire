@@ -9,17 +9,19 @@
  */
 package com.pandulapeter.campfire.screenshots
 
-import androidx.compose.ui.test.hasAnySibling
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.resources.preferences_page_song
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.onboarding_next
 import com.pandulapeter.campfire.presentation.resources.onboarding_start_playing
@@ -41,9 +43,23 @@ internal fun AppTestScope.tap(matcher: SemanticsMatcher) {
     waitForIdle()
 }
 
-/** Picks the Preferences' Chords page, in Settings or in the sheet: its tab is the one beside the Song page's. */
+/**
+ * Opens Settings on the tab named [tab]: found by its role, as a page composed beside it may have a row of that name,
+ * and scrolled into view first, as the tab row is wider than a phone.
+ */
+internal fun AppTestScope.openSettingsTab(tab: String) {
+    tap(hasText(string(Res.string.settings)) and hasClickAction())
+    val settingsTab = hasText(tab) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
+    onNode(settingsTab).performScrollTo()
+    tap(settingsTab)
+}
+
+/**
+ * Picks the Preferences sheet's Chords page: its button names the page only to accessibility
+ * services while another is picked, and is the one choice of that name in a group.
+ */
 internal fun AppTestScope.openChordsPreferences() =
-    tap(hasText(string(Res.string.chords)) and hasClickAction() and hasAnySibling(hasText(string(Res.string.preferences_page_song))))
+    tap(hasContentDescription(string(Res.string.chords)) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
 
 internal fun AppTestScope.openSong() = tap(hasText(RISING_SUN_TITLE) and hasClickAction())
 

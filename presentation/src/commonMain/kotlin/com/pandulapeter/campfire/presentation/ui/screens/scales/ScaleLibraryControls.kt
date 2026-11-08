@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.ToolInstrumentSettin
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesButton
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
 
 /**
@@ -47,7 +48,7 @@ internal fun ScaleLibraryControls(
     onInstrumentClicked = { showDialog(DialogType.Instrument) },
     onTuningClicked = { showDialog(DialogType.Tuning) },
     isTrailingAfterPill = true,
-    endAction = { PreferencesButton(onClick = { showDialog(DialogType.Preferences(PreferencesContext.CHORD_TOOLS)) }) },
+    endAction = { PreferencesButton(onClick = { showDialog(DialogType.Preferences(PreferencesContext.CHORD_TOOLS, PreferencesPage.CHORDS)) }) },
 ) {
     ToolCapoControls(
         capo = capo,

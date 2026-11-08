@@ -30,7 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.save
-import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -54,6 +53,7 @@ import com.pandulapeter.campfire.screenshots.openEditor
 import com.pandulapeter.campfire.screenshots.openNewSong
 import com.pandulapeter.campfire.screenshots.openSetlistDetails
 import com.pandulapeter.campfire.screenshots.openSongMetadata
+import com.pandulapeter.campfire.screenshots.openSettingsTab
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import com.pandulapeter.campfire.screenshots.textLayout
@@ -144,8 +144,7 @@ internal class SheetKeyboardBudgetTest {
         },
         // Nothing is typed into it and its Delete is never pressed: the check only reads where they are.
         SheetCase(name = "Delete library", action = Res.string.delete) {
-            tap(hasText(string(Res.string.settings)) and hasClickAction())
-            tap(hasText(string(Res.string.settings_library)) and hasClickAction())
+            openSettingsTab(string(Res.string.settings_library))
             // The row's own text is the library's size, and its click is announced as what it does.
             onNode(hasClickLabel(string(Res.string.settings_library_delete))).performScrollTo()
             tap(hasClickLabel(string(Res.string.settings_library_delete)))

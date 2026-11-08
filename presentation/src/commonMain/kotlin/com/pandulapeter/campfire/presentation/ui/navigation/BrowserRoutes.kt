@@ -21,9 +21,9 @@ import com.pandulapeter.campfire.data.model.song.Song
  * - `setlists`, and `setlists/search`;
  * - `metronome`;
  * - `tuner`;
- * - `settings/general`, directly on top of the home screen, and `settings/preferences`, `settings/library`,
- *   `settings/features` or `settings/about` on top of that while another tab is open — a Back from any other tab goes to General before it
- *   leaves the screen, so General is a step of its own, while one tab picked after another replaces the entry rather
+ * - `settings/general`, directly on top of the home screen, and `settings/song`, `settings/chords`, `settings/library`,
+ *   and the rest on top of that while another tab is open — a Back from any other tab goes to General before it leaves
+ *   the screen, so General is a step of its own, while one tab picked after another replaces the entry rather
  *   than adding one (`settings` alone opens the tab that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
@@ -83,8 +83,8 @@ internal object BrowserRoutes {
                 CampfireDestination.Scales -> add(SCALES)
 
                 CampfireDestination.Settings -> {
-                    add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
-                    if (inputs.settingsTab != SettingsTab.GENERAL) add("$SETTINGS/${inputs.settingsTab.pathSegment}")
+                    add("$SETTINGS/${SettingsTab.HOME.pathSegment}")
+                    if (inputs.settingsTab != SettingsTab.HOME) add("$SETTINGS/${inputs.settingsTab.pathSegment}")
                 }
                 // A preview names no file, and is the import's, as the import screen is.
                 is CampfireDestination.SongDetails -> if (destination.importPreview != null) {
@@ -112,13 +112,13 @@ internal object BrowserRoutes {
     /**
      * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
      * the back stack, one more for each list screen whose search is open, and one more for a settings screen open on a
-     * tab other than General. A dialog, the setlist reorder mode and the song selection mode are never part of [state], so
+     * tab other than its first. A dialog, the setlist reorder mode and the song selection mode are never part of [state], so
      * Forward to the entry of one that was closed is refused, and the browser is taken back to the screen under it.
      */
     fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
         destination == CampfireDestination.Songs && state.isSongsSearchOpen ||
                 destination == CampfireDestination.Setlists && state.isSetlistsSearchOpen ||
-                destination == CampfireDestination.Settings && state.settingsTab != SettingsTab.GENERAL
+                destination == CampfireDestination.Settings && state.settingsTab != SettingsTab.HOME
     }
 
     /**
@@ -283,12 +283,19 @@ internal object BrowserRoutes {
 
     private val SettingsTab.pathSegment get() = name.lowercase()
 
-    /** The tab a path segment names, where `songs` is the Preferences tab's address from before its rename, still in bookmarks. */
-    private fun settingsTabOf(segment: String) = SettingsTab.entries.firstOrNull { it.pathSegment == segment }
-        ?: SettingsTab.PREFERENCES.takeIf { segment == SONGS }
+    /**
+     * The tab a path segment names, where the addresses of tabs since split into others are still in bookmarks: `songs`,
+     * how a song is read, is the Song tab's, and `preferences`, which held every page, General's.
+     */
+    private fun settingsTabOf(segment: String) = SettingsTab.entries.firstOrNull { it.pathSegment == segment } ?: when (segment) {
+        SONGS -> SettingsTab.SONG
+        PREFERENCES -> SettingsTab.GENERAL
+        else -> null
+    }
 
     private const val ROOT = ""
     private const val SONGS = "songs"
+    private const val PREFERENCES = "preferences"
     private const val SEARCH = "search"
     private const val SETLISTS = "setlists"
     private const val METRONOME = "metronome"

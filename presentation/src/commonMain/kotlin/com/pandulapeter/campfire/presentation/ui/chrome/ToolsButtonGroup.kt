@@ -52,7 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_M
  * [areToolsGrouped]): a connected button group rather than a row of tabs, so that it does not read as the pages of one
  * screen that a swipe would turn, as the settings screen's tabs are. The selected button fills and morphs in place
  * instead of an indicator travelling across the row, matching the tool screens fading through under it rather than
- * sliding. It is capped at the settings tabs' width and starts where the lists start.
+ * sliding. It is capped at the settings tabs' width and starts where the lists start, at the bottom of the tool screens.
  *
  * Each button carries its tool's icon, the one its navigation item would have ([DestinationIcon]), since the chrome's
  * own item shows only the wrench; only the selected one also shows its name, widening as it does, since four names

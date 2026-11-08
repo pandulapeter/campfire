@@ -10,15 +10,16 @@
 
 # :presentation — ui/screens/settings
 
-Six tabs under a tab row (capped at 560dp) while that fits, else a category pane beside the selected page; the layouts
+Eight tabs under a tab row (capped at 560dp) while that fits, else a category pane beside the selected page; the layouts
 crossfade across the breakpoint, as do the wide layout's pages. A build without sync leaves Sharing out.
 
 ## Tab contents
 
-- **General**: Setup, Appearance (ending with the Tooltips switch), Language. Read only mode is not here.
-- **Preferences**: `PreferencesContent` (`ui/preferences/CLAUDE.md`), the same as the sheet: read only mode, then the
-  pages under a secondary tab row, every page there (minus switched-off features), the open one kept for the session
-  (`SettingsSession`). The wide layout's pane shows the same content, inner row included.
+- **General**, **Song**, **Chords**, **Metronome**: the Preferences' pages (`ui/preferences/CLAUDE.md`), each the same
+  component and name as in the Preferences sheet, so Settings has one tab row and nothing nested. General
+  (`SettingsTab.HOME`) is what the screen opens on, read only mode its first row. Song and Metronome go with their
+  features (`settingsTabs`, tested); `settings/preferences` and `settings/songs` addresses open General and Song.
+- Set up Campfire again leads About's Help.
 - **Library**: On this device last, since its rows can't be undone. Deleting the library wants `DELETE` typed in every
   language (into a capitalizing field).
 - **Sharing**: there while disconnected too. Stages crossfade, except the list arriving over "Nothing shared yet".

@@ -460,7 +460,6 @@
     <string name="settings_instrument">Instrument</string>
     <string name="settings_instrument_description">The instrument in your hands and its tuning, which the diagrams, the tabs, and the tuner follow</string>
     <string name="read_only_mark">Read only is on: open Preferences</string>
-    <string name="settings_group_setup">Setup</string>
     <string name="settings_group_appearance">Appearance</string>
     <string name="settings_group_playing">Playing</string>
     <string name="settings_group_online">Online</string>

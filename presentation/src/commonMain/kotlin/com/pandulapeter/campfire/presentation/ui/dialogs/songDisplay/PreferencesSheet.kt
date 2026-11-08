@@ -9,9 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs.songDisplay
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
@@ -25,23 +22,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_preferences
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContent
+import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesFrame
 import com.pandulapeter.campfire.presentation.ui.preferences.preferencesPages
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
- * Settings' Preferences tab over the screen it was opened from ([DialogType.Preferences]), with only the pages that
- * change something there: the same rows, written at once as they are there, so the screen behind the sheet changes as a
- * switch is flipped. It always opens on its first page (the Song page over a song), and the whole of it scrolls, since a
- * page is set once in a while rather than kept in reach.
+ * Settings' General, Song, Chords, and Metronome tabs as one sheet over the screen it was opened from
+ * ([DialogType.Preferences]), with only the pages that change something there: the same rows, written at once as they are there, so the screen behind the sheet changes as a
+ * switch is flipped. It opens on the page its caller names, at its full height; the page scrolls above the buttons
+ * that pick another ([PreferencesFrame]), which stay pinned at the bottom of the sheet.
  */
 @Composable
 internal fun PreferencesSheet(
@@ -53,30 +52,34 @@ internal fun PreferencesSheet(
     val userPreferences by preferencesController.userPreferences.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val pages = preferencesPages(context = dialog.context, userPreferences = userPreferences)
-    var selectedPage by rememberSaveable { mutableStateOf(pages.first()) }
+    var selectedPage by rememberSaveable { mutableStateOf(dialog.page) }
     CampfireBottomSheet(
         title = stringResource(Res.string.settings_preferences),
         onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .fillMaxWidth()
-                .fadingTopEdge(scrollState, sheetContainerColor())
-                .bounceVerticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
+        val backgroundColor = sheetContainerColor()
+        PreferencesFrame(
+            // As tall as the sheet can be whatever the page, so that the buttons stay where they are as one page gives
+            // way to a shorter or a taller one, rather than riding the sheet's edge up and down.
+            modifier = Modifier.weight(1f),
+            pages = pages,
+            selectedPage = selectedPage,
+            isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
+            buttonsPadding = contentPadding.only(bottom = true),
+            onPageSelected = { selectedPage = it },
         ) {
             PreferencesContent(
+                modifier = Modifier
+                    .fadingVerticalEdges(scrollState, backgroundColor)
+                    .bounceVerticalScroll(scrollState)
+                    .padding(bottom = 8.dp),
                 preferencesController = preferencesController,
                 metronomeController = metronomeController,
                 userPreferences = userPreferences,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
                 pages = pages,
                 selectedPage = selectedPage,
-                onPageSelected = { selectedPage = it },
                 // Over this sheet rather than in its place, so that picking one comes back here (DialogStack).
                 showDialog = dialogHost::showDialog,
             )

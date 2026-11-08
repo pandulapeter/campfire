@@ -16,11 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,13 +31,13 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 
 /**
  * The one [ToolsButtonGroup] the tool screens share while none of them carries a chrome of its own (see [ToolScreenFrame]),
- * laid over the room each of them keeps for it, next to the rail's room ([railWidth]) and under the status bar as the
- * screens are. It fades in and out as the stack arrives at a tool or leaves for another screen, and as a resized window
- * groups the tools behind the Tools item ([tools] not empty) or lets them go, while the screens fade through under it
- * or move into the room they keep for it; it keeps the tools and the tool it was on through its exit so that the
- * selection does not move away nor the buttons go blank first. The background is painted across the whole width and
- * under the status bar as well as behind the group, so that nothing of the screens fading through shows beside or above
- * it.
+ * laid over the room each of them keeps for it at its bottom, next to the rail's room ([railWidth]) and above the
+ * navigation bar ([bottomPadding]). It fades in and out as the stack arrives at a tool or leaves for another screen, as
+ * a resized window groups the tools behind the Tools item ([tools] not empty) or lets them go, and as the keyboard comes
+ * and goes, while the screens fade through under it or move into the room they keep for it; it keeps the tools and the
+ * tool it was on through its exit so that the selection does not move away nor the buttons go blank first. The
+ * background is painted across the whole width behind the group, so that nothing of the screens fading through shows
+ * beside it; the screens fade out above it themselves.
  *
  * It reads the back stack itself rather than being handed what is on top, so that a change of screens recomposes the
  * group rather than everything [CampfireScreens] lays out.
@@ -54,6 +50,7 @@ internal fun SharedToolsButtonGroup(
     destinations: List<CampfireDestination.TopLevel>,
     railWidth: () -> Dp,
     contentPadding: PaddingValues,
+    bottomPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
     onSelected: (CampfireDestination.TopLevel) -> Unit,
@@ -65,18 +62,19 @@ internal fun SharedToolsButtonGroup(
         if (current in tools) lastShownTool.value = current
         if (tools.isNotEmpty()) lastShownTools.value = tools
     }
+    val isKeyboardUp by rememberIsKeyboardUp()
     AnimatedVisibility(
         modifier = modifier,
-        visible = current in tools,
+        visible = current in tools && !isKeyboardUp,
         enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
         exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
     ) {
         ToolsButtonGroup(
             modifier = Modifier
                 .padding(ChromeRoomPadding(start = railWidth, bottom = NoChromeRoom))
+                .padding(bottomPadding.only(bottom = true))
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
-                .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)
                 .padding(contentPadding.only(start = true, end = true)),
             tools = tools.ifEmpty { lastShownTools.value },
             destinations = destinations,

@@ -55,7 +55,7 @@ class BrowserRoutesTest {
         backStack = listOf(CampfireDestination.Songs),
         isSongsSearchOpen = false,
         isSetlistsSearchOpen = false,
-        settingsTab = SettingsTab.GENERAL,
+        settingsTab = SettingsTab.HOME,
     )
 
     private fun songDetails(vararg fileNames: String, setlistFileName: String? = null, index: Int = 0) =
@@ -177,10 +177,14 @@ class BrowserRoutesTest {
     }
 
     @Test
-    fun `the songs settings tab's old address opens the preferences tab`() = assertEquals(
-        SettingsTab.PREFERENCES,
-        BrowserRoutes.resolve(path = "settings/songs", songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false)?.settingsTab,
-    )
+    fun `the addresses of settings tabs since split open the tabs they became`() {
+        mapOf("settings/songs" to SettingsTab.SONG, "settings/preferences" to SettingsTab.GENERAL).forEach { (path, tab) ->
+            assertEquals(
+                tab,
+                BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = home, isPerformanceModeEnabled = false)?.settingsTab,
+            )
+        }
+    }
 
     @Test
     fun `a bare settings address keeps the tab that was open`() = assertEquals(
@@ -329,11 +333,11 @@ class BrowserRoutesTest {
     @Test
     fun `a settings tab's address is opened forward with every main screen switched off`() {
         val features = features(areSongsEnabled = false, areToolsEnabled = false)
-        val onGeneral = home.copy(backStack = listOf(CampfireDestination.Settings))
-        val resolved = resolveForward("settings/preferences", depth = 1, features = features, current = onGeneral)
+        val onFirstTab = home.copy(backStack = listOf(CampfireDestination.Settings))
+        val resolved = resolveForward("settings/library", depth = 1, features = features, current = onFirstTab)
         val restored = resolved?.withoutDisabledFeatures(features)
         assertEquals(listOf<CampfireDestination>(CampfireDestination.Settings), restored?.backStack)
-        assertEquals(SettingsTab.PREFERENCES, restored?.settingsTab)
+        assertEquals(SettingsTab.LIBRARY, restored?.settingsTab)
     }
 
     @Test
@@ -348,8 +352,8 @@ class BrowserRoutesTest {
 
     @Test
     fun `an address deeper or shallower than its entry is refused`() {
-        assertNotNull(resolveForward("settings/preferences", depth = 2, features = features()))
-        assertNull(resolveForward("settings/preferences", depth = 1, features = features()))
+        assertNotNull(resolveForward("settings/library", depth = 2, features = features()))
+        assertNull(resolveForward("settings/library", depth = 1, features = features()))
     }
 
     /** A song details screen is identified by an id made up when it is opened, which no address carries. */

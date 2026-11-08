@@ -47,11 +47,14 @@ internal fun BoxScope.CampfireOverlays(
     // them and lets them go.
     if (!chromeInScreens) {
         SharedToolsButtonGroup(
+            modifier = Modifier.align(Alignment.BottomStart),
             backStack = viewModel.navigator.backStack,
             tools = groupedTools,
             destinations = viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle().value,
             railWidth = railWidth,
             contentPadding = shellContentPadding,
+            // Above the navigation bar, or the window's bottom inset where there is none, as the messages are.
+            bottomPadding = messagesPadding,
             metronomeBeat = metronomeBeat,
             isKeyboard = isKeyboard,
             onSelected = viewModel::selectTopLevelDestination,

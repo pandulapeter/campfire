@@ -15,12 +15,11 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollTo
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.settings
+import com.pandulapeter.campfire.presentation.resources.chords
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
 import com.pandulapeter.campfire.presentation.resources.settings_general
-import com.pandulapeter.campfire.presentation.resources.settings_preferences
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_dark
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
@@ -29,7 +28,7 @@ import com.pandulapeter.campfire.screenshots.APP_LANGUAGES
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.isWhole
-import com.pandulapeter.campfire.screenshots.openChordsPreferences
+import com.pandulapeter.campfire.screenshots.openSettingsTab
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import com.pandulapeter.campfire.screenshots.textLayout
@@ -44,8 +43,7 @@ internal class LabelsFitTest {
     fun `the accidentals are named in full on the smallest phone in every language`() = APP_LANGUAGES.forEach { language ->
         listOf(1f, 1.3f).forEach { textScale ->
             runAppTest(appearance = TestAppearance(language = language, textScale = textScale)) {
-                openSettingsTab(string(Res.string.settings_preferences))
-                openChordsPreferences()
+                openSettingsTab(string(Res.string.chords))
                 assertSegmentsWhole(
                     case = "${language.id} at $textScale",
                     labels = listOf(Res.string.settings_accidentals_original, Res.string.settings_accidentals_flats, Res.string.settings_accidentals_sharps).map { string(it) },
@@ -79,11 +77,6 @@ internal class LabelsFitTest {
             assertEquals(1, layout.lineCount, "${language.id}: \"$label\" is broken onto ${layout.lineCount} lines.")
             assertTrue(layout.isWhole, "${language.id}: \"$label\" is cut short.")
         }
-    }
-
-    private fun AppTestScope.openSettingsTab(tab: String) {
-        tap(hasText(string(Res.string.settings)) and hasClickAction())
-        tap(hasText(tab) and hasClickAction())
     }
 
     /** Scrolls to the segments named [labels] and checks each label's own text, every place it is shown, whole. */

@@ -40,7 +40,7 @@ class SyncConsentTest {
 
     @Test
     fun `a connect tapped on the settings screen is answered there`() {
-        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null, settingsTab = SettingsTab.GENERAL))
+        assertEquals(SyncConsentOrigin.Settings, syncConsentOriginOf(CampfireDestination.Settings, visibleDialog = null, settingsTab = SettingsTab.HOME))
     }
 
     @Test
@@ -54,14 +54,14 @@ class SyncConsentTest {
 
     @Test
     fun `a connect tapped in a first run's onboarding is answered there`() {
-        assertEquals(SyncConsentOrigin.Onboarding, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false), visibleDialog = null, settingsTab = SettingsTab.GENERAL))
+        assertEquals(SyncConsentOrigin.Onboarding, syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = false), visibleDialog = null, settingsTab = SettingsTab.HOME))
     }
 
     @Test
     fun `a connect tapped in an onboarding opened from the settings is answered there`() {
         assertEquals(
             SyncConsentOrigin.OnboardingFromSettings,
-            syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true), visibleDialog = null, settingsTab = SettingsTab.GENERAL),
+            syncConsentOriginOf(CampfireDestination.Onboarding(isOpenedFromSettings = true), visibleDialog = null, settingsTab = SettingsTab.HOME),
         )
     }
 

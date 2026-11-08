@@ -55,5 +55,8 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - The tools stay top level destinations (addresses, restored stack, tuner listening unchanged). The item opens the tool
   on top, else `Navigator.lastTool`, else the first enabled; pressed again it scrolls to top, then goes to the first
   tool (`ScrollToTopRequest.destinationWhenAtTop`).
-- One `SharedToolsButtonGroup` is laid over all tool screens (each keeps room via `ToolScreenFrame`) so its selection
-  morphs; under a card or the export screen each draws its own copy, like the chrome copies.
+- **The group sits at the bottom**, above the navigation bar (next to the Tools item, in the thumb's reach): each tool
+  screen keeps room under itself (`ToolScreenFrame`) and fades out at its bottom edge above it (`fadingBottomEdge`).
+  It leaves while the keyboard is up (`rememberIsKeyboardUp`), the search and its results needing the room.
+- One `SharedToolsButtonGroup` is laid over all tool screens so its selection morphs; under a card or the export screen
+  each draws its own copy, like the chrome copies.

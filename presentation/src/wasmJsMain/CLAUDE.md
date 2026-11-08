@@ -78,7 +78,7 @@ close.
   multi-entry Back is taken one step at a time, two frames apart.
 - **Chrome skips entries added without a user gesture**, so:
   - entries just left are gone forward to, never pushed again;
-  - a non-General settings tab sits on top of an existing `settings/general` entry (`isSettingsBackToGeneral`);
+  - a non-General settings tab sits on top of an existing `settings/general` entry (`isSettingsBackToHome`);
   - a deep link's songs entry is skipped by Back until the user touches the page (unavoidable).
 - Forward restores the `NavigationState` recorded for the entry, trimmed to what the library still holds and never
   reopening a finished, skipped, or closed onboarding; an address is only used if it is exactly as deep as the entry

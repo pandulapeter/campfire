@@ -10,27 +10,33 @@
 
 # :presentation — ui/preferences
 
-How a song is read, played, and clicked, set in one place: `PreferencesContent`, drawn identically as Settings'
-Preferences tab and as the Preferences sheet (`dialogs/songDisplay/PreferencesSheet.kt`). **Never a second UI for the
+How the app looks and a song is read, played, and clicked: four pages, each drawn identically as a Settings tab of its
+own name and as a page of the Preferences sheet (`dialogs/songDisplay/PreferencesSheet.kt`, `PreferencesContent`). **Never a second UI for the
 same setting**: a page is one component wherever it appears (the Metronome page is `ui/metronome`'s
 `MetronomePlaybackSection`, also the Metronome tab's second section).
 
 ## Layout
 
-- Read only mode (`PerformanceSection`, only while the songs are on) above everything, in every context; then a
-  Material secondary tab row of pages (lighter than Settings' primary row, flat, no divider); no row for one page.
-- Pages: **Song** (layout, the Chords switch, i.e. lyrics only, scale suggestions, section numbers), **Chords**
+- The pages are picked by a connected button group (`PreferencesPageButtons`), as the tools are switched: an icon each,
+  the picked one named and wider. Never a second tab row (tabs nested in Settings') nor chips (read as a setting).
+- **The sheet's buttons are pinned at its bottom** (`PreferencesFrame`): the page scrolls above them and fades out at
+  its bottom edge, so another page is picked from anywhere down this one, within the thumb's reach. The sheet is always
+  at its full height, so the buttons never move as a page gives way to a shorter or taller one. Settings has no
+  buttons: its own tab row picks the page, as nested navigation (tabs over buttons) read as two.
+- Pages: **General** (read only mode, `PerformanceSection`, only while the songs are on; Appearance, ending with the
+  Tooltips switch; Language), **Song** (layout, the Chords switch, i.e. lyrics only, scale suggestions, section numbers), **Chords**
   (Diagrams: the instrument and tuning, diagrams, degrees; Names: notation, accidentals, chord names with a capo, capo
   keeps the key), **Metronome** (sound, volume, tempo change, visual beat, vibrate). Same order everywhere.
-- Pages slide in their tabs' direction and the height follows (`SizeTransform`), so the sheet grows and shrinks.
-- The whole content scrolls, in the sheet too: nothing is typed, so nothing needs pinning.
+- Pages slide in their buttons' direction and the height follows (`SizeTransform`), so the sheet grows and shrinks.
+- Nothing is typed into the Preferences, so the pinned buttons never meet the keyboard.
 
 ## Contexts (`PreferencesContext`, `preferencesPages`, tested)
 
 - A page that changes nothing on the screen the sheet is opened from is hidden, never disabled: song details has
-  every page, the Chords and Scales tabs only Chords; Settings has all. A page whose feature is off goes (Song with the
-  songs, Metronome with the metronome); Chords always stays.
-- The sheet opens on its first page (Song over a song); Settings keeps its page for the session (`SettingsSession`).
+  every page, the Chords and Scales tabs General and Chords. A page whose feature is off goes (Song
+  with the songs, Metronome with the metronome); General and Chords always stay.
+- The sheet opens on the page its caller names (`DialogType.Preferences.page`): Song from song details' menu, General
+  from the read only mark, Chords from the Chords and Scales tabs.
 - Choices the rows open (notation, instrument, tuning) stack over the sheet (`DialogStack`), so a pick comes back.
 
 ## Rows

@@ -460,7 +460,6 @@
     <string name="settings_instrument">Instrumento</string>
     <string name="settings_instrument_description">El instrumento que tienes en las manos y su afinación, que siguen los diagramas, las tablaturas y el afinador</string>
     <string name="read_only_mark">Solo lectura activado: abrir Preferencias</string>
-    <string name="settings_group_setup">Configuración</string>
     <string name="settings_group_appearance">Apariencia</string>
     <string name="settings_group_playing">Para tocar</string>
     <string name="settings_group_online">En línea</string>
