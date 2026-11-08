@@ -239,10 +239,10 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   stops and asks; a run starts on every return to the front, unless the last one was stopped or is waiting for an
   answer about deletions, and another device's change starts one while in front; shared copies follow the library,
   and a share stops only by an explicit action.
-- **Metronome** (`metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a timer; a
-  click never outlives its screen; tempo overrides live where transpositions do.
-- **Tuner** (`tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers its
-  first ask.
+- **Metronome** (`libs/metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a
+  timer; a click never outlives its screen; tempo overrides live where transpositions do.
+- **Tuner** (`libs/tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers
+  its first ask.
 - **Cover art** and **song details lookup** (`data/source/remote/implementation`, `data/repository/implementation`,
   `ui/dialogs`): lookup only fills the form's draft; Save is the only write.
 - **Updates** (`ui/update`): Play in-app updates on Android only; the release's `updatePriority` is the policy.
