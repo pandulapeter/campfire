@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,6 +35,8 @@ import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeController
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContent
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesFrame
 import com.pandulapeter.campfire.presentation.ui.preferences.preferencesPages
+import com.pandulapeter.campfire.presentation.ui.preferences.shownPreferencesPage
+import kotlinx.coroutines.launch
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
@@ -58,6 +61,7 @@ internal fun PreferencesSheet(
         onDismiss = { dialogHost.dismissSheet(dialog) },
     ) { contentPadding ->
         val scrollState = rememberScrollState()
+        val coroutineScope = rememberCoroutineScope()
         val backgroundColor = sheetContainerColor()
         PreferencesFrame(
             modifier = Modifier.weight(1f, fill = false),
@@ -65,7 +69,14 @@ internal fun PreferencesSheet(
             selectedPage = selectedPage,
             isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,
             buttonsPadding = contentPadding.only(bottom = true),
-            onPageSelected = { selectedPage = it },
+            // The page already open is taken to its top, as a tab pressed again is everywhere else.
+            onPageSelected = { page ->
+                if (page == shownPreferencesPage(pages, selectedPage)) {
+                    coroutineScope.launch { scrollState.animateScrollTo(0) }
+                } else {
+                    selectedPage = page
+                }
+            },
         ) {
             PreferencesContent(
                 modifier = Modifier
