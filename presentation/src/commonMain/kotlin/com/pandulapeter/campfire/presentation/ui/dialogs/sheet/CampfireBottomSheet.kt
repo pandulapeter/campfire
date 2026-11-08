@@ -284,7 +284,7 @@ internal fun CampfireBottomSheet(
                     // A sheet nested inside this one's content is not the dialog the request was for.
                     LocalIsSheetCloseRequested provides false,
                     LocalSheetSaveShortcut provides saveShortcut,
-                    LocalSheetPendingGrowth provides heightAnimation::pendingGrowth,
+                    LocalSheetHeightLag provides heightAnimation::heightLag,
                 ) {
                     SheetHeader(
                         title = title,

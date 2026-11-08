@@ -39,8 +39,8 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 /**
  * Settings' General, Song, Chords, and Metronome tabs as one sheet over the screen it was opened from
  * ([DialogType.Preferences]), with only the pages that change something there: the same rows, written at once as they are there, so the screen behind the sheet changes as a
- * switch is flipped. It opens on the page its caller names, at its full height; the page scrolls above the buttons
- * that pick another ([PreferencesFrame]), which stay pinned at the bottom of the sheet.
+ * switch is flipped. It opens on the page its caller names, as tall as that page; the page scrolls above the
+ * buttons that pick another ([PreferencesFrame]), which stay pinned at the bottom of the sheet.
  */
 @Composable
 internal fun PreferencesSheet(
@@ -60,9 +60,7 @@ internal fun PreferencesSheet(
         val scrollState = rememberScrollState()
         val backgroundColor = sheetContainerColor()
         PreferencesFrame(
-            // As tall as the sheet can be whatever the page, so that the buttons stay where they are as one page gives
-            // way to a shorter or a taller one, rather than riding the sheet's edge up and down.
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f, fill = false),
             pages = pages,
             selectedPage = selectedPage,
             isKeyboard = userPreferences?.instrument == UserPreferences.Instrument.KEYBOARD,

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.preferences
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -51,9 +52,9 @@ internal fun PreferencesContent(
     val shownPage = shownPreferencesPage(pages, selectedPage)
     val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-    // The pages slide in the direction of their buttons, the outgoing one leaving as the next arrives, and the height
-    // follows from one page to the next, so that the sheet they are in grows and shrinks with them rather than jumping
-    // to the new page's height.
+    // The pages slide in the direction of their buttons, the outgoing one leaving as the next arrives. The size is the
+    // new page's at once: the sheet animates its own height to it, and a second animation of the same height here would
+    // have the two disagree, the buttons under the page bobbing between them.
     AnimatedContent(
         modifier = modifier.fillMaxWidth(),
         targetState = shownPage,
@@ -61,7 +62,7 @@ internal fun PreferencesContent(
             val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
             (slideInHorizontally(slideSpec) { it * direction } + fadeIn(fadeSpec))
                 .togetherWith(slideOutHorizontally(slideSpec) { -it * direction } + fadeOut(fadeSpec))
-                .using(SizeTransform())
+                .using(SizeTransform { _, _ -> snap() })
         },
     ) { page ->
         Column(

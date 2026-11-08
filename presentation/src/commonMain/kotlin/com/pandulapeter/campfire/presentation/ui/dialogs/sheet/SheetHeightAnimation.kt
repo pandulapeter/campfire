@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
  * new maximum on every frame of its own animation, or the window being resized) is followed at once, or the sheet
  * would trail behind the keyboard and leave a gap over it. While the sheet is growing the content is already measured
  * at its new height and placed under the animated one, so the content is uncovered from the sheet's bottom edge, which
- * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.pendingGrowth].
+ * the sheet's shape clips, and how much of it is still covered is [SheetHeightAnimation.heightLag].
  *
  * Content that fills the sheet at its tallest keeps filling the room offered at every offset, whether or not it would
  * still need all of it. Material anchors the expanded sheet at the window's height less the sheet's, and the sheet's
@@ -78,30 +78,28 @@ internal fun Modifier.animateSheetContentHeight(state: SheetHeightAnimation, unc
             }
             animatable.value.roundToInt().coerceIn(constraints.minHeight, constraints.maxHeight)
         }
-        state.pendingGrowthState.intValue = (targetHeight - height).coerceAtLeast(0)
+        state.heightLagState.intValue = targetHeight - height
         layout(placeable.width, height) { placeable.placeRelative(0, 0) }
     }
 }
 
 /**
  * What [animateSheetContentHeight] animates, the maximum height it was offered last and the height it snapped to for
- * that, which is not state: it is only read and written by its measure pass. [pendingGrowth] is, since the content
- * reads it as it is placed ([followSheetGrowth]), in the same frame.
+ * that, which is not state: it is only read and written by its measure pass. [heightLag] is, since the content reads
+ * it as it is placed ([followSheetGrowth], [stayOnSheetBottom]), in the same frame.
  */
 internal class SheetHeightAnimation {
     var animatable: Animatable<Float, AnimationVector1D>? = null
     var maxHeight = 0
     var snappedHeight: Int? = null
-    val pendingGrowthState = mutableIntStateOf(0)
+    val heightLagState = mutableIntStateOf(0)
 
-    fun pendingGrowth() = pendingGrowthState.intValue
+    /** How far the sheet's height is behind its content's: positive while it grows, negative while it shrinks. */
+    fun heightLag() = heightLagState.intValue
 }
 
-/**
- * How many pixels the [CampfireBottomSheet] around it still has to grow to its content's height, 0 while it is not
- * growing.
- */
-internal val LocalSheetPendingGrowth = staticCompositionLocalOf<() -> Int> { { 0 } }
+/** [SheetHeightAnimation.heightLag] of the [CampfireBottomSheet] around it, 0 while its height is not animating. */
+internal val LocalSheetHeightLag = staticCompositionLocalOf<() -> Int> { { 0 } }
 
 /**
  * Keeps the rows of a list in a growing [CampfireBottomSheet] where they are on screen. The sheet's top edge rises as it
@@ -115,6 +113,18 @@ internal val LocalSheetPendingGrowth = staticCompositionLocalOf<() -> Int> { { 0
  */
 @Composable
 internal fun Modifier.followSheetGrowth(): Modifier {
-    val pendingGrowth = LocalSheetPendingGrowth.current
-    return clipToBounds().offset { IntOffset(0, -pendingGrowth()) }
+    val heightLag = LocalSheetHeightLag.current
+    return clipToBounds().offset { IntOffset(0, -heightLag().coerceAtLeast(0)) }
+}
+
+/**
+ * Keeps a row pinned under the content of a [CampfireBottomSheet] (the Preferences' page buttons) on the sheet's bottom
+ * edge while the sheet's height animates to its content's: the content is measured at its new height at once and hangs
+ * from the sheet's top, so the row, placed under it, would ride above the edge while the sheet shrinks to it and hide
+ * under it while the sheet grows. Shifted by what the sheet's height still lags behind, it stays where it is on screen.
+ */
+@Composable
+internal fun Modifier.stayOnSheetBottom(): Modifier {
+    val heightLag = LocalSheetHeightLag.current
+    return offset { IntOffset(0, -heightLag()) }
 }

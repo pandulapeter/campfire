@@ -25,7 +25,8 @@
 - A title is one line; a sheet with no text input may wrap it, since no keyboard budget counts its header.
 - **Content height changes animate**, but a change of the room offered (keyboard, resize) is followed in the same frame
   so the sheet never trails the keyboard. Checklists shift rows by what the sheet still has to grow
-  (`followSheetGrowth`) so a ticked row stays under the finger. Content that fills the sheet keeps filling the room at
+  (`followSheetGrowth`) so a ticked row stays under the finger, and a row pinned under the content keeps the sheet's
+  bottom edge (`stayOnSheetBottom`). Content that fills the sheet keeps filling the room at
   every drag offset (`uncoveredTopInset`), else a grid overflowing by less than the status bar oscillates the anchor and
   snaps the sheet back under the finger.
 - The close button runs `sheetState.hide()` then clears the dialog itself: Material calls `onDismissRequest` only for a

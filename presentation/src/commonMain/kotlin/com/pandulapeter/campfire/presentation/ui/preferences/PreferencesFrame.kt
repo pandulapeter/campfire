@@ -14,6 +14,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,13 +23,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
+import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.stayOnSheetBottom
 import com.pandulapeter.campfire.presentation.ui.settingsPage.MAX_COLUMN_WIDTH
 
 /**
- * The Preferences' [content] with the buttons that pick its page ([PreferencesPageButtons]) pinned under it, in Settings
- * and in the sheet alike: the content scrolls by itself above them, fading out at its bottom edge as it would under a
- * bar, so that another page is picked from wherever this one has been scrolled to, and the buttons sit where the thumb
- * is. A single page has no buttons, and the content reaches the bottom.
+ * The Preferences sheet's [content] with the buttons that pick its page ([PreferencesPageButtons]) pinned under it: the
+ * content scrolls by itself above them, fading out at its bottom edge as it would under a bar, so that another page is
+ * picked from wherever this one has been scrolled to, and the buttons sit where the thumb is. The sheet takes each page's
+ * height, its top edge moving as another is picked; the buttons stay on its bottom edge meanwhile ([stayOnSheetBottom]),
+ * over the sheet's own color, so that what the page has not uncovered yet passes under them. A single page has no
+ * buttons, and the content reaches the bottom.
  *
  * @param buttonsPadding Around the buttons: the window's inset under them, and the sides the content keeps.
  */
@@ -42,10 +47,11 @@ internal fun PreferencesFrame(
     onPageSelected: (PreferencesPage) -> Unit,
     content: @Composable () -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
-    Box(modifier = Modifier.weight(1f)) {
+    Box(modifier = Modifier.weight(1f, fill = false)) {
         content()
     }
     AnimatedVisibility(
+        modifier = Modifier.stayOnSheetBottom().background(sheetContainerColor()),
         visible = pages.size > 1,
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
