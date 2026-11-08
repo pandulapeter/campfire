@@ -70,6 +70,10 @@ model, use cases, repositories, and files in a temporary home — and drives it 
 - **The keyboard** is the test's to raise (`keyboardHeight`). It reaches the app twice, through
   `LocalPlatformWindowInsets` and through the scene's own insets, since a dialog (every bottom sheet) is a layer of the
   scene and `imePadding` reads its root's insets, not the composition's.
+- **The platform** is Android's phone unless a test passes `platform`: it has no keyboard, so tooltips name no keys
+  and the desktop's shortcuts (Ctrl+1 … 6) are not heard. A test of keys or hints passes `ImpersonatedPlatform.WINDOWS`
+  in `TestWindow.DESKTOP`, whose keys are Ctrl on any machine, and writes them with `keys(KeyShortcut.X)`. Keys are
+  sent to `onRoot()` with `performKeyInput`, hovering with `performMouseInput { enter(center) }`.
 - **Back** is the test's to send too (`pressBack`, `swipeBack`): only the desktop app's window turns Escape into a back
   event.
 - **`viewModel` and `dataDirectory`** reach the paths no screen drives, the exit and the pause (`AppExitTest`): a holder

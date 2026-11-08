@@ -52,9 +52,8 @@ as in the root `CLAUDE.md`.
 - The reading position is screen-local: `pageScrollStates` (`SongDetailsScreen.kt`), the `SongStepper`
   (`screens/songDetails/stepping/`), and the pager's state. Only the settled song reaches shared state
   (`Navigator.onSongDetailsPageSettled`). Step 2 publishes the visible line range too.
-- The keys: `songKeyboardShortcuts` (`SongKeyboardShortcuts.kt`); Blackout gets `B`, as in presentation software. If
-  the `KeyShortcut` table of `tooltips-and-shortcuts.md` has landed by then, `B` is declared there and listed in its
-  shortcuts sheet.
+- The keys: `songKeyboardShortcuts` (`SongKeyboardShortcuts.kt`); Blackout gets `B`, as in presentation software, declared
+  in the `KeyShortcut` table (`ui/components/shortcuts`) so that the shortcuts sheet lists it.
 - Feature switches: `UserPreferences`, `UserPreferencesDocument` and its mappers, `PreferencesController`,
   `FeaturesSections.kt`, `FeatureSwitches.kt`, with `isTunerEnabled` as the template.
 - Desktop: one `SwingWindow` in `CampfireDesktopApplication.kt`; the window owns the `ViewModelStore`, so the second

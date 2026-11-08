@@ -22,18 +22,16 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.key_ctrl
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_tooltips
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyNames
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.label
-import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
+import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.test.Test
@@ -94,20 +92,19 @@ internal class TooltipTest {
         val searchName = string(Res.string.songs_search)
         onNodeWithContentDescription(searchName).performTouchInput { longClick() }
         waitUntil { onAllNodes(hasText(searchName)).fetchSemanticsNodes().isNotEmpty() }
-        val names = KeyNames(
-            ctrl = string(Res.string.key_ctrl),
-            shift = "",
-            space = "",
-            enter = "",
-            escape = "",
-            pageUp = "",
-            pageDown = "",
-            home = "",
-            end = "",
-            scroll = "",
-        )
-        val keys = KeyShortcut.FIND.chord.label(isApple = isAppleKeyboard, names = names)
+        val keys = keys(KeyShortcut.FIND)
         assertFalse(onAllNodes(hasText(keys, substring = true)).fetchSemanticsNodes().isNotEmpty(), "A phone without a keyboard is shown \"$keys\".")
+    }
+
+    @Test
+    fun `on a desktop resting the mouse on an icon button shows its name and its keys`() = runAppTest(
+        window = TestWindow.DESKTOP,
+        platform = ImpersonatedPlatform.WINDOWS,
+    ) {
+        val searchName = string(Res.string.songs_search)
+        onNodeWithContentDescription(searchName).performMouseInput { enter(center) }
+        val tooltip = hasText(searchName, substring = true) and hasText(keys(KeyShortcut.FIND), substring = true)
+        waitUntil { onAllNodes(tooltip).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun AppTestScope.sortButton() = onNodeWithContentDescription(string(Res.string.songs_sort))

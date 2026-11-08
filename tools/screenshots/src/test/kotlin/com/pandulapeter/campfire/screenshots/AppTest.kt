@@ -38,9 +38,23 @@ import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.localization.pluralTemplate
 import com.pandulapeter.campfire.presentation.localization.withTexts
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.key_ctrl
+import com.pandulapeter.campfire.presentation.resources.key_end
+import com.pandulapeter.campfire.presentation.resources.key_enter
+import com.pandulapeter.campfire.presentation.resources.key_escape
+import com.pandulapeter.campfire.presentation.resources.key_home
+import com.pandulapeter.campfire.presentation.resources.key_page_down
+import com.pandulapeter.campfire.presentation.resources.key_page_up
+import com.pandulapeter.campfire.presentation.resources.key_scroll
+import com.pandulapeter.campfire.presentation.resources.key_shift
+import com.pandulapeter.campfire.presentation.resources.key_space
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyNames
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.label
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
+import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -56,8 +70,8 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
- * A window the app is tested in, drawn at a density of one as an Android device, so that what is asserted about its
- * size is the dp the app decides by. No system bars are drawn over it.
+ * A window the app is tested in, drawn at a density of one, so that what is asserted about its size is the dp the app
+ * decides by. No system bars are drawn over it.
  */
 internal class TestWindow(val width: Dp, val height: Dp) {
     companion object {
@@ -66,6 +80,9 @@ internal class TestWindow(val width: Dp, val height: Dp) {
 
         /** The smallest phone held on its side. */
         val PHONE_ON_ITS_SIDE = TestWindow(width = 640.dp, height = 360.dp)
+
+        /** A laptop's window, for a test impersonating [ImpersonatedPlatform.WINDOWS]. */
+        val DESKTOP = TestWindow(width = 1024.dp, height = 720.dp)
     }
 }
 
@@ -94,6 +111,10 @@ internal data class TestAppearance(
  * app before would hold them (the shared links' mirror). With [isSyncConnected] false, sync shows no account instead of
  * `Fakes.kt`'s.
  *
+ * The app is drawn as [platform] draws it: Android's phone by default, which has no keyboard, so its tooltips name no
+ * keys and the desktop's shortcuts are not heard; [ImpersonatedPlatform.WINDOWS] is the desktop with a keyboard, whose
+ * keys are written as Ctrl+F on whatever machine runs the test.
+ *
  * With [isFirstRun] the data directory starts empty instead, as a fresh install's does: no preferences, so the
  * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to
  * [appearance]'s language.
@@ -111,6 +132,7 @@ internal fun runAppTest(
     isFirstRun: Boolean = false,
     isSyncConnected: Boolean = true,
     preferenceFiles: Map<String, String> = emptyMap(),
+    platform: ImpersonatedPlatform = ImpersonatedPlatform.ANDROID,
     test: suspend AppTestScope.() -> Unit,
 ) {
     if (isFirstRun) {
@@ -127,6 +149,7 @@ internal fun runAppTest(
     try {
         runApp(
             window = window,
+            platform = platform,
             pickedFiles = pickedFiles,
             appearance = appearance,
             fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
@@ -144,13 +167,14 @@ internal fun runAppTest(
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class, InternalTestApi::class)
 private fun runApp(
     window: TestWindow,
+    platform: ImpersonatedPlatform,
     pickedFiles: List<ImportedFile>,
     appearance: TestAppearance,
     fakes: List<Module>,
     writeData: (File) -> Unit,
     test: suspend AppTestScope.() -> Unit,
 ) = withCampfireApp(
-    platform = ImpersonatedPlatform.ANDROID,
+    platform = platform,
     chrome = SystemChrome.None,
     density = 1f,
     writeData = writeData,
@@ -266,6 +290,23 @@ internal class AppTestScope(
 
     /** The text of [resource] for [count] as the app shows it in the test's language, the count filling its first argument. */
     fun pluralString(resource: PluralStringResource, count: Int) = pluralTemplate(resource, count, locale).withTexts(count.toString())
+
+    /** How [shortcut] is written in a hint on the platform the test impersonates (`Ctrl+F`), in the test's language. */
+    fun keys(shortcut: KeyShortcut) = shortcut.chord.label(
+        isApple = isAppleKeyboard,
+        names = KeyNames(
+            ctrl = string(Res.string.key_ctrl),
+            shift = string(Res.string.key_shift),
+            space = string(Res.string.key_space),
+            enter = string(Res.string.key_enter),
+            escape = string(Res.string.key_escape),
+            pageUp = string(Res.string.key_page_up),
+            pageDown = string(Res.string.key_page_down),
+            home = string(Res.string.key_home),
+            end = string(Res.string.key_end),
+            scroll = string(Res.string.key_scroll),
+        ),
+    )
 
     /** Waits for the app to write [condition] true of the library, which it does off the main thread. */
     fun waitForLibrary(condition: () -> Boolean) = waitUntil(timeoutMillis = WRITE_TIMEOUT_MILLIS, condition = condition)
