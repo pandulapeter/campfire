@@ -85,6 +85,7 @@ fun CampfireWebApp(
     )
     SearchShortcutEffect(viewModel)
     EditShortcutEffect(viewModel)
+    ScreenShortcutEffect(viewModel)
     PasteShortcutEffect(viewModel)
     // Read only mode takes no drop, which the page says as the drag passes over it rather than as it ends.
     LaunchedEffect(viewModel) { viewModel.preferencesController.isPerformanceModeEnabled.collect(::refuseDrops) }
@@ -113,9 +114,9 @@ fun CampfireWebApp(
         onDispose { stopWarningBeforeUnload() }
     }
     // A browser acts on these keys before Compose hears them, so the shell's own listeners answer them and keep the
-    // browser from its find bar, its page zoom where the song's text is zoomed instead, and from reading a paste, which
-    // arrives as an event of its own; the metronome's listen on the whole page, which has the keys before the canvas
-    // has the focus.
+    // browser from its find bar, its page zoom where the song's text is zoomed instead, its tabs and settings where a main
+    // screen is selected, and from reading a paste, which arrives as an event of its own; the metronome's listen on the
+    // whole page, which has the keys before the canvas has the focus.
     ProvideKeyboardInsets {
         CompositionLocalProvider(LocalKeysLeftToShell provides KEYS_LEFT_TO_BROWSER) {
             CampfireApp(
@@ -299,7 +300,8 @@ private val KEYS_LEFT_TO_BROWSER = setOf(
     KeyShortcut.FIND,
     KeyShortcut.PASTE,
     KeyShortcut.METRONOME,
+    KeyShortcut.TAP_TEMPO,
     KeyShortcut.ZOOM_IN,
     KeyShortcut.ZOOM_OUT,
     KeyShortcut.ZOOM_RESET,
-)
+) + SHELL_SCREEN_SHORTCUTS

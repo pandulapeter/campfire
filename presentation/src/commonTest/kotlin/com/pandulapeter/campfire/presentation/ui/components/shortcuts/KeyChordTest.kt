@@ -17,8 +17,8 @@ import kotlin.test.assertTrue
 
 class KeyChordTest {
 
-    private val english = KeyNames(ctrl = "Ctrl", shift = "Shift", space = "Space")
-    private val german = KeyNames(ctrl = "Strg", shift = "Umschalt", space = "Leertaste")
+    private val english = KeyNames(ctrl = "Ctrl", shift = "Shift", space = "Space", enter = "Enter")
+    private val german = KeyNames(ctrl = "Strg", shift = "Umschalt", space = "Leertaste", enter = "Eingabe")
 
     @Test
     fun `a chord is written with the modifiers' names and plus signs, in the language's words`() {
@@ -51,8 +51,37 @@ class KeyChordTest {
     }
 
     @Test
-    fun `no two shortcuts share their keys`() {
-        val chords = KeyShortcut.entries.flatMap { shortcut -> (shortcut.chord.alternates + shortcut.chord.key).map { it to shortcut.chord.isCommand } }
-        assertEquals(chords.size, chords.toSet().size)
+    fun `no two shortcuts share their keys, Shift telling apart only the ones that look at it`() {
+        KeyShortcut.entries.forEach { first ->
+            KeyShortcut.entries.filter { it.ordinal > first.ordinal }.forEach { second ->
+                val sharedKeys = (first.chord.alternates + first.chord.key).intersect(second.chord.alternates + second.chord.key)
+                val isShiftShared = listOf(true, false).any { isShift ->
+                    sharedKeys.any { key ->
+                        first.chord.matches(key, isCtrlOrMeta = first.chord.isCommand, isShift = isShift, isAlt = false) &&
+                            second.chord.matches(key, isCtrlOrMeta = first.chord.isCommand, isShift = isShift, isAlt = false)
+                    }
+                }
+                assertFalse(isShiftShared, "${first.name} and ${second.name}")
+            }
+        }
+    }
+
+    @Test
+    fun `undo, redo, and the editor search's steps are told apart by Shift`() {
+        assertTrue(KeyShortcut.UNDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = false, isAlt = false))
+        assertFalse(KeyShortcut.UNDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = true, isAlt = false))
+        assertTrue(KeyShortcut.REDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = true, isAlt = false))
+        assertTrue(KeyShortcut.FIND_PREVIOUS.chord.matches(Key.F3, isCtrlOrMeta = false, isShift = true, isAlt = false))
+        assertFalse(KeyShortcut.FIND_NEXT.chord.matches(Key.F3, isCtrlOrMeta = false, isShift = true, isAlt = false))
+        assertTrue(KeyShortcut.FIND_NEXT_FROM_QUERY.chord.matches(Key.NumPadEnter, isCtrlOrMeta = false, isShift = false, isAlt = false))
+    }
+
+    @Test
+    fun `the new chords are written with their keys' names`() {
+        assertEquals("Ctrl+Shift+↑", KeyShortcut.TRANSPOSE_UP.chord.label(isApple = false, names = english))
+        assertEquals("⇧⌘↓", KeyShortcut.TRANSPOSE_DOWN.chord.label(isApple = true, names = english))
+        assertEquals("Shift+F3", KeyShortcut.FIND_PREVIOUS.chord.label(isApple = false, names = english))
+        assertEquals("Umschalt+Eingabe", KeyShortcut.FIND_PREVIOUS_FROM_QUERY.chord.label(isApple = false, names = german))
+        assertEquals("⌘,", KeyShortcut.SETTINGS.chord.label(isApple = true, names = english))
     }
 }

@@ -1377,4 +1377,5 @@
     <string name="key_ctrl">Strg</string>
     <string name="key_shift">Umschalt</string>
     <string name="key_space">Leertaste</string>
+    <string name="key_enter">Eingabe</string>
 </resources>

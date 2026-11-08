@@ -74,5 +74,6 @@ The songs screen.
 - **Nothing on screen moves under a tick**: the first visible card outside the group is kept in place.
 - The bar keeps search, sort, and filter; New gives way to the selection menu, which stays while search is open. Actions
   are disabled while nothing is ticked or a write runs.
+- Ctrl / Cmd + A is Select all (a focused search field keeps it for its text).
 - Actions run in the screen's sort order; one song is shared as the row's Share song, several through the export
   screen. **There is no bulk delete.**

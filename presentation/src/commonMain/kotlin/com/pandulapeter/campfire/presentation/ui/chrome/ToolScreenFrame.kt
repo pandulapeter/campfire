@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 internal fun ToolScreenFrame(
     destination: CampfireDestination.TopLevel,
     tools: List<CampfireDestination.TopLevel>,
+    destinations: List<CampfireDestination.TopLevel>,
     isButtonGroupDrawn: Boolean,
     contentPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
@@ -72,6 +73,7 @@ internal fun ToolScreenFrame(
                     .padding(contentPadding.only(start = true, end = true))
                     .wrapContentHeight(unbounded = true),
                 tools = shownTools,
+                destinations = destinations,
                 selected = destination,
                 metronomeBeat = metronomeBeat,
                 isKeyboard = isKeyboard,

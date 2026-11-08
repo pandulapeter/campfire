@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsButtonGroup
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
 import com.pandulapeter.campfire.presentation.ui.messages.Messages
@@ -48,6 +49,7 @@ internal fun BoxScope.CampfireOverlays(
         SharedToolsButtonGroup(
             backStack = viewModel.navigator.backStack,
             tools = groupedTools,
+            destinations = viewModel.preferencesController.topLevelDestinations.collectAsStateWithLifecycle().value,
             railWidth = railWidth,
             contentPadding = shellContentPadding,
             metronomeBeat = metronomeBeat,

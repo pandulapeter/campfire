@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireScreens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -41,7 +42,9 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tools
+import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.components.ShrinkToFit
+import com.pandulapeter.campfire.presentation.ui.navigation.screenShortcutOf
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.metronome.rememberMetronomeIconBeat
 import com.pandulapeter.campfire.presentation.resources.tools
@@ -138,25 +141,17 @@ internal fun NavigationChrome(
         ) {
             items.forEach { (item, isShown) ->
                 NavigationItemPresence(isShown = isShown) { presence ->
-                    WideNavigationRailItem(
-                        modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
-                        selected = item.isSelected(currentTopLevelDestination),
-                        onClick = { onItemClick(item) },
-                        enabled = isShown,
-                        colors = WideNavigationRailItemDefaults.colors().let {
-                            it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
-                        },
-                        icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
-                        label = {
-                            Text(
-                                text = stringResource(item.label),
-                                modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        railExpanded = true,
-                    )
+                    NavigationItemTooltip(Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false), item, destinations) {
+                        WideNavigationRailItem(
+                            selected = item.isSelected(currentTopLevelDestination),
+                            onClick = { onItemClick(item) },
+                            enabled = isShown,
+                            colors = wideRailItemColors(),
+                            icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                            label = { ExpandedRailLabel(stringResource(item.label)) },
+                            railExpanded = true,
+                        )
+                    }
                 }
             }
         }
@@ -176,17 +171,16 @@ internal fun NavigationChrome(
             ) {
                 items.forEach { (item, isShown) ->
                     NavigationItemPresence(isShown = isShown) { presence ->
-                        NavigationRailItem(
-                            modifier = Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false),
-                            selected = item.isSelected(currentTopLevelDestination),
-                            onClick = { onItemClick(item) },
-                            enabled = isShown,
-                            colors = NavigationRailItemDefaults.colors().let {
-                                it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
-                            },
-                            icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
-                            label = { NavigationItemLabel(stringResource(item.label)) },
-                        )
+                        NavigationItemTooltip(Modifier.collapsingNavigationItem(presence = presence, isHorizontal = false), item, destinations) {
+                            NavigationRailItem(
+                                selected = item.isSelected(currentTopLevelDestination),
+                                onClick = { onItemClick(item) },
+                                enabled = isShown,
+                                colors = railItemColors(),
+                                icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                                label = { NavigationItemLabel(stringResource(item.label)) },
+                            )
+                        }
                     }
                 }
             }
@@ -195,26 +189,71 @@ internal fun NavigationChrome(
         NavigationBar {
             items.forEach { (item, isShown) ->
                 NavigationItemPresence(isShown = isShown) { presence ->
-                    NavigationBarItem(
-                        // The bar hands its width out by weight, and the outermost weight is the one it reads, so this
-                        // one rather than the item's own decides the slot. A weight cannot be zero.
+                    // The bar hands its width out by weight, and the outermost weight is the one it reads, so the
+                    // tooltip's rather than the item's own decides the slot, and the item fills it. A weight cannot be zero.
+                    NavigationItemTooltip(
                         modifier = Modifier
                             .weight(presence().coerceAtLeast(MIN_NAVIGATION_ITEM_WEIGHT))
                             .collapsingNavigationItem(presence = presence, isHorizontal = true),
-                        selected = item.isSelected(currentTopLevelDestination),
-                        onClick = { onItemClick(item) },
-                        enabled = isShown,
-                        colors = NavigationBarItemDefaults.colors().let {
-                            it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
-                        },
-                        icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
-                        label = { NavigationItemLabel(stringResource(item.label)) },
-                    )
+                        item = item,
+                        destinations = destinations,
+                    ) {
+                        NavigationBarItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            selected = item.isSelected(currentTopLevelDestination),
+                            onClick = { onItemClick(item) },
+                            enabled = isShown,
+                            colors = barItemColors(),
+                            icon = { NavigationBarItemIcon(item = item, metronomeBeat = metronomeBeat, isKeyboard = isKeyboard) },
+                            label = { NavigationItemLabel(stringResource(item.label)) },
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/**
+ * The keys that select [item] where they work, the item's tooltip: the label it shows already, so only the keys
+ * ([screenShortcutOf]), and nothing for the Tools item, whose tools are numbered in their button group.
+ */
+@Composable
+private fun NavigationItemTooltip(
+    modifier: Modifier,
+    item: NavigationBarItem,
+    destinations: List<CampfireDestination.TopLevel>,
+    content: @Composable () -> Unit,
+) = CampfireTooltip(
+    modifier = modifier,
+    label = null,
+    shortcut = (item as? NavigationBarItem.Destination)?.let { screenShortcutOf(it.destination, destinations) },
+    content = content,
+)
+
+/** An item's colors, disabled ones being the unselected ones: an item is disabled only while it shrinks away. */
+@Composable
+private fun wideRailItemColors() = WideNavigationRailItemDefaults.colors().let {
+    it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+}
+
+@Composable
+private fun railItemColors() = NavigationRailItemDefaults.colors().let {
+    it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+}
+
+@Composable
+private fun barItemColors() = NavigationBarItemDefaults.colors().let {
+    it.copy(disabledIconColor = it.unselectedIconColor, disabledTextColor = it.unselectedTextColor)
+}
+
+@Composable
+private fun ExpandedRailLabel(text: String) = Text(
+    text = text,
+    modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
+)
 
 /** Whether [this] item is the one selected: its own screen, or for the Tools item any tool, while it is on top. */
 private fun NavigationBarItem.isSelected(currentTopLevelDestination: CampfireDestination.TopLevel?) = when (this) {

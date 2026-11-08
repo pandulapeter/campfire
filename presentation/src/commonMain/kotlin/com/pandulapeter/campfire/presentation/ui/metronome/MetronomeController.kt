@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.metronome.api.Metronome
+import com.pandulapeter.campfire.metronome.api.TapTempo
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
@@ -98,6 +99,9 @@ internal class MetronomeController(
      */
     private val metronomeRenames = mutableMapOf<String, String>()
 
+    /** The Metronome tab's taps by key, a series of their own beside the Tap segment's. */
+    private val keyTapTempo = TapTempo()
+
     /** What a click plays for, derived from the back stack, see [metronomeContextOf]; snapshot state, observable. */
     val metronomeContext
         get() = metronomeContextOf(
@@ -167,6 +171,18 @@ internal class MetronomeController(
         }
         if (!isAccepted) return false
         toggleMetronome()
+        return true
+    }
+
+    /**
+     * The keyboard's way to the Metronome tab's Tap segment, T, under the same rules as [toggleMetronomeByKey]. Song details
+     * hears its own T, where its tempo stepper is (`songKeyboardShortcuts`), so this answers only the tab.
+     */
+    fun tapTempoByKey(): Boolean {
+        val overlayState = dialogHost.overlayState
+        if (dialogHost.visibleDialog.value != null || overlayState.isAnyMenuOpen || overlayState.isValueBeingTyped) return false
+        if (backStack.lastOrNull() != CampfireDestination.Metronome) return false
+        keyTapTempo.tap()?.let { bpm -> updateMetronomeSettings { copy(bpm = MetronomePattern.coerceBpm(bpm)) } }
         return true
     }
 

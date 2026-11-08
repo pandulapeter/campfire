@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components.actions
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.list.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -50,6 +51,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param buttonModifier Put on every button.
  * @param isDecorative Draws the icons alone, for the header's copy that is being pushed away.
  * @param onReorder Toggles reordering mode when this setlist has enough songs to reorder.
+ * @param isExportShortcut Whether Ctrl / Cmd + S shares or exports this setlist, the one the screen is about, which its
+ *   Share or export entry then names.
  */
 @Composable
 internal fun SetlistActions(
@@ -60,6 +63,7 @@ internal fun SetlistActions(
     isDecorative: Boolean = false,
     onReorder: (() -> Unit)? = null,
     isReordering: Boolean = false,
+    isExportShortcut: Boolean = false,
 ) {
     ActionsMenu(
         modifier = modifier,
@@ -109,6 +113,7 @@ internal fun SetlistActions(
                 title = stringResource(Res.string.share_or_export),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
+                shortcut = KeyShortcut.SAVE.takeIf { isExportShortcut },
                 onClick = { actions.export(setlist) },
             ),
             ActionsMenuItem(

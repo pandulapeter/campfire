@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.ui.input.key.Key
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -48,7 +49,29 @@ class AppShortcutsTest {
     @Test
     fun `Ctrl or Cmd and V pastes a song, and the shortcuts of the screens are none of the app's`() {
         assertEquals(AppShortcut.PasteSong, shortcut(Key.V, isCtrlOrMeta = true))
-        listOf(Key.S, Key.E, Key.R, Key.B).forEach { key -> assertNull(shortcut(key, isCtrlOrMeta = true)) }
+        listOf(Key.E, Key.R, Key.B, Key.Z, Key.Y).forEach { key -> assertNull(shortcut(key, isCtrlOrMeta = true)) }
+        assertNull(shortcut(Key.DirectionUp, isCtrlOrMeta = true, isShift = true))
+        assertNull(shortcut(Key.F3))
+    }
+
+    @Test
+    fun `T taps the tempo like M, and Ctrl or Cmd with N, A, or S are the list screens' New, Select all, and Share or export`() {
+        assertEquals(AppShortcut.TapTempo, shortcut(Key.T))
+        assertNull(shortcut(Key.T, isCtrlOrMeta = true))
+        assertEquals(AppShortcut.NewItem, shortcut(Key.N, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.N, isCtrlOrMeta = true, isShift = true))
+        assertEquals(AppShortcut.SelectAllSongs, shortcut(Key.A, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.A, isCtrlOrMeta = true, isShift = true))
+        assertEquals(AppShortcut.ExportSetlist, shortcut(Key.S, isCtrlOrMeta = true))
+    }
+
+    @Test
+    fun `Ctrl or Cmd and a digit from 1 to 6 or comma select a main screen, from either row of digits`() {
+        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_1), shortcut(Key.One, isCtrlOrMeta = true))
+        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_6), shortcut(Key.NumPad6, isCtrlOrMeta = true))
+        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SETTINGS), shortcut(Key.Comma, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.Seven, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.One))
     }
 
     private fun shortcut(key: Key, isCtrlOrMeta: Boolean = false, isShift: Boolean = false, isAlt: Boolean = false) =

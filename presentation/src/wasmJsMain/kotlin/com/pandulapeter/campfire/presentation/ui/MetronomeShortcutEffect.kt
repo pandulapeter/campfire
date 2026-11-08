@@ -21,7 +21,8 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * M starts and stops the metronome (`MetronomeController.toggleMetronomeByKey`). Unlike the search shortcut this listens
+ * M starts and stops the metronome (`MetronomeController.toggleMetronomeByKey`), and T taps the Metronome tab's tempo
+ * (`tapTempoByKey`). Unlike the search shortcut this listens
  * in the bubbling phase and leaves alone whatever Compose already handled or what is typed into a field (the hidden
  * input of a focused text field), so that the key only toggles the metronome where it would otherwise do nothing.
  */
@@ -30,8 +31,11 @@ internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableE
     val listener: (Event) -> Unit = listener@{ event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
         if (keyEvent.defaultPrevented || isTypingTarget(keyEvent)) return@listener
-        if (keyEvent.code != "KeyM") return@listener
-        val shortcut = KeyShortcut.METRONOME
+        val shortcut = when (keyEvent.code) {
+            "KeyM" -> KeyShortcut.METRONOME
+            "KeyT" -> KeyShortcut.TAP_TEMPO
+            else -> return@listener
+        }
         val isShortcut = shortcut.chord.matches(
             key = shortcut.chord.key,
             isCtrlOrMeta = keyEvent.ctrlKey || keyEvent.metaKey,
@@ -41,10 +45,10 @@ internal fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableE
         // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
         // thirty times a second.
         if (!isShortcut || keyEvent.repeat) return@listener
-        if (viewModel.metronomeController.toggleMetronomeByKey()) keyEvent.preventDefault()
+        val metronomeController = viewModel.metronomeController
+        val isDone = if (shortcut == KeyShortcut.METRONOME) metronomeController.toggleMetronomeByKey() else metronomeController.tapTempoByKey()
+        if (isDone) keyEvent.preventDefault()
     }
     window.addEventListener(EVENT_KEY_DOWN, listener)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener) }
 }
-
-private fun isTypingTarget(event: KeyboardEvent): Boolean = js("event.target && (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable === true)")

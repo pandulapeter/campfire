@@ -272,7 +272,7 @@ private fun ClosedSearchActions(
 ) { isShowingSelectionMenu ->
     if (isShowingSelectionMenu) {
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-        val listedFileNames = remember(songGroups) { songGroups.groups.filterNot { it.isRandomPicks }.flatMap { group -> group.songs.map { it.fileName } } }
+        val listedFileNames = remember(songGroups) { songGroups.listedFileNames }
         val ticked = selection.orEmpty()
         SongSelectionMenu(
             isRoomy = layout.columnCount > 1,

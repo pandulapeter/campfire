@@ -44,6 +44,13 @@ internal fun areToolsGrouped(
     destinations.size > MAX_NAVIGATION_BAR_ITEMS &&
     destinations.count { it in CampfireDestination.TopLevel.tools } > 1
 
+/** The tools behind the Tools item, in their order, or none where [areToolsGrouped] does not group them. */
+internal fun groupedTools(
+    kind: NavigationChromeKind,
+    destinations: List<CampfireDestination.TopLevel>,
+    railCapacity: Int,
+) = if (areToolsGrouped(kind, destinations, railCapacity)) CampfireDestination.TopLevel.tools.filter { it in destinations } else emptyList()
+
 /**
  * How many items each kind of rail holds in the window, both worked out together: the root does not know the chrome's
  * kind, and a handover between the two rails composes both at once, each taking its own ([of]). The bar ignores it.

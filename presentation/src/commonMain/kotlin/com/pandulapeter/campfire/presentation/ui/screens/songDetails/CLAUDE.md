@@ -105,6 +105,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - Left and Right are unconsumed at the setlist's ends and for a single song; all four with Alt, Meta, or Ctrl (Alt +
   Left is the web's Back, Cmd + Left / Right a Mac's Back and Forward).
 - Ctrl/Cmd + E opens the editor, not in performance mode, which has no Edit.
+- Where the song has its playing controls (not read only), Ctrl / Cmd + Shift + Up and Down step its transposition
+  (only where the stepper is: chords on, a song with chords) and T taps its tempo (metronome on), whether or not the
+  steppers are in sight.
 - In one column (`autoScroll/`) the step buttons and step keys nudge it, and Space plays and stops it.
 - The metronome button only shows the panel (opening starts nothing, closing stops a click); M toggles the click from
   anywhere on the song, opening the panel with it.

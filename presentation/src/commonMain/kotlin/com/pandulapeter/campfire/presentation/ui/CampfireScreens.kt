@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.chrome.ScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.ToolScreenFrame
 import com.pandulapeter.campfire.presentation.ui.chrome.TopLevelScreenSurface
 import com.pandulapeter.campfire.presentation.ui.chrome.RailCapacity
-import com.pandulapeter.campfire.presentation.ui.chrome.areToolsGrouped
+import com.pandulapeter.campfire.presentation.ui.chrome.groupedTools
 import com.pandulapeter.campfire.presentation.ui.chrome.backgroundSlideOffset
 import com.pandulapeter.campfire.presentation.ui.chrome.contentEdges
 import com.pandulapeter.campfire.presentation.ui.chrome.coveredScreenScrim
@@ -211,15 +211,12 @@ internal fun CampfireScreens(
     // The tools the chrome offers behind its Tools item, and so the buttons their screens are switched by; none where every
     // screen has an item of its own. Decided by the kind the window has rather than by the chrome on screen, which hands
     // over between the two, so that the buttons come and go once as a window crosses from the bar to a taller rail.
-    val groupedTools = if (areToolsGrouped(chromeKind, topLevelDestinations, railCapacity.of(chromeKind))) {
-        CampfireDestination.TopLevel.tools.filter { it in topLevelDestinations }
-    } else {
-        emptyList()
-    }
+    val groupedTools = groupedTools(chromeKind, topLevelDestinations, railCapacity.of(chromeKind))
     val toolScreen: @Composable (CampfireDestination.TopLevel, @Composable () -> Unit) -> Unit = { destination, content ->
         ToolScreenFrame(
             destination = destination,
             tools = groupedTools,
+            destinations = topLevelDestinations,
             isButtonGroupDrawn = chromeInScreens,
             contentPadding = shellContentPadding,
             metronomeBeat = metronomeBeat,

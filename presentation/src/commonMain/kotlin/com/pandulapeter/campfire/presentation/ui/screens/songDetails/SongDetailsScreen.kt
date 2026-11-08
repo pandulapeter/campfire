@@ -181,7 +181,6 @@ internal fun SongDetailsScreen(
     // beside it anyway, since a click stopped from the panel leaves it where it was, see
     // MetronomeController.toggleMetronomePanel.
     val isMetronomePanelShown = metronomeSettings.isSongPanelShown || isMetronomePlaying
-
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
@@ -264,6 +263,7 @@ internal fun SongDetailsScreen(
                 setlistFileName = destination.setlistFileName,
                 importPreview = importPreview,
                 importController = viewModel.importController,
+                playingKeys = SongPlayingKeys(overrides = viewModel.overrides, areChordsShown = shouldShowChords, isTempoShown = isMetronomeEnabled).takeUnless { isReadOnly },
             ),
     ) {
         SongDetailsAppBar(

@@ -27,6 +27,7 @@ What every screen shares; each destination's package has its own notes.
 - "New song" / "New setlist" sit in the app bar, not a FAB, leaving the corner to the fast scroller. Each opens a
   dropdown (`components/menu/NewItemMenu.kt`) asking how the item is made; only "Create…" opens the naming sheet. Import
   is the same on both screens (an archive holds songs and setlists alike). Songs adds Paste from clipboard third.
+  Ctrl / Cmd + N opens "Create…" without the menu wherever the menu is offered, except on the web.
 - The menu leaves the bar while the empty state, loading indicator, or error is up (`allowsNewItemMenu`); each offers
   its own buttons. Both empty states start with the menu's buttons, same labels, same order.
 - The bar is built afresh (`key`) when its list first leaves the loading placeholder, so the menu arriving with the

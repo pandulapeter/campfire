@@ -19,6 +19,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
  */
 internal val LocalShowsShortcutHints = compositionLocalOf { false }
 
-/** How [this] is written in a hint here (`Ctrl+F`, `⌘F`), or null where hints are not shown. */
+/**
+ * How [this] is written in a hint here (`Ctrl+F`, `⌘F`), or null where hints are not shown or the shortcut does not
+ * work on this platform ([KeyShortcut.isAvailable]).
+ */
 @Composable
-internal fun KeyShortcut.hint(): String? = if (LocalShowsShortcutHints.current) chord.label(isApple = isAppleKeyboard, names = keyNames()) else null
+internal fun KeyShortcut.hint(): String? =
+    if (LocalShowsShortcutHints.current && isAvailable) chord.label(isApple = isAppleKeyboard, names = keyNames()) else null

@@ -50,7 +50,8 @@ import org.jetbrains.compose.resources.painterResource
  * [allowsNewItemMenu].
  *
  * @param contentDescription What the button is called, since it is an icon.
- * @param createLabel The entry that makes the new thing here rather than importing it.
+ * @param createLabel The entry that makes the new thing here rather than importing it, which Ctrl / Cmd + N opens
+ *   without the menu (`AppShortcut.NewItem`).
  * @param onItemSelected Called before either menu action starts.
  * @param onCreate Opens the dialog of [createLabel], called once the menu is closed.
  * @param onImport Imports what is picked with the file picker it is handed, called once the menu is closed.
@@ -84,6 +85,7 @@ internal fun NewItemMenu(
         DropdownMenuItem(
             text = { Text(createLabel) },
             leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_edit), contentDescription = null) },
+            trailingIcon = menuShortcutHint(KeyShortcut.NEW),
             onClick = {
                 select {
                     onItemSelected()

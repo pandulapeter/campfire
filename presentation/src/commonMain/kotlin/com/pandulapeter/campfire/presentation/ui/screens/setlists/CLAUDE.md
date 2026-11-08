@@ -20,6 +20,8 @@
   search's keyboard counted) the description starts at two lines and opens on a tap, or four lines push the first song
   out of sight.
 - The archived icon fades with the archiving.
+- Ctrl / Cmd + S shares or exports the setlist the screen is about (`ListedSetlists.shortcutSetlist`): the one being
+  reordered, else the only one listed; with several listed it does nothing, and only that one's menu entry names it.
 - "New setlist" opens the song picker right after creating, only if nothing else was opened meanwhile and the library
   has songs.
 - A search sends the list to the top when the list narrowed by it arrives (the folded query travels with the setlists),

@@ -35,4 +35,8 @@ data class SongGroups(
     val areRandomPicksAwaited: Boolean,
     val librarySongCount: Int,
     val filteredSongCount: Int,
-)
+) {
+
+    /** The songs listed, by file name, in the list's order and each once: what Select all ticks. */
+    val listedFileNames get() = groups.filterNot { it.isRandomPicks }.flatMap { group -> group.songs.map { it.fileName } }
+}

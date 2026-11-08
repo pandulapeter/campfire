@@ -15,7 +15,8 @@ and revert all edit the field (one undo step each).
 
 ## App bar
 
-- Title row: undo/redo, Save, overflow menu; Close rather than Back. The control row holds the transposition stepper and
+- Title row: undo/redo, Save, overflow menu; Close rather than Back. Ctrl / Cmd + Z, Shift + Z, and Y step the field's
+  history from anywhere in the editor, not only from the focused field (`EditorShortcuts.kt`). The control row holds the transposition stepper and
   Edit / Preview / Split, the two controls that do not write at the caret, so they stay when the rest folds.
 - Split is offered only at `WindowSize.EXPANDED` but is the default; a window that narrows only *shows* Edit, so
   widening returns to both panes. The pane choice is drawn whenever the row is, so the stepper is never alone; its

@@ -68,6 +68,9 @@ import kotlinx.coroutines.launch
  * Ctrl / Cmd + E opens the editor, the way the overflow menu's Edit does, so not in performance mode, where there is none.
  * Not with Alt held, since AltGr arrives as Ctrl + Alt on Windows and the web and types a character on some layouts.
  *
+ * Ctrl / Cmd + Shift + Up and Down step the transposition ([onTranspose]) as its stepper does, a held key repeating as
+ * the held button does; T taps the tempo ([onTapTempo]) once a press, as Space plays once.
+ *
  * @param onToggleAutoScroll Plays or stops the song scrolling by itself, null where it is laid out in pages; Space is
  *   then left alone.
  * @param onEdit Opens the editor on the song being read, or null where it cannot be edited; the key is then left alone.
@@ -100,6 +103,8 @@ internal fun Modifier.songKeyboardShortcuts(
     onToggleAutoScroll: (() -> Unit)?,
     onEdit: (() -> Unit)?,
     onSave: (() -> Unit)?,
+    onTranspose: ((semitones: Int) -> Unit)?,
+    onTapTempo: (() -> Unit)?,
 ): Modifier {
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
@@ -136,6 +141,15 @@ internal fun Modifier.songKeyboardShortcuts(
                 if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onSave()
                 return@onPreviewKeyEvent true
             }
+            val transposition = when {
+                KeyShortcut.TRANSPOSE_UP.matches(keyEvent) -> 1
+                KeyShortcut.TRANSPOSE_DOWN.matches(keyEvent) -> -1
+                else -> null
+            }
+            if (onTranspose != null && transposition != null) {
+                if (keyEvent.type == KeyEventType.KeyDown && latestIsUncovered && !overlayState.isValueBeingTyped) onTranspose(transposition)
+                return@onPreviewKeyEvent true
+            }
             // Key repeats arrive as further KeyDown events, which is what makes a held arrow scroll continuously.
             if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             // An arrow pressed with Alt, Meta or Ctrl belongs to whoever sent it rather than to the reader: Alt + Left
@@ -150,6 +164,10 @@ internal fun Modifier.songKeyboardShortcuts(
             // a focus search of its own, which would move the focus to a chip or a step button of the covered song and
             // scroll it into view.
             if (!latestIsUncovered) return@onPreviewKeyEvent keyEvent.key in STEP_AND_SCROLL_KEYS
+            if (onTapTempo != null && KeyShortcut.TAP_TEMPO.matches(keyEvent)) {
+                if (heldStepKeys.add(keyEvent.key)) onTapTempo()
+                return@onPreviewKeyEvent true
+            }
             val step = when (keyEvent.key) {
                 Key.DirectionUp, Key.PageUp -> onStepBack
                 Key.DirectionDown, Key.PageDown -> onStepForward

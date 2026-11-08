@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.Edit
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.sheetMusicHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchSheet
-import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.editorSearchShortcuts
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.rememberEditorSearch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -78,7 +77,6 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEdit
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.only
-import com.pandulapeter.campfire.presentation.ui.components.saveShortcut
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
@@ -243,12 +241,12 @@ internal fun LoadedSongEditor(
             .fillMaxSize()
             .focusRequester(focusRequester)
             .focusable()
-            .saveShortcut(onSaveRequested)
-            .editorSearchShortcuts(
-                onFind = { onOpenSearch(EditorSearchMode.FIND) },
-                onReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
-            )
-            .editorFormattingShortcuts(isEnabled = panes != EditorPanes.PREVIEW, onToggle = textFieldState::toggleFormatting),
+            .editorShortcuts(
+                textFieldState = textFieldState,
+                isFieldShown = panes != EditorPanes.PREVIEW,
+                onSave = onSaveRequested,
+                onOpenSearch = onOpenSearch,
+            ),
     ) {
         CampfireTopAppBar(
             isCompact = isTypingInShortWindow,

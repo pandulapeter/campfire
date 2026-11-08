@@ -13,7 +13,8 @@
 The editor's find and replace.
 
 - Ctrl / Cmd + F and + R open it and switch modes; on the web the shell keeps the browser's find bar and reload from
-  both while the editor is on top.
+  both while the editor is on top. F3 and Shift + F3 step to the next and previous match anywhere in the sheet (in the
+  editor they open Find), Enter and Shift + Enter from the query, in both modes.
 - `EditorSearchSheet` is not a `DialogType`, so it counts itself into `OverlayState`: Escape and the browser's Back close
   it before leaving the editor. Its state is saved with the field.
 - A search over the preview switches to Edit. The current match is the first at or after the field's selection

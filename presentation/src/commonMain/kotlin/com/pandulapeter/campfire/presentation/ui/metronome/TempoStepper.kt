@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_ICO
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_SEGMENT_PADDING
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
 import com.pandulapeter.campfire.presentation.ui.components.controls.StepperEntry
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -101,7 +102,7 @@ private fun TapTempoSegment(
 ) {
     val tapTempo = remember { TapTempo() }
     val description = stringResource(Res.string.metronome_tap_description)
-    CampfireTooltip(label = description) {
+    CampfireTooltip(label = description, shortcut = KeyShortcut.TAP_TEMPO) {
         Box(
             modifier = Modifier
                 .fillMaxHeight()

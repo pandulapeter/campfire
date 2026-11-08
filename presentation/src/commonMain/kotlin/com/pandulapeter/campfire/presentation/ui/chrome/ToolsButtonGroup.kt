@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.screenShortcutOf
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
 
 /**
@@ -56,7 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_M
  * Each button carries its tool's icon, the one its navigation item would have ([DestinationIcon]), since the chrome's
  * own item shows only the wrench; only the selected one also shows its name, widening as it does, since four names
  * side by side would cut "Metronome" short on a 360dp phone. The others are named for accessibility services and by a
- * tooltip instead.
+ * tooltip instead, which also names the keys that select it, as the chrome's items do ([destinations] number them).
  * Each button is a top level screen of its own, selected as its item would be, so the one already open scrolls its
  * screen to the top.
  *
@@ -68,6 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_M
 internal fun ToolsButtonGroup(
     modifier: Modifier = Modifier,
     tools: List<CampfireDestination.TopLevel>,
+    destinations: List<CampfireDestination.TopLevel>,
     selected: CampfireDestination.TopLevel?,
     metronomeBeat: MetronomeIconBeat,
     isKeyboard: Boolean,
@@ -92,7 +94,8 @@ internal fun ToolsButtonGroup(
             animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         )
         // The tooltip's anchor stands between the row and the button, so it takes the weight and the button fills it.
-        CampfireTooltip(modifier = Modifier.weight(weight), label = label, isEnabled = !isSelected) {
+        // The selected button shows its name, so its tooltip is its keys alone.
+        CampfireTooltip(modifier = Modifier.weight(weight), label = label.takeUnless { isSelected }, shortcut = screenShortcutOf(tool, destinations)) {
             ToggleButton(
                 modifier = Modifier
                     .fillMaxWidth()

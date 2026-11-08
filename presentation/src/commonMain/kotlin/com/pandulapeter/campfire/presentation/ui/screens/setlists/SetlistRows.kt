@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 
 /**
@@ -27,6 +29,10 @@ internal fun SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
         }
     }
 }
+
+/** A [SetlistRowsCache] that holds rows only for [setlists], the ones listed now. */
+@Composable
+internal fun rememberSetlistRowsCache(setlists: List<SetlistWithSongs>) = remember { SetlistRowsCache() }.also { it.retainOnly(setlists) }
 
 /** Keeps unchanged setlists' row objects through each drag update. */
 internal class SetlistRowsCache {

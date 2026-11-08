@@ -1384,4 +1384,5 @@
     <string name="key_ctrl">Ctrl</string>
     <string name="key_shift">Maj</string>
     <string name="key_space">Espace</string>
+    <string name="key_enter">Entrée</string>
 </resources>

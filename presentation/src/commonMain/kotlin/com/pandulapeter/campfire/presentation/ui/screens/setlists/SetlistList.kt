@@ -191,8 +191,7 @@ internal fun SetlistList(
     val reorder = rememberSetlistReorder(listState = listState, setlistsWithSongs = setlistsWithSongs, onReorder = setlistsController::reorderSetlist)
     val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()
-    val rowsCache = remember { SetlistRowsCache() }
-    rowsCache.retainOnly(setlistsWithSongs)
+    val rowsCache = rememberSetlistRowsCache(setlistsWithSongs)
 
     ScrollToTopWhenChanged(
         listState = listState,
@@ -263,6 +262,7 @@ internal fun SetlistList(
                             isPerformanceModeEnabled = isPerformanceModeEnabled,
                             setlistActions = setlistActions,
                             reorderingSetlistFileName = reorderingSetlistFileName,
+                            exportShortcutFileName = listedSetlists.shortcutSetlist(reorderingSetlistFileName.takeIf { isReordering })?.fileName,
                             onReorderingSetlistChanged = onReorderingSetlistChanged,
                             appBarOverlap = appBarOverlap,
                         )

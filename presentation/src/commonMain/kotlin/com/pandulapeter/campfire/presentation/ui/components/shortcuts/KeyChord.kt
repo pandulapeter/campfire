@@ -66,6 +66,7 @@ internal data class KeyChord(
         fun command(key: Key, label: String, shift: Shift = Shift.IGNORED, alternates: Set<Key> = emptySet()) =
             KeyChord(key = key, label = label, isCommand = true, shift = shift, alternates = alternates)
 
-        fun plain(key: Key, label: String?) = KeyChord(key = key, label = label, isCommand = false)
+        fun plain(key: Key, label: String?, shift: Shift = Shift.IGNORED, alternates: Set<Key> = emptySet()) =
+            KeyChord(key = key, label = label, isCommand = false, shift = shift, alternates = alternates)
     }
 }

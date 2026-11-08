@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor.search
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.ChordProTextField
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.replaceAll
 import androidx.compose.animation.AnimatedContent
@@ -99,21 +100,7 @@ internal fun EditorSearchSheet(
     val hasMatches = search.matchCount > 0
     CampfireBottomSheet(
         title = stringResource(if (isReplacing) Res.string.song_editor_find_and_replace else Res.string.song_editor_find),
-        actions = {
-            CampfireIconButton(
-                icon = painterResource(Res.drawable.ic_move_up),
-                label = stringResource(Res.string.song_editor_find_previous),
-                enabled = hasMatches,
-                onClick = search::selectPrevious,
-            )
-            CampfireIconButton(
-                modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                icon = painterResource(Res.drawable.ic_move_down),
-                label = stringResource(Res.string.song_editor_find_next),
-                enabled = hasMatches,
-                onClick = search::selectNext,
-            )
-        },
+        actions = { MatchSteps(search = search, hasMatches = hasMatches) },
         // Only while the search is open: the sheet's window can be laid out once more after the close, and a top left behind
         // by it would keep the room the field makes after its last line for a sheet that is gone.
         onTopMoved = { if (search.mode != null) search.sheetTop = it },
@@ -138,13 +125,16 @@ internal fun EditorSearchSheet(
                 .editorSearchShortcuts(
                     onFind = { search.open(EditorSearchMode.FIND) },
                     onReplace = { search.open(EditorSearchMode.REPLACE) },
+                    onFindNext = search::selectNext,
+                    onFindPrevious = search::selectPrevious,
                 ),
         ) {
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .focusRequester(queryFocusRequester),
+                    .focusRequester(queryFocusRequester)
+                    .editorQueryShortcuts(onFindNext = search::selectNext, onFindPrevious = search::selectPrevious),
                 state = search.query,
                 label = { Text(stringResource(Res.string.song_editor_find_query)) },
                 leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_search), contentDescription = null) },
@@ -209,6 +199,26 @@ internal fun EditorSearchSheet(
             }
         }
     }
+}
+
+/** The header's previous and next match, also F3 and Shift + F3 anywhere in the sheet. */
+@Composable
+private fun MatchSteps(search: EditorSearch, hasMatches: Boolean) {
+    CampfireIconButton(
+        icon = painterResource(Res.drawable.ic_move_up),
+        label = stringResource(Res.string.song_editor_find_previous),
+        shortcut = KeyShortcut.FIND_PREVIOUS,
+        enabled = hasMatches,
+        onClick = search::selectPrevious,
+    )
+    CampfireIconButton(
+        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+        icon = painterResource(Res.drawable.ic_move_down),
+        label = stringResource(Res.string.song_editor_find_next),
+        shortcut = KeyShortcut.FIND_NEXT,
+        enabled = hasMatches,
+        onClick = search::selectNext,
+    )
 }
 
 /**

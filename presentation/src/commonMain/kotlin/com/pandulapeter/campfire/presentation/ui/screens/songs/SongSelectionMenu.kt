@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.share_or_export
 import com.pandulapeter.campfire.presentation.resources.songs_selection_actions
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -66,6 +67,7 @@ internal fun SongSelectionMenu(
             icon = painterResource(Res.drawable.ic_select_all),
             isAlwaysInMenu = true,
             isVisible = canSelectAll,
+            shortcut = KeyShortcut.SELECT_ALL,
             onClick = onSelectAll,
         ),
         ActionsMenuItem(

@@ -51,6 +51,7 @@ internal fun SharedToolsButtonGroup(
     modifier: Modifier = Modifier,
     backStack: List<CampfireDestination>,
     tools: List<CampfireDestination.TopLevel>,
+    destinations: List<CampfireDestination.TopLevel>,
     railWidth: () -> Dp,
     contentPadding: PaddingValues,
     metronomeBeat: MetronomeIconBeat,
@@ -78,6 +79,7 @@ internal fun SharedToolsButtonGroup(
                 .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top).withMinTopEdge)
                 .padding(contentPadding.only(start = true, end = true)),
             tools = tools.ifEmpty { lastShownTools.value },
+            destinations = destinations,
             selected = current?.takeIf { it in tools } ?: lastShownTool.value,
             metronomeBeat = metronomeBeat,
             isKeyboard = isKeyboard,

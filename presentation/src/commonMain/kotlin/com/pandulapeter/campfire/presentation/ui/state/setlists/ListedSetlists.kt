@@ -30,6 +30,14 @@ data class ListedSetlists(
     val unsearchedCount: Int,
 ) {
 
+    /**
+     * The setlist Ctrl / Cmd + S shares or exports, as its menu's Share or export does: the one being reordered, which
+     * the screen shows alone, else the only one listed. With several on screen the key would have to guess, so it does
+     * nothing.
+     */
+    fun shortcutSetlist(reorderingFileName: String?) =
+        (reorderingFileName?.let { fileName -> setlists.firstOrNull { it.setlist.fileName == fileName } } ?: setlists.singleOrNull())?.setlist
+
     companion object {
         val Empty = ListedSetlists(setlists = emptyList(), isLibraryRead = false, filterKey = "", libraryCount = 0, unsearchedCount = 0)
     }

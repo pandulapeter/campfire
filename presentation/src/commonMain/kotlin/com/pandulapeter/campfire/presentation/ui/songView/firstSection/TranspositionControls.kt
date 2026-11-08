@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_r
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
 import com.pandulapeter.campfire.presentation.ui.components.controls.STEPPER_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.controls.Stepper
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionLabel
 import com.pandulapeter.campfire.presentation.ui.playing.transpositionValue
 import org.jetbrains.compose.resources.painterResource
@@ -57,4 +58,5 @@ internal fun TranspositionControls(
     onIncrease = { onStep(1) },
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
     onReset = onReset,
+    shortcuts = KeyShortcut.TRANSPOSE_DOWN to KeyShortcut.TRANSPOSE_UP,
 )

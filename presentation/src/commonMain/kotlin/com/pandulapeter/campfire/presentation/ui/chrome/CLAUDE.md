@@ -37,6 +37,9 @@ The navigation chrome (bar, rail, transitions, and the Tools item).
 - **The chrome moves with the screen under a card**: while a card is dealt (until its pop has settled, two frames on),
   each top level screen draws its own chrome copy so it rides the 12% parallax; tabs share the one chrome so its
   selection animates. The export screen does the same until its `ExportTransition` is back at zero.
+- **Each item's tooltip is its keys alone** (the label is on the item): Ctrl / Cmd + 1 to 6 number the screens switched
+  on, Settings left out, in the chrome's order (`screenShortcutOf`), and Settings is Ctrl / Cmd + comma; desktop and web
+  only, so elsewhere items have none. The Tools item has no key; its tools keep their numbers, which their buttons name.
 - **No top level screen has a title bar**; the rail reaches the top of the window. `TopLevelScreenSurface` is opaque,
   inset by the chrome and at least `MIN_TOP_EDGE` below the top.
 

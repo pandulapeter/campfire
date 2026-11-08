@@ -14,8 +14,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.metronome.api.TapTempo
 import com.pandulapeter.campfire.presentation.ui.components.actions.SongActionHandler
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.PageStepper
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
@@ -32,6 +34,9 @@ import kotlinx.coroutines.launch
  *   the key does anything; the step itself is decided at the time of the press.
  * @param librarySong The song being read where its menu has Edit and Share or export, which Ctrl / Cmd + E and S then
  *   open: not in read only mode, nor in a preview, whose Ctrl / Cmd + S presses its import button instead.
+ * @param playingKeys Where the song has its playing controls, which are then the same song's: Ctrl / Cmd + Shift + Up and
+ *   Down step its transposition and T taps its tempo, as its steppers do. T's series is the screen's, begun again for
+ *   another song.
  */
 @Composable
 internal fun Modifier.songDetailsKeyboardShortcuts(
@@ -51,37 +56,48 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
     setlistFileName: String?,
     importPreview: ImportPreviewState?,
     importController: ImportController,
-) = songKeyboardShortcuts(
-    onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
-    onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
-    onStepBack = if (canStepBack) {
-        { stepBack(null) }
-    } else {
-        null
-    },
-    onStepForward = if (canStepForward) {
-        { stepForward(null) }
-    } else {
-        null
-    },
-    isUncovered = isUncovered,
-    onToggleAutoScroll = onToggleAutoScroll,
-    onEdit = librarySong?.let { song -> { songActions.edit(song) } },
-    onSave = importPreview?.let { preview ->
-        // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
-        preview.actions?.takeIf { preview.canImport(primary = it.primary, isAddingToReview = false) }?.saveShortcutAction
-    }?.let { action -> { importController.importFromPreview(action) } } ?: librarySong?.let { song -> { songActions.export(song, setlistFileName) } },
-    onPreviousSong = if (hasPreviousSong) {
-        { pageStepper.step(-1) }
-    } else {
-        null
-    },
-    onNextSong = if (hasNextSong) {
-        { pageStepper.step(1) }
-    } else {
-        null
-    },
-)
+    playingKeys: SongPlayingKeys?,
+): Modifier {
+    val playedSong = librarySong?.takeIf { playingKeys != null }
+    val tapTempo = remember(playedSong?.fileName) { TapTempo() }
+    return songKeyboardShortcuts(
+        onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
+        onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
+        onStepBack = if (canStepBack) {
+            { stepBack(null) }
+        } else {
+            null
+        },
+        onStepForward = if (canStepForward) {
+            { stepForward(null) }
+        } else {
+            null
+        },
+        isUncovered = isUncovered,
+        onToggleAutoScroll = onToggleAutoScroll,
+        onEdit = librarySong?.let { song -> { songActions.edit(song) } },
+        onSave = importPreview?.let { preview ->
+            // The batch being added is waited for by the controller itself, which ignores the press meanwhile.
+            preview.actions?.takeIf { preview.canImport(primary = it.primary, isAddingToReview = false) }?.saveShortcutAction
+        }?.let { action -> { importController.importFromPreview(action) } } ?: librarySong?.let { song -> { songActions.export(song, setlistFileName) } },
+        onPreviousSong = if (hasPreviousSong) {
+            { pageStepper.step(-1) }
+        } else {
+            null
+        },
+        onNextSong = if (hasNextSong) {
+            { pageStepper.step(1) }
+        } else {
+            null
+        },
+        onTranspose = playedSong?.takeIf { playingKeys?.areChordsShown == true && it.hasChords }?.let { song ->
+            { semitones -> playingKeys?.overrides?.stepTransposition(song.fileName, setlistFileName, semitones) }
+        },
+        onTapTempo = playedSong?.takeIf { playingKeys?.isTempoShown == true }?.let { song ->
+            { tapTempo.tap()?.let { bpm -> playingKeys?.overrides?.setTempo(song.fileName, setlistFileName, bpm) } }
+        },
+    )
+}
 
 /**
  * One press of an arrow key, in the direction it was pressed (-1 for up, 1 for down). The step is a fraction of what

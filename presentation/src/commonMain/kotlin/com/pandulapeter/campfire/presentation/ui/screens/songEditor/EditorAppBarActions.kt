@@ -75,6 +75,7 @@ internal fun RowScope.EditorAppBarActions(
     CampfireIconButton(
         icon = painterResource(Res.drawable.ic_undo),
         label = stringResource(Res.string.song_editor_undo),
+        shortcut = KeyShortcut.UNDO,
         enabled = textFieldState.undoState.canUndo,
         onClick = { textFieldState.undoState.undo() },
     )
@@ -82,6 +83,7 @@ internal fun RowScope.EditorAppBarActions(
         modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
         icon = painterResource(Res.drawable.ic_redo),
         label = stringResource(Res.string.song_editor_redo),
+        shortcut = KeyShortcut.REDO,
         enabled = textFieldState.undoState.canRedo,
         onClick = { textFieldState.undoState.redo() },
     )

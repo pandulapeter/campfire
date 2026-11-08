@@ -40,6 +40,7 @@ internal fun LazyGridScope.setlistHeader(
     isPerformanceModeEnabled: Boolean,
     setlistActions: SetlistActionHandler,
     reorderingSetlistFileName: String?,
+    exportShortcutFileName: String?,
     onReorderingSetlistChanged: (String?) -> Unit,
     appBarOverlap: () -> AppBarOverlap,
 ) = stickyHeader(
@@ -71,6 +72,7 @@ internal fun LazyGridScope.setlistHeader(
                     actions = setlistActions,
                     setlist = setlistWithSongs.setlist,
                     isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
+                    isExportShortcut = exportShortcutFileName == setlistWithSongs.setlist.fileName,
                     onReorder = if (setlistWithSongs.entries.size > 1) {
                         {
                             onReorderingSetlistChanged(

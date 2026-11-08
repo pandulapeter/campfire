@@ -43,7 +43,8 @@ on Android with Vibrate on and a beat not muted (iOS has no background haptics).
 - Only the tab's or a song's taps, with the feature on, may open the web's audio device (`Metronome.setStartable`).
 - Starting over a song opens its panel. A click that stops on its own is a snackbar naming why.
 - Space (tab) and M (tab and song, not an import preview) toggle it on desktop and web, under no dialog or menu, only on
-  a held key's first press.
+  a held key's first press. T taps the tempo under the same rules: the tab's through `tapTempoByKey`, a song's through
+  its own screen, where its tempo stepper is.
 
 ### The panel
 

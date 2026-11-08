@@ -15,6 +15,7 @@ import androidx.compose.ui.input.key.Key
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.key_ctrl
+import com.pandulapeter.campfire.presentation.resources.key_enter
 import com.pandulapeter.campfire.presentation.resources.key_shift
 import com.pandulapeter.campfire.presentation.resources.key_space
 
@@ -24,9 +25,11 @@ internal class KeyNames(
     val ctrl: String,
     val shift: String,
     val space: String,
+    val enter: String,
 ) {
     fun of(key: Key) = when (key) {
         Key.Spacebar -> space
+        Key.Enter -> enter
         else -> error("$key has no name; give its chord a label.")
     }
 }
@@ -36,6 +39,7 @@ internal fun keyNames() = KeyNames(
     ctrl = stringResource(Res.string.key_ctrl),
     shift = stringResource(Res.string.key_shift),
     space = stringResource(Res.string.key_space),
+    enter = stringResource(Res.string.key_enter),
 )
 
 /**
