@@ -34,13 +34,15 @@ internal data class ShortcutRow(val shortcuts: List<KeyShortcut>) {
 
 /**
  * What the features switched on leave of the table, since the sheet lists only keys that do something: no song's keys
- * with the songs off, no click's with the metronome off, and nothing that changes the library in read only mode.
+ * with the songs off, no click's with the metronome off, nothing that changes the library in read only mode, and no
+ * auto-scroll unless a song is read in one scrolling column ([isSongScrolledContinuously]), the only layout it plays in.
  */
 @Immutable
 internal data class ShortcutFeatures(
     val areSongsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isReadOnly: Boolean,
+    val isSongScrolledContinuously: Boolean,
 )
 
 /**
@@ -59,6 +61,7 @@ internal fun shortcutGroups(
         shortcut.platforms.includes(build) &&
             features.lists(shortcut.scope) &&
             !(features.isReadOnly && shortcut in LIBRARY_CHANGES) &&
+            !(!features.isSongScrolledContinuously && shortcut == KeyShortcut.PLAY) &&
             !(isApple && shortcut == KeyShortcut.REDO_ALTERNATE)
     }
     return ShortcutScope.entries.mapNotNull { scope ->

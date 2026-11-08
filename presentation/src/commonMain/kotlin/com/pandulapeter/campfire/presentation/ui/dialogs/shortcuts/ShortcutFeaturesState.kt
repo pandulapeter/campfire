@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.shortcuts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutFeatures
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
@@ -24,5 +25,6 @@ internal fun shortcutFeatures(preferencesController: PreferencesController): Sho
         areSongsEnabled = userPreferences?.areSongsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
         isReadOnly = isReadOnly,
+        isSongScrolledContinuously = userPreferences?.songLayout == SongLayout.CONTINUOUS,
     )
 }

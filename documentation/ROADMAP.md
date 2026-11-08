@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Keyboard shortcuts: new shortcuts, a sheet listing them all: [tooltips-and-shortcuts.md](plans/tooltips-and-shortcuts.md)
 - Full Preferences redesign: [preferences-sheet.md](plans/preferences-sheet.md)
 - Support multi-line sticky headers (setlist titles)
 - Song title line spacing should be consistent between the two card display modes

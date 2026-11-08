@@ -18,7 +18,12 @@ import kotlin.test.assertTrue
 
 class ShortcutListingTest {
 
-    private val everything = ShortcutFeatures(areSongsEnabled = true, isMetronomeEnabled = true, isReadOnly = false)
+    private val everything = ShortcutFeatures(
+        areSongsEnabled = true,
+        isMetronomeEnabled = true,
+        isReadOnly = false,
+        isSongScrolledContinuously = true,
+    )
 
     private fun listed(build: AppBuild, features: ShortcutFeatures = everything, isApple: Boolean = false, isPreviewWheelZoomed: Boolean = false) =
         shortcutGroups(build = build, features = features, isApple = isApple, isPreviewWheelZoomed = isPreviewWheelZoomed)
@@ -79,6 +84,15 @@ class ShortcutListingTest {
         val readOnlyShortcuts = readOnly.flatMap { group -> group.rows.flatMap { it.shortcuts } }
         assertTrue(readOnlyShortcuts.none { it == KeyShortcut.EDIT || it == KeyShortcut.NEW || it == KeyShortcut.PASTE })
         assertTrue(KeyShortcut.SONG_DOWN in readOnlyShortcuts)
+    }
+
+    @Test
+    fun `auto-scroll is listed only while songs are read in one scrolling column`() {
+        fun songShortcuts(features: ShortcutFeatures) = listed(AppBuild.WINDOWS, features).single { it.scope == ShortcutScope.SONG }.rows.flatMap { it.shortcuts }
+        assertTrue(KeyShortcut.PLAY in songShortcuts(everything))
+        val paged = everything.copy(isSongScrolledContinuously = false)
+        assertFalse(KeyShortcut.PLAY in songShortcuts(paged))
+        assertFalse(KeyShortcut.PLAY in systemShortcutGroups(build = AppBuild.ANDROID, features = paged, isApple = false).flatMap { it.second })
     }
 
     @Test
