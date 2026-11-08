@@ -41,8 +41,8 @@ class ChordSheetHeadingsTest {
     @Test
     fun `a label known to be one opens the section its abbreviation names, numbered or not`() {
         assertEquals(
-            listOf("verse", "chorus", "chorus", "bridge", "bridge", "verse"),
-            listOf("V1", "Ch1", "Ch 2", "Br", "Br.", "Chimes").map { ChordSheetHeadings.sectionType(it) },
+            listOf("verse", "chorus", "chorus", "bridge", "bridge", "pre-chorus", "pre-chorus", "verse"),
+            listOf("V1", "Ch1", "Ch 2", "Br", "Br.", "PC", "Pre", "Chimes").map { ChordSheetHeadings.sectionType(it) },
         )
     }
 }

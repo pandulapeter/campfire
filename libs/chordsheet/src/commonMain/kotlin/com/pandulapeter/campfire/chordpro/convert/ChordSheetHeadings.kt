@@ -78,7 +78,8 @@ internal object ChordSheetHeadings {
     private val abbreviations = mapOf(
         "v" to "verse", "vs" to "verse", "vrs" to "verse",
         "c" to "chorus", "ch" to "chorus", "cho" to "chorus", "chor" to "chorus", "ref" to "chorus", "refr" to "chorus",
-        "b" to "bridge", "br" to "bridge", "brg" to "bridge", "pc" to "bridge", "pre" to "bridge",
+        "b" to "bridge", "br" to "bridge", "brg" to "bridge",
+        "pc" to PRE_CHORUS, "pre" to PRE_CHORUS,
     )
 
     private val customTypes = setOf("intro", "outro", "solo", "interlude", "instrumental", "coda", "tag", "ending", "break", "riff")
