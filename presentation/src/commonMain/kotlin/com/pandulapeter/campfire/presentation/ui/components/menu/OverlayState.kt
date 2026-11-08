@@ -37,6 +37,11 @@ import androidx.compose.ui.geometry.Rect
  * history, and Escape is answered by the field itself. A press anywhere outside its stepper ends the typing
  * ([onPointerPressed], from the app's root): nothing else on the screen takes the focus from it, and a field left
  * focused once the user has moved on keeps its caret, and its keyboard.
+ *
+ * Any text field being typed into is counted too, by the platform text input sessions the fields open while they are
+ * focused (`CampfireApp` intercepts them at the root): on the desktop and on iOS a field types its characters from an
+ * event after the key-down, so the key-down of a `?` reaches the root's shortcuts unconsumed. Only key handlers read it,
+ * so it is no snapshot state.
  */
 @Stable
 internal class OverlayState {
@@ -51,6 +56,18 @@ internal class OverlayState {
 
     fun onMenuClosed() {
         openMenuCount--
+    }
+
+    private var textInputSessionCount = 0
+
+    val isTextBeingTyped: Boolean get() = textInputSessionCount > 0
+
+    fun onTextInputStarted() {
+        textInputSessionCount++
+    }
+
+    fun onTextInputEnded() {
+        textInputSessionCount--
     }
 
     private var typedValue by mutableStateOf<TypedValue?>(null)

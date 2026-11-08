@@ -26,7 +26,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +44,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.LocalMenuRoom
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShowsShortcutHints
 import com.pandulapeter.campfire.presentation.ui.platform.rememberHasHardwareKeyboard
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
+import com.pandulapeter.campfire.presentation.ui.components.menu.OverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.rememberMenuRoom
 import com.pandulapeter.campfire.presentation.ui.components.labels.LocalTagColors
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.ProvideCoverArtImageLoader
@@ -164,40 +167,42 @@ fun CampfireApp(
                         }
                     },
             ) {
-                // Nothing is composed until the preferences have been read: they decide the palette and the language,
-                // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
-                // an accent color the user did not choose, with labels in a language they did not choose either.
-                // Waiting costs the one frame it takes to read a small file, and even that frame is not empty: the
-                // window is already painted in the theme's background, which is the one color the palettes agree on
-                // within a light or a dark scheme.
-                if (arePreferencesLoaded) {
-                    // The launch screen is left out of the interface scale: it hands over from the startup screens of the
-                    // platforms, which draw the mark at its unscaled size.
-                    ProvideInterfaceScale {
-                        // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
-                        // the user chose, and above the language preference, so that it is in the language they chose too.
-                        AppUpdateGate(
-                            isAppOnScreenFlow = viewModel.launchState.isAppOnScreen,
-                            hasUnsavedEditorChangesFlow = viewModel.editorSession.hasUnsavedEditorChanges,
-                            isSyncingFlow = viewModel.syncController.isSyncing,
-                            metronomePlaybackFlow = viewModel.metronomeController.metronomePlayback,
-                        ) {
-                            CampfireContent(viewModel = viewModel, urlOpener = urlOpener)
+                CountTextInputSessions(overlayState) {
+                    // Nothing is composed until the preferences have been read: they decide the palette and the language,
+                    // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
+                    // an accent color the user did not choose, with labels in a language they did not choose either.
+                    // Waiting costs the one frame it takes to read a small file, and even that frame is not empty: the
+                    // window is already painted in the theme's background, which is the one color the palettes agree on
+                    // within a light or a dark scheme.
+                    if (arePreferencesLoaded) {
+                        // The launch screen is left out of the interface scale: it hands over from the startup screens of the
+                        // platforms, which draw the mark at its unscaled size.
+                        ProvideInterfaceScale {
+                            // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
+                            // the user chose, and above the language preference, so that it is in the language they chose too.
+                            AppUpdateGate(
+                                isAppOnScreenFlow = viewModel.launchState.isAppOnScreen,
+                                hasUnsavedEditorChangesFlow = viewModel.editorSession.hasUnsavedEditorChanges,
+                                isSyncingFlow = viewModel.syncController.isSyncing,
+                                metronomePlaybackFlow = viewModel.metronomeController.metronomePlayback,
+                            ) {
+                                CampfireContent(viewModel = viewModel, urlOpener = urlOpener)
+                            }
                         }
                     }
+                    LaunchScreenGate(
+                        launchState = viewModel.launchState,
+                        arePreferencesLoaded = arePreferencesLoaded,
+                        isThemeSettled = isThemeSettled,
+                        launchScreenColors = launchScreenColors,
+                        onAppReady = onAppReady,
+                    )
+                    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+                    SyncProgressBar(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        progress = (syncState as? SyncState.Connected)?.progress,
+                    )
                 }
-                LaunchScreenGate(
-                    launchState = viewModel.launchState,
-                    arePreferencesLoaded = arePreferencesLoaded,
-                    isThemeSettled = isThemeSettled,
-                    launchScreenColors = launchScreenColors,
-                    onAppReady = onAppReady,
-                )
-                val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
-                SyncProgressBar(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    progress = (syncState as? SyncState.Connected)?.progress,
-                )
             }
         }
     }
@@ -244,4 +249,24 @@ private fun ImportHandOverEffects(
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel.importController::importFiles) }
     LaunchedEffect(sharedTexts) { sharedTexts.collect(viewModel.pastedSongController::importSharedText) }
     LaunchedEffect(shareLinks) { shareLinks.collect { viewModel.importController.importSharedLink(it) } }
+}
+
+/**
+ * Counts every platform text input session opened under [content] into [overlayState], which every editable field opens
+ * while it is focused, so the root's `?` can tell a field is being typed in. The interceptor is remembered: a new one
+ * tears an open session down and starts it again. A session ends by being cancelled, which runs the `finally`.
+ */
+@Composable
+private fun CountTextInputSessions(overlayState: OverlayState, content: @Composable () -> Unit) {
+    val interceptor = remember(overlayState) {
+        PlatformTextInputInterceptor { request, nextHandler ->
+            overlayState.onTextInputStarted()
+            try {
+                nextHandler.startInputMethod(request)
+            } finally {
+                overlayState.onTextInputEnded()
+            }
+        }
+    }
+    InterceptPlatformTextInput(interceptor = interceptor, content = content)
 }

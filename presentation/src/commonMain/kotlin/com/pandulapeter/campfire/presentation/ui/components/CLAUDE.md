@@ -40,7 +40,7 @@ The shared building blocks of the screens; subpackages with something to say hav
   auto-scroll only in the continuous song layout), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the
   scroll wheel, which is no key, in the sheet only. `?` is Shift + slash
   (`Shift.IN_LABEL`, written as the character): a US layout's key, so elsewhere Ctrl / Cmd + slash, the numpad's
-  slash, or Settings → About open the sheet.
+  slash, or Settings → About open the sheet; `?` does nothing while a text field is being typed in.
 - **`saveShortcut`**: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt); in a `CampfireBottomSheet` it presses
   the header's `BottomSheetConfirmButton` (library deletion opts out), nothing while disabled or closing. Keys travel
   only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a frame in and

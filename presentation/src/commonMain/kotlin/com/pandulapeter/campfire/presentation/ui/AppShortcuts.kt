@@ -115,7 +115,8 @@ internal fun CampfireViewModel.perform(shortcut: AppShortcut, clipboard: Clipboa
     AppShortcut.SelectAllSongs -> selectAllSongsByKey()
     AppShortcut.ExportSetlist -> exportSetlistByKey()
     is AppShortcut.SelectScreen -> selectScreenByKey(shortcut.keyShortcut)
-    is AppShortcut.ShowKeyboardShortcuts -> showKeyboardShortcutsByKey()
+    // A field types the `?` from an event after its key-down on the desktop and on iOS, so the key-down reaches here.
+    is AppShortcut.ShowKeyboardShortcuts -> if (shortcut.keyShortcut == KeyShortcut.SHORTCUTS_QUESTION_MARK && dialogHost.overlayState.isTextBeingTyped) false else showKeyboardShortcutsByKey()
 }
 
 /** Whether nothing is drawn over the screen on top, which the keys are otherwise meant for. */
