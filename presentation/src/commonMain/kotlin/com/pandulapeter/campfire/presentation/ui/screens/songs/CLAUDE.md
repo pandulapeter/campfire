@@ -38,6 +38,8 @@ The songs screen.
 - A sort picked from the menu ends the list on the new order's first section after the picks, since the picks in sight
   do not show the change: glided down to from the very top, put straight onto from anywhere else. The sort already
   applied, picked again while the picks are in sight, glides there too; once the first section's header sticks, nothing.
+  In selection mode, whose list opens with the Selection rather than the picks, a sort goes to the top and a sort
+  picked again does nothing.
 
 ## Back resets the filters
 
