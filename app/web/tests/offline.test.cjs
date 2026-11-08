@@ -86,10 +86,11 @@ test('the worker and the development server know every first segment the app wri
         path.join(__dirname, '../../../presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/navigation/BrowserRoutes.kt'),
         'utf8',
     );
-    // Every segment constant starts an address but the bare root and an editor's trailing "edit".
+    // Every segment constant starts an address but the bare root, an editor's trailing "edit", and "preferences", a
+    // Settings tab's old address read only after "settings/".
     const segments = [...browserRoutes.matchAll(/private const val [A-Z_]+ = "([^"]*)"/g)]
         .map(match => match[1])
-        .filter(segment => segment !== '' && segment !== 'edit');
+        .filter(segment => !['', 'edit', 'preferences'].includes(segment));
     const worker = routesOf(path.join(resources, 'service-worker.js'));
     assert.deepEqual([...worker].sort(), [...segments].sort());
     assert.deepEqual(routesOf(path.join(__dirname, '../webpack.config.d/routes.js')), worker);
