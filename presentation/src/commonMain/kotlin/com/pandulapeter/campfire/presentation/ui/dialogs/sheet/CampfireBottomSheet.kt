@@ -37,11 +37,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -221,7 +223,6 @@ internal fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
-        val density = LocalDensity.current
         val isKeyboardVisible = keyboardBackHandler()
         val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
         CompactKeyboardEffect(isEnabled = isCompactKeyboard)
@@ -242,6 +243,7 @@ internal fun CampfireBottomSheet(
         // the lists in it that would otherwise be measured against an infinite one.
         Column(
             modifier = Modifier.fillMaxWidth()
+                .keepSheetFromWheelScrolls()
                 .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
                 .saveShortcut { saveShortcut.action?.invoke() }
                 .onFocusChanged { sheetFocusState.hasFocus = it.hasFocus }
@@ -262,15 +264,7 @@ internal fun CampfireBottomSheet(
         ) {
             val consumedInsets = remember { MutableWindowInsets() }
             val heightAnimation = remember { SheetHeightAnimation() }
-            val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-            // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not decided
-            // yet takes up none of it).
-            val uncoveredTopInset = remember(sheetState, topInset, density) {
-                derivedStateOf {
-                    val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
-                    with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
-                }
-            }
+            val uncoveredTopInset = rememberUncoveredTopInset(sheetState)
             Column(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
                     .animateSheetContentHeight(heightAnimation) { uncoveredTopInset.value }
@@ -306,6 +300,23 @@ internal fun CampfireBottomSheet(
                     ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
                 }
             }
+        }
+    }
+}
+
+/**
+ * How much of the top inset the sheet's top edge has not come into: Material pads the sheet by as much of it as its offset
+ * has not taken up yet (an offset not decided yet takes up none of it).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun rememberUncoveredTopInset(sheetState: SheetState): State<Dp> {
+    val density = LocalDensity.current
+    val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+    return remember(sheetState, topInset, density) {
+        derivedStateOf {
+            val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
+            with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
         }
     }
 }

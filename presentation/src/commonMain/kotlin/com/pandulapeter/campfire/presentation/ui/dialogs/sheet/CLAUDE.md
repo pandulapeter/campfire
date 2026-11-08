@@ -29,6 +29,9 @@
   bottom edge (`stayOnSheetBottom`). Content that fills the sheet keeps filling the room at
   every drag offset (`uncoveredTopInset`), else a grid overflowing by less than the status bar oscillates the anchor and
   snaps the sheet back under the finger.
+- **A mouse wheel or trackpad scrolling the content never moves the sheet** (`keepSheetFromWheelScrolls`): Material
+  drags the sheet by what the content leaves of each step, and a wheel never lets go for it to settle, leaving it part
+  of the way down. A finger still drags the sheet by its content.
 - The close button runs `sheetState.hide()` then clears the dialog itself: Material calls `onDismissRequest` only for a
   swipe, scrim, or back, and a hidden sheet whose state is still set leaves an invisible modal layer swallowing the next
   tap.
