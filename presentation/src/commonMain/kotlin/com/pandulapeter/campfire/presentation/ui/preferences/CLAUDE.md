@@ -29,7 +29,8 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   numbers), **Chords** (Diagrams: the instrument and tuning, diagrams, degrees; Names: notation, accidentals, chord
   names with a capo, capo keeps the key), **Metronome** (sound, volume, tempo change, visual beat, vibrate). Same order
   everywhere.
-- Pages slide in their buttons' direction; the open page's button pressed again scrolls it to the top.
+- Pages slide in their buttons' direction; each page keeps its own scroll position, as Settings' tabs do, and the open
+  page's button pressed again scrolls it to the top.
 - Nothing is typed into the Preferences, so the pinned buttons never meet the keyboard.
 
 ## Contexts (`PreferencesContext`, `preferencesPages`, tested)
