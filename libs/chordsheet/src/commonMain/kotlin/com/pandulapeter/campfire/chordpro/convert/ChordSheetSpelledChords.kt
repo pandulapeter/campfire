@@ -22,10 +22,14 @@ package com.pandulapeter.campfire.chordpro.convert
 internal object ChordSheetSpelledChords {
     fun lines(lines: List<String>): List<String> {
         if (lines.none { spokenName.containsMatchIn(it) }) return lines
+        // The run of chord rows starting at each line, counted once from the end, so a long run is not read again from each
+        // of its rows.
+        val chordRuns = IntArray(lines.size + 1)
+        for (index in lines.indices.reversed()) chordRuns[index] = if (ChordSheetConverter.isChordLine(lines[index])) chordRuns[index + 1] + 1 else 0
         val result = mutableListOf<String>()
         var index = 0
         while (index < lines.size) {
-            val rows = generateSequence(index) { it + 1 }.takeWhile { it < lines.size && ChordSheetConverter.isChordLine(lines[it]) }.count()
+            val rows = chordRuns[index]
             val lyric = lines.getOrNull(index + rows)
             val set = if (rows > 0 && lyric != null) setOver(lines.subList(index, index + rows), lyric) else null
             if (set == null) {
