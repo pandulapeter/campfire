@@ -15,6 +15,8 @@
 - **Install referrer**: read once, on a first launch only, off the main thread, given up on after ten seconds. Only a
   `campfire_link=<payload>` that `ShareLinks` reads is taken; Play's own `utm_source` and campaigns are ignored, as is a
   device without Play. No flag is kept: the first run's preferences write already ends first launches.
+- `SystemKeyboardShortcutsEffect` hands the activity the shortcuts for Meta + / as `KeyboardShortcutGroup`s, in the
+  app's language, whenever they or the features they depend on change.
 - `update/AppUpdate.android.kt` and `platform/SyncNotificationPermission.kt` live here rather than in `:app:android`
   because a composable can get the activity, a result launcher, and the lifecycle itself.
 - **Notification permission** is asked the moment sync becomes connected: a foreground service started without it keeps

@@ -23,14 +23,11 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.awtTransferable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.EscapeStep
 import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
@@ -146,11 +143,9 @@ fun CampfireDesktopApp(
  *   `AppExitController.confirmExit` and [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
-    // The shortcuts are the app's own root handler's (appKeyboardShortcuts), which every platform shares. Escape with Ctrl
-    // or Cmd and without Alt neither goes back nor asks to close the app.
-    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape &&
-        !((keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed)
-    ) {
+    // The shortcuts are the app's own root handler's (appKeyboardShortcuts), which every platform shares. Escape with Ctrl,
+    // Cmd, or Alt neither goes back nor asks to close the app.
+    if (keyEvent.type == KeyEventType.KeyDown && KeyShortcut.BACK.matches(keyEvent)) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
@@ -188,7 +183,7 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
  * like a new press and nothing can be done about it here.
  */
 fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
-    if (keyEvent.key != Key.Escape) return false
+    if (keyEvent.key != KeyShortcut.BACK.chord.key) return false
     return when (keyEvent.type) {
         KeyEventType.KeyDown -> isEscapeHeld.also { isEscapeHeld = true }
         KeyEventType.KeyUp -> false.also { isEscapeHeld = false }

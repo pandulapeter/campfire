@@ -74,6 +74,16 @@ class AppShortcutsTest {
         assertNull(shortcut(Key.One))
     }
 
+    @Test
+    fun `Ctrl or Cmd and slash, and a question mark, open the shortcuts sheet, while a screen's own keys are no app-wide shortcut`() {
+        assertEquals(AppShortcut.ShowKeyboardShortcuts(KeyShortcut.SHORTCUTS), shortcut(Key.Slash, isCtrlOrMeta = true))
+        assertEquals(AppShortcut.ShowKeyboardShortcuts(KeyShortcut.SHORTCUTS_QUESTION_MARK), shortcut(Key.Slash, isShift = true))
+        assertNull(shortcut(Key.Slash))
+        assertNull(shortcut(Key.PageDown))
+        assertNull(shortcut(Key.DirectionLeft))
+        assertNull(shortcut(Key.Escape))
+    }
+
     private fun shortcut(key: Key, isCtrlOrMeta: Boolean = false, isShift: Boolean = false, isAlt: Boolean = false) =
         appShortcutOf(key, isCtrlOrMeta = isCtrlOrMeta, isShift = isShift, isAlt = isAlt)
 }

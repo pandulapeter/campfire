@@ -18,7 +18,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 
 /**
  * Whether [this] is [shortcut]'s chord, where it works on the web, for the shell's listeners that hear a key before
- * Compose does. Only for the shortcuts on a letter, a digit, the comma, or F3: the key is the physical one as Compose
+ * Compose does. Only for the shortcuts on a letter, a digit, the comma, the slash, or F3: the key is the physical one as Compose
  * goes by it (`code`), else for a letter the character a virtual keyboard sends, which has no code.
  */
 internal fun KeyboardEvent.isShortcut(shortcut: KeyShortcut): Boolean {
@@ -42,4 +42,4 @@ private val LETTER_KEYS: Map<Char, Key> = listOf(
 
 private val CODE_KEYS: Map<String, Key> = listOf(Key.Zero, Key.One, Key.Two, Key.Three, Key.Four, Key.Five, Key.Six, Key.Seven, Key.Eight, Key.Nine)
     .flatMapIndexed { digit, key -> listOf("Digit$digit" to key, "Numpad$digit" to key) }
-    .toMap() + mapOf("Comma" to Key.Comma, "F3" to Key.F3)
+    .toMap() + mapOf("Comma" to Key.Comma, "Slash" to Key.Slash, "NumpadDivide" to Key.NumPadDivide, "F3" to Key.F3)

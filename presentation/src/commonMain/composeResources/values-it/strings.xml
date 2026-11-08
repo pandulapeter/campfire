@@ -1378,4 +1378,43 @@
     <string name="key_shift">Maiusc</string>
     <string name="key_space">Spazio</string>
     <string name="key_enter">Invio</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Pag ↑</string>
+    <string name="key_page_down">Pag ↓</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">Fine</string>
+    <string name="key_scroll">Rotellina</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">Scorciatoie da tastiera</string>
+    <string name="settings_keyboard_shortcuts_description">Ogni tasto a cui l\'app risponde su questo dispositivo</string>
+    <string name="shortcut_group_app">Ovunque</string>
+    <string name="shortcut_group_lists">Canzoni e scalette</string>
+    <string name="shortcut_group_song">Durante la lettura di una canzone</string>
+    <string name="shortcut_group_metronome">Metronomo</string>
+    <string name="shortcut_group_editor">Editor di canzoni</string>
+    <string name="shortcut_group_print_preview">Anteprima di stampa</string>
+    <string name="shortcut_shortcuts">Mostra le scorciatoie da tastiera</string>
+    <string name="shortcut_back">Torna indietro o chiudi ciò che è aperto</string>
+    <string name="shortcut_find">Cerca</string>
+    <string name="shortcut_save">Salva, Crea o Fine; su una canzone o una scaletta, Condividi o esporta</string>
+    <string name="shortcut_screen">Vai a %1$s</string>
+    <string name="shortcut_new">Nuova canzone o scaletta</string>
+    <string name="shortcut_paste">Nuova canzone dal testo copiato</string>
+    <string name="shortcut_select_all">Seleziona tutte le canzoni elencate, durante la selezione</string>
+    <string name="shortcut_edit">Modifica la canzone</string>
+    <string name="shortcut_zoom">Testo più grande o più piccolo</string>
+    <string name="shortcut_zoom_reset">Testo alla dimensione normale</string>
+    <string name="shortcut_transpose">Trasponi di un semitono su o giù</string>
+    <string name="shortcut_play">Avvia o ferma lo scorrimento automatico della canzone</string>
+    <string name="shortcut_song_up_down">Scorri, o avanza dove la canzone ha i pulsanti di passo</string>
+    <string name="shortcut_song_step">Parte precedente o successiva della canzone</string>
+    <string name="shortcut_song_neighbours">Canzone precedente o successiva della scaletta</string>
+    <string name="shortcut_metronome">Avvia o ferma il clic</string>
+    <string name="shortcut_tap_tempo">Batti il tempo</string>
+    <string name="shortcut_find_step">Risultato successivo o precedente</string>
+    <string name="shortcut_find_step_from_query">Risultato successivo o precedente, dal testo da trovare</string>
+    <string name="shortcut_preview_turn">Pagina precedente o successiva</string>
+    <string name="shortcut_preview_ends">Prima o ultima pagina</string>
+    <string name="shortcut_preview_zoom">Ingrandisci la pagina</string>
 </resources>

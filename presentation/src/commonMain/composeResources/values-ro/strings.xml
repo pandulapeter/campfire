@@ -1430,4 +1430,43 @@
     <string name="key_shift">Shift</string>
     <string name="key_space">Spațiu</string>
     <string name="key_enter">Enter</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_scroll">Derulare</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">Comenzi rapide de la tastatură</string>
+    <string name="settings_keyboard_shortcuts_description">Fiecare tastă la care aplicația răspunde pe acest dispozitiv</string>
+    <string name="shortcut_group_app">Oriunde</string>
+    <string name="shortcut_group_lists">Cântece și liste</string>
+    <string name="shortcut_group_song">Citirea unui cântec</string>
+    <string name="shortcut_group_metronome">Metronom</string>
+    <string name="shortcut_group_editor">Editorul de cântece</string>
+    <string name="shortcut_group_print_preview">Previzualizare tipărire</string>
+    <string name="shortcut_shortcuts">Afișează comenzile rapide de la tastatură</string>
+    <string name="shortcut_back">Înapoi sau închide ce este deschis</string>
+    <string name="shortcut_find">Caută</string>
+    <string name="shortcut_save">Salvează, Creează sau Gata; pe un cântec sau o listă, Partajează sau exportă</string>
+    <string name="shortcut_screen">Mergi la %1$s</string>
+    <string name="shortcut_new">Cântec sau listă nouă</string>
+    <string name="shortcut_paste">Cântec nou din textul copiat</string>
+    <string name="shortcut_select_all">Selectează toate cântecele afișate, în modul de selecție</string>
+    <string name="shortcut_edit">Editează cântecul</string>
+    <string name="shortcut_zoom">Text mai mare sau mai mic</string>
+    <string name="shortcut_zoom_reset">Text la mărimea obișnuită</string>
+    <string name="shortcut_transpose">Transpune cu un semiton în sus sau în jos</string>
+    <string name="shortcut_play">Pornește sau oprește derularea automată a cântecului</string>
+    <string name="shortcut_song_up_down">Derulează sau avansează pe unde cântecul are butoane de pas</string>
+    <string name="shortcut_song_step">Partea anterioară sau următoare a cântecului</string>
+    <string name="shortcut_song_neighbours">Cântecul anterior sau următor din listă</string>
+    <string name="shortcut_metronome">Pornește sau oprește metronomul</string>
+    <string name="shortcut_tap_tempo">Bate tempoul</string>
+    <string name="shortcut_find_step">Potrivirea următoare sau anterioară</string>
+    <string name="shortcut_find_step_from_query">Potrivirea următoare sau anterioară, din textul căutat</string>
+    <string name="shortcut_preview_turn">Pagina anterioară sau următoare</string>
+    <string name="shortcut_preview_ends">Prima sau ultima pagină</string>
+    <string name="shortcut_preview_zoom">Mărește pagina</string>
 </resources>

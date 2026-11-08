@@ -63,6 +63,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   other would otherwise get one of for each, and it refuses one asked for by an app that is not active. It is asked
  *   again every time the app comes back to the front, which is what puts right a switch that was refused, or one that
  *   a restored backup brought a preference for, and is nothing at all where the icon already matches.
+ * @param onKeyCommandsChanged Called with the shortcuts that work here whenever they change, for the app module to list
+ *   as `UIKeyCommand`s in the Command-hold overlay ([IosKeyCommandsEffect]).
  */
 @Composable
 fun CampfireIosApp(
@@ -76,6 +78,7 @@ fun CampfireIosApp(
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onUiModeChanged: (UserPreferences.UiMode?) -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
+    onKeyCommandsChanged: (List<IosKeyCommand>) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
     LocalSyncNotifier provides syncNotifier,
@@ -95,6 +98,7 @@ fun CampfireIosApp(
             }
         }
     }
+    IosKeyCommandsEffect(viewModel = viewModel, onChanged = onKeyCommandsChanged)
     // Asked as the app starts, without reading the pasteboard: the view model asks only once, and only on a first launch.
     LaunchedEffect(viewModel) { viewModel.firstRunController.offerClipboardLink(IosClipboardLinkReader) }
     LaunchedEffect(inboxShares) {

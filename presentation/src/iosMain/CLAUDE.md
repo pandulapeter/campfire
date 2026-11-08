@@ -21,6 +21,8 @@
   Paste, happens only on the onboarding card's tap, asking for the URL when the pasteboard has one and for the text
   otherwise, never both.
 - Back navigation, the swipe included, is Navigation 3's.
+- `IosKeyCommandsEffect` hands `:app:ios` the shortcuts for the Command-hold overlay as `IosKeyCommand`s (UIKit's input
+  names; F3, which has none here, left out); the overlay is `:app:ios`'s.
 - **Drops** (iPad and iPhone): an item offering `public.utf8-plain-text` is a text, anything else a file, named by
   `suggestedName` plus its type's extension. Every load starts inside the drop, since a provider answers only then; each
   file is read in its completion handler, as long as the provider's copy lives, under one locked `ImportBudget`.

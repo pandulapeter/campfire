@@ -264,6 +264,9 @@ sealed interface DialogType {
     /** The languages of the interface, opened from the onboarding's first page so that it can be read from the start. */
     data object AppLanguage : DialogType
 
+    /** Every keyboard shortcut that works here, opened with Ctrl / Cmd + slash or `?`, and from Settings → About. */
+    data object KeyboardShortcuts : DialogType
+
     /** What Campfire is built with and under which licenses, opened from Settings → About. */
     data object OpenSourceLicenses : DialogType
 

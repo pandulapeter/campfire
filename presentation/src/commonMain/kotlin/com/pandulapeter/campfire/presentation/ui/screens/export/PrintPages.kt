@@ -42,11 +42,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
@@ -72,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.horizontalArrowStep
 import com.pandulapeter.campfire.presentation.ui.components.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isCtrlWheelZoomOwnedByApp
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import kotlin.math.pow
@@ -201,17 +198,16 @@ internal fun PrintPages(
             .focusable()
             .onKeyEvent { event ->
                 // Alt + Left is the browser's Back, which on the web closes this screen, and Cmd + Left and Right are Back
-                // and Forward on a Mac, so a press with any of those down is left to whoever sent it.
-                if (event.type != KeyEventType.KeyDown || event.isAltPressed || event.isCtrlPressed || event.isMetaPressed) {
-                    return@onKeyEvent false
-                }
+                // and Forward on a Mac, so the table's chords take none of them and such a press is left to whoever sent it.
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
                 // The arrows go to the page lying that way, which in a right-to-left layout is the next one for Left.
-                val target = when (event.key) {
-                    Key.PageUp -> pagerState.currentPage - 1
-                    Key.PageDown -> pagerState.currentPage + 1
-                    Key.MoveHome -> 0
-                    Key.MoveEnd -> pageCount - 1
-                    else -> pagerState.currentPage + (event.key.horizontalArrowStep(layoutDirection) ?: return@onKeyEvent false)
+                val target = when {
+                    KeyShortcut.PREVIEW_PAGE_UP.matches(event) -> pagerState.currentPage - 1
+                    KeyShortcut.PREVIEW_PAGE_DOWN.matches(event) -> pagerState.currentPage + 1
+                    KeyShortcut.PREVIEW_HOME.matches(event) -> 0
+                    KeyShortcut.PREVIEW_END.matches(event) -> pageCount - 1
+                    KeyShortcut.PREVIEW_LEFT.matches(event) || KeyShortcut.PREVIEW_RIGHT.matches(event) -> pagerState.currentPage + (event.key.horizontalArrowStep(layoutDirection) ?: 0)
+                    else -> return@onKeyEvent false
                 }
                 turnTo(target)
                 true

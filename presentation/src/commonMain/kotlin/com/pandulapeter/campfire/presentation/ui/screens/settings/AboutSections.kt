@@ -17,6 +17,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_bug
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
+import com.pandulapeter.campfire.presentation.resources.ic_keyboard
+import com.pandulapeter.campfire.presentation.resources.keyboard_shortcuts
 import com.pandulapeter.campfire.presentation.resources.ic_license
 import com.pandulapeter.campfire.presentation.resources.ic_log
 import com.pandulapeter.campfire.presentation.resources.ic_phone
@@ -38,6 +40,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_group_help
 import com.pandulapeter.campfire.presentation.resources.settings_group_legal
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
+import com.pandulapeter.campfire.presentation.resources.settings_keyboard_shortcuts_description
 import com.pandulapeter.campfire.presentation.resources.settings_log_description
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses
 import com.pandulapeter.campfire.presentation.resources.settings_open_source_licenses_description
@@ -52,20 +55,25 @@ import com.pandulapeter.campfire.presentation.resources.settings_support_descrip
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.screens.settings.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShowsShortcutHints
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutPlatforms
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.processLogActionTitle
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
+import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * What the app is and where it lives, in three groups: the app itself (its website, where every build of it is, how to
- * give something back, and, last, who made it and which version this is); help (the website's support page, the source code
- * and issue tracker, and the app's log for a report there); and the fine print. The row that names the author is the link to the
+ * give something back, and, last, who made it and which version this is); help (the keyboard shortcuts where there is a
+ * keyboard, the website's support page, the source code and issue tracker, and the app's log for a report there); and
+ * the fine print. The row that names the author is the link to the
  * author's own site, since that is what a name with a link on it is expected to lead to. campfire-songbook.com is the
  * app's home page: every build of Campfire is listed there, which is the whole of what the app says about the other
  * platforms, since a page can be kept up to date without a release and it is the one place App Review has nothing to
@@ -99,6 +107,7 @@ internal fun AboutSections(
         urlOpener = urlOpener,
         processLogTitle = processLogActionTitle(filePicker),
         onProcessLogClicked = { showDialog(DialogType.SendProcessLog(isAfterCrash = false)) },
+        onKeyboardShortcutsClicked = { showDialog(DialogType.KeyboardShortcuts) },
     )
     LegalSection(urlOpener = urlOpener, onOpenSourceLicensesClicked = { showDialog(DialogType.OpenSourceLicenses) })
 }
@@ -159,7 +168,18 @@ private fun HelpSection(
     urlOpener: (String) -> Unit,
     processLogTitle: String,
     onProcessLogClicked: () -> Unit,
+    onKeyboardShortcutsClicked: () -> Unit,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_help)) {
+    // A desktop or a web build always lists them, the keyboard being how it is used; a phone or a tablet only while one
+    // is attached, and the row comes and goes with it.
+    AnimatedSettingsRow(isVisible = LocalShowsShortcutHints.current || ShortcutPlatforms.DESKTOP_AND_WEB.includes(appBuild)) {
+        LinkListItem(
+            title = stringResource(Res.string.keyboard_shortcuts),
+            description = stringResource(Res.string.settings_keyboard_shortcuts_description),
+            icon = painterResource(Res.drawable.ic_keyboard),
+            onClick = onKeyboardShortcutsClicked,
+        )
+    }
     LinkListItem(
         title = stringResource(Res.string.settings_help),
         description = stringResource(Res.string.settings_help_description),

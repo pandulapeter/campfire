@@ -163,40 +163,42 @@ internal fun Modifier.songKeyboardShortcuts(
             // Consumed rather than left alone while the screen is covered: an arrow nobody consumes is spent by Compose on
             // a focus search of its own, which would move the focus to a chip or a step button of the covered song and
             // scroll it into view.
-            if (!latestIsUncovered) return@onPreviewKeyEvent keyEvent.key in STEP_AND_SCROLL_KEYS
+            if (!latestIsUncovered) return@onPreviewKeyEvent STEP_AND_SCROLL_KEYS.any { it.matches(keyEvent) }
             if (onTapTempo != null && KeyShortcut.TAP_TEMPO.matches(keyEvent)) {
                 if (heldStepKeys.add(keyEvent.key)) onTapTempo()
                 return@onPreviewKeyEvent true
             }
-            val step = when (keyEvent.key) {
-                Key.DirectionUp, Key.PageUp -> onStepBack
-                Key.DirectionDown, Key.PageDown -> onStepForward
-                Key.Spacebar -> onToggleAutoScroll
+            val step = when {
+                KeyShortcut.SONG_UP.matches(keyEvent) || KeyShortcut.SONG_PAGE_UP.matches(keyEvent) -> onStepBack
+                KeyShortcut.SONG_DOWN.matches(keyEvent) || KeyShortcut.SONG_PAGE_DOWN.matches(keyEvent) -> onStepForward
+                KeyShortcut.PLAY.matches(keyEvent) -> onToggleAutoScroll
                 else -> null
             }
             if (step != null) {
                 if (heldStepKeys.add(keyEvent.key)) step()
                 return@onPreviewKeyEvent true
             }
-            val action = when (keyEvent.key) {
-                Key.DirectionUp -> onScrollUp
-                Key.DirectionDown -> onScrollDown
-                else -> when (keyEvent.key.horizontalArrowStep(layoutDirection)) {
-                    -1 -> onPreviousSong
-                    1 -> onNextSong
-                    else -> null
-                }
+            val action = when {
+                KeyShortcut.SONG_UP.matches(keyEvent) -> onScrollUp
+                KeyShortcut.SONG_DOWN.matches(keyEvent) -> onScrollDown
+                KeyShortcut.SONG_LEFT.matches(keyEvent) || KeyShortcut.SONG_RIGHT.matches(keyEvent) ->
+                    when (keyEvent.key.horizontalArrowStep(layoutDirection)) {
+                        -1 -> onPreviousSong
+                        1 -> onNextSong
+                        else -> null
+                    }
+                else -> null
             } ?: return@onPreviewKeyEvent false
             action()
             true
         }
 }
 
-private val STEP_AND_SCROLL_KEYS = setOf(
-    Key.DirectionUp,
-    Key.DirectionDown,
-    Key.PageUp,
-    Key.PageDown,
-    Key.DirectionLeft,
-    Key.DirectionRight,
+private val STEP_AND_SCROLL_KEYS = listOf(
+    KeyShortcut.SONG_UP,
+    KeyShortcut.SONG_DOWN,
+    KeyShortcut.SONG_PAGE_UP,
+    KeyShortcut.SONG_PAGE_DOWN,
+    KeyShortcut.SONG_LEFT,
+    KeyShortcut.SONG_RIGHT,
 )

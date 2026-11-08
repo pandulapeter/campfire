@@ -25,8 +25,10 @@ import kotlin.js.unsafeCast
  * in the songs screen's selection mode (`selectAllSongsByKey`), each keeping the browser from its own use of the key
  * (switching tabs, its settings on a Mac, selecting the page's text) only where the app did something with it: anywhere
  * else the browser has the key as it always does. Select all is left to a field being typed in, which selects its own
- * text. A listener on the window in the capture phase for the reasons [SearchShortcutEffect] gives; the app's own root
- * handler leaves these keys alone ([LocalKeysLeftToShell]).
+ * text. Ctrl / Cmd + slash opens the shortcuts sheet (`showKeyboardShortcutsByKey`), from a field being typed in too,
+ * whose key never reaches the canvas, and keeps Safari from toggling its status bar. A listener on the window in the
+ * capture phase for the reasons [SearchShortcutEffect] gives; the app's own root handler leaves these keys alone
+ * ([LocalKeysLeftToShell]). `?` is left to the root, since it is no shortcut in a field.
  */
 @Composable
 internal fun ScreenShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
@@ -35,6 +37,7 @@ internal fun ScreenShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
         val shortcut = SHELL_SCREEN_SHORTCUTS.firstOrNull(keyEvent::isShortcut) ?: return@listener
         val isDone = when (shortcut) {
             KeyShortcut.SELECT_ALL -> !isTypingTarget(keyEvent) && viewModel.selectAllSongsByKey()
+            KeyShortcut.SHORTCUTS -> viewModel.showKeyboardShortcutsByKey()
             else -> viewModel.selectScreenByKey(shortcut)
         }
         if (isDone) keyEvent.preventDefault()
@@ -44,4 +47,4 @@ internal fun ScreenShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
 }
 
 /** The shortcuts [ScreenShortcutEffect] answers, which [CampfireWebApp] leaves to it. */
-internal val SHELL_SCREEN_SHORTCUTS get() = KeyShortcut.screens + KeyShortcut.SETTINGS + KeyShortcut.SELECT_ALL
+internal val SHELL_SCREEN_SHORTCUTS get() = KeyShortcut.screens + KeyShortcut.SETTINGS + KeyShortcut.SELECT_ALL + KeyShortcut.SHORTCUTS

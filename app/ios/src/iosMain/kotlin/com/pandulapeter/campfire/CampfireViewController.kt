@@ -25,6 +25,7 @@ import platform.Foundation.URLQueryAllowedCharacterSet
 import platform.Foundation.create
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 import platform.UIKit.UIApplication
+import platform.UIKit.UIKeyCommand
 import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
@@ -53,9 +54,12 @@ private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoi
 
 /**
  * Entry point called from Swift. Returns the view controller hosting the shared Compose UI.
+ *
+ * @param onKeyCommandsChanged Told the app's shortcuts for the Command-hold overlay whenever they change
+ *   ([listedKeyCommands]), for the Swift controller around this one to list.
  */
 @Suppress("unused", "FunctionName")
-fun CampfireViewController(): UIViewController {
+fun CampfireViewController(onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit): UIViewController {
     // Before anything else of the app's, so that the log has the start of its own process too.
     installProcessLog()
     koinApplication
@@ -73,6 +77,7 @@ fun CampfireViewController(): UIViewController {
             metronomeNotifier = metronomeNotifier,
             onUiModeChanged = ::applyInterfaceStyle,
             onAppIconChanged = ::applyAppIcon,
+            onKeyCommandsChanged = { onKeyCommandsChanged(listedKeyCommands(it)) },
         )
     }.also { controller = it }
 }

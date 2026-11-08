@@ -40,7 +40,7 @@ it turns into a back event.
 
 - **Escape**, in order: dismiss what is open on top, close the top screen's search, pop the back stack, reset the
   filters of a songs screen left last (`EscapeStep.CLEAR_FILTERS`), or ask `DialogType.ConfirmExit` (an extra Escape is
-  a habit, not a decision; the close button and system quit don't ask). Not with Ctrl / Cmd.
+  a habit, not a decision; the close button and system quit don't ask). Not with Ctrl / Cmd or Alt (`KeyShortcut.BACK`).
   - "Open on top" is `visibleDialog` plus `overlayState.isAnyMenuOpen` (`LocalOverlayState`, also given to sheets a
     screen hosts itself, like the editor's search). A window key handler runs before Compose turns Escape into a back
     event, so missing one here pops the stack behind the modal.

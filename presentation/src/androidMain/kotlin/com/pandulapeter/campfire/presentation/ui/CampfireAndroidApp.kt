@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import android.graphics.Color
+import android.view.KeyboardShortcutGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
@@ -67,6 +68,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   screen until: the frame that would otherwise take it away is the launch screen rather than the app.
  * @param onAppIconChanged Told the theme color the launcher icon is to be in (`appIconThemeColor`), once the
  *   preferences have been read and whenever it changes, for the activity to switch the launcher entry to.
+ * @param onKeyboardShortcutsChanged Told the shortcuts for the system's list (Meta + /), whenever they change, for the
+ *   activity to answer `onProvideKeyboardShortcuts` with ([SystemKeyboardShortcutsEffect]).
  */
 @Composable
 fun CampfireAndroidApp(
@@ -79,6 +82,7 @@ fun CampfireAndroidApp(
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onAppReady: () -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
+    onKeyboardShortcutsChanged: (List<KeyboardShortcutGroup>) -> Unit = {},
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -92,6 +96,7 @@ fun CampfireAndroidApp(
         viewModel.syncController.syncState.map { it is SyncState.Connected }.distinctUntilChanged()
     }.collectAsStateWithLifecycle(viewModel.syncController.syncState.value is SyncState.Connected)
     SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
+    SystemKeyboardShortcutsEffect(viewModel = viewModel, onChanged = onKeyboardShortcutsChanged)
     val activity = LocalActivity.current as? ComponentActivity
     // Android clears the view model with every activity that is destroyed outside a configuration change, finishing
     // or not ("Don't keep activities" destroys it on every trip to the background), and only a finishing one is the

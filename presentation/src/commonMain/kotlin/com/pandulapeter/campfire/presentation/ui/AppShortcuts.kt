@@ -68,14 +68,19 @@ internal sealed interface AppShortcut {
 
     /** Ctrl / Cmd + 1 to 6 and Ctrl / Cmd + comma, see [selectScreenByKey]. */
     data class SelectScreen(override val keyShortcut: KeyShortcut) : AppShortcut
+
+    /** Ctrl / Cmd + slash, and `?` outside a field, see [showKeyboardShortcutsByKey]. */
+    data class ShowKeyboardShortcuts(override val keyShortcut: KeyShortcut) : AppShortcut
 }
 
 /**
  * The app-wide shortcut a key-down of [key] is, or null: one of [KeyShortcut]'s, working here, that no screen, sheet or
  * field took first. The rest of the table (Edit, the editor's, the song's arrows) belongs to the surfaces that hear them.
  */
-internal fun appShortcutOf(key: Key, isCtrlOrMeta: Boolean, isShift: Boolean, isAlt: Boolean): AppShortcut? =
-    KeyShortcut.entries.firstOrNull { it.isAvailable && it.chord.matches(key, isCtrlOrMeta = isCtrlOrMeta, isShift = isShift, isAlt = isAlt) }?.let(::appShortcutOf)
+internal fun appShortcutOf(key: Key, isCtrlOrMeta: Boolean, isShift: Boolean, isAlt: Boolean): AppShortcut? = KeyShortcut.entries.firstNotNullOfOrNull { shortcut ->
+    // Several entries share a key (Page Down is the song's and the print preview's), so only the app-wide ones are asked.
+    appShortcutOf(shortcut)?.takeIf { shortcut.isAvailable && shortcut.chord.matches(key, isCtrlOrMeta = isCtrlOrMeta, isShift = isShift, isAlt = isAlt) }
+}
 
 /** The app-wide shortcut [shortcut] is, or null for one a surface hears itself. */
 internal fun appShortcutOf(shortcut: KeyShortcut): AppShortcut? = when (shortcut) {
@@ -90,6 +95,7 @@ internal fun appShortcutOf(shortcut: KeyShortcut): AppShortcut? = when (shortcut
     KeyShortcut.SELECT_ALL -> AppShortcut.SelectAllSongs
     KeyShortcut.SAVE -> AppShortcut.ExportSetlist
     KeyShortcut.SETTINGS -> AppShortcut.SelectScreen(shortcut)
+    KeyShortcut.SHORTCUTS, KeyShortcut.SHORTCUTS_QUESTION_MARK -> AppShortcut.ShowKeyboardShortcuts(shortcut)
     else -> if (shortcut in KeyShortcut.screens) AppShortcut.SelectScreen(shortcut) else null
 }
 
@@ -109,6 +115,7 @@ internal fun CampfireViewModel.perform(shortcut: AppShortcut, clipboard: Clipboa
     AppShortcut.SelectAllSongs -> selectAllSongsByKey()
     AppShortcut.ExportSetlist -> exportSetlistByKey()
     is AppShortcut.SelectScreen -> selectScreenByKey(shortcut.keyShortcut)
+    is AppShortcut.ShowKeyboardShortcuts -> showKeyboardShortcutsByKey()
 }
 
 /** Whether nothing is drawn over the screen on top, which the keys are otherwise meant for. */
@@ -165,4 +172,15 @@ internal fun CampfireViewModel.selectScreenByKey(shortcut: KeyShortcut): Boolean
     val destination = screenOf(shortcut, preferencesController.topLevelDestinations.value) ?: return false
     selectTopLevelDestination(destination)
     return navigator.backStack.lastOrNull() == destination
+}
+
+/**
+ * The shortcuts sheet, over whatever screen is on top, though not over a dialog, a sheet or a menu, which it would
+ * replace: those hold the focus, so the root never hears the key over them, and the web's shell, which does, then
+ * leaves it to the browser.
+ */
+internal fun CampfireViewModel.showKeyboardShortcutsByKey(): Boolean {
+    if (!isUncovered) return false
+    dialogHost.showDialog(DialogType.KeyboardShortcuts)
+    return true
 }

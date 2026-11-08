@@ -1427,4 +1427,43 @@
     <string name="key_shift">Shift</string>
     <string name="key_space">רווח</string>
     <string name="key_enter">Enter</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_scroll">גלילה</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">קיצורי מקלדת</string>
+    <string name="settings_keyboard_shortcuts_description">כל מקש שהאפליקציה מגיבה לו במכשיר הזה</string>
+    <string name="shortcut_group_app">בכל מקום</string>
+    <string name="shortcut_group_lists">שירים וסט־ליסטים</string>
+    <string name="shortcut_group_song">בקריאת שיר</string>
+    <string name="shortcut_group_metronome">מטרונום</string>
+    <string name="shortcut_group_editor">עורך השירים</string>
+    <string name="shortcut_group_print_preview">תצוגה מקדימה להדפסה</string>
+    <string name="shortcut_shortcuts">הצגת קיצורי המקלדת</string>
+    <string name="shortcut_back">חזרה, או סגירת מה שפתוח</string>
+    <string name="shortcut_find">חיפוש</string>
+    <string name="shortcut_save">שמירה, יצירה או סיום; בשיר או בסט־ליסט, שיתוף או ייצוא</string>
+    <string name="shortcut_screen">מעבר אל %1$s</string>
+    <string name="shortcut_new">שיר או סט־ליסט חדש</string>
+    <string name="shortcut_paste">שיר חדש מהטקסט שהועתק</string>
+    <string name="shortcut_select_all">בחירת כל השירים שברשימה, במצב בחירה</string>
+    <string name="shortcut_edit">עריכת השיר</string>
+    <string name="shortcut_zoom">טקסט גדול או קטן יותר</string>
+    <string name="shortcut_zoom_reset">טקסט בגודלו הרגיל</string>
+    <string name="shortcut_transpose">טרנספוזיציה בחצי טון למעלה או למטה</string>
+    <string name="shortcut_play">הפעלה או עצירה של הגלילה האוטומטית של השיר</string>
+    <string name="shortcut_song_up_down">גלילה, או מעבר בשלבים במקום שבו יש לשיר כפתורי צעד</string>
+    <string name="shortcut_song_step">החלק הקודם או הבא של השיר</string>
+    <string name="shortcut_song_neighbours">השיר הקודם או הבא בסט־ליסט</string>
+    <string name="shortcut_metronome">הפעלה או עצירה של הקליק</string>
+    <string name="shortcut_tap_tempo">הקשת הטמפו</string>
+    <string name="shortcut_find_step">ההתאמה הבאה או הקודמת</string>
+    <string name="shortcut_find_step_from_query">ההתאמה הבאה או הקודמת, מתוך הטקסט לחיפוש</string>
+    <string name="shortcut_preview_turn">העמוד הקודם או הבא</string>
+    <string name="shortcut_preview_ends">העמוד הראשון או האחרון</string>
+    <string name="shortcut_preview_zoom">הגדלת העמוד</string>
 </resources>

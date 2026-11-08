@@ -46,13 +46,16 @@ internal data class KeyChord(
 
         /** Must be held, and is written in the hint. */
         REQUIRED,
+
+        /** Must be held, and is not written: the label is the character the two type together (`?`, Shift + slash). */
+        IN_LABEL,
     }
 
     fun matches(key: Key, isCtrlOrMeta: Boolean, isShift: Boolean, isAlt: Boolean) =
         (key == this.key || key in alternates) && isCtrlOrMeta == isCommand && !isAlt && when (shift) {
             Shift.IGNORED -> true
             Shift.ABSENT -> !isShift
-            Shift.REQUIRED -> isShift
+            Shift.REQUIRED, Shift.IN_LABEL -> isShift
         }
 
     fun matches(event: KeyEvent) = matches(

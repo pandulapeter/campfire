@@ -1377,4 +1377,43 @@
     <string name="key_shift">Shift</string>
     <string name="key_space">Szóköz</string>
     <string name="key_enter">Enter</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_scroll">Görgetés</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">Billentyűparancsok</string>
+    <string name="settings_keyboard_shortcuts_description">Minden billentyű, amire az app ezen az eszközön reagál</string>
+    <string name="shortcut_group_app">Bárhol</string>
+    <string name="shortcut_group_lists">Dalok és listák</string>
+    <string name="shortcut_group_song">Dal olvasása</string>
+    <string name="shortcut_group_metronome">Metronóm</string>
+    <string name="shortcut_group_editor">Dalszerkesztő</string>
+    <string name="shortcut_group_print_preview">Nyomtatási előnézet</string>
+    <string name="shortcut_shortcuts">A billentyűparancsok megjelenítése</string>
+    <string name="shortcut_back">Vissza, vagy a megnyitott elem bezárása</string>
+    <string name="shortcut_find">Keresés</string>
+    <string name="shortcut_save">Mentés, Létrehozás vagy Kész; dalon vagy listán Megosztás vagy exportálás</string>
+    <string name="shortcut_screen">Ugrás ide: %1$s</string>
+    <string name="shortcut_new">Új dal vagy lista</string>
+    <string name="shortcut_paste">Új dal a vágólapon lévő szövegből</string>
+    <string name="shortcut_select_all">Minden listázott dal kijelölése kijelöléskor</string>
+    <string name="shortcut_edit">A dal szerkesztése</string>
+    <string name="shortcut_zoom">Nagyobb vagy kisebb szöveg</string>
+    <string name="shortcut_zoom_reset">Szöveg az alapméretén</string>
+    <string name="shortcut_transpose">Transzponálás egy félhanggal fel vagy le</string>
+    <string name="shortcut_play">A dal automatikus görgetésének indítása vagy leállítása</string>
+    <string name="shortcut_song_up_down">Görgetés, vagy léptetés, ahol a dalnak léptetőgombjai vannak</string>
+    <string name="shortcut_song_step">A dal előző vagy következő része</string>
+    <string name="shortcut_song_neighbours">A lista előző vagy következő dala</string>
+    <string name="shortcut_metronome">A kattogás indítása vagy leállítása</string>
+    <string name="shortcut_tap_tempo">Tempó megadása koppintással</string>
+    <string name="shortcut_find_step">Következő vagy előző találat</string>
+    <string name="shortcut_find_step_from_query">Következő vagy előző találat a keresett szövegből</string>
+    <string name="shortcut_preview_turn">Előző vagy következő oldal</string>
+    <string name="shortcut_preview_ends">Első vagy utolsó oldal</string>
+    <string name="shortcut_preview_zoom">Az oldal nagyítása</string>
 </resources>

@@ -14,6 +14,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
 
 ## `CampfireViewController.kt`
 
+- **The Command-hold overlay**: `ContentView.swift`'s `ShortcutListingController` hosts the Compose controller as a
+  child and answers `keyCommands` (a category property Kotlin cannot override) with `listedKeyCommands`. They are only
+  listed: nothing implements their action and `canPerformAction` says so, so UIKit delivers the press to Compose,
+  which handles every key itself. It forwards the status bar, home indicator, and edge gestures to the child.
 - An address `NSURL` refuses as written (non-ASCII, `|`, which iOS 15–16 don't encode) is percent-encoded first.
 - The window's `overrideUserInterfaceStyle` follows the theme (unspecified for System): the status bar, pickers, share
   sheet, and keyboard follow UIKit's style, not Compose's theme.

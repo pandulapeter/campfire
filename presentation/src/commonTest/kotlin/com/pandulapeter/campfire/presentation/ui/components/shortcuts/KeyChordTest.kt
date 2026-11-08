@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components.shortcuts
 
 import androidx.compose.ui.input.key.Key
+import com.pandulapeter.campfire.presentation.ui.appShortcutOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -17,8 +18,30 @@ import kotlin.test.assertTrue
 
 class KeyChordTest {
 
-    private val english = KeyNames(ctrl = "Ctrl", shift = "Shift", space = "Space", enter = "Enter")
-    private val german = KeyNames(ctrl = "Strg", shift = "Umschalt", space = "Leertaste", enter = "Eingabe")
+    private val english = KeyNames(
+        ctrl = "Ctrl",
+        shift = "Shift",
+        space = "Space",
+        enter = "Enter",
+        escape = "Esc",
+        pageUp = "Page Up",
+        pageDown = "Page Down",
+        home = "Home",
+        end = "End",
+        scroll = "Scroll",
+    )
+    private val german = KeyNames(
+        ctrl = "Strg",
+        shift = "Umschalt",
+        space = "Leertaste",
+        enter = "Eingabe",
+        escape = "Esc",
+        pageUp = "Bild ↑",
+        pageDown = "Bild ↓",
+        home = "Pos1",
+        end = "Ende",
+        scroll = "Mausrad",
+    )
 
     @Test
     fun `a chord is written with the modifiers' names and plus signs, in the language's words`() {
@@ -51,9 +74,12 @@ class KeyChordTest {
     }
 
     @Test
-    fun `no two shortcuts share their keys, Shift telling apart only the ones that look at it`() {
+    fun `no two shortcuts heard in one place share their keys, Shift telling apart only the ones that look at it`() {
         KeyShortcut.entries.forEach { first ->
-            KeyShortcut.entries.filter { it.ordinal > first.ordinal }.forEach { second ->
+            KeyShortcut.entries.filter { second ->
+                second.ordinal > first.ordinal &&
+                    (second.scope == first.scope || appShortcutOf(first) != null || appShortcutOf(second) != null)
+            }.forEach { second ->
                 val sharedKeys = (first.chord.alternates + first.chord.key).intersect(second.chord.alternates + second.chord.key)
                 val isShiftShared = listOf(true, false).any { isShift ->
                     sharedKeys.any { key ->
@@ -83,5 +109,24 @@ class KeyChordTest {
         assertEquals("Shift+F3", KeyShortcut.FIND_PREVIOUS.chord.label(isApple = false, names = english))
         assertEquals("Umschalt+Eingabe", KeyShortcut.FIND_PREVIOUS_FROM_QUERY.chord.label(isApple = false, names = german))
         assertEquals("⌘,", KeyShortcut.SETTINGS.chord.label(isApple = true, names = english))
+    }
+
+    @Test
+    fun `every key the table names can be written, and the question mark is written as the character it types`() {
+        KeyShortcut.entries.forEach { shortcut ->
+            assertTrue(shortcut.chord.label(isApple = false, names = english).isNotEmpty(), shortcut.name)
+        }
+        assertEquals("?", KeyShortcut.SHORTCUTS_QUESTION_MARK.chord.label(isApple = false, names = english))
+        assertEquals("Strg+/", KeyShortcut.SHORTCUTS.chord.label(isApple = false, names = german))
+        assertEquals("Bild ↓", KeyShortcut.SONG_PAGE_DOWN.chord.label(isApple = true, names = german))
+        assertEquals("⌘ Scroll", english.commandScrollLabel(isApple = true))
+        assertEquals("Strg+Mausrad", german.commandScrollLabel(isApple = false))
+    }
+
+    @Test
+    fun `the question mark needs Shift, and Ctrl or Cmd with slash opens the sheet from either slash`() {
+        assertTrue(KeyShortcut.SHORTCUTS_QUESTION_MARK.chord.matches(Key.Slash, isCtrlOrMeta = false, isShift = true, isAlt = false))
+        assertFalse(KeyShortcut.SHORTCUTS_QUESTION_MARK.chord.matches(Key.Slash, isCtrlOrMeta = false, isShift = false, isAlt = false))
+        assertTrue(KeyShortcut.SHORTCUTS.chord.matches(Key.NumPadDivide, isCtrlOrMeta = true, isShift = false, isAlt = false))
     }
 }

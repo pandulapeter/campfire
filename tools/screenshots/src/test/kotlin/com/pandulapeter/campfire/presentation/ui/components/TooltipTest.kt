@@ -94,7 +94,19 @@ internal class TooltipTest {
         val searchName = string(Res.string.songs_search)
         onNodeWithContentDescription(searchName).performTouchInput { longClick() }
         waitUntil { onAllNodes(hasText(searchName)).fetchSemanticsNodes().isNotEmpty() }
-        val keys = KeyShortcut.FIND.chord.label(isApple = isAppleKeyboard, names = KeyNames(ctrl = string(Res.string.key_ctrl), shift = "", space = "", enter = ""))
+        val names = KeyNames(
+            ctrl = string(Res.string.key_ctrl),
+            shift = "",
+            space = "",
+            enter = "",
+            escape = "",
+            pageUp = "",
+            pageDown = "",
+            home = "",
+            end = "",
+            scroll = "",
+        )
+        val keys = KeyShortcut.FIND.chord.label(isApple = isAppleKeyboard, names = names)
         assertFalse(onAllNodes(hasText(keys, substring = true)).fetchSemanticsNodes().isNotEmpty(), "A phone without a keyboard is shown \"$keys\".")
     }
 

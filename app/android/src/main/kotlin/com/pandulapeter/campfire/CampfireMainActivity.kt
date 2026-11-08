@@ -12,6 +12,8 @@ package com.pandulapeter.campfire
 import android.app.ActivityManager
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyboardShortcutGroup
+import android.view.Menu
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
@@ -33,6 +35,9 @@ class CampfireMainActivity : ComponentActivity() {
 
     /** The theme color the launcher icon is to be in, known once the preferences have been read. */
     private var appIconColor: UserPreferences.ThemeColor? = null
+
+    /** The app's shortcuts as the composition last wrote them, in its language, for the system's list. */
+    private var keyboardShortcuts = emptyList<KeyboardShortcutGroup>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,8 +72,15 @@ class CampfireMainActivity : ComponentActivity() {
                     appIconColor = themeColor
                     AppIconSwitcher.apply(context = this, themeColor = themeColor, isLeaving = false)
                 },
+                onKeyboardShortcutsChanged = { keyboardShortcuts = it },
             )
         }
+    }
+
+    /** The list Meta + / shows under this app, the system's own shortcuts above it. */
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>?, menu: Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        data?.addAll(keyboardShortcuts)
     }
 
     /**

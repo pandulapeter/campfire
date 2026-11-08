@@ -1378,4 +1378,43 @@
     <string name="key_shift">Shift</string>
     <string name="key_space">Space</string>
     <string name="key_enter">Enter</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_scroll">Scroll</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">Keyboard shortcuts</string>
+    <string name="settings_keyboard_shortcuts_description">Every key the app answers on this device</string>
+    <string name="shortcut_group_app">Anywhere</string>
+    <string name="shortcut_group_lists">Songs and setlists</string>
+    <string name="shortcut_group_song">Reading a song</string>
+    <string name="shortcut_group_metronome">Metronome</string>
+    <string name="shortcut_group_editor">Song editor</string>
+    <string name="shortcut_group_print_preview">Print preview</string>
+    <string name="shortcut_shortcuts">Show the keyboard shortcuts</string>
+    <string name="shortcut_back">Go back, or close what is open</string>
+    <string name="shortcut_find">Search</string>
+    <string name="shortcut_save">Save, Create, or Done; on a song or a setlist, Share or export</string>
+    <string name="shortcut_screen">Go to %1$s</string>
+    <string name="shortcut_new">New song or setlist</string>
+    <string name="shortcut_paste">New song from the copied text</string>
+    <string name="shortcut_select_all">Select every song listed, while selecting</string>
+    <string name="shortcut_edit">Edit the song</string>
+    <string name="shortcut_zoom">Larger or smaller text</string>
+    <string name="shortcut_zoom_reset">Text at its usual size</string>
+    <string name="shortcut_transpose">Transpose up or down a semitone</string>
+    <string name="shortcut_play">Start or stop the song scrolling by itself</string>
+    <string name="shortcut_song_up_down">Scroll, or step where the song has step buttons</string>
+    <string name="shortcut_song_step">Previous or next part of the song</string>
+    <string name="shortcut_song_neighbours">Previous or next song of the setlist</string>
+    <string name="shortcut_metronome">Start or stop the click</string>
+    <string name="shortcut_tap_tempo">Tap the tempo</string>
+    <string name="shortcut_find_step">Next or previous match</string>
+    <string name="shortcut_find_step_from_query">Next or previous match, from the text to find</string>
+    <string name="shortcut_preview_turn">Previous or next page</string>
+    <string name="shortcut_preview_ends">First or last page</string>
+    <string name="shortcut_preview_zoom">Zoom the page</string>
 </resources>

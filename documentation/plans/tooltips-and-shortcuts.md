@@ -16,26 +16,18 @@ its tooltip or menu entry shows the keys where there is a hardware keyboard. The
 `appShortcutOf`, heard at the app's root on every platform (`ui/AppKeyboardShortcuts.kt`); the web's shell answers the
 keys its browser acts on first (`LocalKeysLeftToShell`), blocking the browser only where the app used the key. The
 shortcuts Ctrl+N (not on the web), the editor's undo and redo, its search's F3 and Enter, Select all, a setlist's
-Ctrl+S, transposing, T, Ctrl+1 … 6, and Ctrl+, are in, and the navigation items' tooltips name their keys. What follows
-is what remains.
+Ctrl+S, transposing, T, Ctrl+1 … 6, and Ctrl+, are in, and the navigation items' tooltips name their keys. Apple's keys
+are written as `isAppleKeyboard` (`ui/platform`) decides; `multi-caret-editor.md`'s `isMacKeymap` asks nearly the same,
+so whichever lands second reuses the first. What follows is what remains.
 
-## Decided
+## Done
 
-- **Apple's keys**: `isAppleKeyboard` (`ui/platform`) decides how keys are written; `multi-caret-editor.md`'s
-  `isMacKeymap` asks nearly the same, so whichever lands second reuses the first.
-- **On iOS**, the shortcuts are also listed for the system's Command-hold overlay (`UIKeyCommand`).
-
-### A sheet that lists every shortcut
-
-- **Keyboard shortcuts sheet**: opened with `Ctrl+/` (and `?` outside text fields), anywhere, and from Settings → About
-  when the device has a hardware keyboard or is a desktop or web build. It lists the shortcuts that work on the current
-  platform (`KeyShortcut.isAvailable`), grouped by screen, and covers what no button shows: arrows and Page Up / Page
-  Down, Space and M, Esc, Home / End in the print preview, and Ctrl + scroll.
-- **Android's system list (Meta+/)** is filled from the same table (`onProvideKeyboardShortcuts`).
-- The print preview's keys and the song's arrows join the table with the sheet, which is what lists them.
+The shortcuts sheet (`ui/dialogs/shortcuts`, Ctrl / Cmd + slash or `?`, Settings → About where there is a keyboard),
+Android's Meta + / list, and iOS's Command-hold overlay (`app/ios`) are in, all filled from the table's scope column
+(`ui/components/CLAUDE.md`). The song's arrows and Page Up / Page Down, the print preview's keys, and Escape are table
+entries.
 
 ## Order of work
 
-1. The shortcuts sheet, Android's system list, and iOS's `UIKeyCommand` list.
-2. A way to run the UI tests impersonating the desktop (they impersonate Android, which has no keyboard), and a test
+1. A way to run the UI tests impersonating the desktop (they impersonate Android, which has no keyboard), and a test
    that hovering an icon button shows its label and its keys. Update the CLAUDE.md files of the packages touched.

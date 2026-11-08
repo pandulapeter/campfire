@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.UnsavedChangesDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongInfoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicenseSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
+import com.pandulapeter.campfire.presentation.ui.dialogs.shortcuts.KeyboardShortcutsSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.WhatsNewDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.instrument.ChordReferenceSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.scales.ScaleSheet
@@ -234,13 +235,10 @@ private fun CampfireDialog(
         DialogType.SongLayout -> SongLayoutSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
         is DialogType.ChordNames -> ChordNamesSheet(preferencesController = preferencesController, onDismiss = dismissSheet, dialog = dialog)
 
-        DialogType.Tuner -> TunerSheet(
-            tunerController = viewModel.tunerController,
-            userPreferencesFlow = viewModel.userPreferences,
-            onDismiss = dismissSheet,
-        )
+        DialogType.Tuner -> TunerSheet(tunerController = viewModel.tunerController, userPreferencesFlow = viewModel.userPreferences, onDismiss = dismissSheet)
 
         DialogType.AppLanguage -> AppLanguageSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
+        DialogType.KeyboardShortcuts -> KeyboardShortcutsSheet(preferencesController = preferencesController, onDismiss = dismissSheet)
         DialogType.OpenSourceLicenses -> OpenSourceLicensesSheet(dialogHost = dialogHost)
         is DialogType.OpenSourceLicense -> OpenSourceLicenseSheet(onDismiss = dismissSheet, dialog = dialog, urlOpener = urlOpener)
 
