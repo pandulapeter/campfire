@@ -47,8 +47,11 @@ Documents are read locally, never rendered, uploaded, or kept.
   in the lower half that is the same at the same place on every page (an album and its year).
 - A span is italic by its font's name or italic flag; a line carries its baseline.
 - Chord diagrams (`PdfChordDiagrams`) are left out before the lines are set: a run of rows in type under 0.85 of the
-  song's text holding both chord names and marks (fret and finger numbers, `x`, `o`). Names alone stay (a small chord
-  row over its lyric).
+  song's text holding both chord names and a row of at least two marks (fret and finger numbers, `x`, `o`, a lone
+  symbol). Names alone stay (a small chord row over its lyric). A one-mark row joins a run (a barre's position) but does
+  not make one, so a page number `3` under a small chord-only outro does not take it along; `&`, `+`, `-`, `/`, `|`, and
+  dashes are not marks, so a count row (`1 & 2 &`) or a footer (`- 3 -`) ends a run. A small chord row over a count row
+  of bare digits (`1 2 3 4`) is still taken for a diagram: nothing in the glyphs tells it from one.
 - A blank line is a gap over 2.2 em, or one 1.4 times the document's usual step (`PdfParagraphs`: a quantile above the
   median, since a chord row sits closer to its lyric than to the lyric before it) between runs of three lines or more on
   each side, so a tightly set songbook's stanzas part while a header's credits and a diagram's name over its frets stay.

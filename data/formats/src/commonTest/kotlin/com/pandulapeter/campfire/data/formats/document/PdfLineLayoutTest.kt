@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.formats.document
 
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class PdfLineLayoutTest {
@@ -197,6 +198,37 @@ class PdfLineLayoutTest {
 
         assertEquals(song.map { it.text.replace(Regex(" +"), " ") }, lines(names + frets + song).map { it.replace(Regex(" +"), " ").trim() })
     }
+
+    @Test
+    fun `a small chord-only outro over a page number is kept`() = runTest {
+        assertContains(lines(outroOver(Placed(290, 60, "3", size = 8))).map { it.replace(Regex(" +"), " ").trim() }, "G C D G")
+    }
+
+    @Test
+    fun `a small chord-only outro over a page number between dashes is kept`() = runTest {
+        assertContains(lines(outroOver(Placed(280, 60, "- 3 -", size = 8))).map { it.replace(Regex(" +"), " ").trim() }, "G C D G")
+    }
+
+    @Test
+    fun `a small chord row over a small count row is kept`() = runTest {
+        val placed = listOf(
+            Placed(50, 660, "G   C   D   G", size = 9),
+            Placed(50, 648, "1 & 2 & 3 & 4 &", size = 9),
+            Placed(50, 632, "Lyric line one", size = 12),
+            Placed(50, 618, "Lyric line two", size = 12),
+        )
+
+        assertContains(lines(placed).map { it.replace(Regex(" +"), " ").trim() }, "G C D G")
+    }
+
+    /** A song in 12 pt ending in a 9 pt chord-only row, with [footer] in 8 pt far below it. */
+    private fun outroOver(footer: Placed) = listOf(
+        Placed(50, 700, "Lyric line one", size = 12),
+        Placed(50, 686, "Lyric line two", size = 12),
+        Placed(50, 672, "Lyric line three", size = 12),
+        Placed(50, 652, "G   C   D   G", size = 9),
+        footer,
+    )
 
     /**
      * A string shown in Courier, 0.6 of its [size] a glyph, with its baseline starting at [x], [y]; one [isWhole] is

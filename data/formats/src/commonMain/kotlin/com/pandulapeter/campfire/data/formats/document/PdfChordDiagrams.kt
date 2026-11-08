@@ -18,8 +18,10 @@ import kotlin.math.abs
  * left of it is its labels: a chord name in type smaller than the song's over the grid, and under it the frets, the
  * fingers, and the muted or open strings marked in rows of numbers, `x`, `o`, and symbols in smaller type still. Read as
  * text they are a chord row followed by rows of stray numbers, and across the page they would pass for columns, so a run
- * of such rows holding both names and marks is left out before the lines are set. A run of names alone stays: a chord row
- * in small type over its lyric is the song's own, and the lyric under it ends the run.
+ * of such rows holding both names and a row of several marks is left out before the lines are set. A run of names alone
+ * stays: a chord row in small type over its lyric is the song's own, and the lyric under it ends the run. A lone mark (a
+ * barre's position) joins a run without making one, so a page number under a chord-only outro does not take it along;
+ * a row of bare digits under a chord row (`1 2 3 4`) still reads as a diagram, which nothing in the glyphs tells apart.
  */
 internal object PdfChordDiagrams {
     fun withoutDiagrams(glyphs: List<Positioned>): List<Positioned> {
@@ -49,9 +51,10 @@ internal object PdfChordDiagrams {
         return if (isDropped.none { it }) glyphs else glyphs.filterIndexed { index, _ -> !isDropped[index] }
     }
 
-    private enum class Kind { NAMES, MARKS, TEXT }
+    /** A row's role in a diagram: its names, one mark, several marks (a diagram's string row), or neither. */
+    private enum class Kind { NAMES, MARK, MARKS, TEXT }
 
-    /** What a row of [ink], in reading order, could be to a diagram: its names, its marks, or neither. */
+    /** What a row of [ink], in reading order, could be to a diagram. */
     private fun kind(ink: List<Positioned>): Kind {
         val words = mutableListOf<String>()
         var end = Double.NEGATIVE_INFINITY
@@ -61,15 +64,21 @@ internal object PdfChordDiagrams {
             end = glyph.span.end
         }
         return when {
-            words.isNotEmpty() && words.all(::isMark) -> Kind.MARKS
+            words.isNotEmpty() && words.all(::isMark) -> if (words.size == 1) Kind.MARK else Kind.MARKS
             ChordSheetConverter.isChordLine(words.joinToString(" ")) -> Kind.NAMES
             else -> Kind.TEXT
         }
     }
 
-    /** A fret or finger number, a muted or open string's `x` or `o`, or a symbol drawn for one (`○`, `•`). */
+    /**
+     * A fret or finger number, a muted or open string's `x` or `o`, or a symbol drawn for one (`○`, `•`, or the `?` a glyph
+     * with no character comes out as), never one of [NOT_MARKS].
+     */
     private fun isMark(word: String) = word.length <= 2 && word.all { it.isDigit() } ||
-        word in setOf("x", "X", "o", "O") || word.length == 1 && !word[0].isLetterOrDigit()
+        word in setOf("x", "X", "o", "O") || word.length == 1 && !word[0].isLetterOrDigit() && word[0] !in NOT_MARKS
+
+    /** What count rows (`1 & 2 &`), page footers (`- 3 -`, `3 / 5`), and bar lines are made of, never a diagram's string. */
+    private const val NOT_MARKS = "&+-/|–—"
 
     /** The largest share of the song's type a diagram's labels are set in. */
     private const val SMALL_TYPE = 0.85
