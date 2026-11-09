@@ -14,12 +14,17 @@ import com.pandulapeter.campfire.chordpro.abc.AbcBars.Token
 /**
  * Writes the lines of a `{start_of_grid}` from [AbcBars]' tokens: one grid line per line of music, one grid bar per
  * ABC bar, its chords as its cells, in order rather than on beats, since placing them needs note lengths the tokenizer
- * doesn't read. A bar with music and no chord is `%`, the chord before it going on, or `.` before the tune's first
- * chord, when there is none to go on. A chordless pickup before the tune's first bar line is left out.
+ * doesn't read; a chord written again before the next one in its bar (as exports restate it) is one cell. A bar with
+ * music and no chord is `%`, the chord before it going on, or `.` before the tune's first chord, when there is none to
+ * go on. A chordless pickup before the tune's first bar line is left out. Each part the tune names starts a grid of its
+ * own, at the bar it is named in, or at the next one where it is named after that bar's music has begun.
  */
 internal class AbcGrid private constructor() {
 
-    private val lines = mutableListOf<String>()
+    private val sections = mutableListOf<Section>()
+    private var label: String? = null
+    private var pendingLabel: String? = null
+    private var lines = mutableListOf<String>()
     private var words = mutableListOf<String>()
     private var lineHasCell = false
     private val cells = mutableListOf<String>()
@@ -29,7 +34,7 @@ internal class AbcGrid private constructor() {
     private var hasSeenChord = false
     private var breaksAtNextBar = false
 
-    private fun read(tokenLines: List<List<Token>>): List<String> {
+    private fun read(tokenLines: List<List<Token>>): List<Section> {
         tokenLines.forEach { tokens ->
             tokens.forEach(::read)
             endLine()
@@ -43,14 +48,15 @@ internal class AbcGrid private constructor() {
             // A closing bar line written alone on the last line (`|]`) replaces the plain one the line before ends in.
             lines[lines.lastIndex] = lines.last().dropLast(PLAIN_BAR.length) + words.last()
         }
-        return lines
+        sections += Section(label, lines)
+        return sections.filter { it.lines.isNotEmpty() }
     }
 
     private fun read(token: Token) {
         when (token) {
             is Token.Chord -> {
                 flushPendingBar()
-                cells += token.name
+                if (cells.lastOrNull() != token.name) cells += token.name
                 hasMusic = true
                 hasSeenChord = true
             }
@@ -75,7 +81,9 @@ internal class AbcGrid private constructor() {
                     flushPendingBar()
                     emitLine()
                 }
+                pendingLabel?.let(::startSection)
             }
+            is Token.Part -> if (hasMusic) pendingLabel = token.label else startSection(token.label)
             is Token.Volta -> {
                 closeBar()
                 words += gridBar(pendingBar ?: PLAIN_BAR, token.number)
@@ -83,6 +91,19 @@ internal class AbcGrid private constructor() {
                 hasSeenBar = true
             }
         }
+    }
+
+    /** Ends the grid running at the bar line before the bar about to start, which opens one named [label]. */
+    private fun startSection(label: String) {
+        pendingLabel = null
+        breaksAtNextBar = false
+        flushPendingBar()
+        emitLine()
+        if (lines.isNotEmpty()) {
+            sections += Section(this.label, lines)
+            lines = mutableListOf()
+        }
+        this.label = label
     }
 
     /** A line of music that ends mid-bar goes on into the next one, and the grid line breaks after that bar instead. */
@@ -122,14 +143,17 @@ internal class AbcGrid private constructor() {
         pendingBar = null
     }
 
+    /** One grid: the part of the tune it is, by [label] (null for music before the first part named), and its lines. */
+    data class Section(val label: String?, val lines: List<String>)
+
     companion object {
 
         private const val PLAIN_BAR = "|"
         private const val REPEAT = "%"
         private const val BEAT = "."
 
-        /** The grid lines of [tokenLines], or none for a tune with no chord symbol, which gets no grid. */
-        fun lines(tokenLines: List<List<Token>>): List<String> =
+        /** The grids of [tokenLines], a part each, or none for a tune with no chord symbol, which gets no grid. */
+        fun sections(tokenLines: List<List<Token>>): List<Section> =
             if (tokenLines.none { tokens -> tokens.any { it is Token.Chord } }) emptyList() else AbcGrid().read(tokenLines)
 
         /**

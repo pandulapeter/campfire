@@ -17,7 +17,11 @@ comes in, a song comes out.
   `{start_of_abc}`, and editing it later regenerates nothing.
 - **`AbcBars` reads only what a chord grid needs**. Notation is a renderer's job, never a reason to grow it. Only the
   first voice is read (or the first holding chord symbols, where it has none).
-- Grid cells are chords in order, not on beats: placing them needs note lengths, which nothing here reads.
+- Grid cells are chords in order, not on beats: placing them needs note lengths, which nothing here reads. A chord
+  restated in its own bar is one cell.
+- **Each part is a grid of its own**, labelled: a `P:` field, or an annotation above the staff naming a song part
+  (`AbcPartNames`, English only, as notation programs export rehearsal marks); any other annotation is a direction
+  (`"^Coda"`, `"^Fine"`) and cuts nothing.
 - A chord symbol is written as spelled, so a mid-tune `K:` changes no name and `{key}` stays the opening key; a mode
   becomes the key of its chords (`Edor` → `Em`), since `{key}` knows only major and minor.
 - `AbcTunes` writes the file header into every tune, but leaves out a field the tune's own header has (a file `C:` must

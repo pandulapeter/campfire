@@ -115,7 +115,7 @@ class ChordProHighlighterTest {
 
     @Test
     fun `the chord symbols of an abc tune are chords, and its annotations, comments, fields and text blocks are not`() {
-        val text = "{start_of_abc}\nX:1\nK:C\n\"Am\"A2 \"^softly\"B \"G7\"c|[CEG] % \"C\"\n%\"D\"\nw: \"E\"\n" +
+        val text = "{start_of_abc}\nX:1\nK:C\n\"^Chorus\"\"Am\"A2 \"^softly\"B \"G7\"c|[CEG] % \"C\"\n%\"D\"\nw: \"E\"\n" +
             "%%begintext\n\"F\" said\n%%endtext\n\"Dm\"d\n{end_of_abc}\n\"C\""
         assertEquals(
             listOf(TokenType.CHORD to "\"Am\"", TokenType.CHORD to "\"G7\"", TokenType.CHORD to "\"Dm\""),

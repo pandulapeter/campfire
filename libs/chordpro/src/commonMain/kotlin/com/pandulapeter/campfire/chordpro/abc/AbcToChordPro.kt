@@ -13,9 +13,10 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProLiteralText
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 
 /**
- * Writes one ABC tune as a ChordPro song: its header as directives, its chord symbols as a chord grid, its `W:` words
- * as verses, and the tune itself, whole and unchanged, in a `{start_of_abc}` block. The grid and the verses are a
- * one-off translation; the ABC block stays the source, and editing it later regenerates nothing.
+ * Writes one ABC tune as a ChordPro song: its header as directives, its chord symbols as chord grids (one per part the
+ * tune names), its `W:` words as verses, and the tune itself, whole and unchanged, in a `{start_of_abc}` block. The
+ * grids and the verses are a one-off translation; the ABC block stays the source, and editing it later regenerates
+ * nothing.
  */
 public object AbcToChordPro {
 
@@ -33,14 +34,14 @@ public object AbcToChordPro {
         val header = fields(lines.subList(0, headerEnd))
         val titles = header.filter { it.letter == 'T' }.map { AbcTextStrings.decode(it.value) }.filter { it.isNotBlank() }
         val title = titles.firstOrNull() ?: fallbackTitle?.trim()?.takeIf { it.isNotEmpty() }
-        val grid = AbcGrid.lines(AbcBars.lines(lines.subList(headerEnd, lines.size)))
+        val grids = AbcGrid.sections(AbcBars.lines(lines.subList(headerEnd, lines.size)))
         val text = listOf(
             headerLines(header, title, subtitle = titles.getOrNull(1)),
-            grid.takeIf { it.isNotEmpty() }?.let { listOf("{start_of_grid}") + it + "{end_of_grid}" }.orEmpty(),
+            grids.flatMap { grid -> listOf(grid.label?.let { label -> "{start_of_grid: ${label.filterNot { it == '{' || it == '}' }}}" } ?: "{start_of_grid}") + grid.lines + "{end_of_grid}" + "" }.dropLast(1),
             verses(fields(lines)).flatMap { verse -> listOf("{start_of_verse}") + verse + "{end_of_verse}" + "" }.dropLast(1),
             abcBlock(lines),
         ).filter { it.isNotEmpty() }.joinToString("\n\n") { it.joinToString("\n") }
-        return AbcSong(text = text, title = title, hasChords = grid.isNotEmpty())
+        return AbcSong(text = text, title = title, hasChords = grids.isNotEmpty())
     }
 
     /** The index of the first line of the tune body: the one after the `K:` that ends the header, or the first line of music. */

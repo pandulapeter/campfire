@@ -27,17 +27,21 @@ internal object AbcBars {
 
         data class Chord(val name: String) : Token
 
+        /** Where a part of the song starts (a `P:` field, or an annotation naming one, `"^Chorus"`), and its [label]. */
+        data class Part(val label: String) : Token
+
         /** A note, rest, or chord of notes: the bar it is in has music, chord symbol or not. */
         data object Note : Token
     }
 
     private const val BAR_CHARACTERS = "|:"
     private const val ANNOTATION_MARKS = "^_<>@"
+    private const val ABOVE_MARK = '^'
     private const val NOTE_LETTERS = "ABCDEFGabcdefgzZx"
 
     /**
-     * The tokens of each line of music in [body] (the lines after the tune header): field lines, comments, and
-     * `%%begin…`/`%%end…` blocks are left out, and a line ending in a `\` is joined to the next line of music. Only the
+     * The tokens of each line of music in [body] (the lines after the tune header): field lines (but for a `P:`, which
+     * starts a part), comments, and `%%begin…`/`%%end…` blocks are left out, and a line ending in a `\` is joined to the next line of music. Only the
      * first voice is read (`V:`, `[V:…]`): the others are accompaniment written under the same bars, which would
      * otherwise read as rows of bars of their own. Where the first voice has no chord symbol, the first voice that has
      * one is read instead, since the chords are then written over it.
@@ -62,6 +66,7 @@ internal object AbcBars {
             block = AbcLines.blockOpenedBy(line)
             val field = AbcLines.field(line)
             if (field?.letter == 'V') voices.switchTo(field.value)
+            if (field?.letter == 'P' && field.value.isNotBlank() && voices.isRead) pending += Token.Part(field.value.trim())
             if (block != null || line.isBlank() || AbcLines.isComment(line) || field != null) continue
             val music = AbcLines.withoutComment(line).trimEnd()
             val isContinued = music.endsWith('\\')
@@ -102,7 +107,7 @@ internal object AbcBars {
             val start = index
             val count = tokens.size
             index = next(music, index, tokens, voices)
-            if (music[start] == '"' && tokens.size > count) ranges += start until minOf(index, music.length)
+            if (music[start] == '"' && tokens.size > count && tokens.last() is Token.Chord) ranges += start until minOf(index, music.length)
         }
         return ranges
     }
@@ -120,12 +125,17 @@ internal object AbcBars {
         }
     }
 
-    /** A chord symbol, or an annotation, an alternative chord (`"(Em)"`), or any other text, which add nothing. */
+    /**
+     * A chord symbol, an annotation above the staff naming a part of the song (`"^verse"`, as notation programs export
+     * their rehearsal marks), or another annotation, an alternative chord (`"(Em)"`), or any other text, which add
+     * nothing.
+     */
     private fun quoted(line: String, start: Int, tokens: MutableList<Token>): Int {
         val end = line.indexOf('"', start + 1).takeIf { it >= 0 } ?: line.length
         val symbol = line.substring(start + 1, end).trim()
         val isChord = symbol.isNotEmpty() && symbol[0] !in ANNOTATION_MARKS && symbol[0] != '(' && ChordProChordNames.isChordName(symbol)
-        if (isChord) tokens += Token.Chord(symbol)
+        val part = if (symbol.startsWith(ABOVE_MARK)) AbcPartNames.label(symbol.drop(1)) else null
+        if (isChord) tokens += Token.Chord(symbol) else if (part != null) tokens += Token.Part(part)
         return end + 1
     }
 
@@ -158,6 +168,7 @@ internal object AbcBars {
             next.isLetter() && line.getOrNull(start + 2) == ':' -> line.indexOf(']', start).let { end ->
                 val fieldEnd = if (end < 0) line.length else end
                 if (next == 'V') voices.switchTo(line.substring(start + 3, fieldEnd))
+                if (next == 'P') line.substring(start + 3, fieldEnd).trim().takeIf { it.isNotEmpty() }?.let { tokens += Token.Part(it) }
                 if (end < 0) line.length else end + 1
             }
             else -> line.indexOf(']', start).let { end ->

@@ -110,6 +110,38 @@ class AbcGridTest {
     }
 
     @Test
+    fun `a chord written again in its own bar is one cell`() {
+        assertEquals(listOf("| Eb | Eb F |"), gridOf("\"Eb\" D4\"Eb\" D2E2|\"Eb\" E4 \"F\"F2\"F\"F2|"))
+    }
+
+    @Test
+    fun `each part a tune names starts a grid of its own, labelled with it`() {
+        val song = AbcToChordPro.convert(
+            "X:1\nT:Tune\nM:4/4\nK:G\n\"^intro\"\"G\"G4|\"D\"D4|\"^Verse 2\"\"C\"C4|\"G\"G2 \"^chorus\"G2|\"D\"D4|\nP:B\n\"Em\"E4|[P:C]\"C\"C4|",
+        )
+        val grids = ChordProParser.parse(song.text).blocks.filterIsInstance<ChordProBlock.Section>().mapNotNull { section ->
+            val rows = section.lines.filterIsInstance<ChordProLine.Grid>().map { row -> row.tokens.joinToString(" ", transform = ::spelling) }
+            rows.takeIf { it.isNotEmpty() }?.let { section.label to it }
+        }
+
+        assertEquals(
+            listOf(
+                "Intro" to listOf("| G | D |"),
+                "Verse 2" to listOf("| C | G |"),
+                "Chorus" to listOf("| D |"),
+                "B" to listOf("| Em |"),
+                "C" to listOf("| C |"),
+            ),
+            grids,
+        )
+    }
+
+    @Test
+    fun `an annotation that is no part of the song cuts no grid`() {
+        assertEquals(listOf("| G | D |"), gridOf("\"G\"G4|\"^Coda\"\"D\"D4|"))
+    }
+
+    @Test
     fun `the chords of a later voice are read where the first voice has none`() {
         assertEquals(listOf("| G | D |"), gridOf("V:1\nGABc|dedB|\nV:2\n\"G\"G,4|\"D\"D,4|"))
     }
