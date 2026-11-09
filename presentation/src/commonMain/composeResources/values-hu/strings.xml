@@ -1395,6 +1395,7 @@
     <string name="shortcut_shortcuts">A billentyűparancsok megjelenítése</string>
     <string name="shortcut_back">Vissza, vagy a megnyitott elem bezárása</string>
     <string name="shortcut_find">Keresés</string>
+    <string name="shortcut_find_on">Keresés itt: %1$s</string>
     <string name="shortcut_save">Mentés, Létrehozás vagy Kész</string>
     <string name="shortcut_export_setlist">A lista megosztása vagy exportálása</string>
     <string name="shortcut_screen">Ugrás ide: %1$s</string>
@@ -1416,4 +1417,7 @@
     <string name="shortcut_preview_turn">Előző vagy következő oldal</string>
     <string name="shortcut_preview_ends">Első vagy utolsó oldal</string>
     <string name="shortcut_preview_zoom">Az oldal nagyítása</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s és %2$s</string>
+    <string name="list_with_last">%1$s és %2$s</string>
 </resources>

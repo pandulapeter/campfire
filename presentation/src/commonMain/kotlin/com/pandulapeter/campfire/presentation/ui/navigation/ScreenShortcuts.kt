@@ -22,3 +22,16 @@ internal fun screenShortcutOf(destination: CampfireDestination.TopLevel, destina
 /** The main screen [shortcut] opens, the other way round from [screenShortcutOf], or null where it opens none. */
 internal fun screenOf(shortcut: KeyShortcut, destinations: List<CampfireDestination.TopLevel>): CampfireDestination.TopLevel? =
     destinations.firstOrNull { screenShortcutOf(it, destinations) == shortcut }
+
+/**
+ * The main screens switched on, [destinations], that Ctrl / Cmd + F searches (`ScreenSearches.openCurrentSearch`), in
+ * the chrome's order: the two lists, and the Chords and the Scales tabs, whose fields are always there.
+ */
+internal fun screensSearchedByKey(destinations: List<CampfireDestination.TopLevel>) = destinations.filter { it in SEARCHED_SCREENS }
+
+private val SEARCHED_SCREENS = setOf(
+    CampfireDestination.Songs,
+    CampfireDestination.Setlists,
+    CampfireDestination.Chords,
+    CampfireDestination.Scales,
+)

@@ -1403,6 +1403,7 @@
     <string name="shortcut_shortcuts">Afficher les raccourcis clavier</string>
     <string name="shortcut_back">Revenir en arrière ou fermer ce qui est ouvert</string>
     <string name="shortcut_find">Rechercher</string>
+    <string name="shortcut_find_on">Rechercher dans %1$s</string>
     <string name="shortcut_save">Enregistrer, Créer ou OK</string>
     <string name="shortcut_export_setlist">Partager ou exporter la setlist</string>
     <string name="shortcut_screen">Aller à %1$s</string>
@@ -1424,4 +1425,7 @@
     <string name="shortcut_preview_turn">Page précédente ou suivante</string>
     <string name="shortcut_preview_ends">Première ou dernière page</string>
     <string name="shortcut_preview_zoom">Zoomer sur la page</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s et %2$s</string>
+    <string name="list_with_last">%1$s et %2$s</string>
 </resources>

@@ -1445,6 +1445,7 @@
     <string name="shortcut_shortcuts">הצגת קיצורי המקלדת</string>
     <string name="shortcut_back">חזרה, או סגירת מה שפתוח</string>
     <string name="shortcut_find">חיפוש</string>
+    <string name="shortcut_find_on">חיפוש במסכים: %1$s</string>
     <string name="shortcut_save">שמירה, יצירה או סיום</string>
     <string name="shortcut_export_setlist">שיתוף או ייצוא של הסט־ליסט</string>
     <string name="shortcut_screen">מעבר אל %1$s</string>
@@ -1466,4 +1467,7 @@
     <string name="shortcut_preview_turn">העמוד הקודם או הבא</string>
     <string name="shortcut_preview_ends">העמוד הראשון או האחרון</string>
     <string name="shortcut_preview_zoom">הגדלת העמוד</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s ו־%2$s</string>
+    <string name="list_with_last">%1$s ו־%2$s</string>
 </resources>

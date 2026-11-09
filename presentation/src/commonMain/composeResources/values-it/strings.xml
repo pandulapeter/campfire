@@ -1396,6 +1396,7 @@
     <string name="shortcut_shortcuts">Mostra le scorciatoie da tastiera</string>
     <string name="shortcut_back">Torna indietro o chiudi ciò che è aperto</string>
     <string name="shortcut_find">Cerca</string>
+    <string name="shortcut_find_on">Cerca in %1$s</string>
     <string name="shortcut_save">Salva, Crea o Fine</string>
     <string name="shortcut_export_setlist">Condividi o esporta la scaletta</string>
     <string name="shortcut_screen">Vai a %1$s</string>
@@ -1417,4 +1418,7 @@
     <string name="shortcut_preview_turn">Pagina precedente o successiva</string>
     <string name="shortcut_preview_ends">Prima o ultima pagina</string>
     <string name="shortcut_preview_zoom">Ingrandisci la pagina</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s e %2$s</string>
+    <string name="list_with_last">%1$s e %2$s</string>
 </resources>

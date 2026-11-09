@@ -32,4 +32,14 @@ class ScreenShortcutsTest {
         assertNull(screenOf(KeyShortcut.SCREEN_4, destinations))
         assertNull(screenOf(KeyShortcut.SCREEN_3, destinations - CampfireDestination.Settings))
     }
+
+    @Test
+    fun `Ctrl or Cmd and F name only the screens switched on that have a search, in the chrome's order`() {
+        val all = CampfireDestination.TopLevel.entries
+        assertEquals(
+            listOf(CampfireDestination.Songs, CampfireDestination.Setlists, CampfireDestination.Chords, CampfireDestination.Scales),
+            screensSearchedByKey(all),
+        )
+        assertEquals(listOf(CampfireDestination.Scales), screensSearchedByKey(listOf(CampfireDestination.Tuner, CampfireDestination.Scales, CampfireDestination.Settings)))
+    }
 }

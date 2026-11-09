@@ -34,14 +34,15 @@ The shared building blocks of the screens; subpackages with something to say hav
 - **Its scope column** (`ShortcutScope`) is where the keys are heard and the group the **shortcuts sheet**
   (`dialogs/shortcuts`, Ctrl / Cmd + slash or `?`) and the system lists (Android's Meta + /, iOS's Command-hold overlay,
   `systemShortcutGroups`) show them under (Find and the numbers under the main screens, not "Anywhere", since a song or
-  the onboarding has neither); a key heard in several of those places is listed in each (`alsoIn`: Find, Save), worded
-  for each by `descriptionIn`, an exhaustive `when`, so a new entry is described; `rowLead` puts a pair in one row. Keys
-  meaning something else elsewhere (Page Down on a song and in the print preview) are an entry each; the root asks only
-  the app-wide ones. Lists show only what works with the features on (`ShortcutFeatures`: no song keys with the songs
-  off, nothing whose control read only mode hides, Space's auto-scroll only in the continuous song layout), Ctrl / Cmd +
-  Y not on an Apple keyboard, and Ctrl / Cmd + the scroll wheel, which is no key, in the sheet only. `?` is Shift +
-  slash (`Shift.IN_LABEL`, written as the character): a US layout's key, so elsewhere Ctrl / Cmd + slash, the numpad's
-  slash, or Settings → About open the sheet; `?` does nothing while a text field is being typed in.
+  the onboarding has neither); a key heard in several of those places is listed in each (`alsoIn`: Find, which names the
+  main screens it searches, `screensSearchedByKey`; Save), worded for each by `descriptionIn`, an exhaustive `when`, so
+  a new entry is described; `rowLead` puts a pair in one row. Keys meaning something else elsewhere (Page Down on a song
+  and in the print preview) are an entry each; the root asks only the app-wide ones. Lists show only what works with the
+  features on (`ShortcutFeatures`: no song keys with the songs off, nothing whose control read only mode hides, Space's
+  auto-scroll only in the continuous song layout), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the scroll
+  wheel, which is no key, in the sheet only. `?` is Shift + slash (`Shift.IN_LABEL`, written as the character): a US
+  layout's key, so elsewhere Ctrl / Cmd + slash, the numpad's slash, or Settings → About open the sheet; `?` does
+  nothing while a text field is being typed in.
 - **`saveShortcut`**: Ctrl / Cmd + S, **not with Alt** (AltGr arrives as Alt); in a `CampfireBottomSheet` it presses
   the header's `BottomSheetConfirmButton` (library deletion opts out), nothing while disabled or closing. Keys travel
   only along the focus path, so each surface takes focus with a bare focus target as it opens — a sheet a frame in and

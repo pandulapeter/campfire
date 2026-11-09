@@ -30,10 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.isolatedLeftToRight
+import com.pandulapeter.campfire.presentation.localization.listText
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.keyboard_shortcuts
+import com.pandulapeter.campfire.presentation.resources.shortcut_find_on
 import com.pandulapeter.campfire.presentation.ui.chrome.label
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
@@ -52,6 +54,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.CampfireBottomShe
 import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerColor
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.screenOf
+import com.pandulapeter.campfire.presentation.ui.navigation.screensSearchedByKey
 import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import com.pandulapeter.campfire.presentation.ui.platform.isCtrlWheelZoomOwnedByApp
@@ -104,7 +107,10 @@ internal fun KeyboardShortcutsSheet(
     }
 }
 
-/** A row of the table, or nothing for a number that opens no screen of those switched on. */
+/**
+ * A row of the table, or nothing for a number that opens no screen of those switched on. The main screens' search names
+ * the screens it works on, since not every one has a search, and is left out where none of them is on.
+ */
 @Composable
 private fun ShortcutRowItem(
     row: ShortcutRow,
@@ -114,10 +120,13 @@ private fun ShortcutRowItem(
 ) {
     val description = row.lead.descriptionIn(scope) ?: return
     ShortcutItem(
-        description = if (row.lead in KeyShortcut.screens) {
-            textResource(description, stringResource((screenOf(row.lead, destinations) ?: return).label))
-        } else {
-            stringResource(description)
+        description = when {
+            row.lead in KeyShortcut.screens -> textResource(description, stringResource((screenOf(row.lead, destinations) ?: return).label))
+            row.lead == KeyShortcut.FIND && scope == ShortcutScope.MAIN_SCREENS -> {
+                val searched = screensSearchedByKey(destinations).ifEmpty { return }.map { stringResource(it.label) }
+                textResource(Res.string.shortcut_find_on, listText(searched))
+            }
+            else -> stringResource(description)
         },
         keys = row.shortcuts.map { it.chord.label(isApple = isAppleKeyboard, names = names) },
     )

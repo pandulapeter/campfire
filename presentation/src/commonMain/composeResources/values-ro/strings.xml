@@ -1448,6 +1448,7 @@
     <string name="shortcut_shortcuts">Afișează comenzile rapide de la tastatură</string>
     <string name="shortcut_back">Înapoi sau închide ce este deschis</string>
     <string name="shortcut_find">Caută</string>
+    <string name="shortcut_find_on">Caută în %1$s</string>
     <string name="shortcut_save">Salvează, Creează sau Gata</string>
     <string name="shortcut_export_setlist">Partajează sau exportă lista</string>
     <string name="shortcut_screen">Mergi la %1$s</string>
@@ -1469,4 +1470,7 @@
     <string name="shortcut_preview_turn">Pagina anterioară sau următoare</string>
     <string name="shortcut_preview_ends">Prima sau ultima pagină</string>
     <string name="shortcut_preview_zoom">Mărește pagina</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s și %2$s</string>
+    <string name="list_with_last">%1$s și %2$s</string>
 </resources>

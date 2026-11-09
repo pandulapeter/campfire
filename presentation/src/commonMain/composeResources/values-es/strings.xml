@@ -1396,6 +1396,7 @@
     <string name="shortcut_shortcuts">Mostrar los atajos de teclado</string>
     <string name="shortcut_back">Volver o cerrar lo que está abierto</string>
     <string name="shortcut_find">Buscar</string>
+    <string name="shortcut_find_on">Buscar en %1$s</string>
     <string name="shortcut_save">Guardar, Crear o Listo</string>
     <string name="shortcut_export_setlist">Compartir o exportar el repertorio</string>
     <string name="shortcut_screen">Ir a %1$s</string>
@@ -1417,4 +1418,7 @@
     <string name="shortcut_preview_turn">Página anterior o siguiente</string>
     <string name="shortcut_preview_ends">Primera o última página</string>
     <string name="shortcut_preview_zoom">Ampliar la página</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s y %2$s</string>
+    <string name="list_with_last">%1$s y %2$s</string>
 </resources>
