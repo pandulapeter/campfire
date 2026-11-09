@@ -1448,7 +1448,8 @@
     <string name="shortcut_shortcuts">Afișează comenzile rapide de la tastatură</string>
     <string name="shortcut_back">Înapoi sau închide ce este deschis</string>
     <string name="shortcut_find">Caută</string>
-    <string name="shortcut_save">Salvează, Creează sau Gata; pe un cântec sau o listă, Partajează sau exportă</string>
+    <string name="shortcut_save">Salvează, Creează sau Gata</string>
+    <string name="shortcut_export_setlist">Partajează sau exportă lista</string>
     <string name="shortcut_screen">Mergi la %1$s</string>
     <string name="shortcut_new">Cântec sau listă nouă</string>
     <string name="shortcut_paste">Cântec nou din textul copiat</string>

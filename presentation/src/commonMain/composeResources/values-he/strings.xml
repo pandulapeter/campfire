@@ -1445,7 +1445,8 @@
     <string name="shortcut_shortcuts">הצגת קיצורי המקלדת</string>
     <string name="shortcut_back">חזרה, או סגירת מה שפתוח</string>
     <string name="shortcut_find">חיפוש</string>
-    <string name="shortcut_save">שמירה, יצירה או סיום; בשיר או בסט־ליסט, שיתוף או ייצוא</string>
+    <string name="shortcut_save">שמירה, יצירה או סיום</string>
+    <string name="shortcut_export_setlist">שיתוף או ייצוא של הסט־ליסט</string>
     <string name="shortcut_screen">מעבר אל %1$s</string>
     <string name="shortcut_new">שיר או סט־ליסט חדש</string>
     <string name="shortcut_paste">שיר חדש מהטקסט שהועתק</string>

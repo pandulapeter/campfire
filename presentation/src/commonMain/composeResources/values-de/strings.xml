@@ -1396,7 +1396,8 @@
     <string name="shortcut_shortcuts">Tastenkürzel anzeigen</string>
     <string name="shortcut_back">Zurück oder Geöffnetes schließen</string>
     <string name="shortcut_find">Suchen</string>
-    <string name="shortcut_save">Speichern, Erstellen oder Fertig; bei einem Song oder einer Setlist Teilen oder exportieren</string>
+    <string name="shortcut_save">Speichern, Erstellen oder Fertig</string>
+    <string name="shortcut_export_setlist">Setlist teilen oder exportieren</string>
     <string name="shortcut_screen">Zu %1$s wechseln</string>
     <string name="shortcut_new">Neuer Song oder neue Setlist</string>
     <string name="shortcut_paste">Neuer Song aus dem kopierten Text</string>

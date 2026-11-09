@@ -1403,7 +1403,8 @@
     <string name="shortcut_shortcuts">Afficher les raccourcis clavier</string>
     <string name="shortcut_back">Revenir en arrière ou fermer ce qui est ouvert</string>
     <string name="shortcut_find">Rechercher</string>
-    <string name="shortcut_save">Enregistrer, Créer ou OK ; sur une chanson ou une setlist, Partager ou exporter</string>
+    <string name="shortcut_save">Enregistrer, Créer ou OK</string>
+    <string name="shortcut_export_setlist">Partager ou exporter la setlist</string>
     <string name="shortcut_screen">Aller à %1$s</string>
     <string name="shortcut_new">Nouvelle chanson ou setlist</string>
     <string name="shortcut_paste">Nouvelle chanson à partir du texte copié</string>

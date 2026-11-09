@@ -1396,7 +1396,8 @@
     <string name="shortcut_shortcuts">Mostra le scorciatoie da tastiera</string>
     <string name="shortcut_back">Torna indietro o chiudi ciò che è aperto</string>
     <string name="shortcut_find">Cerca</string>
-    <string name="shortcut_save">Salva, Crea o Fine; su una canzone o una scaletta, Condividi o esporta</string>
+    <string name="shortcut_save">Salva, Crea o Fine</string>
+    <string name="shortcut_export_setlist">Condividi o esporta la scaletta</string>
     <string name="shortcut_screen">Vai a %1$s</string>
     <string name="shortcut_new">Nuova canzone o scaletta</string>
     <string name="shortcut_paste">Nuova canzone dal testo copiato</string>

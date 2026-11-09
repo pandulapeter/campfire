@@ -1396,7 +1396,8 @@
     <string name="shortcut_shortcuts">Mostrar los atajos de teclado</string>
     <string name="shortcut_back">Volver o cerrar lo que está abierto</string>
     <string name="shortcut_find">Buscar</string>
-    <string name="shortcut_save">Guardar, Crear o Listo; en una canción o un repertorio, Compartir o exportar</string>
+    <string name="shortcut_save">Guardar, Crear o Listo</string>
+    <string name="shortcut_export_setlist">Compartir o exportar el repertorio</string>
     <string name="shortcut_screen">Ir a %1$s</string>
     <string name="shortcut_new">Nueva canción o nuevo repertorio</string>
     <string name="shortcut_paste">Nueva canción a partir del texto copiado</string>

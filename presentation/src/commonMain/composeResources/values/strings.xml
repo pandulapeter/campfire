@@ -1396,7 +1396,8 @@
     <string name="shortcut_shortcuts">Show the keyboard shortcuts</string>
     <string name="shortcut_back">Go back, or close what is open</string>
     <string name="shortcut_find">Search</string>
-    <string name="shortcut_save">Save, Create, or Done; on a song or a setlist, Share or export</string>
+    <string name="shortcut_save">Save, Create, or Done</string>
+    <string name="shortcut_export_setlist">Share or export the setlist</string>
     <string name="shortcut_screen">Go to %1$s</string>
     <string name="shortcut_new">New song or setlist</string>
     <string name="shortcut_paste">New song from the copied text</string>

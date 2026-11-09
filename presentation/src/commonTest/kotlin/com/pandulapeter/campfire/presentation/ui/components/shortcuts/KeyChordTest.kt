@@ -78,7 +78,7 @@ class KeyChordTest {
         KeyShortcut.entries.forEach { first ->
             KeyShortcut.entries.filter { second ->
                 second.ordinal > first.ordinal &&
-                    (second.scope == first.scope || appShortcutOf(first) != null || appShortcutOf(second) != null)
+                    (second.scopes.any { it in first.scopes } || appShortcutOf(first) != null || appShortcutOf(second) != null)
             }.forEach { second ->
                 val sharedKeys = (first.chord.alternates + first.chord.key).intersect(second.chord.alternates + second.chord.key)
                 val isShiftShared = listOf(true, false).any { isShift ->

@@ -26,7 +26,7 @@ internal data class ShortcutGroup(
     val isCommandScrollListed: Boolean,
 )
 
-/** The keys that do one thing, [shortcuts], the first one leading ([rowLead]) and naming the row ([description]). */
+/** The keys that do one thing, [shortcuts], the first one leading ([rowLead]) and naming the row ([descriptionIn]). */
 @Immutable
 internal data class ShortcutRow(val shortcuts: List<KeyShortcut>) {
     val lead get() = shortcuts.first()
@@ -47,8 +47,8 @@ internal data class ShortcutFeatures(
 )
 
 /**
- * Every shortcut that works on [build] with [features], grouped by [KeyShortcut.scope] in its order and within a group
- * in the table's, the halves of a pair in one row ([rowLead]). Ctrl / Cmd + Y is Windows' and Linux's redo, so on an
+ * Every shortcut that works on [build] with [features], grouped by [KeyShortcut.scopes] in their order and within a
+ * group in the table's, the halves of a pair in one row ([rowLead]); one heard in several places is in each group. Ctrl / Cmd + Y is Windows' and Linux's redo, so on an
  * Apple keyboard ([isApple]) it is not listed, though it works there too. [isPreviewWheelZoomed] says whether the print
  * preview's page zooms with Ctrl / Cmd + the scroll wheel here, which only the desktop answers itself.
  */
@@ -60,13 +60,11 @@ internal fun shortcutGroups(
 ): List<ShortcutGroup> {
     val listed = KeyShortcut.entries.filter { shortcut ->
         shortcut.platforms.includes(build) &&
-            features.lists(shortcut.scope) &&
-            !(features.isReadOnly && shortcut in READ_ONLY_HIDDEN) &&
             !(!features.isSongScrolledContinuously && shortcut == KeyShortcut.PLAY) &&
             !(isApple && shortcut == KeyShortcut.REDO_ALTERNATE)
     }
-    return ShortcutScope.entries.mapNotNull { scope ->
-        val rows = listed.filter { it.scope == scope }
+    return ShortcutScope.entries.filter { features.lists(it) }.mapNotNull { scope ->
+        val rows = listed.filter { scope in it.scopes && !(features.isReadOnly && it.isHiddenInReadOnly(scope)) }
             .groupBy { it.rowLead }
             .map { (_, shortcuts) -> ShortcutRow(shortcuts) }
         val isCommandScrollListed = when (scope) {
@@ -105,6 +103,9 @@ private fun ShortcutFeatures.lists(scope: ShortcutScope) = when (scope) {
     ShortcutScope.METRONOME -> isMetronomeEnabled
     ShortcutScope.EDITOR -> areSongsEnabled && !isReadOnly
 }
+
+/** Whether read only mode takes away what this does in [scope]: a setlist's Share or export goes, a song's stays. */
+private fun KeyShortcut.isHiddenInReadOnly(scope: ShortcutScope) = this in READ_ONLY_HIDDEN || (this == KeyShortcut.SAVE && scope == ShortcutScope.LISTS)
 
 /**
  * What read only mode takes away the way into, outside the editor, whose whole group goes with it: the library's

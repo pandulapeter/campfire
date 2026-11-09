@@ -29,18 +29,30 @@ class ShortcutListingTest {
         shortcutGroups(build = build, features = features, isApple = isApple, isPreviewWheelZoomed = isPreviewWheelZoomed)
 
     @Test
-    fun `the desktop lists every shortcut once, grouped in the scopes' order, each row led by a described one`() {
+    fun `the desktop lists every shortcut once in each of its groups, in the scopes' order, each row led by a described one`() {
         val groups = listed(AppBuild.WINDOWS)
         assertEquals(ShortcutScope.entries, groups.map { it.scope })
         val shortcuts = groups.flatMap { group -> group.rows.flatMap { it.shortcuts } }
-        assertEquals(KeyShortcut.entries.sorted(), shortcuts.sorted())
+        assertEquals(KeyShortcut.entries.flatMap { shortcut -> shortcut.scopes.map { shortcut } }.sorted(), shortcuts.sorted())
         groups.forEach { group ->
             group.rows.forEach { row ->
-                assertNotNull(row.lead.description, row.lead.name)
-                row.shortcuts.forEach { assertEquals(group.scope, it.scope, it.name) }
-                row.shortcuts.drop(1).forEach { assertEquals(null, it.description, it.name) }
+                assertNotNull(row.lead.descriptionIn(group.scope), row.lead.name)
+                row.shortcuts.forEach { assertTrue(group.scope in it.scopes, it.name) }
+                row.shortcuts.drop(1).forEach { assertEquals(null, it.descriptionIn(group.scope), it.name) }
             }
         }
+    }
+
+    @Test
+    fun `Find and Save are listed wherever they are heard, saying what they do there`() {
+        val groups = listed(AppBuild.WINDOWS)
+        fun scopesOf(shortcut: KeyShortcut) = groups.filter { group -> group.rows.any { shortcut in it.shortcuts } }.map { it.scope }
+        assertEquals(listOf(ShortcutScope.MAIN_SCREENS, ShortcutScope.EDITOR), scopesOf(KeyShortcut.FIND))
+        assertEquals(listOf(ShortcutScope.APP, ShortcutScope.LISTS, ShortcutScope.SONG, ShortcutScope.EDITOR), scopesOf(KeyShortcut.SAVE))
+        assertEquals(4, ShortcutScope.entries.mapNotNull { KeyShortcut.SAVE.descriptionIn(it) }.toSet().size)
+        val readOnly = listed(AppBuild.WINDOWS, everything.copy(isReadOnly = true))
+        assertTrue(readOnly.single { it.scope == ShortcutScope.SONG }.rows.any { KeyShortcut.SAVE in it.shortcuts })
+        assertTrue(readOnly.filter { it.scope == ShortcutScope.LISTS }.none { group -> group.rows.any { KeyShortcut.SAVE in it.shortcuts } })
     }
 
     @Test

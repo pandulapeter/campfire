@@ -19,13 +19,15 @@ import com.pandulapeter.campfire.presentation.ui.platform.appBuild
  * works is its handler's business (a screen, a sheet, the app's root); one entry may serve several screens that mean
  * the same by it, as [FIND] does the list screens' search and the editor's. On which platforms it works is the
  * table's ([platforms]): elsewhere it matches no key and shows no hint. Where it is listed in the shortcuts sheet is
- * [scope], so that a new entry cannot be left out of it; keys that mean something else on another screen (Page Down
- * turning a print preview's page, stepping through a song) are an entry each.
+ * [scope], so that a new entry cannot be left out of it, and [alsoIn] for one heard in several of those places, listed
+ * in each with what it does there; keys that mean something else on another screen (Page Down turning a print
+ * preview's page, stepping through a song) are an entry each.
  */
 internal enum class KeyShortcut(
     val chord: KeyChord,
     val scope: ShortcutScope,
     val platforms: ShortcutPlatforms = ShortcutPlatforms.EVERYWHERE,
+    val alsoIn: Set<ShortcutScope> = emptySet(),
 ) {
     /** Opens the shortcuts sheet from anywhere, a field being typed in included. */
     SHORTCUTS(KeyChord.command(Key.Slash, "/", alternates = setOf(Key.NumPadDivide)), ShortcutScope.APP),
@@ -35,12 +37,13 @@ internal enum class KeyShortcut(
 
     /** The window's Escape, which goes back or closes what is open; a phone's or a tablet's own back is the system's. */
     BACK(KeyChord.plain(Key.Escape, label = null), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    /** The search of the main screen on top, where it has one; the editor's too, whose own buttons name it. */
-    FIND(KeyChord.command(Key.F, "F"), ShortcutScope.MAIN_SCREENS),
+
+    /** The search of the main screen on top, where it has one, and the editor's. */
+    FIND(KeyChord.command(Key.F, "F"), ShortcutScope.MAIN_SCREENS, alsoIn = setOf(ShortcutScope.EDITOR)),
     REPLACE(KeyChord.command(Key.R, "R"), ShortcutScope.EDITOR),
 
     /** Saves a sheet or the editor; on song details and a setlist, Share or export. */
-    SAVE(KeyChord.command(Key.S, "S"), ShortcutScope.APP),
+    SAVE(KeyChord.command(Key.S, "S"), ShortcutScope.APP, alsoIn = setOf(ShortcutScope.LISTS, ShortcutScope.SONG, ShortcutScope.EDITOR)),
     EDIT(KeyChord.command(Key.E, "E"), ShortcutScope.SONG),
     PASTE(KeyChord.command(Key.V, "V"), ShortcutScope.LISTS),
     ZOOM_IN(KeyChord.command(Key.Equals, "+", alternates = setOf(Key.Plus, Key.NumPadAdd)), ShortcutScope.SONG),
@@ -123,6 +126,9 @@ internal enum class KeyShortcut(
     SCREEN_6(KeyChord.command(Key.Six, "6", alternates = setOf(Key.NumPad6)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
     SCREEN_7(KeyChord.command(Key.Seven, "7", alternates = setOf(Key.NumPad7)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
     ;
+
+    /** Every group of the shortcuts sheet this is listed in, [scope] first. */
+    val scopes get() = listOf(scope) + alsoIn
 
     /** Whether this works on the platform the app runs on. */
     val isAvailable get() = platforms.includes(appBuild)
