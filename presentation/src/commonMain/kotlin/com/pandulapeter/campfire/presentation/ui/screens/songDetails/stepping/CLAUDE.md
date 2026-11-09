@@ -32,8 +32,9 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
 - **A strip turned by column** (`SongRows.isAcross`) is the same machinery on a sideways scroll (`songPageScroll`):
   stops are column starts, counted from the song's start edge (the scroll reversed where song and screen read
   differently); the viewport and reading window are handed over across (`scrolledViewport`, `ReadingWindow.across`),
-  so a height change re-lays out the strip. It leaves a column gap at the end of the screen and fades out over it and
-  the page's padding, so the next column slides in out of the fade. The scroll is sideways from the first frame where
+  so a height change re-lays out the strip. It leaves a column gap at its reading end (the left in a song read from the
+  right, whatever the interface's direction) and fades out over it and the page's padding there, so the next column
+  slides in out of the fade. The scroll is sideways from the first frame where
   the preference asks for it, and turns down once the layout says the song is no strip.
 - **Turned by column, the buttons and dots are one row along the bottom** (`StepControls`), above the setlist's pager
   bar: previous first, in a strip's reading direction, for every song so turned, a strip or not, so paging a setlist

@@ -25,11 +25,13 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.pressKey
+import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_next_page
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_page
 import com.pandulapeter.campfire.screenshots.AppTestScope
+import com.pandulapeter.campfire.screenshots.TestAppearance
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
@@ -38,82 +40,125 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * A song turned a column at a time: with two columns on screen, the pedal and a tap on the right half of the screen slide
- * the song along by one column, the one that was second now where the first one was, and a tap on the left half slides
- * it back; its step buttons are a row along the bottom that covers no line. Asked only of where the lines and the
- * buttons are on screen.
+ * A song turned a column at a time: the pedal and a tap on the half of the screen the song reads on to slide it along by
+ * one column, bringing the next one to the front and taking the first one out of view, and a tap on the other half
+ * slides it back; its step buttons are a row along the bottom, the previous one first in the song's direction, that
+ * covers no line. Each test reads one song in one interface direction, a song read from the right included, and asks
+ * only where the lines and the buttons are on screen.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class ColumnTurnTest {
 
     @Test
-    fun `the pedal and the screen's halves turn a song one column at a time`() = runAppTest(
+    fun `the pedal and the screen's halves turn a song one column at a time`() = turnsByColumn(LONG_SONG)
+
+    @Test
+    fun `a song read from the left turns towards the right in a right-to-left interface`() = turnsByColumn(
+        song = LONG_SONG,
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
+    )
+
+    @Test
+    fun `a song read from the right turns towards the left in a right-to-left interface`() = turnsByColumn(
+        song = HEBREW_SONG,
+        appearance = TestAppearance(language = AppLanguage.HEBREW),
+    )
+
+    @Test
+    fun `a song read from the right turns towards the left in a left-to-right interface`() = turnsByColumn(HEBREW_SONG)
+
+    private fun turnsByColumn(song: TurnedSong, appearance: TestAppearance = TestAppearance()) = runAppTest(
         window = TestWindow.DESKTOP,
-        songs = listOf(LONG_SONG_FILE),
+        songs = listOf(song.file),
         pageTurn = PageTurn.COLUMN,
+        appearance = appearance,
     ) {
-        onNode(hasScrollToNodeAction()).performScrollToNode(hasText(LONG_SONG_TITLE))
-        tap(hasText(LONG_SONG_TITLE) and hasClickAction())
-        waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { stripViewport() != null }
+        val reading = Reading(this, song.readsLeftwards)
+        onNode(hasScrollToNodeAction()).performScrollToNode(hasText(song.title))
+        tap(hasText(song.title) and hasClickAction())
+        waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { reading.viewport() != null }
         waitForIdle()
-        stepsForward("Page Down") { onRoot().performKeyInput { pressKey(Key.PageDown) } }
-        assertTrue(columnStarts(inView = true).size >= 2, "The song is not read in two columns: they start at ${columnStarts(inView = true)}.")
+        reading.stepsForward("Page Down") { onRoot().performKeyInput { pressKey(Key.PageDown) } }
+        assertTrue(reading.columnsInView().size >= 2, "The song is not read in two columns: they are at ${reading.columnsInView()}.")
         val previous = onNode(hasContentDescription(string(Res.string.song_details_previous_page))).fetchSemanticsNode().boundsInRoot
         val next = onNode(hasContentDescription(string(Res.string.song_details_next_page))).fetchSemanticsNode().boundsInRoot
-        val lowestLine = lines().filter { isInView(it) }.maxOf { it.bounds.bottom }
-        assertTrue(previous.top == next.top && previous.right < next.left, "The step buttons are not one row, the previous one first: $previous, $next.")
+        val isPreviousFirst = if (song.readsLeftwards) previous.left > next.right else previous.right < next.left
+        assertTrue(previous.top == next.top && isPreviousFirst, "The step buttons are not one row, the previous one first: $previous, $next.")
+        val lowestLine = reading.lines().filter(reading::isInView).maxOf { it.bounds.bottom }
         assertTrue(lowestLine <= next.top, "The row of step buttons at ${next.top} covers a line ending at $lowestLine.")
-        val viewport = checkNotNull(stripViewport()).boundsInRoot
-        stepsForward("A tap on the right half") { onRoot().performTouchInput { click(Offset(viewport.left + viewport.width * 3 / 4, viewport.bottom - TAP_ABOVE_BOTTOM)) } }
-        val first = firstLineOfColumn(columnStarts(inView = true).first())
-        onRoot().performTouchInput { click(Offset(viewport.left + viewport.width / 4, viewport.bottom - TAP_ABOVE_BOTTOM)) }
+        val viewport = checkNotNull(reading.viewport()).boundsInRoot
+        val onwards = viewport.left + viewport.width * (if (song.readsLeftwards) 1 else 3) / 4
+        val back = viewport.left + viewport.width * (if (song.readsLeftwards) 3 else 1) / 4
+        reading.stepsForward("A tap on the half the song reads on to") { onRoot().performTouchInput { click(Offset(onwards, viewport.bottom - TAP_ABOVE_BOTTOM)) } }
+        val first = reading.firstLineOfColumn(reading.columnsInView().first())
+        onRoot().performTouchInput { click(Offset(back, viewport.bottom - TAP_ABOVE_BOTTOM)) }
         waitForIdle()
-        assertTrue(columnStarts(inView = true).first() < lineNow(first).bounds.left, "A tap on the left half did not bring the column before back into view.")
-        assertTrue(isInView(lineNow(first)), "A tap on the left half took \"${first.text}\" out of view rather than one column back.")
+        assertTrue(reading.columnsInView().first() < reading.at(reading.lineNow(first)), "A tap on the other half did not bring the column before back.")
+        assertTrue(reading.isInView(reading.lineNow(first)), "A tap on the other half took \"${first.text}\" out of view rather than one column back.")
     }
+}
 
-    /** Asserts that [step] brings the column after the first one in view to the front, and takes that first one out of view. */
-    private fun AppTestScope.stepsForward(what: String, step: () -> Unit) {
-        val firstColumn = columnStarts(inView = true).first()
-        val leaving = firstLineOfColumn(firstColumn)
-        val arriving = firstLineOfColumn(columnStarts(inView = false).first { it > firstColumn + COLUMN_TOLERANCE })
-        step()
-        waitForIdle()
-        val arrived = lineNow(arriving)
-        assertTrue(abs(columnStarts(inView = true).first() - arrived.bounds.left) <= COLUMN_TOLERANCE, "$what did not bring \"${arriving.text}\" to the front.")
-        assertTrue(!isInView(lineNow(leaving)), "$what left \"${leaving.text}\" in view.")
-    }
+/** A song of the test resources, its [title], and whether it [readsLeftwards], as a Hebrew one does. */
+private class TurnedSong(val title: String, val file: String, val readsLeftwards: Boolean)
+
+/**
+ * The lines of the song a [test] has open, where they are along the way it reads: from the left edge of the screen, or
+ * where it [readsLeftwards], from the right one, so that the same questions ask the same of a song either way.
+ */
+@OptIn(ExperimentalTestApi::class)
+private class Reading(private val test: AppTestScope, private val readsLeftwards: Boolean) {
 
     /** The song's scroll, sideways: the innermost container scrolled across that holds its lines, the pager's being outer. */
-    private fun AppTestScope.stripViewport(): SemanticsNode? = onAllNodes(isScrolledAcross, useUnmergedTree = true).fetchSemanticsNodes()
+    fun viewport(): SemanticsNode? = test.onAllNodes(isScrolledAcross, useUnmergedTree = true).fetchSemanticsNodes()
         .lastOrNull { node -> songPieces(node, 0f).isNotEmpty() }
 
-    /**
-     * Where the columns start, left to right, only those wholly within the window where [inView]: the left edges that
-     * lines on several heights share, which a row of pills or chips set inside a column does not.
-     */
-    private fun AppTestScope.columnStarts(inView: Boolean) = lines().filter { !inView || isInView(it) }
-        .groupBy { it.bounds.left.toInt() }
-        .filterValues { lines -> lines.map { it.bounds.top }.distinct().size >= MIN_COLUMN_LINES }
-        .keys.map(Int::toFloat).sorted()
+    fun lines() = songPieces(checkNotNull(viewport()), 0f).filter { it.text.isNotBlank() }
 
-    private fun AppTestScope.isInView(line: Piece) = checkNotNull(stripViewport()).boundsInRoot.let { window ->
-        line.bounds.left >= window.left && line.bounds.right <= window.right
+    /** How far along the song's reading direction [line] starts, its right edge counted leftwards in a song read that way. */
+    fun at(line: Piece) = if (readsLeftwards) -line.bounds.right else line.bounds.left
+
+    fun isInView(line: Piece) = checkNotNull(viewport()).boundsInRoot.let { window -> line.bounds.left >= window.left && line.bounds.right <= window.right }
+
+    /**
+     * Where the columns start along the song, first to last, only those wholly within the window where [inView]: the start
+     * edges that lines on several heights share, and that no line of a column before them reaches across, as one of a
+     * row of pills or chips set inside a column does.
+     */
+    fun columns(inView: Boolean): List<Float> {
+        val lines = lines().filter { !inView || isInView(it) }
+        val edges = lines.groupBy { at(it).toInt() }
+            .filterValues { group -> group.map { it.bounds.top }.distinct().size >= MIN_COLUMN_LINES }
+            .keys.map(Int::toFloat).sorted()
+        return edges.fold(emptyList()) { columns, edge ->
+            val isInside = lines.any { line -> columns.any { abs(at(line) - it) <= 1f } && at(line) + line.bounds.width > edge }
+            if (isInside) columns else columns + edge
+        }
     }
 
-    private fun AppTestScope.lines() = songPieces(checkNotNull(stripViewport()), 0f).filter { it.text.isNotBlank() }
+    fun columnsInView() = columns(inView = true)
 
-    private fun AppTestScope.lineNow(line: Piece) = lines().single { it.key == line.key }
+    fun lineNow(line: Piece) = lines().single { it.key == line.key }
 
-    /** The topmost line of the column starting at [left]. */
-    private fun AppTestScope.firstLineOfColumn(left: Float) = lines().filter { abs(it.bounds.left - left) <= COLUMN_TOLERANCE }.minBy { it.bounds.top }
+    /** The topmost line of the column starting [start] along the song. */
+    fun firstLineOfColumn(start: Float) = lines().filter { abs(at(it) - start) <= COLUMN_TOLERANCE }.minBy { it.bounds.top }
+
+    /** Asserts that [step] brings the column after the first one in view to the front, and takes that first one out of view. */
+    fun stepsForward(what: String, step: () -> Unit) {
+        val firstColumn = columnsInView().first()
+        val leaving = firstLineOfColumn(firstColumn)
+        val arriving = firstLineOfColumn(columns(inView = false).first { it > firstColumn + COLUMN_TOLERANCE })
+        step()
+        test.waitForIdle()
+        assertTrue(abs(columnsInView().first() - at(lineNow(arriving))) <= COLUMN_TOLERANCE, "$what did not bring \"${arriving.text}\" to the front.")
+        assertTrue(!isInView(lineNow(leaving)), "$what left \"${leaving.text}\" in view.")
+    }
 }
 
 private val isScrolledAcross = SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)
 
-private const val LONG_SONG_TITLE = "The Long Road North"
 private const val OPEN_TIMEOUT_MILLIS = 10_000L
-private const val LONG_SONG_FILE = "campfire_tests-the_long_road_north.cho"
+private val LONG_SONG = TurnedSong(title = "The Long Road North", file = "campfire_tests-the_long_road_north.cho", readsLeftwards = false)
+private val HEBREW_SONG = TurnedSong(title = "Shir Aroch", file = "campfire_tests-shir_aroch.cho", readsLeftwards = true)
 
 /** How far apart two lines may start and still be read as starting one column: a card's padding. */
 private const val COLUMN_TOLERANCE = 16f

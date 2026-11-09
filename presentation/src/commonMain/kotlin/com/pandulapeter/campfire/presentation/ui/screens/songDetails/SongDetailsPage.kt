@@ -42,7 +42,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -381,7 +380,7 @@ internal fun SongDetailsPage(
                 SongLyrics(
                     modifier = Modifier
                         .fillMaxSize()
-                        .songPageScroll(scrollState, flingBehavior, isAcross, readsLeftwards = model.textDirection == WritingDirection.RIGHT_TO_LEFT, endPadding)
+                        .songPageScroll(scrollState, flingBehavior, isAcross, model.textDirection, startPadding, endPadding)
                         .padding(
                             start = startPadding,
                             end = endPadding,

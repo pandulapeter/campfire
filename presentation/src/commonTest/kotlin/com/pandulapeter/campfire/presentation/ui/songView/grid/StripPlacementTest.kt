@@ -26,14 +26,14 @@ class StripPlacementTest {
         unitWidths = IntArray(3) { 400 },
     )
 
-    private fun place(layoutDirection: LayoutDirection, isInsetAtLeft: Boolean = false) = placeStrip(
+    private fun place(layoutDirection: LayoutDirection, isInsetAtLeft: Boolean = false, isInset: Boolean = true) = placeStrip(
         grid = grid,
         widths = widths,
         unitHeights = IntArray(3) { 100 },
         units = units,
         piecePadding = IntArray(3),
         width = 1_000,
-        isInset = true,
+        isInset = isInset,
         endInsetPx = 50,
         columnGapPx = 20,
         sectionGapPx = SECTION_GAP,
@@ -66,5 +66,17 @@ class StripPlacementTest {
         val rows = stripRowsOf(grid, units, rtl.columnStops, readsLeftwards = true)
         assertTrue(rows.isAcross && rows.readsLeftwards)
         assertEquals(listOf(0, 1), rows.stepSections)
+    }
+
+    @Test
+    fun `a strip read from the right on a screen read from the left leaves its gap at the left, where it reads on to`() {
+        // With the step buttons in a row under it, nothing is at the screen's end, so only the song's direction counts.
+        val ltr = place(LayoutDirection.Ltr, isInset = false)
+        val rtl = place(LayoutDirection.Rtl, isInset = false)
+        assertEquals(ltr.columnStops, rtl.columnStops)
+        assertEquals(ltr.positions.map { ltr.width - it.x - 400 }, rtl.positions.map { it.x })
+        // The two columns in view, at the end of a reversed scroll, end further from the left edge than the right one.
+        val shown = rtl.positions.take(2).map { it.x - (rtl.width - 1_000) }
+        assertTrue(1_000 - (shown[0] + 400) < shown[1])
     }
 }

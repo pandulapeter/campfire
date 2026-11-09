@@ -29,29 +29,33 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.RowSnapFlingBehavior
 import com.pandulapeter.campfire.presentation.ui.songView.COLUMN_GAP
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 
 /**
  * The scroll a song page is read through: down, its top edge fading what is scrolled past, or sideways for a strip turned
  * a column at a time ([isAcross]), which nothing is scrolled under. A strip's scroll is counted from the song's start
- * edge, as its stops are (`SongRows.isAcross`), so it is reversed where the song [readsLeftwards] and the screen does not,
- * or the other way around. A strip fades out at the end of the screen, over the [COLUMN_GAP] it leaves there and the
- * page's [endPadding], painted over in the screen's background, so the column after the ones in view slides in out of
- * the fade. Its step buttons are a row along the bottom (`StepControls`), with nothing at the end edge.
+ * edge, as its stops are (`SongRows.isAcross`), so it is reversed where the song's [textDirection] is not the screen's.
+ * A strip fades out at its reading end, the right edge, or the left where the song reads from the right, over the
+ * [COLUMN_GAP] it leaves there and the page's padding on that side ([endPadding] where it is the screen's end,
+ * [startPadding] where it is its start), painted over in the screen's background, so the column after the ones in view
+ * slides in out of the fade. Its step buttons are a row along the bottom (`StepControls`), with nothing at the end edge.
  */
 @Composable
 internal fun Modifier.songPageScroll(
     scrollState: ScrollState,
     flingBehavior: RowSnapFlingBehavior,
     isAcross: Boolean,
-    readsLeftwards: Boolean,
+    textDirection: WritingDirection,
+    startPadding: Dp,
     endPadding: Dp,
 ): Modifier = if (isAcross) {
     val isScreenRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val readsLeftwards = textDirection == WritingDirection.RIGHT_TO_LEFT
     val backgroundColor = MaterialTheme.colorScheme.background
     drawWithContent {
         drawContent()
-        val fade = (endPadding + COLUMN_GAP).toPx()
-        val (from, to) = if (isScreenRtl) fade to 0f else size.width - fade to size.width
+        val fade = ((if (readsLeftwards == isScreenRtl) endPadding else startPadding) + COLUMN_GAP).toPx()
+        val (from, to) = if (readsLeftwards) fade to 0f else size.width - fade to size.width
         drawRect(
             brush = Brush.horizontalGradient(listOf(Color.Transparent, backgroundColor), startX = from, endX = to),
             topLeft = Offset(minOf(from, to), 0f),

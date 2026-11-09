@@ -89,8 +89,8 @@ internal data class SongGridSpec(
  *
  * Where the song is [SongGridSpec.turnsByColumn] and would be stepped through, it is set as a strip instead (see
  * [flowIntoStrip]): as many columns on screen as the width has room for, each the height of the screen, the strip
- * running on past the end edge, laid out as a scrolling song is, clear of the buttons and of a column gap at the end of
- * the screen, which it is faded out over. A song with something too tall
+ * running on past the end edge, laid out as a scrolling song is, clear of the buttons and of a column gap at its reading
+ * end, which it is faded out over. A song with something too tall
  * for a column and impossible to cut is paged as before.
  */
 internal class SongGridSearch(
