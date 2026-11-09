@@ -994,6 +994,8 @@
     <string name="chord_names_keep_key">Keep the key</string>
     <string name="chord_names_keep_key_description">The song stays in its key and the capo only changes the shapes you finger, with the chords named as they sound</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Next: %1$s</string>
+    <string name="song_details_step_again">Step again to open it</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>

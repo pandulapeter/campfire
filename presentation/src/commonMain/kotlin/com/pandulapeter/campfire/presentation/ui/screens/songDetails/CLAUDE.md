@@ -22,6 +22,9 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
   never restores its page index onto the wrong song over a partial batch. Once every song it names is gone from a read
   library, the screen closes itself.
 - The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
+- **In a setlist a step leaves a song's end only on the next press** (`NextSongConfirmation`): the first turns the pager
+  bar to name the next song (selecting it goes on too); going back, scrolling up, or another song forgets it. The bar's
+  buttons, swipes, and Left / Right do not ask.
 - The first page's text and its neighbours' are read ahead as the screen is pushed, so a song read before opens with its
   lyrics in the first frame and its model is built before the transition moves, not during it.
 

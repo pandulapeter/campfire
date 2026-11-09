@@ -993,6 +993,8 @@
     <string name="chord_names_keep_key">Hangnem megtartása</string>
     <string name="chord_names_keep_key_description">A dal a hangnemében marad, a capo csak a lefogott fogásokat változtatja meg, az akkordok pedig a hangzásuk szerint kapják a nevüket</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Következő: %1$s</string>
+    <string name="song_details_step_again">Lépj még egyszer a megnyitásához</string>
     <string name="song_details_transposition">Transzponálás</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>

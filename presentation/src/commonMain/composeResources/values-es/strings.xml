@@ -994,6 +994,8 @@
     <string name="chord_names_keep_key">Mantener la tonalidad</string>
     <string name="chord_names_keep_key_description">La canción se queda en su tonalidad y el capo solo cambia las formas que pisas, con los acordes nombrados por cómo suenan</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Siguiente: %1$s</string>
+    <string name="song_details_step_again">Avanza otra vez para abrirla</string>
     <string name="song_details_transposition">Transposición</string>
     <string name="song_details_transpose_up">Transponer hacia arriba</string>
     <string name="song_details_transpose_down">Transponer hacia abajo</string>

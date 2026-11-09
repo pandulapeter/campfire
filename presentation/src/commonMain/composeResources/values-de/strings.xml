@@ -994,6 +994,8 @@
     <string name="chord_names_keep_key">Tonart behalten</string>
     <string name="chord_names_keep_key_description">Der Song bleibt in seiner Tonart, und der Capo ändert nur die Griffe, mit den Akkorden nach ihrem Klang benannt</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Als Nächstes: %1$s</string>
+    <string name="song_details_step_again">Zum Öffnen noch einmal weiterblättern</string>
     <string name="song_details_transposition">Transposition</string>
     <string name="song_details_transpose_up">Hoch transponieren</string>
     <string name="song_details_transpose_down">Runter transponieren</string>

@@ -994,6 +994,8 @@
     <string name="chord_names_keep_key">Mantieni la tonalità</string>
     <string name="chord_names_keep_key_description">Il brano resta nella sua tonalità e il capotasto cambia solo le diteggiature, con gli accordi chiamati come suonano</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Prossima: %1$s</string>
+    <string name="song_details_step_again">Avanza di nuovo per aprirla</string>
     <string name="song_details_transposition">Trasposizione</string>
     <string name="song_details_transpose_up">Trasponi su</string>
     <string name="song_details_transpose_down">Trasponi giù</string>

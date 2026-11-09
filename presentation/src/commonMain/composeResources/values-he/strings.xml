@@ -1031,6 +1031,8 @@
     <string name="chord_names_keep_key">שמירה על הטונליות</string>
     <string name="chord_names_keep_key_description">השיר נשאר בטונליות שלו והקאפו משנה רק את הצורות שנלחצות, והאקורדים נקראים לפי איך שהם נשמעים</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">הבא: %1$s</string>
+    <string name="song_details_step_again">התקדמו שוב כדי לפתוח אותו</string>
     <string name="song_details_transposition">טרנספוזיציה</string>
     <string name="song_details_transpose_up">העלאת טונליות</string>
     <string name="song_details_transpose_down">הורדת טונליות</string>

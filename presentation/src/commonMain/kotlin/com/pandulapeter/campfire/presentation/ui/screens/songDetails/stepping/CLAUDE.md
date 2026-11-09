@@ -23,9 +23,9 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
   song, it moves at most a page.
 - A press moves at least a line where that skips nothing; the last press hands off only once the whole song is on
   screen. **A press mid-step steps on from its target**: two quick presses are two steps.
-- Previous leaves only at the very top; next only once the end has been on screen; a song that fits has neither. In a
-  setlist they go on to the next song's top and the previous song's end (that page's scroll is set to its end
-  beforehand, else a second press skips it).
+- Previous leaves only at the very top; next only once the end has been on screen (in a setlist on the press after,
+  `../CLAUDE.md`); a song that fits has neither. In a setlist they go on to the next song's top and the previous song's
+  end (that page's scroll is set to its end beforehand, else a second press skips it).
 - **The buttons never cover a line**: a scrolling song is laid out narrower; the full width is kept where the song fits
   as one row and the full-width grid does too, never in a setlist. An unpaged single column is assumed to scroll.
 - The dots count reachable stops.

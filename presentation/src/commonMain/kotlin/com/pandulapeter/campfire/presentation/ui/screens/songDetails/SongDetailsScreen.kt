@@ -62,7 +62,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
-import kotlinx.coroutines.launch
 
 /**
  * The lyrics (and chords) of a song, or of a setlist's songs in a pager. **How the song is played is set in the song
@@ -208,31 +207,23 @@ internal fun SongDetailsScreen(
     )
     val canStepBackInSong = if (isContinuous) autoScrolling.scroller?.canNudge(-1) == true else currentPageStepper?.canStepBack == true
     val canStepForwardInSong = if (isContinuous) autoScrolling.scroller?.canNudge(1) == true else currentPageStepper?.canStepForward == true
-    // A tap the song was dragged under steps from where the drag began (from), the rest from where the song is.
-    fun stepBack(from: Int? = null) {
-        val stepper = currentPageStepper
-        if (isContinuous && autoScrolling.nudge(-1)) return
-        if (!isContinuous && stepper?.canStep(-1, from) == true) {
-            coroutineScope.launch { stepper.step(-1, from) }
-        } else if (pagerState.targetPage > 0) {
-            // Going back from the top of a song is going back to the last lines of the one before it, and landing on its
-            // top instead would have the next press skip that song whole. A page not laid out yet has nowhere to go but
-            // its top.
-            pageScrollStates[pagerState.targetPage - 1]?.let { state -> coroutineScope.launch { state.scrollTo(state.maxValue) } }
-            pageStepper.step(-1)
-        }
-    }
-    fun stepForward(from: Int? = null) {
-        val stepper = currentPageStepper
-        if (isContinuous && autoScrolling.nudge(1)) return
-        if (!isContinuous && stepper?.canStep(1, from) == true) {
-            coroutineScope.launch { stepper.step(1, from) }
-        } else if (pagerState.targetPage < songs.lastIndex) {
-            pageStepper.step(1)
-        }
-    }
-    val stepBackAction: (from: Int?) -> Unit = ::stepBack
-    val stepForwardAction: (from: Int?) -> Unit = ::stepForward
+    val nextSongConfirmation = rememberNextSongConfirmation(
+        isAsked = destination.setlistFileName != null && !isImportPreview,
+        targetPage = pagerState.targetPage,
+        canStepForwardInSong = canStepForwardInSong,
+    )
+    val stepActions = SongStepActions(
+        coroutineScope = coroutineScope,
+        pagerState = pagerState,
+        pageStepper = pageStepper,
+        pageScrollStates = pageScrollStates,
+        stepper = currentPageStepper,
+        continuousScrolling = autoScrolling.takeIf { isContinuous },
+        lastPage = songs.lastIndex,
+        nextSongConfirmation = nextSongConfirmation,
+    )
+    val stepBackAction: (from: Int?) -> Unit = stepActions::stepBack
+    val stepForwardAction: (from: Int?) -> Unit = stepActions::stepForward
 
     val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
@@ -380,7 +371,9 @@ internal fun SongDetailsScreen(
                 targetPage = pagerState.targetPage,
                 pageCount = songs.size,
                 contentPadding = contentPadding,
+                nextSongTitle = songs.getOrNull(pagerState.targetPage + 1)?.title?.takeIf { nextSongConfirmation.armedPage == pagerState.targetPage },
                 onStep = pageStepper::step,
+                onConfirmNextSong = { stepForwardAction(null) },
             )
         }
     }
