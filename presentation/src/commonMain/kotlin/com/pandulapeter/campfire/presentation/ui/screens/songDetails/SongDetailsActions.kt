@@ -88,12 +88,13 @@ internal fun RowScope.SongDetailsActions(
     // overflow button reaching into it, laid out to the same width. Switching the mode therefore only crossfades them in
     // place, end aligned: shrinking one set while the other expands would slide the buttons and the stepper before them
     // back and forth. The width is animated only where the two differ (the bar too narrow for the star, or a preview,
-    // which has read only mode's menu but no lock, since switching the mode off would not make it editable), and an
-    // imported preview turning into its song's screen gains the song's actions the same way.
+    // which has read only mode's menu but never the lock: nothing in it is the library's to change until Import,
+    // whatever the mode), and an imported preview turning into its song's screen gains the song's actions, or the lock,
+    // the same way.
     AnimatedContent(
         targetState = when {
-            isPerformanceModeEnabled -> BarActions.READ_ONLY_MODE
             isImportPreview -> BarActions.PREVIEW
+            isPerformanceModeEnabled -> BarActions.READ_ONLY_MODE
             else -> BarActions.SONG
         },
         contentAlignment = Alignment.CenterEnd,
@@ -133,12 +134,12 @@ internal fun RowScope.SongDetailsActions(
 }
 
 /**
- * Which actions the bar ends in: read only mode's mark and menu, the same menu alone over an import preview (only Import
- * makes its song editable), or the song's own.
+ * Which actions the bar ends in: the same menu alone over an import preview (whose card's Import is the only thing that
+ * makes its song editable, in read only mode too), read only mode's mark and menu, or the song's own.
  */
 private enum class BarActions {
-    READ_ONLY_MODE,
     PREVIEW,
+    READ_ONLY_MODE,
     SONG,
 }
 

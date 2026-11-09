@@ -71,10 +71,10 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - As the bar narrows the text size stepper goes into the menu (at its end, the menu staying open while pressed), then
   Choose setlists, then the cover, each while the title keeps 160dp, decided from the settled width for every page at
   once. Performance mode: the read only mark (`ReadOnlyMark`, a lock opening the Preferences, so a mode switched on by
-  accident is noticed and undone here) always before the overflow button. An import preview has read only mode's menu,
-  the mark only while the mode is on (switching it off would not make the preview editable). The stepper where the
-  title keeps 160dp beside all three (about 434dp), the cover only where it keeps 160dp beside all four. **The overflow
-  button is always the bar's last.**
+  accident is noticed and undone here) always before the overflow button. An import preview has read only mode's menu
+  and never the mark, the mode or not: only Import makes it editable, and the mark comes with its song's screen. The
+  stepper where the title keeps 160dp beside all three (about 434dp), the cover only where it keeps 160dp beside all
+  four. **The overflow button is always the bar's last.**
 - Both menus (read only mode's too) hold About the song (never in a preview) and Preferences (the sheet with every page,
   opening on Song, the read only mark's on General; written at once, so the song changes behind it), never let out as buttons.
 
