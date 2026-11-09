@@ -17,7 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.ScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -30,8 +33,9 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.Ro
  * The scroll a song page is read through: down, its top edge fading what is scrolled past, or sideways for a strip turned
  * a column at a time ([isAcross]), which nothing is scrolled under. A strip's scroll is counted from the song's start
  * edge, as its stops are (`SongRows.isAcross`), so it is reversed where the song [readsLeftwards] and the screen does not,
- * or the other way around. A strip is drawn only up to the step buttons, [endPadding] and their own width from the end
- * of the screen: the column after the ones in view would otherwise show under them, and slides in from their edge.
+ * or the other way around. A strip fades out under the step buttons' column, [endPadding] and their own width from the
+ * end of the screen: from where they start to where they end, painted over in the screen's background, so the column
+ * after the ones in view is never read under them and slides in out of the fade.
  */
 @Composable
 internal fun Modifier.songPageScroll(
@@ -42,9 +46,17 @@ internal fun Modifier.songPageScroll(
     endPadding: Dp,
 ): Modifier = if (isAcross) {
     val isScreenRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val backgroundColor = MaterialTheme.colorScheme.background
     drawWithContent {
-        val end = (endPadding + STEP_BUTTON_SIZE + STEP_BUTTON_GAP).toPx()
-        clipRect(left = if (isScreenRtl) end else 0f, right = if (isScreenRtl) size.width else size.width - end) { this@drawWithContent.drawContent() }
+        drawContent()
+        val fadeStart = (endPadding + STEP_BUTTON_SIZE + STEP_BUTTON_GAP).toPx()
+        val fadeEnd = endPadding.toPx()
+        val (from, to) = if (isScreenRtl) fadeStart to fadeEnd else size.width - fadeStart to size.width - fadeEnd
+        drawRect(
+            brush = Brush.horizontalGradient(listOf(Color.Transparent, backgroundColor), startX = from, endX = to),
+            topLeft = Offset(minOf(from, if (isScreenRtl) 0f else size.width), 0f),
+            size = Size(fadeStart, size.height),
+        )
     }.bounceHorizontalScroll(
         state = scrollState,
         flingBehavior = flingBehavior,

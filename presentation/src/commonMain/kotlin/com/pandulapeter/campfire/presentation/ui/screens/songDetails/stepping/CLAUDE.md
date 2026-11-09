@@ -31,9 +31,9 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
 - The dots count reachable stops.
 - **A strip turned by column** (`SongRows.isAcross`) is the same machinery on a sideways scroll (`songPageScroll`):
   stops are column starts, counted from the song's start edge (the scroll reversed where song and screen read
-  differently), the last ones resting at the scroll's end; the viewport and reading window are handed over across
-  (`scrolledViewport`, `ReadingWindow.across`), so a height change re-lays out the strip. The strip is clipped at the
-  buttons' edge, so the next column never shows under them. The scroll is sideways from the first frame where the
+  differently); the viewport and reading window are handed over across (`scrolledViewport`, `ReadingWindow.across`),
+  so a height change re-lays out the strip. The strip fades out under the buttons' column, painted over in the
+  background, so the next column is never read under them and slides in out of the fade. The scroll is sideways from the first frame where the
   preference asks for it, and turns down once the layout says the song is no strip.
 - **Tap to step**: top half previous, bottom half next (on a strip left and right, mirrored for a song read from the
   right), only for taps nothing inside consumed; never a long press, a right or middle click, a fling-stopping press,
