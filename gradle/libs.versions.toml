@@ -18,7 +18,7 @@ androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatfo
 androidx-navigation3 = "1.2.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
 androidx-profileinstaller = "1.4.1" # https://developer.android.com/jetpack/androidx/releases/profileinstaller
 androidx-test-junit = "1.3.0" # https://developer.android.com/jetpack/androidx/releases/test
-androidx-test-uiautomator = "2.4.0" # https://developer.android.com/jetpack/androidx/releases/test-uiautomator
+androidx-test-uiautomator = "2.4.1" # https://developer.android.com/jetpack/androidx/releases/test-uiautomator
 coil = "3.6.3" # https://github.com/coil-kt/coil/releases
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in-app-updates
@@ -31,7 +31,7 @@ jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/co
 #noinspection UnusedVersionCatalogEntry
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
-koin-compilerPlugin = "1.2.1" # https://github.com/InsertKoinIO/koin-compiler-plugin/releases
+koin-compilerPlugin = "1.2.3" # https://github.com/InsertKoinIO/koin-compiler-plugin/releases
 #noinspection GradleDependency,NewerVersionAvailable: koin-compilerPlugin has to name a Kotlin version before Kotlin moves to it
 kotlin = "2.4.20" # https://kotlinlang.org/docs/releases.html#release-details
 kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
@@ -40,11 +40,11 @@ kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.12.0" # https://github.com/Kotlin/kotlinx.serialization/releases
 #noinspection UnusedVersionCatalogEntry
 ktlint = "1.8.0" # https://github.com/pinterest/ktlint/releases
-ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
-quickjs = "1.0.15" # https://github.com/dokar3/quickjs-kt/releases
+ktor = "3.6.1" # https://github.com/ktorio/ktor/releases
+quickjs = "1.0.18" # https://github.com/dokar3/quickjs-kt/releases
 #noinspection NewerVersionAvailable
 skiko = "0.150.2" # Must equal the skiko version Compose brings in: ./gradlew :app:desktop:dependencies --configuration runtimeClasspath | grep skiko
-spotless = "8.10.4" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
+spotless = "8.11.0" # https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md
 zxing = "3.5.4" # https://github.com/zxing/zxing/releases
 
 [libraries]
