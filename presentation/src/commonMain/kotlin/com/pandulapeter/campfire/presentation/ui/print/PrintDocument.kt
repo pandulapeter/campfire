@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrument
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
@@ -36,7 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.SongAsPlayed
 
 /**
  * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
- * if the library changes underneath the screen. [date] is already formatted in the app's language.
+ * if the library changes underneath the screen. [date] is already formatted in the app's language. [instrument] is the
+ * reader's, whose part of a score of several the PDF engraves alone, as the screen does (`abcPartFor`).
  */
 internal data class PrintSource(
     val title: String,
@@ -44,6 +46,7 @@ internal data class PrintSource(
     val date: String? = null,
     val kind: Kind = Kind.SONG,
     val songs: List<PrintSong>,
+    val instrument: Instrument? = null,
 ) {
     /** What is being exported: one song, a setlist, or several songs ticked in the songs screen's selection mode. */
     enum class Kind { SONG, SETLIST, SONGS }

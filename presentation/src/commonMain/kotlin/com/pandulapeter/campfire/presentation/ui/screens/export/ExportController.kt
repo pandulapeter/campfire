@@ -273,6 +273,7 @@ internal class ExportController(
                 else -> PrintSource.Kind.SONG
             },
             songs = printSongs,
+            instrument = preferences?.instrument,
         )
     }
 

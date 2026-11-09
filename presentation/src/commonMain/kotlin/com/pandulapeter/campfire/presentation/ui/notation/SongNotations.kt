@@ -267,18 +267,16 @@ internal fun rememberSongNotations(
     }
 }
 
-/**
- * [tune] engraved as [request] asks, or whole where the part shown fails on its own (abc2svg engraves a part alone as a
- * score of its own, which can hold what the whole score does not), so a part is never worse than the score.
- */
+/** [tune] engraved as [request] asks, in the part it shows (see [renderNotationPartOrScore]). */
 private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: AbcTune, request: NotationRequest): NotationRendering? {
-    val partText = request.textOf(tune)
-    val drawn = renderNotationDrawing(renderer, partText, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { partText to it }
-        ?: tune.text.takeIf { it != partText }?.let { text ->
-            renderNotationDrawing(renderer, text, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { text to it }
-        }
-        ?: return null
-    val (text, drawing) = drawn
+    val (text, drawing) = renderNotationPartOrScore(
+        renderer = renderer,
+        tune = tune.text,
+        part = request.parts[tune.text],
+        width = request.width,
+        chords = request.chords.movedBy(tune.offset),
+        songTitle = request.songTitle,
+    ) ?: return null
     return withContext(Dispatchers.Default) {
         NotationRendering(
             drawing = drawing,
@@ -287,6 +285,25 @@ private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune
             reading = notationReadingOf(text, request.songTitle, drawing.chordNames),
         )
     }
+}
+
+/**
+ * [tune] engraved with only [part] where one is given, or whole where none is or the part fails on its own (abc2svg
+ * engraves a part alone as a score of its own, which can hold what the whole score does not), so a part is never worse
+ * than the score: the text engraved and its drawing, null where neither can be drawn. What the song page and the PDF
+ * both engrave.
+ */
+internal suspend fun renderNotationPartOrScore(
+    renderer: AbcRenderer,
+    tune: String,
+    part: AbcPart?,
+    width: Int,
+    chords: NotationChordSpelling,
+    songTitle: String?,
+): Pair<String, NotationDrawing>? {
+    val partText = part?.let { abcTuneWithPart(tune, it) } ?: tune
+    return renderNotationDrawing(renderer, partText, width, chords, songTitle)?.let { partText to it }
+        ?: tune.takeIf { it != partText }?.let { renderNotationDrawing(renderer, it, width, chords, songTitle)?.let { drawing -> tune to drawing } }
 }
 
 /**

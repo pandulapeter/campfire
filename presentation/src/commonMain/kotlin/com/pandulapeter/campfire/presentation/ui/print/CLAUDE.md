@@ -31,8 +31,10 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   `showSheetMusic`, and never `isSelectable` (read back, ABC's `"G"` and `[CEG]` would be chords).
 - An `abc` run prints engraved (a row per staff system): the export screen renders every song's tunes in its own
   transposition and notation, each copy under its own key change, for the column width right before each layout, which
-  waits for them, at the size printing its lyrics as large as the song's (smaller in a narrower column). Drawn in black,
-  never in the text layer; a tune that does not render prints as its text.
+  waits for them, at the size printing its lyrics as large as the song's (smaller in a narrower column). A score of
+  several parts prints the reader's part where their instrument has one, as the screen shows it, and whole otherwise:
+  the PDF has no picker. Drawn in black, the frets' boxes in white, never in the text layer; a tune that does not render
+  prints as its text.
 - Sections and runs are grouped by the screen's own `joinCutSections` and `groupIntoRuns`: a chorus is one unit under
   one bar, a break the one cut the PDF keeps. Section labels hide when the options hide all their lines; an unnamed
   verse is "Verse", an unnamed paragraph has none.

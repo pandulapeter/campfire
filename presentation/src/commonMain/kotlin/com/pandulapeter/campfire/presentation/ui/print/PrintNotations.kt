@@ -13,13 +13,16 @@ import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
+import com.pandulapeter.campfire.presentation.ui.notation.abcPartFor
+import com.pandulapeter.campfire.presentation.ui.notation.abcPartsOf
 import com.pandulapeter.campfire.presentation.ui.notation.abcTunesOf
-import com.pandulapeter.campfire.presentation.ui.notation.renderNotationDrawing
+import com.pandulapeter.campfire.presentation.ui.notation.renderNotationPartOrScore
 
 /**
  * The ABC tunes of [source] engraved for the song sheets' columns as [settings] lays them out, by song file and by
  * tune, for [layoutPrintDocument]; each song's in its own transposition and chord notation, each copy of a tune under
- * the key change it stands after, as on its page. None where
+ * the key change it stands after, a score of several parts in the reader's part where one is theirs and whole
+ * otherwise (no picker chooses for a PDF), as on its page. None where
  * the chords are not printed, which leaves verbatim runs out altogether, and none for a tune that cannot be rendered,
  * which prints as its text.
  */
@@ -29,7 +32,9 @@ internal suspend fun printNotationsOf(source: PrintSource, settings: PrintSettin
     return source.songs.mapNotNull { song ->
         val tunes = abcTunesOf(song.song?.blocks.orEmpty())
         val drawings = tunes.mapNotNull { tune ->
-            renderNotationDrawing(renderer, tune.text, width, song.notationChords.movedBy(tune.offset), song.title)?.let { tune to it }
+            val parts = abcPartsOf(tune.text)
+            val part = abcPartFor(parts, source.instrument)?.let(parts::get)
+            renderNotationPartOrScore(renderer, tune.text, part, width, song.notationChords.movedBy(tune.offset), song.title)?.let { tune to it.second }
         }.toMap()
         drawings.takeIf { it.isNotEmpty() }?.let { song.fileName to it }
     }.toMap()
