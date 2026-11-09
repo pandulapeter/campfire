@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_so
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTooltip
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.components.FloatingControlVisibility
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.SongStepper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.stepping.StepProgressIndicator
@@ -113,6 +114,7 @@ internal fun BoxScope.StepControls(
                 else -> Res.string.song_details_previous_section
             },
         ),
+        shortcut = KeyShortcut.SONG_UP,
         onClick = onStepBack,
     )
     val forward = StepButtonLook(
@@ -126,6 +128,7 @@ internal fun BoxScope.StepControls(
                 else -> Res.string.song_details_next_section
             },
         ),
+        shortcut = KeyShortcut.SONG_DOWN,
         onClick = onStepForward,
     )
     if (isRow) {
@@ -157,6 +160,7 @@ private class StepButtonLook(
     val isVisible: Boolean,
     val rotation: Float,
     val description: String,
+    val shortcut: KeyShortcut,
     val onClick: () -> Unit,
 )
 
@@ -250,7 +254,7 @@ private fun StepButton(
     LaunchedEffect(look.rotation, look.isVisible) {
         if (look.isVisible) rotation.animateTo(look.rotation)
     }
-    CampfireTooltip(label = look.description) {
+    CampfireTooltip(label = look.description, shortcut = look.shortcut) {
         SmallFloatingActionButton(
             // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
             // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They

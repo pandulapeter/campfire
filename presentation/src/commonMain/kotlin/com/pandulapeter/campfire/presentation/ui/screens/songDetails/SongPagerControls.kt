@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -40,6 +41,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -83,6 +85,8 @@ internal fun SongPagerControls(
     ).value,
 ) {
     val layoutDirection = LocalLayoutDirection.current
+    // The arrow keys go to the song lying their way in the pager, so in a right-to-left layout Right is the previous one.
+    val isLtr = layoutDirection == LayoutDirection.Ltr
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -97,6 +101,7 @@ internal fun SongPagerControls(
         CampfireIconButton(
             icon = painterResource(Res.drawable.ic_previous),
             label = stringResource(Res.string.song_details_previous_song),
+            shortcut = if (isLtr) KeyShortcut.SONG_LEFT else KeyShortcut.SONG_RIGHT,
             enabled = targetPage > 0,
             onClick = { onStep(-1) },
         )
@@ -123,6 +128,7 @@ internal fun SongPagerControls(
         CampfireIconButton(
             icon = painterResource(Res.drawable.ic_next),
             label = stringResource(Res.string.song_details_next_song),
+            shortcut = if (isLtr) KeyShortcut.SONG_RIGHT else KeyShortcut.SONG_LEFT,
             enabled = targetPage < pageCount - 1,
             onClick = { onStep(1) },
         )
