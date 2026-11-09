@@ -29,10 +29,16 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
 - **The buttons never cover a line**: a scrolling song is laid out narrower; the full width is kept where the song fits
   as one row and the full-width grid does too, never in a setlist. An unpaged single column is assumed to scroll.
 - The dots count reachable stops.
-- **Tap to step**: top half previous, bottom half next, only for taps nothing inside consumed; never a long press, a
-  right or middle click, a fling-stopping press, or one the system cancelled. A drag under 250 ms and a tenth of the
-  height is still a tap (a strumming hand slides), stepping from where the song was at finger-down and replacing the
-  fling.
+- **A strip turned by column** (`SongRows.isAcross`) is the same machinery on a sideways scroll (`songPageScroll`):
+  stops are column starts, counted from the song's start edge (the scroll reversed where song and screen read
+  differently), the last ones resting at the scroll's end; the viewport and reading window are handed over across
+  (`scrolledViewport`, `ReadingWindow.across`), so a height change re-lays out the strip. The strip is clipped at the
+  buttons' edge, so the next column never shows under them. The scroll is sideways from the first frame where the
+  preference asks for it, and turns down once the layout says the song is no strip.
+- **Tap to step**: top half previous, bottom half next (on a strip left and right, mirrored for a song read from the
+  right), only for taps nothing inside consumed; never a long press, a right or middle click, a fling-stopping press,
+  or one the system cancelled. A drag under 250 ms and a tenth of the height (a strip's width) is still a tap (a
+  strumming hand slides), stepping from where the song was at finger-down and replacing the fling.
 - **A fling goes no further than one step**; a drag goes anywhere. Not in a column scrolling by itself (`autoScroll/`).
 - The buttons take no focus; the screen retakes lost focus while uncovered, or the next arrow is spent on a focus search.
 - **A held step key is one step until released** (window focus loss counts as a release): key repeats would chain

@@ -114,6 +114,12 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
 
     /** The height of a line of lyrics, which [overlap] is two of: the least a press should move the song by. */
     val lineHeight get() = overlap / 2
+
+    /**
+     * This window for a strip scrolled sideways, which no edge fades, no bar covers, and no space follows: only the least
+     * a press moves the strip by is left, which a column is always wider than.
+     */
+    fun across() = ReadingWindow(overlap = overlap)
 }
 
 /**

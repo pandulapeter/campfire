@@ -473,6 +473,8 @@
     <string name="settings_number_sections_description">Distingue las secciones repetidas que no tienen nombre propio, como Estrofa 1 y Estrofa 2</string>
     <string name="settings_song_layout">Disposición</string>
     <string name="settings_song_layout_description">«Páginas» muestra a la vez la mayor parte posible de la canción. «Continua» es una sola columna que puede desplazarse sola al ritmo de la canción.</string>
+    <string name="settings_page_turn">Pasar por</string>
+    <string name="settings_page_turn_description">Solo importa con varias columnas en pantalla: «Columna» desplaza la canción una columna cada vez, así que la siguiente siempre está a la vista.</string>
     <string name="settings_notation">Notación de acordes</string>
     <string name="settings_notation_description">Cómo se escriben los acordes mientras lees y editas canciones. Las canciones se guardan siempre en notación estándar, para que se lean igual en cualquier app.</string>
     <string name="settings_notation_choose">Elegir notación</string>
@@ -988,6 +990,8 @@
     <string name="song_layout_pages_description">La mayor parte posible de la canción en pantalla a la vez, en columnas que se pasan página a página</string>
     <string name="song_layout_continuous">Continua</string>
     <string name="song_layout_continuous_description">Una sola columna que se desplaza sola al ritmo de la canción, a la velocidad que elijas para cada una</string>
+    <string name="page_turn_page">Página</string>
+    <string name="page_turn_column">Columna</string>
     <string name="chord_names_title">¿Cómo lees los acordes con capo?</string>
     <string name="chord_names_example">Esta canción lleva el capo en el traste %1$s: los acordes pueden nombrarse por las formas que tocas o por cómo suenan, o la canción puede quedarse en su tonalidad y el capo solo cambiar las formas.</string>
     <string name="chord_names_shapes_description">Los acordes que pisas sobre el capo, como se escriben las partituras con capo</string>

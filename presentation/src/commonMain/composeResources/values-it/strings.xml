@@ -473,6 +473,8 @@
     <string name="settings_number_sections_description">Distingui le sezioni ripetute che non hanno un nome proprio, come Strofa 1 e Strofa 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">Le pagine mostrano sullo schermo la parte più ampia possibile di una canzone. Continuo è una sola colonna che può scorrere da sola al ritmo della canzone.</string>
+    <string name="settings_page_turn">Gira per</string>
+    <string name="settings_page_turn_description">Conta solo con più colonne sullo schermo: Colonna fa scorrere la canzone di una colonna alla volta, così la successiva è sempre in vista.</string>
     <string name="settings_notation">Notazione degli accordi</string>
     <string name="settings_notation_description">Come vengono scritti gli accordi mentre leggi e modifichi le canzoni. Le canzoni vengono sempre salvate in notazione standard, così si leggono allo stesso modo in ogni app.</string>
     <string name="settings_notation_choose">Scegli notazione</string>
@@ -988,6 +990,8 @@
     <string name="song_layout_pages_description">La maggior parte della canzone sullo schermo in una volta, in colonne sfogliate una pagina alla volta</string>
     <string name="song_layout_continuous">Continuo</string>
     <string name="song_layout_continuous_description">Una sola colonna che scorre da sola al ritmo della canzone, a una velocità che imposti per ogni canzone</string>
+    <string name="page_turn_page">Pagina</string>
+    <string name="page_turn_column">Colonna</string>
     <string name="chord_names_title">Come leggi gli accordi con il capotasto?</string>
     <string name="chord_names_example">Questa canzone ha il capotasto al tasto %1$s: gli accordi possono prendere il nome dalle diteggiature che suoni o da come suonano, oppure la canzone può restare nella sua tonalità e il capotasto cambiare solo le diteggiature.</string>
     <string name="chord_names_shapes_description">Gli accordi che diteggi sopra il capotasto, come li scrivono gli spartiti per capotasto</string>

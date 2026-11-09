@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.RandomPicksSeed
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.source.local.implementation.model.MetronomeSettingsDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.TunerSettingsDocument
@@ -270,6 +271,15 @@ internal class UserPreferencesMappersTest {
         val unreadable = UserPreferencesDocument(songLayout = "sideways", autoScrollSpeeds = mapOf("a.cho" to 0, "b.cho" to 80)).toModel()
         assertEquals(SongLayout.PAGES, unreadable.songLayout)
         assertEquals(mapOf("b.cho" to 80), unreadable.autoScrollSpeeds)
+    }
+
+    @Test
+    fun `the page turn defaults to the page and survives a round trip - an unknown one read as the page`() {
+        val defaults = UserPreferencesDocumentFormat.decode("{}").document.toModel()
+        assertEquals(PageTurn.PAGE, defaults.pageTurn)
+        val chosen = defaults.copy(pageTurn = PageTurn.COLUMN)
+        assertEquals(chosen, UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(chosen.toDocument())).document.toModel())
+        assertEquals(PageTurn.PAGE, UserPreferencesDocument(pageTurn = "sideways").toModel().pageTurn)
     }
 
     @Test

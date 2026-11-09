@@ -22,6 +22,7 @@ class SectionMeasurementsTest {
         maxColumnCount = 2,
         endInset = 48,
         keepsEndInset = false,
+        turnsByColumn = false,
     )
     private var searchCount = 0
 

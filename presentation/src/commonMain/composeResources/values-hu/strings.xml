@@ -473,6 +473,8 @@
     <string name="settings_number_sections_description">A saját név nélküli, ismétlődő szakaszok sorszámot kapnak, például Versszak 1 és Versszak 2</string>
     <string name="settings_song_layout">Elrendezés</string>
     <string name="settings_song_layout_description">Az oldalak egyszerre a legtöbbet mutatják a dalból. A folyamatos nézet egy hasáb, amely magától is görgethető a dal tempójában.</string>
+    <string name="settings_page_turn">Lapozás</string>
+    <string name="settings_page_turn_description">Csak akkor számít, ha több hasáb látszik: a hasábonkénti lapozás egyszerre egy hasábnyit csúsztat a dalon, így a következő mindig látható.</string>
     <string name="settings_notation">Akkordjelölés</string>
     <string name="settings_notation_description">Hogyan legyenek írva az akkordok a dalok olvasásakor és szerkesztésekor. A dalok mindig szabványos jelöléssel mentődnek, így minden alkalmazásban ugyanúgy olvashatók.</string>
     <string name="settings_notation_choose">Jelölés kiválasztása</string>
@@ -987,6 +989,8 @@
     <string name="song_layout_pages_description">Egyszerre a legtöbb a dalból, oldalanként lapozott hasábokban</string>
     <string name="song_layout_continuous">Folyamatos</string>
     <string name="song_layout_continuous_description">Egy hasáb, amely magától gördül a dal tempójában, dalonként beállítható sebességgel</string>
+    <string name="page_turn_page">Oldalanként</string>
+    <string name="page_turn_column">Hasábonként</string>
     <string name="chord_names_title">Hogyan olvasod az akkordokat capóval?</string>
     <string name="chord_names_example">Ennél a dalnál %1$s. bundon van a capo: az akkordok a lefogott fogások vagy a hangzásuk szerint kaphatnak nevet, vagy a dal a hangnemében maradhat, és a capo csak a fogásokat változtatja meg.</string>
     <string name="chord_names_shapes_description">A capo fölött lefogott akkordok, ahogy a capós kották írják</string>

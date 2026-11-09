@@ -21,8 +21,10 @@ import com.pandulapeter.campfire.presentation.ui.songView.grid.SongGridSpec
 import com.pandulapeter.campfire.presentation.ui.songView.grid.arrange
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowIntoPages
 import com.pandulapeter.campfire.presentation.ui.songView.grid.flowIntoRows
+import com.pandulapeter.campfire.presentation.ui.songView.grid.flowIntoStrip
 import com.pandulapeter.campfire.presentation.ui.songView.grid.pageCount
 import com.pandulapeter.campfire.presentation.ui.songView.grid.placeSections
+import com.pandulapeter.campfire.presentation.ui.songView.grid.placeStrip
 import com.pandulapeter.campfire.presentation.ui.songView.grid.sectionWidthsOf
 import com.pandulapeter.campfire.presentation.ui.songView.grid.songRowsOf
 import androidx.compose.foundation.layout.offset
@@ -101,6 +103,10 @@ import kotlin.math.roundToInt
  * The layout is laid out in the song's direction (the `LocalLayoutDirection` [SongLyrics] provides it with), which
  * orders its columns, while [stepButtonInset] is on the end edge of the screen around it, [screenLayoutDirection].
  *
+ * Where [turnsByColumn] and the song is stepped through, it is laid out as a strip of columns as tall as the screen
+ * instead, wider than it, which scrolls sideways (see [flowIntoStrip], [placeStrip]); such a scroll hands it no width of
+ * its own, so it is told the viewport's ([viewportWidth], unspecified wherever the constraints say it).
+ *
  * [lyricsLineHeight] is the height of one line of lyrics in pixels, at the size the song is drawn at: twice it is the
  * height of a chorded line, which the flows are handed as what the empty space of a column is counted in, and a unit
  * wraps a line more wherever a width makes it a line of lyrics taller than at the width that wraps nothing.
@@ -129,6 +135,8 @@ internal fun SongSectionsLayout(
     cardPadding: Dp,
     canCutSections: Boolean,
     isSingleColumn: Boolean,
+    turnsByColumn: Boolean,
+    viewportWidth: Dp,
     sectionGlides: SectionGlides?,
     glidesEveryMove: Boolean,
     arrival: Any?,
@@ -163,13 +171,12 @@ internal fun SongSectionsLayout(
         val unitCount = units.unitSections.size
         val measurables = allMeasurables.take(unitCount)
         val cardMeasurables = allMeasurables.subList(unitCount, unitCount + units.cardCount)
-        val width = constraints.maxWidth
+        val width = if (viewportWidth.isSpecified) viewportWidth.roundToPx() else constraints.maxWidth
         val settledWidth = width + extraWidth.roundToPx()
         val columnGapPx = columnGap.roundToPx()
         val sectionGapPx = sectionGap.roundToPx()
         val rowGapPx = rowGap.roundToPx()
         val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
-        val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
         val endInsetPx = stepButtonInset.roundToPx()
         val lineHeightPx = 2 * lyricsLineHeight
         // The measurables are only valid inside the pass that hands them over, so the search is built anew on every one.
@@ -188,13 +195,14 @@ internal fun SongSectionsLayout(
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
                 availableHeight = availableHeightPx,
-                maxRowHeight = maxRowHeightPx,
+                maxRowHeight = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE,
                 endInset = endInsetPx,
                 keepsEndInset = keepsStepButtonInset,
                 cardPadding = cardPadding.roundToPx(),
                 lyricsLineHeight = lyricsLineHeight,
                 canCutSections = canCutSections,
                 isSingleColumn = isSingleColumn,
+                turnsByColumn = turnsByColumn,
             ),
         )
         val decidedGrid = sectionMeasurements.grid(search.gridKey(settledWidth)) { search.decide(settledWidth) }
@@ -249,17 +257,15 @@ internal fun SongSectionsLayout(
                 songRowsOf(
                     grid = grid,
                     units = units,
-                    arrangement = arrangement,
+                    placement = placement,
                     unitHeights = unitHeights,
                     dividerHeight = dividerHeight,
-                    isScrolledByRow = placement.isScrolledByRow,
                     fadePx = EDGE_FADE_SIZE.roundToPx(),
+                    layoutDirection = layoutDirection,
                 ),
             )
         }
-        val cardPlaceables = cards.map { (card, bounds) ->
-            cardMeasurables[card].measure(Constraints.fixed(bounds.width, bounds.height))
-        }
+        val cardPlaceables = cards.map { (card, bounds) -> cardMeasurables[card].measure(Constraints.fixed(bounds.width, bounds.height)) }
         val dividerTopsNow = arrangement.dividerTops.take((grid.pageCount - 1).coerceAtLeast(0))
         if (isLookingAhead && sectionGlides != null) {
             sectionGlides.follow(
@@ -279,7 +285,7 @@ internal fun SongSectionsLayout(
                 arrival = arrival,
             )
         }
-        layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
+        layout(placement.width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
             // Read while placing, so that a glide only places the sections again on every frame it runs.
             fun glideOf(key: Any) = if (isLookingAhead || sectionGlides == null) IntOffset.Zero else sectionGlides.offsetOf(key)
             // The cards first, since what is placed later is drawn over what was placed before it.

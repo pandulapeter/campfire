@@ -50,6 +50,7 @@ internal data class UserPreferencesDocument(
     val shouldNumberSections: Boolean = true,
     val songLayout: String = "",
     val isSongLayoutChosen: Boolean = false,
+    val pageTurn: String = "",
     val language: String = "",
     val accidentals: String = "",
     val notation: String = "",

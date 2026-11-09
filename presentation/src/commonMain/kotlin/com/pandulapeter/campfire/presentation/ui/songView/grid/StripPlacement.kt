@@ -1,0 +1,95 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.presentation.ui.songView.grid
+
+import com.pandulapeter.campfire.presentation.ui.songView.SongRows
+import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
+
+/**
+ * Places the units of a strip ([SectionGrid.isStrip]), measured [unitHeights] tall at the [widths] they were given: its
+ * columns side by side from the song's start edge, each column's sections stacked from the top as a cell's are (see
+ * [arrange]), nothing spread out or centered, since the eye looks for the next column's first line where the last one's
+ * was. The layout is as wide as the strip, which scrolls sideways in a viewport [width] wide.
+ *
+ * What the step buttons leave of the viewport, [endInsetPx] at its end where [isInset] (the left where [isInsetAtLeft],
+ * as for [placeSections]), is shared out into one slot for every column on screen, each column centered in its own, so
+ * that the columns beside those in view start past its edge rather than in its margins; a column wider than a slot
+ * takes as much as it needs, and [columnGapPx] beside it. A step scrolls the strip by the slot of the column leaving.
+ * Where the slots start is [SectionPlacement.columnStops], counted from the song's start edge, which a scroll reversed
+ * for a song read leftwards counts from too.
+ */
+internal fun placeStrip(
+    grid: SectionGrid,
+    widths: SectionWidths,
+    unitHeights: IntArray,
+    units: SongUnits,
+    piecePadding: IntArray,
+    width: Int,
+    isInset: Boolean,
+    endInsetPx: Int,
+    columnGapPx: Int,
+    sectionGapPx: Int,
+    rowGapPx: Int,
+    layoutDirection: LayoutDirection,
+    isInsetAtLeft: Boolean,
+): SectionPlacement {
+    val columnWidths = widths.slotWidths.firstOrNull() ?: IntArray(0)
+    val readsLeftwards = layoutDirection == LayoutDirection.Rtl
+    // The buttons are at the end of the screen, which is the song's start where the two read in opposite directions.
+    val isInsetAtStart = isInset && isInsetAtLeft != readsLeftwards
+    val viewWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
+    val slotWidth = viewWidth / grid.stripColumns.coerceAtLeast(1)
+    val slots = IntArray(columnWidths.size) { maxOf(slotWidth, columnWidths[it] + columnGapPx) }
+    val lead = if (isInsetAtStart) endInsetPx else 0
+    val columnStops = IntArray(slots.size)
+    for (column in 1 until slots.size) columnStops[column] = columnStops[column - 1] + slots[column - 1]
+    val totalWidth = maxOf(width, lead + slots.sum() + if (isInset && !isInsetAtStart) endInsetPx else 0)
+    val arrangement = grid.arrange(
+        heights = unitHeights,
+        sectionGap = sectionGapPx,
+        rowGap = rowGapPx,
+        unitSections = units.unitSections,
+        piecePadding = piecePadding,
+    )
+    val positions = Array(unitHeights.size) { index ->
+        val column = grid.columns[index]
+        val start = lead + columnStops[column] + (slots[column] - columnWidths[column]) / 2
+        // What is narrower than its column sits at the column's start, which is its right edge in a song read leftwards.
+        IntOffset(x = if (readsLeftwards) totalWidth - start - widths.unitWidths[index] else start, y = arrangement.tops[index])
+    }
+    return SectionPlacement(
+        isScrolledByRow = false,
+        isPaddedToViewport = false,
+        arrangement = arrangement,
+        positions = positions,
+        cards = cardBoundsOf(grid, units, positions, unitHeights, widths.unitWidths, piecePadding),
+        width = totalWidth,
+        columnStops = columnStops.toList(),
+    )
+}
+
+/**
+ * The stops of a strip placed at [columnStops]: every column a stop, named by the section it starts with, which a scroll
+ * reversed for a song that [readsLeftwards] counts from its start edge too. The scroll cannot go past the strip's last
+ * columns, so the stops beyond them all rest at its end, which shows them.
+ */
+internal fun stripRowsOf(grid: SectionGrid, units: SongUnits, columnStops: List<Int>, readsLeftwards: Boolean) = SongRows(
+    restingOffsets = columnStops,
+    // A column is never taller than the screen, so a stop shows all of it.
+    bottoms = columnStops,
+    stepOffsets = columnStops,
+    stepSections = columnStops.indices.map { column -> units.unitSections[grid.columns.indexOfFirst { it == column }] },
+    isSteppedByRow = true,
+    timingSections = units.timingSections,
+    isAcross = true,
+    readsLeftwards = readsLeftwards,
+)

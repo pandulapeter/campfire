@@ -75,6 +75,7 @@ internal fun spec(
     canCutSections: Boolean = true,
     isSingleColumn: Boolean = false,
     cardPadding: Int = 0,
+    turnsByColumn: Boolean = false,
 ) = SongGridSpec(
     minColumnWidth = 384,
     narrowColumnWidth = 288,
@@ -90,6 +91,7 @@ internal fun spec(
     lyricsLineHeight = LINE_HEIGHT / 2,
     canCutSections = canCutSections,
     isSingleColumn = isSingleColumn,
+    turnsByColumn = turnsByColumn,
 )
 
 private const val LONGEST_WORD_SHARE = 4

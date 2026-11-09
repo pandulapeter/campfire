@@ -46,6 +46,7 @@ internal data class SongGridSpec(
     val lyricsLineHeight: Int,
     val canCutSections: Boolean,
     val isSingleColumn: Boolean,
+    val turnsByColumn: Boolean,
 )
 
 /**
@@ -85,6 +86,11 @@ internal data class SongGridSpec(
  * through it drawn over it there; the grid is searched for at that narrower width, and a song that fits the screen there
  * is laid out across the full one - unless [keepsStepButtonInset], where the buttons page through a setlist and are
  * there whatever the song is.
+ *
+ * Where the song is [SongGridSpec.turnsByColumn] and would be stepped through, it is set as a strip instead (see
+ * [flowIntoStrip]): as many columns on screen as the width has room for, each the height of the screen, the strip
+ * running on past the end edge, laid out as a scrolling song is, clear of the buttons. A song with something too tall
+ * for a column and impossible to cut is paged as before.
  */
 internal class SongGridSearch(
     val units: SongUnits,
@@ -147,10 +153,29 @@ internal class SongGridSearch(
     // A wide row is a single column in which every section is as wide as it needs: the ones whose lines do not wrap as
     // wide as those lines, and the rest as wide as a single column, so that what wraps is not read in lines longer
     // than a column's because a staff of tablature shares the row.
-    fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int) = if (wideRows[rows[unit]]) {
-        wideWidthFor(units.unitSections[unit], totalWidth) ?: columnWidthFor(totalWidth, 1)
-    } else {
-        columnWidthFor(totalWidth, columnCounts[rows[unit]])
+    fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int) = when {
+        isStrip -> stripColumnWidthOf(unit, totalWidth, stripColumns)
+        wideRows[rows[unit]] -> wideWidthFor(units.unitSections[unit], totalWidth) ?: columnWidthFor(totalWidth, 1)
+        else -> columnWidthFor(totalWidth, columnCounts[rows[unit]])
+    }
+
+    // A column of a strip holding a section whose lines do not wrap - a staff of tablature - is as wide as those lines,
+    // up to the screen less a gap, so a step slides the strip by that column's own width rather than breaking the staff.
+    private fun stripColumnWidthOf(unit: Int, totalWidth: Int, columnCount: Int) = maxOf(
+        columnWidthFor(totalWidth, columnCount),
+        unitsOf(units.unitSections[unit]).maxOf { metrics.minWidth(it) }.coerceAtMost(totalWidth - columnGapPx),
+    )
+
+    // A chorded line that wraps counts twice, since its continuation carries a row of chords too. A line no wider than
+    // its column wraps nothing, which is what most lines are, and is not measured again to find that out.
+    private fun wrappedLinesOf(unit: Int, columnWidth: Int): Int {
+        if (units.lineCount[unit] == 0 || spec.lyricsLineHeight <= 0) return 0
+        val width = unitWidthFor(unit, columnWidth)
+        val maxWidth = maxWidthOf(unit)
+        if (maxWidth <= width) return 0
+        val wrappedHeight = metrics.height(unit, width)
+        val unwrappedHeight = metrics.height(unit, maxWidth)
+        return ((wrappedHeight - unwrappedHeight).toFloat() / spec.lyricsLineHeight).roundToInt().coerceAtLeast(0)
     }
 
     fun gridKey(settledWidth: Int) = SectionGridKey(
@@ -160,6 +185,7 @@ internal class SongGridSearch(
         maxColumnCount = narrowColumnCountFor(settledWidth).coerceAtMost(maxOf(1, unitCount)),
         endInset = endInsetPx,
         keepsEndInset = spec.keepsEndInset,
+        turnsByColumn = spec.turnsByColumn,
     )
 
     // The grid of the sections of [segment], the units of a stretch of the song that starts at [sectionOffset], every
@@ -177,18 +203,7 @@ internal class SongGridSearch(
             return metrics.height(index, unitWidthFor(index, columnWidth))
         }
 
-        // A chorded line that wraps counts twice, since its continuation carries a row of chords too. A line no wider
-        // than its column wraps nothing, which is what most lines are, and is not measured again to find that out.
-        fun wrappedLinesAt(unit: Int, columnWidth: Int): Int {
-            if (segment.lineCount[unit] == 0 || spec.lyricsLineHeight <= 0) return 0
-            val index = unit + unitOffset
-            val width = unitWidthFor(index, columnWidth)
-            val maxWidth = maxWidthOf(index)
-            if (maxWidth <= width) return 0
-            val wrappedHeight = metrics.height(index, width)
-            val unwrappedHeight = metrics.height(index, maxWidth)
-            return ((wrappedHeight - unwrappedHeight).toFloat() / spec.lyricsLineHeight).roundToInt().coerceAtLeast(0)
-        }
+        fun wrappedLinesAt(unit: Int, columnWidth: Int) = wrappedLinesOf(unit + unitOffset, columnWidth)
 
         fun sectionHeightAt(section: Int, columnWidth: Int) =
             (segment.sectionStarts[section] until segment.sectionStarts[section + 1]).sumOf { unitHeightAt(it, columnWidth) }
@@ -400,13 +415,48 @@ internal class SongGridSearch(
         // one of fewer, taller columns, which would scroll with the buttons over it. Several rows read across are
         // stepped through however short they are, since each is followed by empty space down to the bottom of the screen.
         val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
-        return when {
-            insetSearch == null -> DecidedGrid(searchGrid(settledWidth).searched.grid, isInset = false)
-            spec.keepsEndInset || !insetSearch.isReadWithoutStepping() -> DecidedGrid(insetSearch.searched.grid, isInset = true)
-            else -> searchGrid(settledWidth).let { full ->
-                if (full.isReadWithoutStepping()) DecidedGrid(full.searched.grid, isInset = false) else DecidedGrid(insetSearch.searched.grid, isInset = true)
-            }
+        val (paged, isInset) = when {
+            insetSearch == null -> searchGrid(settledWidth) to false
+            spec.keepsEndInset || !insetSearch.isReadWithoutStepping() -> insetSearch to true
+            else -> searchGrid(settledWidth).let { full -> if (full.isReadWithoutStepping()) full to false else insetSearch to true }
         }
+        // A song read whole has nothing to turn, by pages or by columns, and is laid out as it always is.
+        if (spec.turnsByColumn && !paged.isReadWithoutStepping()) {
+            stripFor(settledWidth - endInsetPx)?.let { return DecidedGrid(it, isInset = endInsetPx > 0) }
+        }
+        return DecidedGrid(paged.searched.grid, isInset)
+    }
+
+    // The strip of the readable columns the width has room for, or of narrower ones where their lines mostly fit them
+    // and that saves a step (see fitsNarrowColumns). Null where the song cannot be one, and is paged instead.
+    private fun stripFor(totalWidth: Int): SectionGrid? {
+        if (!spec.canCutSections || availableHeightPx <= 0 || isPagedBySections || sectionCount > MAX_CUT_SECTION_COUNT || unitCount == 0) return null
+        val readableColumnCount = widthColumnCountFor(totalWidth)
+        var best = stripOf(totalWidth, readableColumnCount) ?: return null
+        fun SectionGrid.stepCount() = columnCounts[0] - stripColumns
+        for (columnCount in readableColumnCount + 1..narrowColumnCountFor(totalWidth)) {
+            if (best.stepCount() <= 0) break
+            if (!fitsNarrowColumns(units.lineCount) { wrappedLinesOf(it, stripColumnWidthOf(it, totalWidth, columnCount)) }) continue
+            val candidate = stripOf(totalWidth, columnCount) ?: continue
+            if (candidate.stepCount() < best.stepCount()) best = candidate
+        }
+        return best
+    }
+
+    private fun stripOf(totalWidth: Int, columnCount: Int): SectionGrid? {
+        val strip = flowIntoStrip(
+            sectionStarts = units.sectionStarts,
+            timingStarts = units.timingStarts,
+            heights = IntArray(unitCount) { metrics.height(it, unitWidthFor(it, stripColumnWidthOf(it, totalWidth, columnCount))) },
+            isCuttableBefore = { units.isCuttableBefore[it] },
+            piecePadding = piecePadding,
+            sectionGap = sectionGapPx,
+            maxColumnHeight = maxRowHeightPx,
+            lineHeight = lineHeightPx,
+            lineCount = { units.lineCount[it] },
+            isStanzaBreakBefore = { units.isStanzaBreakBefore[it] },
+        ) ?: return null
+        return SectionGrid(rows = IntArray(unitCount), columns = strip.columns, columnCounts = intArrayOf(strip.columnCount), stripColumns = columnCount)
     }
 }
 

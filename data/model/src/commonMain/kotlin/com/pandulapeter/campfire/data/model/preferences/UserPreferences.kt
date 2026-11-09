@@ -107,6 +107,8 @@ data class UserPreferences(
     val songLayout: SongLayout = SongLayout.PAGES,
     /** Whether a [songLayout] was picked in Preferences or confirmed in the question the first song opened asks. */
     val isSongLayoutChosen: Boolean = false,
+    /** How a song laid out in [SongLayout.PAGES] is turned. Never exported or synced, like [songLayout]; never asked about. */
+    val pageTurn: PageTurn = PageTurn.PAGE,
     /**
      * Whether the sections a song gives no name of their own are numbered by their kind where it has several of one
      * ("Verse 1", "Verse 2"), the way the files of a library were once written by hand. Off, they are headed by the

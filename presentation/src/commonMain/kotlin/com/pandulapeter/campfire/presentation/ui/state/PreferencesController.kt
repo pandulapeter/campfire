@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.chordpro.voicings.ChordVoicings
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
@@ -223,6 +224,8 @@ internal class PreferencesController(
 
     /** Picking a layout also answers the question the first song opened asks about it. */
     fun setSongLayout(value: SongLayout) = changeUserPreferences { copy(songLayout = value, isSongLayoutChosen = true) }
+
+    fun setPageTurn(value: PageTurn) = changeUserPreferences { copy(pageTurn = value) }
 
     /**
      * A pick in the question the first song opened asks: written at once, so that the song behind it changes as it goes,

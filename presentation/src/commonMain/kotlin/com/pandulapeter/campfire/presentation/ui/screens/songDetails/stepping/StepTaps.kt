@@ -30,7 +30,9 @@ import kotlinx.coroutines.launch
 
 /**
  * Makes the whole of the area the song is read in the step buttons' touch target: a tap on its top half steps back
- * ([onStep] with -1), a tap on its bottom half forward (1), wherever that has anywhere to go. A reader with both hands on
+ * ([onStep] with -1), a tap on its bottom half forward (1), wherever that has anywhere to go. A song turned a column at a
+ * time ([stepsAcross] not null) is split into its left and right halves instead, the left one stepping back unless the
+ * song reads from the right ([stepsAcross] true), and a sloppy tap's travel is measured against the width. A reader with both hands on
  * an instrument has a moment to reach for the screen and none to aim at a small button in its corner.
  *
  * Only a tap nothing else wanted counts. The modifier sits on the parent of the pager and the buttons, so everything
@@ -58,11 +60,13 @@ internal fun Modifier.stepOnTap(
     isMovingFreely: () -> Boolean,
     isStepping: () -> Boolean,
     stepOrigin: () -> Int?,
+    stepsAcross: () -> Boolean?,
     onStep: (direction: Int, from: Int?) -> Unit,
 ): Modifier {
     val currentIsMovingFreely by rememberUpdatedState(isMovingFreely)
     val currentIsStepping by rememberUpdatedState(isStepping)
     val currentStepOrigin by rememberUpdatedState(stepOrigin)
+    val currentStepsAcross by rememberUpdatedState(stepsAcross)
     val currentOnStep by rememberUpdatedState(onStep)
     return pointerInput(pagerState) {
         coroutineScope {
@@ -75,6 +79,7 @@ internal fun Modifier.stepOnTap(
                 if (isOtherMouseButton || currentIsMovingFreely()) return@awaitEachGesture
                 val isSteppingOn = currentIsStepping()
                 val origin = currentStepOrigin()
+                val readsLeftwards = currentStepsAcross()
                 val page = pagerState.currentPage
                 // The same press once everything inside has seen it. During a step the scroll is what took it, and a
                 // button that did is still told by the up it takes.
@@ -97,7 +102,12 @@ internal fun Modifier.stepOnTap(
                 // cancellation Compose makes up when the system takes the pointer away: Android's home and back
                 // gestures start as an ordinary press and slide on the window, and are short enough to pass for a tap.
                 if (up.isConsumed) return@awaitEachGesture
-                val direction = if (down.position.y < size.height / 2f) -1 else 1
+                val direction = when (readsLeftwards) {
+                    null -> if (down.position.y < size.height / 2f) -1 else 1
+                    false -> if (down.position.x < size.width / 2f) -1 else 1
+                    true -> if (down.position.x < size.width / 2f) 1 else -1
+                }
+                val extent = if (readsLeftwards == null) size.height else size.width
                 val duration = up.uptimeMillis - down.uptimeMillis
                 val isSideways: Boolean
                 if (!isDragged) {
@@ -110,7 +120,7 @@ internal fun Modifier.stepOnTap(
                     isSideways = false
                 } else {
                     val travel = up.position - down.position
-                    if (duration > SLOPPY_TAP_MAX_MILLIS || travel.getDistance() > size.height * SLOPPY_TAP_MAX_TRAVEL_FRACTION) return@awaitEachGesture
+                    if (duration > SLOPPY_TAP_MAX_MILLIS || travel.getDistance() > extent * SLOPPY_TAP_MAX_TRAVEL_FRACTION) return@awaitEachGesture
                     isSideways = abs(travel.x) > abs(travel.y)
                 }
                 launch {

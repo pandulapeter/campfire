@@ -473,6 +473,8 @@
     <string name="settings_number_sections_description">Tell apart repeated sections that have no name of their own, such as Verse 1 and Verse 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">Pages fit the most of a song on the screen at once. Continuous is one column that can scroll by itself at the song\'s pace.</string>
+    <string name="settings_page_turn">Turn by</string>
+    <string name="settings_page_turn_description">Matters only with several columns on screen: Column slides the song along by one column at a time, so the next one is always in view.</string>
     <string name="settings_notation">Chord notation</string>
     <string name="settings_notation_description">How chords are written while you read and edit songs. Songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_notation_choose">Choose notation</string>
@@ -988,6 +990,8 @@
     <string name="song_layout_pages_description">The most of the song on the screen at once, in columns turned a page at a time</string>
     <string name="song_layout_continuous">Continuous</string>
     <string name="song_layout_continuous_description">One column that scrolls by itself at the song\'s pace, at a speed you set for each song</string>
+    <string name="page_turn_page">Page</string>
+    <string name="page_turn_column">Column</string>
     <string name="chord_names_title">How do you read chords with a capo?</string>
     <string name="chord_names_example">With the capo on fret %1$s, this song\'s chords can be named by the shapes you play or by how they sound, or the song can stay in its key, the capo changing only the shapes you finger.</string>
     <string name="chord_names_shapes_description">The chords you finger above the capo, the way capo charts are written</string>

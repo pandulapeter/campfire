@@ -9,16 +9,26 @@
  */
 package com.pandulapeter.campfire.presentation.ui.preferences
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.settings_chords
 import com.pandulapeter.campfire.presentation.resources.settings_chords_description
+import com.pandulapeter.campfire.presentation.resources.page_turn_column
+import com.pandulapeter.campfire.presentation.resources.page_turn_page
 import com.pandulapeter.campfire.presentation.resources.settings_group_song_page
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections
 import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
+import com.pandulapeter.campfire.presentation.resources.settings_page_turn
+import com.pandulapeter.campfire.presentation.resources.settings_page_turn_description
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions
 import com.pandulapeter.campfire.presentation.resources.settings_scale_suggestions_description
 import com.pandulapeter.campfire.presentation.resources.settings_song_layout
@@ -34,7 +44,8 @@ import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 /**
  * The Preferences' Song page, the same in Settings and in the song details screen's sheet, which opens on it: first a
  * song's layout, pages or one column that scrolls by itself, the one choice here that changes how the page is used rather
- * than what is on it, and so a segmented control rather than one more switch; then whether a reader sees the chords at
+ * than what is on it, and so a segmented control rather than one more switch, with how pages are turned under it while
+ * they are picked; then whether a reader sees the chords at
  * all (how they are drawn and written is the Chords page's), and what the app adds to them and to the song's sections.
  * Each only hides, and each is disabled rather than hidden while another takes what it adds, since what it is set to is
  * still what the songs will open with once that is back.
@@ -56,6 +67,26 @@ internal fun SongPreferencesPage(
             selected = userPreferences?.songLayout,
             onSelected = preferencesController::setSongLayout,
         )
+    }
+    // Only pages are turned, so the choice of how is there only while they are picked.
+    AnimatedVisibility(
+        visible = userPreferences?.songLayout != SongLayout.CONTINUOUS,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        SettingsSubsection(
+            title = stringResource(Res.string.settings_page_turn),
+            description = stringResource(Res.string.settings_page_turn_description),
+        ) {
+            SegmentedChoice(
+                options = listOf(
+                    PageTurn.PAGE to stringResource(Res.string.page_turn_page),
+                    PageTurn.COLUMN to stringResource(Res.string.page_turn_column),
+                ),
+                selected = userPreferences?.pageTurn,
+                onSelected = preferencesController::setPageTurn,
+            )
+        }
     }
     val areChordsEnabled = userPreferences?.areChordsEnabled != false
     SwitchListItem(

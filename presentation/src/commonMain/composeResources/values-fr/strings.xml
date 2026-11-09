@@ -477,6 +477,8 @@
     <string name="settings_number_sections_description">Distingue les sections répétées qui n\'ont pas de nom propre, comme Couplet 1 et Couplet 2</string>
     <string name="settings_song_layout">Mise en page</string>
     <string name="settings_song_layout_description">En pages, l\'écran montre le plus possible d\'une chanson à la fois. En continu, c\'est une seule colonne qui peut défiler toute seule au rythme de la chanson.</string>
+    <string name="settings_page_turn">Tourner par</string>
+    <string name="settings_page_turn_description">Ne compte qu\'avec plusieurs colonnes à l\'écran : par colonne, la chanson glisse d\'une colonne à la fois, et la suivante reste toujours visible.</string>
     <string name="settings_notation">Notation des accords</string>
     <string name="settings_notation_description">La façon dont les accords s\'écrivent quand tu lis et modifies des chansons. Les chansons sont toujours enregistrées en notation standard, pour se lire de la même façon dans toutes les apps.</string>
     <string name="settings_notation_choose">Choisir la notation</string>
@@ -993,6 +995,8 @@
     <string name="song_layout_pages_description">Le plus de la chanson à l\'écran à la fois, en colonnes tournées page par page</string>
     <string name="song_layout_continuous">Continu</string>
     <string name="song_layout_continuous_description">Une seule colonne qui défile toute seule au rythme de la chanson, à une vitesse réglée pour chaque chanson</string>
+    <string name="page_turn_page">Page</string>
+    <string name="page_turn_column">Colonne</string>
     <string name="chord_names_title">Comment lis-tu les accords avec un capo ?</string>
     <string name="chord_names_example">Cette chanson a un capo à la case %1$s : les accords peuvent être nommés d\'après les doigtés que tu joues ou d\'après leur son, ou la chanson peut rester dans sa tonalité, le capo ne changeant que les doigtés.</string>
     <string name="chord_names_shapes_description">Les accords que tu doigtes au-dessus du capo, comme les grilles pour capo les écrivent</string>

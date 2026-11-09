@@ -34,12 +34,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.grid.flowLikeAMagazine
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -73,9 +70,7 @@ import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.resources.song_details_key_change
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.ui.components.scaled
 import com.pandulapeter.campfire.presentation.ui.instrument.tunings
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
@@ -153,6 +148,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * @param isSingleColumn Whether the sections are stacked in one column however wide the window is, the way a phone
  * lays them out. The editor's preview next to the text sets it: half a window flows a song into columns that the
  * next keystroke reshuffles, and the lines being typed are only easy to find in the order they are written.
+ * @param turnsByColumn Whether a song that is stepped through is set as a strip of columns turned one at a time, which
+ * scrolls sideways, a scroll that hands it no width: [viewportWidth] is then the width it is read in.
  */
 @Composable
 internal fun SongLyrics(
@@ -180,6 +177,8 @@ internal fun SongLyrics(
     keepsStepButtonInset: Boolean = false,
     canCutSections: Boolean = false,
     isSingleColumn: Boolean = false,
+    turnsByColumn: Boolean = false,
+    viewportWidth: Dp = Dp.Unspecified,
     chordDiagrams: ChordDiagrams? = null,
     scaleSuggestions: ScaleSuggestions? = null,
 ) {
@@ -407,6 +406,8 @@ internal fun SongLyrics(
                     cardPadding = CARD_PADDING,
                     canCutSections = canCutSections,
                     isSingleColumn = isSingleColumn,
+                    turnsByColumn = turnsByColumn,
+                    viewportWidth = viewportWidth,
                     sectionGlides = sectionGlides,
                     glidesEveryMove = sectionMotion == SectionMotion.SPRING && !isResizing,
                     arrival = notationArrival,
@@ -449,27 +450,9 @@ internal fun SongLyrics(
                 }
             }
         }
-        if (model.isCut) {
-            CutSongNotice(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = CARD_PADDING)
-                    .padding(top = 16.dp),
-            )
-        }
+        if (model.isCut) CutSongNotice()
     }
 }
-
-/** Where a song too long to be laid out whole stops, see [LayoutBudget]: the file is whole, and the editor shows it all. */
-@Composable
-private fun CutSongNotice(
-    modifier: Modifier = Modifier,
-) = Text(
-    modifier = modifier,
-    text = stringResource(Res.string.song_details_cut),
-    style = MaterialTheme.typography.bodyMedium,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-)
 
 /** What the instrument pill's tuning half of [SongLyrics] last named. */
 private class LastShownTuning(var value: InstrumentTuning? = null)

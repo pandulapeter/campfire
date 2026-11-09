@@ -35,6 +35,9 @@ import kotlinx.coroutines.flow.first
  * [timingSections] are the sections that change the tempo or the time signature the song is played in from there on,
  * ascending, each of which starts a stop of its own wherever the song is stepped by rows (see `stepping.timingIndexAt`). A change
  * written before the song's first line is reported at section 0 and starts no stop, since it is in force from the first.
+ *
+ * A song turned a column at a time is scrolled sideways ([isAcross]): its stops are where its columns start, counted
+ * from the song's start edge, which is the right one where it [readsLeftwards], and it has no rows and no lines.
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
@@ -47,13 +50,16 @@ internal data class SongRows(
     val lineSections: List<Int> = emptyList(),
     val playedLines: List<Int> = emptyList(),
     val timingSections: List<Int> = emptyList(),
+    val isAcross: Boolean = false,
+    val readsLeftwards: Boolean = false,
 ) {
     /**
      * These rows in the coordinates of a scroll that holds [topPadding] above them: everything that much further down,
      * except a stop at or above their top, which is rested on at the top of the scroll. The padding is read with the first
-     * row or section rather than scrolled past on the way to it, so the song opens on its first stop.
+     * row or section rather than scrolled past on the way to it, so the song opens on its first stop. A strip scrolls
+     * sideways, past none of it.
      */
-    fun belowPadding(topPadding: Int) = copy(
+    fun belowPadding(topPadding: Int) = if (isAcross) this else copy(
         restingOffsets = restingOffsets.map { if (it <= 0) 0 else it + topPadding },
         bottoms = bottoms.map { it + topPadding },
         stepOffsets = stepOffsets.map { if (it <= 0) 0 else it + topPadding },

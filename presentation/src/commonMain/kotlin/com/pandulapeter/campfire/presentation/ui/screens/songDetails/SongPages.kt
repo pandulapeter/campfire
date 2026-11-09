@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
@@ -279,30 +281,20 @@ internal fun SongPages(
             onRetry = { songTextStore.loadSongContent(song.fileName) },
             headedOffset = { stepper.headedOffset },
             onTimingChanged = { timing -> if (timing == null) songTimings.remove(song.fileName) else songTimings[song.fileName] = timing },
-            chordDiagrams = remember(chordDiagrams, song.fileName, destination.setlistFileName, canPickChordShapes, isChordSectionFolded, text, importPreview != null) {
-                chordDiagrams?.copy(
-                    isFolded = isChordSectionFolded,
-                    onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
-                    onChordClicked = if (!canPickChordShapes) null else {
-                        { chordName ->
-                            dialogHost.showDialog(
-                                DialogType.ChordShape(
-                                    song = song,
-                                    setlistFileName = destination.setlistFileName,
-                                    chordName = chordName,
-                                    previewText = text.takeIf { importPreview != null },
-                                ),
-                            )
-                        }
-                    },
-                    // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
-                    onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
-                    onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
-                )
-            },
+            chordDiagrams = rememberPageChordDiagrams(
+                chordDiagrams = chordDiagrams,
+                song = song,
+                setlistFileName = destination.setlistFileName,
+                canPickChordShapes = canPickChordShapes,
+                isFolded = isChordSectionFolded,
+                previewText = text.takeIf { importPreview != null },
+                dialogHost = dialogHost,
+                onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
+            ),
             tabs = tabs,
             showsDegrees = showsDegrees,
             isContinuous = isContinuous,
+            turnsByColumn = userPreferences?.pageTurn == PageTurn.COLUMN,
             scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,
@@ -310,6 +302,46 @@ internal fun SongPages(
                     onFoldToggled = { toggleFold(SCALES_FOLD_KEY) },
                 )
             },
+        )
+    }
+}
+
+/**
+ * What the Chords section of [song]'s page is drawn with, from the pager's [chordDiagrams]: whether it is folded, and
+ * what its diagrams open, a chord's shape sheet only where shapes may be picked ([canPickChordShapes]), and for a
+ * preview's page with the text it was drawn from ([previewText]).
+ */
+@Composable
+private fun rememberPageChordDiagrams(
+    chordDiagrams: ChordDiagrams?,
+    song: Song,
+    setlistFileName: String?,
+    canPickChordShapes: Boolean,
+    isFolded: Boolean,
+    previewText: String?,
+    dialogHost: DialogHost,
+    onFoldToggled: () -> Unit,
+): ChordDiagrams? {
+    val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
+    return remember(chordDiagrams, song.fileName, setlistFileName, canPickChordShapes, isFolded, previewText) {
+        chordDiagrams?.copy(
+            isFolded = isFolded,
+            onFoldToggled = { latestOnFoldToggled() },
+            onChordClicked = if (!canPickChordShapes) null else {
+                { chordName ->
+                    dialogHost.showDialog(
+                        DialogType.ChordShape(
+                            song = song,
+                            setlistFileName = setlistFileName,
+                            chordName = chordName,
+                            previewText = previewText,
+                        ),
+                    )
+                }
+            },
+            // Read only mode keeps them: they change this device's preference rather than the song or the setlist.
+            onInstrumentClicked = { dialogHost.showDialog(DialogType.Instrument) },
+            onTuningClicked = { dialogHost.showDialog(DialogType.Tuning) },
         )
     }
 }

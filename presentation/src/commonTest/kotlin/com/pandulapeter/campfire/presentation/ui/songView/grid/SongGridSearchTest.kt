@@ -115,4 +115,32 @@ class SongGridSearchTest {
         assertTrue(search(long, spec(availableHeight = 800, endInset = 100)).decide(settledWidth = 1_200).isInset)
         assertTrue(search(short, spec(availableHeight = 800, endInset = 100, keepsEndInset = true)).decide(settledWidth = 1_200).isInset)
     }
+
+    @Test
+    fun `a song turned by column that would be stepped through is a strip of readable columns as tall as the screen`() {
+        val sections = song(count = 8, lines = 4, lineWidth = 400)
+        val decided = search(sections, spec(availableHeight = 500, endInset = 50, turnsByColumn = true)).decide(settledWidth = 1_000)
+        assertTrue(decided.grid.isStrip)
+        assertTrue(decided.isInset)
+        // Two readable columns fit beside the buttons, and each holds two sections of four lines.
+        assertEquals(2, decided.grid.stripColumns)
+        assertEquals(listOf(4), decided.grid.columnCounts.toList())
+        assertEquals(List(8) { it / 2 }, decided.grid.columns.toList())
+    }
+
+    @Test
+    fun `a song turned by column that fits the screen is laid out as it always is`() {
+        val sections = song(count = 2, lines = 4, lineWidth = 400)
+        val paged = search(sections, spec(availableHeight = 500, endInset = 50)).decide(settledWidth = 1_000)
+        val turned = search(sections, spec(availableHeight = 500, endInset = 50, turnsByColumn = true)).decide(settledWidth = 1_000)
+        assertFalse(turned.grid.isStrip)
+        assertTrue(turned.hasSameCellsAs(paged))
+    }
+
+    @Test
+    fun `a song turned by column with a staff too tall for a column is turned by pages`() {
+        val sections = song(count = 8, lines = 4, lineWidth = 400) + listOf(listOf(List(12) { 400 }))
+        val decided = search(sections, spec(availableHeight = 500, endInset = 50, turnsByColumn = true)).decide(settledWidth = 1_000)
+        assertFalse(decided.grid.isStrip)
+    }
 }

@@ -37,6 +37,12 @@ internal class SongStepper(
     }
 
     val isSteppedByRow get() = flingBehavior.rows.isSteppedByRow
+
+    /** Whether the song is a strip turned a column at a time, stepped sideways, see [SongRows.isAcross]. */
+    val isAcross get() = flingBehavior.rows.isAcross
+
+    /** Whether a strip reads from the right, so that stepping on moves it the other way, see [SongRows.readsLeftwards]. */
+    val readsLeftwards get() = flingBehavior.rows.readsLeftwards
     // The target changes with every pixel scrolled, but the screen only needs to know whether a target exists, and
     // whether it is a stop or a page of the one being read.
     val canStepBack by derivedStateOf { previous.value != null }

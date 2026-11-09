@@ -86,6 +86,9 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   as lines.
 - **Every row shorter than the screen is followed by space down to its bottom**, so a rest shows one row; only where the
   song scrolls anyway, never in the preview.
+- **A strip** (turned by column, `grid/`) is laid out as wide as its columns and scrolls sideways: the scroll gives it
+  no width, so it is handed the viewport's (`viewportWidth`). Its rows are its column starts from the song's start edge
+  (`SongRows.isAcross`).
 - A continuation piece shows no header. Chorus cards are drawn behind the chunks, one per piece; page dividers are drawn
   by the layout, not composed.
 - **Motion**: a single change glides every section, card, and divider from its old place to its new (`SectionGlides`);

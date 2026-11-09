@@ -537,4 +537,22 @@ class RowSnappingTest {
         // Exactly fitting is both, so growing past the room does not jump.
         assertEquals(0f, stepProgressOffset(contentHeight = 100f, availableHeight = 100f, markCenter = 94f))
     }
+
+    @Test
+    fun `a strip steps one column at a time and ends once its last columns are on screen`() {
+        val rows = SongRows(
+            restingOffsets = listOf(0, 420, 840),
+            bottoms = listOf(0, 420, 840),
+            stepOffsets = listOf(0, 420, 840),
+            stepSections = listOf(0, 1, 2),
+            isSteppedByRow = true,
+            isAcross = true,
+        )
+        val window = ReadingWindow(top = 30, bottom = 40, end = 16, overlap = 100).across()
+        assertEquals(420, nextStepTarget(0, rows, viewportHeight = 1_000, window = window, maxValue = 420))
+        assertEquals(null, nextStepTarget(420, rows, viewportHeight = 1_000, window = window, maxValue = 420))
+        assertEquals(0, previousStepTarget(420, rows, viewportHeight = 1_000, window = window, maxValue = 420))
+        assertEquals(420f, snappedScrollTarget(start = 0f, target = 300f, rows = rows, viewportHeight = 1_000, maxValue = 420))
+        assertEquals(listOf(0, 420), reachableStops(rows, maxValue = 420, minGap = window.lineHeight))
+    }
 }

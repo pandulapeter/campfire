@@ -42,3 +42,16 @@ with the step keys, fewest pages first.
   folded section is one chunk; the preview never cuts.
 - **Tempo and time changes**: each stretch between them is searched as a song of its own, each starting a page, never
   half of a side-by-side pair.
+
+### Turned by column (`PageTurn.COLUMN`)
+
+- A song the page search would step through is set as one **strip** instead (`flowIntoStrip`): the readable column
+  count for the width beside the buttons, every column filled to the screen by `ColumnFlow`'s priced cuts, fewest
+  columns first, never evened out. A song read whole keeps its ordinary grid.
+- Gone in a strip: a section taller than the screen getting a row of its own (it is cut across columns), side-by-side
+  pairs, centering and gap spreading. A tempo or time change starts a column. Narrow columns only for fewer steps,
+  under the quarter-of-lines rule.
+- A section that does not wrap (a staff) widens its column up to the view less a gap; each column is centered in a
+  slot of the view (`placeStrip`), so neighbours start past its edge, and a step moves by the leaving column's slot.
+- **Something uncuttable taller than a column leaves no strip**: the song is paged as before, decided per song, since a
+  strip has no column that scrolls.

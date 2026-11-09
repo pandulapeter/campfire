@@ -473,6 +473,8 @@
     <string name="settings_number_sections_description">Unterscheidet wiederholte Abschnitte ohne eigenen Namen, etwa Strophe 1 und Strophe 2</string>
     <string name="settings_song_layout">Layout</string>
     <string name="settings_song_layout_description">„Seiten“ zeigt so viel vom Song wie möglich auf einmal. „Fortlaufend“ ist eine Spalte, die im Tempo des Songs von selbst scrollen kann.</string>
+    <string name="settings_page_turn">Umblättern</string>
+    <string name="settings_page_turn_description">Nur wichtig, wenn mehrere Spalten zu sehen sind: „Spalte“ schiebt den Song jeweils um eine Spalte weiter, sodass die nächste immer zu sehen ist.</string>
     <string name="settings_notation">Akkordschreibweise</string>
     <string name="settings_notation_description">Wie Akkorde beim Lesen und Bearbeiten von Songs geschrieben werden. Gespeichert werden Songs immer in der Standardschreibweise, damit sie in jeder App gleich aussehen.</string>
     <string name="settings_notation_choose">Schreibweise wählen</string>
@@ -988,6 +990,8 @@
     <string name="song_layout_pages_description">So viel vom Song wie möglich auf einmal auf dem Bildschirm, in Spalten, Seite für Seite umgeblättert</string>
     <string name="song_layout_continuous">Fortlaufend</string>
     <string name="song_layout_continuous_description">Eine Spalte, die im Takt des Songs von selbst scrollt, mit einem Tempo, das du für jeden Song festlegst</string>
+    <string name="page_turn_page">Seite</string>
+    <string name="page_turn_column">Spalte</string>
     <string name="chord_names_title">Wie liest du Akkorde mit Capo?</string>
     <string name="chord_names_example">Dieser Song hat den Capo im %1$s. Bund: Die Akkorde können nach den Griffen, die du spielst, oder nach ihrem Klang heißen, oder der Song bleibt in seiner Tonart und der Capo ändert nur die Griffe.</string>
     <string name="chord_names_shapes_description">Die Akkorde, die du über dem Capo greifst, so wie Capo-Charts sie schreiben</string>

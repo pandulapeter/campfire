@@ -75,13 +75,18 @@ internal fun SongGridSearch.sectionWidthsOf(decided: DecidedGrid, layoutWidth: I
     return SectionWidths(columnWidths = columnWidths, cellWidths = cellWidths, slotWidths = slotWidths, unitWidths = unitWidths)
 }
 
-/** Where the decided grid puts every unit and every card, and whether the song is scrolled by its rows. */
+/**
+ * Where the decided grid puts every unit and every card, and whether the song is scrolled by its rows; [width] is how wide
+ * the layout is, and [columnStops] where a strip's columns start (see [placeStrip]), none for any other grid.
+ */
 internal class SectionPlacement(
     val isScrolledByRow: Boolean,
     val isPaddedToViewport: Boolean,
     val arrangement: SongArrangement,
     val positions: Array<IntOffset>,
     val cards: List<Pair<Int, IntRect>>,
+    val width: Int,
+    val columnStops: List<Int> = emptyList(),
 )
 
 /**
@@ -114,6 +119,23 @@ internal fun placeSections(
     heldSpreads: ColumnSpreads?,
     heldPageShifts: Map<Int, Int>?,
 ): SectionPlacement {
+    if (grid.isStrip) {
+        return placeStrip(
+            grid = grid,
+            widths = widths,
+            unitHeights = unitHeights,
+            units = units,
+            piecePadding = piecePadding,
+            width = width,
+            isInset = isInset,
+            endInsetPx = endInsetPx,
+            columnGapPx = columnGapPx,
+            sectionGapPx = sectionGapPx,
+            rowGapPx = rowGapPx,
+            layoutDirection = layoutDirection,
+            isInsetAtLeft = isInsetAtLeft,
+        )
+    }
     val slotWidths = widths.slotWidths
     val unitWidths = widths.unitWidths
     val hasSeveralPages = grid.pageCount > 1
@@ -181,6 +203,7 @@ internal fun placeSections(
         arrangement = arrangement,
         positions = positions,
         cards = cardBoundsOf(grid, units, positions, unitHeights, unitWidths, piecePadding),
+        width = width,
     )
 }
 
@@ -311,18 +334,22 @@ internal fun cardBoundsOf(
 }
 
 /**
- * Where the scroll rests on each row of [arrangement] and where each ends, with the stops the song is stepped through,
- * a section's [fadePx] above it.
+ * Where the scroll rests on each row of [placement] and where each ends, with the stops the song is stepped through,
+ * a section's [fadePx] above it; a strip's are its columns (see [stripRowsOf]), counted from the start edge of the song,
+ * whose [layoutDirection] it is.
  */
 internal fun songRowsOf(
     grid: SectionGrid,
     units: SongUnits,
-    arrangement: SongArrangement,
+    placement: SectionPlacement,
     unitHeights: IntArray,
     dividerHeight: Int,
-    isScrolledByRow: Boolean,
     fadePx: Int,
+    layoutDirection: LayoutDirection,
 ): SongRows {
+    if (grid.isStrip) return stripRowsOf(grid, units, placement.columnStops, readsLeftwards = layoutDirection == LayoutDirection.Rtl)
+    val arrangement = placement.arrangement
+    val isScrolledByRow = placement.isScrolledByRow
     val unitCount = units.unitSections.size
     val sectionCount = units.sectionStarts.size - 1
     val dividerTops = arrangement.dividerTops

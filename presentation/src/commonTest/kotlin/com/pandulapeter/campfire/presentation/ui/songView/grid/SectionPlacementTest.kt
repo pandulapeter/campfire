@@ -166,7 +166,7 @@ class SectionPlacementTest {
         val grid = SectionGrid(rows = intArrayOf(0, 0), columns = intArrayOf(0, 0), columnCounts = intArrayOf(1))
         val units = songUnitsOf(listOf(listOf(listOf(100)), listOf(listOf(100))))
         val arrangement = grid.arrange(intArrayOf(100, 100), SECTION_GAP, ROW_GAP)
-        val rows = songRowsOf(grid, units, arrangement, intArrayOf(100, 100), dividerHeight = 0, isScrolledByRow = false, fadePx = 30)
+        val rows = songRowsOf(grid, units, placementOf(arrangement, isScrolledByRow = false), intArrayOf(100, 100), dividerHeight = 0, fadePx = 30, layoutDirection = LayoutDirection.Ltr)
         assertEquals(listOf(arrangement.tops[0] - 30, arrangement.tops[1] - 30), rows.stepOffsets)
         assertEquals(listOf(0, 1), rows.stepSections)
     }
@@ -176,9 +176,18 @@ class SectionPlacementTest {
         val grid = SectionGrid(rows = intArrayOf(0, 1), columns = intArrayOf(0, 0), columnCounts = intArrayOf(2, 2))
         val units = songUnitsOf(listOf(listOf(listOf(100)), listOf(listOf(100))))
         val arrangement = grid.arrange(intArrayOf(100, 100), SECTION_GAP, ROW_GAP)
-        val rows = songRowsOf(grid, units, arrangement, intArrayOf(100, 100), dividerHeight = 4, isScrolledByRow = true, fadePx = 30)
+        val rows = songRowsOf(grid, units, placementOf(arrangement, isScrolledByRow = true), intArrayOf(100, 100), dividerHeight = 4, fadePx = 30, layoutDirection = LayoutDirection.Ltr)
         assertEquals(listOf(0) + arrangement.dividerTops.map { it + 2 }, rows.restingOffsets)
         assertEquals(rows.restingOffsets, rows.stepOffsets)
         assertTrue(rows.isSteppedByRow)
     }
+
+    private fun placementOf(arrangement: SongArrangement, isScrolledByRow: Boolean) = SectionPlacement(
+        isScrolledByRow = isScrolledByRow,
+        isPaddedToViewport = false,
+        arrangement = arrangement,
+        positions = emptyArray(),
+        cards = emptyList(),
+        width = 0,
+    )
 }

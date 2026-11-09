@@ -41,7 +41,15 @@ internal class SectionGrid(
     val joinsPrevious: BooleanArray = BooleanArray(columnCounts.size),
     /** Whether every row starts at the same edge, the way the lines of one column do, rather than centered on its own. */
     val sharesKeyline: Boolean = false,
+    /**
+     * How many columns of a strip are on screen at once, 0 where the grid is no strip: a strip is a single row of every
+     * column of the song, wider than the screen, turned a column at a time (see [flowIntoStrip]).
+     */
+    val stripColumns: Int = 0,
 ) {
+
+    /** Whether the grid is a strip turned a column at a time. */
+    val isStrip get() = stripColumns > 0
 
     /** How many pages the rows are read on, each the stop of a step. */
     val pageCount get() = columnCounts.size - joinsPrevious.count { it }
@@ -57,7 +65,8 @@ internal fun SectionGrid.hasSameCellsAs(other: SectionGrid) = this === other || 
         columnCounts.contentEquals(other.columnCounts) &&
         wideRows.contentEquals(other.wideRows) &&
         joinsPrevious.contentEquals(other.joinsPrevious) &&
-        sharesKeyline == other.sharesKeyline
+        sharesKeyline == other.sharesKeyline &&
+        stripColumns == other.stripColumns
     )
 
 /**
@@ -72,44 +81,6 @@ internal fun SectionGrid.expandedTo(unitSections: IntArray) = SectionGrid(
     joinsPrevious = joinsPrevious,
     sharesKeyline = sharesKeyline,
 )
-
-/**
- * These grids, each of the chunks of one stretch of a song, as one grid of all of them in their order: the rows of each
- * after the rows of the ones before it. The first row of every grid starts a page, whatever it was laid out to join,
- * since a stretch is laid out as a song of its own. They are laid out at one width, so their rows agree on whether
- * they share a start edge.
- */
-internal fun List<SectionGrid>.concatenated(): SectionGrid {
-    if (size == 1) return single()
-    val rows = IntArray(sumOf { it.rows.size })
-    val columns = IntArray(rows.size)
-    val columnCounts = IntArray(sumOf { it.columnCounts.size })
-    val wideRows = BooleanArray(columnCounts.size)
-    val joinsPrevious = BooleanArray(columnCounts.size)
-    var unitOffset = 0
-    var rowOffset = 0
-    forEach { grid ->
-        grid.rows.forEachIndexed { unit, row ->
-            rows[unitOffset + unit] = row + rowOffset
-            columns[unitOffset + unit] = grid.columns[unit]
-        }
-        grid.columnCounts.forEachIndexed { row, columnCount ->
-            columnCounts[rowOffset + row] = columnCount
-            wideRows[rowOffset + row] = grid.wideRows[row]
-            joinsPrevious[rowOffset + row] = row > 0 && grid.joinsPrevious[row]
-        }
-        unitOffset += grid.rows.size
-        rowOffset += grid.columnCounts.size
-    }
-    return SectionGrid(
-        rows = rows,
-        columns = columns,
-        columnCounts = columnCounts,
-        wideRows = wideRows,
-        joinsPrevious = joinsPrevious,
-        sharesKeyline = all { it.sharesKeyline },
-    )
-}
 
 /** The grid of no sections at all. */
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.RandomPicksSeed
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
@@ -50,6 +51,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     shouldNumberSections = shouldNumberSections,
     songLayout = SongLayout.entries.firstOrNull { it.id == songLayout } ?: SongLayout.PAGES,
     isSongLayoutChosen = isSongLayoutChosen,
+    pageTurn = PageTurn.entries.firstOrNull { it.id == pageTurn } ?: PageTurn.PAGE,
     language = AppLanguage.entries.firstOrNull { it.id == language } ?: AppLanguage.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
@@ -114,6 +116,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     shouldNumberSections = shouldNumberSections,
     songLayout = songLayout.id,
     isSongLayoutChosen = isSongLayoutChosen,
+    pageTurn = pageTurn.id,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
     notation = chordSpelling.notation.id,

@@ -142,6 +142,7 @@ internal fun SongDetailsPager(
             },
             isStepping = { currentPageStepper()?.isStepping == true },
             stepOrigin = { currentPageStepper()?.origin },
+            stepsAcross = { currentPageStepper()?.takeIf { it.isAcross }?.readsLeftwards },
             onStep = { direction, from -> if (direction < 0) stepBack(from) else stepForward(from) },
         ),
 ) {
@@ -214,7 +215,8 @@ internal fun SongDetailsPager(
  *
  * They are drawn over the song, which leaves them that edge of the screen wherever it has to be scrolled
  * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it. The dots of the [stepper]'s stops take the room
- * between them whether or not the buttons are there, so that neither arriving nor leaving moves them.
+ * between them whether or not the buttons are there, so that neither arriving nor leaving moves them. A strip turned a
+ * column at a time keeps them where they are, their arrows pointing the way it moves.
  *
  * A song that scrolls by itself ([isNudging]) keeps the buttons, which nudge it there and still go on to the songs beside
  * it, but not the dots, whose room the controls of the scroll take (`AutoScrollControls`).
@@ -250,13 +252,20 @@ private fun BoxScope.StepControls(
     // A quarter turn one way makes the arrow pointing down point to where the next song is, and the arrow pointing up to
     // where the previous one is, whichever way the layout reads.
     val pagingRotation = if (layoutDirection == LayoutDirection.Ltr) -90f else 90f
+    // A strip turned a column at a time moves sideways, so its arrows point the way it reads: right for the next column of
+    // a song read from the left, left for one read from the right.
+    val stepRotation = when {
+        stepper?.isAcross != true -> 0f
+        stepper.readsLeftwards -> 90f
+        else -> -90f
+    }
     StepButton(
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(top = contentPadding.calculateTopPadding(), end = contentPadding.calculateEndPadding(layoutDirection)),
         isVisible = canStepBackInSong || hasPreviousSong,
         icon = painterResource(Res.drawable.ic_move_up),
-        iconRotation = if (canStepBackInSong) 0f else pagingRotation,
+        iconRotation = if (canStepBackInSong) stepRotation else pagingRotation,
         contentDescription = stringResource(
             when {
                 !canStepBackInSong -> Res.string.song_details_previous_song
@@ -273,7 +282,7 @@ private fun BoxScope.StepControls(
             .padding(bottom = contentPadding.calculateBottomPadding(), end = contentPadding.calculateEndPadding(layoutDirection)),
         isVisible = canStepForwardInSong || hasNextSong,
         icon = painterResource(Res.drawable.ic_move_down),
-        iconRotation = if (canStepForwardInSong) 0f else pagingRotation,
+        iconRotation = if (canStepForwardInSong) stepRotation else pagingRotation,
         contentDescription = stringResource(
             when {
                 !canStepForwardInSong -> Res.string.song_details_next_song

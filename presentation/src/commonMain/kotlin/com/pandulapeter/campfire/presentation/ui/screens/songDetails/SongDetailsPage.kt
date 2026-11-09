@@ -42,15 +42,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,15 +76,12 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
-import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import org.jetbrains.compose.resources.painterResource
@@ -136,6 +132,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param isContinuous Whether the song is laid out in one column that scrolls by itself (`SongLayout.CONTINUOUS`) rather
  *   than in pages: neither measured against the screen nor padded to it, and cut into a piece a line, so that its rows
  *   say where every line is, which is what it is timed by (see `autoScroll.AutoScrollTrack`).
+ * @param turnsByColumn Whether a song in pages is turned a column at a time (`PageTurn.COLUMN`): set as a strip that
+ *   scrolls sideways wherever it is stepped through, see [songPageScroll].
  */
 @Composable
 internal fun SongDetailsPage(
@@ -179,6 +177,7 @@ internal fun SongDetailsPage(
     tabs: TabReading?,
     showsDegrees: Boolean,
     isContinuous: Boolean,
+    turnsByColumn: Boolean,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -315,6 +314,7 @@ internal fun SongDetailsPage(
         val topPadding = PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
+        val isAcross = rememberIsAcross(flingBehavior, turnsByColumn = turnsByColumn && !isContinuous)
         val timings = remember(model.sections) { model.sections.filterIsInstance<RenderSection.Timing>() }
         val latestHeadedOffset by rememberUpdatedState(headedOffset)
         val latestOnTimingChanged by rememberUpdatedState(onTimingChanged)
@@ -352,7 +352,7 @@ internal fun SongDetailsPage(
             val density = LocalDensity.current
             // Computed here rather than in onRowsPlaced, which would otherwise read the constraints of this scope and be a
             // new lambda on every frame of the height, recomposing the lyrics of a page that does not follow it.
-            val viewport = with(density) { IntSize(maxWidth.roundToPx(), viewportHeight.roundToPx()) }
+            val viewport = with(density) { scrolledViewport(width = maxWidth.roundToPx(), height = viewportHeight.roundToPx(), isAcross = isAcross) }
             // Both are read through a state rather than captured, since a lambda capturing the value itself is a new one
             // on every frame of the height changing: only then does the song skip being composed again on those frames,
             // the layout reading the live height where it measures and the rows reading the viewport as they are placed.
@@ -369,7 +369,7 @@ internal fun SongDetailsPage(
                     overlap = (lyricsLineHeight * currentFontScale).roundToPx() * 2,
                 )
             }
-            SideEffect { flingBehavior.readingWindow = readingWindow }
+            SideEffect { flingBehavior.readingWindow = if (isAcross) readingWindow.across() else readingWindow }
             // Read by both the padding and the width the song is handed, so the two can never drift apart. The pages fill
             // the screen, so whatever the screen is still missing this layout is missing too: the width at rest is taken
             // once, rather than a difference added back to a width that changes on every frame of a transition.
@@ -380,11 +380,7 @@ internal fun SongDetailsPage(
                 SongLyrics(
                     modifier = Modifier
                         .fillMaxSize()
-                        .fadingTopEdge(
-                            scrolled = { flingBehavior.rows.scrolledIntoRow(scrollState.value) },
-                            backgroundColor = MaterialTheme.colorScheme.background,
-                        )
-                        .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
+                        .songPageScroll(scrollState, flingBehavior, isAcross, readsLeftwards = model.textDirection == WritingDirection.RIGHT_TO_LEFT, endPadding)
                         .padding(
                             start = startPadding,
                             end = endPadding,
@@ -424,6 +420,8 @@ internal fun SongDetailsPage(
                     keepsStepButtonInset = keepsStepButtonInset || isContinuous,
                     canCutSections = true,
                     isSingleColumn = isContinuous,
+                    turnsByColumn = turnsByColumn && !isContinuous,
+                    viewportWidth = if (turnsByColumn && !isContinuous) maxWidth - startPadding - endPadding else Dp.Unspecified,
                     chordDiagrams = frame.chordDiagrams,
                     scaleSuggestions = frame.scaleSuggestions,
                 )
@@ -433,29 +431,11 @@ internal fun SongDetailsPage(
 }
 
 /**
- * True while [values] keep changing: from their second change within [CONTINUOUS_CHANGE_MILLIS] of the one before it
- * until they have held still for that long. The first change of a burst is indistinguishable from a single one, so it
- * still counts as discrete.
+ * The viewport a page's rows are placed in, its height the extent of the scroll: across, for a strip scrolled sideways
+ * ([isAcross]), so a viewport taller or shorter lays the strip out anew, as a resize would, rather than being followed
+ * the way a panel opening above a song read down is.
  */
-@Composable
-private fun rememberContinuousChange(vararg values: Any): Boolean {
-    var isContinuous by remember { mutableStateOf(false) }
-    val tracker = remember { ContinuousChangeTracker() }
-    LaunchedEffect(*values) {
-        if (tracker.isFirst) {
-            tracker.isFirst = false
-            return@LaunchedEffect
-        }
-        // A change that arrives while the delay of the one before it was still running, which this restart cancelled,
-        // is the second of a burst.
-        if (tracker.isRecent) isContinuous = true
-        tracker.isRecent = true
-        delay(CONTINUOUS_CHANGE_MILLIS)
-        tracker.isRecent = false
-        isContinuous = false
-    }
-    return isContinuous
-}
+internal fun scrolledViewport(width: Int, height: Int, isAcross: Boolean) = if (isAcross) IntSize(height, width) else IntSize(width, height)
 
 /** The height a page's grid is decided against: the [live] one while the viewport is settled, the [previous] one otherwise. */
 internal fun settledHeight(previous: Dp, live: Dp, isSettled: Boolean) = if (isSettled) live else previous
@@ -469,18 +449,10 @@ internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean)
  */
 private class SettledHeight(var height: Dp)
 
-/** What [rememberContinuousChange] remembers between changes. Not state, since only its effect reads it. */
-private class ContinuousChangeTracker {
-    var isFirst = true
-    var isRecent = false
-}
-
 private val PAGE_BOTTOM_PADDING = 16.dp
 
 /** What a song in one column pads its rows to: nothing, since it is not read a row at a time. */
 private val NO_ROW_VIEWPORT = { Dp.Unspecified }
-
-private const val CONTINUOUS_CHANGE_MILLIS = 200L
 
 /** The stretch after the [index]-th change of a song, as its line on the page reads it and as the click plays it. */
 private fun RenderSection.Timing.toSongTiming(index: Int) = SongTiming(

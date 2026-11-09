@@ -509,6 +509,8 @@
     <string name="settings_number_sections_description">Deosebește secțiunile repetate care nu au un nume propriu, de exemplu Strofa 1 și Strofa 2</string>
     <string name="settings_song_layout">Aspect</string>
     <string name="settings_song_layout_description">Paginile încap cât mai mult din cântec pe ecran deodată. Continuu înseamnă o singură coloană care se poate derula singură în ritmul cântecului.</string>
+    <string name="settings_page_turn">Întoarce câte</string>
+    <string name="settings_page_turn_description">Contează doar cu mai multe coloane pe ecran: Coloană mută cântecul cu câte o coloană, așa că următoarea se vede mereu.</string>
     <string name="settings_notation">Notația acordurilor</string>
     <string name="settings_notation_description">Cum sunt scrise acordurile cât citești și editezi cântece. Cântecele sunt salvate mereu în notația standard, ca să arate la fel în orice aplicație.</string>
     <string name="settings_notation_choose">Alege notația</string>
@@ -1027,6 +1029,8 @@
     <string name="song_layout_pages_description">Cât mai mult din cântec pe ecran deodată, în coloane, întors pagină cu pagină</string>
     <string name="song_layout_continuous">Continuu</string>
     <string name="song_layout_continuous_description">O singură coloană care se derulează singură în ritmul cântecului, cu o viteză pe care o setezi pentru fiecare cântec</string>
+    <string name="page_turn_page">O pagină</string>
+    <string name="page_turn_column">O coloană</string>
     <string name="chord_names_title">Cum citești acordurile cu capodastru?</string>
     <string name="chord_names_example">Cântecul acesta are capodastrul pe tasta %1$s: acordurile pot fi numite după pozițiile pe care le cânți sau după cum sună, ori cântecul poate rămâne în tonalitatea sa, iar capodastrul schimbă doar pozițiile.</string>
     <string name="chord_names_shapes_description">Acordurile pe care le iei deasupra capodastrului, cum sunt scrise partiturile pentru capodastru</string>

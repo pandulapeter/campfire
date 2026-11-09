@@ -508,6 +508,8 @@
     <string name="settings_number_sections_description">הבחנה בין קטעים חוזרים שאין להם שם משלהם, כמו בית 1 ובית 2</string>
     <string name="settings_song_layout">פריסה</string>
     <string name="settings_song_layout_description">“עמודים” מציג על המסך כמה שיותר מהשיר בבת אחת. “רציף” הוא טור אחד שיכול לגלול מעצמו בקצב של השיר.</string>
+    <string name="settings_page_turn">העברה לפי</string>
+    <string name="settings_page_turn_description">חשוב רק כשכמה טורים מוצגים על המסך: “טור” מזיז את השיר בטור אחד בכל פעם, כך שהטור הבא תמיד גלוי.</string>
     <string name="settings_notation">כתיב אקורדים</string>
     <string name="settings_notation_description">איך האקורדים כתובים בזמן קריאה ועריכה של שירים. השירים תמיד נשמרים בכתיב הרגיל, כך שהם נקראים אותו דבר בכל אפליקציה.</string>
     <string name="settings_notation_choose">בחירת כתיב</string>
@@ -1025,6 +1027,8 @@
     <string name="song_layout_pages_description">כמה שיותר מהשיר על המסך בבת אחת, בעמודות שמתחלפות עמוד אחר עמוד</string>
     <string name="song_layout_continuous">רציף</string>
     <string name="song_layout_continuous_description">עמודה אחת שנגללת מעצמה בקצב של השיר, במהירות שנקבעת לכל שיר בנפרד</string>
+    <string name="page_turn_page">עמוד</string>
+    <string name="page_turn_column">טור</string>
     <string name="chord_names_title">איך קוראים אקורדים עם קאפו?</string>
     <string name="chord_names_example">בשיר הזה הקאפו על שריג %1$s: אפשר לקרוא לאקורדים לפי הצורות שמנגנים או לפי איך שהם נשמעים, או להשאיר את השיר בטונליות שלו כך שהקאפו משנה רק את הצורות.</string>
     <string name="chord_names_shapes_description">האקורדים שלוחצים מעל הקאפו, כמו שכותבים תווים לקאפו</string>
