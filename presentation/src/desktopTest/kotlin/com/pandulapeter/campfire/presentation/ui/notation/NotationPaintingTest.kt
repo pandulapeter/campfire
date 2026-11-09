@@ -57,5 +57,14 @@ internal class NotationPaintingTest {
         }
     }
 
+    @Test
+    fun `a turned symbol is drawn turned`() {
+        val drawing = assertNotNull(parseNotationDrawing(listOf(HEADER, NotationFixtures.system("""<g transform="translate(100,50) rotate(270)"><text>&#xE000;</text></g>"""))))
+        val bounds = painting().newPainter().paint(drawing, unitSize = 1f).single().fills.getBounds()
+        // The brace stands about 24 units tall and 2 wide; turned a quarter back, it lies to the left of where it stood.
+        assertTrue(bounds.width > 20f && bounds.height < 4f, bounds.toString())
+        assertTrue(bounds.left > 70f && bounds.right <= 100.5f, bounds.toString())
+    }
+
     private fun painting() = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)
 }

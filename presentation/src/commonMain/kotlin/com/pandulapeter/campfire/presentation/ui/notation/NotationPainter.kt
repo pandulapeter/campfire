@@ -68,7 +68,7 @@ internal class NotationPainter(
                 )
             }
         }
-        system.glyphs.forEach { fills.addGlyph(it.glyph, it.x, it.y, it.size, it.stretch) }
+        system.glyphs.forEach { fills.addGlyph(it.glyph, it.transform) }
         val texts = mutableListOf<NotationTextPaint>()
         system.texts.forEach { text ->
             // A lyric's font is larger than it is drawn, to leave room for the app's wider typeface (see AbcSystem).
@@ -108,7 +108,7 @@ internal class NotationPainter(
                     )
 
                     is NotationTextRun.Glyphs -> run.glyphs.fold(x) { glyphX, glyph ->
-                        fills.addGlyph(glyph, glyphX, text.y + run.dy, run.size, stretch = 1f)
+                        fills.addGlyph(glyph, NotationTransform(x = glyphX, y = text.y + run.dy).scaled(run.size / AbcMusicGlyph.UNITS_PER_EM))
                         glyphX + glyph.advance * run.size / AbcMusicGlyph.UNITS_PER_EM
                     }
                 }
@@ -144,17 +144,19 @@ internal class NotationPainter(
 
     private fun parse(pathData: String) = pathParser.parsePathString(pathData).toPath().also { pathParser.clear() }
 
-    private fun Path.addGlyph(glyph: AbcMusicGlyph, x: Float, y: Float, size: Float, stretch: Float) {
+    private fun Path.addGlyph(glyph: AbcMusicGlyph, transform: NotationTransform) {
         val outline = glyphPaths.getOrPut(glyph) { parse(glyph.path) }
-        addPath(Path().apply { addPath(outline) }.transformed(NotationTransform(x = x, y = y, scale = size / AbcMusicGlyph.UNITS_PER_EM), stretch))
+        addPath(Path().apply { addPath(outline) }.transformed(transform))
     }
 
-    private fun Path.transformed(transform: NotationTransform, stretch: Float = 1f) = apply {
-        if (transform != NotationTransform.IDENTITY || stretch != 1f) {
+    private fun Path.transformed(transform: NotationTransform) = apply {
+        if (transform != NotationTransform.IDENTITY) {
             transform(
                 Matrix().apply {
-                    this[0, 0] = transform.scale
-                    this[1, 1] = transform.scale * stretch
+                    this[0, 0] = transform.a
+                    this[0, 1] = transform.b
+                    this[1, 0] = transform.c
+                    this[1, 1] = transform.d
                     this[3, 0] = transform.x
                     this[3, 1] = transform.y
                 },

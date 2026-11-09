@@ -9,6 +9,12 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
+
 /**
  * A tune's staff notation as plain data, read from one rendering by [parseNotationDrawing]: what is drawn of each
  * system, every coordinate in the system's own SVG units, its transforms already applied. Nothing here knows a
@@ -40,27 +46,55 @@ internal class NotationShape(
 /** The width and dashes of a stroked [NotationShape], in the path's own units. */
 internal data class NotationStroke(val width: Float, val dashes: List<Float>?)
 
-/** A uniform scale about the origin followed by a move: a point p lands on (x + scale·pₓ, y + scale·pᵧ). */
-internal data class NotationTransform(val x: Float, val y: Float, val scale: Float) {
+/**
+ * An SVG transform: a point p lands on (a·pₓ + c·pᵧ + x, b·pₓ + d·pᵧ + y). abc2svg stretches the brace of a grand
+ * staff, mirrors inverted decorations and note heads, and turns arpeggios, glissandi, and some decorations, so shapes
+ * and music symbols take any; words, which are laid out upright, take only an [isUpright] one.
+ */
+internal data class NotationTransform(
+    val a: Float = 1f,
+    val b: Float = 0f,
+    val c: Float = 0f,
+    val d: Float = 1f,
+    val x: Float = 0f,
+    val y: Float = 0f,
+) {
+    /** How much it enlarges a length on average, which a stroke's width and a font's size are scaled by. */
+    val scale get() = sqrt(abs(a * d - b * c))
 
-    fun translated(dx: Float, dy: Float) = copy(x = x + scale * dx, y = y + scale * dy)
+    /** Whether it only moves and enlarges, the one way words can be drawn. */
+    val isUpright get() = b == 0f && c == 0f && a == d && a > 0f
 
-    fun scaled(factor: Float) = copy(scale = scale * factor)
+    /** This transform applied after [inner], as SVG applies the transforms of nested elements and of one list. */
+    operator fun times(inner: NotationTransform) = NotationTransform(
+        a = a * inner.a + c * inner.b,
+        b = b * inner.a + d * inner.b,
+        c = a * inner.c + c * inner.d,
+        d = b * inner.c + d * inner.d,
+        x = a * inner.x + c * inner.y + x,
+        y = b * inner.x + d * inner.y + y,
+    )
 
-    fun mapX(value: Float) = x + scale * value
+    fun translated(dx: Float, dy: Float) = this * NotationTransform(x = dx, y = dy)
 
-    fun mapY(value: Float) = y + scale * value
+    fun scaled(sx: Float, sy: Float = sx) = this * NotationTransform(a = sx, d = sy)
+
+    fun rotated(degrees: Float): NotationTransform {
+        val radians = degrees * PI.toFloat() / 180f
+        return this * NotationTransform(a = cos(radians), b = sin(radians), c = -sin(radians), d = cos(radians))
+    }
+
+    fun mapX(px: Float, py: Float) = a * px + c * py + x
+
+    fun mapY(px: Float, py: Float) = b * px + d * py + y
 
     companion object {
-        val IDENTITY = NotationTransform(x = 0f, y = 0f, scale = 1f)
+        val IDENTITY = NotationTransform()
     }
 }
 
-/**
- * A music symbol with its baseline origin at ([x], [y]), drawn at [size] units to the em, [stretch] times as tall as it
- * is wide (the brace joining a grand staff, which abc2svg stretches to the staves' height).
- */
-internal class NotationGlyph(val glyph: AbcMusicGlyph, val x: Float, val y: Float, val size: Float, val stretch: Float)
+/** A music symbol, its outline's font units placed by [transform] (its baseline origin, size, and any turn or stretch). */
+internal class NotationGlyph(val glyph: AbcMusicGlyph, val transform: NotationTransform)
 
 /**
  * Words drawn in the app's typeface ([runs], one after the other from the baseline point ([x], [y])), placed by

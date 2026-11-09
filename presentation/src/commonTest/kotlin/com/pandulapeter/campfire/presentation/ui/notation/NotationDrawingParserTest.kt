@@ -30,7 +30,7 @@ class NotationDrawingParserTest {
         assertEquals(92.4f, system.height)
         val staff = system.shapes.first()
         assertEquals(NotationStroke(width = 0.7f, dashes = null), staff.stroke)
-        assertEquals(NotationTransform(x = 0f, y = 61.6f, scale = 1f), staff.transform)
+        assertEquals(NotationTransform(y = 61.6f), staff.transform)
         assertEquals(NotationStroke(width = 3f, dashes = null), system.shapes[1].stroke)
         assertNull(system.shapes[2].stroke)
     }
@@ -43,9 +43,9 @@ class NotationDrawingParserTest {
     @Test
     fun `music symbols are placed by their own coordinates`() {
         val glyphs = parseNotationDrawing(listOf(HEADER, SYSTEM))!!.systems.single().glyphs
-        assertEquals(listOf(10f to 61.6f, 20f to 55.6f), glyphs.map { it.x to it.y })
+        assertEquals(listOf(10f to 61.6f, 20f to 55.6f), glyphs.map { it.transform.x to it.transform.y })
         assertEquals(listOf(abcMusicGlyphs[0xE050], abcMusicGlyphs[0xE0A4]), glyphs.map { it.glyph })
-        assertTrue(glyphs.all { it.size == 24f })
+        assertTrue(glyphs.all { it.transform.scale * AbcMusicGlyph.UNITS_PER_EM == 24f })
     }
 
     @Test
@@ -76,9 +76,9 @@ class NotationDrawingParserTest {
     fun `a scaled group scales what it holds`() {
         val glyph = parseNotationDrawing(listOf(HEADER, system("""<g transform="translate(100,50) scale(0.5)"><text x="10" y="4">&#xE050;</text></g>""")))!!
             .systems.single().glyphs.single()
-        assertEquals(105f, glyph.x)
-        assertEquals(52f, glyph.y)
-        assertEquals(12f, glyph.size)
+        assertEquals(105f, glyph.transform.x)
+        assertEquals(52f, glyph.transform.y)
+        assertEquals(12f, glyph.transform.scale * AbcMusicGlyph.UNITS_PER_EM)
     }
 
     @Test
@@ -86,9 +86,40 @@ class NotationDrawingParserTest {
         val brace = parseNotationDrawing(listOf(HEADER, system("""<text transform="translate(51.7,199.6) scale(2.5,3.42)">&#xE000;</text>""")))!!
             .systems.single().glyphs.single()
         assertEquals(abcMusicGlyphs[0xE000], brace.glyph)
-        assertEquals(51.7f to 199.6f, brace.x to brace.y)
-        assertEquals(60f, brace.size)
-        assertEquals(3.42f / 2.5f, brace.stretch, 0.0001f)
+        assertEquals(51.7f to 199.6f, brace.transform.x to brace.transform.y)
+        assertEquals(2.5f * 24f, brace.transform.a * AbcMusicGlyph.UNITS_PER_EM, 0.001f)
+        assertEquals(3.42f * 24f, brace.transform.d * AbcMusicGlyph.UNITS_PER_EM, 0.001f)
+    }
+
+    @Test
+    fun `a turned or mirrored group turns or mirrors its symbols and lines`() {
+        val drawing = parseNotationDrawing(
+            listOf(
+                HEADER,
+                system(
+                    """<g transform="translate(100,50) rotate(270)"><text x="0" y="6">&#xE000;</text><path d="M0 0h10"/></g>""" +
+                        """<g transform="translate(10,20) scale(1,-1)"><text x="0" y="0">&#xE4C0;</text></g>""",
+                ),
+            ),
+        )!!.systems.single()
+        val (arpeggio, fermata) = drawing.glyphs.map { it.transform }
+        assertEquals(106f, arpeggio.x, 0.001f)
+        assertEquals(50f, arpeggio.y, 0.001f)
+        assertEquals(-1f, arpeggio.b * AbcMusicGlyph.UNITS_PER_EM / 24f, 0.001f)
+        assertEquals(10f to 20f, fermata.x to fermata.y)
+        assertEquals(-24f, fermata.d * AbcMusicGlyph.UNITS_PER_EM, 0.001f)
+        val line = drawing.shapes.single().transform
+        assertEquals(100f, line.mapX(10f, 0f), 0.001f)
+        assertEquals(40f, line.mapY(10f, 0f), 0.001f)
+    }
+
+    @Test
+    fun `a boxed tempo's rectangle is a shape, and a page background is left to the page`() {
+        val shapes = parseNotationDrawing(
+            listOf(HEADER, system("""<rect width="100%" height="100%" fill="white"/><rect class="slW" x="10" y="20" width="30" height="15"/>""")),
+        )!!.systems.single().shapes
+        assertEquals("M10.0 20.0H40.0V35.0H10.0Z", shapes.single().path)
+        assertEquals(NotationStroke(width = 0.7f, dashes = null), shapes.single().stroke)
     }
 
     @Test
@@ -146,12 +177,10 @@ class NotationDrawingParserTest {
     @Test
     fun `anything the drawing does not know gives no drawing`() {
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<image href="x.png"/>"""))))
-        assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="rotate(45)"><path d="M0 0h1"/></g>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="skewX(45)"><path d="M0 0h1"/></g>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<text x="1" y="1">&#xF8FF;</text>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<use x="0" y="0" xlink:href="#missing"/>"""))))
-        assertNull(parseNotationDrawing(listOf(HEADER, system("""<path transform="scale(2,3)" d="M0 0h1"/>"""))))
-        assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="scale(2,3)"><text>&#xE000;</text></g>"""))))
-        assertNull(parseNotationDrawing(listOf(HEADER, system("""<text transform="scale(2,3) translate(1,1)">&#xE000;</text>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<style>.f3{font:12.0px sans-serif}</style><text class="f3" transform="rotate(90)">Fine</text>"""))))
         assertNull(parseNotationDrawing(listOf(AbcSystem(svg = "<svg", height = 1f))))
     }
 }
