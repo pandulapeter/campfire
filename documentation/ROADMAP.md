@@ -13,6 +13,8 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Tablature staves in ABC tunes**, as notation programs export a guitar or a bass, engraved as tablature rather than
+  as notes. Plan: [abc-string-tablature.md](plans/abc-string-tablature.md)
 - Support multi-line sticky headers (setlist titles)
 - Add support for filtering abc notation by voicing
 - Song title line spacing should be consistent between the two card display modes
