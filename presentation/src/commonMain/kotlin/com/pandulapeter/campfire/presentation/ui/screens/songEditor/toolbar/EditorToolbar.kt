@@ -48,7 +48,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_purple
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_red
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_yellow
+import com.pandulapeter.campfire.presentation.resources.song_editor_chord_color_magenta
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_color
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_color_cyan
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chorus_recall
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment
@@ -228,9 +231,12 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
             choices = listOf(
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_red), color = "red"),
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_orange), color = "darkorange"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_yellow), color = "yellow"),
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_green), color = "green"),
+                EditorInsertion.chordColor(stringResource(Res.string.song_details_tag_color_cyan), color = "cyan"),
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_blue), color = "blue"),
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_purple), color = "purple"),
+                EditorInsertion.chordColor(stringResource(Res.string.song_editor_chord_color_magenta), color = "magenta"),
                 EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_pink), color = "deeppink"),
             ),
         ),

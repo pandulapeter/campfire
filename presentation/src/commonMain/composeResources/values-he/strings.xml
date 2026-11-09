@@ -977,6 +977,7 @@
     <string name="song_editor_insert_link">קישור</string>
     <string name="song_editor_insert_chord_shape">צורת אקורד</string>
     <string name="song_editor_insert_chord_color">צבע אקורדים</string>
+    <string name="song_editor_chord_color_magenta">מג׳נטה</string>
     <string name="song_editor_transpose_text_up">העלאת הטונליות בטקסט</string>
     <string name="song_editor_transpose_text_down">הורדת הטונליות בטקסט</string>
     <string name="song_editor_prettify">סידור ה־ChordPro</string>

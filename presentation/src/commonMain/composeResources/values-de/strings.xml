@@ -940,6 +940,7 @@
     <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_insert_chord_shape">Griffbild</string>
     <string name="song_editor_insert_chord_color">Akkordfarbe</string>
+    <string name="song_editor_chord_color_magenta">Magenta</string>
     <string name="song_editor_transpose_text_up">Text hoch transponieren</string>
     <string name="song_editor_transpose_text_down">Text runter transponieren</string>
     <string name="song_editor_prettify">ChordPro aufräumen</string>

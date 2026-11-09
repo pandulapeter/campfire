@@ -940,6 +940,7 @@
     <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_insert_chord_shape">Diteggiatura</string>
     <string name="song_editor_insert_chord_color">Colore accordi</string>
+    <string name="song_editor_chord_color_magenta">Magenta</string>
     <string name="song_editor_transpose_text_up">Trasponi il testo su</string>
     <string name="song_editor_transpose_text_down">Trasponi il testo giù</string>
     <string name="song_editor_prettify">Riordina il ChordPro</string>

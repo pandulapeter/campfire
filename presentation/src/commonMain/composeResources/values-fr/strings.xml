@@ -945,6 +945,7 @@
     <string name="song_editor_insert_link">Lien</string>
     <string name="song_editor_insert_chord_shape">Doigté d\'accord</string>
     <string name="song_editor_insert_chord_color">Couleur des accords</string>
+    <string name="song_editor_chord_color_magenta">Magenta</string>
     <string name="song_editor_transpose_text_up">Transposer le texte vers le haut</string>
     <string name="song_editor_transpose_text_down">Transposer le texte vers le bas</string>
     <string name="song_editor_prettify">Mettre en forme le ChordPro</string>
