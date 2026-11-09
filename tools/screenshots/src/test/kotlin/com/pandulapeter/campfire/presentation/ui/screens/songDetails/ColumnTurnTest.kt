@@ -37,13 +37,14 @@ import com.pandulapeter.campfire.screenshots.runAppTest
 import com.pandulapeter.campfire.screenshots.tap
 import kotlin.math.abs
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
  * A song turned a column at a time: the pedal and a tap on the half of the screen the song reads on to slide it along by
  * one column, bringing the next one to the front and taking the first one out of view, and a tap on the other half
  * slides it back; its step buttons are a row along the bottom, the previous one first in the song's direction, that
- * covers no line. Each test reads one song in one interface direction, a song read from the right included, and asks
+ * covers no line, and whose dots stay where they are as a button comes or goes. Each test reads one song in one interface direction, a song read from the right included, and asks
  * only where the lines and the buttons are on screen.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -78,7 +79,10 @@ internal class ColumnTurnTest {
         tap(hasText(song.title) and hasClickAction())
         waitUntil(timeoutMillis = OPEN_TIMEOUT_MILLIS) { reading.viewport() != null }
         waitForIdle()
+        // At the song's start there is no previous button, which the dots do not move for.
+        val dotsAtStart = onNode(isStepProgress).fetchSemanticsNode().boundsInRoot
         reading.stepsForward("Page Down") { onRoot().performKeyInput { pressKey(Key.PageDown) } }
+        assertEquals(dotsAtStart, onNode(isStepProgress).fetchSemanticsNode().boundsInRoot, "The dots moved as the previous button came.")
         assertTrue(reading.columnsInView().size >= 2, "The song is not read in two columns: they are at ${reading.columnsInView()}.")
         val previous = onNode(hasContentDescription(string(Res.string.song_details_previous_page))).fetchSemanticsNode().boundsInRoot
         val next = onNode(hasContentDescription(string(Res.string.song_details_next_page))).fetchSemanticsNode().boundsInRoot
@@ -153,6 +157,8 @@ private class Reading(private val test: AppTestScope, private val readsLeftwards
         assertTrue(!isInView(lineNow(leaving)), "$what left \"${leaving.text}\" in view.")
     }
 }
+
+private val isStepProgress = SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo)
 
 private val isScrolledAcross = SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)
 

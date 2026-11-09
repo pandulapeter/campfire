@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -217,7 +218,8 @@ private fun BoxScope.StepRow(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            StepButton(look = back, icon = painterResource(Res.drawable.ic_move_up))
+            // Each button keeps its room while it is gone, so the dots stay centered between where the two would be.
+            Box(modifier = Modifier.size(STEP_BUTTON_SIZE)) { StepButton(look = back, icon = painterResource(Res.drawable.ic_move_up)) }
             StepProgressIndicator(
                 modifier = Modifier
                     .weight(1f)
@@ -226,7 +228,7 @@ private fun BoxScope.StepRow(
                 stepper = stepper,
                 isHorizontal = true,
             )
-            StepButton(look = forward, icon = painterResource(Res.drawable.ic_move_down))
+            Box(modifier = Modifier.size(STEP_BUTTON_SIZE)) { StepButton(look = forward, icon = painterResource(Res.drawable.ic_move_down)) }
         }
     }
 }
