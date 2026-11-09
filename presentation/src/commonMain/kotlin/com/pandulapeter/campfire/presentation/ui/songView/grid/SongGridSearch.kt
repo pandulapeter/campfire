@@ -89,7 +89,8 @@ internal data class SongGridSpec(
  *
  * Where the song is [SongGridSpec.turnsByColumn] and would be stepped through, it is set as a strip instead (see
  * [flowIntoStrip]): as many columns on screen as the width has room for, each the height of the screen, the strip
- * running on past the end edge, laid out as a scrolling song is, clear of the buttons. A song with something too tall
+ * running on past the end edge, laid out as a scrolling song is, clear of the buttons and a column gap before them, which
+ * the screen fades it out over. A song with something too tall
  * for a column and impossible to cut is paged as before.
  */
 internal class SongGridSearch(
@@ -154,7 +155,7 @@ internal class SongGridSearch(
     // wide as those lines, and the rest as wide as a single column, so that what wraps is not read in lines longer
     // than a column's because a staff of tablature shares the row.
     fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int) = when {
-        isStrip -> stripColumnWidthOf(unit, totalWidth, stripColumns)
+        isStrip -> stripColumnWidthOf(unit, totalWidth - columnGapPx, stripColumns)
         wideRows[rows[unit]] -> wideWidthFor(units.unitSections[unit], totalWidth) ?: columnWidthFor(totalWidth, 1)
         else -> columnWidthFor(totalWidth, columnCounts[rows[unit]])
     }
@@ -422,7 +423,7 @@ internal class SongGridSearch(
         }
         // A song read whole has nothing to turn, by pages or by columns, and is laid out as it always is.
         if (spec.turnsByColumn && !paged.isReadWithoutStepping()) {
-            stripFor(settledWidth - endInsetPx)?.let { return DecidedGrid(it, isInset = endInsetPx > 0) }
+            stripFor(settledWidth - endInsetPx - columnGapPx)?.let { return DecidedGrid(it, isInset = endInsetPx > 0) }
         }
         return DecidedGrid(paged.searched.grid, isInset)
     }

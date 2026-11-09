@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.LayoutDirection
  * [arrange]), nothing spread out or centered, since the eye looks for the next column's first line where the last one's
  * was. The layout is as wide as the strip, which scrolls sideways in a viewport [width] wide.
  *
- * What the step buttons leave of the viewport, [endInsetPx] at its end where [isInset] (the left where [isInsetAtLeft],
- * as for [placeSections]), and a [columnGapPx] past it, is shared out into one slot for every column on screen, each
+ * What the step buttons and a [columnGapPx] before them leave of the viewport, [endInsetPx] and that gap at its end where
+ * [isInset] (the left where [isInsetAtLeft], as for [placeSections]), and a gap past it, is shared out into one slot for every column on screen, each
  * column centered in its own less that gap: the columns in view fill it exactly, a gap apart, and the ones beside them
  * start past its edge rather than in its margins. A column wider than a slot takes as much as it needs, and the gap. A
  * step scrolls the strip by the slot of the column leaving, and the strip ends at the first stop that shows its last
@@ -48,11 +48,13 @@ internal fun placeStrip(
     val readsLeftwards = layoutDirection == LayoutDirection.Rtl
     // The buttons are at the end of the screen, which is the song's start where the two read in opposite directions.
     val isInsetAtStart = isInset && isInsetAtLeft != readsLeftwards
-    val viewWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
+    // A column gap more than a page leaves before the buttons, which the screen fades the strip out over (`COLUMN_GAP`).
+    val inset = if (isInset) endInsetPx + columnGapPx else 0
+    val viewWidth = (width - inset).coerceAtLeast(0)
     val slotWidth = (viewWidth + columnGapPx) / grid.stripColumns.coerceAtLeast(1)
     val slots = IntArray(columnWidths.size) { maxOf(slotWidth, columnWidths[it] + columnGapPx) }
     val offsets = IntArray(slots.size) { ((slots[it] - columnGapPx - columnWidths[it]) / 2).coerceAtLeast(0) }
-    val lead = if (isInsetAtStart) endInsetPx else 0
+    val lead = if (isInsetAtStart) inset else 0
     val slotStarts = IntArray(slots.size)
     for (column in 1 until slots.size) slotStarts[column] = slotStarts[column - 1] + slots[column - 1]
     val contentEnd = slots.indices.maxOfOrNull { slotStarts[it] + offsets[it] + columnWidths[it] } ?: 0

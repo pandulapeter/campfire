@@ -472,6 +472,5 @@ private val MAX_COLUMN_WIDTH = 560.dp
 
 /** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */
 private val NOTATION_UNIT = 1.dp
-private val COLUMN_GAP = 16.dp
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp
