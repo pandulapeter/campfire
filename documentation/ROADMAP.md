@@ -13,11 +13,12 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Turning a song by one column**: with several columns on screen, Next slides the strip one column left instead of
+  turning the whole page. Plan: [column-turns.md](plans/column-turns.md)
 - Support multi-line sticky headers (setlist titles)
 - Add a confirmation step to prevent paging past last page of song unintentionally
 - Song title line spacing should be consistent between the two card display modes
 - Add ability to make notes / markups on music
-- New scroll method for paged view: one column at a time,
 - Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
