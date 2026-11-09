@@ -60,6 +60,9 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
   tags are read inside one line only, and any other angle bracket (`<intro>`) is lyrics. A chord renamed inside markup
   keeps the tags around it. A comment keeps its markup in its text, since its chords are rewritten there after parsing:
   whoever draws it calls `ChordProMarkup.strip`.
+- **`{chordcolour}`** (`ChordProColors`: `#RRGGBB`, `#RGB`, or a CSS name) colours every real chord after it, across
+  sections, until the next one; an empty or unreadable value, and `foreground`, give back the reader's colour. It is
+  the one look the model carries (`Lyrics.Chord.color`), since the file asks for it; annotations and marks never take it.
 - **A chord row's repeat counts, bar lines, and beat dots are marks** (`ChordProRowMarks`), written back as their bare
   text; a sung line, and a line of a mark alone, keep them as lyrics. A word is never one: `twice` is written
   `[*twice]`.

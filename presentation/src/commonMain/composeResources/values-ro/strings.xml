@@ -978,6 +978,7 @@
     <string name="song_editor_insert_language">Limbă</string>
     <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_insert_chord_shape">Poziție de acord</string>
+    <string name="song_editor_insert_chord_color">Culoarea acordurilor</string>
     <string name="song_editor_transpose_text_up">Transpune textul în sus</string>
     <string name="song_editor_transpose_text_down">Transpune textul în jos</string>
     <string name="song_editor_prettify">Formatează ChordPro</string>

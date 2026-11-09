@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -24,4 +26,13 @@ class ContrastTest {
 
     @Test
     fun `an orange as dark as the eye would put white on takes a black check`() = assertTrue(isDarkerMoreLegible(Color(0xFFF57C00)))
+
+    @Test
+    fun `a colour that reads on the background is kept as it is`() = assertEquals(Color.Red, legibleOn(Color.White, Color.Red))
+
+    @Test
+    fun `a colour that does not read on the background is moved away from it`() {
+        assertTrue(legibleOn(Color.Black, Color.Black).luminance() > 0.1f)
+        assertTrue(legibleOn(Color.White, Color.Yellow).luminance() < Color.Yellow.luminance())
+    }
 }

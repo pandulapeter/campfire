@@ -114,6 +114,16 @@ object ChordProSerializer {
         var tempo = metadata.tempo
         var time = metadata.time
 
+        /** The chord colour in force, which a `{chordcolour}` is written for only where a line's chords change it. */
+        var chordColor: Int? = null
+
+        fun chordColor(line: ChordProLine): String? {
+            val color = (line as? ChordProLine.Lyrics)?.chords?.firstOrNull { !it.isAnnotation }?.color
+            if (line !is ChordProLine.Lyrics || line.chords.none { !it.isAnnotation } || color == chordColor) return null
+            chordColor = color
+            return color?.let { "{chordcolour: #${it.toString(16).padStart(6, '0')}}" } ?: "{chordcolour}"
+        }
+
         fun timing(block: ChordProBlock.Timing) = buildList {
             if (block.tempo != null && ChordProTempo.parse(block.tempo) != ChordProTempo.parse(tempo)) add("{tempo: ${block.tempo}}")
             if (block.time != null && ChordProTime.parse(block.time) != ChordProTime.parse(time)) add("{time: ${block.time}}")
@@ -211,6 +221,7 @@ object ChordProSerializer {
                 openEnvironment?.let { add("{end_of_$it}") }
                 startEnvironment(line, environment)
             }
+            writer.chordColor(line)?.let(::add)
             add(serializeLine(line))
         }
         openEnvironment?.let { add("{end_of_$it}") }

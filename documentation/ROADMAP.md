@@ -14,8 +14,6 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Support multi-line sticky headers (setlist titles)
-- Improvement: Transpose tag should be promoted in the editor
-- Add support for the chordfont, chordsize, and chordcolour ChordPro directives
 - Add a confirmation step to prevent paging past last page of song unintentionally
 - Song title line spacing should be consistent between the two card display modes
 - Add ability to make notes / markups on music

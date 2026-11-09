@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChorusRecalls
+import com.pandulapeter.campfire.chordpro.syntax.ChordProColors
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
@@ -33,6 +34,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
 import com.pandulapeter.campfire.chordpro.abc.AbcLines
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CHORD_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
@@ -256,6 +258,8 @@ public object ChordProParser {
             "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
+            // Not the section's: the colour holds from here on, across sections, until another one changes it.
+            CHORD_COLOUR -> section.chordColor = ChordProColors.parse(directive.value)
             else -> {
                 // Before the metadata reads it, since whether it is a change depends on whether it becomes the song's own.
                 if (transposition.isInBody) {

@@ -114,6 +114,17 @@ internal data class EditorInsertion(
         )
 
         /**
+         * A `{chordcolour}` naming [color] (a ChordPro colour name) before what is selected and one with no value, which
+         * gives the chords back the reader's colour, after it; with nothing selected, around an empty line for the caret.
+         */
+        fun chordColor(label: String, color: String) = EditorInsertion(
+            label = label,
+            prefix = "{chordcolour: $color}\n",
+            suffix = "\n{chordcolour}",
+            isOwnLine = true,
+        )
+
+        /**
          * @param hasValue False for the directives that are a word on their own (`{chorus}`), which leave nothing
          *   to type after them and so have no closing half to put the caret in front of.
          */

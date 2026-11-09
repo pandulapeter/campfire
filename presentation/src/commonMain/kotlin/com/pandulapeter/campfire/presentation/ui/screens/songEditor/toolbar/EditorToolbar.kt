@@ -42,6 +42,13 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_annot
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_artist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_green
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_orange
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_purple
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_red
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_color
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord_shape
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chorus_recall
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment
@@ -194,6 +201,9 @@ private fun EditorToolbarRow(
  * toggle too), and every section the app has a name for, in the order a song tends to run through them (the chorus
  * recall right after the chorus it repeats).
  *
+ * The Chord color menu sits with them too: it colours the chords of what is selected (`{chordcolour}`), handing the
+ * reader's colour back after it.
+ *
  * The Chord shape menu sits with the chords although it writes into the header: what it writes is how the chord at
  * the caret is played, which is what a player looks for next to the Chord button. The formatting buttons are icons,
  * the ones every text editor shares, since three words there would make the busiest row longer still.
@@ -212,6 +222,17 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
             choices = chordShapeInstruments.mapNotNull { instrument ->
                 instrument.chordInstrument?.let { EditorInsertion.chordShape(instrumentLabel(instrument), it) }
             },
+        ),
+        EditorInsertion.menu(
+            label = stringResource(Res.string.song_editor_insert_chord_color),
+            choices = listOf(
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_red), color = "red"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_orange), color = "darkorange"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_green), color = "green"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_blue), color = "blue"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_purple), color = "purple"),
+                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_pink), color = "deeppink"),
+            ),
         ),
     ),
     listOf(

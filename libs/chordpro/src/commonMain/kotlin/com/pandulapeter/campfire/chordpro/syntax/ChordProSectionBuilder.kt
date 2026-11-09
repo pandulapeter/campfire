@@ -34,6 +34,12 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
     private val lines = mutableListOf<ChordProLine>()
 
     /**
+     * The colour the last `{chordcolour}` asked for (see [ChordProLine.Lyrics.Chord.color]), which every chord read after
+     * it takes, across sections, until another one changes it.
+     */
+    var chordColor: Int? = null
+
+    /**
      * How many blank lines [close] trimmed off the end of the section, which a continuation [addBlock] opened carries
      * over so that [rejoin] can put them back between the two halves.
      */
@@ -288,7 +294,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
                 .also { hasTabLine = true }
             LineMode.GRID -> ChordProLine.Grid(ChordProTokens.parseGridTokens(trimmedLine), label = lineModeLabel)
             LineMode.VERBATIM -> verbatimLine(rawLine)
-            null -> ChordProParser.parseLyrics(rawLine)
+            null -> ChordProParser.parseLyrics(rawLine).withChordColor(chordColor)
         }
         hasContentLine = true
     }
@@ -305,6 +311,12 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         } else {
             ChordProLine.Verbatim(text = rawLine, environment = environment)
         }
+    }
+
+    private fun ChordProLine.Lyrics.withChordColor(color: Int?) = if (color == null) {
+        this
+    } else {
+        copy(chords = chords.map { if (it.isAnnotation) it else it.copy(color = color) })
     }
 
     private companion object {

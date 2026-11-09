@@ -31,6 +31,9 @@ public object ChordProVocabulary {
     internal const val TEMPO = "tempo"
     internal const val TIME = "time"
 
+    /** The directive colouring the chords from where it stands on (`{chordcolour: red}`); empty, back to the reader's. */
+    internal const val CHORD_COLOUR = "chordcolour"
+
     /** The environments whose lines are tablature and a chord grid, by the name they are opened with. */
     internal const val TAB = "tab"
     internal const val GRID = "grid"

@@ -37,6 +37,13 @@ public sealed interface ChordProLine {
              * comments, and in standing in the file as its bare text. The [text] it was written in is blank there.
              */
             val isMark: Boolean = false,
+            /**
+             * The colour the `{chordcolour}` in force where the line stands asks for, as `0xRRGGBB`, or null for the
+             * reader's own chord colour. Only a real chord has one: an annotation or a mark is an instruction, which the
+             * directive does not speak of. It is what the file asked for, which whoever draws it may lighten or darken
+             * until it reads on their background.
+             */
+            val color: Int? = null,
         )
 
         /**
