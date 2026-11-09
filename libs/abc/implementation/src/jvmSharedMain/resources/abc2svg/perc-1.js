@@ -41,8 +41,7 @@ this.do_pscom("map MIDIdrum "+a[1]+" play="+toabc(a[2])+" print="+p+
 this.set_v_param("perc","MIDIdrum")},set_perc:function(a){var i,item,s,curvoice=this.get_curvoice()
 for(i=0;i<a.length;i++){switch(a[i]){case"perc=":if(!curvoice.map)
 curvoice.map={}
-curvoice.map=a[i+1];s=this.new_block("midiprog")
-s.play=s.invis=1
+curvoice.map=a[i+1];s=this.new_block("midiprog",1)
 curvoice.chn=s.chn=9
 break}}},do_pscom:function(of,text){if(text.slice(0,8)=="percmap ")
 abc2svg.perc.do_perc.call(this,text)

@@ -14,10 +14,10 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
 ### The script
 
 - `src/jvmSharedMain/resources/abc2svg/`: `abc2svg-1.js` and every module that changes how a tune is drawn (not the
-  playback and page modules), **bundled unmodified**, built from the v1.23.6 tag of the author's repository
-  (https://chiselapp.com/user/moinejf/repository/abc2svg; npm and the GitHub mirror are stale). Its tarball endpoint
-  fails, so the sources are fetched through the "raw" links at the tag and concatenated and minified as its
-  build.ninja says (its jsmin.js runs under node with the three QuickJS globals it uses provided).
+  playback and page modules), **bundled unmodified**, built from the v1.23.7 tag of the author's repository
+  (https://chiselapp.com/user/moinejf/repository/abc2svg; npm and the GitHub mirror are stale) by
+  `python3 -I tools/abc2svg/update.py <tag>`, which also regenerates the music glyphs from the tag's font. An update
+  then changes the version in `documentation/THIRD_PARTY_SOFTWARE.md` and `abc2svg_notice.txt` by hand.
 - **Never bundle or adapt its GPL command line helpers** (cmdline.js, tosvg.js, tohtml.js): `campfire-abc-host.js` is
   our own shim over the core API, evaluated before abc2svg; modules are loaded only by abc2svg's own names.
 - **A tune is untrusted** (shared links, imports, pastes): the host replaces each `Abc` instance's `do_begin_end` so a

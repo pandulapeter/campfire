@@ -8,7 +8,7 @@ var abc2svg={}
 abc2svg.soloffs={set_fmt:function(of,cmd,parm){if(cmd=="soloffs"){var i,v,C=abc2svg.C,soloffs=this.cfmt().soloffs={}
 parm=parm.split(/\s+/)
 while(parm.length){i=parm.shift().split('=')
-v=Number(i[1])
+v=parseInt(i[1])
 if(isNaN(v))
 continue
 switch(i[0]){case'part':soloffs[C.PART]=v

@@ -104,7 +104,7 @@ def main():
         sys.exit(__doc__)
     with open(sys.argv[1], encoding="utf-8") as source:
         sfd_text = source.read()
-    version = os.environ.get("ABC2SVG_VERSION", "abc2svg v1.23.6")
+    version = os.environ.get("ABC2SVG_VERSION", "abc2svg v1.23.7")
     entries = sorted(glyphs(sfd_text))
     with open(OUTPUT, "w", encoding="utf-8") as output:
         output.write(KOTLIN_HEADER.replace("{version}", version))
