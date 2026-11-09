@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
@@ -38,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
-import com.pandulapeter.campfire.presentation.ui.components.legibleOn
 import com.pandulapeter.campfire.presentation.ui.songLayout.padLyricsToFitChords
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
@@ -63,7 +61,7 @@ internal fun SongLineWithChords(
     val background = MaterialTheme.colorScheme.surface
     // A song's own `{chordcolour}` stands in for the accent, as far from the theme's background as it takes to read on it.
     val writtenChordColors = remember(line.chords, background) {
-        line.chords.mapNotNull { it.color }.distinct().associateWith { legibleOn(background, Color(OPAQUE or it)) }
+        line.chords.mapNotNull { it.color }.distinct().associateWith { writtenColorOn(background, it) }
     }
     val change = LocalSongChange.current
     val chordLayouts = remember(line, textMeasurements) { line.chords.map(textMeasurements::chordLayout) }
@@ -168,7 +166,7 @@ internal fun SongLineWithChords(
                 trim = LineHeightStyle.Trim.None,
             ),
         ),
-        color = MaterialTheme.colorScheme.onSurface,
+        color = lyricsColor(line),
         onTextLayout = { lyricsLayout = it },
     )
 }
@@ -189,4 +187,3 @@ private fun ChordProLine.Lyrics.withChordsInline() = buildString {
 }
 
 private val CHORD_GAP = 4.dp
-private const val OPAQUE = 0xFF000000.toInt()

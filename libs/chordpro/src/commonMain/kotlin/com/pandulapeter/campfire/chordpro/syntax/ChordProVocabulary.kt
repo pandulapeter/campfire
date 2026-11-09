@@ -34,6 +34,9 @@ public object ChordProVocabulary {
     /** The directive colouring the chords from where it stands on (`{chordcolour: red}`); empty, back to the reader's. */
     internal const val CHORD_COLOUR = "chordcolour"
 
+    /** The directive colouring the words of the lyrics from where it stands on (`{textcolour: red}`), as [CHORD_COLOUR] does. */
+    internal const val TEXT_COLOUR = "textcolour"
+
     /** The environments whose lines are tablature and a chord grid, by the name they are opened with. */
     internal const val TAB = "tab"
     internal const val GRID = "grid"

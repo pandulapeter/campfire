@@ -38,9 +38,9 @@ The editor's Shortcuts rows and its control row.
 - Sheet music with nothing selected writes `X:1`, the song's meter, `L:1/8`, and its key as root, minor, or mode in
   standard letters (abc2svg draws nothing without `X:`, fails on `K:H`, and reads `K:A-moll` as A major); with a
   selection it only wraps it.
-- Chord color offers nine ChordPro colour names, the pure ones (`yellow`, `cyan`) too: the reader moves each to a shade
-  that reads on the theme. It writes `{chordcolour: <name>}` before the selection (else an empty line) and a bare
-  `{chordcolour}` after it, so the colour ends where the selection did.
+- Chord color and Text color offer nine ChordPro colour names, the pure ones (`yellow`, `cyan`) too: the reader moves
+  each to a shade that reads on the theme. Each writes `{chordcolour: <name>}` (or `{textcolour: <name>}`) before the
+  selection (else an empty line) and a bare one after it, so the colour ends where the selection did.
 - Chord shape asks which instrument (every one with shapes, no Any, the twelve-string a guitar) and writes a `{define}`
   into the header, **always the standard-tuning shape** (ChordPro gives a definition no tuning): the player's choice,
   else the app's first, frets selected; or moves to an existing line's frets. With the caret in no chord it writes a

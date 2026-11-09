@@ -14,10 +14,9 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Support multi-line sticky headers (setlist titles)
-- Support for textcolour directive
 - Song title line spacing should be consistent between the two card display modes
 - Add ability to make notes / markups on music
-- Add Portuguese, Polish, Czech, Slovak, Ukranian and Dutch translations
+- Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 

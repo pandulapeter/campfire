@@ -124,6 +124,15 @@ object ChordProSerializer {
             return color?.let { "{chordcolour: #${it.toString(16).padStart(6, '0')}}" } ?: "{chordcolour}"
         }
 
+        /** The text colour in force, which a `{textcolour}` is written for only where a lyrics line changes it. */
+        var textColor: Int? = null
+
+        fun textColor(line: ChordProLine): String? {
+            if (line !is ChordProLine.Lyrics || line.color == textColor) return null
+            textColor = line.color
+            return line.color?.let { "{textcolour: #${it.toString(16).padStart(6, '0')}}" } ?: "{textcolour}"
+        }
+
         fun timing(block: ChordProBlock.Timing) = buildList {
             if (block.tempo != null && ChordProTempo.parse(block.tempo) != ChordProTempo.parse(tempo)) add("{tempo: ${block.tempo}}")
             if (block.time != null && ChordProTime.parse(block.time) != ChordProTime.parse(time)) add("{time: ${block.time}}")
@@ -222,6 +231,7 @@ object ChordProSerializer {
                 startEnvironment(line, environment)
             }
             writer.chordColor(line)?.let(::add)
+            writer.textColor(line)?.let(::add)
             add(serializeLine(line))
         }
         openEnvironment?.let { add("{end_of_$it}") }

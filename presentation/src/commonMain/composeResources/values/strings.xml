@@ -942,6 +942,7 @@
     <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_insert_chord_shape">Chord shape</string>
     <string name="song_editor_insert_chord_color">Chord color</string>
+    <string name="song_editor_insert_text_color">Text color</string>
     <string name="song_editor_chord_color_magenta">Magenta</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>

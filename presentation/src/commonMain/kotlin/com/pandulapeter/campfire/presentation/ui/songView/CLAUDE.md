@@ -25,8 +25,9 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   edge as one block: in an RTL song a run moves right by the line's width less its widest row over all its slots
   (`runShiftAtLineEnd`, as the PDF's `atLineEnd`), so a run that fills or wraps barely moves and its slots keep their
   columns. Only the drawing moves; sizes and intrinsics are unchanged.
-- A chord with a `{chordcolour}` is drawn in it, moved towards black or white only as far as reading on the theme's
-  surface needs (`legibleOn`); the PDF, a grayscale image, prints it black.
+- A chord with a `{chordcolour}`, and a lyrics line's words with a `{textcolour}`, are drawn in it, moved towards black
+  or white only as far as reading on the theme's surface needs (`writtenColorOn`); the PDF, a grayscale image, prints
+  them black.
 - Chords are drawn over the lyrics, not composed. Lyrics under a wider chord are padded with non-breaking spaces; a
   padded line may break only between two chords at a word boundary (no chord pulled back over the one before), and never
   before a chord row's mark (`x4`, `|`), which would lose what it repeats or ends.

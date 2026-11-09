@@ -120,6 +120,7 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
                 end = paddedOffset(range.end, pieceStarts, markOffsets, isEnd = true) { from -> innerPadding(from, range.end, isEnd = true) },
             )
         },
+        color = color,
     )
 }
 

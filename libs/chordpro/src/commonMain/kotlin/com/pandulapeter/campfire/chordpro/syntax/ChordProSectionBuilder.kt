@@ -39,6 +39,9 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      */
     var chordColor: Int? = null
 
+    /** The colour the last `{textcolour}` asked for (see [ChordProLine.Lyrics.color]), kept the way [chordColor] is. */
+    var textColor: Int? = null
+
     /**
      * How many blank lines [close] trimmed off the end of the section, which a continuation [addBlock] opened carries
      * over so that [rejoin] can put them back between the two halves.
@@ -294,7 +297,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
                 .also { hasTabLine = true }
             LineMode.GRID -> ChordProLine.Grid(ChordProTokens.parseGridTokens(trimmedLine), label = lineModeLabel)
             LineMode.VERBATIM -> verbatimLine(rawLine)
-            null -> ChordProParser.parseLyrics(rawLine).withChordColor(chordColor)
+            null -> ChordProParser.parseLyrics(rawLine).withChordColor(chordColor).copy(color = textColor)
         }
         hasContentLine = true
     }

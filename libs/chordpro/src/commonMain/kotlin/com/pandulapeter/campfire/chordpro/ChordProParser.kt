@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ABC
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CHORD_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.GRID
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
+import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TEXT_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.syntax.LineMode
 import com.pandulapeter.campfire.chordpro.syntax.MetadataBuilder
@@ -258,8 +259,9 @@ public object ChordProParser {
             "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
-            // Not the section's: the colour holds from here on, across sections, until another one changes it.
+            // Not the section's: each colour holds from here on, across sections, until another one changes it.
             CHORD_COLOUR -> section.chordColor = ChordProColors.parse(directive.value)
+            TEXT_COLOUR -> section.textColor = ChordProColors.parse(directive.value)
             else -> {
                 // Before the metadata reads it, since whether it is a change depends on whether it becomes the song's own.
                 if (transposition.isInBody) {

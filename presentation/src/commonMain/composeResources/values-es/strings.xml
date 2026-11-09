@@ -942,6 +942,7 @@
     <string name="song_editor_insert_link">Enlace</string>
     <string name="song_editor_insert_chord_shape">Forma de acorde</string>
     <string name="song_editor_insert_chord_color">Color de acordes</string>
+    <string name="song_editor_insert_text_color">Color de texto</string>
     <string name="song_editor_chord_color_magenta">Magenta</string>
     <string name="song_editor_transpose_text_up">Transponer el texto hacia arriba</string>
     <string name="song_editor_transpose_text_down">Transponer el texto hacia abajo</string>

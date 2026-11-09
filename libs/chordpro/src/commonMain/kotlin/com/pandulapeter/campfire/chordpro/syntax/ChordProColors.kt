@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.chordpro.syntax
 
 /**
- * Reads a colour the way ChordPro writes one in `{chordcolour}`: `#RRGGBB` (or the short `#RGB`), or a name. The names
+ * Reads a colour the way ChordPro writes one in `{chordcolour}` and `{textcolour}`: `#RRGGBB` (or the short `#RGB`), or a name. The names
  * are the colours of CSS a song is likely to ask for; ChordPro's own reference knows them by these names too.
  */
 internal object ChordProColors {

@@ -63,6 +63,8 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
 - **`{chordcolour}`** (`ChordProColors`: `#RRGGBB`, `#RGB`, or a CSS name) colours every real chord after it, across
   sections, until the next one; an empty or unreadable value, and `foreground`, give back the reader's colour. It is
   the one look the model carries (`Lyrics.Chord.color`), since the file asks for it; annotations and marks never take it.
+  `{textcolour}` is read the same way into `Lyrics.color`, for the words of every lyrics line after it (never a comment,
+  tab, grid, text block, or delegated line).
 - **A chord row's repeat counts, bar lines, and beat dots are marks** (`ChordProRowMarks`), written back as their bare
   text; a sung line, and a line of a mark alone, keep them as lyrics. A word is never one: `twice` is written
   `[*twice]`.

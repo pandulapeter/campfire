@@ -24,6 +24,12 @@ public sealed interface ChordProLine {
         val text: String,
         val chords: List<Chord>,
         val formatting: List<Formatting> = emptyList(),
+        /**
+         * The colour the `{textcolour}` in force where the line stands asks for its words, as `0xRRGGBB`, or null for the
+         * reader's own text colour. Like [Chord.color] it is what the file asked for, which whoever draws it may lighten or
+         * darken until it reads on their background; the chords keep theirs.
+         */
+        val color: Int? = null,
     ) : ChordProLine {
 
         public data class Chord(

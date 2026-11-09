@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_more_
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tag
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_text_color
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
@@ -204,8 +205,8 @@ private fun EditorToolbarRow(
  * toggle too), and every section the app has a name for, in the order a song tends to run through them (the chorus
  * recall right after the chorus it repeats).
  *
- * The Chord color menu sits with them too: it colours the chords of what is selected (`{chordcolour}`), handing the
- * reader's colour back after it.
+ * The Chord color and Text color menus sit with them too: they colour the chords (`{chordcolour}`) or the words
+ * (`{textcolour}`) of what is selected, handing the reader's colour back after it.
  *
  * The Chord shape menu sits with the chords although it writes into the header: what it writes is how the chord at
  * the caret is played, which is what a player looks for next to the Chord button. The formatting buttons are icons,
@@ -228,17 +229,11 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
         ),
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_chord_color),
-            choices = listOf(
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_red), color = "red"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_orange), color = "darkorange"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_yellow), color = "yellow"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_green), color = "green"),
-                EditorInsertion.chordColor(stringResource(Res.string.song_details_tag_color_cyan), color = "cyan"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_blue), color = "blue"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_purple), color = "purple"),
-                EditorInsertion.chordColor(stringResource(Res.string.song_editor_chord_color_magenta), color = "magenta"),
-                EditorInsertion.chordColor(stringResource(Res.string.settings_user_interface_theme_color_pink), color = "deeppink"),
-            ),
+            choices = colorInsertions(directive = "chordcolour"),
+        ),
+        EditorInsertion.menu(
+            label = stringResource(Res.string.song_editor_insert_text_color),
+            choices = colorInsertions(directive = "textcolour"),
         ),
     ),
     listOf(
@@ -257,6 +252,23 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.section(stringResource(Res.string.song_editor_section_outro), name = "outro"),
     ),
 )
+
+/**
+ * The colours the Chord color and Text color menus offer, as ChordPro names them for [directive]: the pure ones too, since
+ * the reader moves each to a shade that reads on the theme.
+ */
+@Composable
+private fun colorInsertions(directive: String) = listOf(
+    Res.string.settings_user_interface_theme_color_red to "red",
+    Res.string.settings_user_interface_theme_color_orange to "darkorange",
+    Res.string.settings_user_interface_theme_color_yellow to "yellow",
+    Res.string.settings_user_interface_theme_color_green to "green",
+    Res.string.song_details_tag_color_cyan to "cyan",
+    Res.string.settings_user_interface_theme_color_blue to "blue",
+    Res.string.settings_user_interface_theme_color_purple to "purple",
+    Res.string.song_editor_chord_color_magenta to "magenta",
+    Res.string.settings_user_interface_theme_color_pink to "deeppink",
+).map { (label, color) -> EditorInsertion.color(stringResource(label), directive = directive, color = color) }
 
 /**
  * What the song says about itself and how it is played: every metadata directive the parser reads and the app then

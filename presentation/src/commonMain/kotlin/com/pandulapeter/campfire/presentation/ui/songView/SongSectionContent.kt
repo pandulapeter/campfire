@@ -224,7 +224,7 @@ internal fun SongSectionContent(
                             modifier = Modifier.fillMaxWidth(),
                             text = remember(line) { line.formattedText() },
                             style = lyricsStyle,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = lyricsColor(line),
                         )
                     } else {
                         SongLineWithChords(
