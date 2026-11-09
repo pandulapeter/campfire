@@ -21,7 +21,6 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
-import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,7 +28,7 @@ import kotlinx.coroutines.withContext
 /**
  * Files dragged onto the app from another one - side by side in split screen, in a desktop window, or from the taskbar -
  * are imported, as the desktop's dropped files are, and a dragged text is a new song where Paste from clipboard would
- * make one. A drag that carries both is its files. Read only mode takes neither.
+ * make one. A drag that carries both is its files. Read only mode takes both, as it takes a share.
  */
 @Composable
 internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier {
@@ -38,15 +37,14 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
     val target = remember(viewModel, activity, scope) {
         object : DragAndDropTarget {
             override fun onDrop(event: DragAndDropEvent): Boolean {
-                // Asked again rather than trusted from the start of the drag, during which a dialog, the editor or
-                // read only mode can have come.
-                if (!viewModel.preferencesController.isDropAvailable) return false
                 val dragEvent = event.toAndroidDragEvent()
                 val clipData = dragEvent.clipData ?: return false
                 val items = (0 until clipData.itemCount).map(clipData::getItemAt)
                 val uris = items.mapNotNull { it.uri }
                 if (uris.isEmpty()) {
-                    if (!viewModel.pastedSongController.isNewSongPasteAvailable) return false
+                    // Asked again rather than trusted from the start of the drag, during which a dialog or the editor can
+                    // have come.
+                    if (!viewModel.pastedSongController.isNewSongDropAvailable) return false
                     val text = items.mapNotNull { it.text?.toString() }.joinToString("\n").ifEmpty { return false }
                     viewModel.pastedSongController.newSongFromText(text)
                     return true
@@ -74,7 +72,7 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
     }
     return dragAndDropTarget(
         shouldStartDragAndDrop = { event ->
-            viewModel.preferencesController.isDropAvailable && event.toAndroidDragEvent().isAcceptable(viewModel)
+            event.toAndroidDragEvent().isAcceptable(viewModel)
         },
         target = target,
     )
@@ -90,5 +88,5 @@ private fun DragEvent.isAcceptable(viewModel: CampfireViewModel): Boolean {
     val isTextOnly = (0 until description.mimeTypeCount).all { index ->
         description.getMimeType(index).let { it == ClipDescription.MIMETYPE_TEXT_PLAIN || it == ClipDescription.MIMETYPE_TEXT_HTML }
     }
-    return !isTextOnly || viewModel.pastedSongController.isNewSongPasteAvailable
+    return !isTextOnly || viewModel.pastedSongController.isNewSongDropAvailable
 }

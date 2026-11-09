@@ -31,4 +31,4 @@
 - **Drops** (from another app in split screen, a desktop window, or the taskbar): URIs are read under
   `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items are a pasted
   song. A drag's description can't tell a text file from a text, so a `text/plain`-only drag starts only where
-  `isNewSongPasteAvailable`.
+  `isNewSongDropAvailable`.

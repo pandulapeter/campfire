@@ -36,7 +36,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
-import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import kotlinx.coroutines.Dispatchers
@@ -82,14 +81,12 @@ fun CampfireDesktopApp(
             // Files dropped anywhere on the window are imported, which is the shortest path there is from a folder
             // of songs to a library. Text dropped on the song list is a new song, as Paste from clipboard makes one; a
             // file list wins over a text, since a file dragged from a file manager offers both. Read only mode takes
-            // neither.
+            // both, as it takes a file opened with Campfire: a drop is the user bringing something in on purpose.
             .dragAndDropTarget(
                 shouldStartDragAndDrop = { event ->
                     val transferable = event.awtTransferable
-                    viewModel.preferencesController.isDropAvailable && (
-                        transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
-                            transferable.isDataFlavorSupported(DataFlavor.stringFlavor) && viewModel.pastedSongController.isNewSongPasteAvailable
-                        )
+                    transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
+                        transferable.isDataFlavorSupported(DataFlavor.stringFlavor) && viewModel.pastedSongController.isNewSongDropAvailable
                 },
                 target = remember {
                     object : DragAndDropTarget {
@@ -99,12 +96,11 @@ fun CampfireDesktopApp(
                             // of here would also skip the end of the session, and the window would refuse every drag after
                             // this one.
                             val transferable = event.awtTransferable
-                            if (!viewModel.preferencesController.isDropAvailable) return false
                             val files = try {
                                 if (!transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
                                     // Checked again rather than trusted from the start of the drag, during which a dialog
                                     // or the editor can have opened.
-                                    if (!viewModel.pastedSongController.isNewSongPasteAvailable) return false
+                                    if (!viewModel.pastedSongController.isNewSongDropAvailable) return false
                                     val text = transferable.getTransferData(DataFlavor.stringFlavor) as? String ?: return false
                                     viewModel.pastedSongController.newSongFromText(text)
                                     return true

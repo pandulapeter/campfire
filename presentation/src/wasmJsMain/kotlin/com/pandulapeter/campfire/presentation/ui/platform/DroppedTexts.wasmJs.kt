@@ -42,7 +42,7 @@ private fun listenForTextDrops(): Unit = js(
         window.__campfireTextDropResolve = null;
         window.addEventListener('drop', function (event) {
             var transfer = event.dataTransfer;
-            if (!transfer || window.__campfireDropsRefused) return;
+            if (!transfer) return;
             var items = transfer.items;
             if (items) {
                 for (var i = 0; i < items.length; i++) if (items[i].kind === 'file') return;

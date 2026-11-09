@@ -22,8 +22,7 @@ The web shell (page-side quirks: `app/web/CLAUDE.md`).
   composition stops collecting.
 - Drops: a folder is read to the bottom like the desktop's, unknown names peeked at (`fileHead`) and read only as an
   archive or a text; an unreadable file arrives empty and is reported as skipped. A drop with no file is text, a pasted
-  song where `isNewSongPasteAvailable`, ignored elsewhere. In read only mode (`refuseDrops`) the listeners still prevent
-  the browser's default, which would navigate to the file, but set `dropEffect` to `none` and drop nothing.
+  song where `isNewSongDropAvailable` (read only mode too), ignored elsewhere.
 - A link the browser refuses to share (anything but the user closing the sheet) throws from `shareText`, so the screen
   says the share failed; a refused file is downloaded instead.
 - Shared links come from the list `index.html` keeps of the address's fragment and of what other tabs hand over, one

@@ -53,13 +53,20 @@ internal class PastedSongController(
 ) {
 
     /**
-     * Whether the shortcut and a dropped text are answered now: only with the Songs screen on top and nothing over it - a
-     * dialog, a sheet or an overflow menu would have the paste land under it - and not in read only mode, which offers
-     * no way to make a song.
+     * Whether a dropped text is answered now: only with the Songs screen on top and nothing over it - a dialog, a sheet
+     * or an overflow menu would have the song land under it. Read only mode included, as for a shared text: a drop is the
+     * user bringing a song in on purpose, and nothing is written before the editor's Save.
+     */
+    val isNewSongDropAvailable
+        get() = backStack.lastOrNull() == CampfireDestination.Songs && dialogHost.visibleDialog.value == null &&
+            !dialogHost.overlayState.isAnyMenuOpen
+
+    /**
+     * Whether the paste shortcut is answered now: where a drop would be, except in read only mode, where a stray
+     * Ctrl / Cmd + V is not taken for a new song.
      */
     val isNewSongPasteAvailable
-        get() = backStack.lastOrNull() == CampfireDestination.Songs && dialogHost.visibleDialog.value == null &&
-            !dialogHost.overlayState.isAnyMenuOpen && !isPerformanceModeEnabled.value
+        get() = isNewSongDropAvailable && !isPerformanceModeEnabled.value
 
     /**
      * The one way from a text to a new song, which opens the editor on it, read only mode included: a text shared there

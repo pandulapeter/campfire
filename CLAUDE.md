@@ -219,11 +219,11 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Nothing from outside is written before Import, and every song can be read first: a batch that is one song opens its
   preview, anything more the review, whose song rows open the same preview; existing files are skipped, collisions
   numbered or replaced after confirmation: `ui/screens/songDetails`, `domain/implementation`.
-- A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a share in read only mode
-  included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
+- A pasted, dropped, or shared chord sheet that is one new song opens the editor on it, a drop or share in read only
+  mode included, with a share's page title, else placeholders, for a missing title and artist; nothing is written before
   Save, which needs a title; never a link followed, except a Campfire share link: `presentation`.
-- Files and text dragged onto the app are taken on every platform (Android and iOS from another app), never in read
-  only mode: `presentation`.
+- Files and text dragged onto the app are taken on every platform (Android and iOS from another app), read only mode
+  included: `presentation`.
 - A share from another app (Android, the iOS share extension) is imported like a paste or an "Open with"; the
   extension never opens the app: `presentation`, `app/ios`.
 - A song is named by its own header; renames happen only when asked or when lossless: `domain/implementation`,

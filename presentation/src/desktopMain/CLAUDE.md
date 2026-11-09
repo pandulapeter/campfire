@@ -16,8 +16,8 @@
   `ImportLimits.MAX_FOLDER_DEPTH`; hidden entries left out; unknown names peeked at and read only as an archive or a
   text, never a photo or a recording by its name, else reported as skipped). A drop whose file list can't be read is
   refused, never thrown: an exception out of the target skips the end of the drag session and the window refuses every
-  later drag. Dropped text is a pasted song, only where `isNewSongPasteAvailable`; a file list wins. Read only mode
-  refuses both.
+  later drag. Dropped text is a pasted song, only where `isNewSongDropAvailable` (read only mode
+  too); a file list wins.
 - Links go through `java.awt.Desktop`, falling back to `open`, `rundll32`, or `xdg-open` where AWT has no desktop or
   `browse` fails. On macOS and Windows anything but a web page (the microphone and sound settings pages) always uses the
   system command, since `browse` hands every address to the default browser. The same opener is the

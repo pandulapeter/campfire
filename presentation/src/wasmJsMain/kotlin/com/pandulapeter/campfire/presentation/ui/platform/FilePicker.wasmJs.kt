@@ -348,13 +348,9 @@ private fun listenForDrops(maxDepth: Int, maxEntries: Int): Unit = js(
                 return files;
             }, function () { return []; });
         }
-        window.addEventListener('dragover', function (event) {
-            stop(event);
-            if (window.__campfireDropsRefused && event.dataTransfer) event.dataTransfer.dropEffect = 'none';
-        });
+        window.addEventListener('dragover', stop);
         window.addEventListener('drop', function (event) {
             stop(event);
-            if (window.__campfireDropsRefused) return;
             var files = event.dataTransfer ? collect(event.dataTransfer) : null;
             if (!files) return;
             if (window.__campfireDropResolve) {
@@ -367,13 +363,6 @@ private fun listenForDrops(maxDepth: Int, maxEntries: Int): Unit = js(
         });
     })()"""
 )
-
-/**
- * Makes the page refuse every drop, files and text alike, while [isRefused] (read only mode). The listeners keep
- * preventing the browser's default, which would navigate away to a dropped file, and tell it the drop is not taken
- * instead, so the pointer says so before anything is let go.
- */
-internal fun refuseDrops(isRefused: Boolean): Unit = js("window.__campfireDropsRefused = isRefused")
 
 private fun nextDrop(): Promise<JsArray<JsAny>?> = js(
     """(function () {

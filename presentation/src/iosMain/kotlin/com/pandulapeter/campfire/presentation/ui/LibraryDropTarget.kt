@@ -19,7 +19,6 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -44,7 +43,7 @@ import platform.posix.memcpy
 /**
  * Files dragged onto the app - from Files or another app beside it on an iPad, or from one in the background on an
  * iPhone - are imported, as the desktop's dropped files are, and a dragged text is a new song where Paste from
- * clipboard would make one. A drag that carries both is its files. Read only mode takes neither.
+ * clipboard would make one. A drag that carries both is its files. Read only mode takes both, as it takes a share.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -53,13 +52,12 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
     val target = remember(viewModel, scope) {
         object : DragAndDropTarget {
             override fun onDrop(event: DragAndDropEvent): Boolean {
-                // Asked again rather than trusted from the start of the drag, during which a dialog, the editor or
-                // read only mode can have come.
-                if (!viewModel.preferencesController.isDropAvailable) return false
                 val providers = event.items.map { it.itemProvider }
                 val fileProviders = providers.filterNot { it.isText }
                 if (fileProviders.isEmpty()) {
-                    if (!viewModel.pastedSongController.isNewSongPasteAvailable) return false
+                    // Asked again rather than trusted from the start of the drag, during which a dialog or the editor can
+                    // have come.
+                    if (!viewModel.pastedSongController.isNewSongDropAvailable) return false
                     val texts = providers.map { it.loadText() }
                     scope.launch {
                         val text = texts.awaitAll().filterNotNull().joinToString("\n")
@@ -79,8 +77,8 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
     return dragAndDropTarget(
         shouldStartDragAndDrop = { event ->
             val providers = event.items.map { it.itemProvider }
-            viewModel.preferencesController.isDropAvailable && providers.isNotEmpty() &&
-                (providers.any { !it.isText } || viewModel.pastedSongController.isNewSongPasteAvailable)
+            providers.isNotEmpty() &&
+                (providers.any { !it.isText } || viewModel.pastedSongController.isNewSongDropAvailable)
         },
         target = target,
     )

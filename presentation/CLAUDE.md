@@ -14,8 +14,8 @@ local sources.
 
 - **Shells** (the `ui` package of each platform source set) only do what common Compose cannot; anything non-trivial
   belongs in `commonMain` (`expect`/`actual`, `ui/platform/`). Each provides `LocalFilePicker`, a `Flow` of files the OS
-  handed over ("open with", share), and drops (`isDropAvailable`); Android's also shared texts, iOS's the share
-  extension's `InboxShare`s.
+  handed over ("open with", share), and drops; Android's also shared texts, iOS's the share extension's
+  `InboxShare`s.
 
 ## Package layers
 

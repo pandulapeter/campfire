@@ -205,6 +205,18 @@ class PastedSongControllerTest {
     }
 
     @Test
+    fun `a dropped text is answered only on the song list with nothing over it, in read only mode too`() = runTest {
+        val controller = controller()
+        isPerformanceModeEnabled.value = true
+        assertTrue(controller.isNewSongDropAvailable)
+        dialogHost.showDialog(DialogType.NewSong)
+        assertFalse(controller.isNewSongDropAvailable)
+        dialogHost.dismissDialog()
+        backStack += CampfireDestination.Setlists
+        assertFalse(controller.isNewSongDropAvailable)
+    }
+
+    @Test
     fun `a pasted or shared Campfire link is imported as the link, not as a song`() = runTest {
         val controller = controller()
         controller.newSongFromText(" $LINK\n")

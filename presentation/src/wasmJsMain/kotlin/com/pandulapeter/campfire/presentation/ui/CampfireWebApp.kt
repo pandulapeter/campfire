@@ -28,9 +28,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.platform.droppedTexts
-import com.pandulapeter.campfire.presentation.ui.platform.refuseDrops
 import com.pandulapeter.campfire.presentation.ui.platform.sharedLinks
-import com.pandulapeter.campfire.presentation.ui.state.importing.isDropAvailable
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.filter
 import org.w3c.dom.events.KeyboardEvent
@@ -87,12 +85,10 @@ fun CampfireWebApp(
     EditShortcutEffect(viewModel)
     ScreenShortcutEffect(viewModel)
     PasteShortcutEffect(viewModel)
-    // Read only mode takes no drop, which the page says as the drag passes over it rather than as it ends.
-    LaunchedEffect(viewModel) { viewModel.preferencesController.isPerformanceModeEnabled.collect(::refuseDrops) }
     // Dropped anywhere else, or over a dialog, the text is dropped: the drop has no meaning there.
     LaunchedEffect(viewModel) {
         droppedTexts().collect { text ->
-            if (viewModel.pastedSongController.isNewSongPasteAvailable) viewModel.pastedSongController.newSongFromText(text)
+            if (viewModel.pastedSongController.isNewSongDropAvailable) viewModel.pastedSongController.newSongFromText(text)
         }
     }
     MetronomeShortcutEffect(viewModel)
@@ -122,7 +118,7 @@ fun CampfireWebApp(
             CampfireApp(
                 viewModel = viewModel,
                 urlOpener = ::openInNewTab,
-                filesToImport = remember(viewModel) { droppedFiles().filter { viewModel.preferencesController.isDropAvailable } },
+                filesToImport = remember(viewModel) { droppedFiles() },
                 shareLinks = remember { sharedLinks() },
                 onAppReady = ::dismissLoadingScreen,
             )
