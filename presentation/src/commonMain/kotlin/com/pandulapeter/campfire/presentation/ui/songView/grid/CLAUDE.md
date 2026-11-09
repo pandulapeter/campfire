@@ -46,7 +46,7 @@ with the step keys, fewest pages first.
 ### Turned by column (`PageTurn.COLUMN`)
 
 - A song the page search would step through is set as one **strip** instead (`flowIntoStrip`): the readable column
-  count for the width beside the buttons, every column filled to the screen by `ColumnFlow`'s priced cuts, fewest
+  count for the width less a gap the screen fades it over, every column filled to the screen by `ColumnFlow`'s priced cuts, fewest
   columns first, never evened out. A song read whole keeps its ordinary grid.
 - Gone in a strip: a section taller than the screen getting a row of its own (it is cut across columns), side-by-side
   pairs, centering and gap spreading. A tempo or time change starts a column. Narrow columns only for fewer steps,

@@ -168,4 +168,5 @@ another takes what it adds:
 - **Layout** (`songLayout`), heading the Song page section as a segmented control: pages, or one column scrolling at the
   song's pace, asked once over the first song (`screens/songDetails/autoScroll`). The one choice that rearranges rather
   than hides. Under it while pages are picked, **Turn by** (`pageTurn`, never asked): a page, or a column at a time,
-  the song a strip sliding sideways (`songView/grid`, `screens/songDetails/stepping`).
+  the song a strip sliding sideways, stepped by a row of buttons along the bottom (`songView/grid`,
+  `screens/songDetails/stepping`).

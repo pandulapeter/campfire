@@ -16,7 +16,7 @@ internal val CARD_PADDING = 12.dp
 internal val HEADER_GAP = 4.dp
 
 /**
- * How far apart two columns of a song are; a strip turned by column (`grid.placeStrip`) also leaves this much more
- * before the step buttons than a page does, which the song details screen fades it out over.
+ * How far apart two columns of a song are; a strip turned by column (`grid.placeStrip`) also leaves this much at the end
+ * of the screen, which the song details screen fades it out over.
  */
 internal val COLUMN_GAP = 16.dp

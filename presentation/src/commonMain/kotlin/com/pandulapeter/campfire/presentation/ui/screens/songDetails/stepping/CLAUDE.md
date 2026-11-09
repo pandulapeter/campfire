@@ -26,16 +26,19 @@ Pedal stepping and snapping, over the `SongRows` the layout reports (`ui/songVie
 - Previous leaves only at the very top; next only once the end has been on screen (in a setlist on the press after,
   `../CLAUDE.md`); a song that fits has neither. In a setlist they go on to the next song's top and the previous song's
   end (that page's scroll is set to its end beforehand, else a second press skips it).
-- **The buttons never cover a line**: a scrolling song is laid out narrower; the full width is kept where the song fits
+- **The buttons never cover a line**: a scrolling song is laid out narrower (shorter under a row of them, below); the full width is kept where the song fits
   as one row and the full-width grid does too, never in a setlist. An unpaged single column is assumed to scroll.
 - The dots count reachable stops.
 - **A strip turned by column** (`SongRows.isAcross`) is the same machinery on a sideways scroll (`songPageScroll`):
   stops are column starts, counted from the song's start edge (the scroll reversed where song and screen read
   differently); the viewport and reading window are handed over across (`scrolledViewport`, `ReadingWindow.across`),
-  so a height change re-lays out the strip. It leaves a column gap more before the buttons than a page does, and fades
-  out over it and the buttons' gap; nothing of it is drawn under the buttons' column, so the next column is never read
-  there and slides in out of the fade. The scroll is sideways from the first frame where the
-  preference asks for it, and turns down once the layout says the song is no strip.
+  so a height change re-lays out the strip. It leaves a column gap at the end of the screen and fades out over it and
+  the page's padding, so the next column slides in out of the fade. The scroll is sideways from the first frame where
+  the preference asks for it, and turns down once the layout says the song is no strip.
+- **Turned by column, the buttons and dots are one row along the bottom** (`StepControls`), above the setlist's pager
+  bar: previous first, in a strip's reading direction, for every song so turned, a strip or not, so paging a setlist
+  never moves them. The song takes the full width; its bottom padding and reading window leave the row's height
+  (`STEP_ROW_HEIGHT`), so the row covers no line.
 - **Tap to step**: top half previous, bottom half next (on a strip left and right, mirrored for a song read from the
   right), only for taps nothing inside consumed; never a long press, a right or middle click, a fling-stopping press,
   or one the system cancelled. A drag under 250 ms and a tenth of the height (a strip's width) is still a tap (a

@@ -294,7 +294,7 @@ internal fun SongPages(
             tabs = tabs,
             showsDegrees = showsDegrees,
             isContinuous = isContinuous,
-            turnsByColumn = userPreferences?.pageTurn == PageTurn.COLUMN,
+            turnsByColumn = !isContinuous && userPreferences?.pageTurn == PageTurn.COLUMN,
             scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,

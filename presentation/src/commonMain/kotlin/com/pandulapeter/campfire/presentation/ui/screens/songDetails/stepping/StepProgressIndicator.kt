@@ -19,6 +19,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -49,6 +51,9 @@ import kotlin.math.roundToInt
  * A screen reader is told the stop the mark is nearest and how many there are, which is read in composition through a
  * derived state, so that it recomposes once per stop rather than once per pixel scrolled.
  *
+ * Laid along a row ([isHorizontal]) under a song turned a column at a time, the dots run from the start edge of the
+ * layout direction it is given, the song's, as its columns do.
+ *
  * Everything moving is read while drawing, so neither the scroll nor a count animating recomposes anything. It fades by the
  * colors it draws with rather than through a layer, since the web build does not redraw a layer whose alpha alone changed.
  */
@@ -56,6 +61,7 @@ import kotlin.math.roundToInt
 internal fun StepProgressIndicator(
     modifier: Modifier = Modifier,
     stepper: SongStepper?,
+    isHorizontal: Boolean = false,
 ) {
     val stopCount = stepper?.stopCount ?: 0
     val isShown = stopCount >= MIN_STOP_COUNT
@@ -72,6 +78,7 @@ internal fun StepProgressIndicator(
     }
     val dotColor = MaterialTheme.colorScheme.outlineVariant
     val selectedColor = MaterialTheme.colorScheme.primary
+    val isMirrored = isHorizontal && LocalLayoutDirection.current == LayoutDirection.Rtl
     val currentStop by remember(stepper) { derivedStateOf { stepper?.stopProgress?.roundToInt() ?: 0 } }
     val description = if (isShown) {
         stringResource(
@@ -99,7 +106,7 @@ internal fun StepProgressIndicator(
         val alpha = visibility
         if (alpha == 0f) return@Canvas
         val pitch = DOT_PITCH.toPx()
-        val available = size.height
+        val available = if (isHorizontal) size.width else size.height
         val animatedCount = count.value
         val progress = stepper?.stopProgress ?: 0f
         val animatedSelected = progress.coerceIn(0f, (animatedCount - 1f).coerceAtLeast(0f))
@@ -114,7 +121,12 @@ internal fun StepProgressIndicator(
             val bottom = 1f - (hiddenBelow / fadeLength).coerceIn(0f, 1f) * (1f - ((available - y) / fadeLength).coerceIn(0f, 1f))
             return top * bottom
         }
-        val x = size.width / 2f
+        // Where a dot [along] the column or the row is drawn.
+        fun centerOf(along: Float) = when {
+            !isHorizontal -> Offset(size.width / 2f, along)
+            isMirrored -> Offset(size.width - along, size.height / 2f)
+            else -> Offset(along, size.height / 2f)
+        }
         val dotRadius = DOT_RADIUS.toPx()
         val first = floor(-offset / pitch - 1f).toInt().coerceAtLeast(0)
         val last = ceil((available - offset) / pitch).toInt().coerceAtMost(ceil(animatedCount).toInt() - 1)
@@ -127,7 +139,7 @@ internal fun StepProgressIndicator(
             drawCircle(
                 color = dotColor,
                 radius = dotRadius * (MIN_EDGE_SCALE + (1f - MIN_EDGE_SCALE) * factor),
-                center = Offset(x, y),
+                center = centerOf(y),
                 alpha = alpha * factor,
             )
         }
@@ -136,7 +148,7 @@ internal fun StepProgressIndicator(
         drawCircle(
             color = selectedColor,
             radius = SELECTED_DOT_RADIUS.toPx() * (MIN_EDGE_SCALE + (1f - MIN_EDGE_SCALE) * markFactor),
-            center = Offset(x, markY),
+            center = centerOf(markY),
             alpha = alpha * markFactor,
         )
     }

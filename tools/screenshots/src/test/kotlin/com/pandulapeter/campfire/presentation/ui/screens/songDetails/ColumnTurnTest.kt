@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
@@ -25,6 +26,9 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.pressKey
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_next_page
+import com.pandulapeter.campfire.presentation.resources.song_details_previous_page
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.runAppTest
@@ -36,7 +40,8 @@ import kotlin.test.assertTrue
 /**
  * A song turned a column at a time: with two columns on screen, the pedal and a tap on the right half of the screen slide
  * the song along by one column, the one that was second now where the first one was, and a tap on the left half slides
- * it back. Asked only of where the lines are on screen.
+ * it back; its step buttons are a row along the bottom that covers no line. Asked only of where the lines and the
+ * buttons are on screen.
  */
 @OptIn(ExperimentalTestApi::class)
 internal class ColumnTurnTest {
@@ -53,6 +58,11 @@ internal class ColumnTurnTest {
         waitForIdle()
         stepsForward("Page Down") { onRoot().performKeyInput { pressKey(Key.PageDown) } }
         assertTrue(columnStarts(inView = true).size >= 2, "The song is not read in two columns: they start at ${columnStarts(inView = true)}.")
+        val previous = onNode(hasContentDescription(string(Res.string.song_details_previous_page))).fetchSemanticsNode().boundsInRoot
+        val next = onNode(hasContentDescription(string(Res.string.song_details_next_page))).fetchSemanticsNode().boundsInRoot
+        val lowestLine = lines().filter { isInView(it) }.maxOf { it.bounds.bottom }
+        assertTrue(previous.top == next.top && previous.right < next.left, "The step buttons are not one row, the previous one first: $previous, $next.")
+        assertTrue(lowestLine <= next.top, "The row of step buttons at ${next.top} covers a line ending at $lowestLine.")
         val viewport = checkNotNull(stripViewport()).boundsInRoot
         stepsForward("A tap on the right half") { onRoot().performTouchInput { click(Offset(viewport.left + viewport.width * 3 / 4, viewport.bottom - TAP_ABOVE_BOTTOM)) } }
         val first = firstLineOfColumn(columnStarts(inView = true).first())

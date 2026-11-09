@@ -133,7 +133,8 @@ import org.jetbrains.compose.resources.painterResource
  *   than in pages: neither measured against the screen nor padded to it, and cut into a piece a line, so that its rows
  *   say where every line is, which is what it is timed by (see `autoScroll.AutoScrollTrack`).
  * @param turnsByColumn Whether a song in pages is turned a column at a time (`PageTurn.COLUMN`): set as a strip that
- *   scrolls sideways wherever it is stepped through, see [songPageScroll].
+ *   scrolls sideways wherever it is stepped through, see [songPageScroll], and stepped by a row of buttons along the
+ *   bottom ([StepControls]) rather than a column of them at the end edge, whose room it leaves under it instead.
  */
 @Composable
 internal fun SongDetailsPage(
@@ -314,7 +315,7 @@ internal fun SongDetailsPage(
         val topPadding = PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
-        val isAcross = rememberIsAcross(flingBehavior, turnsByColumn = turnsByColumn && !isContinuous)
+        val isAcross = rememberIsAcross(flingBehavior, turnsByColumn = turnsByColumn)
         val timings = remember(model.sections) { model.sections.filterIsInstance<RenderSection.Timing>() }
         val latestHeadedOffset by rememberUpdatedState(headedOffset)
         val latestOnTimingChanged by rememberUpdatedState(onTimingChanged)
@@ -324,7 +325,7 @@ internal fun SongDetailsPage(
                 .distinctUntilChanged()
                 .collect { index -> latestOnTimingChanged(timings.getOrNull(index)?.toSongTiming(index)) }
         }
-        val bottomPadding = contentPadding.calculateBottomPadding() + PAGE_BOTTOM_PADDING
+        val bottomPadding = contentPadding.calculateBottomPadding() + PAGE_BOTTOM_PADDING + if (turnsByColumn) STEP_ROW_HEIGHT else 0.dp
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
         BoxWithConstraints(
@@ -362,8 +363,8 @@ internal fun SongDetailsPage(
             val readingWindow = with(density) {
                 ReadingWindow(
                     top = EDGE_FADE_SIZE.roundToPx(),
-                    bottom = contentPadding.calculateBottomPadding().roundToPx(),
-                    end = (bottomPadding - contentPadding.calculateBottomPadding()).roundToPx(),
+                    bottom = (bottomPadding - PAGE_BOTTOM_PADDING).roundToPx(),
+                    end = PAGE_BOTTOM_PADDING.roundToPx(),
                     // A chorded line is a line of chords over a line of lyrics, and it is the last of those that the eye
                     // looks for at the top of the next page.
                     overlap = (lyricsLineHeight * currentFontScale).roundToPx() * 2,
@@ -414,14 +415,14 @@ internal fun SongDetailsPage(
                     rowViewportTopPadding = topPadding,
                     rowViewportBottomPadding = bottomPadding,
                     // The buttons are as far from the end of the screen as the text is, so the text only has to leave
-                    // them their own width and a gap.
-                    stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                    // them their own width and a gap, and none where they are a row, which the bottom padding leaves room for.
+                    stepButtonInset = if (turnsByColumn) 0.dp else STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
                     // The controls of the scroll are in the step buttons' column whatever the song.
                     keepsStepButtonInset = keepsStepButtonInset || isContinuous,
                     canCutSections = true,
                     isSingleColumn = isContinuous,
-                    turnsByColumn = turnsByColumn && !isContinuous,
-                    viewportWidth = if (turnsByColumn && !isContinuous) maxWidth - startPadding - endPadding else Dp.Unspecified,
+                    turnsByColumn = turnsByColumn,
+                    viewportWidth = if (turnsByColumn) maxWidth - startPadding - endPadding else Dp.Unspecified,
                     chordDiagrams = frame.chordDiagrams,
                     scaleSuggestions = frame.scaleSuggestions,
                 )
