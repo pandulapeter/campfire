@@ -50,6 +50,8 @@ internal class NotationPaintingTest {
             ),
             standIns = emptyMap(),
             unitSize = 1f,
+            partChoices = null,
+            instrument = null,
         )
         tunes.forEach { tune ->
             val run = tune.lines().map { ChordProLine.Verbatim(text = it, environment = "abc") }

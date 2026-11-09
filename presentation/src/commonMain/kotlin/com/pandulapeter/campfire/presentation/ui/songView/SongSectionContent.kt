@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEAD
 import com.pandulapeter.campfire.presentation.ui.songLayout.environmentLabel
 import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
+import com.pandulapeter.campfire.presentation.ui.notation.NotationPartPicker
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.notation.describedAs
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
@@ -128,49 +129,20 @@ internal fun SongSectionContent(
             monospaceChord = chordStyle.copy(fontFamily = monospaceFontFamily),
         )
     }
-    if (isFirstChunk) when {
-        isHeaderShown && isOnCard -> CardTitleRow(
-            // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
-            // as below it.
-            modifier = Modifier.padding(
-                start = CARD_PADDING,
-                top = CARD_PADDING,
-                end = CARD_PADDING,
-                bottom = if (hasBody) HEADER_GAP else CARD_PADDING,
-            ),
-            header = header,
-            toggle = sectionToggle,
-            style = headerStyle,
-            chevronSize = chevronSize,
-        )
-
-        isHeaderShown -> SectionHeaderPill(
-            header = header,
-            toggle = sectionToggle,
-            style = headerStyle,
-            chevronSize = chevronSize,
-            // A pill with no name would read as one more "Hide the section" among many, so it is named by its first line.
-            chevronDescription = section.firstLyric?.takeIf { header == UNNAMED_SECTION_HEADER }?.let {
-                textResource(
-                    if (sectionToggle?.isExpanded == true) {
-                        Res.string.song_details_section_collapse_starting
-                    } else {
-                        Res.string.song_details_section_expand_starting
-                    },
-                    it,
-                )
-            },
-        )
-
-        sectionToggle != null && wholeSectionKind != null -> FoldToggleRow(
-            modifier = if (isOnCard) Modifier.padding(start = CARD_PADDING, top = CARD_PADDING, end = CARD_PADDING) else Modifier,
-            kind = wholeSectionKind,
-            label = section.firstEnvironmentLabel ?: defaultLabels.labelOf(wholeSectionKind, section.lines),
-            toggle = sectionToggle,
-            style = headerStyle,
-            chevronSize = chevronSize,
-        )
-    }
+    if (isFirstChunk) SectionHeading(
+        section = section,
+        isHeaderShown = isHeaderShown,
+        isOnCard = isOnCard,
+        hasBody = hasBody,
+        toggle = sectionToggle,
+        defaultLabels = defaultLabels,
+        style = headerStyle,
+        chevronSize = chevronSize,
+        // A section that is one engraved score is headed by its picker too.
+        partPicker = (section.sectionItems.firstOrNull { it is SectionItem.RunSlot } as? SectionItem.RunSlot)
+            ?.takeIf { wholeSectionKind == FoldableKind.VERBATIM }
+            ?.let { notations.partPickerOf(it.run, it.tuneOffset) },
+    )
     // The body leaves the composition while it is folded, so that unfolding it composes it afresh to fade in.
     if (!hasBody) return@Column
     val hasTitle = isHeaderShown || sectionToggle != null
@@ -278,6 +250,72 @@ internal fun SongSectionContent(
  * [foldedRuns] given): the toggle is drawn with the run's first slot, and a folded run draws nothing else.
  */
 @Composable
+private fun SectionHeading(
+    section: RenderSection.Lines,
+    isHeaderShown: Boolean,
+    isOnCard: Boolean,
+    hasBody: Boolean,
+    toggle: FoldToggle?,
+    defaultLabels: DefaultSectionLabels,
+    style: TextStyle,
+    chevronSize: Dp,
+    partPicker: NotationPartPicker?,
+) {
+    val header = section.header
+    val wholeSectionKind = section.wholeFoldableKind
+    when {
+        header == null || !isHeaderShown -> if (toggle != null && wholeSectionKind != null) HeadingWithPartPicker(
+            modifier = if (isOnCard) Modifier.padding(start = CARD_PADDING, top = CARD_PADDING, end = CARD_PADDING) else Modifier,
+            picker = partPicker,
+            style = style,
+        ) {
+            FoldToggleRow(
+                kind = wholeSectionKind,
+                label = section.firstEnvironmentLabel ?: defaultLabels.labelOf(wholeSectionKind, section.lines),
+                toggle = toggle,
+                style = style,
+                chevronSize = chevronSize,
+            )
+        }
+
+        isOnCard -> CardTitleRow(
+            // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
+            // as below it.
+            modifier = Modifier.padding(
+                start = CARD_PADDING,
+                top = CARD_PADDING,
+                end = CARD_PADDING,
+                bottom = if (hasBody) HEADER_GAP else CARD_PADDING,
+            ),
+            header = header,
+            toggle = toggle,
+            style = style,
+            chevronSize = chevronSize,
+        )
+
+        else -> HeadingWithPartPicker(picker = partPicker, style = style) {
+            SectionHeaderPill(
+                header = header,
+                toggle = toggle,
+                style = style,
+                chevronSize = chevronSize,
+                // A pill with no name would read as one more "Hide the section" among many, so it is named by its first line.
+                chevronDescription = section.firstLyric?.takeIf { header == UNNAMED_SECTION_HEADER }?.let {
+                    textResource(
+                        if (toggle?.isExpanded == true) {
+                            Res.string.song_details_section_collapse_starting
+                        } else {
+                            Res.string.song_details_section_expand_starting
+                        },
+                        it,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
 private fun SectionRun(
     run: List<ChordProLine>,
     kind: FoldableKind,
@@ -297,13 +335,15 @@ private fun SectionRun(
     val runModifier = if (!hasToggle || foldedRuns == null) {
         Modifier
     } else {
-        if (0 in shownSlots) FoldToggleRow(
-            kind = kind,
-            label = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run),
-            toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(runFoldKey), onToggled = { foldedRuns.toggle(runFoldKey) }),
-            style = headerStyle,
-            chevronSize = chevronSize,
-        )
+        if (0 in shownSlots) HeadingWithPartPicker(picker = notations.partPickerOf(run, tuneOffset), style = headerStyle) {
+            FoldToggleRow(
+                kind = kind,
+                label = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run),
+                toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(runFoldKey), onToggled = { foldedRuns.toggle(runFoldKey) }),
+                style = headerStyle,
+                chevronSize = chevronSize,
+            )
+        }
         if (foldedRuns.isCollapsed(runFoldKey)) return
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
     }

@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.abc.api.AbcRendering
 import com.pandulapeter.campfire.chordpro.abc.AbcTranspositions
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -50,6 +51,8 @@ internal class SongNotations(
     private val rendered: RenderedNotations,
     private val standIns: Map<AbcTune, AbcTune>,
     private val unitSize: Float,
+    private val partChoices: NotationPartChoices?,
+    private val instrument: Instrument?,
 ) {
     /**
      * How many lines of the song each system of each tune plays ([playedLinesOf] its bars), in the systems the slots draw,
@@ -76,10 +79,17 @@ internal class SongNotations(
      * tune is a change the reader made and is narrated whole. An instance rebuilt for the same rendering (a pinch changes
      * only the unit) hands the same token, so it is never a second arrival.
      */
+    /** What the picker beside [run]'s heading offers, null where it has none, or where the run is drawn as text. */
+    fun partPickerOf(run: List<ChordProLine>, tuneOffset: Int): NotationPartPicker? {
+        val tune = run.abcTune() ?: return null
+        if (of(run, tuneOffset) == null) return null
+        return partChoices?.pickerOf(tune, instrument)
+    }
+
     val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
     companion object {
-        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f)
+        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f, partChoices = null, instrument = null)
     }
 }
 
@@ -100,7 +110,8 @@ internal class NotationRun(
 
 /**
  * What [rememberSongNotations] renders for: every tune of the song under the key change it stands after ([abcTunesOf]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
- * same leaves to the page, and what its words are laid out with, so a new density or style paints again.
+ * same leaves to the page, what its words are laid out with, so a new density or style paints again, and the part of
+ * each score engraved, by the tune's text (a tune not in [parts] is engraved whole).
  */
 internal data class NotationRequest(
     val tunes: Set<AbcTune>,
@@ -109,7 +120,11 @@ internal data class NotationRequest(
     val chords: NotationChordSpelling,
     val songTitle: String?,
     val painting: NotationPainting,
-)
+    val parts: Map<String, AbcPart>,
+) {
+    /** The text of [tune] engraved: the part shown, where only one is. */
+    fun textOf(tune: AbcTune) = parts[tune.text]?.let { abcTuneWithPart(tune.text, it) } ?: tune.text
+}
 
 /**
  * What a tune's words are laid out with: the page's density, fonts, and the lyrics' unscaled style. Always from the
@@ -191,11 +206,15 @@ internal fun rememberSongNotations(
     chords: NotationChordSpelling,
     songTitle: String?,
     painting: NotationPainting,
+    partChoices: NotationPartChoices?,
 ): SongNotations {
     val renderer = LocalAbcRenderer.current
     val cache = LocalNotationCache.current
     val tunes = remember(blocks) { abcTunesOf(blocks) }
-    val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting)
+    val instrument = LocalNotationInstrument.current
+    // Read in composition, so that a part picked or an instrument changed is a new request.
+    val parts = partChoices?.let { choices -> tunes.mapNotNull { tune -> choices.shownPartOf(tune.text, instrument)?.let { tune.text to it } }.toMap() }.orEmpty()
+    val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting, parts)
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
     val standIns = remember(tunes, rendered) {
@@ -208,7 +227,8 @@ internal fun rememberSongNotations(
         val shownStandIns = standIns
         if (renderer == null || request == null || request == rendered.request) return@LaunchedEffect
         val previous = rendered.request
-        val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle
+        val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle &&
+            previous.parts == request.parts
         // Nothing to engrave where every tune is kept, so a pinch reversed to a size seen a moment ago is instant.
         val isCached = cache != null && request.tunes.all { cache.isKept(request.keyOf(it)) }
         if (isOnlyResized && !isCached) delay(RERENDER_DELAY_MILLIS)
@@ -230,7 +250,7 @@ internal fun rememberSongNotations(
             }
             rendering?.let { tune to it }
         }.toMap()
-        val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords)
+        val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords || previous.parts != request.parts)
         // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
         // block just added) arrives as data, replacing its text at once.
         val rerenderedTunes = (if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()) +
@@ -242,22 +262,32 @@ internal fun rememberSongNotations(
             arrivingTunes = arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
         )
     }
-    return remember(rendered, standIns, unitSize) {
-        if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize)
+    return remember(rendered, standIns, unitSize, partChoices, instrument) {
+        if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize, partChoices, instrument)
     }
 }
 
-private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: AbcTune, request: NotationRequest): NotationRendering? =
-    renderNotationDrawing(renderer, tune.text, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { drawing ->
-        withContext(Dispatchers.Default) {
-            NotationRendering(
-                drawing = drawing,
-                unitSize = request.unitSize,
-                systems = painter.paint(drawing, request.unitSize),
-                reading = notationReadingOf(tune.text, request.songTitle, drawing.chordNames),
-            )
+/**
+ * [tune] engraved as [request] asks, or whole where the part shown fails on its own (abc2svg engraves a part alone as a
+ * score of its own, which can hold what the whole score does not), so a part is never worse than the score.
+ */
+private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune: AbcTune, request: NotationRequest): NotationRendering? {
+    val partText = request.textOf(tune)
+    val drawn = renderNotationDrawing(renderer, partText, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { partText to it }
+        ?: tune.text.takeIf { it != partText }?.let { text ->
+            renderNotationDrawing(renderer, text, request.width, request.chords.movedBy(tune.offset), request.songTitle)?.let { text to it }
         }
+        ?: return null
+    val (text, drawing) = drawn
+    return withContext(Dispatchers.Default) {
+        NotationRendering(
+            drawing = drawing,
+            unitSize = request.unitSize,
+            systems = painter.paint(drawing, request.unitSize),
+            reading = notationReadingOf(text, request.songTitle, drawing.chordNames),
+        )
     }
+}
 
 /**
  * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as

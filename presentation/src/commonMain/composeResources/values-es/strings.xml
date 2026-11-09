@@ -1039,6 +1039,10 @@
     <string name="song_details_section_abc">Partitura</string>
     <string name="song_details_sheet_music_chords">Acordes: %1$s</string>
     <string name="song_details_sheet_music_words">Letra: %1$s</string>
+    <string name="song_details_sheet_music_parts">Partes</string>
+    <string name="song_details_sheet_music_all_parts">Todas las partes</string>
+    <string name="song_details_sheet_music_part_unnamed">Voz %1$s</string>
+    <string name="song_details_sheet_music_part_choose">Elegir la parte mostrada</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">Mostrar la tablatura</string>

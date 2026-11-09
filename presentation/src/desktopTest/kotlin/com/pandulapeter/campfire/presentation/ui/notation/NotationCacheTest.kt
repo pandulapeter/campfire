@@ -139,5 +139,6 @@ internal class NotationCacheTest {
         chords = chords,
         songTitle = null,
         painting = painting,
+        parts = emptyMap(),
     )
 }

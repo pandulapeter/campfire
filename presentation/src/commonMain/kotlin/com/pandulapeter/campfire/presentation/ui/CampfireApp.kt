@@ -69,6 +69,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
 import com.pandulapeter.campfire.presentation.ui.notation.LocalNotationCache
+import com.pandulapeter.campfire.presentation.ui.notation.LocalNotationInstrument
 import com.pandulapeter.campfire.presentation.ui.notation.NotationCache
 import com.pandulapeter.campfire.presentation.ui.notation.WarmNotationEngine
 
@@ -140,6 +141,7 @@ fun CampfireApp(
         LocalShowsShortcutHints provides rememberHasHardwareKeyboard(),
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
         LocalNotationCache provides remember { NotationCache() },
+        LocalNotationInstrument provides userPreferences?.instrument,
     ) {
         // The flow is handed over rather than collected here, so a change of the library recomposes nothing.
         WarmNotationEngine(songs = viewModel.libraryState.allSongs)

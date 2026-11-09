@@ -47,15 +47,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
-import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.abcTune
-import com.pandulapeter.campfire.presentation.ui.notation.notationPageWidth
 import com.pandulapeter.campfire.presentation.ui.notation.notationSlotLines
-import com.pandulapeter.campfire.presentation.ui.notation.rememberSongNotations
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -287,27 +283,12 @@ internal fun SongLyrics(
     // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
     // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
-    // The staff notation of the song's ABC tunes, which replaces their text once it has been rendered: for a page as wide
-    // as the widest column the song can have here, each SVG unit as large as the text size makes it. Its words are laid
-    // out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
-    val notationTextStyle = remember(localTextStyle, typography) { localTextStyle.merge(typography.bodyLarge).copy(color = Color.Unspecified) }
-    val fontResolver = LocalFontFamilyResolver.current
-    val notationPainting = remember(density, fontResolver, notationTextStyle) {
-        NotationPainting(density, fontResolver, notationTextStyle)
-    }
-    val notationUnit = NOTATION_UNIT * fontScale
-    val notations = rememberSongNotations(
-        blocks = model.song.blocks,
-        width = notationPageWidth(
-            availableWidth = availableWidth,
-            maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
-            cardPadding = CARD_PADDING,
-            notationUnit = notationUnit,
-        ),
-        unitSize = with(density) { notationUnit.toPx() },
-        chords = model.notationChords,
-        songTitle = model.song.metadata.title,
-        painting = notationPainting,
+    val notations = rememberSongLyricsNotations(
+        model = model,
+        availableWidth = availableWidth,
+        maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
+        fontScale = fontScale,
+        hasPartChoices = onFoldToggled != null,
     )
     // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
     // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the
@@ -470,7 +451,5 @@ private val NARROW_COLUMN_WIDTH = 288.dp
 
 private val MAX_COLUMN_WIDTH = 560.dp
 
-/** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */
-private val NOTATION_UNIT = 1.dp
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp

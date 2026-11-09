@@ -46,5 +46,7 @@ class NotationArrivalTest {
         rendered = RenderedNotations(request = null, renderings = emptyMap(), rerenderedTunes = rerendered, arrivingTunes = arriving),
         standIns = emptyMap(),
         unitSize = 1f,
+        partChoices = null,
+        instrument = null,
     )
 }

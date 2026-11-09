@@ -26,7 +26,7 @@ internal data class NotationTuneKey(
 
 /** The key of [tune] in this request. */
 internal fun NotationRequest.keyOf(tune: AbcTune) = NotationTuneKey(
-    tune = tune.text,
+    tune = textOf(tune),
     chords = chords.movedBy(tune.offset),
     width = width,
     unitSize = unitSize,

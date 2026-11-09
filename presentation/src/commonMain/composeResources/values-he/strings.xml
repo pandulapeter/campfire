@@ -1076,6 +1076,10 @@
     <string name="song_details_section_abc">תווים</string>
     <string name="song_details_sheet_music_chords">אקורדים: %1$s</string>
     <string name="song_details_sheet_music_words">מילים: %1$s</string>
+    <string name="song_details_sheet_music_parts">תפקידים</string>
+    <string name="song_details_sheet_music_all_parts">כל התפקידים</string>
+    <string name="song_details_sheet_music_part_unnamed">קול %1$s</string>
+    <string name="song_details_sheet_music_part_choose">בחירת התפקיד המוצג</string>
     <string name="song_details_section_lilypond">LilyPond</string>
     <string name="song_details_section_svg">SVG</string>
     <string name="song_details_tab_expand">הצגת הטאב</string>

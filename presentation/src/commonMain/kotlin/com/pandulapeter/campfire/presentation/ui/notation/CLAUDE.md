@@ -55,5 +55,12 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   key (the last 64) and drawn as text without rendering again.
 - **A tune whose text changed is drawn as the staff it replaced** (paired in order where as many left as came) until its
   own rendering arrives, and cross-fades from it.
+- **A score of several parts is engraved one part at a time** (`AbcParts.kt`, tested): a part is a top-level item of its
+  `%%score` (a brace or a parenthesis whole, a bracket's members each), neighbours of one `nm=` joined (a staff and its
+  tablature). The player's instrument picks its part by name (`AbcPartInstruments.kt`), and then there is no picker;
+  otherwise the heading's picker does, the first part until then, never stored (`NotationPartChoices`). The editor's
+  preview and the PDF engrave every part. **The other voices' music is cut out, not only left off the score**: abc2svg
+  still times a hidden voice and pads the shown one to it, and an export's voices of uneven length give a fractional
+  rest no glyph draws. A part that still fails is engraved as the whole score, never as text the score was not.
 - **The engine is warmed** 2 s after the library first holds a song with an `abc` block, on every platform, so a tune's
   first open pays only its rendering.
