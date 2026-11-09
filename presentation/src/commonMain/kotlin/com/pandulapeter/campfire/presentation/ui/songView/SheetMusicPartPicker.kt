@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_all_parts
 import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_part_choose
 import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_part_unnamed
 import com.pandulapeter.campfire.presentation.resources.song_details_sheet_music_parts
@@ -79,7 +78,6 @@ private fun PartPicker(
     picker: NotationPartPicker,
     style: TextStyle,
 ) {
-    val allParts = stringResource(Res.string.song_details_sheet_music_all_parts)
     val labels = picker.parts.map { partLabel(it) }
     val title = stringResource(Res.string.song_details_sheet_music_parts)
     val chooseLabel = stringResource(Res.string.song_details_sheet_music_part_choose)
@@ -91,7 +89,7 @@ private fun PartPicker(
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 AnimatedContent(
-                    targetState = picker.selected?.let(labels::getOrNull) ?: allParts,
+                    targetState = labels[picker.selected],
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { label ->
                     Text(
@@ -111,7 +109,7 @@ private fun PartPicker(
             text = title,
             contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 4.dp),
         )
-        (labels.indices.map { it to labels[it] } + (null to allParts)).forEach { (index, label) ->
+        labels.forEachIndexed { index, label ->
             RadioListItem(
                 modifier = Modifier.width(PICKER_MENU_WIDTH),
                 title = label,

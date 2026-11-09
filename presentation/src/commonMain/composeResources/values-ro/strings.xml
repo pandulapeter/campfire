@@ -1080,7 +1080,6 @@
     <string name="song_details_sheet_music_chords">Acorduri: %1$s</string>
     <string name="song_details_sheet_music_words">Versuri: %1$s</string>
     <string name="song_details_sheet_music_parts">Partide</string>
-    <string name="song_details_sheet_music_all_parts">Toate partidele</string>
     <string name="song_details_sheet_music_part_unnamed">Vocea %1$s</string>
     <string name="song_details_sheet_music_part_choose">Alege partida afișată</string>
     <string name="song_details_section_lilypond">LilyPond</string>

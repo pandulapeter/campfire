@@ -1040,7 +1040,6 @@
     <string name="song_details_sheet_music_chords">Chords: %1$s</string>
     <string name="song_details_sheet_music_words">Words: %1$s</string>
     <string name="song_details_sheet_music_parts">Parts</string>
-    <string name="song_details_sheet_music_all_parts">All parts</string>
     <string name="song_details_sheet_music_part_unnamed">Voice %1$s</string>
     <string name="song_details_sheet_music_part_choose">Choose the part shown</string>
     <string name="song_details_section_lilypond">LilyPond</string>

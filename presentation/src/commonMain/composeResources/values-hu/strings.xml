@@ -1039,7 +1039,6 @@
     <string name="song_details_sheet_music_chords">Akkordok: %1$s</string>
     <string name="song_details_sheet_music_words">Dalszöveg: %1$s</string>
     <string name="song_details_sheet_music_parts">Szólamok</string>
-    <string name="song_details_sheet_music_all_parts">Az összes szólam</string>
     <string name="song_details_sheet_music_part_unnamed">%1$s szólam</string>
     <string name="song_details_sheet_music_part_choose">Válaszd ki a megjelenített szólamot</string>
     <string name="song_details_section_lilypond">LilyPond</string>

@@ -31,7 +31,7 @@ internal class NotationPartChoices {
 
     private fun partsOf(tune: String) = parsed.getOrPut(tune) { abcPartsOf(tune) }
 
-    /** The part of [tune] engraved for [instrument], null for the whole score. */
+    /** The part of [tune] engraved for [instrument], null where it has no parts to choose between. */
     fun shownPartOf(tune: String, instrument: Instrument?): AbcPart? {
         val parts = partsOf(tune)
         val index = shownAbcPartIndex(parts, matched = abcPartFor(parts, instrument), chosen = chosen[tune]) ?: return null
@@ -44,34 +44,32 @@ internal class NotationPartChoices {
         if (parts.isEmpty() || abcPartFor(parts, instrument) != null) return null
         return NotationPartPicker(
             parts = parts,
-            selected = shownAbcPartIndex(parts, matched = null, chosen = chosen[tune]),
-            onSelected = { chosen[tune] = it ?: ALL_PARTS },
+            selected = shownAbcPartIndex(parts, matched = null, chosen = chosen[tune]) ?: 0,
+            onSelected = { chosen[tune] = it },
         )
     }
 }
 
 /**
- * The parts a score can be shown in and the one it is.
+ * The parts a score can be shown in and the one it is. The whole score is never one of them: a score of many parts is
+ * what the picker is there to spare the reader.
  *
- * @param selected The index of the part shown, null for the whole score.
- * @param onSelected Takes the index of a part, or null for the whole score.
+ * @param selected The index of the part shown.
+ * @param onSelected Takes the index of a part.
  */
 internal class NotationPartPicker(
     val parts: List<AbcPart>,
-    val selected: Int?,
-    val onSelected: (Int?) -> Unit,
+    val selected: Int,
+    val onSelected: (Int) -> Unit,
 )
 
 /**
- * The index of the part of [parts] shown, null for the whole score: the one [matched] the instrument, else the one
- * [chosen] ([ALL_PARTS] for the whole score), else the first, which is the melody in most scores.
+ * The index of the part of [parts] shown, null where there are none: the one [matched] the instrument, else the one
+ * [chosen], else the first, which is the melody in most scores.
  */
 internal fun shownAbcPartIndex(parts: List<AbcPart>, matched: Int?, chosen: Int?): Int? = when {
     parts.isEmpty() -> null
     matched != null -> matched
-    chosen == ALL_PARTS -> null
     chosen != null && chosen in parts.indices -> chosen
     else -> 0
 }
-
-internal const val ALL_PARTS = -1

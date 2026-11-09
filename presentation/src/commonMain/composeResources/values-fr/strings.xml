@@ -1045,7 +1045,6 @@
     <string name="song_details_sheet_music_chords">Accords : %1$s</string>
     <string name="song_details_sheet_music_words">Paroles : %1$s</string>
     <string name="song_details_sheet_music_parts">Parties</string>
-    <string name="song_details_sheet_music_all_parts">Toutes les parties</string>
     <string name="song_details_sheet_music_part_unnamed">Voix %1$s</string>
     <string name="song_details_sheet_music_part_choose">Choisir la partie affichée</string>
     <string name="song_details_section_lilypond">LilyPond</string>

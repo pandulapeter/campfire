@@ -114,7 +114,6 @@ class AbcPartsTest {
         val parts = abcPartsOf(EXPORT)
         assertEquals(2, shownAbcPartIndex(parts, matched = 2, chosen = 4))
         assertEquals(4, shownAbcPartIndex(parts, matched = null, chosen = 4))
-        assertNull(shownAbcPartIndex(parts, matched = null, chosen = ALL_PARTS))
         assertEquals(0, shownAbcPartIndex(parts, matched = null, chosen = null))
         assertEquals(0, shownAbcPartIndex(parts, matched = null, chosen = 9))
         assertNull(shownAbcPartIndex(emptyList(), matched = null, chosen = null))
