@@ -99,7 +99,9 @@ internal class NotationGlyph(val glyph: AbcMusicGlyph, val transform: NotationTr
 /**
  * Words drawn in the app's typeface ([runs], one after the other from the baseline point ([x], [y])), placed by
  * [anchor] once they are measured, since their width is the typeface's rather than the one abc2svg measured with, and
- * framed where abc2svg boxes them ([isBoxed]: a chord or a part name under `%%gchordbox` or `%%partsbox`).
+ * framed where abc2svg boxes them ([isBoxed]: a chord or a part name under `%%gchordbox` or `%%partsbox`), and drawn
+ * over a box of the page's colour where abc2svg floods the background behind them ([isKnockedOut]: a tablature's fret,
+ * cutting the string under it).
  */
 internal class NotationText(
     val x: Float,
@@ -107,6 +109,7 @@ internal class NotationText(
     val anchor: NotationAnchor,
     val runs: List<NotationTextRun>,
     val isBoxed: Boolean = false,
+    val isKnockedOut: Boolean = false,
 )
 
 internal enum class NotationAnchor { START, MIDDLE, END }

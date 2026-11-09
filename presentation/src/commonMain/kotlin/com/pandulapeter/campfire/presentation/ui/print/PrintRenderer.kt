@@ -177,6 +177,7 @@ internal class PrintRenderer(
                         unitSize = notation.scale,
                         color = Color.Black,
                         chordColor = Color.Black,
+                        background = Color.White,
                     )
                 }
             }

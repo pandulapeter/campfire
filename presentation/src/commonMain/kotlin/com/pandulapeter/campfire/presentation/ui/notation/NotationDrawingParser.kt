@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.abc.api.AbcSystem
  * drawing does not know (an element, a transform, a music symbol the font lacks): the caller then shows the tune as its
  * text, which is better than notation with something silently missing.
  *
- * The styles and the shared shapes (`<defs>`) are gathered across the systems in order, since abc2svg writes them once,
+ * The styles, the shared shapes (`<defs>`), and the filters are gathered across the systems in order, since abc2svg writes them once,
  * into the first system that needs them, and only within this one rendering, whose class numbers are its own. A system
  * that draws nothing (the header of a tune with its title switched off still carries the styles) is left out.
  */
@@ -47,6 +47,7 @@ private class NotationSystemReader {
 
     private val classes = HashMap<String, NotationCssRule>()
     private val definitions = HashMap<String, SvgElement>()
+    private val backgroundFloods = HashSet<String>()
     private var shapes = mutableListOf<NotationShape>()
     private var glyphs = mutableListOf<NotationGlyph>()
     private var texts = mutableListOf<NotationText>()
@@ -61,8 +62,11 @@ private class NotationSystemReader {
         firstMusicX = null
         // Read first wherever they stand, since an element may come before the <style> that names its class.
         root.elements.filter { it.name == "style" }.forEach { classes += parseNotationCss(it.text) }
+        root.elements.filter { it.name == "filter" }.forEach(::readFilter)
         root.elements.filter { it.name == "defs" }.forEach { defs ->
-            defs.elements.forEach { definition -> definition.attributes["id"]?.let { definitions[it] = definition } }
+            defs.elements.forEach { definition ->
+                if (definition.name == "filter") readFilter(definition) else definition.attributes["id"]?.let { definitions[it] = definition }
+            }
         }
         val context = contextOf(
             element = root,
@@ -83,7 +87,7 @@ private class NotationSystemReader {
 
     private fun read(element: SvgElement, parent: NotationContext) {
         when (element.name) {
-            "style", "defs" -> Unit
+            "style", "defs", "filter" -> Unit
             "g" -> contextOf(element, parent).let { context -> element.elements.forEach { read(it, context) } }
             "use" -> {
                 val id = (element.attributes["xlink:href"] ?: element.attributes["href"])?.removePrefix("#")
@@ -98,6 +102,29 @@ private class NotationSystemReader {
             "text" -> readText(element, contextOf(element, parent))
             else -> throw NotationUnsupportedException()
         }
+        // Only a text's background is flooded; a filter on anything else would change what is drawn of it.
+        if (element.name != "text" && classesOf(element).any { it.filter != null }) throw NotationUnsupportedException()
+    }
+
+    /**
+     * Records [filter]'s id where it only floods the background behind what it is applied to (`%%strtab`'s white box
+     * behind a fret, which the page draws in its own colour); a filter of any other shape gives no drawing.
+     */
+    private fun readFilter(filter: SvgElement) {
+        val (flood, composite) = filter.elements.takeIf { it.size == 2 } ?: throw NotationUnsupportedException()
+        val id = filter.attributes["id"]
+        if (id == null || flood.name != "feFlood" || composite.name != "feComposite" || composite.attributes["operator"] != "over" ||
+            composite.attributes["in"] != "SourceGraphic" || flood.elements.isNotEmpty() || composite.elements.isNotEmpty()
+        ) {
+            throw NotationUnsupportedException()
+        }
+        backgroundFloods += id
+    }
+
+    /** Whether [text] is drawn over its flooded background; a filter that does not only flood it gives no drawing. */
+    private fun isKnockedOut(text: SvgElement) = classesOf(text).mapNotNull { it.filter }.let { filters ->
+        if (filters.any { it !in backgroundFloods }) throw NotationUnsupportedException()
+        filters.isNotEmpty()
     }
 
     private fun contextOf(element: SvgElement, parent: NotationContext): NotationContext {
@@ -135,7 +162,9 @@ private class NotationSystemReader {
         )
     }
 
-    private fun classesOf(element: SvgElement) = element.classNames.mapNotNull { classes[it] }
+    /** The rules [element] is styled by, its own `style` first, since it beats its classes as it does in CSS. */
+    private fun classesOf(element: SvgElement) =
+        listOfNotNull(element.attributes["style"]?.let(::parseNotationStyle)) + element.classNames.mapNotNull { classes[it] }
 
     private fun readPath(element: SvgElement, context: NotationContext) {
         val path = element.attributes["d"] ?: throw NotationUnsupportedException()
@@ -197,7 +226,9 @@ private class NotationSystemReader {
         val xs = element.attributes["x"]?.let { parseSvgNumbers(it) ?: throw NotationUnsupportedException() }.orEmpty()
         val ys = element.attributes["y"]?.let { parseSvgNumbers(it) ?: throw NotationUnsupportedException() }.orEmpty()
         val transform = context.transform
+        val isKnockedOut = isKnockedOut(element)
         if (font.isMusic && element.children.none { it is SvgElement }) {
+            if (isKnockedOut) throw NotationUnsupportedException()
             // A line of music symbols, each placed by its own coordinate pair where the lists have one.
             var x = xs.firstOrNull() ?: 0f
             var y = ys.firstOrNull() ?: 0f
@@ -218,6 +249,8 @@ private class NotationSystemReader {
             return
         }
         if (!transform.isUpright) throw NotationUnsupportedException()
+        // A tablature's frets are its notes, which a system of tablature alone (a part with no staff) plays no bar without.
+        if (isKnockedOut) firstMusicX = minOf(firstMusicX ?: Float.MAX_VALUE, transform.mapX(xs.firstOrNull() ?: 0f, 0f))
         if (xs.size > 1 || ys.size > 1) {
             // Words placed a character at a time (a chord diagram's fingerings over its strings), each its own text.
             if (element.children.any { it is SvgElement }) throw NotationUnsupportedException()
@@ -228,6 +261,7 @@ private class NotationSystemReader {
                     y = transform.mapY(0f, ys.getOrElse(index) { ys.last() }),
                     anchor = context.anchor,
                     runs = listOf(NotationTextRun.Words(text = character.toString(), font = font.scaled(transform.scale), role = role, dy = 0f)),
+                    isKnockedOut = isKnockedOut,
                 )
             }
             return
@@ -263,6 +297,7 @@ private class NotationSystemReader {
                 anchor = context.anchor,
                 runs = runs,
                 isBoxed = classesOf(element).any { it.isOutlined },
+                isKnockedOut = isKnockedOut,
             )
         }
     }

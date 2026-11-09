@@ -55,6 +55,90 @@ internal object NotationFixtures {
         """.trimIndent(),
     )
 
+    /**
+     * A tune of one voice in the tab clef rendered under `%strtab` (`CDEF GABc|cBAG FEDC|` on a guitar's six strings),
+     * verbatim but for the embedded font: its header, then its system, which holds the filter behind each fret.
+     */
+    val TAB_HEADER = AbcSystem(
+        svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             fill="currentColor" stroke-width=".7" class="f1 tune0"
+             width="800px" height="54.00px" viewBox="0 0 800 54.00">
+            <style>
+            .f0{font:20.0px text,serif}
+            .f1{font:24.0px music}
+            @font-face{
+             font-family:music;
+             src:url("data:application/octet-stream;base64,AAEAAAAOAIAAAwBg") format("truetype")}
+            .f1 text,tspan{white-space:pre}
+            .stroke{stroke:currentColor;fill:none}
+            .bW{stroke:currentColor;fill:none;stroke-width:1}
+            .bthW{stroke:currentColor;fill:none;stroke-width:3}
+            .slW{stroke:currentColor;fill:none;stroke-width:.7}
+            .slthW{stroke:currentColor;fill:none;stroke-width:1.5}
+            .sltnW{stroke:currentColor;fill:none;stroke-width:.25}
+            .sldW{stroke:currentColor;fill:none;stroke-width:.7;stroke-dasharray:5,10}
+            .sW{stroke:currentColor;fill:none;stroke-width:.7}
+            .box{outline:1px solid black;outline-offset:1px}
+            </style>
+            <text class="f0" x="399.0" y="43.6" text-anchor="middle">Tab</text>
+            </svg>
+        """.trimIndent(),
+        height = 54f,
+    )
+
+    val TAB_SYSTEM = AbcSystem(
+        svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             fill="currentColor" stroke-width=".7" class="f1 tune0"
+             width="800px" height="94.00px" viewBox="0 0 800 94.00">
+            <filter x="-0.1" y="0.1" width="1.2" height=".8" id="bg1">
+            <feFlood flood-color="white"/>
+            <feComposite in="SourceGraphic" operator="over"/>
+            </filter>
+            <style>
+            .f2{font:bold 13.0px text,serif}
+            .f3{font:700 7.0px sans-serif}
+            .bg1{filter:url(#bg1)}
+            </style>
+            <defs>
+            <text id="tab6" x="-4,-4,-4" y="-14.5,-4,5.5" style="font:bold 13px sans-serif">TAB</text>
+            </defs>
+            <g transform="translate(48.5, 71.0)">
+            <path class="slW" d="m0 0h332.9m-332.9 -9.60h332.9m-332.9 -9.60h332.9m-332.9 -9.60h332.9m-332.9 -9.60h332.9m-332.9 -9.60h332.9"/>
+            </g>
+            <g transform="translate(0,71.0) scale(1.6)">
+            </g>
+            <path class="bW" d="M234.8 71.0v-48.0M381.4 71.0v-48.0"/>
+            <text class="f2" x="24.3" y="50.6" text-anchor="middle">Guitar</text>
+            <g transform="translate(0,71.0) scale(1.6)">
+            <g class="f3">
+            <text class="bg1" x="59.5" y="-21.5">1</text>
+            <text class="bg1" x="70.2" y="-21.5">3</text>
+            <text class="bg1" x="80.9" y="-27.5">0</text>
+            <text class="bg1" x="91.6" y="-27.5">1</text>
+            <text class="bg1" x="103.4" y="-27.5">3</text>
+            <text class="bg1" x="114.1" y="-27.5">5</text>
+            <text class="bg1" x="124.8" y="-27.5">7</text>
+            <text class="bg1" x="135.4" y="-27.5">8</text>
+            <text class="bg1" x="152.2" y="-27.5">8</text>
+            <text class="bg1" x="162.9" y="-27.5">7</text>
+            <text class="bg1" x="173.6" y="-27.5">5</text>
+            <text class="bg1" x="184.2" y="-27.5">3</text>
+            <text class="bg1" x="196.1" y="-27.5">1</text>
+            <text class="bg1" x="206.8" y="-27.5">0</text>
+            <text class="bg1" x="217.5" y="-21.5">3</text>
+            <text class="bg1" x="228.1" y="-21.5">1</text>
+            </g>
+            <use x="37.8" y="-6.0" xlink:href="#tab6"/>
+            </g>
+            </svg>
+        """.trimIndent(),
+        height = 94f,
+    )
+
     fun system(content: String) = AbcSystem(
         svg = """
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1"

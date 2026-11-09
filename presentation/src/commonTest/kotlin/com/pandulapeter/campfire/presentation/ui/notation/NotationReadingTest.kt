@@ -44,6 +44,12 @@ class NotationReadingTest {
     }
 
     @Test
+    fun `a tablature's frets are not read as words`() {
+        val tune = "X:1\nL:1/8\nV:1 tab stafflines=6 strings=E2,A2,D3,G3,B3,E4 nostems nm=\"Guitar\"\nK:C\nCDEF GABc|\nw:la la"
+        assertEquals("la la", notationReadingOf(tune, songTitle = null, chordNames = emptyList()).words)
+    }
+
+    @Test
     fun `the chords are said in the names the page draws`() {
         assertEquals(listOf("La-", "Sol"), notationReadingOf(SCARBOROUGH_FAIR, songTitle = null, chordNames = listOf("La-", "Sol")).chords)
     }

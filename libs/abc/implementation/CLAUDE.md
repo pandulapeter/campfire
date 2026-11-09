@@ -30,6 +30,9 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   `LYRICS_ROOM` times their size (abc2svg's bold serif ran Inter's words together; regular sans-serif at their own size
   still let long syllables touch). `%%transpose` moves notes, key signatures, and chord symbols; the app renames the
   chords afterwards.
+- A tune with a voice in the tab clef (`V:… tab` or `clef=tab`, how notation programs export a guitar's or a bass's
+  tablature) also gets `%%strtab`: only that line loads abc2svg's string tablature module, without which the voice is
+  engraved as a bass-clef staff of notes with string numbers over them.
 
 ### Engines (`AbcScriptEngine`)
 

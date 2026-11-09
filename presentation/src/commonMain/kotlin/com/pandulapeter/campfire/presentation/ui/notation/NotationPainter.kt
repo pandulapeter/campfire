@@ -70,6 +70,7 @@ internal class NotationPainter(
         }
         system.glyphs.forEach { fills.addGlyph(it.glyph, it.transform) }
         val texts = mutableListOf<NotationTextPaint>()
+        val knockouts = Path()
         system.texts.forEach { text ->
             // A lyric's font is larger than it is drawn, to leave room for the app's wider typeface (see AbcSystem).
             val layouts = text.runs.map { run ->
@@ -98,6 +99,20 @@ internal class NotationPainter(
                     dashes = null,
                 )
             }
+            if (text.isKnockedOut && firstWords != null) {
+                // The region of abc2svg's flood filter: the words' box as measured, a tenth wider on each side and a tenth
+                // shorter at the top and at the bottom.
+                val top = text.y - firstWords.firstBaseline / unitSize
+                val height = firstWords.size.height / unitSize
+                knockouts.addRect(
+                    Rect(
+                        left = x - KNOCKOUT_MARGIN * widths.sum(),
+                        top = top + KNOCKOUT_MARGIN * height,
+                        right = x + (1 + KNOCKOUT_MARGIN) * widths.sum(),
+                        bottom = top + (1 - KNOCKOUT_MARGIN) * height,
+                    ),
+                )
+            }
             text.runs.forEachIndexed { index, run ->
                 when (run) {
                     is NotationTextRun.Words -> texts += NotationTextPaint(
@@ -115,7 +130,7 @@ internal class NotationPainter(
                 x += widths[index]
             }
         }
-        return NotationSystemPaint(width = system.width, height = system.height, fills = fills, strokes = strokes, texts = texts)
+        return NotationSystemPaint(width = system.width, height = system.height, fills = fills, strokes = strokes, knockouts = knockouts, texts = texts)
     }
 
     private fun layout(text: String, font: NotationFont, unitSize: Float): TextLayoutResult = textMeasurer.measure(
@@ -140,6 +155,9 @@ internal class NotationPainter(
 
         /** The outline's offset plus half its stroke, which is drawn centred on the rectangle's edge. */
         const val BOX_GAP = 1.5f
+
+        /** The part of a knocked out text's width added on each side, and of its height taken off at the top and bottom. */
+        const val KNOCKOUT_MARGIN = 0.1f
     }
 
     private fun parse(pathData: String) = pathParser.parsePathString(pathData).toPath().also { pathParser.clear() }
@@ -165,12 +183,16 @@ internal class NotationPainter(
     }
 }
 
-/** One system of a [NotationDrawing] ready to draw (see [drawNotationSystem]), in its SVG units. */
+/**
+ * One system of a [NotationDrawing] ready to draw (see [drawNotationSystem]), in its SVG units: [knockouts] are the boxes
+ * filled in the page's colour between the lines and the words, behind the texts abc2svg floods the background of.
+ */
 internal class NotationSystemPaint(
     val width: Float,
     val height: Float,
     val fills: Path,
     val strokes: List<NotationStrokePaint>,
+    val knockouts: Path,
     val texts: List<NotationTextPaint>,
 )
 

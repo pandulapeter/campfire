@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.Layout
@@ -58,8 +59,7 @@ internal fun SongNotationBlock(
     isLastSlot: Boolean,
     isAtEnd: Boolean,
 ) {
-    val color = MaterialTheme.colorScheme.onSurface
-    val chordColor = LocalSecondAccentColor.current
+    val colors = NotationColors(color = MaterialTheme.colorScheme.onSurface, chordColor = LocalSecondAccentColor.current, background = LocalSectionBackground.current.takeOrElse { MaterialTheme.colorScheme.surface })
     val crossfade = rememberNotationCrossfade(run)
     val shown = run.systems.inSlot(slot, isLastSlot)
     val unitSize = run.unitSize
@@ -71,11 +71,9 @@ internal fun SongNotationBlock(
             .drawBehind {
                 val progress = crossfade.progress
                 crossfade.leaving?.let { leaving ->
-                    val leavingColor = color.copy(alpha = color.alpha * (1f - progress))
-                    val leavingChordColor = chordColor.copy(alpha = chordColor.alpha * (1f - progress))
-                    drawSystems(leaving.systems.inSlot(slot, isLastSlot), leaving.systems.pageWidth(), unitSize, leaving.measuredUnitSize, leavingColor, leavingChordColor, isAtEnd)
+                    drawSystems(leaving.systems.inSlot(slot, isLastSlot), leaving.systems.pageWidth(), unitSize, leaving.measuredUnitSize, colors.faded(1f - progress), isAtEnd)
                 }
-                drawSystems(shown, pageWidth, unitSize, run.measuredUnitSize, color.copy(alpha = color.alpha * progress), chordColor.copy(alpha = chordColor.alpha * progress), isAtEnd)
+                drawSystems(shown, pageWidth, unitSize, run.measuredUnitSize, colors.faded(progress), isAtEnd)
             },
     ) { _, constraints ->
         val width = constraints.maxWidth
@@ -99,18 +97,32 @@ private fun DrawScope.drawSystems(
     pageWidth: Float,
     unitSize: Float,
     measuredUnitSize: Float,
-    color: Color,
-    chordColor: Color,
+    colors: NotationColors,
     isAtEnd: Boolean,
 ) {
     val scale = scaleAt(size.width.roundToInt(), pageWidth, unitSize)
     translate(left = runShiftAtLineEnd(isAtEnd, size.width, pageWidth * scale)) {
         var top = 0f
         systems.forEach { system ->
-            drawNotationSystem(system = system, top = top, scale = scale, unitSize = measuredUnitSize, color = color, chordColor = chordColor)
+            drawNotationSystem(
+                system = system,
+                top = top,
+                scale = scale,
+                unitSize = measuredUnitSize,
+                color = colors.color,
+                chordColor = colors.chordColor,
+                background = colors.background,
+            )
             top += system.height * scale
         }
     }
+}
+
+/** The colours a rendering is drawn in, each faded together with the rest of it by a cross-fade. */
+private class NotationColors(val color: Color, val chordColor: Color, val background: Color) {
+    fun faded(alpha: Float) = NotationColors(color.fade(alpha), chordColor.fade(alpha), background.fade(alpha))
+
+    private fun Color.fade(alpha: Float) = copy(alpha = this.alpha * alpha)
 }
 
 /**

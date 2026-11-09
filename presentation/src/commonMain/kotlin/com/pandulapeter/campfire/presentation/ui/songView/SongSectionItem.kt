@@ -181,7 +181,8 @@ private fun LinesSectionItem(
     val zeroCorner = CornerSize(0.dp)
     val isFirstChunk = items.first == 0
     val isLastChunk = items.last >= section.itemCount - 1
-    CompositionLocalProvider(LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+    val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    CompositionLocalProvider(LocalContentColor provides contentColorFor(cardColor), LocalSectionBackground provides cardColor) {
         SongSectionContent(
             modifier = modifier.clip(
                 cardShape.copy(

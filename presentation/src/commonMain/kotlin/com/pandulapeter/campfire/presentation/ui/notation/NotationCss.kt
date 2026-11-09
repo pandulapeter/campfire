@@ -10,9 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.notation
 
 /**
- * What one class of abc2svg's `<style>` says, as far as the drawing reads it: a font, a stroke, and what its modules
- * add (a text's anchor, a size relative to the text around it and a raised baseline for a jazz chord's superscript, an
- * outline for a boxed chord or part).
+ * What one class of abc2svg's `<style>` (or an element's own `style`) says, as far as the drawing reads it: a font, a
+ * stroke, and what its modules add (a text's anchor, a size relative to the text around it and a raised baseline for a
+ * jazz chord's superscript, an outline for a boxed chord or part, the id of the [filter] behind a tablature's fret).
  */
 internal data class NotationCssRule(
     val font: NotationFont?,
@@ -23,6 +23,7 @@ internal data class NotationCssRule(
     val relativeSize: Float? = null,
     val baselineShift: Float? = null,
     val isOutlined: Boolean = false,
+    val filter: String? = null,
 )
 
 /**
@@ -31,10 +32,15 @@ internal data class NotationCssRule(
  * the `white-space` of music text (which the drawing keeps as written anyway).
  */
 internal fun parseNotationCss(css: String): Map<String, NotationCssRule> = SINGLE_CLASS_RULE.findAll(css).associate { match ->
-    val declarations = match.groupValues[2].split(';').mapNotNull { declaration ->
+    match.groupValues[1] to parseNotationStyle(match.groupValues[2])
+}
+
+/** The declarations of one rule, or of an element's `style` attribute, read as a class's are; any other is ignored. */
+internal fun parseNotationStyle(style: String): NotationCssRule {
+    val declarations = style.split(';').mapNotNull { declaration ->
         declaration.split(':', limit = 2).takeIf { it.size == 2 }?.let { (name, value) -> name.trim() to value.trim() }
     }.toMap()
-    match.groupValues[1] to NotationCssRule(
+    return NotationCssRule(
         font = declarations["font"]?.let(::parseFontShorthand),
         isStroke = "stroke" in declarations,
         strokeWidth = declarations["stroke-width"]?.let(::parseSvgLength),
@@ -43,6 +49,7 @@ internal fun parseNotationCss(css: String): Map<String, NotationCssRule> = SINGL
         relativeSize = declarations["font-size"]?.let(::parsePercentage),
         baselineShift = declarations["baseline-shift"]?.let(::parsePercentage),
         isOutlined = declarations["outline"]?.let { it != "none" } == true,
+        filter = declarations["filter"]?.takeIf { it != "none" }?.let { FILTER_URL.matchEntire(it)?.groupValues?.get(1) ?: UNKNOWN_FILTER },
     )
 }
 
@@ -85,6 +92,9 @@ internal fun parseSvgNumbers(value: String): List<Float>? = value.split(',', ' '
 
 /** The closing brace is escaped because Android's ICU engine, unlike the JVM's, rejects a bare `}` outside a class. */
 private val SINGLE_CLASS_RULE = Regex("""\.([\w-]+)\s*\{([^}]*)\}""")
+/** What a filter that is no reference to one by id (`filter:blur(2px)`) is named as: an id no filter has. */
+private const val UNKNOWN_FILTER = ""
+private val FILTER_URL = Regex("""url\(\s*#([^)\s]+)\s*\)""")
 private const val MUSIC_FAMILY = "music"
 
 /** CSS semibold, the lightest weight drawn bold. */

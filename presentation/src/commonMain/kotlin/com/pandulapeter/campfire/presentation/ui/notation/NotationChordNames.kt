@@ -99,7 +99,7 @@ internal fun NotationDrawing.withChordNames(symbols: List<String>, names: List<S
                     if (name == null || name == drawn) {
                         text
                     } else {
-                        NotationText(x = text.x, y = text.y, anchor = text.anchor, runs = listOf(chordRuns.first().copy(text = name)), isBoxed = text.isBoxed)
+                        NotationText(x = text.x, y = text.y, anchor = text.anchor, runs = listOf(chordRuns.first().copy(text = name)), isBoxed = text.isBoxed, isKnockedOut = text.isKnockedOut)
                     }
                 },
             )

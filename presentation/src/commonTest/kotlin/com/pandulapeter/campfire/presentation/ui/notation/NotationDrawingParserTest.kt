@@ -12,9 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.notation
 import com.pandulapeter.campfire.abc.api.AbcSystem
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.HEADER
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.SYSTEM
+import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.TAB_HEADER
+import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.TAB_SYSTEM
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.system
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -172,6 +175,42 @@ class NotationDrawingParserTest {
         assertEquals(2, parseNotationDrawing(listOf(HEADER, grandStaff))!!.systems.single().bars)
         val title = system("""<style>.f3{font:700 16.0px text,sans-serif}</style><text class="f3" x="180.0" y="20.0">A Reel</text>""")
         assertEquals(0, parseNotationDrawing(listOf(HEADER, title))!!.systems.single().bars)
+    }
+
+    @Test
+    fun `a tablature's frets are drawn over their flooded background`() {
+        val system = assertNotNull(parseNotationDrawing(listOf(TAB_HEADER, TAB_SYSTEM))).systems.last()
+        val frets = system.texts.filter { it.isKnockedOut }
+        assertEquals("1301357887531031", frets.joinToString("") { (it.runs.single() as NotationTextRun.Words).text })
+        assertEquals(NotationFont(size = 7f * 1.6f, isBold = true, isItalic = false, isMusic = false), (frets.first().runs.single() as NotationTextRun.Words).font)
+        assertEquals(59.5f * 1.6f, frets.first().x, 0.001f)
+        assertEquals(71f - 21.5f * 1.6f, frets.first().y, 0.001f)
+    }
+
+    @Test
+    fun `a tablature's clef reads TAB in the bold sans-serif its own style gives it`() {
+        val system = assertNotNull(parseNotationDrawing(listOf(TAB_HEADER, TAB_SYSTEM))).systems.last()
+        val clef = system.texts.filter { (it.runs.single() as? NotationTextRun.Words)?.text in listOf("T", "A", "B") && !it.isKnockedOut }
+        assertEquals(listOf("T", "A", "B"), clef.map { (it.runs.single() as NotationTextRun.Words).text })
+        clef.forEach { letter ->
+            assertEquals(NotationFont(size = 13f * 1.6f, isBold = true, isItalic = false, isMusic = false), (letter.runs.single() as NotationTextRun.Words).font)
+            assertFalse(letter.isKnockedOut)
+        }
+    }
+
+    @Test
+    fun `a system of tablature alone plays the bars its staff draws`() {
+        assertEquals(2, parseNotationDrawing(listOf(TAB_HEADER, TAB_SYSTEM))!!.systems.last().bars)
+    }
+
+    @Test
+    fun `a filter that does more than flood the background gives no drawing`() {
+        val blurred = AbcSystem(svg = TAB_SYSTEM.svg.replace("<feFlood flood-color=\"white\"/>", "<feGaussianBlur stdDeviation=\"2\"/>"), height = TAB_SYSTEM.height)
+        assertNull(parseNotationDrawing(listOf(TAB_HEADER, blurred)))
+        val composited = AbcSystem(svg = TAB_SYSTEM.svg.replace("operator=\"over\"", "operator=\"xor\""), height = TAB_SYSTEM.height)
+        assertNull(parseNotationDrawing(listOf(TAB_HEADER, composited)))
+        val unnamed = AbcSystem(svg = TAB_SYSTEM.svg.replace(".bg1{filter:url(#bg1)}", ".bg1{filter:url(#bg2)}"), height = TAB_SYSTEM.height)
+        assertNull(parseNotationDrawing(listOf(TAB_HEADER, unnamed)))
     }
 
     @Test

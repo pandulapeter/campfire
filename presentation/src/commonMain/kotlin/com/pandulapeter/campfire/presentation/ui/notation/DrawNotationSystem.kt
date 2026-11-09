@@ -20,13 +20,14 @@ import androidx.compose.ui.text.drawText
 
 /**
  * Draws [system] with its top left corner at [top], [scale] pixels to the SVG unit. Everything is drawn in [color] but
- * chord symbols, which are drawn in [chordColor], as the chords over the lyrics are; the colours are only given here,
+ * chord symbols, which are drawn in [chordColor], as the chords over the lyrics are, and the boxes behind a
+ * tablature's frets, which are the page's [background] and cut the strings under them; the colours are only given here,
  * so a theme cross-fade draws again without anything being laid out again.
  *
  * Words were laid out at [unitSize] pixels to the unit ([NotationPainter.unitSize]), so they are scaled by what is left
  * of [scale] once that is taken out.
  */
-internal fun DrawScope.drawNotationSystem(system: NotationSystemPaint, top: Float, scale: Float, unitSize: Float, color: Color, chordColor: Color) =
+internal fun DrawScope.drawNotationSystem(system: NotationSystemPaint, top: Float, scale: Float, unitSize: Float, color: Color, chordColor: Color, background: Color) =
     translate(top = top) {
         scale(scale = scale, pivot = Offset.Zero) {
             drawPath(path = system.fills, color = color)
@@ -37,6 +38,7 @@ internal fun DrawScope.drawNotationSystem(system: NotationSystemPaint, top: Floa
                     style = Stroke(width = stroke.width, pathEffect = stroke.dashes?.let { PathEffect.dashPathEffect(it.toFloatArray()) }),
                 )
             }
+            drawPath(path = system.knockouts, color = background)
             system.texts.forEach { text ->
                 translate(left = text.x, top = text.baseline) {
                     scale(scale = 1f / unitSize, pivot = Offset.Zero) {

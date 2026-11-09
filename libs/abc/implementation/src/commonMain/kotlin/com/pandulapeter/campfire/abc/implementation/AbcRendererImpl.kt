@@ -32,7 +32,7 @@ internal class AbcRendererImpl : AbcRenderer {
     }
 
     private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
-        val output = engine.render(source = headerOf(width, transposition) + tune)
+        val output = engine.render(source = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune)) + tune)
         if (output.startsWith(SEPARATOR)) {
             AbcRendering.Failed(output.drop(1).ifBlank { "abc2svg rendered nothing" })
         } else if (output.count { it == SEPARATOR } + 1 > MAX_SYSTEMS) {
@@ -53,7 +53,9 @@ internal class AbcRendererImpl : AbcRenderer {
     // abc2svg's 12 and 13, which read as small print beside them, and chord symbols in bold, as the page's chords are.
     // Lyrics are measured as sans-serif rather than abc2svg's bold serif, and larger than they are drawn (see
     // AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which its width tables measure narrower than it is.
-    private fun headerOf(width: Int, transposition: Int) = """
+    // A voice in the tab clef (a notation program's guitar or bass tablature) is engraved as tablature only by abc2svg's
+    // string tablature module, which nothing but a %%strtab line loads; without it the voice is a bass-clef staff of notes.
+    private fun headerOf(width: Int, transposition: Int, hasStringTablature: Boolean) = """
         %%pagewidth ${width}px
         %%leftmargin 0
         %%rightmargin 0
@@ -62,7 +64,7 @@ internal class AbcRendererImpl : AbcRenderer {
         %%vocalfont sans-serif ${(TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition
 
-    """.trimIndent()
+    """.trimIndent() + if (hasStringTablature) "%%strtab\n" else ""
 
     /**
      * The distinct voices [tune] names: in `V:` fields, inline `[V:` fields, and `%%score` / `%%staves` lines (or their
@@ -104,6 +106,7 @@ internal class AbcRendererImpl : AbcRenderer {
         private val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
         private val VOICE_FIELD = Regex("""(?m)(?:^|\[)V:[ \t]*([^\s\]]+)""")
         private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
+        private val TAB_VOICE = Regex("""(?m)(?:^|\[)V:[^\]\n]*?(?:\stab\b|clef=tab\b)""")
         private val SCORE_VOICE = Regex("""[^\s()\[\]{}|*]+""")
     }
 }
