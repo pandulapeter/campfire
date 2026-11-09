@@ -30,12 +30,17 @@ internal fun parseNotationDrawing(systems: List<AbcSystem>): NotationDrawing? {
     )
 }
 
-/** What an element inherits from those around it: SVG's inheritance, as far as abc2svg relies on it. */
+/**
+ * What an element inherits from those around it: SVG's inheritance, as far as abc2svg relies on it. [stretch] is how
+ * much taller than [transform]'s scale a music symbol is drawn: abc2svg stretches only the brace joining a grand staff
+ * (`scale(2.5,h)`, a text of one glyph), so anything else under a stretch is not read.
+ */
 private data class NotationContext(
     val transform: NotationTransform,
     val font: NotationFont?,
     val strokeWidth: Float,
     val anchor: NotationAnchor,
+    val stretch: Float,
 )
 
 private class NotationUnsupportedException : Exception()
@@ -50,14 +55,14 @@ private class NotationSystemReader {
     private var shapes = mutableListOf<NotationShape>()
     private var glyphs = mutableListOf<NotationGlyph>()
     private var texts = mutableListOf<NotationText>()
-    private var barXs = mutableListOf<Float>()
+    private var barStrokes = mutableListOf<NotationBarStroke>()
     private var firstMusicX: Float? = null
 
     fun read(root: SvgElement): NotationSystem? = try {
         shapes = mutableListOf()
         glyphs = mutableListOf()
         texts = mutableListOf()
-        barXs = mutableListOf()
+        barStrokes = mutableListOf()
         firstMusicX = null
         // Read first wherever they stand, since an element may come before the <style> that names its class.
         root.elements.filter { it.name == "style" }.forEach { classes += parseNotationCss(it.text) }
@@ -66,7 +71,13 @@ private class NotationSystemReader {
         }
         val context = contextOf(
             element = root,
-            parent = NotationContext(NotationTransform.IDENTITY, font = null, strokeWidth = DEFAULT_STROKE_WIDTH, anchor = NotationAnchor.START),
+            parent = NotationContext(
+                transform = NotationTransform.IDENTITY,
+                font = null,
+                strokeWidth = DEFAULT_STROKE_WIDTH,
+                anchor = NotationAnchor.START,
+                stretch = 1f,
+            ),
         )
         root.elements.forEach { read(it, context) }
         NotationSystem(
@@ -75,13 +86,14 @@ private class NotationSystemReader {
             shapes = shapes,
             glyphs = glyphs,
             texts = texts,
-            bars = barCountOf(barXs, firstMusicX),
+            bars = barCountOf(barStrokes, firstMusicX),
         )
     } catch (_: NotationUnsupportedException) {
         null
     }
 
     private fun read(element: SvgElement, parent: NotationContext) {
+        if (parent.stretch != 1f) throw NotationUnsupportedException()
         when (element.name) {
             "style", "defs" -> Unit
             "g" -> contextOf(element, parent).let { context -> element.elements.forEach { read(it, context) } }
@@ -101,16 +113,18 @@ private class NotationSystemReader {
 
     private fun contextOf(element: SvgElement, parent: NotationContext): NotationContext {
         var transform = parent.transform
+        var stretch = parent.stretch
         element.attributes["transform"]?.let { value ->
             TRANSFORM.findAll(value).forEach { match ->
                 val numbers = parseSvgNumbers(match.groupValues[2]) ?: throw NotationUnsupportedException()
+                // A move after a stretch would be stretched too, which the transform cannot say; abc2svg never writes one.
+                if (stretch != 1f) throw NotationUnsupportedException()
                 transform = when (match.groupValues[1]) {
                     "translate" -> transform.translated(numbers.getOrElse(0) { 0f }, numbers.getOrElse(1) { 0f })
-                    // A scale that differs between the axes would distort the glyphs and the strokes; abc2svg never writes one.
-                    "scale" -> if (numbers.size == 1 || numbers.size == 2 && numbers[0] == numbers[1]) {
-                        transform.scaled(numbers[0])
-                    } else {
-                        throw NotationUnsupportedException()
+                    "scale" -> when (numbers.size) {
+                        1 -> transform.scaled(numbers[0])
+                        2 -> transform.scaled(numbers[0]).also { if (numbers[0] != 0f) stretch = numbers[1] / numbers[0] }
+                        else -> throw NotationUnsupportedException()
                     }
 
                     else -> throw NotationUnsupportedException()
@@ -125,6 +139,7 @@ private class NotationSystemReader {
             anchor = element.attributes["text-anchor"]?.let { parseTextAnchor(it) ?: NotationAnchor.START }
                 ?: classesOf(element).firstNotNullOfOrNull { it.anchor }
                 ?: parent.anchor,
+            stretch = stretch,
         )
     }
 
@@ -133,7 +148,9 @@ private class NotationSystemReader {
     private fun readPath(element: SvgElement, context: NotationContext) {
         val path = element.attributes["d"] ?: throw NotationUnsupportedException()
         // abc2svg draws every bar line of a system as a stroke of one of these two paths, once per staff.
-        if (element.classNames.any { it == BAR_CLASS || it == THICK_BAR_CLASS }) barXs += barStrokeXsOf(path).map(context.transform::mapX)
+        if (element.classNames.any { it == BAR_CLASS || it == THICK_BAR_CLASS }) {
+            barStrokes += barStrokesOf(path).map { NotationBarStroke(x = context.transform.mapX(it.x), y = context.transform.mapY(it.y)) }
+        }
         addShape(element, context, path)
     }
 
@@ -147,6 +164,7 @@ private class NotationSystemReader {
     }
 
     private fun addShape(element: SvgElement, context: NotationContext, path: String) {
+        if (context.stretch != 1f) throw NotationUnsupportedException()
         val rule = classesOf(element).firstOrNull { it.isStroke }
         shapes += NotationShape(
             path = path,
@@ -174,6 +192,8 @@ private class NotationSystemReader {
         val ys = element.attributes["y"]?.let { parseSvgNumbers(it) ?: throw NotationUnsupportedException() }.orEmpty()
         val transform = context.transform
         if (font.isMusic && element.children.none { it is SvgElement }) {
+            // A stretched symbol's own coordinates are stretched with it.
+            val stretchedTransform = transform.copy(scale = transform.scale * context.stretch)
             // A line of music symbols, each placed by its own coordinate pair where the lists have one.
             var x = xs.firstOrNull() ?: 0f
             var y = ys.firstOrNull() ?: 0f
@@ -187,12 +207,19 @@ private class NotationSystemReader {
                     NotationAnchor.MIDDLE -> glyph.advance * font.size / AbcMusicGlyph.UNITS_PER_EM / 2
                     NotationAnchor.END -> glyph.advance * font.size / AbcMusicGlyph.UNITS_PER_EM
                 }
-                glyphs += NotationGlyph(glyph = glyph, x = transform.mapX(x - offset), y = transform.mapY(y), size = font.size * transform.scale)
+                glyphs += NotationGlyph(
+                    glyph = glyph,
+                    x = transform.mapX(x - offset),
+                    y = stretchedTransform.mapY(y),
+                    size = font.size * transform.scale,
+                    stretch = context.stretch,
+                )
                 if (isMusicGlyph(codePoint)) firstMusicX = minOf(firstMusicX ?: Float.MAX_VALUE, transform.mapX(x - offset))
                 x += glyph.advance * font.size / AbcMusicGlyph.UNITS_PER_EM
             }
             return
         }
+        if (context.stretch != 1f) throw NotationUnsupportedException()
         if (xs.size > 1 || ys.size > 1) {
             // Words placed a character at a time (a chord diagram's fingerings over its strings), each its own text.
             if (element.children.any { it is SvgElement }) throw NotationUnsupportedException()

@@ -56,8 +56,11 @@ internal data class NotationTransform(val x: Float, val y: Float, val scale: Flo
     }
 }
 
-/** A music symbol with its baseline origin at ([x], [y]), drawn at [size] units to the em. */
-internal class NotationGlyph(val glyph: AbcMusicGlyph, val x: Float, val y: Float, val size: Float)
+/**
+ * A music symbol with its baseline origin at ([x], [y]), drawn at [size] units to the em, [stretch] times as tall as it
+ * is wide (the brace joining a grand staff, which abc2svg stretches to the staves' height).
+ */
+internal class NotationGlyph(val glyph: AbcMusicGlyph, val x: Float, val y: Float, val size: Float, val stretch: Float)
 
 /**
  * Words drawn in the app's typeface ([runs], one after the other from the baseline point ([x], [y])), placed by

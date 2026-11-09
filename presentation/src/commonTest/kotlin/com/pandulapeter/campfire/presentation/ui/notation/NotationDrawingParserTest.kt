@@ -82,6 +82,16 @@ class NotationDrawingParserTest {
     }
 
     @Test
+    fun `the brace joining a grand staff is drawn stretched to the staves' height`() {
+        val brace = parseNotationDrawing(listOf(HEADER, system("""<text transform="translate(51.7,199.6) scale(2.5,3.42)">&#xE000;</text>""")))!!
+            .systems.single().glyphs.single()
+        assertEquals(abcMusicGlyphs[0xE000], brace.glyph)
+        assertEquals(51.7f to 199.6f, brace.x to brace.y)
+        assertEquals(60f, brace.size)
+        assertEquals(3.42f / 2.5f, brace.stretch, 0.0001f)
+    }
+
+    @Test
     fun `circles and ellipses are shapes like paths`() {
         val shapes = parseNotationDrawing(listOf(HEADER, system("""<circle cx="4" cy="5" r="1.5"/><ellipse class="slW" rx="2.5" ry="2"/>""")))!!.systems.single().shapes
         assertEquals("M2.5 5.0a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0z", shapes[0].path)
@@ -139,6 +149,9 @@ class NotationDrawingParserTest {
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="rotate(45)"><path d="M0 0h1"/></g>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<text x="1" y="1">&#xF8FF;</text>"""))))
         assertNull(parseNotationDrawing(listOf(HEADER, system("""<use x="0" y="0" xlink:href="#missing"/>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<path transform="scale(2,3)" d="M0 0h1"/>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<g transform="scale(2,3)"><text>&#xE000;</text></g>"""))))
+        assertNull(parseNotationDrawing(listOf(HEADER, system("""<text transform="scale(2,3) translate(1,1)">&#xE000;</text>"""))))
         assertNull(parseNotationDrawing(listOf(AbcSystem(svg = "<svg", height = 1f))))
     }
 }
