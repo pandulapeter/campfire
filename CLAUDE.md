@@ -62,6 +62,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
   tools/promo-video                   the promo video: Remotion over Promo.kt's footage, with the owner's recording
   tools/fonts                         draws ♭ ♮ ♯ into the bundled Inter and ♮ into JetBrains Mono, which lack them;
                                       extracts abc2svg's music glyphs for the notation drawing
+  tools/abc2svg                       rebuilds the bundled abc2svg and its music glyphs from a release tag
 ```
 
 `campfire-library` fails the build when a `:libs:*` module depends on a project outside `:libs:` (`gradle/build-logic`).
