@@ -52,6 +52,7 @@ with the step keys, fewest pages first.
   pairs, centering and gap spreading. A tempo or time change starts a column. Narrow columns only for fewer steps,
   under the quarter-of-lines rule.
 - A section that does not wrap (a staff) widens its column up to the view less a gap; each column is centered in a
-  slot of the view (`placeStrip`), so neighbours start past its edge, and a step moves by the leaving column's slot.
+  slot of the view and a gap (`placeStrip`), so neighbours start past its edge, and a step moves by the leaving
+  column's slot. **The strip ends at the first stop that shows its last column**: no last step shows nothing new.
 - **Something uncuttable taller than a column leaves no strip**: the song is paged as before, decided per song, since a
   strip has no column that scrolls.

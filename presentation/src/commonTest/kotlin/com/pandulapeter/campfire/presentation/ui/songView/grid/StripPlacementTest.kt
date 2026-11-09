@@ -43,16 +43,16 @@ class StripPlacementTest {
     )
 
     @Test
-    fun `a strip's columns are each centered in a slot of the view, the last ones reached at the end of its scroll`() {
+    fun `a strip's columns are each centered in a slot of the view, and it ends at the first stop showing its last column`() {
         val placement = place(LayoutDirection.Ltr)
-        // What the buttons leave of the viewport, 950, is a slot of 475 for each of the two columns on screen, each
-        // centered in its own, so the third one starts past the edge of what is in view.
-        assertEquals(listOf(0, 475, 950), placement.columnStops)
-        assertEquals(listOf(37, 512, 987), placement.positions.map { it.x })
-        assertEquals(3 * 475 + 50, placement.width)
-        val maxScroll = placement.width - 1_000
-        assertTrue(987 + 400 - maxScroll <= 950)
-        assertTrue(512 + 400 <= 950 && 987 >= 950)
+        // What the buttons leave of the viewport, 950, and a gap past it is a slot of 485 for each of the two columns on
+        // screen, each centered in its own less the gap, so the third one starts past the edge of what is in view.
+        assertEquals(listOf(32, 517, 1002), placement.positions.map { it.x })
+        assertTrue(517 + 400 <= 950 && 1002 > 950)
+        // The second stop already shows the third column, so it is the last, and the scroll ends there.
+        assertEquals(listOf(0, 485), placement.columnStops)
+        assertEquals(1_000 + 485, placement.width)
+        assertTrue(1002 + 400 - 485 <= 950)
         assertTrue(placement.positions.all { it.y == 0 })
     }
 
@@ -65,6 +65,6 @@ class StripPlacementTest {
         assertEquals(ltr.positions.map { ltr.width - it.x - 400 }, rtl.positions.map { it.x })
         val rows = stripRowsOf(grid, units, rtl.columnStops, readsLeftwards = true)
         assertTrue(rows.isAcross && rows.readsLeftwards)
-        assertEquals(listOf(0, 1, 2), rows.stepSections)
+        assertEquals(listOf(0, 1), rows.stepSections)
     }
 }
