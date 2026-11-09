@@ -19,11 +19,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.takeOrElse
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 
 /**
  * Material's icon button with a [CampfireTooltip] naming it, which is what every icon-only button of the app is: one
  * whose [icon] is drawn with [label] as its content description, the tooltip saying the same.
+ *
+ * [tint] left unspecified follows the button's content color, dimmed while it is not [enabled]; a color given overrides
+ * that, so it is only for a button that is never disabled.
  *
  * [modifier] is the button's, not the tooltip's, so focus, semantics, and size modifiers keep working on it; a modifier
  * that is the parent layout's to read (a `weight`, an `align`) goes on a [CampfireTooltip] wrapped around the button
@@ -38,7 +42,7 @@ internal fun CampfireIconButton(
     enabled: Boolean = true,
     shortcut: KeyShortcut? = null,
     iconModifier: Modifier = Modifier,
-    tint: Color = LocalContentColor.current,
+    tint: Color = Color.Unspecified,
     colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
 ) = CampfireIconButton(
     modifier = modifier,
@@ -48,7 +52,14 @@ internal fun CampfireIconButton(
     shortcut = shortcut,
     colors = colors,
 ) {
-    Icon(modifier = iconModifier, painter = icon, contentDescription = label, tint = tint)
+    // Read inside the button, which provides its enabled or disabled content color: a default read at the call site would
+    // always be the enabled one.
+    Icon(
+        modifier = iconModifier,
+        painter = icon,
+        contentDescription = label,
+        tint = tint.takeOrElse { LocalContentColor.current },
+    )
 }
 
 /**
