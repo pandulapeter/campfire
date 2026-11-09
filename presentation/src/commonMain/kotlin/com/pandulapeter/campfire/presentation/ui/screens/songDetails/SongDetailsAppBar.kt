@@ -155,6 +155,7 @@ internal fun SongDetailsAppBar(
                 setlistFileName = destination.setlistFileName,
                 isReadOnly = isReadOnly,
                 isPerformanceModeEnabled = isPerformanceModeEnabled,
+                isImportPreview = destination.importPreview != null,
                 areSetlistsEnabled = areSetlistsEnabled,
                 showsFontScaleInBar = showsFontScaleInBar,
                 showsSetlistAssignmentsInBar = showsSetlistAssignmentsInBar,

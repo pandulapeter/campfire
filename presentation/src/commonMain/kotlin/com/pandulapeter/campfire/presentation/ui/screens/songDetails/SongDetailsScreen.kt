@@ -270,8 +270,7 @@ internal fun SongDetailsScreen(
             destination = destination,
             currentSong = currentSong,
             isReadOnly = isReadOnly,
-            // A preview has no song's actions: what it is about is the import, which its buttons answer.
-            isPerformanceModeEnabled = isPerformanceModeEnabled || isImportPreview,
+            isPerformanceModeEnabled = isPerformanceModeEnabled,
             shouldShowChords = shouldShowChords,
             isMetronomeEnabled = isMetronomeEnabled,
             isTunerEnabled = isTunerEnabled,

@@ -55,6 +55,7 @@ internal fun RowScope.SongDetailsActions(
     setlistFileName: String?,
     isReadOnly: Boolean,
     isPerformanceModeEnabled: Boolean,
+    isImportPreview: Boolean,
     areSetlistsEnabled: Boolean,
     showsFontScaleInBar: Boolean,
     showsSetlistAssignmentsInBar: Boolean,
@@ -86,19 +87,27 @@ internal fun RowScope.SongDetailsActions(
     // Read only mode's actions and the song's are the same two buttons, a mark (the lock, the setlists' star) and an
     // overflow button reaching into it, laid out to the same width. Switching the mode therefore only crossfades them in
     // place, end aligned: shrinking one set while the other expands would slide the buttons and the stepper before them
-    // back and forth. The width is animated only where the two differ (the bar too narrow for the star, or a preview
-    // without a song yet), and an imported preview turning into its song's screen gains the song's actions the same way.
+    // back and forth. The width is animated only where the two differ (the bar too narrow for the star, or a preview,
+    // which has read only mode's menu but no lock, since switching the mode off would not make it editable), and an
+    // imported preview turning into its song's screen gains the song's actions the same way.
     AnimatedContent(
-        targetState = isPerformanceModeEnabled,
+        targetState = when {
+            isPerformanceModeEnabled -> BarActions.READ_ONLY_MODE
+            isImportPreview -> BarActions.PREVIEW
+            else -> BarActions.SONG
+        },
         contentAlignment = Alignment.CenterEnd,
         transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
-    ) { showsReadOnlyActions ->
+    ) { barActions ->
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (showsReadOnlyActions) {
-                ReadOnlyMark(onClick = onReadOnlyMarkClicked)
+            if (barActions != BarActions.SONG) {
+                val showsReadOnlyMark = barActions == BarActions.READ_ONLY_MODE
+                if (showsReadOnlyMark) {
+                    ReadOnlyMark(onClick = onReadOnlyMarkClicked)
+                }
                 // Read only mode's menu: nothing in it changes the library, and nothing in it is ever let out as a button.
                 ActionsMenu(
-                    isAfterButton = true,
+                    isAfterButton = showsReadOnlyMark,
                     menuFooter = fontScaleMenuFooter,
                     items = { listOfNotNull(aboutSongAction, tunerAction, preferencesAction) },
                 )
@@ -121,6 +130,16 @@ internal fun RowScope.SongDetailsActions(
             }
         }
     }
+}
+
+/**
+ * Which actions the bar ends in: read only mode's mark and menu, the same menu alone over an import preview (only Import
+ * makes its song editable), or the song's own.
+ */
+private enum class BarActions {
+    READ_ONLY_MODE,
+    PREVIEW,
+    SONG,
 }
 
 /** The song's own actions: the setlists' star where the bar has room for it, and the song's menu. */
