@@ -86,19 +86,27 @@ internal enum class KeyShortcut(
     PLAY(KeyChord.plain(Key.Spacebar, label = null), ShortcutScope.SONG),
 
     /**
-     * The song's Up and Down: its step buttons' previous and next where it has them, a scroll elsewhere
-     * (`songKeyboardShortcuts`). What a page turner pedal sends, with Shift or without.
+     * The song's previous and next: its step buttons where it has them, a scroll elsewhere (`songKeyboardShortcuts`).
+     * What a page turner pedal sends, so Left and Right step as Up and Down do, whichever arrows the pedal is set to;
+     * Left goes on where the song reads from the right. Without Shift, which switches songs ([SONG_SWITCH_UP]).
      */
-    SONG_UP(KeyChord.plain(Key.DirectionUp, "↑"), ShortcutScope.SONG),
-    SONG_DOWN(KeyChord.plain(Key.DirectionDown, "↓"), ShortcutScope.SONG),
+    SONG_UP(KeyChord.plain(Key.DirectionUp, "↑", shift = KeyChord.Shift.ABSENT), ShortcutScope.SONG),
+    SONG_DOWN(KeyChord.plain(Key.DirectionDown, "↓", shift = KeyChord.Shift.ABSENT), ShortcutScope.SONG),
+    SONG_LEFT(KeyChord.plain(Key.DirectionLeft, "←", shift = KeyChord.Shift.ABSENT), ShortcutScope.SONG),
+    SONG_RIGHT(KeyChord.plain(Key.DirectionRight, "→", shift = KeyChord.Shift.ABSENT), ShortcutScope.SONG),
 
     /** The song's step buttons alone, which the other kind of pedal sends. */
     SONG_PAGE_UP(KeyChord.plain(Key.PageUp, label = null), ShortcutScope.SONG),
     SONG_PAGE_DOWN(KeyChord.plain(Key.PageDown, label = null), ShortcutScope.SONG),
 
-    /** The song of the setlist lying that way in the pager, which in a right-to-left layout is the next one for Left. */
-    SONG_LEFT(KeyChord.plain(Key.DirectionLeft, "←"), ShortcutScope.SONG),
-    SONG_RIGHT(KeyChord.plain(Key.DirectionRight, "→"), ShortcutScope.SONG),
+    /**
+     * The previous and the next song of a setlist, as the pager bar's buttons go to them: Left and Right to the one lying
+     * that way in the pager, which in a right-to-left layout is the next one for Left.
+     */
+    SONG_SWITCH_UP(KeyChord.plain(Key.DirectionUp, "↑", shift = KeyChord.Shift.REQUIRED), ShortcutScope.SONG),
+    SONG_SWITCH_DOWN(KeyChord.plain(Key.DirectionDown, "↓", shift = KeyChord.Shift.REQUIRED), ShortcutScope.SONG),
+    SONG_SWITCH_LEFT(KeyChord.plain(Key.DirectionLeft, "←", shift = KeyChord.Shift.REQUIRED), ShortcutScope.SONG),
+    SONG_SWITCH_RIGHT(KeyChord.plain(Key.DirectionRight, "→", shift = KeyChord.Shift.REQUIRED), ShortcutScope.SONG),
 
     /**
      * Starts and stops the click, on a song and on the Metronome tab alike. Not Space, which a focused button takes as its

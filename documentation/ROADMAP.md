@@ -14,6 +14,7 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Support multi-line sticky headers (setlist titles)
+- Add support for filtering abc notation by voicing
 - Song title line spacing should be consistent between the two card display modes
 - Add ability to make notes / markups on music
 - Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations

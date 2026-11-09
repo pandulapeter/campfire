@@ -86,7 +86,7 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope): StringResource? = 
     KeyShortcut.PLAY -> Res.string.shortcut_play
     KeyShortcut.SONG_UP -> Res.string.shortcut_song_up_down
     KeyShortcut.SONG_PAGE_UP -> Res.string.shortcut_song_step
-    KeyShortcut.SONG_LEFT -> Res.string.shortcut_song_neighbours
+    KeyShortcut.SONG_SWITCH_UP -> Res.string.shortcut_song_neighbours
     KeyShortcut.METRONOME -> Res.string.shortcut_metronome
     KeyShortcut.TAP_TEMPO -> Res.string.shortcut_tap_tempo
     KeyShortcut.PREVIEW_PAGE_UP -> Res.string.shortcut_preview_turn
@@ -106,7 +106,11 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope): StringResource? = 
     KeyShortcut.TRANSPOSE_DOWN,
     KeyShortcut.SONG_DOWN,
     KeyShortcut.SONG_PAGE_DOWN,
+    KeyShortcut.SONG_LEFT,
     KeyShortcut.SONG_RIGHT,
+    KeyShortcut.SONG_SWITCH_DOWN,
+    KeyShortcut.SONG_SWITCH_LEFT,
+    KeyShortcut.SONG_SWITCH_RIGHT,
     KeyShortcut.PREVIEW_PAGE_DOWN,
     KeyShortcut.PREVIEW_END,
     KeyShortcut.PREVIEW_LEFT,

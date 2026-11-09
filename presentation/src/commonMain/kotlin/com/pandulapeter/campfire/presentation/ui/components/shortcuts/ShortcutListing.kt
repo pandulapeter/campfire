@@ -88,9 +88,9 @@ internal val KeyShortcut.rowLead: KeyShortcut
         KeyShortcut.FIND_PREVIOUS -> KeyShortcut.FIND_NEXT
         KeyShortcut.FIND_PREVIOUS_FROM_QUERY -> KeyShortcut.FIND_NEXT_FROM_QUERY
         KeyShortcut.TRANSPOSE_DOWN -> KeyShortcut.TRANSPOSE_UP
-        KeyShortcut.SONG_DOWN -> KeyShortcut.SONG_UP
+        KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT -> KeyShortcut.SONG_UP
         KeyShortcut.SONG_PAGE_DOWN -> KeyShortcut.SONG_PAGE_UP
-        KeyShortcut.SONG_RIGHT -> KeyShortcut.SONG_LEFT
+        KeyShortcut.SONG_SWITCH_DOWN, KeyShortcut.SONG_SWITCH_LEFT, KeyShortcut.SONG_SWITCH_RIGHT -> KeyShortcut.SONG_SWITCH_UP
         KeyShortcut.PREVIEW_PAGE_DOWN -> KeyShortcut.PREVIEW_PAGE_UP
         KeyShortcut.PREVIEW_END -> KeyShortcut.PREVIEW_HOME
         KeyShortcut.PREVIEW_LEFT, KeyShortcut.PREVIEW_RIGHT -> KeyShortcut.PREVIEW_PAGE_UP

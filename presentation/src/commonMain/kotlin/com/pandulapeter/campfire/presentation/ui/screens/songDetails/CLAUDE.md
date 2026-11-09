@@ -24,7 +24,7 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 - The pager bar numbers by place in the setlist, missing entries included; pages are only the songs that exist.
 - **In a setlist a step leaves a song's end only on the next press** (`NextSongConfirmation`): the first turns the pager
   bar to name the next song (selecting it goes on too); going back, scrolling up, or another song forgets it. The bar's
-  buttons, swipes, and Left / Right do not ask.
+  buttons, swipes, and Shift + an arrow do not ask.
 - The first page's text and its neighbours' are read ahead as the screen is pushed, so a song read before opens with its
   lyrics in the first frame and its model is built before the transition moves, not during it.
 
@@ -100,15 +100,18 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 ## Keyboard
 
-- Up and Down scroll a tenth of the viewport, linearly over the key repeat interval; Left and Right change the
-  setlist's song physically (in RTL Left is the next song), as the print preview's arrows turn pages. Where the step
-  buttons are, Up, Down, Page Up, and Page Down press them instead (a Bluetooth page turner sends exactly these; a
-  nudge leaves the player mid-verse); elsewhere the page keys are unconsumed. Counted from the page the pager is heading
-  to, so two quick presses go two songs.
+- **Down and Right go on, Up and Left go back** (a pedal sends either pair, as it is set): where the step buttons are,
+  the arrows, Page Up, and Page Down press them (a nudge leaves the player mid-verse); elsewhere the arrows scroll a
+  tenth of the viewport, linearly over the key repeat interval, and the page keys are unconsumed. Left goes on in a
+  strip read from the right, as its buttons and taps do; a song read down the screen mirrors with the layout.
+- **Shift + an arrow switches the setlist's song** without the question above: Up and Down, and Left and Right
+  physically, as the pager lays songs out (in RTL Left is the next song) and the print preview's arrows turn pages.
+  Counted from the page the pager is heading to, so two quick presses go two songs. Taken at the setlist's ends and
+  for a single song too, doing nothing, so a held Shift never turns a page instead.
 - The screen takes focus as it opens, and the handler is in the preview pass, so it sees keys wherever focus has moved
   and the scroll container never handles an arrow.
-- Left and Right are unconsumed at the setlist's ends and for a single song; all four with Alt, Meta, or Ctrl (Alt +
-  Left is the web's Back, Cmd + Left / Right a Mac's Back and Forward).
+- The arrows with Alt, Meta, or Ctrl are unconsumed (Alt + Left is the web's Back, Cmd + Left / Right a Mac's Back and
+  Forward).
 - Ctrl/Cmd + E opens the editor, not in performance mode, which has no Edit.
 - Where the song has its playing controls (not read only), Ctrl / Cmd + Shift + Up and Down step its transposition
   (only where the stepper is: chords on, a song with chords) and T taps its tempo (metronome on), whether or not the

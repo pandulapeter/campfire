@@ -16,6 +16,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -28,7 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * The arrow keys turn to the song of the setlist lying that way in the pager. The setlist has Home on the Range before
+ * Shift + the arrow keys turn to the song of the setlist lying that way in the pager. The setlist has Home on the Range before
  * House of the Rising Sun, so the song before the one opened lies on the left in a left-to-right layout and on the right
  * in a right-to-left one, and nothing lies past it.
  */
@@ -36,27 +37,27 @@ import kotlin.test.assertTrue
 internal class SongArrowKeysTest {
 
     @Test
-    fun `Left turns to the previous song in a left-to-right layout`() = runAppTest(setlists = listOf(TWO_SONGS_SETLIST)) {
+    fun `Shift + Left turns to the previous song in a left-to-right layout`() = runAppTest(setlists = listOf(TWO_SONGS_SETLIST)) {
         openRisingSunFromSetlist()
-        onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionLeft) } }
         waitForIdle()
-        assertTrue(isTitleOnScreen(PREVIOUS_SONG_TITLE), "Left did not turn to the song before the one opened.")
-        assertTrue(!isTitleOnScreen(RISING_SUN_TITLE), "The song opened is still on screen after Left.")
+        assertTrue(isTitleOnScreen(PREVIOUS_SONG_TITLE), "Shift + Left did not turn to the song before the one opened.")
+        assertTrue(!isTitleOnScreen(RISING_SUN_TITLE), "The song opened is still on screen after Shift + Left.")
     }
 
     @Test
-    fun `Right turns to the previous song in a right-to-left layout`() = runAppTest(
+    fun `Shift + Right turns to the previous song in a right-to-left layout`() = runAppTest(
         setlists = listOf(TWO_SONGS_SETLIST),
         appearance = TestAppearance(language = AppLanguage.HEBREW),
     ) {
         openRisingSunFromSetlist()
-        onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionLeft) } }
         waitForIdle()
-        assertTrue(isTitleOnScreen(RISING_SUN_TITLE), "Left turned away from the last song, towards nothing on its left.")
-        onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        assertTrue(isTitleOnScreen(RISING_SUN_TITLE), "Shift + Left turned away from the last song, towards nothing on its left.")
+        onRoot().performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.DirectionRight) } }
         waitForIdle()
-        assertTrue(isTitleOnScreen(PREVIOUS_SONG_TITLE), "Right did not turn to the song before the one opened.")
-        assertTrue(!isTitleOnScreen(RISING_SUN_TITLE), "The song opened is still on screen after Right.")
+        assertTrue(isTitleOnScreen(PREVIOUS_SONG_TITLE), "Shift + Right did not turn to the song before the one opened.")
+        assertTrue(!isTitleOnScreen(RISING_SUN_TITLE), "The song opened is still on screen after Shift + Right.")
     }
 
     private fun AppTestScope.openRisingSunFromSetlist() {

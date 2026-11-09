@@ -114,7 +114,11 @@ internal fun BoxScope.StepControls(
                 else -> Res.string.song_details_previous_section
             },
         ),
-        shortcut = KeyShortcut.SONG_UP,
+        shortcut = when {
+            stepper?.isAcross != true -> KeyShortcut.SONG_UP
+            stepper.readsLeftwards -> KeyShortcut.SONG_RIGHT
+            else -> KeyShortcut.SONG_LEFT
+        },
         onClick = onStepBack,
     )
     val forward = StepButtonLook(
@@ -128,7 +132,11 @@ internal fun BoxScope.StepControls(
                 else -> Res.string.song_details_next_section
             },
         ),
-        shortcut = KeyShortcut.SONG_DOWN,
+        shortcut = when {
+            stepper?.isAcross != true -> KeyShortcut.SONG_DOWN
+            stepper.readsLeftwards -> KeyShortcut.SONG_LEFT
+            else -> KeyShortcut.SONG_RIGHT
+        },
         onClick = onStepForward,
     )
     if (isRow) {

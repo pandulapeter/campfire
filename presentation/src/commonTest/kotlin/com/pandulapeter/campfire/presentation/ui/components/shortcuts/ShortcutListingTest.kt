@@ -120,4 +120,11 @@ class ShortcutListingTest {
         assertTrue(desktop.none { it in KeyShortcut.screens })
         assertTrue(KeyShortcut.BACK in desktop)
     }
+
+    @Test
+    fun `the four arrows of a song share one row, and with Shift another`() {
+        val rows = listed(AppBuild.WINDOWS).single { it.scope == ShortcutScope.SONG }.rows.map { it.shortcuts.toSet() }
+        assertTrue(setOf(KeyShortcut.SONG_UP, KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT) in rows)
+        assertTrue(setOf(KeyShortcut.SONG_SWITCH_UP, KeyShortcut.SONG_SWITCH_DOWN, KeyShortcut.SONG_SWITCH_LEFT, KeyShortcut.SONG_SWITCH_RIGHT) in rows)
+    }
 }

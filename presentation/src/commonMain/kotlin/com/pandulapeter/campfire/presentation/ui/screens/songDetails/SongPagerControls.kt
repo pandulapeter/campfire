@@ -101,7 +101,7 @@ internal fun SongPagerControls(
         CampfireIconButton(
             icon = painterResource(Res.drawable.ic_previous),
             label = stringResource(Res.string.song_details_previous_song),
-            shortcut = if (isLtr) KeyShortcut.SONG_LEFT else KeyShortcut.SONG_RIGHT,
+            shortcut = if (isLtr) KeyShortcut.SONG_SWITCH_LEFT else KeyShortcut.SONG_SWITCH_RIGHT,
             enabled = targetPage > 0,
             onClick = { onStep(-1) },
         )
@@ -128,7 +128,7 @@ internal fun SongPagerControls(
         CampfireIconButton(
             icon = painterResource(Res.drawable.ic_next),
             label = stringResource(Res.string.song_details_next_song),
-            shortcut = if (isLtr) KeyShortcut.SONG_RIGHT else KeyShortcut.SONG_LEFT,
+            shortcut = if (isLtr) KeyShortcut.SONG_SWITCH_RIGHT else KeyShortcut.SONG_SWITCH_LEFT,
             enabled = targetPage < pageCount - 1,
             onClick = { onStep(1) },
         )

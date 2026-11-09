@@ -48,8 +48,7 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
     hasPreviousSong: Boolean,
     hasNextSong: Boolean,
     isUncovered: Boolean,
-    stepBack: (from: Int?) -> Unit,
-    stepForward: (from: Int?) -> Unit,
+    stepActions: SongStepActions,
     onToggleAutoScroll: (() -> Unit)?,
     songActions: SongActionHandler,
     librarySong: Song?,
@@ -64,15 +63,16 @@ internal fun Modifier.songDetailsKeyboardShortcuts(
         onScrollUp = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
         onScrollDown = { currentPageScrollState()?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
         onStepBack = if (canStepBack) {
-            { stepBack(null) }
+            { stepActions.stepBack(null) }
         } else {
             null
         },
         onStepForward = if (canStepForward) {
-            { stepForward(null) }
+            { stepActions.stepForward(null) }
         } else {
             null
         },
+        songReadsLeftwards = stepActions.stripReadsLeftwards,
         isUncovered = isUncovered,
         onToggleAutoScroll = onToggleAutoScroll,
         onEdit = librarySong?.let { song -> { songActions.edit(song) } },

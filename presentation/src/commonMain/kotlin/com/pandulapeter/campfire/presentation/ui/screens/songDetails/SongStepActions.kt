@@ -36,6 +36,9 @@ internal class SongStepActions(
     private val lastPage: Int,
     private val nextSongConfirmation: NextSongConfirmation,
 ) {
+    /** Whether the song is a strip read from the right, null where it is no strip, see [SongStepper.readsLeftwards]. */
+    val stripReadsLeftwards get() = stepper?.takeIf { it.isAcross }?.readsLeftwards
+
     /** A step back, from where a gesture the step stands in for began ([from]) or from where the song is. */
     fun stepBack(from: Int?) {
         nextSongConfirmation.dismiss()
