@@ -1394,6 +1394,7 @@
     <string name="keyboard_shortcuts">Raccourcis clavier</string>
     <string name="settings_keyboard_shortcuts_description">Chaque touche à laquelle l\'app répond sur cet appareil</string>
     <string name="shortcut_group_app">Partout</string>
+    <string name="shortcut_group_main_screens">Écrans principaux</string>
     <string name="shortcut_group_lists">Chansons et setlists</string>
     <string name="shortcut_group_song">Lecture d\'une chanson</string>
     <string name="shortcut_group_metronome">Métronome</string>

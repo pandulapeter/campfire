@@ -17,9 +17,9 @@ import kotlin.test.assertNull
 class ScreenShortcutsTest {
 
     @Test
-    fun `every main screen but Settings is numbered in the chrome's order, and Settings has its own key`() {
+    fun `every main screen is numbered in the chrome's order, Settings included`() {
         val all = CampfireDestination.TopLevel.entries
-        assertEquals(KeyShortcut.screens + KeyShortcut.SETTINGS, all.map { screenShortcutOf(it, all) })
+        assertEquals(KeyShortcut.screens, all.map { screenShortcutOf(it, all) })
         all.forEach { destination -> assertEquals(destination, screenOf(screenShortcutOf(destination, all)!!, all)) }
     }
 
@@ -28,8 +28,8 @@ class ScreenShortcutsTest {
         val destinations = listOf(CampfireDestination.Songs, CampfireDestination.Tuner, CampfireDestination.Settings)
         assertEquals(KeyShortcut.SCREEN_2, screenShortcutOf(CampfireDestination.Tuner, destinations))
         assertNull(screenShortcutOf(CampfireDestination.Setlists, destinations))
-        assertNull(screenOf(KeyShortcut.SCREEN_3, destinations))
-        assertEquals(CampfireDestination.Settings, screenOf(KeyShortcut.SETTINGS, destinations))
-        assertNull(screenOf(KeyShortcut.SETTINGS, destinations - CampfireDestination.Settings))
+        assertEquals(CampfireDestination.Settings, screenOf(KeyShortcut.SCREEN_3, destinations))
+        assertNull(screenOf(KeyShortcut.SCREEN_4, destinations))
+        assertNull(screenOf(KeyShortcut.SCREEN_3, destinations - CampfireDestination.Settings))
     }
 }

@@ -1439,6 +1439,7 @@
     <string name="keyboard_shortcuts">Comenzi rapide de la tastatură</string>
     <string name="settings_keyboard_shortcuts_description">Fiecare tastă la care aplicația răspunde pe acest dispozitiv</string>
     <string name="shortcut_group_app">Oriunde</string>
+    <string name="shortcut_group_main_screens">Ecrane principale</string>
     <string name="shortcut_group_lists">Cântece și liste</string>
     <string name="shortcut_group_song">Citirea unui cântec</string>
     <string name="shortcut_group_metronome">Metronom</string>

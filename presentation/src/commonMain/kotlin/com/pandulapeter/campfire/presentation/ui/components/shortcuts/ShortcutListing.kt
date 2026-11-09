@@ -100,7 +100,7 @@ internal val KeyShortcut.rowLead: KeyShortcut
     }
 
 private fun ShortcutFeatures.lists(scope: ShortcutScope) = when (scope) {
-    ShortcutScope.APP -> true
+    ShortcutScope.APP, ShortcutScope.MAIN_SCREENS -> true
     ShortcutScope.LISTS, ShortcutScope.SONG, ShortcutScope.PRINT_PREVIEW -> areSongsEnabled
     ShortcutScope.METRONOME -> isMetronomeEnabled
     ShortcutScope.EDITOR -> areSongsEnabled && !isReadOnly

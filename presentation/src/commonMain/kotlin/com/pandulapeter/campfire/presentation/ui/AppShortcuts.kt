@@ -66,7 +66,7 @@ internal sealed interface AppShortcut {
         override val keyShortcut = KeyShortcut.SAVE
     }
 
-    /** Ctrl / Cmd + 1 to 6 and Ctrl / Cmd + comma, see [selectScreenByKey]. */
+    /** Ctrl / Cmd + 1 to 7, see [selectScreenByKey]. */
     data class SelectScreen(override val keyShortcut: KeyShortcut) : AppShortcut
 
     /** Ctrl / Cmd + slash, and `?` outside a field, see [showKeyboardShortcutsByKey]. */
@@ -94,7 +94,6 @@ internal fun appShortcutOf(shortcut: KeyShortcut): AppShortcut? = when (shortcut
     KeyShortcut.NEW -> AppShortcut.NewItem
     KeyShortcut.SELECT_ALL -> AppShortcut.SelectAllSongs
     KeyShortcut.SAVE -> AppShortcut.ExportSetlist
-    KeyShortcut.SETTINGS -> AppShortcut.SelectScreen(shortcut)
     KeyShortcut.SHORTCUTS, KeyShortcut.SHORTCUTS_QUESTION_MARK -> AppShortcut.ShowKeyboardShortcuts(shortcut)
     else -> if (shortcut in KeyShortcut.screens) AppShortcut.SelectScreen(shortcut) else null
 }
@@ -157,19 +156,11 @@ private fun CampfireViewModel.exportSetlistByKey(): Boolean {
 }
 
 /**
- * The navigation item [shortcut] names ([screenOf]), pressed: a number only while a main screen is on top, where the
- * chrome is, Settings from a song or the editor too (an editor with unsaved text refuses, as its Close would ask). Not
- * from the onboarding or an import, which a new stack would drop. Answers whether that screen is on top now.
+ * The navigation item [shortcut] names ([screenOf]), pressed, only while a main screen is on top, where the chrome is.
+ * Answers whether that screen is on top now.
  */
 internal fun CampfireViewModel.selectScreenByKey(shortcut: KeyShortcut): Boolean {
-    val top = top
-    val isAllowed = when (top) {
-        is CampfireDestination.TopLevel -> true
-        is CampfireDestination.SongDetails -> shortcut == KeyShortcut.SETTINGS && top.importPreview == null
-        is CampfireDestination.SongEditor -> shortcut == KeyShortcut.SETTINGS
-        else -> false
-    }
-    if (!isAllowed || !isUncovered) return false
+    if (top !is CampfireDestination.TopLevel || !isUncovered) return false
     val destination = screenOf(shortcut, preferencesController.topLevelDestinations.value) ?: return false
     selectTopLevelDestination(destination)
     return navigator.backStack.lastOrNull() == destination

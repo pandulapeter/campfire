@@ -16,10 +16,10 @@ import kotlin.test.assertEquals
 class ShortcutPlatformsTest {
 
     @Test
-    fun `the web has no Ctrl+N, and only the desktop and the web switch screens by number or open Settings`() {
+    fun `the web has no Ctrl+N, and only the desktop and the web switch screens by number`() {
         assertEquals(AppBuild.entries - AppBuild.WEB, AppBuild.entries.filter { KeyShortcut.NEW.platforms.includes(it) })
         val desktopAndWeb = listOf(AppBuild.MACOS, AppBuild.WINDOWS, AppBuild.LINUX, AppBuild.WEB)
-        (KeyShortcut.screens + KeyShortcut.SETTINGS).forEach { shortcut ->
+        KeyShortcut.screens.forEach { shortcut ->
             assertEquals(desktopAndWeb, AppBuild.entries.filter { shortcut.platforms.includes(it) }, shortcut.name)
         }
         assertEquals(AppBuild.entries, AppBuild.entries.filter { KeyShortcut.SAVE.platforms.includes(it) })

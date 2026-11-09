@@ -1387,6 +1387,7 @@
     <string name="keyboard_shortcuts">Scorciatoie da tastiera</string>
     <string name="settings_keyboard_shortcuts_description">Ogni tasto a cui l\'app risponde su questo dispositivo</string>
     <string name="shortcut_group_app">Ovunque</string>
+    <string name="shortcut_group_main_screens">Schermate principali</string>
     <string name="shortcut_group_lists">Canzoni e scalette</string>
     <string name="shortcut_group_song">Durante la lettura di una canzone</string>
     <string name="shortcut_group_metronome">Metronomo</string>

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.presentation.resources.shortcut_find_step_from_
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_app
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_editor
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_lists
+import com.pandulapeter.campfire.presentation.resources.shortcut_group_main_screens
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_metronome
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_print_preview
 import com.pandulapeter.campfire.presentation.resources.shortcut_group_song
@@ -50,7 +51,7 @@ import org.jetbrains.compose.resources.StringResource
 /**
  * What the row [this] leads does, as the shortcuts sheet and the system's lists say it, or null for the second half of
  * a pair, which is listed in its first half's row ([rowLead]). Every entry is named here, so a new one has to be
- * described. A number or comma takes the name of the screen it opens (`%1$s`), which only the sheet knows.
+ * described. A number takes the name of the screen it opens (`%1$s`), which only the sheet knows.
  */
 internal val KeyShortcut.description: StringResource?
     get() = when (this) {
@@ -87,7 +88,7 @@ internal val KeyShortcut.description: StringResource?
         KeyShortcut.SCREEN_4,
         KeyShortcut.SCREEN_5,
         KeyShortcut.SCREEN_6,
-        KeyShortcut.SETTINGS -> Res.string.shortcut_screen
+        KeyShortcut.SCREEN_7 -> Res.string.shortcut_screen
         KeyShortcut.SHORTCUTS_QUESTION_MARK,
         KeyShortcut.ZOOM_OUT,
         KeyShortcut.REDO_ALTERNATE,
@@ -107,6 +108,7 @@ internal val KeyShortcut.description: StringResource?
 internal val ShortcutScope.title
     get() = when (this) {
         ShortcutScope.APP -> Res.string.shortcut_group_app
+        ShortcutScope.MAIN_SCREENS -> Res.string.shortcut_group_main_screens
         ShortcutScope.LISTS -> Res.string.shortcut_group_lists
         ShortcutScope.SONG -> Res.string.shortcut_group_song
         ShortcutScope.METRONOME -> Res.string.shortcut_group_metronome

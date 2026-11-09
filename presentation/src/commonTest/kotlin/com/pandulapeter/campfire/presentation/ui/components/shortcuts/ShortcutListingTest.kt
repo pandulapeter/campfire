@@ -58,10 +58,10 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `a phone or a tablet lists no screen numbers, no Settings, and no Escape, and the web no Ctrl+N`() {
+    fun `a phone or a tablet lists no screen numbers and no Escape, and the web no Ctrl+N`() {
         listOf(AppBuild.ANDROID, AppBuild.IOS).forEach { build ->
             val shortcuts = listed(build).flatMap { group -> group.rows.flatMap { it.shortcuts } }
-            assertTrue(shortcuts.none { it in KeyShortcut.screens || it == KeyShortcut.SETTINGS || it == KeyShortcut.BACK }, build.name)
+            assertTrue(shortcuts.none { it in KeyShortcut.screens || it == KeyShortcut.BACK }, build.name)
             assertTrue(KeyShortcut.SHORTCUTS in shortcuts && KeyShortcut.SONG_PAGE_DOWN in shortcuts && KeyShortcut.NEW in shortcuts, build.name)
         }
         assertFalse(KeyShortcut.NEW in listed(AppBuild.WEB).flatMap { group -> group.rows.flatMap { it.shortcuts } })
@@ -77,7 +77,7 @@ class ShortcutListingTest {
     @Test
     fun `a feature switched off takes its keys, and read only mode every key whose control it hides`() {
         val withoutSongs = listed(AppBuild.WINDOWS, everything.copy(areSongsEnabled = false))
-        assertEquals(listOf(ShortcutScope.APP, ShortcutScope.METRONOME), withoutSongs.map { it.scope })
+        assertEquals(listOf(ShortcutScope.APP, ShortcutScope.MAIN_SCREENS, ShortcutScope.METRONOME), withoutSongs.map { it.scope })
         assertFalse(ShortcutScope.METRONOME in listed(AppBuild.WINDOWS, everything.copy(isMetronomeEnabled = false)).map { it.scope })
         val readOnly = listed(AppBuild.WINDOWS, everything.copy(isReadOnly = true))
         assertFalse(ShortcutScope.EDITOR in readOnly.map { it.scope })
@@ -105,7 +105,7 @@ class ShortcutListingTest {
         val ios = systemShortcutGroups(build = AppBuild.IOS, features = everything, isApple = true).flatMap { it.second }
         assertFalse(KeyShortcut.REDO_ALTERNATE in ios)
         val desktop = systemShortcutGroups(build = AppBuild.WINDOWS, features = everything, isApple = false).flatMap { it.second }
-        assertTrue(desktop.none { it in KeyShortcut.screens || it == KeyShortcut.SETTINGS })
+        assertTrue(desktop.none { it in KeyShortcut.screens })
         assertTrue(KeyShortcut.BACK in desktop)
     }
 }

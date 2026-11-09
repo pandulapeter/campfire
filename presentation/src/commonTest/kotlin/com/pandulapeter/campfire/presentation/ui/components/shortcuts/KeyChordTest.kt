@@ -108,7 +108,7 @@ class KeyChordTest {
         assertEquals("⇧⌘↓", KeyShortcut.TRANSPOSE_DOWN.chord.label(isApple = true, names = english))
         assertEquals("Shift+F3", KeyShortcut.FIND_PREVIOUS.chord.label(isApple = false, names = english))
         assertEquals("Umschalt+Eingabe", KeyShortcut.FIND_PREVIOUS_FROM_QUERY.chord.label(isApple = false, names = german))
-        assertEquals("⌘,", KeyShortcut.SETTINGS.chord.label(isApple = true, names = english))
+        assertEquals("⌘7", KeyShortcut.SCREEN_7.chord.label(isApple = true, names = english))
     }
 
     @Test

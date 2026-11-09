@@ -111,9 +111,8 @@ private fun ShortcutRowItem(
     names: KeyNames,
 ) {
     val description = row.lead.description ?: return
-    val isScreenKey = row.lead in KeyShortcut.screens || row.lead == KeyShortcut.SETTINGS
     ShortcutItem(
-        description = if (isScreenKey) {
+        description = if (row.lead in KeyShortcut.screens) {
             textResource(description, stringResource((screenOf(row.lead, destinations) ?: return).label))
         } else {
             stringResource(description)

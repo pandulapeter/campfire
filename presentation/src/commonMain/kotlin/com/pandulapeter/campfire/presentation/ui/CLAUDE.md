@@ -50,13 +50,15 @@ The view model facade, the composition root, and the product rules every screen 
 ## `CampfireApp`
 
 - **App-wide shortcuts** (`AppKeyboardShortcuts.kt`, `AppShortcuts.kt`): Ctrl / Cmd + F, V, plus, minus, zero, N, A, S,
-  1 to 6, comma, and slash, and M, T, and `?`, are heard at the root after everything under it, on every platform with a
+  1 to 7, and slash, and M, T, and `?`, are heard at the root after everything under it, on every platform with a
   keyboard that has them (`KeyShortcut.platforms`); the root takes the focus whenever nothing under it holds it (not
-  under a dialog or menu), since keys travel only along the focus path. A held key acts once. Each asks the view model
-  whether the screen on top offers what it presses (New only outside read only mode and the selection, Ctrl / Cmd + 1 to
-  6 only over a main screen, the shortcuts sheet over no dialog), and is left unconsumed where it does not. `?` is left
-  alone while a field is being typed in (an open text input session, counted by `InterceptPlatformTextInput` in
-  `CampfireApp`): the desktop and iOS type a character from an event after its key-down, which reaches the root.
+  under a dialog or menu), since keys travel only along the focus path. A held key acts once; the keys held are
+  forgotten as a dialog, a sheet, or a menu comes or goes, since their release reaches its window instead. Each asks the
+  view model whether the screen on top offers what it presses (New only outside read only mode and the selection,
+  Ctrl / Cmd + 1 to 7 only over a main screen, the shortcuts sheet over no dialog), and is left unconsumed where it does
+  not. `?` is left alone while a field is being typed in (an open text input session, counted by
+  `InterceptPlatformTextInput` in `CampfireApp`): the desktop and iOS type a character from an event after its key-down,
+  which reaches the root.
 - Snackbars are queued with a running number: two identical messages are the same object.
 - **Rescans** only on `ON_START` (not `ON_RESUME`, which iOS sends after Control Center), on desktop window focus if the
   last is ten seconds old (`refreshIfStale`), on launch, and on retry after a failed load — and only where the library

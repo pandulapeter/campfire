@@ -29,11 +29,12 @@ The shared building blocks of the screens; subpackages with something to say hav
   slot), so a hint is written from the keys that work. Hints show only with a hardware keyboard
   (`LocalShowsShortcutHints`), Apple's symbols on an Apple keyboard (`⌘S`), names translated elsewhere (`Strg+S`).
   **The table's platform column** (`ShortcutPlatforms`) says where a shortcut works: elsewhere it matches nothing and
-  shows no hint. The web has no Ctrl / Cmd + N (Chrome opens a window before the page hears it); Ctrl / Cmd + 1 to 6 and
-  comma are the desktop's and the web's only.
+  shows no hint. The web has no Ctrl / Cmd + N (Chrome opens a window before the page hears it); Ctrl / Cmd + 1 to 7 are
+  the desktop's and the web's only.
 - **Its scope column** (`ShortcutScope`) is where the keys are heard and the group the **shortcuts sheet**
   (`dialogs/shortcuts`, Ctrl / Cmd + slash or `?`) and the system lists (Android's Meta + /, iOS's Command-hold
-  overlay, `systemShortcutGroups`) show them under; `description` is an exhaustive `when`, so a new entry is described,
+  overlay, `systemShortcutGroups`) show them under (Find and the numbers under the main screens, not "Anywhere", since a song or the onboarding
+  has neither); `description` is an exhaustive `when`, so a new entry is described,
   and `rowLead` puts a pair in one row. Keys meaning something else elsewhere (Page Down on a song and in the print
   preview) are an entry each; the root asks only the app-wide ones. Lists show only what works with the features on
   (`ShortcutFeatures`: no song keys with the songs off, nothing whose control read only mode hides, Space's

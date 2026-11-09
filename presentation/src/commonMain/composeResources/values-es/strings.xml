@@ -1387,6 +1387,7 @@
     <string name="keyboard_shortcuts">Atajos de teclado</string>
     <string name="settings_keyboard_shortcuts_description">Cada tecla a la que responde la app en este dispositivo</string>
     <string name="shortcut_group_app">En cualquier lugar</string>
+    <string name="shortcut_group_main_screens">Pantallas principales</string>
     <string name="shortcut_group_lists">Canciones y repertorios</string>
     <string name="shortcut_group_song">Al leer una canción</string>
     <string name="shortcut_group_metronome">Metrónomo</string>

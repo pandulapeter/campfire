@@ -17,6 +17,9 @@ internal enum class ShortcutScope {
     /** Wherever nothing is drawn over the screen, a sheet's Save and Escape over anything. */
     APP,
 
+    /** The screens the navigation bar or rail offers, while one of them is on top. */
+    MAIN_SCREENS,
+
     /** The songs and the setlists screens. */
     LISTS,
 

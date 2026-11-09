@@ -21,9 +21,9 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 
 /**
- * Ctrl / Cmd + 1 to 6 and comma select a main screen (`selectScreenByKey`), and Ctrl / Cmd + A selects every song listed
+ * Ctrl / Cmd + 1 to 7 select a main screen (`selectScreenByKey`), and Ctrl / Cmd + A selects every song listed
  * in the songs screen's selection mode (`selectAllSongsByKey`), each keeping the browser from its own use of the key
- * (switching tabs, its settings on a Mac, selecting the page's text) only where the app did something with it: anywhere
+ * (switching tabs, selecting the page's text) only where the app did something with it: anywhere
  * else the browser has the key as it always does. Select all is left to a field being typed in, which selects its own
  * text. Ctrl / Cmd + slash opens the shortcuts sheet (`showKeyboardShortcutsByKey`), from a field being typed in too,
  * whose key never reaches the canvas, and keeps Safari from toggling its status bar. A listener on the window in the
@@ -47,4 +47,4 @@ internal fun ScreenShortcutEffect(viewModel: CampfireViewModel) = DisposableEffe
 }
 
 /** The shortcuts [ScreenShortcutEffect] answers, which [CampfireWebApp] leaves to it. */
-internal val SHELL_SCREEN_SHORTCUTS get() = KeyShortcut.screens + KeyShortcut.SETTINGS + KeyShortcut.SELECT_ALL + KeyShortcut.SHORTCUTS
+internal val SHELL_SCREEN_SHORTCUTS get() = KeyShortcut.screens + KeyShortcut.SELECT_ALL + KeyShortcut.SHORTCUTS

@@ -1436,6 +1436,7 @@
     <string name="keyboard_shortcuts">קיצורי מקלדת</string>
     <string name="settings_keyboard_shortcuts_description">כל מקש שהאפליקציה מגיבה לו במכשיר הזה</string>
     <string name="shortcut_group_app">בכל מקום</string>
+    <string name="shortcut_group_main_screens">מסכים ראשיים</string>
     <string name="shortcut_group_lists">שירים וסט־ליסטים</string>
     <string name="shortcut_group_song">בקריאת שיר</string>
     <string name="shortcut_group_metronome">מטרונום</string>

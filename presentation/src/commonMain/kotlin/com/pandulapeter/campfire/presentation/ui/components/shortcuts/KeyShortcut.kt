@@ -35,7 +35,8 @@ internal enum class KeyShortcut(
 
     /** The window's Escape, which goes back or closes what is open; a phone's or a tablet's own back is the system's. */
     BACK(KeyChord.plain(Key.Escape, label = null), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    FIND(KeyChord.command(Key.F, "F"), ShortcutScope.APP),
+    /** The search of the main screen on top, where it has one; the editor's too, whose own buttons name it. */
+    FIND(KeyChord.command(Key.F, "F"), ShortcutScope.MAIN_SCREENS),
     REPLACE(KeyChord.command(Key.R, "R"), ShortcutScope.EDITOR),
 
     /** Saves a sheet or the editor; on song details and a setlist, Share or export. */
@@ -113,14 +114,14 @@ internal enum class KeyShortcut(
     PREVIEW_LEFT(KeyChord.plain(Key.DirectionLeft, "←"), ShortcutScope.PRINT_PREVIEW),
     PREVIEW_RIGHT(KeyChord.plain(Key.DirectionRight, "→"), ShortcutScope.PRINT_PREVIEW),
 
-    /** The main screens switched on, in the chrome's order, Settings left out: it has [SETTINGS]. */
-    SCREEN_1(KeyChord.command(Key.One, "1", alternates = setOf(Key.NumPad1)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SCREEN_2(KeyChord.command(Key.Two, "2", alternates = setOf(Key.NumPad2)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SCREEN_3(KeyChord.command(Key.Three, "3", alternates = setOf(Key.NumPad3)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SCREEN_4(KeyChord.command(Key.Four, "4", alternates = setOf(Key.NumPad4)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SCREEN_5(KeyChord.command(Key.Five, "5", alternates = setOf(Key.NumPad5)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SCREEN_6(KeyChord.command(Key.Six, "6", alternates = setOf(Key.NumPad6)), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
-    SETTINGS(KeyChord.command(Key.Comma, ",", shift = KeyChord.Shift.ABSENT), ShortcutScope.APP, ShortcutPlatforms.DESKTOP_AND_WEB),
+    /** The main screens switched on, in the chrome's order, Settings included. */
+    SCREEN_1(KeyChord.command(Key.One, "1", alternates = setOf(Key.NumPad1)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_2(KeyChord.command(Key.Two, "2", alternates = setOf(Key.NumPad2)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_3(KeyChord.command(Key.Three, "3", alternates = setOf(Key.NumPad3)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_4(KeyChord.command(Key.Four, "4", alternates = setOf(Key.NumPad4)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_5(KeyChord.command(Key.Five, "5", alternates = setOf(Key.NumPad5)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_6(KeyChord.command(Key.Six, "6", alternates = setOf(Key.NumPad6)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
+    SCREEN_7(KeyChord.command(Key.Seven, "7", alternates = setOf(Key.NumPad7)), ShortcutScope.MAIN_SCREENS, ShortcutPlatforms.DESKTOP_AND_WEB),
     ;
 
     /** Whether this works on the platform the app runs on. */
@@ -129,7 +130,7 @@ internal enum class KeyShortcut(
     fun matches(event: KeyEvent) = isAvailable && chord.matches(event)
 
     companion object {
-        /** [SCREEN_1] to [SCREEN_6], in order. */
-        val screens get() = listOf(SCREEN_1, SCREEN_2, SCREEN_3, SCREEN_4, SCREEN_5, SCREEN_6)
+        /** [SCREEN_1] to [SCREEN_7], in order. */
+        val screens get() = listOf(SCREEN_1, SCREEN_2, SCREEN_3, SCREEN_4, SCREEN_5, SCREEN_6, SCREEN_7)
     }
 }

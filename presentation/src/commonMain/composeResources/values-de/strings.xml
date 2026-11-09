@@ -1387,6 +1387,7 @@
     <string name="keyboard_shortcuts">Tastenkürzel</string>
     <string name="settings_keyboard_shortcuts_description">Jede Taste, auf die die App auf diesem Gerät reagiert</string>
     <string name="shortcut_group_app">Überall</string>
+    <string name="shortcut_group_main_screens">Hauptbildschirme</string>
     <string name="shortcut_group_lists">Songs und Setlists</string>
     <string name="shortcut_group_song">Beim Lesen eines Songs</string>
     <string name="shortcut_group_metronome">Metronom</string>

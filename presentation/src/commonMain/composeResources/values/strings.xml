@@ -1387,6 +1387,7 @@
     <string name="keyboard_shortcuts">Keyboard shortcuts</string>
     <string name="settings_keyboard_shortcuts_description">Every key the app answers on this device</string>
     <string name="shortcut_group_app">Anywhere</string>
+    <string name="shortcut_group_main_screens">Main screens</string>
     <string name="shortcut_group_lists">Songs and setlists</string>
     <string name="shortcut_group_song">Reading a song</string>
     <string name="shortcut_group_metronome">Metronome</string>

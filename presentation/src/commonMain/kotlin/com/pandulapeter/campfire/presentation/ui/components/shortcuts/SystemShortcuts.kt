@@ -27,13 +27,13 @@ internal data class SystemShortcutGroup(val title: String, val shortcuts: List<S
 
 /**
  * The shortcuts the sheet lists ([shortcutGroups]) as a platform's own list takes them, one chord at a time, each named
- * by its row: the system writes the keys itself, so a pair's halves are two entries of one description. A number or
- * comma, which needs the name of the screen it opens, is left out (none works on a phone or a tablet), and so is the
+ * by its row: the system writes the keys itself, so a pair's halves are two entries of one description. A number,
+ * which needs the name of the screen it opens, is left out (none works on a phone or a tablet), and so is the
  * scroll wheel, which is no key.
  */
 internal fun systemShortcutGroups(build: AppBuild, features: ShortcutFeatures, isApple: Boolean): List<Pair<ShortcutScope, List<KeyShortcut>>> =
     shortcutGroups(build = build, features = features, isApple = isApple, isPreviewWheelZoomed = false).mapNotNull { group ->
-        val shortcuts = group.rows.filter { it.lead !in SCREEN_KEYS }.flatMap { it.shortcuts }
+        val shortcuts = group.rows.filter { it.lead !in KeyShortcut.screens }.flatMap { it.shortcuts }
         if (shortcuts.isEmpty()) null else group.scope to shortcuts
     }
 
@@ -50,5 +50,3 @@ internal fun systemShortcutTexts(features: ShortcutFeatures): List<SystemShortcu
         )
     }
 }
-
-private val SCREEN_KEYS get() = KeyShortcut.screens + KeyShortcut.SETTINGS

@@ -1386,6 +1386,7 @@
     <string name="keyboard_shortcuts">Billentyűparancsok</string>
     <string name="settings_keyboard_shortcuts_description">Minden billentyű, amire az app ezen az eszközön reagál</string>
     <string name="shortcut_group_app">Bárhol</string>
+    <string name="shortcut_group_main_screens">Főképernyők</string>
     <string name="shortcut_group_lists">Dalok és listák</string>
     <string name="shortcut_group_song">Dal olvasása</string>
     <string name="shortcut_group_metronome">Metronóm</string>

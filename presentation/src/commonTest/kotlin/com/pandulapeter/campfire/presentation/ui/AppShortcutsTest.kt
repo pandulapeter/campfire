@@ -66,11 +66,11 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and a digit from 1 to 6 or comma select a main screen, from either row of digits`() {
+    fun `Ctrl or Cmd and a digit from 1 to 7 select a main screen, from either row of digits`() {
         assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_1), shortcut(Key.One, isCtrlOrMeta = true))
-        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_6), shortcut(Key.NumPad6, isCtrlOrMeta = true))
-        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SETTINGS), shortcut(Key.Comma, isCtrlOrMeta = true))
-        assertNull(shortcut(Key.Seven, isCtrlOrMeta = true))
+        assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_7), shortcut(Key.NumPad7, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.Comma, isCtrlOrMeta = true))
+        assertNull(shortcut(Key.Eight, isCtrlOrMeta = true))
         assertNull(shortcut(Key.One))
     }
 
