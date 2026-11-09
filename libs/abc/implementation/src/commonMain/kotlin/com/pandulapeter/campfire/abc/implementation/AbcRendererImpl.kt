@@ -32,7 +32,7 @@ internal class AbcRendererImpl : AbcRenderer {
     }
 
     private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
-        val output = engine.render(source = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune)) + tune)
+        val output = engine.render(source = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune)) + withAbc2svgPercussionMaps(tune))
         if (output.startsWith(SEPARATOR)) {
             AbcRendering.Failed(output.drop(1).ifBlank { "abc2svg rendered nothing" })
         } else if (output.count { it == SEPARATOR } + 1 > MAX_SYSTEMS) {

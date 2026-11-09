@@ -60,6 +60,15 @@ class AbcRendererImplTest {
     }
 
     @Test
+    fun `a drum kit mapped as notation programs export it draws every head`() = runTest {
+        val maps = "I:percmap F F 36 normal\nI:percmap ^g g 42 x\n%%percmap c c 38 normal"
+        val tune = "X:1\nL:1/8\nV:1 perc nm=\"Drums\"\nK:none\n$maps\nV:1\n[^gF]^g[^gc]^g|"
+        val svg = assertIs<AbcRendering.Systems>(renderer.render(tune, width = 800, transposition = 0)).systems.joinToString("")
+        assertEquals(4, svg.count { it == X_HEAD })
+        assertEquals(2, svg.count { it == BLACK_HEAD })
+    }
+
+    @Test
     fun `a transposition moves the key signature and the chord symbols`() = runTest {
         val rendering = assertIs<AbcRendering.Systems>(renderer.render(REEL, width = 800, transposition = 2))
         assertTrue(rendering.systems.any { ">E<" in it.svg && ">F♯m<" in it.svg })
@@ -120,6 +129,9 @@ class AbcRendererImplTest {
     }
 
     private companion object {
+        /** The music font's black and x-shaped note heads. */
+        const val BLACK_HEAD = '\uE0A4'
+        const val X_HEAD = '\uE0A9'
         val REEL = """
             X:1
             T:The Test Reel
