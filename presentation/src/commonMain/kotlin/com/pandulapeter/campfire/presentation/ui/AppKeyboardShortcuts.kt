@@ -65,7 +65,13 @@ internal fun Modifier.appKeyboardShortcuts(viewModel: CampfireViewModel): Modifi
     val windowInfo = LocalWindowInfo.current
     LaunchedEffect(windowInfo) { snapshotFlow { windowInfo.isWindowFocused }.collect { if (!it) heldKeys.clear() } }
     LaunchedEffect(focusRequester) {
-        snapshotFlow { isUncovered }.collect { uncovered -> if (uncovered && !lastPress.hasFocus) focusRequester.requestFocus() }
+        snapshotFlow { isUncovered }.collect { uncovered ->
+            // A dialog, a sheet, or a menu holds the focus in a window of its own, where the root never loses it, so the
+            // release of the keys that opened it (Ctrl / Cmd + slash) goes there, and still held here they would make the
+            // next press of the same key read as a repeat.
+            heldKeys.clear()
+            if (uncovered && !lastPress.hasFocus) focusRequester.requestFocus()
+        }
     }
     return this
         // In the preview pass and never consumed, so that a release whatever took the press still counts.
