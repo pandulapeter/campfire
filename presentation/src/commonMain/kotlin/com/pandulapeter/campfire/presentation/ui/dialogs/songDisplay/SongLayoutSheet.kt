@@ -26,7 +26,8 @@ import com.pandulapeter.campfire.presentation.ui.preferences.SongLayoutChoices
 
 /**
  * The question the first song opened asks once, over that song, of a reader who has not picked a layout: pages, or one
- * column that scrolls by itself, in a [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as
+ * column that scrolls by itself, and while pages are picked whether they turn a page or a column at a time, in a
+ * [ConfirmedQuestionSheet]. A pick is written at once, the song behind it changing as
  * it goes, and only Confirm answers the question, so that a stray tap beside it does not; confirming without a pick keeps
  * the pages, which is what is shown as picked, and a sheet put away without Confirm (back, Escape) is asked again.
  */
@@ -49,7 +50,9 @@ internal fun SongLayoutSheet(
         )
         SongLayoutChoices(
             selected = userPreferences?.songLayout,
+            pageTurn = userPreferences?.pageTurn,
             onSelected = preferencesController::pickSongLayout,
+            onPageTurnSelected = preferencesController::setPageTurn,
         )
     }
 }
