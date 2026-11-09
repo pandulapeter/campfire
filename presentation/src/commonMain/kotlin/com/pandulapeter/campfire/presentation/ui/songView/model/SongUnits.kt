@@ -196,9 +196,9 @@ internal class SongUnits(
 }
 
 /**
- * The key each of [sections] is emitted under in [SongLyrics]: its content, so a section inserted above the others does
- * not hand each of their nodes the section that used to be its neighbour, equal sections told apart by the order they
- * come in.
+ * The key each of [sections] is emitted under in [SongLyrics]: what it is (its content where nothing the reader changes
+ * moves that), so a section inserted above the others does not hand each of their nodes the section that used to be its
+ * neighbour, equal sections told apart by the order they come in.
  */
 internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
     val occurrences = HashMap<Any, Int>()
@@ -216,6 +216,10 @@ internal fun sectionKeysOf(sections: List<RenderSection>): List<SectionKey> {
             // same section drawn differently, which springs to its new place: composed afresh, it would be placed there
             // at once, over the sections still on their way.
             is RenderSection.Lines -> RenderSection.Lines::class to section.foldKey
+            // What these say moves with the transposition and the notation: keyed by it, two of them a semitone apart
+            // would trade keys on a step, each gliding to where the other stood.
+            is RenderSection.KeyChange -> RenderSection.KeyChange::class
+            is RenderSection.Comment -> RenderSection.Comment::class
             else -> section
         }
         val occurrence = (occurrences[identity] ?: 0) + 1

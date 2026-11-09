@@ -106,6 +106,13 @@ class SongUnitsTest {
     }
 
     @Test
+    fun `key changes keep their keys through a transposition`() {
+        val before = sectionKeysOf(listOf(RenderSection.KeyChange(key = "C"), RenderSection.KeyChange(key = "C#")))
+        val after = sectionKeysOf(listOf(RenderSection.KeyChange(key = "C#"), RenderSection.KeyChange(key = "D")))
+        assertEquals(before, after)
+    }
+
+    @Test
     fun `a chunk is keyed by its section and its first item`() {
         val sections = listOf(verseWithStanzas())
         val units = SongUnits.of(sections) { true }
