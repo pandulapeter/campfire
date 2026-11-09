@@ -110,6 +110,24 @@ class AbcPartsTest {
     }
 
     @Test
+    fun `a choir's bass is not the bass player's part, a band's is`() {
+        val choir = listOf("Soprano", "Alto", "Tenor", "Bass", "Piano").map { AbcPart(name = it, voiceId = it, score = it) }
+        assertNull(abcPartFor(choir, Instrument.BASS))
+        assertEquals(4, abcPartFor(choir, Instrument.KEYBOARD))
+        val numbered = listOf("Sopran 1", "Bass 2", "Bass Guitar").map { AbcPart(name = it, voiceId = it, score = it) }
+        assertEquals(2, abcPartFor(numbered, Instrument.BASS))
+        val band = listOf("Vocals", "Bass", "Alto Saxophone").map { AbcPart(name = it, voiceId = it, score = it) }
+        assertEquals(1, abcPartFor(band, Instrument.BASS))
+    }
+
+    @Test
+    fun `a staff voices of several names share is no instrument's part, and makes the score a choir's`() {
+        val parts = abcPartsOf("X:1\n%%score (S A) (T B) 3\nV:S nm=\"Soprano\"\nV:A nm=\"Alto\"\nV:T nm=\"Tenor\"\nV:B nm=\"Bass\"\nV:3 nm=\"Bass\"\nK:C\n")
+        assertEquals(listOf("Soprano / Alto", "Tenor / Bass", "Bass"), parts.map { it.name })
+        assertNull(abcPartFor(parts, Instrument.BASS))
+    }
+
+    @Test
     fun `the part shown is the instrument's, else the one picked, else the first`() {
         val parts = abcPartsOf(EXPORT)
         assertEquals(2, shownAbcPartIndex(parts, matched = 2, chosen = 4))

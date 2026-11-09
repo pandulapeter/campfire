@@ -41,7 +41,7 @@ internal fun abcPartsOf(tune: String): List<AbcPart> {
     val parts = mutableListOf<AbcPart>()
     items.forEach { item ->
         // Voices sharing a staff are named together, as abc2svg names the staff ("Soprano / Alto").
-        val name = item.voiceIds.mapNotNull { names[it] }.distinct().joinToString(separator = " / ").ifEmpty { null }
+        val name = item.voiceIds.mapNotNull { names[it] }.distinct().joinToString(separator = SHARED_STAFF_NAME_SEPARATOR).ifEmpty { null }
         val previous = parts.lastOrNull()
         if (previous != null && name != null && previous.name.equals(name, ignoreCase = true)) {
             parts[parts.lastIndex] = previous.copy(score = "${previous.score} ${item.score}")
@@ -117,6 +117,8 @@ private fun scoreItems(tokens: List<String>): List<ScoreItem> {
     return items
 }
 
+/** What joins the names of the voices sharing a staff into the part's, as abc2svg joins them. */
+internal const val SHARED_STAFF_NAME_SEPARATOR = " / "
 private val SCORE_PUNCTUATION = setOf("{", "}", "[", "]", "(", ")", "|")
 private val SCORE_TOKEN = Regex("""[{}\[\]()|]|[^\s{}\[\]()|*]+""")
 private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")

@@ -15,10 +15,21 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrume
  * The index of the first of [parts] written for [instrument], by the part's name, or null where none is (and always for
  * [Instrument.OTHER]). Every guitar is the guitar's and every bass the bass's: a score names the instrument, never its
  * strings.
+ *
+ * A choir's voices are nobody's, though one is named like an instrument: a staff several named voices share ("Tenor /
+ * Bass") is a choir's, and so is a part named only as a voice ("Bass", "Bass 2") in a score naming another part a
+ * singing voice (a Soprano, an Alto, a Tenor). A band's "Bass" beside its "Vocals" is still the bass player's.
  */
 internal fun abcPartFor(parts: List<AbcPart>, instrument: Instrument?): Int? {
     val family = instrument?.family ?: return null
-    return parts.indexOfFirst { part -> part.name?.let(::instrumentNamed) == family }.takeIf { it >= 0 }
+    val hasChoir = parts.any { part ->
+        part.name.orEmpty().split(SHARED_STAFF_NAME_SEPARATOR).any { SINGING_VOICE.matches(it.trim().lowercase()) }
+    }
+    return parts.indexOfFirst { part ->
+        val name = part.name ?: return@indexOfFirst false
+        val isChoirVoice = SHARED_STAFF_NAME_SEPARATOR in name || (hasChoir && CHOIR_BASS.matches(name.trim().lowercase()))
+        !isChoirVoice && instrumentNamed(name) == family
+    }.takeIf { it >= 0 }
 }
 
 /**
@@ -36,6 +47,12 @@ private val Instrument.family
         Instrument.OTHER -> null
         else -> this
     }
+
+/** A part named only as one of a choir's voices but the bass (the bass's name is an instrument's too), numbered or not. */
+private val SINGING_VOICE = Regex("""(?:soprano|sopran|szoprán|mezzo-?soprano|mezzo|alto|alt|contralto|tenor|ténor|tenore|baritone|bariton|baritono|barítono)s?\.?\s*\d*""")
+
+/** A part named only as a choir's bass, numbered or not (`Bass 2`, `Basses`). */
+private val CHOIR_BASS = Regex("""(?:bass|basse|basso|bassi|bajo|bajos|bas|basszus)(?:es)?\.?\s*\d*""")
 
 private val NAMES = listOf(
     // A bassoon (and the French basson) is no bass.

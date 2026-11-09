@@ -63,7 +63,8 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   own rendering arrives, and cross-fades from it.
 - **A score of several parts is engraved one part at a time** (`AbcParts.kt`, tested): a part is a top-level item of its
   `%%score` (a brace or a parenthesis whole, a bracket's members each), neighbours of one `nm=` joined (a staff and its
-  tablature). The player's instrument picks its part by name (`AbcPartInstruments.kt`), and then there is no picker;
+  tablature). The player's instrument picks its part by name (`AbcPartInstruments.kt`; never a choir's voice, a staff
+  of several voice names or a lone "Bass" beside a Soprano, Alto, or Tenor), and then there is no picker;
   otherwise the heading's picker does, the first part until then, never stored (`NotationPartChoices`). The editor's
   preview and the PDF engrave every part. **The other voices' music is cut out, not only left off the score**: abc2svg
   still times a hidden voice and pads the shown one to it, and an export's voices of uneven length give a fractional
