@@ -1,0 +1,14 @@
+{title: A Second Tune}
+{artist: Campfire Tests}
+{key: D}
+
+{start_of_verse}
+A verse stands above the second tune
+{end_of_verse}
+
+{start_of_abc}
+X:1
+L:1/8
+K:D
+|: "D"D2 F2 A2 F2 | "A"E2 G2 F2 D2 | "G"B2 d2 c2 A2 | "D"d4 D4 :|
+{end_of_abc}

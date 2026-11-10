@@ -254,15 +254,13 @@ internal fun rememberSongNotations(
     val parts = partChoices?.let { choices -> tunes.mapNotNull { tune -> choices.shownPartOf(tune.text, instrument)?.let { tune.text to it } }.toMap() }.orEmpty()
     val facts = remember(tunes, parts, songTitle) { notationTuneFactsOf(tunes, parts, songTitle) }
     val placement = remember { NotationPlacement() }
-    val request = if (narrowestWidth == null || narrowestWidth <= 0 || tunes.isEmpty()) {
+    // The request for the narrowest column, which the width the tunes were placed at is remembered by.
+    val base = if (narrowestWidth == null || narrowestWidth <= 0 || tunes.isEmpty()) {
         null
     } else {
-        val read = chords.forTune(facts.hasTabVoice)
-        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, read, songTitle.takeIf { facts.namesSongTitle }, painting, parts, facts)
-        val width = placement.widthFor(tunes, narrowestWidth, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(base))
-        if (width != narrowestWidth) cache?.rememberPlacedWidth(base, width)
-        base.copy(width = width)
+        NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords.forTune(facts.hasTabVoice), songTitle.takeIf { facts.namesSongTitle }, painting, parts, facts)
     }
+    val request = base?.let { it.copy(width = placement.widthFor(tunes, it.width, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(it))) }
     val isPlacementUnknown = placement.isGuessing
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
@@ -319,6 +317,9 @@ internal fun rememberSongNotations(
             rerenderedTunes = rerenderedTunes,
             arrivingTunes = if (isOnlyPlaced) renderings.keys else arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
         )
+        // Only a rendering that landed is remembered, never each frame of a pinch or a resize, whose every page would
+        // put an entry of its own into the app-wide cache and push out where the other songs were placed.
+        if (request.width != base.width) cache?.rememberPlacedWidth(base, request.width)
     }
     val maxWidth = (widestWidth ?: narrowestWidth ?: 0) * unitSize
     return remember(tunes.isEmpty(), rendered, standIns, unitSize, maxWidth, partChoices, instrument) {

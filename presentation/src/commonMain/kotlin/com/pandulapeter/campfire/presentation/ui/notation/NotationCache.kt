@@ -111,7 +111,8 @@ internal class NotationCache(
     /**
      * The page width a song's tunes were last engraved for where the layout placed them ([NotationPlacement]), by the
      * request engraving them for the narrowest column, so that a song opened again is engraved for its column on its
-     * first frame rather than for the narrowest one and then again. As many songs as tunes are kept.
+     * first frame rather than for the narrowest one and then again. Written once a rendering for it has landed, never
+     * while composing: every frame of a pinch or a resize is a request of its own. As many songs as tunes are kept.
      */
     private val placedWidths = LinkedHashMap<NotationRequest, Int>()
 
