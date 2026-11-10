@@ -49,8 +49,9 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   verse by verse with syllable marks undone; it is the staff's content description, never the ABC source.
 - A tune whose first `T:` is the song's title leaves its title and composer to the page (`AbcTitles.kt`, tested); a
   medley's tunes, named otherwise, keep theirs.
-- Painting happens off the main thread (the web's only thread aside) with the rendering, by a painter of the effect's
-  own (its own `TextMeasurer`); nothing is painted during composition.
+- Painting happens off the main thread (the web's only thread aside) with the rendering and the string work around it
+  (a part cut out, a title hidden, the engine's output read), by a painter of the effect's own (its own
+  `TextMeasurer`); nothing is painted during composition.
 - **A song's tunes are engraved for the column they are placed in** (`NotationPlacement`, tested): a staff is only ever
   scaled down, its words with it, so one engraved for a wider column came out smaller than the lyrics. Its text tells
   its column before the first engraving (two frames' wait), so the staff replaces it in one step; with nothing placed

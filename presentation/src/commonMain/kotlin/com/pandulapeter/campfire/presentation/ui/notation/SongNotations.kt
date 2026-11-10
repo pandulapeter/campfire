@@ -358,7 +358,8 @@ private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune
  * [tune] engraved with only [part] where one is given, or whole where none is or the part fails on its own (abc2svg
  * engraves a part alone as a score of its own, which can hold what the whole score does not), so a part is never worse
  * than the score: the text engraved and its drawing, null where neither can be drawn. What the song page and the PDF
- * both engrave.
+ * both engrave, [partText] being the part's text where the caller has it already. Off the main thread, the web's only
+ * thread aside: a part cut out, a title hidden, and the engine's output read are string work over a whole score.
  */
 internal suspend fun renderNotationPartOrScore(
     renderer: AbcRenderer,
@@ -367,9 +368,12 @@ internal suspend fun renderNotationPartOrScore(
     width: Int,
     chords: NotationChordSpelling,
     songTitle: String?,
-    partText: String = engravedTextOf(tune, part),
-): Pair<String, NotationDrawing>? = renderNotationDrawing(renderer, partText, width, chords, songTitle)?.let { partText to it }
-        ?: tune.takeIf { it != partText }?.let { renderNotationDrawing(renderer, it, width, chords, songTitle)?.let { drawing -> tune to drawing } }
+    partText: String? = null,
+): Pair<String, NotationDrawing>? = withContext(Dispatchers.Default) {
+    val engraved = partText ?: engravedTextOf(tune, part)
+    renderNotationDrawing(renderer, engraved, width, chords, songTitle)?.let { engraved to it }
+        ?: tune.takeIf { it != engraved }?.let { renderNotationDrawing(renderer, it, width, chords, songTitle)?.let { drawing -> tune to drawing } }
+}
 
 /**
  * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as

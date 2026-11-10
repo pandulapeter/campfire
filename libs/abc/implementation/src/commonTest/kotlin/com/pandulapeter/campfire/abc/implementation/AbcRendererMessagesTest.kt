@@ -75,6 +75,7 @@ class AbcRendererMessagesTest {
     fun `the characters the host separates its output with are blanked out of a tune without moving its positions`() = runTest {
         val rendering = assertIs<AbcRendering.Systems>(renderer.render("X:1\nT:A\u0001B\u0002\nK:C\n\"Am C D|\n", width = 800, transposition = 0))
         assertTrue(rendering.messages.any { it.line == 3 && it.column == 1 }, rendering.messages.toString())
+        assertEquals("A B C D\nE\tF", withSeparatorsBlanked("A\u0000B\u0001C\u0002D\nE\tF"))
     }
 
     private companion object {

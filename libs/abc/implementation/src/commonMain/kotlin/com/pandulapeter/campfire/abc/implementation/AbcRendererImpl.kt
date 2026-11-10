@@ -29,9 +29,7 @@ internal class AbcRendererImpl : AbcRenderer {
     override suspend fun render(tune: String, width: Int, transposition: Int, tablature: AbcTablature?): AbcRendering {
         if (tune.length > MAX_TUNE_LENGTH) return AbcRendering.Failed("A tune longer than $MAX_TUNE_LENGTH characters")
         if (voiceCountOf(tune) > MAX_TUNE_VOICES) return AbcRendering.Failed("A tune of more than $MAX_TUNE_VOICES voices")
-        // The host's output is split at these three characters, which a tune has no use for; each is blanked rather than
-        // removed so that the positions abc2svg reports are still the tune's.
-        val readable = tune.map { if (it <= RECORD_SEPARATOR + 1) ' ' else it }.joinToString("")
+        val readable = withSeparatorsBlanked(tune)
         val zeroDurations = zeroDurationsIn(readable)
         if (zeroDurations.isNotEmpty()) return AbcRendering.Failed(ZERO_DURATION_MESSAGE, zeroDurations)
         return rendered(readable, width, transposition, tablature)
@@ -126,4 +124,13 @@ internal class AbcRendererImpl : AbcRenderer {
         private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
         private val SCORE_VOICE = Regex("""[^\s()\[\]{}|*]+""")
     }
+}
+
+/**
+ * [tune] with the three characters the host splits its output at, which a tune has no use for, each blanked rather than
+ * removed, so that the positions abc2svg reports are still the tune's. Built without boxing a character, since a tune
+ * can be long.
+ */
+internal fun withSeparatorsBlanked(tune: String) = buildString(tune.length) {
+    tune.forEach { append(if (it <= RECORD_SEPARATOR + 1) ' ' else it) }
 }
