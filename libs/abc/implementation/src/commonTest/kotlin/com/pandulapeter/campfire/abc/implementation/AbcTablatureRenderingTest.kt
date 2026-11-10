@@ -14,12 +14,21 @@ import com.pandulapeter.campfire.abc.api.AbcTablature
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class AbcTablatureRenderingTest {
 
     private val renderer = AbcRendererImpl()
+
+    @Test
+    fun `a tablature is read by a voice in the tab clef, named either way, and by no other`() {
+        assertTrue(AbcTablature.isReadBy("X:1\nK:C\nV:1\nC|\nV:2 clef=tab\nC|"))
+        assertTrue(AbcTablature.isReadBy("X:1\nK:C\nV:1\nC|\nV:2 tab strings=E,A,DG\nC|"))
+        assertTrue(AbcTablature.isReadBy("X:1\nK:C\n[V:2 clef=tab] C|"))
+        assertFalse(AbcTablature.isReadBy("X:1\nK:C\nV:1\nC|"))
+    }
 
     @Test
     fun `a tab is fretted on the strings it names where nobody reads it`() = runTest {

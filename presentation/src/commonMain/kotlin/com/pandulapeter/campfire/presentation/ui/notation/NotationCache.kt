@@ -24,15 +24,22 @@ internal data class NotationTuneKey(
     val painting: NotationPainting,
 )
 
-/** The key of [tune] in this request. */
-internal fun NotationRequest.keyOf(tune: AbcTune) = NotationTuneKey(
-    tune = textOf(tune),
-    chords = chords.movedBy(tune.offset),
-    width = width,
-    unitSize = unitSize,
-    songTitle = songTitle,
-    painting = painting,
-)
+/**
+ * The key of [tune] in this request, holding only what its engraving reads: the reader's tab fretting only where it has
+ * a tab voice, the song's title only where it is named as the song, so neither re-engraves a plain staff or misses the
+ * same tune in another song.
+ */
+internal fun NotationRequest.keyOf(tune: AbcTune): NotationTuneKey {
+    val facts = factsOf(tune)
+    return NotationTuneKey(
+        tune = facts.engravedText,
+        chords = chords.forTune(facts.hasTabVoice).movedBy(tune.offset),
+        width = width,
+        unitSize = unitSize,
+        songTitle = songTitle.takeIf { facts.namesSongTitle },
+        painting = painting,
+    )
+}
 
 /**
  * The renderings made last, app-wide, so that a tune seen before at the same width, size, and transposition is notation

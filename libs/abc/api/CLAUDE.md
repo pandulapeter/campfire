@@ -22,3 +22,5 @@ The contract of the staff notation engraver: depends on nothing, so no app type 
   are about where the page broke a line, so the editor renders on a page of `AbcRenderer.TEXT_LINE_WIDTH`.
 - Lyrics (`AbcSystem.LYRICS_CLASS`) are set `AbcSystem.LYRICS_ROOM` times larger than they are meant to be drawn, so
   the notes are spaced for a typeface wider than the renderer's width tables (Inter's).
+- `AbcTablature.isReadBy` is the one test of whether a tune has a tab voice, which alone reads an `AbcTablature`: the
+  engine and the song page (keying a plain staff without the reader's tab fretting) share it.

@@ -15,11 +15,13 @@ import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.abc.api.AbcTablature
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.HEADER
 import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures.SYSTEM
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -169,19 +171,40 @@ internal class NotationCacheTest {
         assertEquals(request(AbcTune("A", 0)).hashCode(), request(AbcTune("A", 0)).hashCode())
     }
 
+    @Test
+    fun `a tune is keyed by the tab fretting only where it has a tab voice`() {
+        val plain = AbcTune("X:1\nK:C\nV:1\nC|", 0)
+        val tab = AbcTune("X:1\nK:C\nV:1\nC|\nV:2 clef=tab\nC|", 0)
+        val noteNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        fun keyOf(tune: AbcTune, capo: Int) = request(
+            tune,
+            chords = NotationChordSpelling.AS_WRITTEN.copy(tablature = AbcTablature(tuning = null, capo = capo, maxFret = 24, noteNames = noteNames)),
+        ).keyOf(tune)
+        assertEquals(keyOf(plain, capo = 0), keyOf(plain, capo = 2))
+        assertNotEquals(keyOf(tab, capo = 0), keyOf(tab, capo = 2))
+    }
+
+    @Test
+    fun `a tune is keyed by the song's title only where it is named as the song`() {
+        val reel = AbcTune("X:1\nT:The Reel\nK:G\nGAB|", 0)
+        assertEquals(request(reel, songTitle = "A Song").keyOf(reel), request(reel, songTitle = "Another Song").keyOf(reel))
+        assertNotEquals(request(reel, songTitle = "A Song").keyOf(reel), request(reel, songTitle = "The Reel").keyOf(reel))
+    }
+
     private fun request(
         vararg tunes: AbcTune,
         chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
         parts: Map<String, AbcPart> = emptyMap(),
+        songTitle: String? = null,
     ) = NotationRequest(
         tunes = tunes.toSet(),
         width = 300,
         availableWidth = 1_000,
         unitSize = 1f,
         chords = chords,
-        songTitle = null,
+        songTitle = songTitle,
         painting = painting,
         parts = parts,
-        facts = notationTuneFactsOf(tunes.toSet(), parts),
+        facts = notationTuneFactsOf(tunes.toSet(), parts, songTitle),
     )
 }

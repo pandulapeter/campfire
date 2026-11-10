@@ -38,7 +38,7 @@ internal class AbcRendererImpl : AbcRenderer {
     }
 
     private suspend fun rendered(tune: String, width: Int, transposition: Int, tablature: AbcTablature?): AbcRendering = try {
-        val header = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune), tablature = tablature)
+        val header = headerOf(width, transposition, hasStringTablature = AbcTablature.isReadBy(tune), tablature = tablature)
         // A percussion map and the tune's own page format are rewritten within their own lines, so the lines abc2svg counts
         // are still the tune's.
         val result = engine.render(source = header + withAbc2svgPercussionMaps(withoutOwnPageFormat(tune)))
@@ -124,7 +124,6 @@ internal class AbcRendererImpl : AbcRenderer {
         private val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
         private val VOICE_FIELD = Regex("""(?m)(?:^|\[)V:[ \t]*([^\s\]]+)""")
         private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
-        private val TAB_VOICE = Regex("""(?m)(?:^|\[)V:[^\]\n]*?(?:\stab\b|clef=tab\b)""")
         private val SCORE_VOICE = Regex("""[^\s()\[\]{}|*]+""")
     }
 }

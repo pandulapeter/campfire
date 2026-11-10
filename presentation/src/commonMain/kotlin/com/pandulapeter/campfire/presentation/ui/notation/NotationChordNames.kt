@@ -42,6 +42,9 @@ internal data class NotationChordSpelling(
     /** This spelling moved [offset] semitones further, for a tune under a key change ([abcTunesOf]). */
     fun movedBy(offset: Int) = if (offset == 0) this else copy(semitones = semitones + offset)
 
+    /** This spelling as a tune reads it: its [tablature] only where the tune has a tab voice ([AbcTablature.isReadBy]). */
+    fun forTune(hasTabVoice: Boolean) = if (hasTabVoice || tablature == null) this else copy(tablature = null)
+
     companion object {
         val AS_WRITTEN = NotationChordSpelling(semitones = 0, preferFlats = null, notation = ChordNotation.STANDARD)
     }

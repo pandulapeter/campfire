@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.notation
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class AbcTitlesTest {
 
@@ -27,6 +29,14 @@ class AbcTitlesTest {
             abcTuneWithoutSongTitle(medley, songTitle = "The Reel"),
         )
         assertEquals(medley, abcTuneWithoutSongTitle(medley, songTitle = "A Medley"))
+    }
+
+    @Test
+    fun `a tune names the song only by its first title, case and spacing aside`() {
+        assertTrue(abcNamesSongTitle("X:1\nT:The  Reel\nK:G\nGAB|", songTitle = "the reel"))
+        assertTrue(abcNamesSongTitle("X:1\nT:Another\nK:G\nGAB|\n\nX:2\nT:The Reel\nK:D\nDEF|", songTitle = "The Reel"))
+        assertFalse(abcNamesSongTitle("X:1\nT:Another\nT:The Reel\nK:G\nGAB|", songTitle = "The Reel"))
+        assertFalse(abcNamesSongTitle("X:1\nT:The Reel\nK:G\nGAB|", songTitle = null))
     }
 
     @Test

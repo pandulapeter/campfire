@@ -31,4 +31,15 @@ public data class AbcTablature(
     val capo: Int,
     val maxFret: Int,
     val noteNames: List<String>,
-)
+) {
+    public companion object {
+
+        /**
+         * Whether [tune] has a voice in the tab clef (`V:… tab` or `V:… clef=tab`, on a line of its own or inline), the only
+         * voices an [AbcTablature] is read for: a tune with none is engraved alike under any tablature.
+         */
+        public fun isReadBy(tune: String): Boolean = TAB_VOICE.containsMatchIn(tune)
+
+        private val TAB_VOICE = Regex("""(?m)(?:^|\[)V:[^\]\n]*?(?:\stab\b|clef=tab\b)""")
+    }
+}

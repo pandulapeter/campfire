@@ -137,7 +137,9 @@ internal class NotationRun(
  * from the tunes only placed at another width), its chords, the song's title, which a tune named the
  * same leaves to the page, what its words are laid out with, so a new density or style paints again, and the part of
  * each score engraved, by the tune's text (a tune not in [parts] is engraved whole). [facts] are what follows from the
- * tunes and parts, worked out once for them; each request carries its own, since a part picked changes a tune's text.
+ * tunes, parts, and title, worked out once for them; each request carries its own, since a part picked changes a tune's
+ * text. The tab fretting in [chords] is left out where no tune has a tab voice, and [songTitle] where no tune is named as
+ * the song, so neither changing makes a new request of a song they cannot change.
  */
 internal data class NotationRequest(
     val tunes: Set<AbcTune>,
@@ -150,8 +152,11 @@ internal data class NotationRequest(
     val parts: Map<String, AbcPart>,
     val facts: NotationTuneFacts,
 ) {
+    /** What [tune]'s engraving reads of its text. */
+    fun factsOf(tune: AbcTune) = facts[tune] ?: tuneFactsOf(tune.text, parts[tune.text], songTitle)
+
     /** The text of [tune] engraved: the part shown, where only one is. */
-    fun textOf(tune: AbcTune) = facts[tune]?.engravedText ?: engravedTextOf(tune.text, parts[tune.text])
+    fun textOf(tune: AbcTune) = factsOf(tune).engravedText
 }
 
 /**
@@ -247,12 +252,13 @@ internal fun rememberSongNotations(
     val instrument = LocalNotationInstrument.current
     // Read in composition, so that a part picked or an instrument changed is a new request.
     val parts = partChoices?.let { choices -> tunes.mapNotNull { tune -> choices.shownPartOf(tune.text, instrument)?.let { tune.text to it } }.toMap() }.orEmpty()
-    val facts = remember(tunes, parts) { notationTuneFactsOf(tunes, parts) }
+    val facts = remember(tunes, parts, songTitle) { notationTuneFactsOf(tunes, parts, songTitle) }
     val placement = remember { NotationPlacement() }
     val request = if (narrowestWidth == null || narrowestWidth <= 0 || tunes.isEmpty()) {
         null
     } else {
-        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords, songTitle, painting, parts, facts)
+        val read = chords.forTune(facts.hasTabVoice)
+        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, read, songTitle.takeIf { facts.namesSongTitle }, painting, parts, facts)
         val width = placement.widthFor(tunes, narrowestWidth, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(base))
         if (width != narrowestWidth) cache?.rememberPlacedWidth(base, width)
         base.copy(width = width)
@@ -285,6 +291,10 @@ internal fun rememberSongNotations(
         val renderings = request.tunes.mapNotNull { tune ->
             ensureActive() // a cancelled run (a newer request) stops between tunes rather than painting the rest
             val key = request.keyOf(tune)
+            // A tune whose engraving reads nothing that changed keeps the very rendering it has, which neither cross-fades
+            // nor waits for a cache that may have let it go. Each key is made from its own request's texts: a part picked
+            // since changes the text.
+            rendered.renderings[tune]?.takeIf { previous?.keyOf(tune) == key }?.let { return@mapNotNull tune to it }
             if (cache?.isFailed(key) == true) return@mapNotNull null
             val rendering = cache?.get(key) ?: render(renderer, painter, tune, request).also { rendering ->
                 // A cancellation throws rather than returning null, but one racing the end of the work must not be
@@ -301,7 +311,7 @@ internal fun rememberSongNotations(
             (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords || previous.parts != request.parts)
         // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
         // block just added) arrives as data, replacing its text at once.
-        val rerenderedTunes = (if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()) +
+        val rerenderedTunes = (if (isRerendering) renderings.filter { (tune, rendering) -> rendering !== rendered.renderings[tune] }.keys.intersect(rendered.renderings.keys) else emptySet()) +
             renderings.keys.intersect(shownStandIns.keys)
         rendered = RenderedNotations(
             request = request,

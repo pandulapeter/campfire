@@ -60,10 +60,11 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   Where a song was placed is kept app-wide (`NotationCache`), so a song opened again is engraved for its column on its
   first frame. Each unit is the lyrics' text size over `AbcSystem.TEXT_SIZE`, so the staff grows with the reader's and
   the system's font size as the lyrics do (the PDF's by the same rule). Engraved again when tunes, transposition,
-  spelling, width, or text size change; a width or size alone waits 300 ms for the resize or pinch to settle, the
-  systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering replacing one the
-  reader changed cross-fades with it (fading in from nothing blinked the tune out) while sections glide; the first one,
-  replacing the text, does not.
+  spelling, width, or text size change, each tune keyed by only what its engraving reads (the tab fretting only with a
+  tab voice, the song's title only where its `T:` names it), so a tune nothing it reads changed keeps its rendering; a
+  width or size alone waits 300 ms for the resize or pinch to settle, the systems scaled meanwhile. All tunes arrive at
+  once, so sections are measured again once. A rendering replacing one the reader changed cross-fades with it (fading
+  in from nothing blinked the tune out) while sections glide; the first one, replacing the text, does not.
 - **Renderings are kept app-wide** (`NotationCache`: 16 tunes or 4,000 distinct word layouts, LRU), keyed by everything they
   depend on, so a tune seen before is notation on its first frame. A cold one's arrival moves nothing gradually; a
   rendering that also re-renders a tune is the reader's change and is animated whole. A failed tune is remembered per

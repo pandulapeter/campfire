@@ -35,6 +35,12 @@ internal fun abcTuneWithoutSongTitle(tune: String, songTitle: String?): String {
 internal fun abcOwnTitles(tune: String, songTitle: String?): List<String> =
     firstTitlesOf(tune.lines()).mapNotNull { (_, title) -> title?.trim()?.takeIf { it.isNotEmpty() && !title.isSongTitle(songTitle) } }
 
+/**
+ * Whether any tune of [tune] is named by its first title (`T:`) as the song, [songTitle], case and spacing aside: the
+ * only tunes the song's title changes the engraving and reading of ([abcTuneWithoutSongTitle], [abcOwnTitles]).
+ */
+internal fun abcNamesSongTitle(tune: String, songTitle: String?): Boolean = firstTitlesOf(tune.lines()).any { (_, title) -> title.isSongTitle(songTitle) }
+
 /** The first title (`T:`) in the header of each tune of [lines], by the line its `X:` stands on (-1 for a tune with none). */
 private fun firstTitlesOf(lines: List<String>): List<Pair<Int, String?>> {
     val tuneStarts = lines.indices.filter { lines[it].startsWith("X:") }.ifEmpty { listOf(-1) }
