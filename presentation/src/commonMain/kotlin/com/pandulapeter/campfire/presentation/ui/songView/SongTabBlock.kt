@@ -181,18 +181,22 @@ internal class TabRows(
         if (staffLines == null) {
             lines.maxOfOrNull { line -> textMeasurer.measure(AnnotatedString(line), styles.monospaceText, softWrap = false).size.width } ?: 0
         } else {
-            ceil(ChordProTabWrapper.wrapLines(lines, Int.MAX_VALUE).flatten().maxOfOrNull { staffLines.line(it).width } ?: 0f).toInt()
+            ceil(rowsOf(Int.MAX_VALUE).maxOfOrNull { row -> row.lines.maxOfOrNull { it.width } ?: 0f } ?: 0f).toInt()
         }
     }
-    private val rowsByWidth = mutableMapOf<Int, List<TabRow>>()
-    private val recentWidths = ArrayDeque<Int>()
 
-    fun at(width: Int): List<TabRow> {
-        recentWidths.remove(width)
-        recentWidths.addLast(width)
-        if (recentWidths.size > MAX_TAB_WIDTHS) rowsByWidth.remove(recentWidths.removeFirst())
-        return rowsByWidth.getOrPut(width) {
-            val maxColumns = if (width >= naturalWidth || columnWidth <= 0f) Int.MAX_VALUE else (width / columnWidth).toInt()
+    // Kept by how many columns fit rather than by the width: every width of a window being dragged that fits the same
+    // columns, and every one that fits the whole run, is the same rows.
+    private val rowsByColumns = mutableMapOf<Int, List<TabRow>>()
+    private val recentColumns = ArrayDeque<Int>()
+
+    fun at(width: Int): List<TabRow> = rowsOf(if (width >= naturalWidth || columnWidth <= 0f) Int.MAX_VALUE else (width / columnWidth).toInt())
+
+    private fun rowsOf(maxColumns: Int): List<TabRow> {
+        recentColumns.remove(maxColumns)
+        recentColumns.addLast(maxColumns)
+        if (recentColumns.size > MAX_TAB_WIDTHS) rowsByColumns.remove(recentColumns.removeFirst())
+        return rowsByColumns.getOrPut(maxColumns) {
             if (staffLines != null) {
                 ChordProTabWrapper.wrapLines(lines, maxColumns).map { row ->
                     TabRow(lines = row.map(staffLines::line), staff = tabStaffGeometryOf(row))
