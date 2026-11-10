@@ -39,17 +39,13 @@ internal object ChordProTabTransposer {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
         // A string's number (`1|`) is its name, not a fret: the frets are read after it, as the retuner reads them.
         val bodyStarts = lines.map { ChordProStaffNames.staffPrefix(it).bodyStart }
-        val frets = lines.indices.filter { isStaffLine[it] }.flatMap { fretNumbers(lines[it].substring(bodyStarts[it])) }
+        val frets = lines.indices.filter { isStaffLine[it] }.flatMap { fretNumbers(lines[it], start = bodyStarts[it]) }
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
         return ChordProTabWrapper.systems(lines, isStaffLine).flatMap { range ->
             val system = lines.subList(range.first, range.last + 1)
             val moved = ChordProTabColumns.replace(
                 lines = system,
-                replacements = range.map { index ->
-                    if (!isStaffLine[index]) return@map null
-                    val start = bodyStarts[index]
-                    fretReplacements(lines[index].substring(start), shift).map { (frets, moved) -> (frets.first + start)..(frets.last + start) to moved }
-                },
+                replacements = range.map { index -> if (isStaffLine[index]) fretReplacements(lines[index], shift, start = bodyStarts[index]) else null },
             )
             moved.mapIndexed { position, line -> if (isStaffLine[range.first + position]) line else rewriteChordLine(line, rename) }
         }
@@ -70,13 +66,15 @@ internal object ChordProTabTransposer {
 
     /**
      * The positions of the fret numbers of a staff line: every run of digits that is not a repeat count, `x4` or, after
-     * the last bar line, `4x`. Inside the staff a `3x` is a fret and a dead note on the next column, and moves.
+     * the last bar line, `4x`. Inside the staff a `3x` is a fret and a dead note on the next column, and moves. What
+     * stands before [start] is skipped, the bars there still counted: it is how a string's number is left out with the
+     * line whole, since the bar after it may be the staff's only one.
      */
-    internal fun fretRanges(line: String): List<IntRange> {
+    internal fun fretRanges(line: String, start: Int = 0): List<IntRange> {
         val ranges = mutableListOf<IntRange>()
         // What stands after the last bar line is a note to the player (`x3`, `3x`, `(3x)`), not a string's frets.
         val lastBar = line.lastIndexOf('|')
-        var index = 0
+        var index = start
         while (index < line.length) {
             if (line[index].isAsciiDigit) {
                 var endIndex = index
@@ -100,7 +98,7 @@ internal object ChordProTabTransposer {
      */
     private val Char.isAsciiDigit get() = this in '0'..'9'
 
-    internal fun fretNumbers(line: String) = fretRanges(line).mapNotNull { line.substring(it).toIntOrNull() }
+    internal fun fretNumbers(line: String, start: Int = 0) = fretRanges(line, start).mapNotNull { line.substring(it).toIntOrNull() }
 
     /** How many semitones of whole octaves to add so that every fret stays on the fingerboard, or null if none does. */
     private fun octaveOffset(frets: List<Int>, semitones: Int): Int? {
@@ -112,7 +110,7 @@ internal object ChordProTabTransposer {
     }
 
     /** The fret numbers of a staff line moved by [shift], for [ChordProTabColumns.replace]. */
-    internal fun fretReplacements(line: String, shift: Int) = fretRanges(line).mapNotNull { range ->
+    internal fun fretReplacements(line: String, shift: Int, start: Int = 0) = fretRanges(line, start).mapNotNull { range ->
         line.substring(range).toIntOrNull()?.let { fret -> range to (fret + shift).toString() }
     }
 

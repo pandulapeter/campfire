@@ -20,6 +20,8 @@ class ChordProTabTransposerTest {
         assertEquals("{sot}\ne|--2--4--| 3x\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--2--| 3x\n{eot}", 2))
         assertEquals("{sot}\ne|--2--4--| (3x)\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--2--| (3x)\n{eot}", 2))
         assertEquals("{sot}\ne|--5x--|\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--3x--|\n{eot}", 2))
+        assertEquals("{sot}\ne|--2--4-- 4x\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--2-- 4x\n{eot}", 2))
+        assertEquals("{sot}\n|--2--4-- 4x\n{eot}", ChordProTransposer.transposeText("{sot}\n|--0--2-- 4x\n{eot}", 2))
     }
 
     @Test
