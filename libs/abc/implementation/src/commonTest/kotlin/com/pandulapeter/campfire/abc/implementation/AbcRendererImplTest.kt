@@ -60,6 +60,14 @@ class AbcRendererImplTest {
     }
 
     @Test
+    fun `chord symbols over a tab staff carry their own class at the page's size`() = runTest {
+        val tune = "X:1\nL:1/8\nV:1 tab stafflines=6 strings=E2,A2,D3,G3,B3,E4 nm=\"Guitar\"\nK:C\n\"C\"CDEF \"G\"GABc|"
+        val svg = assertIs<AbcRendering.Systems>(renderer.render(tune, width = 800, transposition = 0)).systems.joinToString("")
+        val chordClass = """class="(f\d+) ${AbcSystem.CHORD_SYMBOL_CLASS}"[^>]*>C<""".toRegex().find(svg)?.groupValues?.get(1)
+        assertTrue(chordClass != null && ".$chordClass{font:700 10.0px sans-serif}" in svg)
+    }
+
+    @Test
     fun `a drum kit mapped as notation programs export it draws every head`() = runTest {
         val maps = "I:percmap F F 36 normal\nI:percmap ^g g 42 x\n%%percmap c c 38 normal"
         val tune = "X:1\nL:1/8\nV:1 perc nm=\"Drums\"\nK:none\n$maps\nV:1\n[^gF]^g[^gc]^g|"

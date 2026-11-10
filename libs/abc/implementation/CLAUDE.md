@@ -39,7 +39,8 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   dropped the lyrics' class. A voice's own scale is relative to the score and kept.
 - A tune with a voice in the tab clef (`V:… tab` or `clef=tab`, how notation programs export a guitar's or a bass's
   tablature) also gets `%%strtab`: only that line loads abc2svg's string tablature module, without which the voice is
-  engraved as a bass-clef staff of notes with string numbers over them.
+  engraved as a bass-clef staff of notes with string numbers over them. Its chord symbols get `%%cstabfont` with the
+  chord class, at the size that the module's 1.6 times scale draws as the page's chords (it gives them neither).
 - A percussion map as notation programs export it (`I:percmap ^g g 42 x`, xml2abc's note, shown step, MIDI drum, and
   head) is rewritten into abc2svg's (`%%percmap ^g 42 x`) before rendering (`PercussionMaps.kt`): abc2svg reads the third
   word as the head, names no glyph by it, and draws the notes headless. Its `normal` head is dropped, being abc2svg's

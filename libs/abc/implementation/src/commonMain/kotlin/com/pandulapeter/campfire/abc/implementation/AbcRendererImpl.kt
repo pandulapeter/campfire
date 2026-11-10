@@ -65,6 +65,8 @@ internal class AbcRendererImpl : AbcRenderer {
     // AbcSystem.LYRICS_ROOM): the app draws them in Inter Regular, which its width tables measure narrower than it is.
     // A voice in the tab clef (a notation program's guitar or bass tablature) is engraved as tablature only by abc2svg's
     // string tablature module, which nothing but a %%strtab line loads; without it the voice is a bass-clef staff of notes.
+    // The module sets a tab staff's chord symbols in a font of their own, drawn 1.6 times larger and without the chord
+    // class, so it is given the class and the size that comes out as the page's chords.
     private fun headerOf(width: Int, transposition: Int, hasStringTablature: Boolean) = """
         %%pagewidth ${width}px
         %%leftmargin 0
@@ -74,7 +76,7 @@ internal class AbcRendererImpl : AbcRenderer {
         %%vocalfont sans-serif ${(AbcSystem.TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition
 
-    """.trimIndent() + if (hasStringTablature) "%%strtab\n" else ""
+    """.trimIndent() + if (hasStringTablature) STRING_TABLATURE else ""
 
     /**
      * The distinct voices [tune] names: in `V:` fields, inline `[V:` fields, and `%%score` / `%%staves` lines (or their
@@ -104,6 +106,15 @@ internal class AbcRendererImpl : AbcRenderer {
 
         /** The most systems of a rendering read: what the app parses, paints, and lays out (one note a line is a system a line). */
         const val MAX_SYSTEMS = 2_000
+
+        /** abc2svg's string tablature module, and its chord symbols' font, which it draws [TAB_STAFF_SCALE] times larger. */
+        private val STRING_TABLATURE = """
+            %%strtab
+            %%cstabfont sans-serif-Bold ${AbcSystem.TEXT_SIZE / TAB_STAFF_SCALE} class=${AbcSystem.CHORD_SYMBOL_CLASS}
+
+        """.trimIndent()
+
+        private const val TAB_STAFF_SCALE = 1.6f
 
         /** What `campfire-abc-host.js` joins the systems with, and puts in front of the messages when there are none. */
         private const val SEPARATOR = '\u0000'
