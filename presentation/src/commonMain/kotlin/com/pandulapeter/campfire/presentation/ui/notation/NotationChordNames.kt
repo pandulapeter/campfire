@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import com.pandulapeter.campfire.abc.api.AbcTablature
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.chords.ChordProNotation
@@ -24,12 +25,15 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
  *
  * @property nameCapo The semitones the page names its chords below what sounds: the capo where it names the shapes
  *   fingered above it (`ShapeNames`), else 0.
+ * @property tablature How a tune's tab staves are fretted and named for the reader, as the page's own tabs are; null
+ *   leaves them as the tune writes them.
  */
 internal data class NotationChordSpelling(
     val semitones: Int,
     val preferFlats: Boolean?,
     val notation: ChordNotation,
     val nameCapo: Int = 0,
+    val tablature: AbcTablature? = null,
 ) {
 
     /** The semitones the chord symbols are named at, see [nameCapo]. */

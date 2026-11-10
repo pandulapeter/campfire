@@ -26,8 +26,10 @@ public interface AbcRenderer {
      *
      * @param transposition Semitones the notes, the key signatures, and the chord symbols are moved by, up or down;
      *   the renderer spells them for the key they land in.
+     * @param tablature How a voice in the tab clef is fretted and its strings named; null frets it on the strings it
+     *   names, under a TAB clef.
      */
-    public suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering
+    public suspend fun render(tune: String, width: Int, transposition: Int, tablature: AbcTablature? = null): AbcRendering
 
     public companion object {
         /**

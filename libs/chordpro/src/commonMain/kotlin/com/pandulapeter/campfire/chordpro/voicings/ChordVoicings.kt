@@ -139,7 +139,7 @@ public object ChordVoicings {
     private const val BASS_SEPARATOR = "/"
 
     /** The last fret of the neck, on every fretted instrument and in a tab. */
-    internal const val MAX_FRET = 24
+    public const val MAX_FRET: Int = 24
 
     /** The highest key a keyboard shape can press: four octaves above the diagram's C, past anything [ChordVoicingSearch.keyboard] writes. */
     internal const val MAX_KEY = 47

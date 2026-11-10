@@ -120,9 +120,40 @@ class TabPlayersTest {
         assertFalse(Instrument.OTHER in tabInstruments)
     }
 
+    private val noticeLabels = TabNoticeLabels(
+        octaveUp = "up",
+        octaveDown = "down",
+        otherInstrument = "other",
+        notMoved = "as written",
+        notMovedInstrument = "other, as written",
+        hidden = "hidden",
+        hiddenInstrument = "other, hidden",
+        instruments = emptyMap(),
+    )
+
     private fun unnamed(strings: Int) = List<Int?>(strings) { null }
 
     private fun pitchClasses(tuning: InstrumentTuning) = tuning.strings.map { it.mod(12) }
+
+    @Test
+    fun `sheet music's tabs are fretted on the player's strings above the capo and named in their notation`() {
+        val tablature = TabReading(player = tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR_DROP_D, ChordNotation.LATIN, isMoved = true), labels = noticeLabels, selects = true)
+            .abcTablature(capo = 2)
+
+        assertEquals(InstrumentTuning.GUITAR_DROP_D.strings, tablature.tuning)
+        assertEquals(2, tablature.capo)
+        assertEquals("Do", tablature.noteNames[0])
+        assertEquals("Re", tablature.noteNames[2])
+    }
+
+    @Test
+    fun `sheet music's tabs keep their own strings where nothing is moved`() {
+        val tablature = TabReading(player = tabPlayerOf(Instrument.GUITAR, InstrumentTuning.GUITAR_DROP_D, ChordNotation.STANDARD, isMoved = false), labels = noticeLabels, selects = false)
+            .abcTablature(capo = 0)
+
+        assertNull(tablature.tuning)
+        assertEquals("E", tablature.noteNames[4])
+    }
 
     @Test
     fun `a notice names the instrument a tab is written for where it is not the reader's`() {

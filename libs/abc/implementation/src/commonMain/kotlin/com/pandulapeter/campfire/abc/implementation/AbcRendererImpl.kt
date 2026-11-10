@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.abc.implementation
 
 import com.pandulapeter.campfire.abc.api.AbcRenderer
+import com.pandulapeter.campfire.abc.api.AbcTablature
 import com.pandulapeter.campfire.abc.api.AbcRendering
 import com.pandulapeter.campfire.abc.api.AbcSystem
 import kotlinx.coroutines.CancellationException
@@ -25,7 +26,7 @@ internal class AbcRendererImpl : AbcRenderer {
 
     private val engine = createAbcScriptEngine()
 
-    override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering {
+    override suspend fun render(tune: String, width: Int, transposition: Int, tablature: AbcTablature?): AbcRendering {
         if (tune.length > MAX_TUNE_LENGTH) return AbcRendering.Failed("A tune longer than $MAX_TUNE_LENGTH characters")
         if (voiceCountOf(tune) > MAX_TUNE_VOICES) return AbcRendering.Failed("A tune of more than $MAX_TUNE_VOICES voices")
         // The host's output is split at these three characters, which a tune has no use for; each is blanked rather than
@@ -33,11 +34,11 @@ internal class AbcRendererImpl : AbcRenderer {
         val readable = tune.map { if (it <= RECORD_SEPARATOR + 1) ' ' else it }.joinToString("")
         val zeroDurations = zeroDurationsIn(readable)
         if (zeroDurations.isNotEmpty()) return AbcRendering.Failed(ZERO_DURATION_MESSAGE, zeroDurations)
-        return rendered(readable, width, transposition)
+        return rendered(readable, width, transposition, tablature)
     }
 
-    private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
-        val header = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune))
+    private suspend fun rendered(tune: String, width: Int, transposition: Int, tablature: AbcTablature?): AbcRendering = try {
+        val header = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune), tablature = tablature)
         // A percussion map and the tune's own page format are rewritten within their own lines, so the lines abc2svg counts
         // are still the tune's.
         val result = engine.render(source = header + withAbc2svgPercussionMaps(withoutOwnPageFormat(tune)))
@@ -67,7 +68,8 @@ internal class AbcRendererImpl : AbcRenderer {
     // string tablature module, which nothing but a %%strtab line loads; without it the voice is a bass-clef staff of notes.
     // The module sets a tab staff's chord symbols in a font of their own, drawn 1.6 times larger and without the chord
     // class, so it is given the class and the size that comes out as the page's chords.
-    private fun headerOf(width: Int, transposition: Int, hasStringTablature: Boolean) = """
+    // The host reads how a tab is fretted for the reader from a comment line of its own, which abc2svg skips.
+    private fun headerOf(width: Int, transposition: Int, hasStringTablature: Boolean, tablature: AbcTablature?) = """
         %%pagewidth ${width}px
         %%leftmargin 0
         %%rightmargin 0
@@ -76,7 +78,7 @@ internal class AbcRendererImpl : AbcRenderer {
         %%vocalfont sans-serif ${(AbcSystem.TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition
 
-    """.trimIndent() + if (hasStringTablature) STRING_TABLATURE else ""
+    """.trimIndent() + if (hasStringTablature) STRING_TABLATURE + tablature?.let(::hostTablatureLineOf).orEmpty() else ""
 
     /**
      * The distinct voices [tune] names: in `V:` fields, inline `[V:` fields, and `%%score` / `%%staves` lines (or their

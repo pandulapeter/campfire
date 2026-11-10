@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
+import com.pandulapeter.campfire.abc.api.AbcTablature
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences.Instrument
@@ -51,7 +52,7 @@ class PrintNotationsTest {
     private class RecordingRenderer(private val failing: String? = null) : AbcRenderer {
         val tunes = mutableListOf<String>()
 
-        override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering {
+        override suspend fun render(tune: String, width: Int, transposition: Int, tablature: AbcTablature?): AbcRendering {
             tunes += tune
             return if (failing != null && failing in tune) {
                 AbcRendering.Failed("Failing on purpose")

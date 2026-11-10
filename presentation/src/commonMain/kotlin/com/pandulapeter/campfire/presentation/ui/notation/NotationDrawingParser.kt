@@ -30,12 +30,16 @@ internal fun parseNotationDrawing(systems: List<AbcSystem>): NotationDrawing? {
     )
 }
 
-/** What an element inherits from those around it: SVG's inheritance, as far as abc2svg relies on it. */
+/**
+ * What an element inherits from those around it: SVG's inheritance, as far as abc2svg relies on it, and whether it is
+ * drawn as part of a shared shape ([isShared], a `<use>`'s), such as the clef that names a tab staff's strings.
+ */
 private data class NotationContext(
     val transform: NotationTransform,
     val font: NotationFont?,
     val strokeWidth: Float,
     val anchor: NotationAnchor,
+    val isShared: Boolean = false,
 )
 
 private class NotationUnsupportedException : Exception()
@@ -93,7 +97,7 @@ private class NotationSystemReader {
                 val id = (element.attributes["xlink:href"] ?: element.attributes["href"])?.removePrefix("#")
                 val definition = definitions[id] ?: throw NotationUnsupportedException()
                 val context = contextOf(element, parent)
-                read(definition, context.copy(transform = context.transform.translated(element.number("x"), element.number("y"))))
+                read(definition, context.copy(transform = context.transform.translated(element.number("x"), element.number("y")), isShared = true))
             }
 
             "path" -> readPath(element, contextOf(element, parent))
@@ -159,6 +163,7 @@ private class NotationSystemReader {
             anchor = element.attributes["text-anchor"]?.let { parseTextAnchor(it) ?: NotationAnchor.START }
                 ?: classesOf(element).firstNotNullOfOrNull { it.anchor }
                 ?: parent.anchor,
+            isShared = parent.isShared,
         )
     }
 
@@ -249,8 +254,9 @@ private class NotationSystemReader {
             return
         }
         if (!transform.isUpright) throw NotationUnsupportedException()
-        // A tablature's frets are its notes, which a system of tablature alone (a part with no staff) plays no bar without.
-        if (isKnockedOut) firstMusicX = minOf(firstMusicX ?: Float.MAX_VALUE, transform.mapX(xs.firstOrNull() ?: 0f, 0f))
+        // A tablature's frets are its notes, which a system of tablature alone (a part with no staff) plays no bar without;
+        // the string names of its clef are knocked out of the strings as well, and are no notes.
+        if (isKnockedOut && !context.isShared) firstMusicX = minOf(firstMusicX ?: Float.MAX_VALUE, transform.mapX(xs.firstOrNull() ?: 0f, 0f))
         if (xs.size > 1 || ys.size > 1) {
             // Words placed a character at a time (a chord diagram's fingerings over its strings), each its own text.
             if (element.children.any { it is SvgElement }) throw NotationUnsupportedException()

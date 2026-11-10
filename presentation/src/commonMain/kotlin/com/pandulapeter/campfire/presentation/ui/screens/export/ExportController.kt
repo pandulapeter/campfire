@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.state.PendingWrites
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabNoticeLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.abcTablature
 import com.pandulapeter.campfire.presentation.ui.tabs.tabReadingOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -261,6 +262,7 @@ internal class ExportController(
                     preferFlats = spelling.accidentals.toPreferFlats(),
                     notation = spelling.notation.toChordNotation(),
                     nameCapo = shapeNames?.capo ?: 0,
+                    tablature = tabs?.abcTablature(capo = tabCapo),
                 ))
         }
         // Several songs are titled by the screen, which counts them in the app's language.

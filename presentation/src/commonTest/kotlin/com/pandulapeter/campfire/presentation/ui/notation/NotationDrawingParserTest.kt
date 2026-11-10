@@ -204,6 +204,28 @@ class NotationDrawingParserTest {
     }
 
     @Test
+    fun `a tablature's clef naming its strings draws them knocked out, and plays no bar`() {
+        // The clef the app's host writes in place of TAB, and a bar line opening the staff between it and the first fret.
+        val names = listOf("E", "A", "D", "G", "B", "e").mapIndexed { string, name ->
+            "<text class=\"bg1\" x=\"-7.5\" y=\"${-6 * string + 8.5}\" style=\"font:7px sans-serif\">$name</text>"
+        }
+        val named = AbcSystem(
+            svg = TAB_SYSTEM.svg
+                .replace(Regex("<text id=\"tab6\"[^>]*>TAB</text>"), names.joinToString(separator = "\n", prefix = "<g id=\"tab6\">\n", postfix = "\n</g>"))
+                .replace("M234.8 71.0v-48.0", "M80.0 71.0v-48.0M234.8 71.0v-48.0"),
+            height = TAB_SYSTEM.height,
+        )
+        val system = assertNotNull(parseNotationDrawing(listOf(TAB_HEADER, named))).systems.last()
+        val clef = system.texts.filter { (it.runs.single() as NotationTextRun.Words).text in listOf("E", "A", "D", "G", "B", "e") }
+        assertEquals(listOf("E", "A", "D", "G", "B", "e"), clef.map { (it.runs.single() as NotationTextRun.Words).text })
+        clef.forEach { name ->
+            assertTrue(name.isKnockedOut)
+            assertEquals(NotationFont(size = 7f * 1.6f, isBold = false, isItalic = false, isMusic = false), (name.runs.single() as NotationTextRun.Words).font)
+        }
+        assertEquals(2, system.bars)
+    }
+
+    @Test
     fun `a filter that does more than flood the background gives no drawing`() {
         val blurred = AbcSystem(svg = TAB_SYSTEM.svg.replace("<feFlood flood-color=\"white\"/>", "<feGaussianBlur stdDeviation=\"2\"/>"), height = TAB_SYSTEM.height)
         assertNull(parseNotationDrawing(listOf(TAB_HEADER, blurred)))

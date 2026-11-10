@@ -81,6 +81,7 @@ import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
+import com.pandulapeter.campfire.presentation.ui.tabs.abcTablature
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import org.jetbrains.compose.resources.painterResource
@@ -257,12 +258,7 @@ internal fun SongDetailsPage(
                 searchesShapes = searchesShapes,
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
-                notationChords = NotationChordSpelling(
-                    semitones = named.metadata.transpose + inputs.transposition,
-                    preferFlats = inputs.spelling.accidentals.toPreferFlats(),
-                    notation = inputs.spelling.notation.toChordNotation(),
-                    nameCapo = shapes?.capo ?: 0,
-                ),
+                notationChords = notationChordsOf(inputs, transpose = named.metadata.transpose, nameCapo = shapes?.capo ?: 0),
             )
         }
         if (built == null) {
@@ -453,6 +449,18 @@ private val PAGE_BOTTOM_PADDING = 16.dp
 
 /** What a song in one column pads its rows to: nothing, since it is not read a row at a time. */
 private val NO_ROW_VIEWPORT = { Dp.Unspecified }
+
+/**
+ * How the page's sheet music is moved, its chords named, and its tabs fretted for [inputs]: by the file's [transpose]
+ * and the reader's transposition, named [nameCapo] below what sounds, as the lyrics' chords are.
+ */
+private fun notationChordsOf(inputs: SongLyricsInputs, transpose: Int, nameCapo: Int) = NotationChordSpelling(
+    semitones = transpose + inputs.transposition,
+    preferFlats = inputs.spelling.accidentals.toPreferFlats(),
+    notation = inputs.spelling.notation.toChordNotation(),
+    nameCapo = nameCapo,
+    tablature = inputs.tabs?.abcTablature(capo = inputs.tabCapo),
+)
 
 /** The stretch after the [index]-th change of a song, as its line on the page reads it and as the click plays it. */
 private fun RenderSection.Timing.toSongTiming(index: Int) = SongTiming(

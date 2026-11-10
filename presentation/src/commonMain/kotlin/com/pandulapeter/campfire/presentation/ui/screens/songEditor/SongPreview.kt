@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.tabs.abcTablature
 import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -113,6 +114,7 @@ internal fun SongPreview(
                 semitones = song.metadata.transpose + inputs.transposition,
                 preferFlats = inputs.spelling.accidentals.toPreferFlats(),
                 notation = inputs.spelling.notation.toChordNotation(),
+                tablature = inputs.tabs?.abcTablature(capo = 0),
             ),
         )
     }

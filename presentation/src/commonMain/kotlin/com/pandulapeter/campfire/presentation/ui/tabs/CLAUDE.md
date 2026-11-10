@@ -20,3 +20,6 @@ Tabs follow the instrument; how a tab is moved, and which staffs get a notice, i
 - Keyboard and violin hide tabs with a line saying so; Other shows them as written. **No switch** for any of it.
 - Details and PDF follow it; the editor's preview and field only rename strings in the reader's notation. The Tab
   button's staff is stored in standard notation on Save.
+- Sheet music's tab staves follow the same player (`abcTablature`): its strings and the capo the frets are counted
+  from (`tabCapoFor`), names in the reader's notation; the editor's preview keeps each voice's own strings. How abc2svg
+  is made to fret them is `libs/abc/implementation/CLAUDE.md`'s.

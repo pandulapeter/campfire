@@ -360,7 +360,7 @@ internal suspend fun renderNotationDrawing(
     width: Int,
     chords: NotationChordSpelling,
     songTitle: String?,
-): NotationDrawing? = when (val rendering = renderer.render(tune = abcTuneWithoutSongTitle(tune, songTitle), width = width, transposition = chords.semitones)) {
+): NotationDrawing? = when (val rendering = renderer.render(tune = abcTuneWithoutSongTitle(tune, songTitle), width = width, transposition = chords.semitones, tablature = chords.tablature)) {
     is AbcRendering.Systems -> withContext(Dispatchers.Default) {
         parseNotationDrawing(rendering.systems)?.let { drawing ->
             // abc2svg adds the tune's own %%transpose to the reader's, so the names are moved by both.

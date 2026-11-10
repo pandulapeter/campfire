@@ -41,6 +41,14 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   tablature) also gets `%%strtab`: only that line loads abc2svg's string tablature module, without which the voice is
   engraved as a bass-clef staff of notes with string numbers over them. Its chord symbols get `%%cstabfont` with the
   chord class, at the size that the module's 1.6 times scale draws as the page's chords (it gives them neither).
+- **A tab is fretted for the reader in the host** (`AbcTablature`, a `%campfire-tablature` JSON comment in the header):
+  the module works frets out from pitches in its `set_stems` hook, and the host's wrapper, installed before abc2svg
+  installs the module's, runs in between. It adds the score's transposition (`tr_sco`; abc2svg's `%%transpose` moves only
+  what is drawn), counts the voice's own `capo=` once (the module adds it twice), takes the reader's strings where every
+  note fits on them by some whole octaves, else the voice's own, and drops a note's string (`!3s!`) where it no longer
+  fits. **Only strings of the voice's number**: the staff's lines are drawn before the hook runs. The TAB clef glyphs
+  (`tab4` to `tab6`, which seven and eight strings share) are replaced by the strings' names where the staves sharing one
+  agree, and deleted before every rendering, since abc2svg keeps them.
 - A percussion map as notation programs export it (`I:percmap ^g g 42 x`, xml2abc's note, shown step, MIDI drum, and
   head) is rewritten into abc2svg's (`%%percmap ^g 42 x`) before rendering (`PercussionMaps.kt`): abc2svg reads the third
   word as the head, names no glyph by it, and draws the notes headless. Its `normal` head is dropped, being abc2svg's
