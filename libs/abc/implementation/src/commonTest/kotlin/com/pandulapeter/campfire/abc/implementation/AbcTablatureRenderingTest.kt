@@ -68,6 +68,20 @@ class AbcTablatureRenderingTest {
         assertTrue(">TAB<" !in svg)
     }
 
+    @Test
+    fun `a tab with no stems draws no tuplet number among its frets`() = runTest {
+        assertTrue(TUPLET_NUMBER.findAll(svgOf(TRIPLET.replace("V:1", "V:1 clef=tab nostems"), tablature())).none())
+    }
+
+    @Test
+    fun `a tab with stems draws its tuplet number above its top string`() = runTest {
+        val svg = svgOf(TRIPLET.replace("V:1", "V:1 clef=tab"), tablature())
+        val numberY = TUPLET_NUMBER.findAll(svg).single().groupValues[1].toFloat()
+        // The frets of the top string stand on it, so the number is above them.
+        val topFretY = FRET_Y.findAll(svg).minOf { it.groupValues[1].toFloat() }
+        assertTrue(numberY < topFretY - FRET_HEIGHT, "The tuplet number at $numberY is among the frets, the highest at $topFretY.")
+    }
+
     private fun tabOf(notes: String, voice: String = "") = "X:1\nL:1/4\nK:C\nV:1 clef=tab $voice\n$notes|\n"
 
     private fun tablature(tuning: List<Int> = STANDARD, capo: Int = 0) = AbcTablature(tuning = tuning, capo = capo, maxFret = 24, noteNames = NOTE_NAMES)
@@ -83,6 +97,10 @@ class AbcTablatureRenderingTest {
         val DROP_D = listOf(38, 45, 50, 55, 59, 64)
         val NOTE_NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
         val FRET = Regex("""<text class="bg\d+" x="[^"]*" y="[^"]*">([^<]*)</text>""")
+        const val TRIPLET = "X:1\nL:1/8\nM:4/4\nK:Bb\nV:1\n(3B,,FB f B/A/ A|\n"
+        const val FRET_HEIGHT = 5f
+        val TUPLET_NUMBER = Regex("""<text class="f\d+" x="[^"]*" y="([^"]*)" text-anchor="middle">3</text>""")
+        val FRET_Y = Regex("""<text class="bg\d+" x="[^"]*" y="([^"]*)">\d+</text>""")
         val STRING_NAME = Regex("""<text class="bg\d+" x="[^"]*" y="[^"]*" style="[^"]*">([^<]*)</text>""")
     }
 }

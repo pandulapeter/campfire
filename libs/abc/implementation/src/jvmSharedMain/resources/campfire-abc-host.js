@@ -86,13 +86,14 @@ function campfireFretTablature(abc, tablature) {
 	delete glyphs.tab4
 	delete glyphs.tab5
 	delete glyphs.tab6
-	if (!tablature) return
 	var setStems = abc.set_stems
 	abc.set_stems = function () {
 		setStems.apply(this, arguments)
 		var voices = abc.get_voice_tb(), tunings = {}, v, id
 		for (v = 0; v < voices.length; v++) {
 			if (!voices[v].tab) continue
+			campfirePlaceTuplets(voices[v])
+			if (!tablature) continue
 			campfireRetune(voices[v], tablature)
 			id = campfireClefOf(voices[v].tab.length)
 			if (id) tunings[id] = tunings[id] === undefined || tunings[id] == String(voices[v].tab) ? String(voices[v].tab) : null
@@ -101,6 +102,21 @@ function campfireFretTablature(abc, tablature) {
 		for (id in tunings) {
 			if (tunings[id] != null) glyphs[id] = campfireStringNames(id, tunings[id].split(",").map(Number), tablature.noteNames)
 		}
+	}
+}
+
+// abc2svg sets a tab staff's tuplet number among its frets, on the strings, whatever its stems. Over a staff with no
+// stems, which shows no rhythm, it says nothing and is left out; over one with stems, which hang below it, it goes above.
+// The settings of a tuplet are shared with the voice's others and the tune's format, so each gets a copy of its own.
+function campfirePlaceTuplets(voice) {
+	var isStemless = voice.pos.stm == abc2svg.C.SL_HIDDEN
+	for (var s = voice.sym; s; s = s.next) {
+		if (!s.tp) continue
+		s.tp.forEach(function (tuplet) {
+			tuplet.f = tuplet.f.slice()
+			if (isStemless) tuplet.f[0] = 1
+			else tuplet.f[3] = abc2svg.C.SL_ABOVE
+		})
 	}
 }
 

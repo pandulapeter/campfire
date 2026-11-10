@@ -48,7 +48,8 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   note fits on them by some whole octaves, else the voice's own, and drops a note's string (`!3s!`) where it no longer
   fits. **Only strings of the voice's number**: the staff's lines are drawn before the hook runs. The TAB clef glyphs
   (`tab4` to `tab6`, which seven and eight strings share) are replaced by the strings' names where the staves sharing one
-  agree, and deleted before every rendering, since abc2svg keeps them.
+  agree, and deleted before every rendering, since abc2svg keeps them. abc2svg sets a tab's tuplet number on its strings,
+  among the frets: the hook leaves it out over a staff with no stems (no rhythm to count) and puts it above one with.
 - A percussion map as notation programs export it (`I:percmap ^g g 42 x`, xml2abc's note, shown step, MIDI drum, and
   head) is rewritten into abc2svg's (`%%percmap ^g 42 x`) before rendering (`PercussionMaps.kt`): abc2svg reads the third
   word as the head, names no glyph by it, and draws the notes headless. Its `normal` head is dropped, being abc2svg's
