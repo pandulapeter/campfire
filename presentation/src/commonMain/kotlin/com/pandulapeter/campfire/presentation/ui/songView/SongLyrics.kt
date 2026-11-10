@@ -286,7 +286,6 @@ internal fun SongLyrics(
     val notations = rememberSongLyricsNotations(
         model = model,
         availableWidth = availableWidth,
-        maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
         fontScale = fontScale,
         hasPartChoices = onFoldToggled != null,
     )
@@ -447,9 +446,9 @@ private val MIN_COLUMN_WIDTH = 384.dp
  * The narrowest a column may be, three quarters of [MIN_COLUMN_WIDTH]: taken only by a song whose lines mostly fit it,
  * and only where that saves a page (see [fitsNarrowColumns]).
  */
-private val NARROW_COLUMN_WIDTH = 288.dp
+internal val NARROW_COLUMN_WIDTH = 288.dp
 
-private val MAX_COLUMN_WIDTH = 560.dp
+internal val MAX_COLUMN_WIDTH = 560.dp
 
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp

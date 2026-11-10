@@ -120,21 +120,22 @@ internal class NotationCacheTest {
 
     @Test
     fun `a page wider than a column engraves for the column`() {
-        assertEquals(268, notationPageWidth(availableWidth = 1_000.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
-        assertEquals(134, notationPageWidth(availableWidth = 1_000.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 2.dp))
-        assertEquals(168, notationPageWidth(availableWidth = 200.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+        assertEquals(268, notationPageWidth(availableWidth = 1_000.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+        assertEquals(134, notationPageWidth(availableWidth = 1_000.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 2.dp))
+        assertEquals(168, notationPageWidth(availableWidth = 200.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
     }
 
     @Test
     fun `no width engraves nothing`() {
-        assertNull(notationPageWidth(availableWidth = Dp.Unspecified, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
-        assertNull(notationPageWidth(availableWidth = 0.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
-        assertNull(notationPageWidth(availableWidth = 20.dp, maxColumnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+        assertNull(notationPageWidth(availableWidth = Dp.Unspecified, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+        assertNull(notationPageWidth(availableWidth = 0.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+        assertNull(notationPageWidth(availableWidth = 20.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
     }
 
     private fun request(vararg tunes: AbcTune, chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN) = NotationRequest(
         tunes = tunes.toSet(),
         width = 300,
+        availableWidth = 1_000,
         unitSize = 1f,
         chords = chords,
         songTitle = null,

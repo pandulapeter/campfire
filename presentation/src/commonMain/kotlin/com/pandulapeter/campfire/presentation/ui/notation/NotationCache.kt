@@ -101,6 +101,21 @@ internal class NotationCache(
         )
     }
 
+    /**
+     * The page width a song's tunes were last engraved for where the layout placed them ([NotationPlacement]), by the
+     * request engraving them for the narrowest column, so that a song opened again is engraved for its column on its
+     * first frame rather than for the narrowest one and then again. As many songs as tunes are kept.
+     */
+    private val placedWidths = LinkedHashMap<NotationRequest, Int>()
+
+    fun placedWidthFor(narrowestRequest: NotationRequest): Int? = placedWidths.remove(narrowestRequest)?.also { placedWidths[narrowestRequest] = it }
+
+    fun rememberPlacedWidth(narrowestRequest: NotationRequest, width: Int) {
+        placedWidths.remove(narrowestRequest)
+        placedWidths[narrowestRequest] = width
+        if (placedWidths.size > maxTunes) placedWidths.remove(placedWidths.keys.first())
+    }
+
     private val NotationRendering.words get() = notationWordsOf(systems)
 
     private companion object {

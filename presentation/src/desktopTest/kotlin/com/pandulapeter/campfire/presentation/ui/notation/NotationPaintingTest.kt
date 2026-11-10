@@ -53,6 +53,8 @@ internal class NotationPaintingTest {
             ),
             standIns = emptyMap(),
             unitSize = 1f,
+            maxWidth = 0f,
+            placement = null,
             partChoices = null,
             instrument = null,
         )

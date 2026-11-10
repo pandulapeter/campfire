@@ -30,6 +30,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -383,7 +384,10 @@ private fun SectionRun(
                 }
                 shownSlots.forEach { slot ->
                     SongTabBlock(
-                        modifier = runModifier.fillMaxWidth(),
+                        // A tune's text tells where it was placed, which its first engraving is then made for.
+                        modifier = runModifier.fillMaxWidth().then(
+                            if (slot == 0 && kind == FoldableKind.VERBATIM) Modifier.onSizeChanged { notations.placeText(run, tuneOffset, it.width) } else Modifier,
+                        ),
                         lines = lines,
                         rows = rows,
                         slot = slot,

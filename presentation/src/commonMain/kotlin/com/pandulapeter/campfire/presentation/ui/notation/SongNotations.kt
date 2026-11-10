@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -51,6 +52,8 @@ internal class SongNotations(
     private val rendered: RenderedNotations,
     private val standIns: Map<AbcTune, AbcTune>,
     private val unitSize: Float,
+    private val maxWidth: Float,
+    private val placement: NotationPlacement?,
     private val partChoices: NotationPartChoices?,
     private val instrument: Instrument?,
 ) {
@@ -68,8 +71,10 @@ internal class SongNotations(
             systems = rendering.systems,
             measuredUnitSize = rendering.unitSize,
             unitSize = unitSize,
+            maxWidth = maxWidth,
             isRerendered = tune in rendered.rerenderedTunes,
             reading = rendering.reading,
+            onPlaced = { widthPx -> placement?.place(tune, widthPx) },
         )
     }
 
@@ -79,6 +84,15 @@ internal class SongNotations(
      * tune is a change the reader made and is narrated whole. An instance rebuilt for the same rendering (a pinch changes
      * only the unit) hands the same token, so it is never a second arrival.
      */
+    /**
+     * Where the layout placed the first slot of [run], standing after a key change of [tuneOffset] semitones, while it is
+     * drawn as its text: the column its first rendering is then engraved for ([NotationPlacement]), so that the staff
+     * replaces the text in one step rather than first in the narrowest column's engraving.
+     */
+    fun placeText(run: List<ChordProLine>, tuneOffset: Int, widthPx: Int) {
+        placement?.place(AbcTune(run.abcTune() ?: return, tuneOffset), widthPx)
+    }
+
     /** What the picker beside [run]'s heading offers, null where it has none, or where the run is drawn as text. */
     fun partPickerOf(run: List<ChordProLine>, tuneOffset: Int): NotationPartPicker? {
         val tune = run.abcTune() ?: return null
@@ -89,7 +103,7 @@ internal class SongNotations(
     val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
     companion object {
-        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f, partChoices = null, instrument = null)
+        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f, maxWidth = 0f, placement = null, partChoices = null, instrument = null)
     }
 }
 
@@ -98,24 +112,32 @@ internal class SongNotations(
  * the unit the song's text size asks for now ([unitSize]), which differ while a pinch waits for its rendering. [isRerendered]
  * says the run was notation before this rendering too, so it replaces one the reader asked to change (a width, a text
  * size, a transposition) and cross-fades with it, where the first rendering, replacing the text, is data arriving.
- * [reading] is what a screen reader is told the run is.
+ * [reading] is what a screen reader is told the run is. [maxWidth] is how wide, in pixels, the widest column a tune can
+ * have here would show it, which is what it asks its column for whatever page it was engraved for, so that a column is
+ * never narrowed to the engraving it holds; its first system tells [onPlaced] how wide a column it was given, which the
+ * tunes are then engraved for ([NotationPlacement]).
  */
 internal class NotationRun(
     val systems: List<NotationSystemPaint>,
     val measuredUnitSize: Float,
     val unitSize: Float,
+    val maxWidth: Float,
     val isRerendered: Boolean,
     val reading: NotationReading,
+    val onPlaced: (widthPx: Int) -> Unit,
 )
 
 /**
- * What [rememberSongNotations] renders for: every tune of the song under the key change it stands after ([abcTunesOf]), the page and unit it is laid out at, its chords, the song's title, which a tune named the
+ * What [rememberSongNotations] renders for: every tune of the song under the key change it stands after ([abcTunesOf]),
+ * the page and unit it is laid out at (and the whole page's width in pixels, [availableWidth], which tells a new page
+ * from the tunes only placed at another width), its chords, the song's title, which a tune named the
  * same leaves to the page, what its words are laid out with, so a new density or style paints again, and the part of
  * each score engraved, by the tune's text (a tune not in [parts] is engraved whole).
  */
 internal data class NotationRequest(
     val tunes: Set<AbcTune>,
     val width: Int,
+    val availableWidth: Int,
     val unitSize: Float,
     val chords: NotationChordSpelling,
     val songTitle: String?,
@@ -178,16 +200,18 @@ internal class RenderedNotations(
  */
 internal fun <T> arrivingTunesOf(previous: Set<T>, rendered: Set<T>, rerendered: Set<T>): Set<T> = rendered - previous - rerendered
 
-/** The SVG units a tune is engraved across on a page [availableWidth] wide: its widest column less a card's padding. */
-internal fun notationPageWidth(availableWidth: Dp, maxColumnWidth: Dp, cardPadding: Dp, notationUnit: Dp): Int? =
+/** The SVG units across a column [columnWidth] wide (or the whole page, [availableWidth], where narrower), less a card's padding. */
+internal fun notationPageWidth(availableWidth: Dp, columnWidth: Dp, cardPadding: Dp, notationUnit: Dp): Int? =
     if (!availableWidth.isSpecified || availableWidth <= 0.dp) {
         null
     } else {
-        ((minOf(availableWidth, maxColumnWidth) - cardPadding * 2) / notationUnit).toInt().takeIf { it > 0 }
+        ((minOf(availableWidth, columnWidth) - cardPadding * 2) / notationUnit).toInt().takeIf { it > 0 }
     }
 
 /**
- * Renders every `abc` run of the song's [blocks] for a page [width] SVG units wide, each unit [unitSize] pixels, with its chords
+ * Renders every `abc` run of the song's [blocks] for the page it is placed at ([NotationPlacement]), first for the
+ * narrowest column's, [narrowestWidth] SVG units wide, each unit [unitSize] pixels, and asking for a column of the widest,
+ * [widestWidth] units, with its chords
  * named as [chords] says and the title it repeats of [songTitle] left out, once the width is known, and again whenever
  * one of those changes. Until the first rendering, and for a tune that fails, the runs stay text, which is what the
  * first frame shows: the notation replaces the text when it arrives rather than animating in over a wrong first frame,
@@ -196,12 +220,15 @@ internal fun notationPageWidth(availableWidth: Dp, maxColumnWidth: Dp, cardPaddi
  *
  * A width or a unit size alone changes on every frame of a window being resized or a pinch, while the systems before
  * it are scaled to follow, so it is rendered only once it has stopped changing ([RERENDER_DELAY_MILLIS]); a new tune
- * or a new transposition is rendered at once.
+ * or a new transposition is rendered at once, and so are the tunes placed at another width than they were engraved for,
+ * which arrive as data (placed at once, not cross-faded): the layout settling, not something the reader did.
  */
 @Composable
 internal fun rememberSongNotations(
     blocks: List<ChordProBlock>,
-    width: Int?,
+    availableWidth: Int,
+    narrowestWidth: Int?,
+    widestWidth: Int?,
     unitSize: Float,
     chords: NotationChordSpelling,
     songTitle: String?,
@@ -214,7 +241,16 @@ internal fun rememberSongNotations(
     val instrument = LocalNotationInstrument.current
     // Read in composition, so that a part picked or an instrument changed is a new request.
     val parts = partChoices?.let { choices -> tunes.mapNotNull { tune -> choices.shownPartOf(tune.text, instrument)?.let { tune.text to it } }.toMap() }.orEmpty()
-    val request = if (width == null || width <= 0 || tunes.isEmpty()) null else NotationRequest(tunes, width, unitSize, chords, songTitle, painting, parts)
+    val placement = remember { NotationPlacement() }
+    val request = if (narrowestWidth == null || narrowestWidth <= 0 || tunes.isEmpty()) {
+        null
+    } else {
+        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords, songTitle, painting, parts)
+        val width = placement.widthFor(tunes, narrowestWidth, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(base))
+        if (width != narrowestWidth) cache?.rememberPlacedWidth(base, width)
+        base.copy(width = width)
+    }
+    val isPlacementUnknown = placement.isGuessing
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
     val standIns = remember(tunes, rendered) {
@@ -229,9 +265,13 @@ internal fun rememberSongNotations(
         val previous = rendered.request
         val isOnlyResized = previous != null && previous.tunes == request.tunes && previous.chords == request.chords && previous.songTitle == request.songTitle &&
             previous.parts == request.parts
+        val isOnlyPlaced = isOnlyResized && previous.availableWidth == request.availableWidth && previous.unitSize == request.unitSize
         // Nothing to engrave where every tune is kept, so a pinch reversed to a size seen a moment ago is instant.
         val isCached = cache != null && request.tunes.all { cache.isKept(request.keyOf(it)) }
-        if (isOnlyResized && !isCached) delay(RERENDER_DELAY_MILLIS)
+        if (isOnlyResized && !isOnlyPlaced && !isCached) delay(RERENDER_DELAY_MILLIS)
+        // Nowhere placed yet, the text is laid out first, and tells where in a frame or two: engraving for the narrowest
+        // column meanwhile would show that staff first, then the column's, a step too many. A folded tune never tells.
+        if (isPlacementUnknown && !isCached) repeat(PLACEMENT_FRAMES) { withFrameNanos { } }
         // One painter per run, never one shared across runs: a cancelled run's painting goes on until its next suspension,
         // so two runs can overlap and would race on the painter's caches.
         val painter = request.painting.newPainter()
@@ -250,7 +290,8 @@ internal fun rememberSongNotations(
             }
             rendering?.let { tune to it }
         }.toMap()
-        val isRerendering = previous != null && (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords || previous.parts != request.parts)
+        val isRerendering = previous != null && !isOnlyPlaced &&
+            (previous.width != request.width || previous.unitSize != request.unitSize || previous.chords != request.chords || previous.parts != request.parts)
         // An edited tune replaces the staff it was drawn as meanwhile, and cross-fades with it; one with no stand-in (a
         // block just added) arrives as data, replacing its text at once.
         val rerenderedTunes = (if (isRerendering) renderings.keys.intersect(rendered.renderings.keys) else emptySet()) +
@@ -259,11 +300,13 @@ internal fun rememberSongNotations(
             request = request,
             renderings = renderings,
             rerenderedTunes = rerenderedTunes,
-            arrivingTunes = arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
+            arrivingTunes = if (isOnlyPlaced) renderings.keys else arrivingTunesOf(previous = rendered.renderings.keys, rendered = renderings.keys, rerendered = rerenderedTunes),
         )
     }
-    return remember(rendered, standIns, unitSize, partChoices, instrument) {
-        if (rendered.renderings.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize, partChoices, instrument)
+    val maxWidth = (widestWidth ?: narrowestWidth ?: 0) * unitSize
+    return remember(tunes.isEmpty(), rendered, standIns, unitSize, maxWidth, partChoices, instrument) {
+        // A song with tunes still drawn as text has an instance of its own all the same, which the text tells its place.
+        if (tunes.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize, maxWidth, placement, partChoices, instrument)
     }
 }
 
@@ -341,3 +384,4 @@ internal fun List<ChordProLine>.abcTune(): String? {
 
 private const val ABC_ENVIRONMENT = "abc"
 private const val RERENDER_DELAY_MILLIS = 300L
+private const val PLACEMENT_FRAMES = 2

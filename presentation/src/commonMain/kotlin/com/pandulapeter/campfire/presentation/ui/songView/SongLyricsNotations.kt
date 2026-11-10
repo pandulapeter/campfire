@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.abc.api.AbcSystem
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPartChoices
@@ -27,7 +28,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 
 /**
  * The staff notation of the song's ABC tunes, which replaces their text once it has been rendered: for a page as wide as
- * the widest column the song can have here ([maxColumnWidth]), each SVG unit as large as the text size makes it. Its
+ * the column the layout places it in, first the narrowest column the song can have here ([NARROW_COLUMN_WIDTH]), asking
+ * for the widest ([MAX_COLUMN_WIDTH]), each SVG unit as large as the text size makes it. Its
  * words are laid out in the lyrics' typeface at the sizes abc2svg asks for, so the style they start from is not scaled.
  *
  * @param hasPartChoices Whether a score is engraved one part at a time; not in the editor's preview, which is there to
@@ -37,7 +39,6 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 internal fun rememberSongLyricsNotations(
     model: SongLyricsModel,
     availableWidth: Dp,
-    maxColumnWidth: Dp,
     fontScale: Float,
     hasPartChoices: Boolean,
 ): SongNotations {
@@ -55,9 +56,16 @@ internal fun rememberSongLyricsNotations(
     val partChoices = remember(hasPartChoices) { if (hasPartChoices) NotationPartChoices() else null }
     return rememberSongNotations(
         blocks = model.song.blocks,
-        width = notationPageWidth(
+        availableWidth = with(density) { if (availableWidth.isSpecified) availableWidth.roundToPx() else 0 },
+        narrowestWidth = notationPageWidth(
             availableWidth = availableWidth,
-            maxColumnWidth = maxColumnWidth,
+            columnWidth = NARROW_COLUMN_WIDTH * fontScale,
+            cardPadding = CARD_PADDING,
+            notationUnit = notationUnit,
+        ),
+        widestWidth = notationPageWidth(
+            availableWidth = availableWidth,
+            columnWidth = MAX_COLUMN_WIDTH * fontScale,
             cardPadding = CARD_PADDING,
             notationUnit = notationUnit,
         ),
@@ -68,5 +76,3 @@ internal fun rememberSongLyricsNotations(
         partChoices = partChoices,
     )
 }
-
-/** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */

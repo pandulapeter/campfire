@@ -50,12 +50,19 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   medley's tunes, named otherwise, keep theirs.
 - Painting happens off the main thread (the web's only thread aside) with the rendering, by a painter of the effect's
   own (its own `TextMeasurer`); nothing is painted during composition.
-- A song's tunes are rendered for the widest column, each unit the lyrics' text size over `AbcSystem.TEXT_SIZE`, so
-  the staff grows with the reader's and the system's font size as the lyrics do (the PDF's by the same rule), again
-  when tunes, transposition, spelling, width, or text size change; a width or size alone waits 300 ms for the resize
-  or pinch to settle, the systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering
-  replacing one the reader changed cross-fades with it (fading in from nothing blinked the tune out) while sections
-  glide; the first one, replacing the text, does not.
+- **A song's tunes are engraved for the column they are placed in** (`NotationPlacement`, tested): a staff is only ever
+  scaled down, its words with it, so one engraved for a wider column came out smaller than the lyrics. Its text tells
+  its column before the first engraving (two frames' wait), so the staff replaces it in one step; with nothing placed
+  (folded) it is first engraved for the narrowest column the page can have (never scaled down); then again for where the
+  layout put each tune's first system (the narrowest of them), arriving as data; a layout swinging back to a width
+  engraved before settles on the narrowest. A tune asks its column for the widest page, so no column narrows to it.
+  Where a song was placed is kept app-wide (`NotationCache`), so a song opened again is engraved for its column on its
+  first frame. Each unit is the lyrics' text size over `AbcSystem.TEXT_SIZE`, so the staff grows with the reader's and
+  the system's font size as the lyrics do (the PDF's by the same rule). Engraved again when tunes, transposition,
+  spelling, width, or text size change; a width or size alone waits 300 ms for the resize or pinch to settle, the
+  systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering replacing one the
+  reader changed cross-fades with it (fading in from nothing blinked the tune out) while sections glide; the first one,
+  replacing the text, does not.
 - **Renderings are kept app-wide** (`NotationCache`: 16 tunes or 4,000 laid-out words, LRU), keyed by everything they
   depend on, so a tune seen before is notation on its first frame. A cold one's arrival moves nothing gradually; a
   rendering that also re-renders a tune is the reader's change and is animated whole. A failed tune is remembered per

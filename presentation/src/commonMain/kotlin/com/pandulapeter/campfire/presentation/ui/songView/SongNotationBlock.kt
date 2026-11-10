@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
@@ -67,7 +68,7 @@ internal fun SongNotationBlock(
     Layout(
         // The notation is drawn, so a screen reader is told what it says instead, by the run's first piece.
         modifier = modifier
-            .then(if (slot == 0) Modifier.semantics { contentDescription = description } else Modifier)
+            .then(if (slot == 0) Modifier.semantics { contentDescription = description }.onSizeChanged { run.onPlaced(it.width) } else Modifier)
             .drawBehind {
                 val progress = crossfade.progress
                 crossfade.leaving?.let { leaving ->
@@ -77,7 +78,9 @@ internal fun SongNotationBlock(
             },
     ) { _, constraints ->
         val width = constraints.maxWidth
-        val naturalWidth = ceil(pageWidth * unitSize).toInt()
+        // Asked how wide it would be, it answers the widest column a tune can have, not the page it was engraved for, so
+        // its column is never narrowed to an engraving that is about to follow the column.
+        val naturalWidth = ceil(run.maxWidth).toInt()
         val scale = scaleAt(if (width == Constraints.Infinity) naturalWidth else width, pageWidth, unitSize)
         val height = ceil(shown.sumOf { it.height.toDouble() } * scale).toInt()
         layout(
