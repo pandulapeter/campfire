@@ -53,6 +53,7 @@ internal class SongNotations(
     private val standIns: Map<AbcTune, AbcTune>,
     private val unitSize: Float,
     private val maxWidth: Float,
+    private val minWidth: Float,
     private val placement: NotationPlacement?,
     private val partChoices: NotationPartChoices?,
     private val instrument: Instrument?,
@@ -75,6 +76,7 @@ internal class SongNotations(
             measuredUnitSize = rendering.unitSize,
             unitSize = unitSize,
             maxWidth = maxWidth,
+            minWidth = minWidth,
             isRerendered = abcTune in rendered.rerenderedTunes,
             reading = rendering.reading,
             onPlaced = { widthPx -> placement?.place(abcTune, widthPx) },
@@ -107,7 +109,7 @@ internal class SongNotations(
     val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
     companion object {
-        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f, maxWidth = 0f, placement = null, partChoices = null, instrument = null)
+        val NONE = SongNotations(RenderedNotations.NONE, standIns = emptyMap(), unitSize = 1f, maxWidth = 0f, minWidth = 0f, placement = null, partChoices = null, instrument = null)
     }
 }
 
@@ -118,14 +120,16 @@ internal class SongNotations(
  * size, a transposition) and cross-fades with it, where the first rendering, replacing the text, is data arriving.
  * [reading] is what a screen reader is told the run is. [maxWidth] is how wide, in pixels, the widest column a tune can
  * have here would show it, which is what it asks its column for whatever page it was engraved for, so that a column is
- * never narrowed to the engraving it holds; its first system tells [onPlaced] how wide a column it was given, which the
- * tunes are then engraved for ([NotationPlacement]).
+ * never narrowed to the engraving it holds; [minWidth], the narrowest page, is the least it asks for, since it is
+ * engraved again for any column, so that no column is widened for it either. Its first system tells [onPlaced] how wide
+ * a column it was given, which the tunes are then engraved for ([NotationPlacement]).
  */
 internal class NotationRun(
     val systems: List<NotationSystemPaint>,
     val measuredUnitSize: Float,
     val unitSize: Float,
     val maxWidth: Float,
+    val minWidth: Float,
     val isRerendered: Boolean,
     val reading: NotationReading,
     val onPlaced: (widthPx: Int) -> Unit,
@@ -260,7 +264,7 @@ internal fun rememberSongNotations(
     } else {
         NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords.forTune(facts.hasTabVoice), songTitle.takeIf { facts.namesSongTitle }, painting, parts, facts)
     }
-    val request = base?.let { it.copy(width = placement.widthFor(tunes, it.width, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(it))) }
+    val request = base?.let { it.copy(width = placement.widthFor(tunes, it.width, widestWidth ?: it.width, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(it))) }
     val isPlacementUnknown = placement.isGuessing
     // A song whose tunes were all rendered before at this width, size, and transposition is notation on its first frame.
     var rendered by remember(renderer) { mutableStateOf(request?.let { cache?.renderedFor(it) } ?: RenderedNotations.NONE) }
@@ -322,9 +326,10 @@ internal fun rememberSongNotations(
         if (request.width != base.width) cache?.rememberPlacedWidth(base, request.width)
     }
     val maxWidth = (widestWidth ?: narrowestWidth ?: 0) * unitSize
-    return remember(tunes.isEmpty(), rendered, standIns, unitSize, maxWidth, partChoices, instrument) {
+    val minWidth = (narrowestWidth ?: 0) * unitSize
+    return remember(tunes.isEmpty(), rendered, standIns, unitSize, maxWidth, minWidth, partChoices, instrument) {
         // A song with tunes still drawn as text has an instance of its own all the same, which the text tells its place.
-        if (tunes.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize, maxWidth, placement, partChoices, instrument)
+        if (tunes.isEmpty()) SongNotations.NONE else SongNotations(rendered, standIns, unitSize, maxWidth, minWidth, placement, partChoices, instrument)
     }
 }
 

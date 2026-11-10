@@ -18,8 +18,8 @@ class NotationPlacementTest {
     private val second = AbcTune("X:2\nK:G\nGABc|", 0)
     private val tunes = setOf(first, second)
 
-    private fun NotationPlacement.width(rememberedWidth: Int? = null, availableWidth: Int = 2_000, unitSize: Float = 2f) =
-        widthFor(tunes, narrowestWidth = 300, availableWidth = availableWidth, unitSize = unitSize, rememberedWidth = rememberedWidth)
+    private fun NotationPlacement.width(rememberedWidth: Int? = null, availableWidth: Int = 2_000, unitSize: Float = 2f, widestWidth: Int = 2_000) =
+        widthFor(tunes, narrowestWidth = 300, widestWidth = widestWidth, availableWidth = availableWidth, unitSize = unitSize, rememberedWidth = rememberedWidth)
 
     @Test
     fun `tunes not yet placed are engraved for the narrowest column, or for where the song was placed before`() {
@@ -38,7 +38,7 @@ class NotationPlacementTest {
     }
 
     @Test
-    fun `a layout swinging back to a width the tunes were engraved for settles on the narrowest column`() {
+    fun `a layout swinging back to a width the tunes were engraved for settles on the narrowest width of the swing`() {
         val placement = NotationPlacement()
         placement.width()
         placement.place(first, widthPx = 1_000)
@@ -47,9 +47,51 @@ class NotationPlacementTest {
         assertEquals(400, placement.width())
         placement.place(first, widthPx = 1_000)
 
-        assertEquals(300, placement.width())
+        assertEquals(400, placement.width())
         placement.place(first, widthPx = 800)
+        assertEquals(400, placement.width())
+    }
+
+    @Test
+    fun `a swing that passes a width twice settles on the narrowest it passed since`() {
+        val placement = NotationPlacement()
+        placement.width()
+        listOf(1_705, 536, 315).forEach { units ->
+            placement.place(first, widthPx = units * 2)
+            assertEquals(units, placement.width())
+        }
+        placement.place(first, widthPx = 536 * 2)
+
+        assertEquals(315, placement.width())
+    }
+
+    @Test
+    fun `a settled width follows a narrower column down and never back up`() {
+        val placement = NotationPlacement()
+        placement.width()
+        placement.place(first, widthPx = 1_000)
+        placement.width()
+        placement.place(first, widthPx = 800)
+        placement.width()
+        placement.place(first, widthPx = 1_000)
+        assertEquals(400, placement.width())
+
+        placement.place(first, widthPx = 700)
+        assertEquals(350, placement.width())
+        placement.place(first, widthPx = 1_000)
+        assertEquals(350, placement.width())
+        placement.place(first, widthPx = 100)
         assertEquals(300, placement.width())
+    }
+
+    @Test
+    fun `a placement wider than the widest column is engraved for the widest`() {
+        val placement = NotationPlacement()
+        placement.width(widestWidth = 600)
+        placement.place(first, widthPx = 5_000)
+
+        assertEquals(600, placement.width(widestWidth = 600))
+        assertEquals(600, NotationPlacement().width(rememberedWidth = 900, widestWidth = 600))
     }
 
     @Test
@@ -61,7 +103,7 @@ class NotationPlacementTest {
         placement.place(first, widthPx = 800)
         placement.width()
         placement.place(first, widthPx = 1_000)
-        assertEquals(300, placement.width())
+        assertEquals(400, placement.width())
 
         assertEquals(500, placement.width(availableWidth = 2_100))
     }

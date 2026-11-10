@@ -1,0 +1,84 @@
+{title: A Long Tune}
+{artist: Campfire Tests}
+{key: G}
+
+{start_of_verse}
+[G]A verse of chords stands [D]before the long tune
+[Em]Its lines are as wide as the [C]columns they are in
+{end_of_verse}
+
+{start_of_grid: Outro}
+| G . . . | D . . . | Em . . . | C . . . |
+{end_of_grid}
+
+{start_of_abc}
+X:1
+T:A Long Tune
+M:4/4
+L:1/8
+I:linebreak $
+%%score (1 2)
+K:G
+V:1 treble-8 nm="Guitar"
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+V:2 tab stafflines=6 strings=E2,A2,D3,G3,B3,E4 nostems nm="Guitar"
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+"Am"ABcd "Cmaj7"edcB | "D7"c2A2 "G"F2DE | "G"GFGA "D"B2G2 | "Cmaj7"EFGA "Em"BcdB |
+"G"GABc "C"dcBA | "D"B2d2 "Am"g2fe | "Em"edcB "D7"AGFE | "C"D2G2 "G"B2AG |
+{end_of_abc}

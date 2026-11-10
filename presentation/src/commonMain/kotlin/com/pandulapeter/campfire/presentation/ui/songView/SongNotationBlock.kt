@@ -24,7 +24,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -76,18 +82,30 @@ internal fun SongNotationBlock(
                 }
                 drawSystems(shown, pageWidth, unitSize, run.measuredUnitSize, colors.faded(progress), isAtEnd)
             },
-    ) { _, constraints ->
+        measurePolicy = notationSlotMeasurePolicy(run, shown, pageWidth),
+    )
+}
+
+/**
+ * How a slot of [run] showing [shown] systems of a page [pageWidth] units wide is measured. Asked how wide it would be,
+ * it answers the widest column a tune can have, not the page it was engraved for, so its column is never narrowed to an
+ * engraving that is about to follow the column; asked the least it needs, it answers the narrowest page, since it is
+ * engraved again for whatever column it is given, so no column (a strip's, which widens for a section that does not
+ * wrap) is widened for it either. Its height at any width is the systems scaled down to fit it.
+ */
+private fun notationSlotMeasurePolicy(run: NotationRun, shown: List<NotationSystemPaint>, pageWidth: Float) = object : MeasurePolicy {
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
         val width = constraints.maxWidth
-        // Asked how wide it would be, it answers the widest column a tune can have, not the page it was engraved for, so
-        // its column is never narrowed to an engraving that is about to follow the column.
         val naturalWidth = ceil(run.maxWidth).toInt()
-        val scale = scaleAt(if (width == Constraints.Infinity) naturalWidth else width, pageWidth, unitSize)
+        val scale = scaleAt(if (width == Constraints.Infinity) naturalWidth else width, pageWidth, run.unitSize)
         val height = ceil(shown.sumOf { it.height.toDouble() } * scale).toInt()
-        layout(
+        return layout(
             width = if (width == Constraints.Infinity) naturalWidth else width,
             height = height.coerceIn(constraints.minHeight, constraints.maxHeight),
         ) {}
     }
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) = ceil(run.minWidth).toInt()
 }
 
 private fun List<NotationSystemPaint>.pageWidth() = maxOfOrNull { it.width } ?: 0f

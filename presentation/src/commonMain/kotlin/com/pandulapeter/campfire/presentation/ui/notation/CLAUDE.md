@@ -55,8 +55,10 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   scaled down, its words with it, so one engraved for a wider column came out smaller than the lyrics. Its text tells
   its column before the first engraving (two frames' wait), so the staff replaces it in one step; with nothing placed
   (folded) it is first engraved for the narrowest column the page can have (never scaled down); then again for where the
-  layout put each tune's first system (the narrowest of them), arriving as data; a layout swinging back to a width
-  engraved before settles on the narrowest. A tune asks its column for the widest page, so no column narrows to it.
+  layout put each tune's first system (the narrowest of them), arriving as data, never wider than the widest column; a
+  layout swinging back to a width engraved before settles on the narrowest width of the swing, and follows a narrower
+  column down after, never back up. A tune asks its column for the widest page, so no column narrows to it, and for the
+  narrowest as its least width, so a strip gives it its own column.
   Where a song was placed is kept app-wide (`NotationCache`), so a song opened again is engraved for its column on its
   first frame. Each unit is the lyrics' text size over `AbcSystem.TEXT_SIZE`, so the staff grows with the reader's and
   the system's font size as the lyrics do (the PDF's by the same rule). Engraved again when tunes, transposition,
