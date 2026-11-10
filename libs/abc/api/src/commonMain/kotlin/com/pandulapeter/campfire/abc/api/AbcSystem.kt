@@ -17,6 +17,9 @@ package com.pandulapeter.campfire.abc.api
  * outlines rather than a font of the platform's. Chord symbols carry the class [CHORD_SYMBOL_CLASS] beside their font
  * class, so that they can be coloured apart from the rest.
  *
+ * Chord symbols, annotations, and lyrics are set at [TEXT_SIZE] units, whatever the tune asks for, so that drawing one unit
+ * as the page's text size over [TEXT_SIZE] sets them as large as the page's own text, and the staff in proportion.
+ *
  * Lyrics carry the class [LYRICS_CLASS], and their font is [LYRICS_ROOM] times the size they are meant to be drawn
  * at: the renderer spaces the notes for the words as its own width tables measure them, which are narrower than the
  * app's typeface, so a lyric drawn at its font's size could run into the next one.
@@ -29,5 +32,6 @@ public data class AbcSystem(
         public const val CHORD_SYMBOL_CLASS: String = "gch"
         public const val LYRICS_CLASS: String = "lyr"
         public const val LYRICS_ROOM: Float = 1.1f
+        public const val TEXT_SIZE: Float = 16f
     }
 }

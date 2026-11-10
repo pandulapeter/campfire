@@ -50,9 +50,10 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   medley's tunes, named otherwise, keep theirs.
 - Painting happens off the main thread (the web's only thread aside) with the rendering, by a painter of the effect's
   own (its own `TextMeasurer`); nothing is painted during composition.
-- A song's tunes are rendered for the widest column, each unit `NOTATION_UNIT` times the text size, again when tunes,
-  transposition, spelling, width, or text size change; a width or size alone waits 300 ms for the resize or pinch to
-  settle, the systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering
+- A song's tunes are rendered for the widest column, each unit the lyrics' text size over `AbcSystem.TEXT_SIZE`, so
+  the staff grows with the reader's and the system's font size as the lyrics do (the PDF's by the same rule), again
+  when tunes, transposition, spelling, width, or text size change; a width or size alone waits 300 ms for the resize
+  or pinch to settle, the systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering
   replacing one the reader changed cross-fades with it (fading in from nothing blinked the tune out) while sections
   glide; the first one, replacing the text, does not.
 - **Renderings are kept app-wide** (`NotationCache`: 16 tunes or 4,000 laid-out words, LRU), keyed by everything they

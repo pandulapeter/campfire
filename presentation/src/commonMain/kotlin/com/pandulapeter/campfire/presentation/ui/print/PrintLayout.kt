@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 import com.pandulapeter.campfire.presentation.ui.notation.AbcTune
 import com.pandulapeter.campfire.presentation.ui.notation.NotationDrawing
 import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
+import com.pandulapeter.campfire.abc.api.AbcSystem
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.language.textDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
@@ -69,14 +70,13 @@ internal fun printColumnWidth(settings: PrintSettings): Float = settings.normali
 }
 
 /**
- * The PDF points one SVG unit of an engraved tune is printed at where its column allows: its lyrics, set at abc2svg's
- * 13 units, then come out as large as the song's own.
+ * The PDF points one SVG unit of an engraved tune is printed at where its column allows: its chord symbols and lyrics,
+ * set at [AbcSystem.TEXT_SIZE] units, then come out as large as the song's own, as on screen.
  */
-internal fun printNotationUnit(settings: PrintSettings) = settings.fontSize / ABC_LYRICS_UNITS
+internal fun printNotationUnit(settings: PrintSettings) = settings.fontSize / AbcSystem.TEXT_SIZE
 
 private val PrintSettings.marginPoints get() = marginMm * 72f / 25.4f
 private const val COLUMN_GUTTER = 18f
-private const val ABC_LYRICS_UNITS = 13f
 
 /**
  * One layout run: the geometry and the styles the options give, and the cursor ([column] and [y] on the last page) that

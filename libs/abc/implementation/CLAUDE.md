@@ -33,7 +33,10 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   abc2svg's 12 and 13 read as small print beside the lyrics), and measure lyrics as sans-serif regular at
   `LYRICS_ROOM` times their size (abc2svg's bold serif ran Inter's words together; regular sans-serif at their own size
   still let long syllables touch). `%%transpose` moves notes, key signatures, and chord symbols; the app renames the
-  chords afterwards.
+  chords afterwards. **The tune's own page geometry, overall scale, and those three fonts are made comments**
+  (`PageFormat.kt`; `%%` or `I:` becomes `% `, so positions hold): an export's `%%pagewidth 21.59cm` and `%%scale 0.83`
+  engraved it for a sheet of paper, then shrunk to the column at half a hand-written tune's size, and its own lyrics font
+  dropped the lyrics' class. A voice's own scale is relative to the score and kept.
 - A tune with a voice in the tab clef (`V:… tab` or `clef=tab`, how notation programs export a guitar's or a bass's
   tablature) also gets `%%strtab`: only that line loads abc2svg's string tablature module, without which the voice is
   engraved as a bass-clef staff of notes with string numbers over them.

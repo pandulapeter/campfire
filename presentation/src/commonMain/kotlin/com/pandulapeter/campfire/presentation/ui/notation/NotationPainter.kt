@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 
 /**
  * Turns [NotationDrawing]s into what a canvas draws ([NotationSystemPaint]), each once: the outlines of a system merged
@@ -146,8 +145,11 @@ internal class NotationPainter(
         maxLines = 1,
     )
 
-    /** The size of [this] SVG units, laid out at [unitSize] pixels each, whatever the user's font scale says. */
-    private fun Float.toFontSize(unitSize: Float) = (this * unitSize / density.density / density.fontScale).sp
+    /**
+     * The size of [this] SVG units, laid out at [unitSize] pixels each: the unit already holds the system's font size, so
+     * the pixels are converted back through the density's own font scaling, which Android's is not proportional.
+     */
+    private fun Float.toFontSize(unitSize: Float) = with(density) { (this@toFontSize * unitSize).toSp() }
 
     private companion object {
         const val MAX_PAINTED_DRAWINGS = 8

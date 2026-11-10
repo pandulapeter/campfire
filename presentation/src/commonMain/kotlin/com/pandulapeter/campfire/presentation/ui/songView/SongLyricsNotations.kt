@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.abc.api.AbcSystem
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainting
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPartChoices
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
@@ -49,7 +49,9 @@ internal fun rememberSongLyricsNotations(
     val notationPainting = remember(density, fontResolver, notationTextStyle) {
         NotationPainting(density, fontResolver, notationTextStyle)
     }
-    val notationUnit = NOTATION_UNIT * fontScale
+    // A unit is the lyrics' text size over the renderer's, so the staff and its words grow with the lyrics: by the reader's
+    // text size and by the system's font size alike (which Android scales nonlinearly, hence the text size converted).
+    val notationUnit = with(density) { notationTextStyle.fontSize.toDp() } * fontScale / AbcSystem.TEXT_SIZE
     val partChoices = remember(hasPartChoices) { if (hasPartChoices) NotationPartChoices() else null }
     return rememberSongNotations(
         blocks = model.song.blocks,
@@ -68,4 +70,3 @@ internal fun rememberSongLyricsNotations(
 }
 
 /** What one SVG unit of engraved notation is drawn as at the default text size, where the column is wide enough. */
-private val NOTATION_UNIT = 1.dp

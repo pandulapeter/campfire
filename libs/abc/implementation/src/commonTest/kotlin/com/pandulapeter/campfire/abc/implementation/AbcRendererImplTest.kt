@@ -82,6 +82,20 @@ class AbcRendererImplTest {
     }
 
     @Test
+    fun `a tune's own page format leaves its staff as large as any other tune's`() = runTest {
+        val exported = REEL.replaceFirst("M:4/4", "%%scale 0.83\n%%pagewidth 21.59cm\n%%leftmargin 1cm\nI:rightmargin 1cm\nM:4/4")
+        val plain = assertIs<AbcRendering.Systems>(renderer.render(REEL, width = 300, transposition = 0))
+        val rendering = assertIs<AbcRendering.Systems>(renderer.render(exported, width = 300, transposition = 0))
+        assertEquals(plain.systems.map { it.height }, rendering.systems.map { it.height })
+    }
+
+    @Test
+    fun `a tune's own lyrics font keeps the lyrics' class`() = runTest {
+        val rendering = assertIs<AbcRendering.Systems>(renderer.render(REEL.replaceFirst("M:4/4", "%%vocalfont Times-Roman 13\nM:4/4"), width = 800, transposition = 0))
+        assertTrue(rendering.systems.any { """class="f\d+ ${AbcSystem.LYRICS_CLASS}"""".toRegex().containsMatchIn(it.svg) })
+    }
+
+    @Test
     fun `text that is no tune fails rather than throwing`() = runTest {
         assertIs<AbcRendering.Failed>(renderer.render("This is not ABC notation.", width = 800, transposition = 0))
     }

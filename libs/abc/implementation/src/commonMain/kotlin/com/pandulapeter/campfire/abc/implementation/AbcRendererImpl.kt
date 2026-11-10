@@ -38,8 +38,9 @@ internal class AbcRendererImpl : AbcRenderer {
 
     private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
         val header = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune))
-        // A percussion map is rewritten within its own line, so the lines abc2svg counts are still the tune's.
-        val result = engine.render(source = header + withAbc2svgPercussionMaps(tune))
+        // A percussion map and the tune's own page format are rewritten within their own lines, so the lines abc2svg counts
+        // are still the tune's.
+        val result = engine.render(source = header + withAbc2svgPercussionMaps(withoutOwnPageFormat(tune)))
         val output = result.substringBefore(RECORD_SEPARATOR)
         val messages = abcMessagesOf(records = result.substringAfter(RECORD_SEPARATOR, missingDelimiterValue = ""), headerLines = header.count { it == '\n' }, tune = tune)
         if (output.startsWith(SEPARATOR)) {
@@ -68,9 +69,9 @@ internal class AbcRendererImpl : AbcRenderer {
         %%pagewidth ${width}px
         %%leftmargin 0
         %%rightmargin 0
-        %%gchordfont sans-serif-Bold ${TEXT_SIZE.roundToInt()} class=${AbcSystem.CHORD_SYMBOL_CLASS}
-        %%annotationfont sans-serif ${TEXT_SIZE.roundToInt()}
-        %%vocalfont sans-serif ${(TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
+        %%gchordfont sans-serif-Bold ${AbcSystem.TEXT_SIZE.roundToInt()} class=${AbcSystem.CHORD_SYMBOL_CLASS}
+        %%annotationfont sans-serif ${AbcSystem.TEXT_SIZE.roundToInt()}
+        %%vocalfont sans-serif ${(AbcSystem.TEXT_SIZE * AbcSystem.LYRICS_ROOM * 10).roundToInt() / 10.0} class=${AbcSystem.LYRICS_CLASS}
         %%transpose $transposition
 
     """.trimIndent() + if (hasStringTablature) "%%strtab\n" else ""
@@ -107,11 +108,6 @@ internal class AbcRendererImpl : AbcRenderer {
         /** What `campfire-abc-host.js` joins the systems with, and puts in front of the messages when there are none. */
         private const val SEPARATOR = '\u0000'
 
-        /**
-         * The size chord symbols, annotations, and lyrics are meant to be drawn at: the page's text size (bodyLarge), as
-         * the app draws one SVG unit as 1 dp times the reader's text size.
-         */
-        private const val TEXT_SIZE = 16f
         private val HEIGHT = Regex("""\sheight="([\d.]+)(?:px)?"""")
         private val VOICE_FIELD = Regex("""(?m)(?:^|\[)V:[ \t]*([^\s\]]+)""")
         private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
