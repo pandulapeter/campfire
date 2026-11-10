@@ -346,7 +346,7 @@ private fun SectionRun(
             )
         }
         if (foldedRuns.isCollapsed(runFoldKey)) return
-        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey))
+        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey), keepsLayer = true)
     }
     val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run, tuneOffset) else null
     // Music is laid out from the left whatever the song's direction: a grid's bars, a staff, a tune. Its toggle above is

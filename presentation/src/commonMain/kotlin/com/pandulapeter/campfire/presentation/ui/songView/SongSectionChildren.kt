@@ -101,7 +101,7 @@ internal fun SongSectionChildren(
                     isTraversalGroup = true
                     traversalIndex = unit.toFloat()
                 }
-                .fadingIn(isFadingIn = isFadingIn)
+                .fadingIn(isFadingIn = isFadingIn, keepsLayer = true)
                 .arrivingWith(change, isArrivingWithChange)
                 .leavingWith(change, leaving != null && section.leavesWith(leaving, items))
             SongSectionItem(
