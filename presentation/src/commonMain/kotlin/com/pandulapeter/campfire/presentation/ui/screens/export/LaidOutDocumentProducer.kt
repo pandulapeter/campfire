@@ -13,8 +13,11 @@ import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.presentation.ui.print.printNotationsOf
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.print.PrintEngravings
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -31,7 +34,8 @@ import kotlinx.coroutines.withContext
  * spinner each time. Retry is keyed too ([ExportState.attempt]): the source it reads again equals the one that failed
  * to lay out, so without it nothing would. [renderer] is a key alone, the layout measuring with one of [newRenderer]'s
  * of its own off the main thread. The ABC tunes are engraved for the columns ([abcRenderer]) right before each layout,
- * which waits for them, so the preview and the file never show a tune as text that would print as a staff.
+ * which waits for them, so the preview and the file never show a tune as text that would print as a staff; they are
+ * kept per width for the source and renderer, so a step that keeps the column's width engraves nothing.
  */
 @Composable
 internal fun produceLaidOutDocument(
@@ -42,44 +46,47 @@ internal fun produceLaidOutDocument(
     renderer: PrintRenderer,
     newRenderer: () -> PrintRenderer,
     abcRenderer: AbcRenderer?,
-) = produceState<LaidOutDocument?>(null, source, settings, labels, renderer, abcRenderer, state.attempt) {
-    state.layoutFailed = false
-    val input = source
-    val inputSettings = settings
-    if (input == null || input.songs.isEmpty()) {
-        value = null
-        return@produceState
-    }
-    // An export of the library's own files has no pages, and the ones laid out for the PDF are kept for the format being switched back,
-    // which then lays out nothing again.
-    if (inputSettings.format != PrintSettings.Format.PDF) return@produceState
-    if (value.let { it != null && it.source === input && it.settings == inputSettings && it.labels == labels }) return@produceState
-    // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
-    if (value != null) delay(LAYOUT_DEBOUNCE)
-    try {
-        val notations = abcRenderer?.let { printNotationsOf(input, inputSettings, it) }.orEmpty()
-        val document = withContext(Dispatchers.Default) {
-            val measurements = newRenderer()
-            layoutPrintDocument(
+): State<LaidOutDocument?> {
+    val engravings = remember(source, abcRenderer) { PrintEngravings() }
+    return produceState<LaidOutDocument?>(null, source, settings, labels, renderer, abcRenderer, state.attempt) {
+        state.layoutFailed = false
+        val input = source
+        val inputSettings = settings
+        if (input == null || input.songs.isEmpty()) {
+            value = null
+            return@produceState
+        }
+        // An export of the library's own files has no pages, and the ones laid out for the PDF are kept for the format being switched back,
+        // which then lays out nothing again.
+        if (inputSettings.format != PrintSettings.Format.PDF) return@produceState
+        if (value.let { it != null && it.source === input && it.settings == inputSettings && it.labels == labels }) return@produceState
+        // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
+        if (value != null) delay(LAYOUT_DEBOUNCE)
+        try {
+            val notations = abcRenderer?.let { printNotationsOf(input, inputSettings, it, engravings) }.orEmpty()
+            val document = withContext(Dispatchers.Default) {
+                val measurements = newRenderer()
+                layoutPrintDocument(
+                    source = input,
+                    settings = inputSettings,
+                    labels = labels,
+                    measureText = measurements::width,
+                    notations = notations,
+                    measureLyric = measurements::lyricLayout,
+                )
+            }
+            value = LaidOutDocument(
+                document = document,
                 source = input,
                 settings = inputSettings,
                 labels = labels,
-                measureText = measurements::width,
-                notations = notations,
-                measureLyric = measurements::lyricLayout,
+                generation = (value?.generation ?: 0) + 1,
             )
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            state.layoutFailed = true
         }
-        value = LaidOutDocument(
-            document = document,
-            source = input,
-            settings = inputSettings,
-            labels = labels,
-            generation = (value?.generation ?: 0) + 1,
-        )
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        state.layoutFailed = true
     }
 }
 

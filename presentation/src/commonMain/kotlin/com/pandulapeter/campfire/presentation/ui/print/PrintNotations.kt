@@ -24,9 +24,14 @@ import com.pandulapeter.campfire.presentation.ui.notation.renderNotationPartOrSc
  * the key change it stands after, a score of several parts in the reader's part where one is theirs and whole
  * otherwise (no picker chooses for a PDF), as on its page. None where
  * the chords are not printed, which leaves verbatim runs out altogether, and none for a tune that cannot be rendered,
- * which prints as its text.
+ * which prints as its text. A tune [engravings] already holds at this width is not engraved again.
  */
-internal suspend fun printNotationsOf(source: PrintSource, settings: PrintSettings, renderer: AbcRenderer): Map<String, Map<AbcTune, NotationDrawing>> {
+internal suspend fun printNotationsOf(
+    source: PrintSource,
+    settings: PrintSettings,
+    renderer: AbcRenderer,
+    engravings: PrintEngravings,
+): Map<String, Map<AbcTune, NotationDrawing>> {
     if (!settings.normalized().showSheetMusic) return emptyMap()
     val width = (printColumnWidth(settings) / printNotationUnit(settings)).toInt()
     return source.songs.mapNotNull { song ->
@@ -34,7 +39,9 @@ internal suspend fun printNotationsOf(source: PrintSource, settings: PrintSettin
         val drawings = tunes.mapNotNull { tune ->
             val parts = abcPartsOf(tune.text)
             val part = abcPartFor(parts, source.instrument)?.let(parts::get)
-            renderNotationPartOrScore(renderer, tune.text, part, width, song.notationChords.movedBy(tune.offset), song.title)?.let { tune to it.second }
+            engravings.drawingOf(width, song.fileName, tune) {
+                renderNotationPartOrScore(renderer, tune.text, part, width, song.notationChords.movedBy(tune.offset), song.title)?.second
+            }?.let { tune to it }
         }.toMap()
         drawings.takeIf { it.isNotEmpty() }?.let { song.fileName to it }
     }.toMap()
