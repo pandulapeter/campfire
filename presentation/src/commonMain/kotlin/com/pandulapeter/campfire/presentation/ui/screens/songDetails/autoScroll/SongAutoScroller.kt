@@ -58,8 +58,15 @@ internal class SongAutoScroller(
 
     private val nudgeOrigin get() = nudgeTarget ?: scrollState.value
 
+    /**
+     * Derived, since the screen reads them while composing: read from the scroll itself, every frame of a song playing
+     * would compose the whole screen again for an answer that changes only at the song's two ends.
+     */
+    private val canNudgeBack by derivedStateOf { nudgeOrigin > 0 }
+    private val canNudgeForward by derivedStateOf { nudgeOrigin < scrollState.maxValue }
+
     /** Whether there is anything left to scroll to in [direction] (-1 up, 1 down), counted from where a nudge still moving is headed. */
-    fun canNudge(direction: Int) = if (direction < 0) nudgeOrigin > 0 else nudgeOrigin < scrollState.maxValue
+    fun canNudge(direction: Int) = if (direction < 0) canNudgeBack else canNudgeForward
 
     /**
      * Moves the song [NUDGE_LINES] lines in [direction], the way a pedal does: whatever is playing goes on from there. A
