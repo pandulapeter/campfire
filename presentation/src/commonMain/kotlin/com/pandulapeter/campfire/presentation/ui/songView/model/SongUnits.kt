@@ -36,8 +36,8 @@ internal data class CardKey(
 
 /**
  * What a chunk of a section holds, which is what its measurements are reused by (see [SectionSizesPool]): the section
- * and its items from [firstItem] to [lastItem], and the folds of the section, which are part of what it holds since they
- * change its height.
+ * and its items from [firstItem] to [lastItem], the folds of the section, which are part of what it holds since they
+ * change its height, and what its tune slots draw ([unitContentsOf]).
  */
 internal data class UnitContent(
     val section: RenderSection,
@@ -45,6 +45,8 @@ internal data class UnitContent(
     val lastItem: Int,
     /** The keys of [foldedSections][FoldedRuns] that fold this section or a run inside it, see [foldedKeysOf]. */
     val foldedKeys: Set<String>,
+    /** What each ABC tune slot among the items draws, null for one drawn as its text; null for a chunk holding no tune. */
+    val notation: List<NotationMeasureToken?>? = null,
 )
 
 /**

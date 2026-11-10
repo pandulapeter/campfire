@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.songView.grid
 
 import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SectionPart
+import com.pandulapeter.campfire.presentation.ui.songView.model.NotationMeasureToken
 import com.pandulapeter.campfire.presentation.ui.songView.model.UnitContent
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
@@ -72,6 +73,18 @@ class SectionSizesPoolTest {
         val after = pool.sizesFor(listOf(UnitContent(verse, 0, 1, setOf("verse#1")), UnitContent(chorus, 0, 0, emptySet())))
         assertSame(before[1], after[1])
         assertTrue(after[1].heightsByWidth[400] == 60)
+    }
+
+    @Test
+    fun `a tune drawn anew measures only its own chunk again`() {
+        val pool = SectionSizesPool<UnitContent>()
+        val verse = section(foldKey = "verse#1", "One", "Two")
+        val tune = section(foldKey = "abc#1", "X:1")
+        val before = pool.sizesFor(listOf(UnitContent(verse, 0, 1, emptySet()), UnitContent(tune, 0, 0, emptySet(), notation = listOf(null))))
+        val token = NotationMeasureToken(systems = emptyList(), unitSize = 1f, maxWidth = 400f, minWidth = 200f, hasPartPicker = false)
+        val after = pool.sizesFor(listOf(UnitContent(verse, 0, 1, emptySet()), UnitContent(tune, 0, 0, emptySet(), notation = listOf(token))))
+        assertSame(before[0], after[0])
+        assertNotSame(before[1], after[1])
     }
 
     @Test

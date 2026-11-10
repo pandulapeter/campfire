@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.model.UnitContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.unitContentsOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.cardKeysOf
-import com.pandulapeter.campfire.presentation.ui.songView.model.foldedKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.sectionKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.unitKeysOf
@@ -292,8 +292,9 @@ internal fun SongLyrics(
     // Everything the height of a section depends on apart from its own content and the width it is measured at. Within
     // one of these the sizes of a section are reused by content, so an edit or a transposition only measures the
     // sections it changed. The folds are not one of its keys but part of each chunk's content (UnitContent.foldedKeys),
-    // so a fold only measures its own section again. The notation arriving measures everything again, once.
-    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels, notations) { SectionSizesPool<UnitContent>() }
+    // so a fold only measures its own section again, and so is what a tune draws, so a rendering arriving only measures
+    // the chunks that draw a tune again.
+    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
     // row of diagrams or chips. A folded section is one, since what is left of it is its header.
@@ -317,16 +318,8 @@ internal fun SongLyrics(
             }
         }
     }
-    val sectionMeasurements = remember(units, sectionSizesPool, foldedSections) {
-        val foldedKeys = sections.map { foldedKeysOf(it, foldedSections) }
-        SectionMeasurements(
-            sectionSizesPool.sizesFor(
-                units.itemRanges.mapIndexed { unit, items ->
-                    val section = units.unitSections[unit]
-                    UnitContent(sections[section], items.first, items.last, foldedKeys[section])
-                },
-            ),
-        )
+    val sectionMeasurements = remember(units, sectionSizesPool, foldedSections, notations) {
+        SectionMeasurements(sectionSizesPool.sizesFor(unitContentsOf(units, sections, foldedSections, notations)))
     }
     val sectionKeys = remember(sections) { sectionKeysOf(sections) }
     val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }

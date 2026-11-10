@@ -44,7 +44,8 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   how it is written, which a reader need not know, and it may hold chords and several voices. It keeps the text's slots,
   one for each line and each 12 characters of every line (`runSlotCount`, more than it is ever engraved as): slot *n*
   draws staff system *n*, the last one the rest, which a column cannot cut; each answers its height for any width at
-  once (scaled down in a narrower column until engraved for it), the sizes pool renewed when a rendering arrives.
+  once (scaled down in a narrower column until engraved for it); a rendering arriving measures again only the chunks
+  that draw a tune (what they draw is part of their `UnitContent`).
 - A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested; the PDF rules the same):
   strings run bar to bar, broken by every other character; a bar joins the strings above and under it that have one in
   its column.
