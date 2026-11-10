@@ -318,7 +318,7 @@ class ChordSheetConverterTest {
         val text = "[".repeat(100_000) + "\nhello world"
         val started = TimeSource.Monotonic.markNow()
         val result = convert(text)
-        assertTrue(started.elapsedNow() < 5.seconds)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
         assertEquals("(".repeat(100_000) + "\nhello world\n", result)
         assertEquals("(a b (C)x\nplain words\nmore words\n", convert("[a b [C]x\nplain words\nmore words"))
     }
@@ -355,11 +355,11 @@ class ChordSheetConverterTest {
         val lyrics = "la ".repeat(30_000).trimEnd()
         var started = TimeSource.Monotonic.markNow()
         assertEquals("[C]la ".repeat(30_000).trimEnd() + "\n", convert("$chordRow\n$lyrics"))
-        assertTrue(started.elapsedNow() < 5.seconds)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
         val inline = "(C)la ".repeat(60_000).trimEnd()
         started = TimeSource.Monotonic.markNow()
         assertEquals("[C]la ".repeat(60_000).trimEnd() + "\n", convert(inline))
-        assertTrue(started.elapsedNow() < 5.seconds)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
     }
 
     @Test
@@ -1898,5 +1898,14 @@ class ChordSheetConverterTest {
             "{title: Hello}\n{key: C}\n{artist: The Band With A Long Name}\n\n[Am]Hello [C]world\n",
             ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
         )
+    }
+
+    private companion object {
+        /**
+         * How long the inputs of the linear time tests may take: a quarter of a second warm and about a second cold on a
+         * laptop, several times that on a CI runner's cold JVM beside other test workers, and minutes if any step went
+         * quadratic, which is what these tests are for.
+         */
+        val LINEAR_TIME_BOUND = 30.seconds
     }
 }
