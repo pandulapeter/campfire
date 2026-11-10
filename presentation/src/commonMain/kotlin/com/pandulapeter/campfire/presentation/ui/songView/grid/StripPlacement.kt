@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.LayoutDirection
  * What a [columnGapPx] at the song's reading end of the viewport, and the step buttons where [isInset] ([endInsetPx], at
  * the screen's end, the left where [isInsetAtLeft], as for [placeSections]), leave of it, and a gap past it, is shared out into one slot for every column on screen, each
  * column centered in its own less that gap: the columns in view fill it exactly, a gap apart, and the ones beside them
- * start past its edge rather than in its margins. A column wider than a slot takes as much as it needs, and the gap. A
- * step scrolls the strip by the slot of the column leaving, and the strip ends at the first stop that shows its last
+ * start past its edge rather than in its margins. A column wider than a slot takes as many whole slots as it needs,
+ * centered in them, so the columns in view still fill it and the next one starts past its edge. A step scrolls the strip by the slot of the column leaving, and the strip ends at the first stop that shows its last
  * column, so the last step is never one that shows nothing new. Where the stops are is [SectionPlacement.columnStops],
  * one a column up to that last one, counted from the song's start edge, which a scroll reversed for a song read
  * leftwards counts from too.
@@ -52,7 +52,10 @@ internal fun placeStrip(
     val lead = if (isInsetAtLeft != readsLeftwards) buttonInset else 0
     val viewWidth = (width - buttonInset - columnGapPx).coerceAtLeast(0)
     val slotWidth = (viewWidth + columnGapPx) / grid.stripColumns.coerceAtLeast(1)
-    val slots = IntArray(columnWidths.size) { maxOf(slotWidth, columnWidths[it] + columnGapPx) }
+    val slots = IntArray(columnWidths.size) { column ->
+        val needed = columnWidths[column] + columnGapPx
+        if (slotWidth <= 0) maxOf(slotWidth, needed) else slotWidth * ((needed + slotWidth - 1) / slotWidth).coerceAtLeast(1)
+    }
     val offsets = IntArray(slots.size) { ((slots[it] - columnGapPx - columnWidths[it]) / 2).coerceAtLeast(0) }
     val slotStarts = IntArray(slots.size)
     for (column in 1 until slots.size) slotStarts[column] = slotStarts[column - 1] + slots[column - 1]

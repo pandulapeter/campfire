@@ -57,6 +57,31 @@ class StripPlacementTest {
     }
 
     @Test
+    fun `a column wider than a slot takes whole slots, centered in them, so the next one still starts past the view`() {
+        val columnWidths = intArrayOf(280, 500, 280, 280)
+        val placement = placeStrip(
+            grid = SectionGrid(rows = IntArray(4), columns = intArrayOf(0, 1, 2, 3), columnCounts = intArrayOf(4), stripColumns = 3),
+            widths = SectionWidths(columnWidths = columnWidths, cellWidths = arrayOf(columnWidths), slotWidths = arrayOf(columnWidths), unitWidths = columnWidths),
+            unitHeights = IntArray(4) { 100 },
+            units = songUnitsOf(List(4) { listOf(listOf(100)) }),
+            piecePadding = IntArray(4),
+            width = 1_000,
+            isInset = true,
+            endInsetPx = 50,
+            columnGapPx = 20,
+            sectionGapPx = SECTION_GAP,
+            rowGapPx = ROW_GAP,
+            layoutDirection = LayoutDirection.Ltr,
+            isInsetAtLeft = false,
+        )
+        // A view of 930 and a gap is three slots of 316: the wide column is centered in two of them, and the one after it
+        // starts past the view rather than in it.
+        assertEquals(listOf(8, 372, 956, 1_272), placement.positions.map { it.x })
+        assertTrue(956 > 930)
+        assertEquals(listOf(0, 316, 948), placement.columnStops)
+    }
+
+    @Test
     fun `a strip read from the right is the one read from the left mirrored, its stops counted from its start edge`() {
         val ltr = place(LayoutDirection.Ltr)
         // A song and a screen both read from the right: the buttons, at the screen's end, are on the left.
