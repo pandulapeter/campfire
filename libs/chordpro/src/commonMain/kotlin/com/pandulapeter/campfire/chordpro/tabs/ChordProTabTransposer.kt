@@ -37,13 +37,19 @@ internal object ChordProTabTransposer {
      */
     fun transpose(lines: List<String>, semitones: Int, rename: (String) -> String): List<String> {
         val isStaffLine = lines.map(ChordProTokens::isStaffLine)
-        val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
+        // A string's number (`1|`) is its name, not a fret: the frets are read after it, as the retuner reads them.
+        val bodyStarts = lines.map { ChordProStaffNames.staffPrefix(it).bodyStart }
+        val frets = lines.indices.filter { isStaffLine[it] }.flatMap { fretNumbers(lines[it].substring(bodyStarts[it])) }
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
         return ChordProTabWrapper.systems(lines, isStaffLine).flatMap { range ->
             val system = lines.subList(range.first, range.last + 1)
             val moved = ChordProTabColumns.replace(
                 lines = system,
-                replacements = range.map { index -> if (isStaffLine[index]) fretReplacements(lines[index], shift) else null },
+                replacements = range.map { index ->
+                    if (!isStaffLine[index]) return@map null
+                    val start = bodyStarts[index]
+                    fretReplacements(lines[index].substring(start), shift).map { (frets, moved) -> (frets.first + start)..(frets.last + start) to moved }
+                },
             )
             moved.mapIndexed { position, line -> if (isStaffLine[range.first + position]) line else rewriteChordLine(line, rename) }
         }

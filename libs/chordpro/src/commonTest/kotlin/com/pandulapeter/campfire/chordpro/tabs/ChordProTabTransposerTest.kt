@@ -23,6 +23,14 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a string named by its number keeps the number when the frets move`() {
+        assertEquals(
+            "{sot}\n1|--5--7--|\n2|--3--5--|\n{eot}",
+            ChordProTransposer.transposeText("{sot}\n1|--3--5--|\n2|--1--3--|\n{eot}", 2),
+        )
+    }
+
+    @Test
     fun `a tab with an open string moves up by the rest of the octave whenever it is transposed down`() {
         (1..11).forEach { semitones ->
             val transposed = ChordProTabTransposer.transpose(listOf("e|--0--3--|"), -semitones) { it }.single()
