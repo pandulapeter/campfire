@@ -37,8 +37,9 @@ import com.pandulapeter.campfire.presentation.resources.shortcut_screen
 import com.pandulapeter.campfire.presentation.resources.shortcut_select_all
 import com.pandulapeter.campfire.presentation.resources.shortcut_shortcuts
 import com.pandulapeter.campfire.presentation.resources.shortcut_song_neighbours
-import com.pandulapeter.campfire.presentation.resources.shortcut_song_step
-import com.pandulapeter.campfire.presentation.resources.shortcut_song_up_down
+import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_column
+import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_nudge
+import com.pandulapeter.campfire.presentation.resources.shortcut_song_step_page
 import com.pandulapeter.campfire.presentation.resources.shortcut_tap_tempo
 import com.pandulapeter.campfire.presentation.resources.shortcut_transpose
 import com.pandulapeter.campfire.presentation.resources.shortcut_zoom
@@ -56,9 +57,10 @@ import org.jetbrains.compose.resources.StringResource
  * What the row [this] leads does in the group of [scope], as the shortcuts sheet and the system's lists say it, or null
  * for the second half of a pair, which is listed in its first half's row ([rowLead]). Every entry is named here, so a
  * new one has to be described, and one listed in several groups says what it does in each. A number takes the name of
- * the screen it opens (`%1$s`), which only the sheet knows.
+ * the screen it opens (`%1$s`), which only the sheet knows. A song's step keys say what they move it by in the setup
+ * [features] describe ([ShortcutFeatures.songStep]).
  */
-internal fun KeyShortcut.descriptionIn(scope: ShortcutScope): StringResource? = when (this) {
+internal fun KeyShortcut.descriptionIn(scope: ShortcutScope, features: ShortcutFeatures): StringResource? = when (this) {
     KeyShortcut.SHORTCUTS -> Res.string.shortcut_shortcuts
     KeyShortcut.BACK -> Res.string.shortcut_back
     KeyShortcut.FIND -> if (scope == ShortcutScope.EDITOR) Res.string.song_editor_find else Res.string.shortcut_find
@@ -84,8 +86,11 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope): StringResource? = 
     KeyShortcut.FIND_NEXT_FROM_QUERY -> Res.string.shortcut_find_step_from_query
     KeyShortcut.TRANSPOSE_UP -> Res.string.shortcut_transpose
     KeyShortcut.PLAY -> Res.string.shortcut_play
-    KeyShortcut.SONG_UP -> Res.string.shortcut_song_up_down
-    KeyShortcut.SONG_PAGE_UP -> Res.string.shortcut_song_step
+    KeyShortcut.SONG_UP -> when (features.songStep) {
+        SongStep.PAGE -> Res.string.shortcut_song_step_page
+        SongStep.COLUMN -> Res.string.shortcut_song_step_column
+        SongStep.NUDGE -> Res.string.shortcut_song_step_nudge
+    }
     KeyShortcut.SONG_SWITCH_UP -> Res.string.shortcut_song_neighbours
     KeyShortcut.METRONOME -> Res.string.shortcut_metronome
     KeyShortcut.TAP_TEMPO -> Res.string.shortcut_tap_tempo
@@ -105,6 +110,7 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope): StringResource? = 
     KeyShortcut.FIND_PREVIOUS_FROM_QUERY,
     KeyShortcut.TRANSPOSE_DOWN,
     KeyShortcut.SONG_DOWN,
+    KeyShortcut.SONG_PAGE_UP,
     KeyShortcut.SONG_PAGE_DOWN,
     KeyShortcut.SONG_LEFT,
     KeyShortcut.SONG_RIGHT,

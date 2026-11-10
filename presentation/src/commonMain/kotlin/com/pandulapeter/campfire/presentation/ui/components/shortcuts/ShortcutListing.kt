@@ -36,14 +36,16 @@ internal data class ShortcutRow(val shortcuts: List<KeyShortcut>) {
  * What the features switched on leave of the table, since the sheet lists only keys that do something: no song's keys
  * with the songs off, no click's with the metronome off, nothing that changes the library, a song's transposition, or
  * the selection in read only mode, which hides their controls, and no auto-scroll unless a song is read in one
- * scrolling column ([isSongScrolledContinuously]), the only layout it plays in.
+ * scrolling column ([SongStep.NUDGE]), the only layout it plays in.
+ *
+ * @param songStep What the song's step keys move it by, which their row of the table says.
  */
 @Immutable
 internal data class ShortcutFeatures(
     val areSongsEnabled: Boolean,
     val isMetronomeEnabled: Boolean,
     val isReadOnly: Boolean,
-    val isSongScrolledContinuously: Boolean,
+    val songStep: SongStep,
 )
 
 /**
@@ -60,7 +62,7 @@ internal fun shortcutGroups(
 ): List<ShortcutGroup> {
     val listed = KeyShortcut.entries.filter { shortcut ->
         shortcut.platforms.includes(build) &&
-            !(!features.isSongScrolledContinuously && shortcut == KeyShortcut.PLAY) &&
+            !(features.songStep != SongStep.NUDGE && shortcut == KeyShortcut.PLAY) &&
             !(isApple && shortcut == KeyShortcut.REDO_ALTERNATE)
     }
     return ShortcutScope.entries.filter { features.lists(it) }.mapNotNull { scope ->
@@ -77,8 +79,8 @@ internal fun shortcutGroups(
 }
 
 /**
- * The shortcut whose row [this] is listed in: the first of the keys that do one thing (a pair's halves, the print
- * preview's arrows beside its Page Up and Page Down), itself otherwise.
+ * The shortcut whose row [this] is listed in: the first of the keys that do one thing (a pair's halves, a song's and the
+ * print preview's arrows beside their Page Up and Page Down), itself otherwise.
  */
 internal val KeyShortcut.rowLead: KeyShortcut
     get() = when (this) {
@@ -88,8 +90,11 @@ internal val KeyShortcut.rowLead: KeyShortcut
         KeyShortcut.FIND_PREVIOUS -> KeyShortcut.FIND_NEXT
         KeyShortcut.FIND_PREVIOUS_FROM_QUERY -> KeyShortcut.FIND_NEXT_FROM_QUERY
         KeyShortcut.TRANSPOSE_DOWN -> KeyShortcut.TRANSPOSE_UP
-        KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT -> KeyShortcut.SONG_UP
-        KeyShortcut.SONG_PAGE_DOWN -> KeyShortcut.SONG_PAGE_UP
+        KeyShortcut.SONG_DOWN,
+        KeyShortcut.SONG_LEFT,
+        KeyShortcut.SONG_RIGHT,
+        KeyShortcut.SONG_PAGE_UP,
+        KeyShortcut.SONG_PAGE_DOWN -> KeyShortcut.SONG_UP
         KeyShortcut.SONG_SWITCH_DOWN, KeyShortcut.SONG_SWITCH_LEFT, KeyShortcut.SONG_SWITCH_RIGHT -> KeyShortcut.SONG_SWITCH_UP
         KeyShortcut.PREVIEW_PAGE_DOWN -> KeyShortcut.PREVIEW_PAGE_UP
         KeyShortcut.PREVIEW_END -> KeyShortcut.PREVIEW_HOME

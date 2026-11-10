@@ -1472,8 +1472,9 @@
     <string name="shortcut_zoom_reset">Text la mărimea obișnuită</string>
     <string name="shortcut_transpose">Transpune cu un semiton în sus sau în jos</string>
     <string name="shortcut_play">Pornește sau oprește derularea automată a cântecului</string>
-    <string name="shortcut_song_up_down">Derulează sau avansează pe unde cântecul are butoane de pas</string>
-    <string name="shortcut_song_step">Partea anterioară sau următoare a cântecului</string>
+    <string name="shortcut_song_step_page">Pagina anterioară sau următoare</string>
+    <string name="shortcut_song_step_column">Coloana anterioară sau următoare</string>
+    <string name="shortcut_song_step_nudge">Derulează puțin în sus sau în jos</string>
     <string name="shortcut_song_neighbours">Cântecul anterior sau următor din listă</string>
     <string name="shortcut_metronome">Pornește sau oprește metronomul</string>
     <string name="shortcut_tap_tempo">Bate tempoul</string>

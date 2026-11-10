@@ -1420,8 +1420,9 @@
     <string name="shortcut_zoom_reset">Text at its usual size</string>
     <string name="shortcut_transpose">Transpose up or down a semitone</string>
     <string name="shortcut_play">Start or stop the song scrolling by itself</string>
-    <string name="shortcut_song_up_down">Scroll, or step where the song has step buttons</string>
-    <string name="shortcut_song_step">Previous or next part of the song</string>
+    <string name="shortcut_song_step_page">Previous or next page</string>
+    <string name="shortcut_song_step_column">Previous or next column</string>
+    <string name="shortcut_song_step_nudge">Scroll up or down a little</string>
     <string name="shortcut_song_neighbours">Previous or next song of the setlist</string>
     <string name="shortcut_metronome">Start or stop the click</string>
     <string name="shortcut_tap_tempo">Tap the tempo</string>

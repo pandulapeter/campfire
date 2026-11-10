@@ -45,7 +45,7 @@ internal fun systemShortcutTexts(features: ShortcutFeatures): List<SystemShortcu
         SystemShortcutGroup(
             title = stringResource(scope.title),
             shortcuts = shortcuts.map { shortcut ->
-                SystemShortcut(description = stringResource(requireNotNull(shortcut.rowLead.descriptionIn(scope))), chord = shortcut.chord)
+                SystemShortcut(description = stringResource(requireNotNull(shortcut.rowLead.descriptionIn(scope, features))), chord = shortcut.chord)
             },
         )
     }

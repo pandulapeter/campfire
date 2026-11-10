@@ -22,7 +22,7 @@ class ShortcutListingTest {
         areSongsEnabled = true,
         isMetronomeEnabled = true,
         isReadOnly = false,
-        isSongScrolledContinuously = true,
+        songStep = SongStep.NUDGE,
     )
 
     private fun listed(build: AppBuild, features: ShortcutFeatures = everything, isApple: Boolean = false, isPreviewWheelZoomed: Boolean = false) =
@@ -36,9 +36,9 @@ class ShortcutListingTest {
         assertEquals(KeyShortcut.entries.flatMap { shortcut -> shortcut.scopes.map { shortcut } }.sorted(), shortcuts.sorted())
         groups.forEach { group ->
             group.rows.forEach { row ->
-                assertNotNull(row.lead.descriptionIn(group.scope), row.lead.name)
+                assertNotNull(row.lead.descriptionIn(group.scope, everything), row.lead.name)
                 row.shortcuts.forEach { assertTrue(group.scope in it.scopes, it.name) }
-                row.shortcuts.drop(1).forEach { assertEquals(null, it.descriptionIn(group.scope), it.name) }
+                row.shortcuts.drop(1).forEach { assertEquals(null, it.descriptionIn(group.scope, everything), it.name) }
             }
         }
     }
@@ -49,7 +49,7 @@ class ShortcutListingTest {
         fun scopesOf(shortcut: KeyShortcut) = groups.filter { group -> group.rows.any { shortcut in it.shortcuts } }.map { it.scope }
         assertEquals(listOf(ShortcutScope.MAIN_SCREENS, ShortcutScope.EDITOR), scopesOf(KeyShortcut.FIND))
         assertEquals(listOf(ShortcutScope.APP, ShortcutScope.LISTS, ShortcutScope.SONG, ShortcutScope.EDITOR), scopesOf(KeyShortcut.SAVE))
-        assertEquals(4, ShortcutScope.entries.mapNotNull { KeyShortcut.SAVE.descriptionIn(it) }.toSet().size)
+        assertEquals(4, ShortcutScope.entries.mapNotNull { KeyShortcut.SAVE.descriptionIn(it, everything) }.toSet().size)
         val readOnly = listed(AppBuild.WINDOWS, everything.copy(isReadOnly = true))
         assertTrue(readOnly.single { it.scope == ShortcutScope.SONG }.rows.any { KeyShortcut.SAVE in it.shortcuts })
         assertTrue(readOnly.filter { it.scope == ShortcutScope.LISTS }.none { group -> group.rows.any { KeyShortcut.SAVE in it.shortcuts } })
@@ -103,7 +103,7 @@ class ShortcutListingTest {
     fun `auto-scroll is listed only while songs are read in one scrolling column`() {
         fun songShortcuts(features: ShortcutFeatures) = listed(AppBuild.WINDOWS, features).single { it.scope == ShortcutScope.SONG }.rows.flatMap { it.shortcuts }
         assertTrue(KeyShortcut.PLAY in songShortcuts(everything))
-        val paged = everything.copy(isSongScrolledContinuously = false)
+        val paged = everything.copy(songStep = SongStep.PAGE)
         assertFalse(KeyShortcut.PLAY in songShortcuts(paged))
         assertFalse(KeyShortcut.PLAY in systemShortcutGroups(build = AppBuild.ANDROID, features = paged, isApple = false).flatMap { it.second })
     }
@@ -122,9 +122,16 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `the four arrows of a song share one row, and with Shift another`() {
+    fun `the four arrows of a song share one row with Page Up and Page Down, and with Shift another`() {
         val rows = listed(AppBuild.WINDOWS).single { it.scope == ShortcutScope.SONG }.rows.map { it.shortcuts.toSet() }
-        assertTrue(setOf(KeyShortcut.SONG_UP, KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT) in rows)
+        val steps = setOf(KeyShortcut.SONG_UP, KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT, KeyShortcut.SONG_PAGE_UP, KeyShortcut.SONG_PAGE_DOWN)
+        assertTrue(steps in rows)
         assertTrue(setOf(KeyShortcut.SONG_SWITCH_UP, KeyShortcut.SONG_SWITCH_DOWN, KeyShortcut.SONG_SWITCH_LEFT, KeyShortcut.SONG_SWITCH_RIGHT) in rows)
+    }
+
+    @Test
+    fun `a song's step keys say what they move it by in each layout`() {
+        val descriptions = SongStep.entries.map { KeyShortcut.SONG_UP.descriptionIn(ShortcutScope.SONG, everything.copy(songStep = it)) }
+        assertEquals(SongStep.entries.size, descriptions.toSet().size)
     }
 }

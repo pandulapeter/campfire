@@ -1469,8 +1469,9 @@
     <string name="shortcut_zoom_reset">טקסט בגודלו הרגיל</string>
     <string name="shortcut_transpose">טרנספוזיציה בחצי טון למעלה או למטה</string>
     <string name="shortcut_play">הפעלה או עצירה של הגלילה האוטומטית של השיר</string>
-    <string name="shortcut_song_up_down">גלילה, או מעבר בשלבים במקום שבו יש לשיר כפתורי צעד</string>
-    <string name="shortcut_song_step">החלק הקודם או הבא של השיר</string>
+    <string name="shortcut_song_step_page">העמוד הקודם או הבא</string>
+    <string name="shortcut_song_step_column">הטור הקודם או הבא</string>
+    <string name="shortcut_song_step_nudge">גלילה מעט למעלה או למטה</string>
     <string name="shortcut_song_neighbours">השיר הקודם או הבא בסט־ליסט</string>
     <string name="shortcut_metronome">הפעלה או עצירה של הקליק</string>
     <string name="shortcut_tap_tempo">הקשת הטמפו</string>

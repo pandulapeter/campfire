@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.list.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyNames
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutFeatures
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutRow
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutScope
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.commandScrollDescription
@@ -93,7 +94,7 @@ internal fun KeyboardShortcutsSheet(
         groups.forEach { group ->
             item(key = group.scope.name) { SettingsSectionTitle(text = stringResource(group.scope.title)) }
             items(group.rows, key = { "${group.scope.name}-${it.lead.name}" }) { row ->
-                ShortcutRowItem(row = row, scope = group.scope, destinations = destinations, names = names)
+                ShortcutRowItem(row = row, scope = group.scope, features = features, destinations = destinations, names = names)
             }
             if (group.isCommandScrollListed) {
                 item(key = "${group.scope.name}-scroll") {
@@ -115,10 +116,11 @@ internal fun KeyboardShortcutsSheet(
 private fun ShortcutRowItem(
     row: ShortcutRow,
     scope: ShortcutScope,
+    features: ShortcutFeatures,
     destinations: List<CampfireDestination.TopLevel>,
     names: KeyNames,
 ) {
-    val description = row.lead.descriptionIn(scope) ?: return
+    val description = row.lead.descriptionIn(scope, features) ?: return
     ShortcutItem(
         description = when {
             row.lead in KeyShortcut.screens -> textResource(description, stringResource((screenOf(row.lead, destinations) ?: return).label))

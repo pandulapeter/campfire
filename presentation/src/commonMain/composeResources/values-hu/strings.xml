@@ -1419,8 +1419,9 @@
     <string name="shortcut_zoom_reset">Szöveg az alapméretén</string>
     <string name="shortcut_transpose">Transzponálás egy félhanggal fel vagy le</string>
     <string name="shortcut_play">A dal automatikus görgetésének indítása vagy leállítása</string>
-    <string name="shortcut_song_up_down">Görgetés, vagy léptetés, ahol a dalnak léptetőgombjai vannak</string>
-    <string name="shortcut_song_step">A dal előző vagy következő része</string>
+    <string name="shortcut_song_step_page">Előző vagy következő oldal</string>
+    <string name="shortcut_song_step_column">Előző vagy következő hasáb</string>
+    <string name="shortcut_song_step_nudge">Görgetés kicsit felfelé vagy lefelé</string>
     <string name="shortcut_song_neighbours">A lista előző vagy következő dala</string>
     <string name="shortcut_metronome">A kattogás indítása vagy leállítása</string>
     <string name="shortcut_tap_tempo">Tempó megadása koppintással</string>

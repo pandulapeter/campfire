@@ -39,7 +39,8 @@ The shared building blocks of the screens; subpackages with something to say hav
   a new entry is described; `rowLead` puts a pair in one row. Keys meaning something else elsewhere (Page Down on a song
   and in the print preview) are an entry each; the root asks only the app-wide ones. Lists show only what works with the
   features on (`ShortcutFeatures`: no song keys with the songs off, nothing whose control read only mode hides, Space's
-  auto-scroll only in the continuous song layout), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the scroll
+  auto-scroll only in the continuous song layout; a song's arrows, Page Up, and Page Down are one row worded for the
+  layout and Turn by, `SongStep`), Ctrl / Cmd + Y not on an Apple keyboard, and Ctrl / Cmd + the scroll
   wheel, which is no key, in the sheet only. `?` is Shift + slash (`Shift.IN_LABEL`, written as the character): a US
   layout's key, so elsewhere Ctrl / Cmd + slash, the numpad's slash, or Settings → About open the sheet; `?` does
   nothing while a text field is being typed in.

@@ -1427,8 +1427,9 @@
     <string name="shortcut_zoom_reset">Texte à sa taille habituelle</string>
     <string name="shortcut_transpose">Transposer d\'un demi-ton vers le haut ou le bas</string>
     <string name="shortcut_play">Lancer ou arrêter le défilement automatique de la chanson</string>
-    <string name="shortcut_song_up_down">Faire défiler, ou avancer là où la chanson a des boutons de pas</string>
-    <string name="shortcut_song_step">Partie précédente ou suivante de la chanson</string>
+    <string name="shortcut_song_step_page">Page précédente ou suivante</string>
+    <string name="shortcut_song_step_column">Colonne précédente ou suivante</string>
+    <string name="shortcut_song_step_nudge">Défiler un peu vers le haut ou vers le bas</string>
     <string name="shortcut_song_neighbours">Chanson précédente ou suivante de la setlist</string>
     <string name="shortcut_metronome">Lancer ou arrêter le clic</string>
     <string name="shortcut_tap_tempo">Taper le tempo</string>

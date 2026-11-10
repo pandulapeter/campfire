@@ -12,8 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.dialogs.shortcuts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutFeatures
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.SongStep
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /** The features the shortcuts listed depend on, as [preferencesController] has them, for the sheet and the shells' lists. */
@@ -25,6 +27,10 @@ internal fun shortcutFeatures(preferencesController: PreferencesController): Sho
         areSongsEnabled = userPreferences?.areSongsEnabled != false,
         isMetronomeEnabled = userPreferences?.isMetronomeEnabled != false,
         isReadOnly = isReadOnly,
-        isSongScrolledContinuously = userPreferences?.songLayout == SongLayout.CONTINUOUS,
+        songStep = when {
+            userPreferences?.songLayout == SongLayout.CONTINUOUS -> SongStep.NUDGE
+            userPreferences?.pageTurn == PageTurn.COLUMN -> SongStep.COLUMN
+            else -> SongStep.PAGE
+        },
     )
 }

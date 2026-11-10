@@ -1420,8 +1420,9 @@
     <string name="shortcut_zoom_reset">Texto a su tamaño habitual</string>
     <string name="shortcut_transpose">Transponer un semitono arriba o abajo</string>
     <string name="shortcut_play">Iniciar o detener el desplazamiento automático de la canción</string>
-    <string name="shortcut_song_up_down">Desplazar, o avanzar donde la canción tiene botones de paso</string>
-    <string name="shortcut_song_step">Parte anterior o siguiente de la canción</string>
+    <string name="shortcut_song_step_page">Página anterior o siguiente</string>
+    <string name="shortcut_song_step_column">Columna anterior o siguiente</string>
+    <string name="shortcut_song_step_nudge">Desplazar un poco hacia arriba o hacia abajo</string>
     <string name="shortcut_song_neighbours">Canción anterior o siguiente del repertorio</string>
     <string name="shortcut_metronome">Iniciar o detener el clic</string>
     <string name="shortcut_tap_tempo">Marca el tempo tocando</string>
