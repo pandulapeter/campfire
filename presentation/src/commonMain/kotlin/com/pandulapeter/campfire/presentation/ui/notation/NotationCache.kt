@@ -37,8 +37,8 @@ internal fun NotationRequest.keyOf(tune: AbcTune) = NotationTuneKey(
 /**
  * The renderings made last, app-wide, so that a tune seen before at the same width, size, and transposition is notation
  * on the first frame its song is opened again. Least recently used out first, bounded twice, whichever is reached
- * first: [maxTunes], and [maxWords] words laid out, since a painted tune's size is mostly its text layouts and one long
- * tune with words holds thousands of them. A rendering heavier than the whole bound is not kept (its page still shows
+ * first: [maxTunes], and [maxWords] word layouts kept, since a painted tune's size is mostly its text layouts and one
+ * long tune with words holds thousands of them. A rendering heavier than the whole bound is not kept (its page still shows
  * it). A tune that failed to render is remembered too, by the same key, the last [maxFailedTunes] of them, so that a
  * resize or a transposition back to it draws it as its text at once instead of holding the single engraving thread for
  * as long as the failure took again; a failure from a device too busy at that moment stays until the key changes too.
@@ -125,5 +125,10 @@ internal class NotationCache(
     }
 }
 
-/** How many words [systems] hold laid out, which is what a painted tune's size mostly is. */
-internal fun notationWordsOf(systems: List<NotationSystemPaint>) = systems.sumOf { it.texts.size }
+/**
+ * How many distinct word layouts [systems] hold, which is what a painted tune's size mostly is: a word repeated in one
+ * font is drawn from one layout ([NotationPainter.paint]), so it is counted once, however often it is drawn. Two
+ * layouts are equal only when they are one: a [androidx.compose.ui.text.TextLayoutResult] compares its paragraphs by
+ * identity.
+ */
+internal fun notationWordsOf(systems: List<NotationSystemPaint>) = systems.flatMapTo(HashSet()) { system -> system.texts.map { it.layout } }.size

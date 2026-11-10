@@ -39,8 +39,15 @@ internal class NotationPainter(
     private val glyphPaths = HashMap<AbcMusicGlyph, Path>()
     private val pathParser = PathParser()
 
-    /** The systems of [drawing], its words laid out at [unitSize] pixels to the unit, painted anew on every call. */
-    fun paint(drawing: NotationDrawing, unitSize: Float): List<NotationSystemPaint> = drawing.systems.map { paint(it, unitSize) }
+    /**
+     * The systems of [drawing], its words laid out at [unitSize] pixels to the unit, painted anew on every call. A word
+     * repeated in one font (a fret, a chord name, a bar number) is laid out once and drawn from that layout wherever it
+     * stands; the layouts are shared within the call only, so a long-lived painter holds none of them afterwards.
+     */
+    fun paint(drawing: NotationDrawing, unitSize: Float): List<NotationSystemPaint> {
+        val layouts = HashMap<Pair<String, NotationFont>, TextLayoutResult>()
+        return drawing.systems.map { paint(it, unitSize, layouts) }
+    }
 
     /**
      * [paint], kept for the drawings asked for most recently: the PDF draws its pages one at a time and asks for each
@@ -51,7 +58,7 @@ internal class NotationPainter(
         paint(drawing, unitSize)
     }
 
-    private fun paint(system: NotationSystem, unitSize: Float): NotationSystemPaint {
+    private fun paint(system: NotationSystem, unitSize: Float, layouts: MutableMap<Pair<String, NotationFont>, TextLayoutResult>): NotationSystemPaint {
         val fills = Path()
         val strokes = mutableListOf<NotationStrokePaint>()
         system.shapes.forEach { shape ->
@@ -72,12 +79,15 @@ internal class NotationPainter(
         val knockouts = Path()
         system.texts.forEach { text ->
             // A lyric's font is larger than it is drawn, to leave room for the app's wider typeface (see AbcSystem).
-            val layouts = text.runs.map { run ->
-                (run as? NotationTextRun.Words)?.let { layout(it.text, if (it.role == NotationTextRole.LYRIC) it.font.scaled(1f / AbcSystem.LYRICS_ROOM) else it.font, unitSize) }
+            val runLayouts = text.runs.map { run ->
+                (run as? NotationTextRun.Words)?.let {
+                    val font = if (it.role == NotationTextRole.LYRIC) it.font.scaled(1f / AbcSystem.LYRICS_ROOM) else it.font
+                    layouts.getOrPut(it.text to font) { layout(it.text, font, unitSize) }
+                }
             }
             val widths = text.runs.mapIndexed { index, run ->
                 when (run) {
-                    is NotationTextRun.Words -> layouts[index]!!.size.width / unitSize
+                    is NotationTextRun.Words -> runLayouts[index]!!.size.width / unitSize
                     is NotationTextRun.Glyphs -> run.glyphs.sumOf { it.advance.toDouble() }.toFloat() * run.size / AbcMusicGlyph.UNITS_PER_EM
                 }
             }
@@ -86,7 +96,7 @@ internal class NotationPainter(
                 NotationAnchor.MIDDLE -> widths.sum() / 2
                 NotationAnchor.END -> widths.sum()
             }
-            val firstWords = layouts.firstNotNullOfOrNull { it }
+            val firstWords = runLayouts.firstNotNullOfOrNull { it }
             if (text.isBoxed && firstWords != null) {
                 // abc2svg's box is a CSS outline, 1 unit wide and 1 unit off the text, around the words as measured.
                 val top = text.y - firstWords.firstBaseline / unitSize - BOX_GAP
@@ -115,7 +125,7 @@ internal class NotationPainter(
             text.runs.forEachIndexed { index, run ->
                 when (run) {
                     is NotationTextRun.Words -> texts += NotationTextPaint(
-                        layout = layouts[index]!!,
+                        layout = runLayouts[index]!!,
                         x = x,
                         baseline = text.y + run.dy,
                         isChord = run.role == NotationTextRole.CHORD,

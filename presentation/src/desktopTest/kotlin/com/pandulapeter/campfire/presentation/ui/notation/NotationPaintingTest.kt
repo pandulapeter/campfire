@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -85,6 +86,29 @@ internal class NotationPaintingTest {
         assertTrue(knockouts.top < 71f - 27.5f * 1.6f && knockouts.bottom > 71f - 21.5f * 1.6f, knockouts.toString())
         val staff = assertNotNull(parseNotationDrawing(listOf(HEADER, SYSTEM)))
         assertEquals(true, painting().newPainter().paint(staff, unitSize = 1f).single().knockouts.isEmpty)
+    }
+
+    @Test
+    fun `a word repeated in one font across a drawing is laid out once, and in another font apart`() {
+        val second = NotationFixtures.system(
+            """
+            <style>
+            .f6{font:16.0px text,sans-serif}
+            </style>
+            <g transform="translate(0,61.6)">
+            <text class="f3 gch" x="40.0" y="-39.1">Em</text>
+            <text class="f6 gch" x="80.0" y="-39.1">Em</text>
+            </g>
+            """.trimIndent(),
+        )
+        val drawing = assertNotNull(parseNotationDrawing(listOf(HEADER, SYSTEM, second)))
+        val (first, other) = painting().newPainter().paint(drawing, unitSize = 1f)
+        val boldChord = first.texts.single { it.isChord }
+        val (sameChord, regularChord) = other.texts
+        assertSame(boldChord.layout, sameChord.layout)
+        assertNotSame(boldChord.layout, regularChord.layout)
+        assertEquals(40f, sameChord.x)
+        assertEquals(80f, regularChord.x)
     }
 
     private fun painting() = NotationPainting(Density(1f), createFontFamilyResolver(), TextStyle.Default)

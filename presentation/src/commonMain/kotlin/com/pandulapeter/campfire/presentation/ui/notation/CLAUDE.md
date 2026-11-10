@@ -64,7 +64,7 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   systems scaled meanwhile. All tunes arrive at once, so sections are measured again once. A rendering replacing one the
   reader changed cross-fades with it (fading in from nothing blinked the tune out) while sections glide; the first one,
   replacing the text, does not.
-- **Renderings are kept app-wide** (`NotationCache`: 16 tunes or 4,000 laid-out words, LRU), keyed by everything they
+- **Renderings are kept app-wide** (`NotationCache`: 16 tunes or 4,000 distinct word layouts, LRU), keyed by everything they
   depend on, so a tune seen before is notation on its first frame. A cold one's arrival moves nothing gradually; a
   rendering that also re-renders a tune is the reader's change and is animated whole. A failed tune is remembered per
   key (the last 64) and drawn as text without rendering again.

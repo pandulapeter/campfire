@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.notation
 
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -130,6 +131,20 @@ internal class NotationCacheTest {
         assertNull(notationPageWidth(availableWidth = Dp.Unspecified, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
         assertNull(notationPageWidth(availableWidth = 0.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
         assertNull(notationPageWidth(availableWidth = 20.dp, columnWidth = 300.dp, cardPadding = 16.dp, notationUnit = 1.dp))
+    }
+
+    @Test
+    fun `a layout drawn by three texts is counted once`() {
+        val layout = rendering.systems.first().texts.first().layout
+        val system = NotationSystemPaint(
+            width = 100f,
+            height = 10f,
+            fills = Path(),
+            strokes = emptyList(),
+            knockouts = Path(),
+            texts = List(3) { NotationTextPaint(layout = layout, x = it * 10f, baseline = 0f, isChord = false) },
+        )
+        assertEquals(1, notationWordsOf(listOf(system)))
     }
 
     private fun request(vararg tunes: AbcTune, chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN) = NotationRequest(
