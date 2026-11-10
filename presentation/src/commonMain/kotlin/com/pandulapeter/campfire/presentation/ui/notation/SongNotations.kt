@@ -63,18 +63,21 @@ internal class SongNotations(
      */
     val systemLines: Map<AbcTune, List<Int>> = rendered.systemLines
 
-    /** What [run], standing after a key change of [tuneOffset] semitones, is drawn as, or null where it is drawn as text. */
-    fun of(run: List<ChordProLine>, tuneOffset: Int): NotationRun? {
-        val tune = AbcTune(run.abcTune() ?: return null, tuneOffset)
-        val rendering = rendered.renderings[tune] ?: standIns[tune]?.let { rendered.renderings[it] } ?: return null
+    /**
+     * What the run of [tune]'s text ([abcTune], null for a run that is no tune), standing after a key change of
+     * [tuneOffset] semitones, is drawn as, or null where it is drawn as text.
+     */
+    fun of(tune: String?, tuneOffset: Int): NotationRun? {
+        val abcTune = AbcTune(tune ?: return null, tuneOffset)
+        val rendering = renderingOf(abcTune) ?: return null
         return NotationRun(
             systems = rendering.systems,
             measuredUnitSize = rendering.unitSize,
             unitSize = unitSize,
             maxWidth = maxWidth,
-            isRerendered = tune in rendered.rerenderedTunes,
+            isRerendered = abcTune in rendered.rerenderedTunes,
             reading = rendering.reading,
-            onPlaced = { widthPx -> placement?.place(tune, widthPx) },
+            onPlaced = { widthPx -> placement?.place(abcTune, widthPx) },
         )
     }
 
@@ -85,20 +88,21 @@ internal class SongNotations(
      * only the unit) hands the same token, so it is never a second arrival.
      */
     /**
-     * Where the layout placed the first slot of [run], standing after a key change of [tuneOffset] semitones, while it is
-     * drawn as its text: the column its first rendering is then engraved for ([NotationPlacement]), so that the staff
-     * replaces the text in one step rather than first in the narrowest column's engraving.
+     * Where the layout placed the first slot of the run of [tune]'s text, standing after a key change of [tuneOffset]
+     * semitones, while it is drawn as its text: the column its first rendering is then engraved for ([NotationPlacement]),
+     * so that the staff replaces the text in one step rather than first in the narrowest column's engraving.
      */
-    fun placeText(run: List<ChordProLine>, tuneOffset: Int, widthPx: Int) {
-        placement?.place(AbcTune(run.abcTune() ?: return, tuneOffset), widthPx)
+    fun placeText(tune: String?, tuneOffset: Int, widthPx: Int) {
+        placement?.place(AbcTune(tune ?: return, tuneOffset), widthPx)
     }
 
-    /** What the picker beside [run]'s heading offers, null where it has none, or where the run is drawn as text. */
-    fun partPickerOf(run: List<ChordProLine>, tuneOffset: Int): NotationPartPicker? {
-        val tune = run.abcTune() ?: return null
-        if (of(run, tuneOffset) == null) return null
+    /** What the picker beside the heading of the run of [tune]'s text offers, null where it has none, or where the run is drawn as text. */
+    fun partPickerOf(tune: String?, tuneOffset: Int): NotationPartPicker? {
+        if (tune == null || renderingOf(AbcTune(tune, tuneOffset)) == null) return null
         return partChoices?.pickerOf(tune, instrument)
     }
+
+    private fun renderingOf(tune: AbcTune) = rendered.renderings[tune] ?: standIns[tune]?.let { rendered.renderings[it] }
 
     val arrival: Any? get() = rendered.takeIf { it.arrivingTunes.isNotEmpty() && it.rerenderedTunes.isEmpty() }
 
@@ -132,7 +136,8 @@ internal class NotationRun(
  * the page and unit it is laid out at (and the whole page's width in pixels, [availableWidth], which tells a new page
  * from the tunes only placed at another width), its chords, the song's title, which a tune named the
  * same leaves to the page, what its words are laid out with, so a new density or style paints again, and the part of
- * each score engraved, by the tune's text (a tune not in [parts] is engraved whole).
+ * each score engraved, by the tune's text (a tune not in [parts] is engraved whole). [facts] are what follows from the
+ * tunes and parts, worked out once for them; each request carries its own, since a part picked changes a tune's text.
  */
 internal data class NotationRequest(
     val tunes: Set<AbcTune>,
@@ -143,9 +148,10 @@ internal data class NotationRequest(
     val songTitle: String?,
     val painting: NotationPainting,
     val parts: Map<String, AbcPart>,
+    val facts: NotationTuneFacts,
 ) {
     /** The text of [tune] engraved: the part shown, where only one is. */
-    fun textOf(tune: AbcTune) = parts[tune.text]?.let { abcTuneWithPart(tune.text, it) } ?: tune.text
+    fun textOf(tune: AbcTune) = facts[tune]?.engravedText ?: engravedTextOf(tune.text, parts[tune.text])
 }
 
 /**
@@ -241,11 +247,12 @@ internal fun rememberSongNotations(
     val instrument = LocalNotationInstrument.current
     // Read in composition, so that a part picked or an instrument changed is a new request.
     val parts = partChoices?.let { choices -> tunes.mapNotNull { tune -> choices.shownPartOf(tune.text, instrument)?.let { tune.text to it } }.toMap() }.orEmpty()
+    val facts = remember(tunes, parts) { notationTuneFactsOf(tunes, parts) }
     val placement = remember { NotationPlacement() }
     val request = if (narrowestWidth == null || narrowestWidth <= 0 || tunes.isEmpty()) {
         null
     } else {
-        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords, songTitle, painting, parts)
+        val base = NotationRequest(tunes, narrowestWidth, availableWidth, unitSize, chords, songTitle, painting, parts, facts)
         val width = placement.widthFor(tunes, narrowestWidth, availableWidth, unitSize, rememberedWidth = cache?.placedWidthFor(base))
         if (width != narrowestWidth) cache?.rememberPlacedWidth(base, width)
         base.copy(width = width)
@@ -316,6 +323,7 @@ private suspend fun render(renderer: AbcRenderer, painter: NotationPainter, tune
         renderer = renderer,
         tune = tune.text,
         part = request.parts[tune.text],
+        partText = request.textOf(tune),
         width = request.width,
         chords = request.chords.movedBy(tune.offset),
         songTitle = request.songTitle,
@@ -343,11 +351,9 @@ internal suspend fun renderNotationPartOrScore(
     width: Int,
     chords: NotationChordSpelling,
     songTitle: String?,
-): Pair<String, NotationDrawing>? {
-    val partText = part?.let { abcTuneWithPart(tune, it) } ?: tune
-    return renderNotationDrawing(renderer, partText, width, chords, songTitle)?.let { partText to it }
+    partText: String = engravedTextOf(tune, part),
+): Pair<String, NotationDrawing>? = renderNotationDrawing(renderer, partText, width, chords, songTitle)?.let { partText to it }
         ?: tune.takeIf { it != partText }?.let { renderNotationDrawing(renderer, it, width, chords, songTitle)?.let { drawing -> tune to drawing } }
-}
 
 /**
  * [tune] engraved for a page [width] SVG units wide and read into a drawing, its staff moved and its chords named as

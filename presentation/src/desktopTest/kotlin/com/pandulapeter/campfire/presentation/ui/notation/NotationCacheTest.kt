@@ -147,7 +147,33 @@ internal class NotationCacheTest {
         assertEquals(1, notationWordsOf(listOf(system)))
     }
 
-    private fun request(vararg tunes: AbcTune, chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN) = NotationRequest(
+    @Test
+    fun `a tune is engraved and keyed by its part's text where one is shown, and by its own otherwise`() {
+        val score = "X:1\nT:Song\n%%score 1 { 2 | 3 } 4 5\nV:4\nV:5\nK:C\nC|"
+        val part = AbcPart(name = "Guitar", voiceId = "4", score = "4 5")
+        val withPart = AbcTune(score, 2)
+        val plain = AbcTune("X:1\nK:G\nGABc|", 0)
+        val request = request(withPart, plain, parts = mapOf(score to part))
+        assertEquals(abcTuneWithPart(score, part), request.textOf(withPart))
+        assertEquals(plain.text, request.textOf(plain))
+        assertEquals(
+            NotationTuneKey(abcTuneWithPart(score, part), NotationChordSpelling.AS_WRITTEN.movedBy(2), 300, 1f, null, painting),
+            request.keyOf(withPart),
+        )
+        assertEquals(NotationTuneKey(plain.text, NotationChordSpelling.AS_WRITTEN, 300, 1f, null, painting), request.keyOf(plain))
+    }
+
+    @Test
+    fun `requests for the same tunes and parts are equal, whichever time their facts were worked out`() {
+        assertEquals(request(AbcTune("A", 0)), request(AbcTune("A", 0)))
+        assertEquals(request(AbcTune("A", 0)).hashCode(), request(AbcTune("A", 0)).hashCode())
+    }
+
+    private fun request(
+        vararg tunes: AbcTune,
+        chords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
+        parts: Map<String, AbcPart> = emptyMap(),
+    ) = NotationRequest(
         tunes = tunes.toSet(),
         width = 300,
         availableWidth = 1_000,
@@ -155,6 +181,7 @@ internal class NotationCacheTest {
         chords = chords,
         songTitle = null,
         painting = painting,
-        parts = emptyMap(),
+        parts = parts,
+        facts = notationTuneFactsOf(tunes.toSet(), parts),
     )
 }

@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.labelOf
 import com.pandulapeter.campfire.presentation.ui.songLayout.monospaceText
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPartPicker
 import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
+import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.notation.describedAs
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 
@@ -142,7 +143,7 @@ internal fun SongSectionContent(
         // A section that is one engraved score is headed by its picker too.
         partPicker = (section.sectionItems.firstOrNull { it is SectionItem.RunSlot } as? SectionItem.RunSlot)
             ?.takeIf { wholeSectionKind == FoldableKind.VERBATIM }
-            ?.let { notations.partPickerOf(it.run, it.tuneOffset) },
+            ?.let { notations.partPickerOf(it.run.abcTune(), it.tuneOffset) },
     )
     // The body leaves the composition while it is folded, so that unfolding it composes it afresh to fade in.
     if (!hasBody) return@Column
@@ -333,10 +334,11 @@ private fun SectionRun(
     textMeasurements: SongTextMeasurements,
     notations: SongNotations,
 ) {
+    val tune = remember(run) { run.abcTune() }
     val runModifier = if (!hasToggle || foldedRuns == null) {
         Modifier
     } else {
-        if (0 in shownSlots) HeadingWithPartPicker(picker = notations.partPickerOf(run, tuneOffset), style = headerStyle) {
+        if (0 in shownSlots) HeadingWithPartPicker(picker = notations.partPickerOf(tune, tuneOffset), style = headerStyle) {
             FoldToggleRow(
                 kind = kind,
                 label = run.first().environmentLabel ?: defaultLabels.labelOf(kind, run),
@@ -348,7 +350,7 @@ private fun SectionRun(
         if (foldedRuns.isCollapsed(runFoldKey)) return
         Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(runFoldKey), keepsLayer = true)
     }
-    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(run, tuneOffset) else null
+    val notationRun = if (kind == FoldableKind.VERBATIM) notations.of(tune, tuneOffset) else null
     // Music is laid out from the left whatever the song's direction: a grid's bars, a staff, a tune. Its toggle above is
     // the song's, and so is the edge it is drawn at, read here before the direction is left to right.
     val isAtEnd = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -386,7 +388,7 @@ private fun SectionRun(
                     SongTabBlock(
                         // A tune's text tells where it was placed, which its first engraving is then made for.
                         modifier = runModifier.fillMaxWidth().then(
-                            if (slot == 0 && kind == FoldableKind.VERBATIM) Modifier.onSizeChanged { notations.placeText(run, tuneOffset, it.width) } else Modifier,
+                            if (slot == 0 && kind == FoldableKind.VERBATIM) Modifier.onSizeChanged { notations.placeText(tune, tuneOffset, it.width) } else Modifier,
                         ),
                         lines = lines,
                         rows = rows,
