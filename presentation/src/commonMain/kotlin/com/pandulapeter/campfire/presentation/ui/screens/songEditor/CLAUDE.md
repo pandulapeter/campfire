@@ -88,6 +88,9 @@ key leaves numbers nothing to count from.
   markup is read within one. Only where the parser reads markup (a lyric line, a comment's value); a tab, grid,
   delegated, other directive, Campfire 3 heading (`{c: Verse 1}` with no environment open), or `#` line is left alone.
 - Unreadable directive values (`{time: 5/7}`) are drawn whole in the error colour.
+- **What abc2svg complains about in a tune is too** (`rememberAbcProblems`): each tune is engraved for its messages
+  half a second after typing stops, apart from the preview (whose tune is the reader's, a part or no title), so the
+  positions are the text's; the marks follow edits made since, those inside one dropped until the next check.
 
 ## Preview
 

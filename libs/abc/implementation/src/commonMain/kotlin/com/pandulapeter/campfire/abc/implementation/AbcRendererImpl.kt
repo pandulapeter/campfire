@@ -25,21 +25,30 @@ internal class AbcRendererImpl : AbcRenderer {
 
     private val engine = createAbcScriptEngine()
 
-    override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering = when {
-        tune.length > MAX_TUNE_LENGTH -> AbcRendering.Failed("A tune longer than $MAX_TUNE_LENGTH characters")
-        voiceCountOf(tune) > MAX_TUNE_VOICES -> AbcRendering.Failed("A tune of more than $MAX_TUNE_VOICES voices")
-        else -> rendered(tune, width, transposition)
+    override suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering {
+        if (tune.length > MAX_TUNE_LENGTH) return AbcRendering.Failed("A tune longer than $MAX_TUNE_LENGTH characters")
+        if (voiceCountOf(tune) > MAX_TUNE_VOICES) return AbcRendering.Failed("A tune of more than $MAX_TUNE_VOICES voices")
+        // The host's output is split at these three characters, which a tune has no use for; each is blanked rather than
+        // removed so that the positions abc2svg reports are still the tune's.
+        val readable = tune.map { if (it <= RECORD_SEPARATOR + 1) ' ' else it }.joinToString("")
+        val zeroDurations = zeroDurationsIn(readable)
+        if (zeroDurations.isNotEmpty()) return AbcRendering.Failed(ZERO_DURATION_MESSAGE, zeroDurations)
+        return rendered(readable, width, transposition)
     }
 
     private suspend fun rendered(tune: String, width: Int, transposition: Int): AbcRendering = try {
-        val output = engine.render(source = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune)) + withAbc2svgPercussionMaps(tune))
+        val header = headerOf(width, transposition, hasStringTablature = TAB_VOICE.containsMatchIn(tune))
+        // A percussion map is rewritten within its own line, so the lines abc2svg counts are still the tune's.
+        val result = engine.render(source = header + withAbc2svgPercussionMaps(tune))
+        val output = result.substringBefore(RECORD_SEPARATOR)
+        val messages = abcMessagesOf(records = result.substringAfter(RECORD_SEPARATOR, missingDelimiterValue = ""), headerLines = header.count { it == '\n' }, tune = tune)
         if (output.startsWith(SEPARATOR)) {
-            AbcRendering.Failed(output.drop(1).ifBlank { "abc2svg rendered nothing" })
+            AbcRendering.Failed(output.drop(1).ifBlank { "abc2svg rendered nothing" }, messages)
         } else if (output.count { it == SEPARATOR } + 1 > MAX_SYSTEMS) {
-            AbcRendering.Failed("A rendering of more than $MAX_SYSTEMS systems")
+            AbcRendering.Failed("A rendering of more than $MAX_SYSTEMS systems", messages)
         } else {
-            val systems = output.split(SEPARATOR).map { svg -> AbcSystem(svg = svg, height = heightOf(svg) ?: return AbcRendering.Failed("An SVG with no height")) }
-            AbcRendering.Systems(systems)
+            val systems = output.split(SEPARATOR).map { svg -> AbcSystem(svg = svg, height = heightOf(svg) ?: return AbcRendering.Failed("An SVG with no height", messages)) }
+            AbcRendering.Systems(systems, messages)
         }
     } catch (exception: CancellationException) {
         throw exception

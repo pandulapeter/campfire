@@ -20,9 +20,15 @@ public sealed interface AbcRendering {
      * shapes (`<defs>`) once, into the first image that needs them, and the images after it refer to them. Their class
      * names (`f0`, `f1`, …) are numbered by the renderer across calls, so the same tune rendered twice may name its
      * classes differently: they mean something only within one rendering, and are never part of a cache key.
+     *
+     * [messages] are what the renderer reported about the tune's text while drawing it anyway: something it skipped or
+     * guessed at, which a tune drawn without complaint has none of.
      */
-    public data class Systems(val systems: List<AbcSystem>) : AbcRendering
+    public data class Systems(val systems: List<AbcSystem>, val messages: List<AbcMessage> = emptyList()) : AbcRendering
 
-    /** Nothing was rendered; [message] is the renderer's own account of why, for the log. */
-    public data class Failed(val message: String) : AbcRendering
+    /**
+     * Nothing was rendered; [message] is the renderer's own account of why, for the log, and [messages] what it reported
+     * about the tune's text, where it got as far as reading it.
+     */
+    public data class Failed(val message: String, val messages: List<AbcMessage> = emptyList()) : AbcRendering
 }

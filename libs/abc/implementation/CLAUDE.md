@@ -24,7 +24,11 @@ abc2svg (Jean-François Moine, LGPL-3.0-or-later) run in an embedded JavaScript 
   `%%beginjs` block, which abc2svg would `eval`, is ignored. On the web that script would run in the page, beside OPFS
   and the sync token. A tune over `MAX_TUNE_LENGTH` characters or `MAX_TUNE_VOICES` voices is never rendered, and a
   rendering of more than `MAX_SYSTEMS` systems is dropped: memory grows with the text, time with the voices times the
-  systems, and iOS and the web have no engine limits.
+  systems, and iOS and the web have no engine limits. **A length divided by zero** (`C/0`) is refused before abc2svg
+  sees it (`AbcZeroDurations.kt`): it never finishes laying one out, which only QuickJS's timeout would end.
+- The host returns abc2svg's messages after the systems, with the line and column it passes to `errmsg`
+  (`AbcMessages.kt` takes the format lines off); an unknown decoration, which it names without a position, is placed on
+  every one written. The tune's U+0000 to U+0002, the output's separators, are blanked first, so positions hold.
 - `AbcRendererImpl`'s format lines set chord symbols, annotations, and lyrics at the page's text size (16 units;
   abc2svg's 12 and 13 read as small print beside the lyrics), and measure lyrics as sans-serif regular at
   `LYRICS_ROOM` times their size (abc2svg's bold serif ran Inter's words together; regular sans-serif at their own size

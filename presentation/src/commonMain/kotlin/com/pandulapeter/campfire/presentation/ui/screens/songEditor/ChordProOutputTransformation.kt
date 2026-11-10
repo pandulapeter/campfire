@@ -12,12 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.SearchHighlights
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighting
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
  * Colours the text as it is typed. Only styles are added, no characters are inserted or removed, so the offsets the
@@ -31,6 +36,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProHighlighting
  * The matches of the editor's search are drawn over the tokens, behind the letters, and the current one in a color of
  * its own, which also takes over the letters' color so that they stay legible on it. [searchHighlights] is snapshot
  * state, which the field observes while it runs the transformation, so the matches follow the query as it is typed.
+ * [abcProblems] are too, drawn over the tokens in the error colour as the notation engine's checks arrive.
  */
 internal class ChordProOutputTransformation(
     private val tokenCache: ChordProTokenCache,
@@ -43,6 +49,7 @@ internal class ChordProOutputTransformation(
     private val searchMatch: SpanStyle,
     private val currentSearchMatch: SpanStyle,
     private val searchHighlights: () -> SearchHighlights?,
+    private val abcProblems: () -> AbcProblems?,
 ) : OutputTransformation {
 
     override fun TextFieldBuffer.transformOutput() {
@@ -61,6 +68,9 @@ internal class ChordProOutputTransformation(
                 token.end,
             )
         }
+        abcProblems()?.rangesIn(originalText)?.forEach { range ->
+            if (range.last < length) addStyle(invalid, range.first, range.last + 1)
+        }
         searchHighlights()?.let { highlights ->
             highlights.matchStarts.forEachIndexed { index, start ->
                 // The matches are of the text as the search last read it, which a keystroke may have shortened since.
@@ -75,7 +85,7 @@ internal class ChordProOutputTransformation(
         /**
          * The same colours the viewer uses, so that the editor and the preview next to it agree, and the error colour
          * for a line whose value cannot be read, which the song then comes out without, and for a second line of what
-         * a song can only say once.
+         * a song can only say once, and for what the notation engine complained about in a tune.
          */
         fun of(
             tokenCache: ChordProTokenCache,
@@ -88,6 +98,7 @@ internal class ChordProOutputTransformation(
             currentSearchMatchColor: Color,
             onCurrentSearchMatchColor: Color,
             searchHighlights: () -> SearchHighlights?,
+            abcProblems: () -> AbcProblems?,
         ) = ChordProOutputTransformation(
             tokenCache = tokenCache,
             directiveName = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
@@ -99,6 +110,37 @@ internal class ChordProOutputTransformation(
             searchMatch = SpanStyle(background = searchMatchColor),
             currentSearchMatch = SpanStyle(color = onCurrentSearchMatchColor, background = currentSearchMatchColor),
             searchHighlights = searchHighlights,
+            abcProblems = abcProblems,
+        )
+    }
+}
+
+/**
+ * The field's [ChordProOutputTransformation] in the theme's colours, over the tokens of [text] (a [ChordProTokenCache] of
+ * its own, kept while [text] is the same state), made anew only when a colour or one of the lambdas changes.
+ */
+@Composable
+internal fun rememberChordProOutputTransformation(
+    text: State<String>,
+    searchHighlights: () -> SearchHighlights?,
+    abcProblems: () -> AbcProblems?,
+): ChordProOutputTransformation {
+    val colorScheme = MaterialTheme.colorScheme
+    val secondAccentColor = LocalSecondAccentColor.current
+    val tokenCache = remember(text) { ChordProTokenCache(editorText = text::value) }
+    return remember(colorScheme, secondAccentColor, tokenCache, searchHighlights, abcProblems) {
+        ChordProOutputTransformation.of(
+            tokenCache = tokenCache,
+            primaryColor = colorScheme.primary,
+            chordColor = secondAccentColor,
+            secondaryColor = colorScheme.onSurfaceVariant,
+            outlineColor = colorScheme.outline,
+            errorColor = colorScheme.error,
+            searchMatchColor = colorScheme.secondaryContainer,
+            currentSearchMatchColor = colorScheme.primary,
+            onCurrentSearchMatchColor = colorScheme.onPrimary,
+            searchHighlights = searchHighlights,
+            abcProblems = abcProblems,
         )
     }
 }

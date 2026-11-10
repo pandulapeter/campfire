@@ -338,8 +338,7 @@ internal fun LoadedSongEditor(
                 }
             },
         )
-        val searchHighlights = remember(search) { { search.highlights } }
-        val searchSheetTop = remember(search) { { search.sheetTop } }
+        val abcProblems = rememberAbcProblems(text)
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,
@@ -354,8 +353,9 @@ internal fun LoadedSongEditor(
                 horizontalScrollState = fieldHorizontalScrollState,
                 // Next to the preview the divider is the end of this pane, not the window.
                 contentPadding = contentPadding.only(start = true, end = !hasSideBySidePreview, bottom = true),
-                searchHighlights = searchHighlights,
-                searchSheetTop = searchSheetTop,
+                searchHighlights = remember(search) { { search.highlights } },
+                abcProblems = abcProblems,
+                searchSheetTop = remember(search) { { search.sheetTop } },
                 selectionReveals = typingRequest.reveals,
             )
         }

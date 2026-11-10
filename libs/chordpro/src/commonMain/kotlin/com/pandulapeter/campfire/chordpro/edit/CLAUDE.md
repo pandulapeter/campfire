@@ -37,3 +37,6 @@ song.
 Chords without brackets are `CHORD` too, each as its reader decides: a grid's cells, the names of a tab line the
 transposition renames (`ChordProTabTransposer.chordWords`), and an `abc` tune's quoted chord symbols (`AbcBars.chordSymbols`;
 a `%%begintext` block is skipped, so it is part of the state).
+
+`ChordProAbcTunes` cuts the `abc` blocks into tunes as the song view does (at a blank line or a directive) and places a
+renderer's line and column back on the text, on the token `AbcTokens.around` finds there.

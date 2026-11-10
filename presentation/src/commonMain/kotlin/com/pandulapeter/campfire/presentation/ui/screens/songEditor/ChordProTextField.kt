@@ -62,7 +62,6 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
-import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 
 /**
  * The text itself. Monospaced, because a tab or a grid only lines up in one and because a ChordPro document is
@@ -86,6 +85,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  * @param searchHighlights The matches of the editor's search while its sheet is open, drawn behind the text; the current
  *   one is scrolled into view whenever it changes, since the field has no focus under the sheet to follow it with.
+ * @param abcProblems What the notation engine reported about the tunes in [text] ([rememberAbcProblems]), drawn in the
+ *   error colour.
  * @param searchSheetTop Where the search sheet's top edge is on the screen ([EditorSearch.sheetTop]), above which the
  *   current match is revealed, or null while there is no sheet laid out.
  * @param selectionReveals Asks for the selection to be scrolled into view ([TypingRequest.reveals]), once the field has
@@ -105,26 +106,12 @@ internal fun ChordProTextField(
     horizontalScrollState: ScrollState,
     contentPadding: PaddingValues,
     searchHighlights: () -> SearchHighlights?,
+    abcProblems: () -> AbcProblems?,
     searchSheetTop: () -> Float?,
     selectionReveals: Flow<Unit>,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val secondAccentColor = LocalSecondAccentColor.current
-    val tokenCache = remember(text) { ChordProTokenCache(editorText = text::value) }
-    val outputTransformation = remember(colorScheme, secondAccentColor, tokenCache, searchHighlights) {
-        ChordProOutputTransformation.of(
-            tokenCache = tokenCache,
-            primaryColor = colorScheme.primary,
-            chordColor = secondAccentColor,
-            secondaryColor = colorScheme.onSurfaceVariant,
-            outlineColor = colorScheme.outline,
-            errorColor = colorScheme.error,
-            searchMatchColor = colorScheme.secondaryContainer,
-            currentSearchMatchColor = colorScheme.primary,
-            onCurrentSearchMatchColor = colorScheme.onPrimary,
-            searchHighlights = searchHighlights,
-        )
-    }
+    val outputTransformation = rememberChordProOutputTransformation(text, searchHighlights, abcProblems)
     val bodyLarge = MaterialTheme.typography.bodyLarge
     // The room after the last line is inside the scroll, as at the end of every list, so the text runs under the
     // navigation bar and comes clear of it once scrolled to the end. It is part of the field (its decorator), so a
