@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.songLayout
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 
 internal fun ChordProLine.foldableKind() = when (this) {
     is ChordProLine.Tab -> FoldableKind.TAB
@@ -21,15 +22,19 @@ internal fun ChordProLine.foldableKind() = when (this) {
 /**
  * How many pieces a run of tablature, grid, or verbatim lines is drawn as, which the section may be cut between: a line
  * of a grid each, and for tablature and verbatim text as many as the rows it could wrap into (see `SongTabBlock`), which
- * are only known once the width is, assuming no row narrower than [MIN_TAB_SLOT_COLUMNS] characters. A staff of
- * tablature wraps as one, so it takes a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the
- * longest; verbatim text wraps line by line, so it takes a slot for every line and for every [MIN_TAB_SLOT_COLUMNS]
+ * are only known once the width is, assuming no row narrower than [MIN_TAB_SLOT_COLUMNS] characters. A system of
+ * tablature wraps as one, each at columns of its own, so a run of them takes a slot for every line and, per system, for
+ * every [MIN_TAB_SLOT_COLUMNS] characters of its longest line; verbatim text wraps line by line, so it takes a slot for every line and for every [MIN_TAB_SLOT_COLUMNS]
  * characters of each, which also bounds the staff systems an ABC tune is engraved as. Never more than [MAX_RUN_SLOTS],
  * the last one holding whatever rows are left, which a column cannot cut; a slot costs about what a line of lyrics does.
  * A slot with no row at a width has no height there, and nothing is cut in front of it.
  */
 internal fun List<ChordProLine>.runSlotCount(kind: FoldableKind) = when (kind) {
-    FoldableKind.TAB -> (size + maxOf { it.monospaceText?.length ?: 0 } / MIN_TAB_SLOT_COLUMNS).coerceIn(1, MAX_RUN_SLOTS)
+    FoldableKind.TAB -> map { it.monospaceText.orEmpty() }.let { texts ->
+        ChordProTabWrapper.systemRanges(texts).sumOf { system ->
+            system.count() + (system.maxOfOrNull { texts[it].length } ?: 0) / MIN_TAB_SLOT_COLUMNS
+        }
+    }.coerceIn(1, MAX_RUN_SLOTS)
     FoldableKind.VERBATIM -> sumOf { 1 + (it.monospaceText?.length ?: 0) / MIN_TAB_SLOT_COLUMNS }.coerceIn(1, MAX_RUN_SLOTS)
     FoldableKind.GRID -> count { it is ChordProLine.Grid }.coerceAtLeast(1)
 }

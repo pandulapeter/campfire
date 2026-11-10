@@ -11,9 +11,11 @@ package com.pandulapeter.campfire.presentation.ui.songLayout
 
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.tabs.ChordProTabWrapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class LineRunsTest {
 
@@ -67,7 +69,28 @@ class LineRunsTest {
         assertEquals(3, listOf(grid(), grid(), grid()).runSlotCount(FoldableKind.GRID))
         assertEquals(1, listOf(tab(text = "")).runSlotCount(FoldableKind.TAB))
         assertEquals(30, List(30) { tab(text = "e|---|") }.runSlotCount(FoldableKind.TAB))
-        assertEquals(6 + 2, List(6) { tab(text = "e|" + "-".repeat(22) + "|") }.runSlotCount(FoldableKind.TAB))
+        assertEquals(6 + 2, listOf("e", "B", "G", "D", "A", "E").map { tab(text = "$it|" + "-".repeat(22) + "|") }.runSlotCount(FoldableKind.TAB))
+    }
+
+    @Test
+    fun `a run of several systems has a piece for every row each of its systems can wrap into`() {
+        val chord = ("Am" + " ".repeat(10) + "C           G           ".repeat(6).take(136)).padEnd(150)
+        val staff = "-0---2---3-|".repeat(13).take(148)
+        val system = listOf(chord) + listOf("e", "B", "G", "D", "A", "E").map { "$it|$staff" }
+        val lines = List(20) { system }.flatten()
+        val run = lines.mapIndexed { index, line -> tab(text = line, continuesEnvironment = index > 0) }
+
+        listOf(20, 16).forEach { maxColumns ->
+            val rows = ChordProTabWrapper.wrapLines(lines, maxColumns)
+            assertTrue(run.runSlotCount(FoldableKind.TAB) >= rows.size, "${rows.size} rows at $maxColumns columns")
+        }
+    }
+
+    @Test
+    fun `a run of one system has a piece for every line and for every wrap of its longest`() {
+        val system = listOf("  Am" + " ".repeat(30) + "C") + listOf("e", "B", "G", "D", "A", "E").map { "$it|" + "-0---2---3-|".repeat(4) }
+
+        assertEquals(7 + 50 / 12, system.map { tab(text = it) }.runSlotCount(FoldableKind.TAB))
     }
 
     @Test

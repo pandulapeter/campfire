@@ -295,6 +295,12 @@ class ChordProTabWrapperTest {
     }
 
     @Test
+    fun `the systems of a run are the ranges of lines it is cut by`() {
+        assertEquals(listOf(0..2, 3..5), ChordProTabWrapper.systemRanges(twoSystems))
+        assertEquals(listOf(0..1, 2..3), ChordProTabWrapper.systemRanges(listOf("e|---0---|", "B|---1---|", "e|---5---|", "B|---5---|")))
+    }
+
+    @Test
     fun `a run of several systems that fits is still one row`() {
         assertEquals(listOf(twoSystems), wrap(twoSystems, maxColumns = 40))
     }

@@ -80,6 +80,13 @@ public object ChordProTabWrapper {
     }
 
     /**
+     * The systems [wrapLines] cuts [lines], the lines of one run of tablature, into, as ranges of their indices in order,
+     * every line in exactly one: each system is cut into rows at columns of its own, so how many rows a run can wrap into
+     * is the sum of what each of its systems can. A run with no staff line is one system.
+     */
+    public fun systemRanges(lines: List<String>): List<IntRange> = systems(lines, lines.map(ChordProTokens::isStaffLine))
+
+    /**
      * Cuts [lines], a run of preformatted text inside a tab environment (one that is not tablature, see [isTablature]),
      * into rows of at most [maxColumns] characters, so that none of it is out of reach past the edge of a screen that
      * is only ever scrolled up and down. Such a run is chord names written over lyrics, whose columns only line up
