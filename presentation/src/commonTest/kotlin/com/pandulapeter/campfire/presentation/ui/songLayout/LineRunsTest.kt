@@ -63,14 +63,21 @@ class LineRunsTest {
     }
 
     @Test
-    fun `a grid is as many pieces as its lines and tablature between one and twenty four`() {
+    fun `a grid is as many pieces as its lines and tablature as many as its lines and its longest line's wraps`() {
         assertEquals(3, listOf(grid(), grid(), grid()).runSlotCount(FoldableKind.GRID))
         assertEquals(1, listOf(tab(text = "")).runSlotCount(FoldableKind.TAB))
-        assertEquals(24, List(30) { tab() }.runSlotCount(FoldableKind.TAB))
+        assertEquals(30, List(30) { tab(text = "e|---|") }.runSlotCount(FoldableKind.TAB))
+        assertEquals(6 + 2, List(6) { tab(text = "e|" + "-".repeat(22) + "|") }.runSlotCount(FoldableKind.TAB))
     }
 
     @Test
-    fun `verbatim lines are a run of their own, folded whole as their section, in as many pieces as tablature`() {
+    fun `a long tune is cut into a piece for each line and for each wrap of every line, so no column holds the rest whole`() {
+        assertEquals(40 * 3, List(40) { abc("abc def gab|" + "abc def gab|" + "abc|") }.runSlotCount(FoldableKind.VERBATIM))
+        assertEquals(500, List(1_000) { abc() }.runSlotCount(FoldableKind.VERBATIM))
+    }
+
+    @Test
+    fun `verbatim lines are a run of their own, folded whole as their section, a short one in as many pieces as tablature`() {
         val first = abc("X:1")
         val second = abc()
 

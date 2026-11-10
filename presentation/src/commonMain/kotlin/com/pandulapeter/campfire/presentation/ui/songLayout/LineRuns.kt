@@ -21,12 +21,16 @@ internal fun ChordProLine.foldableKind() = when (this) {
 /**
  * How many pieces a run of tablature, grid, or verbatim lines is drawn as, which the section may be cut between: a line
  * of a grid each, and for tablature and verbatim text as many as the rows it could wrap into (see `SongTabBlock`), which
- * are only known once the width is - a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the
- * longest, which no real width wraps it into more rows than, and never more than [MAX_TAB_SLOTS], the last one holding
- * whatever rows are left. A slot with no row at a width has no height there, and nothing is cut in front of it.
+ * are only known once the width is, assuming no row narrower than [MIN_TAB_SLOT_COLUMNS] characters. A staff of
+ * tablature wraps as one, so it takes a slot for every line and for every [MIN_TAB_SLOT_COLUMNS] characters of the
+ * longest; verbatim text wraps line by line, so it takes a slot for every line and for every [MIN_TAB_SLOT_COLUMNS]
+ * characters of each, which also bounds the staff systems an ABC tune is engraved as. Never more than [MAX_RUN_SLOTS],
+ * the last one holding whatever rows are left, which a column cannot cut; a slot costs about what a line of lyrics does.
+ * A slot with no row at a width has no height there, and nothing is cut in front of it.
  */
 internal fun List<ChordProLine>.runSlotCount(kind: FoldableKind) = when (kind) {
-    FoldableKind.TAB, FoldableKind.VERBATIM -> (size + maxOf { it.monospaceText?.length ?: 0 } / MIN_TAB_SLOT_COLUMNS).coerceIn(1, MAX_TAB_SLOTS)
+    FoldableKind.TAB -> (size + maxOf { it.monospaceText?.length ?: 0 } / MIN_TAB_SLOT_COLUMNS).coerceIn(1, MAX_RUN_SLOTS)
+    FoldableKind.VERBATIM -> sumOf { 1 + (it.monospaceText?.length ?: 0) / MIN_TAB_SLOT_COLUMNS }.coerceIn(1, MAX_RUN_SLOTS)
     FoldableKind.GRID -> count { it is ChordProLine.Grid }.coerceAtLeast(1)
 }
 
@@ -77,4 +81,8 @@ internal fun List<ChordProLine>.groupIntoRuns(): List<List<ChordProLine>> {
 }
 
 private const val MIN_TAB_SLOT_COLUMNS = 12
-private const val MAX_TAB_SLOTS = 24
+/**
+ * Far past any real tab or tune (a whole song's tab written without a blank line is a few hundred lines), and still well
+ * inside the lines [com.pandulapeter.campfire.presentation.ui.songView.model.LayoutBudget] lets a song lay out.
+ */
+private const val MAX_RUN_SLOTS = 500

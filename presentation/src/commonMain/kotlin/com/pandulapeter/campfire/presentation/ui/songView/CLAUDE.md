@@ -41,9 +41,10 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 - An `abc` run is engraved once its rendering arrives (`ui/notation`), the text until then or if it fails. `SongLyrics`
   is handed its width at rest (`availableWidth`), which tunes are engraved for, so a tune rendered before is notation on
   its first frame and a push hiding the rail engraves once. Headed "Sheet music" (screen and PDF): ABC is how it is
-  written, which a reader need not know, and it may hold chords and several voices. It keeps the text's slots: slot *n*
-  draws staff system *n*, the last one the rest; each answers its height for any width at once (scaled down to a
-  narrower column), the sizes pool renewed when a rendering arrives.
+  written, which a reader need not know, and it may hold chords and several voices. It keeps the text's slots, one for
+  each line and each 12 characters of every line (`runSlotCount`, more than it is ever engraved as): slot *n* draws
+  staff system *n*, the last one the rest, which a column cannot cut; each answers its height for any width at once
+  (scaled down to a narrower column), the sizes pool renewed when a rendering arrives.
 - A staff's dashes and bar lines are strokes under its text (`TabStaffGeometry`, tested; the PDF rules the same):
   strings run bar to bar, broken by every other character; a bar joins the strings above and under it that have one in
   its column.
