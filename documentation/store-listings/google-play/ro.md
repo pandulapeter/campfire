@@ -37,8 +37,8 @@ Acordurile stau deasupra silabelor lor, iar cântecul ocupă câte coloane înca
 Campfire nu vine cu cântece, ci e o casă pentru ale tale. Scrie-le în editor, lipește o foaie cu acorduri de pe un site sau adu-le pe cele pe care le ai, chiar și din backupul altei aplicații.
 
 Citire
-• Întorci pagina cu o atingere, o tastă sau o pedală Bluetooth și ajungi la orice rând doar cu Sus și Jos
-• Sau o coloană care se derulează singură, cu o viteză proprie fiecărui cântec
+• Întorci o pagină sau o coloană cu o atingere, o tastă sau o pedală Bluetooth și ajungi la orice rând doar cu Sus și Jos
+• Sau o coloană care se derulează singură, în ritmul fiecărui cântec
 • Melodii ABC ca partitură, și în PDF
 • Mărimea textului reglabilă, secțiuni pliabile, coperte și linkuri spre înregistrări
 • Modul Doar versuri, pentru cei care doar cântă vocal
@@ -62,7 +62,7 @@ Metronom
 • Un flash la fiecare bătaie, și bate mai departe cu ecranul blocat
 
 Liste
-• Cânți tot setul fără oprire, tempoul schimbându-se la măsura următoare
+• Cânți tot setul fără oprire, tempoul schimbându-se la măsura sau bătaia următoare
 • Fiecare listă are tonalitatea, capodastrul și tempoul ei pentru fiecare cântec
 • Data concertului cu numărătoare inversă și durata totală a setului
 
@@ -71,10 +71,10 @@ Organizare și editare
 • Selectezi mai multe cântece deodată, pentru liste, etichete sau export
 • Etichete și limbi păstrate în fișierele cântecelor, cu 14 culori
 • Coperta și detaliile cântecului, căutate online doar la cerere
-• Editor ChordPro cu sintaxă colorată, erori marcate, previzualizare live și aldin, cursiv și subliniat
+• Editor ChordPro cu sintaxă colorată, erori marcate, previzualizare live și aldin, cursiv, subliniat și culori
 
 Import, export, partajare, sincronizare
-• Lipești, tragi sau partajezi o foaie cu acorduri în Campfire, iar acordurile de deasupra versurilor devin acorduri pe care le poți transpune
+• Lipești, tragi sau partajezi o foaie cu acorduri în Campfire, iar acordurile de deasupra versurilor se pot transpune
 • Import de fișiere ChordPro, text, PDF, Word și ABC, arhive zip și backupuri din alte aplicații de cântece
 • Export PDF gata de tipar, cu formatul de hârtie și coloanele tale
 • Partajezi un cântec sau o listă ca link sau cod QR, deschis de oricine în Campfire și ținut la zi

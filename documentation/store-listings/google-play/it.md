@@ -37,8 +37,8 @@ Gli accordi stanno sopra le sillabe giuste e la canzone riempie tutte le colonne
 Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor, incollale da un sito web o porta quelle che hai già, anche dal backup di un'altra app di canzonieri.
 
 Lettura
-• Gira pagina con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
-• Oppure una colonna che scorre da sola, con una velocità per ogni canzone
+• Gira pagina o colonna con un tocco, un tasto o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Oppure una colonna che scorre da sola al ritmo di ogni canzone
 • Le melodie ABC come spartito, anche nel PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
@@ -62,7 +62,7 @@ Metronomo
 • Un lampo su ogni movimento, e continua a battere a schermo bloccato
 
 Scalette
-• Suona tutta la scaletta senza pause, con il tempo che cambia alla battuta successiva
+• Suona tutta la scaletta senza pause, cambiando tempo alla battuta o al movimento successivo
 • Ogni scaletta ha tonalità, capotasto e tempo propri per ogni canzone
 • Data del concerto con conto alla rovescia e durata totale
 
@@ -71,10 +71,10 @@ Organizzazione e modifica
 • Seleziona più canzoni per aggiungerle alle scalette, taggarle o esportarle
 • Tag e lingue salvati nei file delle canzoni, tag in 14 colori
 • Copertina e dati di una canzone online, solo quando lo chiedi
-• Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo e sottolineato
+• Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo, sottolineato e colori
 
 Importa, esporta, condividi e sincronizza
-• Incolla, trascina o condividi un foglio di accordi: gli accordi sopra il testo diventano veri accordi da trasporre
+• Incolla, trascina o condividi un foglio di accordi: quelli sopra il testo diventano accordi da trasporre
 • Importa file ChordPro, testo, PDF, Word e ABC, archivi zip e backup di altre app di canzonieri
 • Esportazione PDF pronta per la stampa, con formato carta e colonne a scelta
 • Condividi una canzone o una scaletta come link o codice QR che chiunque apre in Campfire, sempre aggiornato

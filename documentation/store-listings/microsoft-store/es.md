@@ -39,7 +39,7 @@ Los acordes van justo encima de la sílaba a la que pertenecen, y cada canción 
 Campfire no trae canciones propias: es un hogar para las tuyas. Escríbelas en el editor integrado, pega una hoja de acordes copiada de una web o trae las que ya tienes, incluso la copia de seguridad de otra app de cancioneros.
 
 Lectura
-• Pasa la página con un clic, las teclas de flecha o un pedal Bluetooth para pasar páginas, y llega a cada línea solo con Arriba y Abajo
+• Pasa página o columna con un clic, las teclas de flecha o un pedal Bluetooth para pasar páginas, y llega a cada línea solo con Arriba y Abajo
 • O una sola columna que se desplaza sola, a la velocidad que fijes para cada canción
 • Melodías ABC dibujadas como partitura, también en el PDF
 • Tamaño de texto ajustable, secciones que puedes plegar, y portada y enlaces a grabaciones en cada canción
@@ -65,7 +65,7 @@ Metrónomo
 • Un destello en cada pulso, y sigue sonando mientras usas otras apps
 
 Repertorios
-• Ordena las canciones y toca el repertorio entero sin parar, con el cambio de tempo en el compás siguiente
+• Ordena las canciones y toca el repertorio entero sin parar, con el cambio de tempo en el compás o el pulso siguiente
 • Cada repertorio guarda su propia tonalidad, capo y tempo para cada canción
 • Ponle fecha al concierto, mira la cuenta atrás y la duración total del repertorio
 • Archiva un repertorio después del concierto en lugar de eliminarlo
@@ -78,7 +78,7 @@ Organización
 • Haz clic derecho en cualquier canción o repertorio para abrir su menú
 
 Escritura y edición
-• Editor ChordPro con resaltado de sintaxis, marcas de error, vista previa en tiempo real, y negrita, cursiva y subrayado
+• Editor ChordPro con resaltado de sintaxis, marcas de error, vista previa en tiempo real, y negrita, cursiva, subrayado y colores
 
 Importar, exportar, compartir y sincronizar
 • Pega una hoja de acordes o arrástrala a la ventana, y se abre en el editor. Los acordes escritos sobre la letra se convierten en acordes reales que puedes transponer
@@ -106,7 +106,7 @@ Campfire es de código abierto, con licencia Mozilla Public License 2.0.
 Letras y acordes repartidos en tantas columnas como quepan en la ventana, para que cada canción ocupe las menos páginas posibles
 ```
 ```
-Pasa las páginas con un clic, las teclas de flecha o un pedal Bluetooth, o lee en una sola columna que se desplaza sola
+Pasa página o columna con un clic, las teclas de flecha o un pedal Bluetooth, o lee en una sola columna que se desplaza sola
 ```
 ```
 Diagramas de acordes para guitarra, ukelele, mandolina, banjo o teclado, también en afinaciones alternativas, con las posiciones que de verdad tocas
@@ -136,7 +136,7 @@ Selecciona varias canciones a la vez para añadirlas a repertorios, etiquetarlas
 Etiquetas e idiomas que viajan dentro de los archivos de las canciones, y uno de 14 colores para cada etiqueta
 ```
 ```
-Editor ChordPro con resaltado de sintaxis, marcas de error, vista previa en tiempo real, y negrita, cursiva y subrayado
+Editor ChordPro con resaltado de sintaxis, marcas de error, vista previa en tiempo real, y negrita, cursiva, subrayado y colores
 ```
 ```
 Pega o suelta una hoja de acordes copiada de una web, y se abre en el editor con acordes reales que puedes transponer

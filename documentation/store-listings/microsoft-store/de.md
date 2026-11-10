@@ -39,7 +39,7 @@ Die Akkorde stehen genau über den Silben, zu denen sie gehören, und ein Song v
 Campfire bringt keine eigenen Songs mit. Es ist ein Zuhause für deine. Schreib sie im eingebauten Editor, füge ein Akkordblatt ein, das du von einer Website kopiert hast, oder bring die mit, die du schon hast, sogar das Backup einer anderen Songbook-App.
 
 Lesen
-• Blättere per Klick, Pfeiltasten oder Bluetooth-Blätterpedal um und erreiche jede Zeile allein mit Hoch und Runter
+• Blättere per Klick, Pfeiltasten oder Bluetooth-Blätterpedal seiten- oder spaltenweise um und erreiche jede Zeile allein mit Hoch und Runter
 • Oder eine einzige Spalte, die von selbst scrollt, mit eigener Geschwindigkeit für jeden Song
 • ABC-Melodien als Noten gezeichnet, auch im PDF
 • Einstellbare Textgröße, einklappbare Abschnitte, und zu jedem Song Cover und Links zu Aufnahmen
@@ -65,7 +65,7 @@ Metronom
 • Ein Aufblitzen auf jedem Schlag, und es läuft weiter, während du andere Apps nutzt
 
 Setlists
-• Bring Songs in eine Reihenfolge und spiel das ganze Set ohne Pause durch, das Tempo wechselt mit dem nächsten Takt
+• Bring Songs in eine Reihenfolge und spiel das ganze Set ohne Pause durch, das Tempo wechselt mit dem nächsten Takt oder Schlag
 • Jede Setlist merkt sich für jeden Song ihre eigene Tonart, ihren Kapodaster und ihr Tempo
 • Gib dem Auftritt ein Datum, sieh den Countdown dorthin und die Gesamtdauer des Sets
 • Archiviere eine Setlist nach dem Auftritt, statt sie zu löschen
@@ -78,7 +78,7 @@ Organisieren
 • Rechtsklick auf einen Song oder eine Setlist öffnet ihr Menü
 
 Schreiben und Bearbeiten
-• ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierungen, Live-Vorschau sowie fett, kursiv und unterstrichen
+• ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierungen, Live-Vorschau sowie fett, kursiv, unterstrichen und farbig
 
 Importieren, exportieren, teilen und synchronisieren
 • Füge ein Akkordblatt ein oder zieh es ins Fenster, und es öffnet sich im Editor. Akkorde über dem Text werden zu echten Akkorden, die du transponieren kannst
@@ -106,7 +106,7 @@ Campfire ist Open Source unter der Mozilla Public License 2.0.
 Texte und Akkorde in so vielen Spalten, wie das Fenster Platz bietet, damit ein Song so wenige Seiten wie möglich braucht
 ```
 ```
-Blättere per Klick, Pfeiltasten oder Bluetooth-Blätterpedal um, oder lies in einer Spalte, die von selbst scrollt
+Blättere per Klick, Pfeiltasten oder Bluetooth-Blätterpedal seiten- oder spaltenweise um, oder lies in einer Spalte, die von selbst scrollt
 ```
 ```
 Akkorddiagramme für Gitarre, Ukulele, Mandoline, Banjo oder Keyboard, auch in alternativen Stimmungen, in den Griffen, die du wirklich spielst
@@ -136,7 +136,7 @@ Wähle mehrere Songs auf einmal aus, um sie zu Setlists hinzuzufügen, zu taggen
 Tags und Sprachen, die in den Songdateien mitreisen, und eine von 14 Farben für jeden Tag
 ```
 ```
-ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierungen, Live-Vorschau sowie fett, kursiv und unterstrichen
+ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierungen, Live-Vorschau sowie fett, kursiv, unterstrichen und farbig
 ```
 ```
 Füge ein von einer Website kopiertes Akkordblatt ein oder zieh es herein, und es öffnet sich im Editor, mit echten Akkorden zum Transponieren

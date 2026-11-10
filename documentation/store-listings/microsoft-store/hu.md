@@ -39,7 +39,7 @@ Az akkordok a hozzájuk tartozó szótag fölött állnak, a dal pedig annyi has
 A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a beépített szerkesztőben, illessz be egy weboldalról kimásolt akkordlapot, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
 
 Olvasás
-• Lapozz kattintással, a nyílbillentyűkkel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
+• Lapozz oldalanként vagy hasábonként kattintással, a nyílbillentyűkkel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
 • Vagy olvasd egyetlen, magától gördülő hasábban, dalonként beállítható sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, és minden dalhoz borítókép és linkek a felvételekhez
@@ -65,7 +65,7 @@ Metronóm
 • Villanás minden ütésre, és akkor is tovább szól, amíg más alkalmazásokat használsz
 
 Listák
-• Rendezd sorba a dalokat, és játszd végig az egész listát megállás nélkül, a tempó a következő ütemben vált
+• Rendezd sorba a dalokat, és játszd végig az egész listát megállás nélkül, a tempó a következő ütemre vagy ütésre vált
 • Minden lista dalonként megőrzi a saját hangnemét, capóját és tempóját
 • Adj dátumot a fellépésnek, kövesd a visszaszámlálást, és lásd a lista teljes játékidejét
 • A fellépés után törlés helyett archiválhatod a listát
@@ -78,7 +78,7 @@ Rendszerezés
 • Jobb kattintással bármelyik dal vagy lista menüje megnyílik
 
 Írás és szerkesztés
-• ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt és aláhúzott szöveggel
+• ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
 
 Importálás, exportálás, megosztás és szinkronizálás
 • Illessz be egy akkordlapot, vagy húzd rá az ablakra, és megnyílik a szerkesztőben. A dalszöveg fölé írt akkordokból valódi, transzponálható akkordok lesznek
@@ -106,7 +106,7 @@ A Campfire nyílt forráskódú, a Mozilla Public License 2.0 alatt.
 Dalszöveg és akkordok annyi hasábban, amennyi kifér az ablakba, így egy dal a lehető legkevesebb oldalt foglalja el
 ```
 ```
-Lapozás kattintással, a nyílbillentyűkkel vagy Bluetooth-os lapozópedállal, vagy olvasás egyetlen, magától gördülő hasábban
+Lapozás oldalanként vagy hasábonként kattintással, a nyílbillentyűkkel vagy Bluetooth-os lapozópedállal, vagy olvasás egyetlen, magától gördülő hasábban
 ```
 ```
 Akkordábrák gitárra, ukulelére, mandolinra, bendzsóra vagy billentyűre, alternatív hangolásban is, a valóban használt fogásokkal
@@ -136,7 +136,7 @@ Több dal kijelölése egyszerre, hogy listákhoz add, felcímkézd, beállítsd
 A címkék és a nyelvek a dalfájlokkal együtt utaznak, és minden címke 14 szín egyikét kaphatja
 ```
 ```
-ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt és aláhúzott szöveggel
+ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
 ```
 ```
 Illessz be vagy húzz az ablakra egy weboldalról kimásolt akkordlapot, és a szerkesztőben valódi, transzponálható akkordokkal nyílik meg

@@ -35,8 +35,8 @@ Chords sit right above the syllables they belong to, and a song flows into as ma
 Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
 
 Reading
-• Turn the page with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
-• Or one column that scrolls by itself, at a speed set for each song
+• Turn a page or a column with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
+• Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for the people who only sing
@@ -60,22 +60,22 @@ Metronome
 • A flash on every beat, and it keeps clicking with the screen locked
 
 Setlists
-• Play through the whole set without stopping, the tempo changing on the next bar
+• Play through the whole set without stopping, the tempo changing on the next bar or beat
 • Every setlist keeps its own key, capo, and tempo for each song
 • A gig date with a countdown, and the set's total running time
 
 Organizing and editing
 • Search by title, artist, or tag
 • Select several songs at once to add them to setlists, tag them, or export them
-• Tags and languages stored inside the song files, with 14 tag colors
+• Tags and languages stored in the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
-• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
+• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 
 Import, export, share, and sync
-• Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become real chords you can transpose
+• Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become chords you can transpose
 • Import ChordPro, text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 • Print-ready PDF export with your paper size and columns
-• Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
+• Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date
 • Optional sync through your own Dropbox, automatic after every change
 
 Make it yours

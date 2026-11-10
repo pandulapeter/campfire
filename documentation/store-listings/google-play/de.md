@@ -37,8 +37,8 @@ Akkorde stehen genau über ihren Silben, und ein Song füllt so viele Spalten, w
 Campfire bringt keine eigenen Songs mit, es ist ein Zuhause für deine. Schreib sie im Editor, füge ein Akkordblatt von einer Website ein oder bring mit, was du schon hast, sogar das Backup einer anderen Songbook-App.
 
 Lesen
-• Umblättern per Tippen, Taste oder Bluetooth-Pedal, jede Zeile allein mit Hoch und Runter erreichbar
-• Oder eine Spalte, die von selbst scrollt, mit eigener Geschwindigkeit pro Song
+• Seite oder Spalte weiter per Tippen, Taste oder Bluetooth-Pedal, jede Zeile allein mit Hoch und Runter erreichbar
+• Oder eine selbst scrollende Spalte, je Song eigene Geschwindigkeit
 • ABC-Melodien als Noten, auch im PDF
 • Einstellbare Textgröße, einklappbare Abschnitte, Cover und Links zu Aufnahmen
 • „Nur Text“ für alle, die nur singen
@@ -62,19 +62,19 @@ Metronom
 • Blitz auf jedem Schlag, klickt auch bei gesperrtem Bildschirm
 
 Setlists
-• Das ganze Set ohne Pause durchspielen, das Tempo wechselt im nächsten Takt
+• Das ganze Set ohne Pause durchspielen, das Tempo wechselt zum nächsten Takt oder Schlag
 • Jede Setlist hat pro Song eigene Tonart, Kapodaster und Tempo
 • Auftrittsdatum mit Countdown und Gesamtdauer des Sets
 
 Organisieren und Bearbeiten
 • Suche nach Titel, Interpret oder Tag
 • Mehrere Songs auf einmal zu Setlists hinzufügen, taggen oder exportieren
-• Tags und Sprachen in den Songdateien, mit 14 Tag-Farben
+• Tags und Sprachen in den Songdateien, 14 Tag-Farben
 • Cover und Songangaben online finden, nur auf Wunsch
-• ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierung, Live-Vorschau sowie fett, kursiv und unterstrichen
+• ChordPro-Editor mit Syntaxhervorhebung, Fehlermarkierung, Live-Vorschau sowie fett, kursiv, unterstrichen und farbig
 
 Importieren, exportieren, teilen und synchronisieren
-• Akkordblatt einfügen, hineinziehen oder mit Campfire teilen: Akkorde über dem Text werden zu echten, transponierbaren Akkorden
+• Akkordblatt einfügen, hineinziehen oder mit Campfire teilen: Akkorde über dem Text werden zu transponierbaren Akkorden
 • Import von ChordPro-, Text-, PDF-, Word- und ABC-Dateien, Zip-Archiven und Backups anderer Songbook-Apps
 • Druckfertiger PDF-Export mit deinem Papierformat und deinen Spalten
 • Song oder Setlist als Link oder QR-Code teilen, den jeder in Campfire öffnet, immer aktuell

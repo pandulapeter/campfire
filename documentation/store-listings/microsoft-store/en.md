@@ -37,7 +37,7 @@ Chords sit right above the syllables they belong to, and a song flows into as ma
 Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
 
 Reading
-• Turn the page with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
+• Turn a page or a column with a click, the arrow keys, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
 • Or one column that scrolls by itself, at a speed set for each song
 • ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, sections you can fold, and cover art and links to recordings with every song
@@ -63,7 +63,7 @@ Metronome
 • A flash on every beat, and it keeps going while you use other apps
 
 Setlists
-• Put songs in order and play through the whole set without stopping, the tempo changing on the next bar
+• Put songs in order and play through the whole set without stopping, the tempo changing on the next bar or beat
 • Every setlist keeps its own key, capo, and tempo for each song
 • Give the gig a date, see a countdown to it, and the set's total running time
 • Archive a setlist after the gig instead of deleting it
@@ -76,7 +76,7 @@ Organizing
 • Right-click any song or setlist to open its menu
 
 Writing and editing
-• ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
+• ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 
 Import, export, share, and sync
 • Paste a chord sheet or drag it onto the window, and it opens in the editor. Chords written above the lyrics become real chords you can transpose
@@ -104,7 +104,7 @@ Campfire is open source under the Mozilla Public License 2.0.
 Lyrics and chords laid out in as many columns as the window has room for, so a song needs as few pages as possible
 ```
 ```
-Turn pages with a click, the arrow keys, or a Bluetooth page-turner pedal, or read in one column that scrolls by itself
+Turn a page or a column with a click, the arrow keys, or a Bluetooth page-turner pedal, or read in one column that scrolls by itself
 ```
 ```
 Chord diagrams for guitar, ukulele, mandolin, banjo, or keyboard, in alternate tunings too, in the shapes you actually play
@@ -134,7 +134,7 @@ Select several songs at once to add them to setlists, tag them, set their langua
 Tags and languages that travel inside the song files, and one of 14 colors for every tag
 ```
 ```
-ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
+ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 ```
 ```
 Paste or drop a chord sheet copied from a website, and it opens in the editor with real chords you can transpose

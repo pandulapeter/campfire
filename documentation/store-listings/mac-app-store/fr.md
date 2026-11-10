@@ -20,7 +20,7 @@ Paste into App Store Connect's French localizations: fr-FR and fr-CA.
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.2.3 : accords avec capo nommés par doigté ou son réel, cinq chansons au hasard, diagrammes dans chaque tonalité pour plus d'instruments, meilleur import PDF.
+Nouveau en 5.3.0 : lecture colonne par colonne, partition dans la partie de ton instrument, Préférences repensées, accords et paroles en couleur et raccourcis clavier.
 ```
 
 ## Description (4,000 characters max)
@@ -33,10 +33,10 @@ Les accords se posent sur leurs syllabes, et une chanson remplit autant de colon
 Campfire n'a pas de chansons à lui : il accueille les tiennes. Écris-les dans l'éditeur, colle une grille copiée sur un site, ou apporte celles que tu as, même la sauvegarde d'une autre app de chansonnier.
 
 Lecture
-• Tourne la page d'un clic, des flèches du clavier ou d'une pédale tourne-page Bluetooth, et atteins chaque ligne avec Haut et Bas
+• Tourne une page ou une colonne d'un clic, des flèches ou d'une pédale Bluetooth, et atteins chaque ligne avec Haut et Bas
 • Ou une colonne qui défile seule, à la vitesse de chaque chanson
 • Airs ABC en partition, PDF inclus
-• Taille du texte réglable, sections repliables, pochettes et liens vers des enregistrements
+• Taille du texte réglable, sections repliables, pochettes et liens d'écoute
 • Affichage Paroles seules pour qui ne fait que chanter
 • Le mode Lecture seule protège tes chansons d'un clic égaré en plein concert
 
@@ -58,7 +58,7 @@ Métronome
 • Un flash à chaque temps, et il tourne même derrière d'autres apps
 
 Setlists
-• Enchaîne toute la setlist, le tempo changeant à la mesure suivante
+• Enchaîne toute la setlist, le tempo changeant à la mesure ou au temps suivant
 • Chaque setlist a sa tonalité, son capo et son tempo par chanson
 • Date de concert avec compte à rebours, et durée totale
 • Archive une setlist après le concert au lieu de la supprimer
@@ -69,7 +69,7 @@ Organisation et édition
 • Étiquettes et langues stockées dans les fichiers, 14 couleurs d'étiquette
 • Pochette et infos trouvées en ligne, à ta demande seulement
 • Clic droit sur une chanson ou une setlist pour son menu
-• Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique et souligné
+• Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique, souligné et couleurs
 
 Import, export, partage et synchro
 • Colle une grille d'accords ou glisse-la sur la fenêtre : les accords écrits sur les paroles deviennent transposables

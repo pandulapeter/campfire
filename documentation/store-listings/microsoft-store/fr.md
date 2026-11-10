@@ -39,7 +39,7 @@ Les accords sont placés juste au-dessus des syllabes auxquelles ils appartienne
 Campfire n'est pas livré avec ses propres chansons. C'est une maison pour les tiennes. Écris-les dans l'éditeur intégré, colle une grille d'accords copiée sur un site web, ou apporte celles que tu as déjà, même la sauvegarde d'une autre application de chansonnier.
 
 Lecture
-• Tourne la page d'un clic, avec les flèches du clavier ou avec une pédale tourne-page Bluetooth, et atteins chaque ligne rien qu'avec Haut et Bas
+• Tourne une page ou une colonne d'un clic, avec les flèches du clavier ou avec une pédale tourne-page Bluetooth, et atteins chaque ligne rien qu'avec Haut et Bas
 • Ou une seule colonne qui défile toute seule, à une vitesse réglée pour chaque chanson
 • Les airs ABC dessinés en partition, dans le PDF aussi
 • Taille du texte réglable, sections repliables, et pour chaque chanson une pochette et des liens vers des enregistrements
@@ -65,7 +65,7 @@ Métronome
 • Un flash à chaque temps, et il continue de battre pendant que tu utilises d'autres apps
 
 Setlists
-• Mets les chansons dans l'ordre et enchaîne toute la setlist sans t'arrêter, le tempo changeant à la mesure suivante
+• Mets les chansons dans l'ordre et enchaîne toute la setlist sans t'arrêter, le tempo changeant à la mesure ou au temps suivant
 • Chaque setlist garde sa propre tonalité, son capo et son tempo pour chaque chanson
 • Donne une date au concert, avec un compte à rebours et la durée totale de la setlist
 • Archive une setlist après le concert au lieu de la supprimer
@@ -78,7 +78,7 @@ Organisation
 • Un clic droit sur une chanson ou une setlist ouvre son menu
 
 Écriture et édition
-• Éditeur ChordPro avec coloration syntaxique, signalement des erreurs, aperçu en direct, et gras, italique et souligné
+• Éditeur ChordPro avec coloration syntaxique, signalement des erreurs, aperçu en direct, et gras, italique, souligné et couleurs
 
 Import, export, partage et synchronisation
 • Colle une grille d'accords ou fais-la glisser sur la fenêtre, et elle s'ouvre dans l'éditeur. Les accords écrits au-dessus des paroles deviennent de vrais accords transposables
@@ -106,7 +106,7 @@ Campfire est open source, sous licence Mozilla Public License 2.0.
 Paroles et accords répartis sur autant de colonnes que la fenêtre peut en contenir, pour qu'une chanson tienne sur le moins de pages possible
 ```
 ```
-Tourne les pages d'un clic, avec les flèches du clavier ou une pédale tourne-page Bluetooth, ou lis sur une seule colonne qui défile toute seule
+Tourne une page ou une colonne d'un clic, avec les flèches du clavier ou une pédale tourne-page Bluetooth, ou lis sur une seule colonne qui défile toute seule
 ```
 ```
 Diagrammes d'accords pour guitare, ukulélé, mandoline, banjo ou clavier, aussi en accordages alternatifs, avec les doigtés que tu joues vraiment
@@ -136,7 +136,7 @@ Sélectionne plusieurs chansons à la fois pour les ajouter à des setlists, les
 Des étiquettes et des langues qui voyagent dans les fichiers des chansons, et une couleur parmi 14 pour chaque étiquette
 ```
 ```
-Éditeur ChordPro avec coloration syntaxique, signalement des erreurs, aperçu en direct, et gras, italique et souligné
+Éditeur ChordPro avec coloration syntaxique, signalement des erreurs, aperçu en direct, et gras, italique, souligné et couleurs
 ```
 ```
 Colle ou dépose une grille d'accords copiée sur un site web, et elle s'ouvre dans l'éditeur avec de vrais accords transposables

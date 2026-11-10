@@ -39,7 +39,7 @@ Gli accordi stanno proprio sopra le sillabe a cui appartengono, e una canzone si
 Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor integrato, incolla un foglio di accordi copiato da un sito web o porta quelle che hai già, perfino il backup di un'altra app di canzonieri.
 
 Lettura
-• Gira pagina con un clic, i tasti freccia o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Gira una pagina o una colonna con un clic, i tasti freccia o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
 • Oppure una sola colonna che scorre da sola, a una velocità impostata per ogni canzone
 • Le melodie ABC disegnate come spartito, anche nel PDF
 • Dimensione del testo regolabile, sezioni da richiudere, e per ogni canzone la copertina e i link alle registrazioni
@@ -65,7 +65,7 @@ Metronomo
 • Un lampo su ogni movimento, e continua a battere mentre usi altre app
 
 Scalette
-• Metti in ordine le canzoni e suona tutta la scaletta senza fermarti, con il tempo che cambia alla battuta successiva
+• Metti in ordine le canzoni e suona tutta la scaletta senza fermarti, con il tempo che cambia alla battuta o al movimento successivo
 • Ogni scaletta conserva tonalità, capotasto e tempo propri per ogni canzone
 • Dai una data al concerto, guarda il conto alla rovescia e la durata totale della scaletta
 • Archivia una scaletta dopo il concerto invece di eliminarla
@@ -78,7 +78,7 @@ Organizzazione
 • Fai clic con il tasto destro su una canzone o una scaletta per aprirne il menu
 
 Scrittura e modifica
-• Editor ChordPro con evidenziazione della sintassi, segnalazione degli errori, anteprima dal vivo e grassetto, corsivo e sottolineato
+• Editor ChordPro con evidenziazione della sintassi, segnalazione degli errori, anteprima dal vivo e grassetto, corsivo, sottolineato e colori
 
 Importa, esporta, condividi e sincronizza
 • Incolla un foglio di accordi o trascinalo nella finestra, e si apre nell'editor. Gli accordi scritti sopra il testo diventano veri accordi da trasporre
@@ -106,7 +106,7 @@ Campfire è open source con licenza Mozilla Public License 2.0.
 Testi e accordi distribuiti su tutte le colonne che la finestra può contenere, così una canzone occupa meno pagine possibile
 ```
 ```
-Gira pagina con un clic, i tasti freccia o un pedale voltapagina Bluetooth, oppure leggi in una sola colonna che scorre da sola
+Gira una pagina o una colonna con un clic, i tasti freccia o un pedale voltapagina Bluetooth, oppure leggi in una sola colonna che scorre da sola
 ```
 ```
 Diagrammi degli accordi per chitarra, ukulele, mandolino, banjo o tastiera, anche in accordature alternative, nelle posizioni che suoni davvero
@@ -136,7 +136,7 @@ Seleziona più canzoni insieme per aggiungerle alle scalette, assegnare loro dei
 Tag e lingue che viaggiano dentro i file delle canzoni, e uno di 14 colori per ogni tag
 ```
 ```
-Editor ChordPro con evidenziazione della sintassi, segnalazione degli errori, anteprima dal vivo e grassetto, corsivo e sottolineato
+Editor ChordPro con evidenziazione della sintassi, segnalazione degli errori, anteprima dal vivo e grassetto, corsivo, sottolineato e colori
 ```
 ```
 Incolla o trascina un foglio di accordi copiato da un sito web, e si apre nell'editor con veri accordi da trasporre

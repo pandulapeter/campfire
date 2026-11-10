@@ -33,7 +33,7 @@ Letras, acordes y repertorios
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.2.2: acordes con capo por forma o por sonido, cinco canciones al azar, diagramas en todas las tonalidades para más instrumentos y mejor importación de PDF.
+Novedad en 5.3.0: pasa una canción columna a columna, partituras en la parte de tu instrumento, Preferencias rediseñadas, acordes y letras en color y atajos de teclado.
 ```
 
 ## Description (4,000 characters max)
@@ -46,8 +46,8 @@ Cada acorde va sobre su sílaba, y la canción ocupa tantas columnas como quepan
 Campfire no trae canciones: es un hogar para las tuyas. Escríbelas en el editor, pega una hoja de acordes de una web o trae las que ya tienes, incluso la copia de seguridad de otra app de cancioneros.
 
 Lectura
-• Pasa la página con un toque, una tecla o un pedal Bluetooth, y llega a cada línea solo con Arriba y Abajo
-• O una columna que avanza sola, a la velocidad de cada canción
+• Pasa página o columna con un toque, una tecla o un pedal Bluetooth, y llega a cada línea solo con Arriba y Abajo
+• O una columna que avanza sola a la velocidad de cada canción
 • Melodías ABC como partitura, también en PDF
 • Tamaño de texto ajustable, secciones plegables, portadas y enlaces a grabaciones
 • Una vista Solo letra para quienes solo cantan
@@ -71,7 +71,7 @@ Metrónomo
 • Un destello en cada pulso, y sigue sonando con la pantalla bloqueada
 
 Repertorios
-• Toca todo el repertorio sin parar; el tempo cambia en el compás siguiente
+• Toca todo el repertorio sin parar; el tempo cambia en el compás o el pulso siguiente
 • Cada repertorio guarda la tonalidad, el capo y el tempo de cada canción
 • Fecha del concierto con cuenta atrás y duración total
 • Archiva un repertorio tras el concierto en vez de borrarlo
@@ -81,13 +81,13 @@ Organización y edición
 • Selecciona varias canciones para añadirlas a repertorios, etiquetarlas o exportarlas
 • Etiquetas e idiomas guardados en el propio archivo, con 14 colores
 • Portada y datos de la canción buscados en línea, solo si lo pides
-• Editor ChordPro con resaltado, marcas de error, vista previa en vivo, y negrita, cursiva y subrayado
+• Editor ChordPro con resaltado, marcas de error, vista previa en vivo, y negrita, cursiva, subrayado y colores
 
 Importar, exportar, compartir y sincronizar
-• Pega, suelta o comparte una hoja de acordes en Campfire, y los acordes sobre la letra se vuelven acordes reales que puedes transponer
+• Pega, suelta o comparte una hoja de acordes en Campfire, y los acordes sobre la letra se vuelven acordes que puedes transponer
 • Importa ChordPro, texto, PDF, Word, ABC, zip y copias de seguridad de otras apps de cancioneros
 • PDF listo para imprimir, con tu tamaño de papel y columnas
-• Comparte canciones o repertorios como enlace o QR que cualquiera abre en Campfire, al día con tus cambios
+• Comparte canciones o repertorios como enlace o QR que cualquiera abre en Campfire, al día
 • Sincronización opcional con tu Dropbox, automática tras cada cambio
 
 A tu manera

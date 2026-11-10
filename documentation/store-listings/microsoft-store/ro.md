@@ -39,7 +39,7 @@ Acordurile stau chiar deasupra silabelor cărora le aparțin, iar un cântec se 
 Campfire nu vine cu cântece proprii. Este o casă pentru ale tale. Scrie-le în editorul integrat, lipește o foaie cu acorduri copiată de pe un site sau adu-le pe cele pe care le ai deja, chiar și backupul altei aplicații de cântece.
 
 Citire
-• Întoarce pagina cu un clic, cu tastele săgeți sau cu o pedală Bluetooth de întors pagini și ajungi la fiecare rând doar cu Sus și Jos
+• Întoarce o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth de întors pagini și ajungi la fiecare rând doar cu Sus și Jos
 • Sau o singură coloană care se derulează singură, cu o viteză setată pentru fiecare cântec
 • Melodii ABC desenate ca partitură, și în PDF
 • Mărimea textului reglabilă, secțiuni pe care le poți plia, iar la fiecare cântec coperta și linkuri spre înregistrări
@@ -65,7 +65,7 @@ Metronom
 • Un flash la fiecare bătaie, și continuă să bată cât timp folosești alte aplicații
 
 Liste
-• Pune cântecele în ordine și cântă tot setul fără oprire, cu tempoul schimbându-se de la următoarea măsură
+• Pune cântecele în ordine și cântă tot setul fără oprire, cu tempoul schimbându-se de la următoarea măsură sau bătaie
 • Fiecare listă păstrează propria tonalitate, propriul capodastru și propriul tempo pentru fiecare cântec
 • Dă-i concertului o dată, vezi numărătoarea inversă până la el și durata totală a setului
 • Arhivează o listă după concert în loc s-o ștergi
@@ -78,7 +78,7 @@ Organizare
 • Clic dreapta pe orice cântec sau listă îi deschide meniul
 
 Scriere și editare
-• Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv și subliniat
+• Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv, subliniat și culori
 
 Import, export, partajare și sincronizare
 • Lipește o foaie cu acorduri sau trage-o în fereastră, iar ea se deschide în editor. Acordurile scrise deasupra versurilor devin acorduri adevărate, pe care le poți transpune
@@ -106,7 +106,7 @@ Campfire este open source, sub licența Mozilla Public License 2.0.
 Versuri și acorduri așezate pe atâtea coloane câte încap în fereastră, ca un cântec să ocupe cât mai puține pagini
 ```
 ```
-Întoarce paginile cu un clic, cu tastele săgeți sau cu o pedală Bluetooth, sau citește într-o coloană care se derulează singură
+Întoarce o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth, sau citește într-o coloană care se derulează singură
 ```
 ```
 Diagrame de acorduri pentru chitară, ukulele, mandolină, banjo sau claviatură, și în acordaje alternative, în pozițiile pe care chiar le folosești
@@ -136,7 +136,7 @@ Selectează mai multe cântece deodată ca să le adaugi în liste, să le etich
 Etichete și limbi care călătoresc în fișierele cântecelor și una din 14 culori pentru fiecare etichetă
 ```
 ```
-Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv și subliniat
+Editor ChordPro cu evidențierea sintaxei, marcarea erorilor, previzualizare în timp real și aldin, cursiv, subliniat și culori
 ```
 ```
 Lipește sau trage o foaie cu acorduri copiată de pe un site, iar ea se deschide în editor cu acorduri adevărate, pe care le poți transpune

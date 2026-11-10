@@ -21,7 +21,7 @@ review notes and App Sandbox information stay in `en.md`.
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.2.3: accordi con capotasto per diteggiatura o per suono, cinque canzoni a caso, diagrammi in ogni tonalità per più strumenti e import PDF migliore.
+Novità della 5.3.0: gira una canzone per colonne, spartiti con la parte del tuo strumento, Preferenze ridisegnate, accordi e testi colorati e scorciatoie da tastiera.
 ```
 
 ## Description (4,000 characters max)
@@ -34,8 +34,8 @@ Gli accordi stanno sopra le sillabe giuste e la canzone riempie tutte le colonne
 Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor, incollale da un sito web o porta quelle che hai già, anche dal backup di un'altra app di canzonieri.
 
 Lettura
-• Gira pagina con un clic, i tasti freccia o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
-• Oppure una colonna che scorre da sola, con una velocità per ogni canzone
+• Gira pagina o colonna con un clic, le frecce o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Oppure una colonna che scorre da sola al ritmo di ogni canzone
 • Melodie ABC come spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
@@ -59,7 +59,7 @@ Metronomo
 • Un lampo su ogni movimento, e continua a battere mentre usi altre app
 
 Scalette
-• Suona tutta la scaletta senza pause, con il tempo che cambia alla battuta successiva
+• Suona tutta la scaletta senza pause, cambiando tempo alla battuta o al movimento successivo
 • Ogni scaletta ha tonalità, capotasto e tempo propri per ogni canzone
 • Data del concerto con conto alla rovescia e durata totale
 • Archivia una scaletta dopo il concerto invece di eliminarla
@@ -70,10 +70,10 @@ Organizzazione e modifica
 • Tag e lingue salvati nei file delle canzoni, tag in 14 colori
 • Copertina e dati di una canzone online, solo quando lo chiedi
 • Clic destro su una canzone o scaletta per aprirne il menu
-• Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo e sottolineato
+• Editor ChordPro con sintassi evidenziata, errori segnalati, anteprima dal vivo, grassetto, corsivo, sottolineato e colori
 
 Importa, esporta, condividi e sincronizza
-• Incolla un foglio di accordi o trascinalo nella finestra: gli accordi sopra il testo diventano veri accordi da trasporre
+• Incolla un foglio di accordi o trascinalo nella finestra: quelli sopra il testo diventano accordi da trasporre
 • Importa file ChordPro, testo, PDF, Word e ABC, archivi zip e backup di altre app di canzonieri
 • Esportazione PDF pronta per la stampa, con formato carta e colonne a scelta
 • Condividi una canzone o una scaletta come link o codice QR che chiunque apre in Campfire, sempre aggiornato

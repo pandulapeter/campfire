@@ -20,7 +20,7 @@ Paste into the App Store Connect localization hu (macOS).
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.2.3-as verzióban: akkordnevek capóval fogás vagy hangzás szerint, öt véletlen dal, akkordábrák minden hangnemben több hangszerre és jobb PDF-import.
+Újdonságok az 5.3.0-s verzióban: hasábonkénti lapozás, kotta a hangszered szólamában, megújult Preferenciák, színes akkordok és dalszöveg, valamint billentyűparancsok.
 ```
 
 ## Description (4,000 characters max)
@@ -33,8 +33,8 @@ Az akkordok a saját szótagjuk fölött állnak, a dal pedig annyi hasábba ren
 A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a szerkesztőben, illessz be egy weboldalról másolt akkordlapot, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
 
 Olvasás
-• Lapozz kattintással, nyilakkal vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
-• Vagy olvasd egyetlen, magától gördülő hasábban, dalonként állítható sebességgel
+• Lapozz oldalt vagy hasábot kattintással, nyilakkal vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
+• Vagy olvasd egy magától gördülő hasábban, dalonként saját sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, borítókép, linkek a felvételekhez
 • Csak dalszöveg nézet az énekeseknek
@@ -58,7 +58,7 @@ Metronóm
 • Villanás minden ütésre, és más appok használata közben is szól
 
 Listák
-• Játszd végig a listát megállás nélkül, a tempó a következő ütemben vált
+• Játszd végig a listát megállás nélkül, a tempó a következő ütemre vagy ütésre vált
 • Minden lista dalonként tárolja a hangnemet, a capót és a tempót
 • A fellépés dátuma visszaszámlálással, és a lista teljes játékideje
 • A fellépés után törlés helyett archiválhatod a listát
@@ -69,13 +69,13 @@ Rendszerezés és szerkesztés
 • Címkék és nyelvek a dalfájlokban tárolva, 14 címkeszínnel
 • Borítókép és daladatok keresése online, csak ha kéred
 • Jobb kattintással minden dal és lista menüje elérhető
-• ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt és aláhúzott szöveggel
+• ChordPro-szerkesztő szintaxiskiemeléssel, hibajelzéssel, élő előnézettel, félkövér, dőlt, aláhúzott és színes betűkkel
 
 Import, export, megosztás, szinkronizálás
-• Illessz be egy akkordlapot, vagy húzd rá az ablakra, és a dalszöveg fölé írt akkordokból valódi, transzponálható akkordok lesznek
+• Illessz be egy akkordlapot, vagy húzd rá az ablakra, és a dalszöveg fölé írt akkordokból transzponálható akkordok lesznek
 • Importálj ChordPro-, szöveg-, PDF-, Word- és ABC-fájlokat, zip archívumokat és más daloskönyv-appok mentéseit
 • Nyomtatásra kész PDF-export saját papírmérettel és hasábszámmal
-• Ossz meg dalt vagy listát linkként vagy QR-kóddal: bárki megnyithatja a Campfire-ben, és a link követi a változtatásaidat
+• Ossz meg dalt vagy listát linkként vagy QR-kóddal: bárki megnyithatja a Campfire-ben, és a link naprakész marad
 • Opcionális, minden változtatás után automatikus szinkronizálás a saját Dropboxodon át
 
 Szabd magadra

@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.2.2: chords named by shape or by sound with a capo, five random picks from your library, chord diagrams in every key on more instruments, and better PDF imports.
+New in 5.3.0: turn a song a column at a time, sheet music in your instrument's part, redesigned Preferences, colored chords and lyrics, and keyboard shortcuts.
 ```
 
 ## Description (4,000 characters max)
@@ -43,8 +43,8 @@ Chords sit right above the syllables they belong to, and a song flows into as ma
 Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
 
 Reading
-• Turn the page with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
-• Or one column that scrolls by itself, at a speed set for each song
+• Turn a page or a column with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
+• Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
 • A lyrics-only view for the people who only sing
@@ -68,7 +68,7 @@ Metronome
 • A flash on every beat, and it keeps clicking with the screen locked
 
 Setlists
-• Play through the whole set without stopping, the tempo changing on the next bar
+• Play through the whole set without stopping, the tempo changing on the next bar or beat
 • Every setlist keeps its own key, capo, and tempo for each song
 • A gig date with a countdown, and the set's total running time
 • Archive a setlist after the gig instead of deleting it
@@ -76,15 +76,15 @@ Setlists
 Organizing and editing
 • Search by title, artist, or tag
 • Select several songs at once to add them to setlists, tag them, or export them
-• Tags and languages stored inside the song files, with 14 tag colors
+• Tags and languages stored in the song files, with 14 tag colors
 • Find a song's cover art and details online, only when you ask
-• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, and underline
+• A ChordPro editor with syntax highlighting, error marks, a live preview, and bold, italic, underline, and colors
 
 Import, export, share, and sync
-• Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become real chords you can transpose
+• Paste, drop, or share a chord sheet into Campfire, and chords written above the lyrics become chords you can transpose
 • Import ChordPro, text, PDF, Word, and ABC files, zip archives, and other songbook apps' backups
 • Print-ready PDF export with your paper size and columns
-• Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date with your changes
+• Share a song or setlist as a link or QR code that anyone opens in Campfire, kept up to date
 • Optional sync through your own Dropbox, automatic after every change
 
 Make it yours
@@ -133,4 +133,14 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by tapping the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
 
 The "audio" background mode keeps the metronome clicking while the screen is locked; it plays only after the user starts it, and stops when they leave the screen it was started on.
+
+New since the last approved version, and where to find it:
+- Turn by column: Settings → Song → Turn by → Column (shown while Layout is Pages; the same page opens from Preferences in a song's three-dot menu). With several columns on screen, an iPad in landscape for instance, a swipe or a tap on either half of the song then moves it one column at a time.
+- Sheet music: the demo song Home on the Range draws its tune as sheet music. A score with several voices shows one part, picked by the instrument, with a Parts picker beside its Sheet music heading; guitar and bass tablature in a tune follows the instrument's tuning and capo.
+- Preferences: Settings has General, Song, Chords, and Metronome tabs, and the same pages open as a sheet from Preferences in a song's three-dot menu and from the Preferences button on the Chords and Scales tabs.
+- Chord and text colors: in the song editor (Edit in a song's three-dot menu), the toolbar's Chord color and Text color menus color the selected chords or lyrics.
+- Tooltips: holding a pointer over a button drawn as an icon alone names it; Settings → General → Tooltips turns them off.
+- Keyboard shortcuts: with a keyboard attached to an iPad, Command + slash opens a list of every shortcut (also Settings → About → Keyboard shortcuts), and holding Command shows them in the system's overlay.
+- Metronome: the Metronome tab's Tempo change setting can switch to a new song's tempo on the Next beat instead of the Next bar.
+- Import: chord sheets pasted from websites that spell each chord's name out in the lyrics, like (C sharp minor), are imported with the chords above the words.
 ```

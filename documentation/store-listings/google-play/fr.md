@@ -37,10 +37,10 @@ Les accords se posent sur leurs syllabes, et une chanson remplit autant de colon
 Campfire n'a pas de chansons à lui : il accueille les tiennes. Écris-les dans l'éditeur, colle une grille copiée sur un site, ou apporte celles que tu as, même la sauvegarde d'une autre app de chansonnier.
 
 Lecture
-• Tourne la page d'un toucher, d'une touche ou d'une pédale tourne-page Bluetooth, et atteins chaque ligne avec Haut et Bas
+• Tourne une page ou une colonne d'un toucher, d'une touche ou d'une pédale Bluetooth, et atteins chaque ligne avec Haut et Bas
 • Ou une colonne qui défile seule, à la vitesse de chaque chanson
 • Airs ABC en partition, PDF compris
-• Taille du texte réglable, sections repliables, pochettes et liens vers des enregistrements
+• Taille du texte réglable, sections repliables, pochettes et liens d'écoute
 • Affichage Paroles seules pour qui ne fait que chanter
 • Le mode Lecture seule protège tes chansons d'un toucher égaré en plein concert
 
@@ -62,7 +62,7 @@ Métronome
 • Un flash à chaque temps, et il continue écran verrouillé
 
 Setlists
-• Enchaîne toute la setlist, le tempo changeant à la mesure suivante
+• Enchaîne toute la setlist, le tempo changeant à la mesure ou au temps suivant
 • Chaque setlist a sa tonalité, son capo et son tempo par chanson
 • Date de concert avec compte à rebours, et durée totale
 
@@ -71,7 +71,7 @@ Organisation et édition
 • Sélection multiple pour ajouter à une setlist, étiqueter ou exporter
 • Étiquettes et langues stockées dans les fichiers, 14 couleurs d'étiquette
 • Pochette et infos trouvées en ligne, à ta demande seulement
-• Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique et souligné
+• Éditeur ChordPro avec coloration syntaxique, erreurs signalées, aperçu en direct, gras, italique, souligné et couleurs
 
 Import, export, partage et synchro
 • Colle, dépose ou partage une grille d'accords vers Campfire : les accords écrits sur les paroles deviennent transposables
