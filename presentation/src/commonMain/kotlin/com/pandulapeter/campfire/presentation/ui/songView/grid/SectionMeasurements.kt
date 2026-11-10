@@ -11,21 +11,30 @@ package com.pandulapeter.campfire.presentation.ui.songView.grid
 
 import com.pandulapeter.campfire.presentation.ui.songView.SongSectionsLayout
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Constraints
 
 /**
  * What [SongSectionsLayout] has already worked out about one set of sections: the [sizes] of each, which outlive it for
  * the sections a change leaves as they were (see [SectionSizesPool]), and the grid last decided for them. None of it
  * is state: it is read and written by the measurement alone, and a change to it never has anything to redraw. The
- * heights are kept per width and only for the widths of the last few searches.
+ * heights are kept per width and only for the widths of the last few searches; a section [isFlatPastWidest] says is as
+ * tall at every width past its widest line keeps one for all of those, since almost every line is narrower than any
+ * column a search tries.
  */
-internal class SectionMeasurements(private val sizes: List<SectionSizes>) {
+internal class SectionMeasurements(
+    private val sizes: List<SectionSizes>,
+    private val isFlatPastWidest: BooleanArray,
+) {
 
     private var lastGridKey: SectionGridKey? = null
     private var lastGrid = DecidedGrid(emptyGrid(), isInset = false)
 
-    /** The intrinsic height of the section at [index] when it is [width] wide. */
-    fun height(index: Int, width: Int, measure: (Int) -> Int): Int = sizes[index].heightsByWidth.getOrPut(width) { measure(width) }
+    /** The intrinsic height of the section at [index], [measurable], when it is [width] wide. */
+    fun height(index: Int, width: Int, measurable: IntrinsicMeasurable): Int {
+        val key = if (isFlatPastWidest[index]) minOf(width, maxWidth(index, measurable::maxIntrinsicWidth)) else width
+        return sizes[index].heightsByWidth.getOrPut(key) { measurable.maxIntrinsicHeight(key) }
+    }
 
     /** The minimum intrinsic width of the section at [index], which no width changes. */
     fun minWidth(index: Int, measure: (Int) -> Int): Int {

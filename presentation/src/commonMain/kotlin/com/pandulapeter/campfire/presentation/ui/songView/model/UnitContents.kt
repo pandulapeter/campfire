@@ -59,3 +59,18 @@ private fun notationOf(section: RenderSection, items: IntRange, notations: SongN
         }
     }
 }
+
+/**
+ * For each chunk of [units] of [sections], whether its height is the same at every width at or past its widest line, so
+ * that it is measured once for all of them ([SectionMeasurements][com.pandulapeter.campfire.presentation.ui.songView.grid.SectionMeasurements]):
+ * the lines, comments, key changes, tabs, grids, and headings of a section, whose widest line its content alone fixes,
+ * and the comment, key change, and timing sections. Never a chunk holding a tune, which a leaving engraving made for a
+ * wider page scales by the width past it, nor the Chords, Scales, or first sections, which no probe has proven flat.
+ */
+internal fun flatPastWidestOf(units: SongUnits, sections: List<RenderSection>) = BooleanArray(units.itemRanges.size) { unit ->
+    when (val section = sections[units.unitSections[unit]]) {
+        is RenderSection.Lines -> units.itemRanges[unit].none { (section.sectionItems.getOrNull(it) as? SectionItem.RunSlot)?.kind == FoldableKind.VERBATIM }
+        is RenderSection.Comment, is RenderSection.KeyChange, is RenderSection.Timing -> true
+        else -> false
+    }
+}

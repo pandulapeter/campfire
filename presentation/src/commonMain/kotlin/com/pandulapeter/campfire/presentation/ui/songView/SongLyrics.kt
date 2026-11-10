@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.presentation.ui.songView.model.RenderSection
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsModel
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongUnits
 import com.pandulapeter.campfire.presentation.ui.songView.model.UnitContent
+import com.pandulapeter.campfire.presentation.ui.songView.model.flatPastWidestOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.unitContentsOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.cardKeysOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
@@ -319,7 +320,7 @@ internal fun SongLyrics(
         }
     }
     val sectionMeasurements = remember(units, sectionSizesPool, foldedSections, notations) {
-        SectionMeasurements(sectionSizesPool.sizesFor(unitContentsOf(units, sections, foldedSections, notations)))
+        SectionMeasurements(sectionSizesPool.sizesFor(unitContentsOf(units, sections, foldedSections, notations)), flatPastWidestOf(units, sections))
     }
     val sectionKeys = remember(sections) { sectionKeysOf(sections) }
     val unitKeys = remember(units, sectionKeys) { unitKeysOf(units, sectionKeys) }

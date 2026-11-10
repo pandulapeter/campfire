@@ -40,6 +40,10 @@ with the step keys, fewest pages first.
 - **Chunks**: cuts only where `sectionChunkStarts` allows (a line each side, never after a comment or before an empty
   line). Every tab slot's intrinsic width is the whole run's, or narrowing a column to one slot would rewrap the run. A
   folded section is one chunk; the preview never cuts.
+- **A chunk's height is kept per width** (`SectionMeasurements`), and for one past its widest line once for every
+  width there, where its kind is proven as tall at all of them (`flatPastWidestOf`, each kind probed by a test): lines,
+  comments, key changes, tabs, grids, headings, and timing lines. Never a chunk holding a tune, nor the Chords, Scales,
+  or first sections; a kind is added only with its probe.
 - **Tempo and time changes**: each stretch between them is searched as a song of its own, each starting a page, never
   half of a side-by-side pair.
 

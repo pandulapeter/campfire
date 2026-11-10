@@ -183,7 +183,7 @@ internal fun SongSectionsLayout(
         val search = SongGridSearch(
             units = units,
             metrics = object : SectionMetrics {
-                override fun height(index: Int, width: Int) = sectionMeasurements.height(index = index, width = width, measure = measurables[index]::maxIntrinsicHeight)
+                override fun height(index: Int, width: Int) = sectionMeasurements.height(index = index, width = width, measurable = measurables[index])
                 override fun minWidth(index: Int) = sectionMeasurements.minWidth(index, measurables[index]::minIntrinsicWidth)
                 override fun maxWidth(index: Int) = sectionMeasurements.maxWidth(index, measurables[index]::maxIntrinsicWidth)
             },
