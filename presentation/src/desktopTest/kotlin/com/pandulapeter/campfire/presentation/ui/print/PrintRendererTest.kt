@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordTuning
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.notation.NotationFixtures
+import com.pandulapeter.campfire.presentation.ui.notation.parseNotationDrawing
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.theme.scriptFaces
 import kotlinx.coroutines.runBlocking
@@ -329,6 +331,25 @@ internal class PrintRendererTest {
         assertTrue(inked(pages[0], 0 until 120))
         assertTrue(!inked(pages[1], 0 until 120), "The second page must not show the first page's text.")
         assertTrue(inked(pages[1], 200 until 300))
+        assertContentEquals(pages[0], pages[2])
+    }
+
+    @Test fun `each page draws its own system of a tune, the same every time it is drawn`() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val low = NotationFixtures.system("""<path d="M0 80h360v12h-360z"/>""")
+        val drawing = assertNotNull(parseNotationDrawing(listOf(NotationFixtures.HEADER, NotationFixtures.SYSTEM, low)))
+        fun page(system: Int) = PrintPage(texts = emptyList(), notations = listOf(PrintNotation(drawing, system, x = 5f, y = 5f, scale = 0.25f)))
+        val first = page(0)
+        val second = page(1)
+        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(first, second, first)), "Systems")
+        val width = 300
+        val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
+        fun inked(page: IntArray, rows: IntRange) = rows.any { row -> (0 until width).any { page[row * width + it] != 15 } }
+        // At a quarter of a point to the unit and three pixels to the point, 5 points down: the first system's staff
+        // lines, 55.6 and 61.6 units down, fall on rows 56 and 61, and the second system is a bar from row 75 to row 84.
+        assertTrue(inked(pages[0], 55 until 63))
+        assertTrue(!inked(pages[1], 0 until 74), "The second page must draw only the second system.")
+        assertTrue(inked(pages[1], 76 until 83))
         assertContentEquals(pages[0], pages[2])
     }
 

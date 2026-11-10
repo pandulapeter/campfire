@@ -84,9 +84,9 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
 - **The layout measures the advance a text is drawn with**
   (`PrintRenderer.width`), never the layout's size, rounded up to a whole point: each padding space's rounding adds up,
   and a chord after a padded lyric would hang a letter late.
-- Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts are cached by page
-  (the 8 drawn last), never by text: a frame's pages always fit, while a frame drawing more texts than a per-text bound
-  misses every one.
+- Export reuses one bitmap, read back in bands, checking cancellation between them. Text layouts and the notation
+  systems a page draws (painted one system at a time, never a whole tune) are cached by page (the 8 drawn last), never
+  by text or tune: a frame's pages always fit, while a frame drawing more texts than a per-text bound misses every one.
 - Diagrams draw in black (root mid gray), thinnest line one page pixel.
 
 ### Writer

@@ -35,7 +35,6 @@ internal class NotationPainter(
     private val density: Density,
     private val textStyle: TextStyle,
 ) {
-    private val paints = HashMap<Pair<NotationDrawing, Float>, List<NotationSystemPaint>>()
     private val glyphPaths = HashMap<AbcMusicGlyph, Path>()
     private val pathParser = PathParser()
 
@@ -50,13 +49,10 @@ internal class NotationPainter(
     }
 
     /**
-     * [paint], kept for the drawings asked for most recently: the PDF draws its pages one at a time and asks for each
-     * system of a tune, and one tune can be printed at two scales (inside a chorus and outside it).
+     * One [system] of a drawing, painted anew, its repeated words laid out once as [paint]'s are: the PDF paints only the
+     * systems a page draws, and keeps them with the page's other layouts.
      */
-    fun paintOf(drawing: NotationDrawing, unitSize: Float) = paints.getOrPut(drawing to unitSize) {
-        if (paints.size >= MAX_PAINTED_DRAWINGS) paints.clear()
-        paint(drawing, unitSize)
-    }
+    fun paintSystem(system: NotationSystem, unitSize: Float) = paint(system, unitSize, HashMap())
 
     private fun paint(system: NotationSystem, unitSize: Float, layouts: MutableMap<Pair<String, NotationFont>, TextLayoutResult>): NotationSystemPaint {
         val fills = Path()
@@ -162,7 +158,6 @@ internal class NotationPainter(
     private fun Float.toFontSize(unitSize: Float) = with(density) { (this@toFontSize * unitSize).toSp() }
 
     private companion object {
-        const val MAX_PAINTED_DRAWINGS = 8
         const val BOX_STROKE = 1f
 
         /** The outline's offset plus half its stroke, which is drawn centred on the rectangle's edge. */

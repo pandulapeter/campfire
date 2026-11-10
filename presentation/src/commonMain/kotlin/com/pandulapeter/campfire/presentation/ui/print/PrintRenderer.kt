@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
+import com.pandulapeter.campfire.presentation.ui.notation.NotationSystemPaint
 import com.pandulapeter.campfire.presentation.ui.notation.drawNotationSystem
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING_MARK
@@ -67,8 +68,13 @@ internal class PrintRenderer(
         textStyle = TextStyle(fontFamily = textFontFamily, fontFeatureSettings = "liga=0"),
     )
 
-    /** The laid out texts of the pages drawn last, one for each of a page's [PrintPage.texts]. */
-    private val layouts = PrintPageCache { page -> page.texts.map { text(it.text, it.style, it.formatting) } }
+    /** The laid out texts and painted notation systems of the pages drawn last, which the preview draws on every frame. */
+    private val layouts = PrintPageCache { page ->
+        PrintPageLayouts(
+            texts = page.texts.map { text(it.text, it.style, it.formatting) },
+            notations = page.notations.map { notationPainter.paintSystem(it.drawing.systems[it.system], unitSize = it.scale) },
+        )
+    }
 
     private fun PrintStyle.toTextStyle() = TextStyle(
         color = Color(gray, gray, gray),
@@ -151,7 +157,8 @@ internal class PrintRenderer(
                     size = Size(rule.width, rule.height),
                 )
             }
-            page.texts.zip(layouts.of(page)) { item, layout -> if (item.isDrawn) drawText(layout, topLeft = Offset(item.x, item.y)) }
+            val pageLayouts = layouts.of(page)
+            page.texts.zip(pageLayouts.texts) { item, layout -> if (item.isDrawn) drawText(layout, topLeft = Offset(item.x, item.y)) }
             page.diagrams.forEach { diagram ->
                 translate(diagram.x, diagram.y) {
                     drawChordDiagram(
@@ -168,10 +175,10 @@ internal class PrintRenderer(
                     )
                 }
             }
-            page.notations.forEach { notation ->
+            page.notations.zip(pageLayouts.notations) { notation, system ->
                 translate(notation.x, notation.y) {
                     drawNotationSystem(
-                        system = notationPainter.paintOf(notation.drawing, unitSize = notation.scale)[notation.system],
+                        system = system,
                         top = 0f,
                         scale = notation.scale,
                         unitSize = notation.scale,
@@ -188,7 +195,7 @@ internal class PrintRenderer(
     internal suspend fun selectableText(page: PrintPage): List<PrintPdfText> = buildList {
         var characters = 0
         // The page was just drawn, so its layouts are the ones drawn.
-        val pageLayouts = layouts.of(page)
+        val pageLayouts = layouts.of(page).texts
         for ((run, item) in page.texts.withIndex()) {
             if (!item.isSelectable) continue
             val layout = pageLayouts[run]
@@ -266,6 +273,9 @@ internal class PrintRenderer(
         return writer.finish()
     }
 }
+
+/** What [PrintRenderer] lays out of a page: one layout for each of its [PrintPage.texts], one paint for each of its notations. */
+private class PrintPageLayouts(val texts: List<TextLayoutResult>, val notations: List<NotationSystemPaint>)
 
 /** The text with its formatting spans and, over each run of a script's characters, that script's face. */
 private fun String.withSpans(formatting: List<Formatting>, scriptFontFamilies: List<Pair<ScriptFace, FontFamily>>): AnnotatedString {
