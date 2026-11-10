@@ -90,7 +90,8 @@ key leaves numbers nothing to count from.
 - Unreadable directive values (`{time: 5/7}`) are drawn whole in the error colour.
 - **What abc2svg complains about in a tune is too** (`rememberAbcProblems`): each tune is engraved for its messages
   half a second after typing stops, apart from the preview (whose tune is the reader's, a part or no title), so the
-  positions are the text's; the marks follow edits made since, those inside one dropped until the next check.
+  positions are the text's; the marks follow edits made since, those inside one dropped until the next check. The page is
+  `AbcRenderer.TEXT_LINE_WIDTH` wide, so only the text breaks lines.
 
 ## Preview
 

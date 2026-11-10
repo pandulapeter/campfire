@@ -18,6 +18,7 @@ The contract of the staff notation engraver: depends on nothing, so no app type 
   `<style>` and `<defs>` once, into the first system needing them. Its class numbers (`fN`) keep counting across
   renders in one engine, so they mean nothing outside their rendering and never go into a cache key.
 - Both outcomes carry the renderer's `AbcMessage`s, placed on the tune as the caller passed it (lines and columns from
-  zero, never the format lines the renderer adds), null where it cannot tell: the editor marks them in the text.
+  zero, never the format lines the renderer adds), null where it cannot tell: the editor marks them in the text. Some
+  are about where the page broke a line, so the editor renders on a page of `AbcRenderer.TEXT_LINE_WIDTH`.
 - Lyrics (`AbcSystem.LYRICS_CLASS`) are set `AbcSystem.LYRICS_ROOM` times larger than they are meant to be drawn, so
   the notes are spaced for a typeface wider than the renderer's width tables (Inter's).

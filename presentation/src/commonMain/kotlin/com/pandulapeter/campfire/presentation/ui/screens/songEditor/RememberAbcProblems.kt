@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.abc.api.AbcMessage
+import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
 import com.pandulapeter.campfire.chordpro.edit.ChordProAbcTunes
 import com.pandulapeter.campfire.presentation.ui.notation.LocalAbcRenderer
@@ -46,7 +47,7 @@ internal fun rememberAbcProblems(text: State<String>): () -> AbcProblems? {
             val tunes = ChordProAbcTunes.of(current)
             val messages = tunes.associate { tune ->
                 tune.text to (
-                    messagesByTune[tune.text] ?: when (val rendering = renderer.render(tune = tune.text, width = CHECK_WIDTH, transposition = 0)) {
+                    messagesByTune[tune.text] ?: when (val rendering = renderer.render(tune = tune.text, width = AbcRenderer.TEXT_LINE_WIDTH, transposition = 0)) {
                         is AbcRendering.Systems -> rendering.messages
                         is AbcRendering.Failed -> rendering.messages
                     }
@@ -61,6 +62,3 @@ internal fun rememberAbcProblems(text: State<String>): () -> AbcProblems? {
 }
 
 private const val CHECK_DELAY_MILLIS = 500L
-
-/** Any page width: what the engine reports is about the text, not where its systems break. */
-private const val CHECK_WIDTH = 800

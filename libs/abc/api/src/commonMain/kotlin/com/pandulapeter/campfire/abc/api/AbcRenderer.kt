@@ -28,4 +28,15 @@ public interface AbcRenderer {
      *   the renderer spells them for the key they land in.
      */
     public suspend fun render(tune: String, width: Int, transposition: Int): AbcRendering
+
+    public companion object {
+        /**
+         * A page wide enough that a tune's systems break where its text does, for a caller that wants the
+         * [AbcRendering]'s messages about the text alone: some of the renderer's messages are about where a narrower page
+         * broke a line (a tuplet cut in two by a system break), which no edit of the text can fix. Only a text line
+         * longer than about two hundred dense bars is still broken by the page. It is not wider still because the
+         * renderer's output grows in time with the square of a system's length.
+         */
+        public const val TEXT_LINE_WIDTH: Int = 50_000
+    }
 }

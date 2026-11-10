@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.abc.implementation
 
 import com.pandulapeter.campfire.abc.api.AbcMessage
+import com.pandulapeter.campfire.abc.api.AbcRenderer
 import com.pandulapeter.campfire.abc.api.AbcRendering
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -39,6 +40,21 @@ class AbcRendererMessagesTest {
         val rendering = renderer.render(tablature, width = 800, transposition = 3)
         val messages = (rendering as? AbcRendering.Systems)?.messages ?: assertIs<AbcRendering.Failed>(rendering).messages
         assertTrue(messages.any { it.line == 5 && it.column == 1 }, messages.toString())
+    }
+
+    @Test
+    fun `a tune rendered on a page of text line width reports no tuplet that only a narrower page cuts in two`() = runTest {
+        val triplets = "X:1\nL:1/16\nM:none\nK:C\n" + "(3CDE ".repeat(80) + "|\n"
+        val narrow = assertIs<AbcRendering.Systems>(renderer.render(triplets, width = 360, transposition = 0))
+        assertTrue(narrow.messages.isNotEmpty(), "A narrow page no longer cuts a tuplet, so this test proves nothing")
+        val wide = assertIs<AbcRendering.Systems>(renderer.render(triplets, width = AbcRenderer.TEXT_LINE_WIDTH, transposition = 0))
+        assertEquals(emptyList(), wide.messages)
+    }
+
+    @Test
+    fun `a tuplet the text itself breaks across lines is still reported on a page of text line width`() = runTest {
+        val rendering = renderer.render("X:1\nL:1/8\nK:C\nCD (3EF\nG A|\n", width = AbcRenderer.TEXT_LINE_WIDTH, transposition = 0)
+        assertTrue(assertIs<AbcRendering.Systems>(rendering).messages.any { it.line == 3 }, rendering.messages.toString())
     }
 
     @Test
