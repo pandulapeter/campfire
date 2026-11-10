@@ -133,7 +133,9 @@ private class ShortContentOverscroll(
     private var hasPulled = false
     private var releaseJob: Job? = null
 
-    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+    // Only what the content left over is taken, never a drag before the content has seen it: a scrollable inside the
+    // container (a song's strip of columns inside a pager holding that one song) would otherwise never move.
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
         if (state.canScrollForward || state.canScrollBackward || source != NestedScrollSource.UserInput) return Offset.Zero
         val delta = if (orientation == Orientation.Vertical) Offset(0f, available.y) else Offset(available.x, 0f)
         // The parents are offered the drag first, as they would be offered what a list left over: a bottom sheet is
@@ -148,7 +150,7 @@ private class ShortContentOverscroll(
         return delta
     }
 
-    override suspend fun onPreFling(available: Velocity): Velocity {
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
         // A glow (before Android 12) reports no stretch distance, but still has to be told that the finger let go.
         if (!hasPulled && !effect.isInProgress) return Velocity.Zero
         hasPulled = false

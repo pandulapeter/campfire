@@ -63,7 +63,7 @@ The shared building blocks of the screens; subpackages with something to say hav
   the child's modifiers; never in lazy list items, whose reused nodes would travel from the previous item's places.
 - **Overscroll** is Compose's own (none on desktop/web), which Foundation skips when content fits, so short containers
   use the `bounce…` modifiers (`ContentOverscroll.kt`), offering drags to parents first so a fitting sheet still drags
-  down. Installed whether or not the content fits (deciding while composing would compose every row twice); the clip is
+  down, and taking only what the content inside left over (a pager holding one song still lets its strip scroll). Installed whether or not the content fits (deciding while composing would compose every row twice); the clip is
   drawn only while it fits (a scrolling container must not clip its cross axis), and never as a layer's clip, which on
   Android can keep the layer's first size. The vertical form draws its own top fade while pulled (`fadingTopEdge` is
   off at scroll zero); list screens pass their `ListTopFade`'s `OverscrollPull`.
