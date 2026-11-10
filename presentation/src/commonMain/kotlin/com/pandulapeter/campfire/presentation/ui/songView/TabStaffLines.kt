@@ -28,6 +28,8 @@ import kotlin.math.roundToInt
  * it takes, in the proportions of the sheet music's tab staff ([TabEngraving]). Every other line of a run is set
  * in the lyrics' face from the column each word starts at, pushed along where the word before it ran past its columns,
  * since a proportional word is not as wide as the characters it was typed in; a line of chord names in the chords' style.
+ * A run's thousands of frets are a few dozen distinct texts, and a layout is placed and coloured only when drawn, so each
+ * distinct text is laid out once per style and shared by every line and every column count of the run that holds it.
  */
 internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMeasurer) {
 
@@ -40,6 +42,10 @@ internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMe
     private val fretStyle = nameStyle.copy(fontWeight = FontWeight.Bold)
     private val wordStyle = textStyle.copy(lineHeight = TextUnit.Unspecified)
     private val chordStyle = styles.chord.copy(lineHeight = TextUnit.Unspecified)
+    private val names = TextLayouts(nameStyle)
+    private val frets = TextLayouts(fretStyle)
+    private val words = TextLayouts(wordStyle)
+    private val chords = TextLayouts(chordStyle)
     private val figures = measure(FIGURE_SAMPLE.repeat(FIGURE_SAMPLE_LENGTH), fretStyle)
 
     private val textSize = if (textStyle.fontSize.isSpecified) {
@@ -72,7 +78,7 @@ internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMe
         val text = line.drawnText
         val nameEnd = line.stringNameEnd
         val texts = WORD.findAll(text).map { word ->
-            val layout = measure(word.value, if (word.range.first < nameEnd) nameStyle else fretStyle)
+            val layout = (if (word.range.first < nameEnd) names else frets)[word.value]
             val centre = (word.range.first + word.range.last + 1) / 2f * columnWidth
             PlacedTabText(layout = layout, x = centre - layout.size.width / 2f, y = stringOffset - layout.firstBaseline + figureHeight / 2f)
         }.toList()
@@ -83,7 +89,7 @@ internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMe
         val isChord = ChordProTabWrapper.isChordLine(text)
         var end = Float.NEGATIVE_INFINITY
         val texts = WORD.findAll(text).map { word ->
-            val layout = measure(word.value, if (isChord) chordStyle else wordStyle)
+            val layout = (if (isChord) chords else words)[word.value]
             val x = maxOf(word.range.first * columnWidth, end + columnWidth * TabEngraving.MIN_WORD_GAP_PER_COLUMN)
             end = x + layout.size.width
             PlacedTabText(layout = layout, x = x, y = 0f, isChord = isChord)
@@ -92,6 +98,14 @@ internal class TabStaffLines(styles: RunStyles, private val textMeasurer: TextMe
     }
 
     private fun measure(text: String, style: TextStyle) = textMeasurer.measure(AnnotatedString(text), style, softWrap = false)
+
+    /** Every distinct text of the run laid out once in [style]. */
+    private inner class TextLayouts(private val style: TextStyle) {
+
+        private val byText = HashMap<String, TextLayoutResult>()
+
+        operator fun get(text: String) = byText.getOrPut(text) { measure(text, style) }
+    }
 }
 
 /** One line of a row of a tab run as it is drawn: [texts] at their offsets from its top left, [height] tall, [width] wide. */
