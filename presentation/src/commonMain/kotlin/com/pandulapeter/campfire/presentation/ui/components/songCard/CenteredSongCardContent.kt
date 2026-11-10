@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.presentation.ui.components.list.LocalListItemTr
 import com.pandulapeter.campfire.presentation.ui.components.only
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,11 +54,10 @@ import androidx.compose.ui.unit.sp
  *
  * @param coverArtUrl The cover drawn at the start of the body ([CoverArtImage]), next to the headline, the supporting
  *   line, and the details line only, and as tall as the lines drawn there.
- * @param isThreeLine Whether the supporting line and the details line are both drawn. The headline then takes the
- *   supporting line's line height, since its own leaves more room under the title than there is between the two lines
- *   below it, and the cover grows to the three lines. A card of two lines keeps the smaller cover and the lower card
- *   rather than standing half empty beside a cover made for three. Both follow the change as it animates, the artist
- *   fading in or out under an artist header as the sort or the search changes.
+ * @param isThreeLine Whether the supporting line and the details line are both drawn, which grows the cover to the three
+ *   lines. A card of two lines keeps the smaller cover and the lower card rather than standing half empty beside a cover
+ *   made for three. The cover follows the change as it animates, the artist fading in or out under an artist header as
+ *   the sort or the search changes. The title's line height is the same either way ([SONG_CARD_TITLE_LINE_HEIGHT]).
  * @param supportingContent The line under the headline, which a song card gives its artist alone.
  * @param detailsContent The line under that, in the smaller type of the values it holds.
  * @param labelsContent The row of labels under both, which starts from the keyline beneath the cover rather than next
@@ -76,14 +74,10 @@ internal fun CenteredSongCardContent(
     labelsContent: (@Composable () -> Unit)? = null,
     isThreeLine: Boolean = false,
 ) {
-    val headlineStyle = MaterialTheme.typography.bodyLarge
-    // On the spring the artist line folds out on and the search moves the list on, since the card's height follows all
-    // three: the song list keeps the card at its top left still and slides the rest by that same spring, and a card that
-    // grew on a faster one would push the cards under it ahead of the slide and let them drift back.
-    val headlineLineHeight by animateFloatAsState(
-        targetValue = if (isThreeLine) MaterialTheme.typography.bodyMedium.lineHeight.value else headlineStyle.lineHeight.value,
-        animationSpec = searchTravelSpec(),
-    )
+    val headlineStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = SONG_CARD_TITLE_LINE_HEIGHT)
+    // On the spring the artist line folds out on and the search moves the list on, since the card's height follows it:
+    // the song list keeps the card at its top left still and slides the rest by that same spring, and a card that grew on
+    // a faster one would push the cards under it ahead of the slide and let them drift back.
     val coverSize by animateDpAsState(
         targetValue = if (isThreeLine) SONG_CARD_THREE_LINE_COVER_SIZE else SONG_CARD_TWO_LINE_COVER_SIZE,
         animationSpec = searchTravelSpec(visibilityThreshold = Dp.VisibilityThreshold),
@@ -118,7 +112,7 @@ internal fun CenteredSongCardContent(
                             }
                             Column {
                                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                                    ProvideTextStyle(headlineStyle.copy(lineHeight = headlineLineHeight.sp), headlineContent)
+                                    ProvideTextStyle(headlineStyle, headlineContent)
                                 }
                                 if (supportingContent != null) {
                                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
@@ -133,16 +127,11 @@ internal fun CenteredSongCardContent(
                             }
                         }
                         if (labelsContent != null) {
-                            // Under a title alone the labels are the second line and follow it directly, as the artist would. A line
-                            // of text carries some room under its letters and a cover carries none, so the labels keep further
-                            // away from a cover to stand as far from it as they do from an artist line.
+                            // A line of text carries some room under its letters and a cover carries none, so the labels keep
+                            // further away from a cover to stand as far from it as they do from whichever line of text is last.
                             Box(
                                 modifier = Modifier.padding(
-                                    top = when {
-                                        coverArtUrl != null -> SONG_CARD_LABELS_COVER_GAP
-                                        supportingContent == null && detailsContent == null -> 0.dp
-                                        else -> SONG_CARD_LABELS_GAP
-                                    },
+                                    top = if (coverArtUrl != null) SONG_CARD_LABELS_COVER_GAP else SONG_CARD_LABELS_GAP,
                                 ),
                             ) {
                                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
@@ -201,13 +190,22 @@ private val SONG_CARD_ACTIONS_GAP = 4.dp
 /** The height of a card that is only a title, and of one with anything under it, as Material's list items have them. */
 private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
 
-/** A card's cover as tall as its title and the line under it: a bodyLarge and a bodyMedium line. */
-private val SONG_CARD_TWO_LINE_COVER_SIZE = 44.dp
+/**
+ * The line height of a card's title, in a card of two lines and of three alike, so that a title wrapped onto a second
+ * line in a narrow window is spaced the same in both. Between bodyLarge's own 24sp, which leaves more room under the
+ * title than there is between the two lines below it, and the 20sp of those lines, which crowds a wrapped title: the
+ * room between the letters of the title and of the artist then comes out a step wider than between the artist and the
+ * details, as the larger type wants.
+ */
+private val SONG_CARD_TITLE_LINE_HEIGHT = 22.sp
 
-/** A card's cover as tall as its three lines: the title at a bodyMedium line's height, a bodyMedium, and a labelMedium. */
-private val SONG_CARD_THREE_LINE_COVER_SIZE = 56.dp
+/** A card's cover as tall as its title and the line under it: the title's line and a bodyMedium line. */
+private val SONG_CARD_TWO_LINE_COVER_SIZE = 42.dp
 
-/** The room between a card's lines of text and the labels under them. */
+/** A card's cover as tall as its three lines: the title's line, a bodyMedium, and a labelMedium. */
+private val SONG_CARD_THREE_LINE_COVER_SIZE = 58.dp
+
+/** The room between a card's lines of text, the title alone included, and the labels under them. */
 private val SONG_CARD_LABELS_GAP = 4.dp
 
 /** The room between a card's cover and the labels under it. */

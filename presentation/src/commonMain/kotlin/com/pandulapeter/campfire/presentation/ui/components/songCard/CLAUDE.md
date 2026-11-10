@@ -12,8 +12,9 @@
 # :presentation — ui/components/songCard
 
 - Beside the cover: title, artist, and details (as the list's `SongCardOptions` say); a missing line closes up, labels go
-  under all of it. With three lines the title takes `bodyMedium`'s line height (its own leaves a wider gap under it) and
-  the cover is 56dp; with two the cover is 44dp and the card lower; both animate.
+  under all of it, 4dp under any last line, a title alone included, and 8dp under a cover. The title's line height is
+  22sp with two lines and three alike, so a wrapped title is spaced the same in both; the cover is the text's height,
+  58dp with three lines and 42dp with two (the card then lower), and animates.
 - A song inside a setlist prefixes its one-based place, missing files included.
 - The title carries its `{subtitle}` in parentheses, as everywhere: a "Live" copy by the same artist is told apart by
   nothing else.
