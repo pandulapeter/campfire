@@ -1297,6 +1297,39 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `an abc block inside a verse is a run of the verse, which goes on after it`() {
+        val blocks = ChordProParser.parse("{start_of_verse: Intro}\n[C]la\n{start_of_abc}\nX:1\nCDEF|\n{end_of_abc}\n[G]li\n{end_of_verse}\n[D]lo").blocks
+
+        assertEquals(2, blocks.size)
+        val verse = blocks[0] as ChordProBlock.Section
+        assertEquals(SectionType.Verse, verse.type)
+        assertEquals("Intro", verse.label)
+        assertEquals(listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("CDEF|", "abc")), verse.lines.filterIsInstance<ChordProLine.Verbatim>())
+        assertEquals(listOf("C", "G"), verse.lines.filterIsInstance<ChordProLine.Lyrics>().flatMap { line -> line.chords.map { it.name } })
+        assertEquals(SectionType.Paragraph, (blocks[1] as ChordProBlock.Section).type)
+    }
+
+    @Test
+    fun `an abc block inside a chorus is recalled with it`() {
+        val blocks = ChordProParser.parse("{start_of_chorus}\n[C]la\n{start_of_abc}\nX:1\n{comment: Twice}\nCDEF|\n{end_of_abc}\n{end_of_chorus}\n{chorus}").blocks
+        val recall = blocks.last() as ChordProBlock.ChorusRecall
+
+        assertEquals(blocks.dropLast(1), recall.blocks)
+        assertEquals(
+            listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("CDEF|", "abc")),
+            recall.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Verbatim>(),
+        )
+    }
+
+    @Test
+    fun `another end inside an abc block in a verse ends the verse too`() {
+        val blocks = ChordProParser.parse("{start_of_verse}\n{start_of_abc}\nX:1\n{end_of_verse}\n[C]la").blocks
+
+        assertEquals(listOf(SectionType.Verse, SectionType.Paragraph), blocks.map { (it as ChordProBlock.Section).type })
+        assertEquals("la", ((blocks[1] as ChordProBlock.Section).lines.single() as ChordProLine.Lyrics).text)
+    }
+
+        @Test
     fun `an environment with a selector is the environment it selects`() {
         val blocks = ChordProParser.parse("{start_of_chorus-guitar}\n[C]la\n{end_of_chorus}\n{chorus}").blocks
 

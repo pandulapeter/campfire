@@ -46,8 +46,9 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
 - `ChordProMetadata.displayTitle` is the one rule for naming a song.
 - **`SectionType` has no `Tab` or `Grid`**: those environments switch the kind of line inside whatever section runs, so
   a solo of chords over tablature is one section. A *run* of tab or grid lines is the unit everywhere.
-- **`abc`, `ly`, and `svg` lines are `ChordProLine.Verbatim`**, whose environment always opens a section of its own,
-  so the run is the section; `textblock` is prose and stays `Lyrics`.
+- **`abc`, `ly`, and `svg` lines are `ChordProLine.Verbatim`**; `textblock` is prose and stays `Lyrics`. Inside an
+  explicit section a delegated environment is a run of its lines, as a tab is, and the section goes on after it;
+  anywhere else it opens a section of its own, so the run is the section.
 - **Recalls are capped** (`ChorusRecall`): past an allowance proportional to the song, a recall draws as its heading,
   since every later step expands each recall and a tiny file could otherwise become millions of lines.
 - **The parser is total: it never throws or rejects** — the file is the user's and half of it may be under the caret.

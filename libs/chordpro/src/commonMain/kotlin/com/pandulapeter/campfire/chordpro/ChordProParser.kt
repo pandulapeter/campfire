@@ -231,13 +231,16 @@ public object ChordProParser {
                 section.openLineMode(mode, ChordProEnvironments.label(directive.value), ChordProEnvironments.selectorOf(name))
                 return
             }
+            if (environment.lowercase() in ChordProEnvironments.delegateEnvironments) {
+                section.openDelegated(environment.lowercase(), sectionType(environment), ChordProEnvironments.label(directive.value))
+                return
+            }
             section.close()
             section.open(sectionType(environment), ChordProEnvironments.label(directive.value), isExplicit = true)
-            if (environment.lowercase() in ChordProEnvironments.delegateEnvironments) section.openLineMode(LineMode.VERBATIM, label = null)
             return
         }
         ChordProEnvironments.endOfEnvironment(name)?.let { environment ->
-            if (lineMode(environment) == null) section.close() else section.closeLineMode()
+            if (lineMode(environment) == null && !section.endsDelegatedRun(environment.lowercase())) section.close() else section.closeLineMode()
             return
         }
         when (name) {

@@ -140,6 +140,13 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `an abc block inside a verse survives serializing`() {
+        val parsed = ChordProParser.parse("{start_of_verse}\n[C]la\n{start_of_abc}\nX:1\n\nCDEF|\n{end_of_abc}\n[G]li\n{end_of_verse}")
+
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+        @Test
     fun `a tab with a blank line in it comes back as one section`() {
         val parsed = ChordProParser.parse("{sot: Riff}\ne|--0--|\n\ne|--3--|\n{eot}")
 

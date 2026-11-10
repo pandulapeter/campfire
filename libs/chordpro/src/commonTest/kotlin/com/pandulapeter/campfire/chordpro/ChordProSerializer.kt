@@ -163,8 +163,8 @@ object ChordProSerializer {
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that, where its lines do not carry it themselves; see `SectionBuilder.openLineMode`.
         if (section.type == SectionType.Paragraph) return serializeLines(pieces, writer, section.label)
-        val body = serializeLines(pieces, writer)
         val name = environmentName(section.type)
+        val body = serializeLines(pieces, writer, sectionEnvironment = name)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
     }
@@ -180,7 +180,13 @@ object ChordProSerializer {
      * A comment says itself whether it was in one ([ChordProBlock.Comment.isInTabOrGrid]), and one that was is written
      * inside the environment of the lines around it, opening it early where it came before the first of them.
      */
-    private fun serializeLines(pieces: List<ChordProBlock>, writer: Writer, environmentLabel: String? = null) = buildList {
+    private fun serializeLines(
+        pieces: List<ChordProBlock>,
+        writer: Writer,
+        environmentLabel: String? = null,
+        sectionEnvironment: String? = null,
+    ) = buildList {
+        fun lineEnvironmentName(line: ChordProLine, openEnvironment: String?) = lineEnvironmentName(line, openEnvironment, sectionEnvironment)
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var openEnvironmentLabel: String? = null
@@ -238,13 +244,16 @@ object ChordProSerializer {
     }.joinToString("\n")
 
     /**
-     * The environment a line has to be written inside, or null for the lines that need none. A blank line stays in the
+     * The environment a line has to be written inside, or null for the lines that need none, [sectionEnvironment] being
+     * the one the section itself is. A blank line stays in the
      * [openEnvironment] it is found in: outside one, a blank line ends the paragraph it is in on the way back in, so
      * closing a tab around it would come back as two sections where there was one.
      */
-    private fun lineEnvironmentName(line: ChordProLine, openEnvironment: String?) = when (line) {
+    private fun lineEnvironmentName(line: ChordProLine, openEnvironment: String?, sectionEnvironment: String?) = when (line) {
         is ChordProLine.Tab -> "tab"
         is ChordProLine.Grid -> "grid"
+        // A delegated environment written inside a verse is a run of it, and the section that is the environment has it already.
+        is ChordProLine.Verbatim -> line.environment.takeIf { it != sectionEnvironment }
         ChordProLine.Blank -> openEnvironment
         else -> null
     }
@@ -267,7 +276,6 @@ object ChordProSerializer {
     private fun serializeLine(line: ChordProLine) = when (line) {
         is ChordProLine.Lyrics -> serializeLyrics(line)
         is ChordProLine.Tab -> line.text
-        // Its section is the delegated environment, which is written around it already.
         is ChordProLine.Verbatim -> line.text
         is ChordProLine.Grid -> line.tokens.joinToString(" ") { serializeGridToken(it) }
         ChordProLine.Blank -> ""

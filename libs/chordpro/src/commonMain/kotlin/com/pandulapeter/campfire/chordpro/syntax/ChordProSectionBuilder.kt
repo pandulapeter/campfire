@@ -31,6 +31,15 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
 
     /** The selector of the tab environment that is open, which each of its lines and comments carries. */
     private var lineModeSelector: String? = null
+
+    /** The delegated environment that is open (`abc`, `textblock`, …), which says what its lines are. */
+    private var delegatedEnvironment: String? = null
+
+    /**
+     * Whether that environment runs inside a section the file opened around it, the way a tab does, rather than being
+     * the section: its `{end_of_…}` then ends only the environment, and the section goes on after it.
+     */
+    private var isDelegatedInSection = false
     private val lines = mutableListOf<ChordProLine>()
 
     /**
@@ -128,6 +137,28 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      * ([ChordProLine.Tab.label], [ChordProLine.Grid.label]), which is where a viewer finds "Riff" for the run.
      */
     fun openLineMode(mode: LineMode, label: String?, selector: String? = null) {
+        startLineMode(mode, label, selector, delegatedEnvironment = null)
+    }
+
+    /**
+     * A delegated environment starts: inside an explicit section it is a run of that section's lines, like a tab, and
+     * anywhere else a section of its own, named after it. Only an explicit section holds it, since a blank line or a
+     * heading ends any other, and Prettify sets the environment apart from what stands before it with one.
+     */
+    fun openDelegated(environment: String, sectionType: SectionType, label: String?) {
+        val isInSection = isExplicit && lineMode == null
+        if (!isInSection) {
+            close()
+            open(sectionType, label, isExplicit = true)
+        }
+        startLineMode(LineMode.VERBATIM, label = null, selector = null, delegatedEnvironment = environment)
+        isDelegatedInSection = isInSection
+    }
+
+    /** Whether `{end_of_[environment]}` ends only a delegated run inside the section, see [openDelegated]. */
+    fun endsDelegatedRun(environment: String) = isDelegatedInSection && environment == delegatedEnvironment
+
+    private fun startLineMode(mode: LineMode, label: String?, selector: String?, delegatedEnvironment: String?) {
         if (type == null) {
             open(SectionType.Paragraph, label = label, isExplicit = false)
             isOpenedByLineMode = true
@@ -135,6 +166,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         lineMode = mode
         lineModeLabel = label
         lineModeSelector = selector.takeIf { mode == LineMode.TAB }
+        this.delegatedEnvironment = delegatedEnvironment
         hasTabLine = false
         hasLineModeLine = false
         lineModeComments.clear()
@@ -149,6 +181,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         lineMode = null
         lineModeLabel = null
         lineModeSelector = null
+        delegatedEnvironment = null
+        isDelegatedInSection = false
         if (isOpenedByLineMode && lines.all { it == ChordProLine.Blank }) close()
         isOpenedByLineMode = false
     }
@@ -158,6 +192,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         lineMode = null
         lineModeLabel = null
         lineModeSelector = null
+        delegatedEnvironment = null
+        isDelegatedInSection = false
         val type = type ?: return
         trimmedBlankLineCount = 0
         while (lines.isNotEmpty() && lines.last() == ChordProLine.Blank) {
@@ -221,6 +257,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             val lineModeLabel = this.lineModeLabel
             val lineModeSelector = this.lineModeSelector
             val hasTabLine = this.hasTabLine
+            val delegatedEnvironment = this.delegatedEnvironment
+            val isDelegatedInSection = this.isDelegatedInSection
             this.lineMode = null
             close()
             val trimmedBlankLineCount = this.trimmedBlankLineCount
@@ -231,6 +269,8 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             this.lineModeLabel = lineModeLabel
             this.lineModeSelector = lineModeSelector
             this.hasTabLine = hasTabLine
+            this.delegatedEnvironment = delegatedEnvironment
+            this.isDelegatedInSection = isDelegatedInSection
         } else {
             blocks += placedBlock
         }
@@ -302,13 +342,9 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         hasContentLine = true
     }
 
-    /**
-     * A line of a delegated environment. The environment always opens a section of its own, named after it, so the
-     * section's type says which one is open, through every cut [addBlock] makes. A text block is prose, the others
-     * another program's notation.
-     */
+    /** A line of a delegated environment: a text block's is prose, the others' another program's notation. */
     private fun verbatimLine(rawLine: String): ChordProLine {
-        val environment = (type as? SectionType.Custom)?.name
+        val environment = delegatedEnvironment
         return if (environment == null || environment == TEXTBLOCK) {
             ChordProLine.Lyrics(text = rawLine, chords = emptyList())
         } else {

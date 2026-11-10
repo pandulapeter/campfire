@@ -66,8 +66,8 @@ internal val ChordProLine.environmentLabel
 /**
  * Splits lines into runs of tablature, runs of grid lines, runs of verbatim lines, and runs of everything else, keeping
  * their order. Each of the first three is folded as one, and tablature and verbatim text are also measured and wrapped
- * as a block, so the lines of a run have to reach the layout together. A delegated environment is a section of its own,
- * so a run of verbatim lines is all of its section and folds as the section. Two environments written one after the
+ * as a block, so the lines of a run have to reach the layout together. A delegated environment outside an explicit
+ * section is a section of its own, whose run of verbatim lines folds as the section. Two environments written one after the
  * other are two runs where they were labelled differently, since each is then folded under its own name.
  */
 internal fun List<ChordProLine>.groupIntoRuns(): List<List<ChordProLine>> {
