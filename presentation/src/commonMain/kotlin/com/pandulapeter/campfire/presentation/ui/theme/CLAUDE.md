@@ -63,10 +63,10 @@ own counterpart (its AutoMirrored icons), so the tag, checklist, and playlist re
 ## Fonts
 
 **Bundled on every platform**: Inter for the interface, JetBrains Mono (no-ligatures) for tabs and the editor, so a song
-looks and breaks the same on a phone, a computer, and paper. Subset to Latin, Greek, and Cyrillic; Inter's ♭ ♮ ♯ and
-JetBrains Mono's ♮ are drawn in by `tools/fonts/accidentals.py`, rerun on any new subset. Others fall back to the script
-faces below and system fonts (Skia's Roboto on the web, lacking most symbols), so a string uses no character the bundled
-files lack (⌘ is written "Cmd").
+looks and breaks the same on a phone, a computer, and paper. Subset to Latin, Greek, and Cyrillic; Inter's ♭ ♮ ♯,
+JetBrains Mono's ♮, and both's ⌘ are drawn in by `tools/fonts/symbols.py`, rerun on any new subset. Others fall back to
+the script faces below and system fonts (Skia's Roboto on the web, lacking most symbols, and fetched after the text is
+measured), so a string uses no visible character the bundled files lack; a new one is drawn in there.
 
 - The type scale is read before the first frame except on the web, whose actual returns null until all three weights are
   fetched; the theme isn't settled until then (no second layout of every line), and after five seconds falls back to

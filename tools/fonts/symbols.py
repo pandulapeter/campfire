@@ -8,12 +8,17 @@
 
 """
 Draws the flat, natural, and sharp signs (U+266D, U+266E, U+266F) into the bundled Inter files, which have none, and
-the natural sign into the bundled JetBrains Mono files, which have the other two.
+the natural sign into the bundled JetBrains Mono files, which have the other two; and Apple's command sign (U+2318),
+which neither has, into both.
 
 Inter is the face every chord name is shown in, and without these glyphs a ♭ or ♯ would fall back to whatever font the
 platform has (Skia's Roboto on the web, nothing at all in some PDF viewers), so a chord would look and measure
 differently on every platform. The signs are built from each file's own stem width and cap height, so the three weights
 match the letters around them, and sit raised the way chord symbols set them (`B♭m7`).
+
+The command sign writes a keyboard shortcut on an Apple keyboard (`⌘S`). Without it the web, which has no fonts of its
+own, measures a menu's shortcut hint before fetching a fallback for it and wraps the hint onto two lines; drawn from the
+font's own stem, it also matches the ⇧ and arrows Inter has.
 
 JetBrains Mono sets the editor, tabs, and chord grids, where a ChordPro `natural` symbol becomes a ♮; one drawn from a
 fallback font would be another width and pull the columns after it out of line. A monospaced file (its `post` table
@@ -23,7 +28,7 @@ width, as its own flat and sharp are.
 Rerunning it replaces the glyphs it drew, so it is run again on any new subset of either font:
 
     pip install fonttools skia-pathops
-    python3 tools/fonts/accidentals.py presentation/src/commonMain/composeResources/font/inter_*.ttf \
+    python3 tools/fonts/symbols.py presentation/src/commonMain/composeResources/font/inter_*.ttf \
         presentation/src/commonMain/composeResources/font/jetbrains_mono_*.ttf
 
 Neither font's license reserves a font name, so the modified files keep theirs.
@@ -39,6 +44,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 
 FLAT, NATURAL, SHARP = 0x266D, 0x266E, 0x266F
+COMMAND = 0x2318
 
 # The shapes below are drawn in Inter's units; a font with another em size has them scaled to it.
 DESIGN_UNITS_PER_EM = 2048
@@ -152,6 +158,47 @@ def flat(stem, bottom, top):
     return union([polygon([(0, bottom), (vertical, bottom), (vertical, top), (0, top)]), bowl]), right
 
 
+def circle(x, y, radius):
+    """A circle of four cubic quarters."""
+    k = radius * 0.5523
+    path = pathops.Path()
+    path.moveTo(x + radius, y)
+    path.cubicTo(x + radius, y + k, x + k, y + radius, x, y + radius)
+    path.cubicTo(x - k, y + radius, x - radius, y + k, x - radius, y)
+    path.cubicTo(x - radius, y - k, x - k, y - radius, x, y - radius)
+    path.cubicTo(x + k, y - radius, x + radius, y - k, x + radius, y)
+    path.close()
+    return path
+
+
+def command(stem, size):
+    """
+    A square whose sides run on past its corners into a loop at each, three quarters of a circle as wide as the square,
+    `size` across and tall, its strokes lighter than a letter's as Inter's arrows are.
+    """
+    thickness = stem * 0.62
+    half = thickness / 2
+    # The square's half side, which the loops' radius equals: the whole sign is six of them plus a stroke.
+    side = (size - thickness) / 6
+    reach = 2 * side
+    paths = []
+    for y in (-side, side):
+        paths.append(polygon([(-reach, y - half), (reach, y - half), (reach, y + half), (-reach, y + half)]))
+    for x in (-side, side):
+        paths.append(polygon([(x - half, -reach), (x + half, -reach), (x + half, reach), (x - half, reach)]))
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            cx, cy = sx * reach, sy * reach
+            ring = pathops.op(circle(cx, cy, side + half), circle(cx, cy, side - half), pathops.PathOp.DIFFERENCE)
+            # The quarter facing the square is where its sides cross instead.
+            inner = side + thickness
+            quarter = polygon([(cx, cy), (cx - sx * inner, cy), (cx - sx * inner, cy - sy * inner), (cx, cy - sy * inner)])
+            paths.append(pathops.op(ring, quarter, pathops.PathOp.DIFFERENCE))
+    sign = pathops.Path()
+    union(paths).draw(TransformPen(sign.getPen(), (1, 0, 0, 1, size / 2, size / 2)))
+    return sign, size
+
+
 def add_glyph(font, codepoint, name, outline, width, side_bearing, scale=1):
     shifted = pathops.Path()
     outline.draw(TransformPen(shifted.getPen(), (scale, 0, 0, scale, side_bearing, 0)))
@@ -178,16 +225,22 @@ def add_proportional(font):
         (SHARP, sharp(stem, bottom, cap), 70),
         (FLAT, flat(stem, bottom, cap + 40), 90),
         (NATURAL, natural(stem, bottom, cap), 110),
+        (COMMAND, command(stem, cap), 100),
     ):
         add_glyph(font, codepoint, "uni%04X" % codepoint, outline, width, side_bearing)
 
 
 def add_monospaced(font):
-    """The natural sign alone: JetBrains Mono draws its own flat and sharp, which stay."""
+    """The natural and command signs: JetBrains Mono draws its own flat and sharp, which stay."""
     scale = font["head"].unitsPerEm / DESIGN_UNITS_PER_EM
     advance = font["hmtx"][font.getBestCmap()[ord("l")]][0]
-    outline, width = natural(stem_width(font, "|") / scale, 0, font["OS/2"].sCapHeight / scale)
-    add_glyph(font, NATURAL, "uni%04X" % NATURAL, outline, width, (advance - width * scale) / 2, scale)
+    stem = stem_width(font, "|") / scale
+    cap = font["OS/2"].sCapHeight
+    for codepoint, (outline, width) in (
+        (NATURAL, natural(stem, 0, cap / scale)),
+        (COMMAND, command(stem, min(cap, advance * 0.94) / scale)),
+    ):
+        add_glyph(font, codepoint, "uni%04X" % codepoint, outline, width, (advance - width * scale) / 2, scale)
 
 
 def main(paths):
