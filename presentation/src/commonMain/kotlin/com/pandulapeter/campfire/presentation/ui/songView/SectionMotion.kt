@@ -74,7 +74,8 @@ internal class SectionGlides(
         // song is next composed and silence a later move that only measures.
         val isArrival = arrival != null && arrival !== lastArrival
         lastArrival = arrival
-        if (keys !== lastKeys) {
+        // Compared by content: the list is built anew for every pass, and the same keys are nothing to clean up after.
+        if (keys != lastKeys) {
             val current = keys.toHashSet()
             glides.entries.removeAll { (key, glide) -> (key !in current).also { if (it) glide.stop() } }
             lastKeys = keys
