@@ -59,6 +59,9 @@ internal fun abcPartsOf(tune: String): List<AbcPart> {
  * digits no music glyph draws, and the tune would stay text. A `V:` line, or a line's inline `[V:…]` fields, start a
  * voice's music, which runs on until the next; a line naming voices both shown and not is kept, and what comes before the
  * first voice is kept too.
+ *
+ * The voices kept lose their names: abc2svg writes a voice's name before its staff, which says again what the player's
+ * instrument or the heading's picker chose.
  */
 internal fun abcTuneWithPart(tune: String, part: AbcPart): String {
     val voiceIds = tokensOf(part.score).filter { it !in SCORE_PUNCTUATION }.toSet()
@@ -74,10 +77,14 @@ internal fun abcTuneWithPart(tune: String, part: AbcPart): String {
             return@filterIndexed inlineVoices.any { it in voiceIds }
         }
         voice == null || voice in voiceIds
+    }.map { line ->
+        if (VOICE_LINE.matches(line)) line.withoutVoiceNames() else line.replace(INLINE_VOICE) { it.value.withoutVoiceNames() }
     }
     val tuneStart = kept.indexOfFirst { it.startsWith("X:") }
     return (kept.take(tuneStart + 1) + "%%score ${part.score}" + kept.drop(tuneStart + 1)).joinToString(separator = "\n")
 }
+
+private fun String.withoutVoiceNames() = replace(VOICE_NAME_FIELD, "")
 
 private class ScoreItem(val voiceIds: List<String>, val score: String)
 
@@ -125,4 +132,5 @@ private val SCORE_LINE = Regex("""(?m)^(?:%%|I:)(?:score|staves)\b(.*)$""")
 private val TUNE_START = Regex("""(?m)^X:""")
 private val VOICE_LINE = Regex("""(?m)^V:[ \t]*([^\s\]]+)(.*)$""")
 private val INLINE_VOICE = Regex("""\[V:[ \t]*([^\s\]]+)[^\]]*\]""")
+private val VOICE_NAME_FIELD = Regex("""\s+(?:nm|name|snm|sname|subname)\s*=\s*(?:"[^"]*"|[^\s\]]+)""")
 private val VOICE_NAME = Regex("""(?:^|\s)(?:nm|name)\s*=\s*(?:"([^"]*)"|(\S+))""")

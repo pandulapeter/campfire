@@ -76,6 +76,7 @@ and ignores `<style>`, and abc2svg writes every music symbol as text in its musi
   otherwise the heading's picker does, the first part until then, never stored (`NotationPartChoices`). The editor's
   preview engraves every part, and the PDF the player's where it is theirs, every part otherwise (no picker there). **The other voices' music is cut out, not only left off the score**: abc2svg
   still times a hidden voice and pads the shown one to it, and an export's voices of uneven length give a fractional
-  rest no glyph draws. A part that still fails is engraved as the whole score, never as text the score was not.
+  rest no glyph draws. A part shown alone names no staff (its voices' `nm=` / `snm=` dropped): the instrument or the
+  picker already said which it is. A part that still fails is engraved as the whole score, never as text the score was not.
 - **The engine is warmed** 2 s after the library first holds a song with an `abc` block, on every platform, so a tune's
   first open pays only its rendering.

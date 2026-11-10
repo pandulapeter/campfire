@@ -17,7 +17,6 @@ What's planned for Campfire, grouped by area.
 - Update app version to 5.3.0
 - Song title line spacing should be consistent between the two card display modes
 - Tab inside ABC notation gets rendered differently compared to regular tab directives
-- Multi-voice ABC notation gets filtered to the current instrument, but showing that at the beginning of the staff notation is duplicated information
 - Add ability to make notes / markups on music
 - Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.

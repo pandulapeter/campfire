@@ -69,7 +69,7 @@ class AbcPartsTest {
     @Test
     fun `a part leaves the other voices' music out, so they keep no time for it`() {
         assertEquals(
-            "X:1\n%%score 2\nK:C\nC|\nV:2 nm=\"Violin\"\nL:1/8\nE|",
+            "X:1\n%%score 2\nK:C\nC|\nV:2\nL:1/8\nE|",
             abcTuneWithPart("X:1\nK:C\nC|\nV:1 nm=\"Wind\"\nD|\nV:2 nm=\"Violin\"\nL:1/8\nE|\nV:1\nF|", AbcPart(name = "Violin", voiceId = "2", score = "2")),
         )
     }
@@ -77,8 +77,19 @@ class AbcPartsTest {
     @Test
     fun `a part keeps its music written in inline voice fields, after any voice line`() {
         assertEquals(
-            "X:1\n%%score 1\nK:C\nV:1 nm=\"Melody\"\n[V:1] EFGA|",
+            "X:1\n%%score 1\nK:C\nV:1\n[V:1] EFGA|",
             abcTuneWithPart("X:1\nK:C\nV:1 nm=\"Melody\"\nV:2 nm=\"Bass\"\n[V:1] EFGA|\n[V:2] C,C,C,C,|", AbcPart(name = "Melody", voiceId = "1", score = "1")),
+        )
+    }
+
+    @Test
+    fun `a part shown alone names no staff, as what picked it already says which it is`() {
+        assertEquals(
+            "X:1\n%%score 2\nK:C\nV:2 clef=bass\n[V:2 clef=bass] C,|",
+            abcTuneWithPart(
+                "X:1\nK:C\nV:1 name=Melody\nV:2 nm=\"Guitar\" snm=\"Gtr.\" clef=bass\n[V:2 subname=Gtr clef=bass] C,|",
+                AbcPart(name = "Guitar", voiceId = "2", score = "2"),
+            ),
         )
     }
 
