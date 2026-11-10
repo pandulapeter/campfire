@@ -20,7 +20,8 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ACCIDENTALS
  * A tab is a grid of columns: the notes of one moment sit above each other, and the chord names above the staff and
  * anything written under it are aligned to the same columns. So it can never be wrapped line by line, the way prose
  * is, and this cuts every line of a system at the same columns instead. A cut is made after a bar line wherever one
- * fits, so that a row ends where the music does; where a single bar is wider than the row, the cut falls on a column
+ * fits, so that a row ends where the music does, at one no chord name or word under the staff runs across where the
+ * second half of the row has such a bar; where a single bar is wider than the row, the cut falls on a column
  * every string is silent on and no chord name spans, and only when there is no such column is it made wherever the
  * row is full. Every row after the first repeats the string names in front of the staff (`e|`, `B|`, …), because
  * without them the reader would have to count strings back to the first row.
@@ -294,15 +295,23 @@ public object ChordProTabWrapper {
 
     /**
      * Where the row whose content starts at [start] ends, given that it cannot reach past [maxEnd]: after the last
-     * bar line that fits, failing that on the last quiet column in the second half of the row, and failing that at
-     * the edge. The quiet cut is not allowed into the first half, since a row that short would only be made so by a
-     * chord name sitting exactly where the row wants to end, and cutting the name is the smaller loss.
+     * bar line in the second half of the row that no chord name or word of a line off the staff runs across, failing
+     * that after the last bar line that fits, failing that on the last quiet column in the second half of the row, and
+     * failing that at the edge. Neither the word-free bar nor the quiet cut is allowed into the first half, since a row
+     * that short would only be made so by a word sitting exactly where the row wants to end, and cutting the word is the
+     * smaller loss: lyrics under a staff often run across every bar, and would otherwise cut a row after its first.
      */
     private fun cutColumn(lines: List<String>, isStaffLine: List<Boolean>, barColumns: BooleanArray, start: Int, maxEnd: Int): Int {
+        val half = start + (maxEnd - start) / 2
+        var lastBar = -1
         for (end in maxEnd downTo start + MIN_BAR_WIDTH) {
-            if (barColumns[end - 1] && !barColumns[end]) return end
+            if (!barColumns[end - 1] || barColumns[end]) continue
+            if (lastBar < 0) lastBar = end
+            if (end < half) break
+            if (lines.indices.none { index -> !isStaffLine[index] && isWordCrossing(lines[index], end) }) return end
         }
-        for (end in maxEnd downTo start + (maxEnd - start) / 2) {
+        if (lastBar >= 0) return lastBar
+        for (end in maxEnd downTo half) {
             if (lines.indices.all { index -> isQuietColumn(lines[index], isStaffLine[index], end) }) return end
         }
         return maxEnd
@@ -341,6 +350,15 @@ public object ChordProTabWrapper {
             category == CharCategory.NON_SPACING_MARK ||
             category == CharCategory.COMBINING_SPACING_MARK ||
             category == CharCategory.ENCLOSING_MARK
+
+    /**
+     * Whether a cut of [line] in front of [column] would fall inside a word, a character written with several `Char`s
+     * counting as one.
+     */
+    private fun isWordCrossing(line: String, column: Int): Boolean {
+        val boundary = cutBoundary(line, column)
+        return boundary > 0 && boundary < line.length && line[boundary - 1] != ' ' && line[boundary] != ' '
+    }
 
     /** Whether nothing on the line would be torn by a cut in front of [column]: a dash on a staff, a space elsewhere. */
     private fun isQuietColumn(line: String, isStaffLine: Boolean, column: Int) =

@@ -98,6 +98,36 @@ class ChordProTabWrapperTest {
     }
 
     @Test
+    fun `a row is cut at an earlier bar where the last one would split a word under the staff`() {
+        val lines = barsOverWords + "  hello my  old darkness"
+        assertEquals(
+            listOf(
+                listOf("e|----|----|", "B|-1--|-3--|", "  hello my"),
+                listOf("e|----|----|----|", "B|-0--|-2--|-0--|", "  old darkness"),
+            ),
+            wrap(lines, maxColumns = 20),
+        )
+    }
+
+    @Test
+    fun `a row is cut at an earlier bar where the last one would split a chord name`() {
+        val lines = listOf("  Am   Em   C  Dsus4") + barsOverWords
+        assertEquals(
+            listOf(
+                listOf("  Am   Em", "e|----|----|", "B|-1--|-3--|"),
+                listOf("  C  Dsus4", "e|----|----|----|", "B|-0--|-2--|-0--|"),
+            ),
+            wrap(lines, maxColumns = 20),
+        )
+    }
+
+    @Test
+    fun `a row is cut at the last bar that fits where every bar in its second half splits a word`() {
+        val rows = wrap(barsOverWords + "  hello my old darkness", maxColumns = 20)
+        assertEquals(listOf("e|----|----|----|", "B|-1--|-3--|-0--|", "  hello my old da"), rows[0])
+    }
+
+    @Test
     fun `a bar wider than the row is cut on a quiet column`() {
         val lines = listOf(
             "   Am          C",
@@ -385,6 +415,8 @@ class ChordProTabWrapperTest {
         assertTrue(rows.all { it.size == 1 })
         assertEquals("first line of words second line of words", rows.joinToString(" ") { it.single() })
     }
+
+    private val barsOverWords = listOf("e|----|----|----|----|----|", "B|-1--|-3--|-0--|-2--|-0--|")
 
     private val twoSystems = listOf(
         "   C       G",
