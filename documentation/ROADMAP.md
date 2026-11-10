@@ -14,8 +14,6 @@ What's planned for Campfire, grouped by area.
 ## In progress
 
 - Update app version to 5.3.0
-- Support multi-line sticky headers (setlist titles)
-- Song title line spacing should be consistent between the two card display modes
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
 ## Short-term
