@@ -350,7 +350,7 @@
     <string name="setlists_move_up">Subir</string>
     <string name="setlists_move_down">Bajar</string>
     <string name="setlists_actions">Acciones del repertorio</string>
-    <string name="setlists_edit_details">Editar repertorio</string>
+    <string name="setlists_edit_details">Editar los detalles del repertorio</string>
     <string name="setlists_choose_songs">Elegir canciones</string>
     <string name="checklist_selected">Selección: %1$d</string>
     <string name="setlists_description">Descripción (opcional)</string>

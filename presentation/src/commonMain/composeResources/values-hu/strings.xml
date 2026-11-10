@@ -350,7 +350,7 @@
     <string name="setlists_move_up">Mozgatás feljebb</string>
     <string name="setlists_move_down">Mozgatás lejjebb</string>
     <string name="setlists_actions">Műveletek</string>
-    <string name="setlists_edit_details">Lista szerkesztése</string>
+    <string name="setlists_edit_details">Listaadatok szerkesztése</string>
     <string name="setlists_choose_songs">Dalok kiválasztása</string>
     <string name="checklist_selected">%1$d kiválasztva</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>

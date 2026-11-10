@@ -383,7 +383,7 @@
     <string name="setlists_move_up">העברה למעלה</string>
     <string name="setlists_move_down">העברה למטה</string>
     <string name="setlists_actions">פעולות על הסט־ליסט</string>
-    <string name="setlists_edit_details">עריכת הסט־ליסט</string>
+    <string name="setlists_edit_details">עריכת פרטי הסט־ליסט</string>
     <string name="setlists_choose_songs">בחירת שירים</string>
     <string name="checklist_selected">%1$d נבחרו</string>
     <string name="setlists_description">תיאור (לא חובה)</string>

@@ -384,7 +384,7 @@
     <string name="setlists_move_up">Mută în sus</string>
     <string name="setlists_move_down">Mută în jos</string>
     <string name="setlists_actions">Acțiuni pentru listă</string>
-    <string name="setlists_edit_details">Editează lista</string>
+    <string name="setlists_edit_details">Editează detaliile listei</string>
     <string name="setlists_choose_songs">Alege cântecele</string>
     <string name="checklist_selected">%1$d selectate</string>
     <string name="setlists_description">Descriere (opțional)</string>

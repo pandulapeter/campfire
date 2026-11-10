@@ -350,7 +350,7 @@
     <string name="setlists_move_up">Sposta su</string>
     <string name="setlists_move_down">Sposta giù</string>
     <string name="setlists_actions">Azioni della scaletta</string>
-    <string name="setlists_edit_details">Modifica scaletta</string>
+    <string name="setlists_edit_details">Modifica i dettagli della scaletta</string>
     <string name="setlists_choose_songs">Scegli canzoni</string>
     <string name="checklist_selected">%1$d selezionate</string>
     <string name="setlists_description">Descrizione (facoltativa)</string>

@@ -354,7 +354,7 @@
     <string name="setlists_move_up">Monter</string>
     <string name="setlists_move_down">Descendre</string>
     <string name="setlists_actions">Actions de la setlist</string>
-    <string name="setlists_edit_details">Modifier la setlist</string>
+    <string name="setlists_edit_details">Modifier les infos de la setlist</string>
     <string name="setlists_choose_songs">Choisir les chansons</string>
     <string name="checklist_selected">Sélection : %1$d</string>
     <string name="setlists_description">Description (facultative)</string>

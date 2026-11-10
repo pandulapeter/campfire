@@ -350,7 +350,7 @@
     <string name="setlists_move_up">Nach oben</string>
     <string name="setlists_move_down">Nach unten</string>
     <string name="setlists_actions">Setlist-Aktionen</string>
-    <string name="setlists_edit_details">Setlist bearbeiten</string>
+    <string name="setlists_edit_details">Setlist-Details bearbeiten</string>
     <string name="setlists_choose_songs">Songs auswählen</string>
     <string name="checklist_selected">%1$d ausgewählt</string>
     <string name="setlists_description">Beschreibung (optional)</string>
