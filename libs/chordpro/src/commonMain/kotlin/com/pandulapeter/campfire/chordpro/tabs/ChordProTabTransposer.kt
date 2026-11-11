@@ -47,7 +47,7 @@ internal object ChordProTabTransposer {
                 lines = system,
                 replacements = range.map { index -> if (isStaffLine[index]) fretReplacements(lines[index], shift, start = bodyStarts[index]) else null },
             )
-            moved.mapIndexed { position, line -> if (isStaffLine[range.first + position]) line else rewriteChordLine(line, rename) }
+            moved.mapIndexed { position, line -> if (isStaffLine[range.first + position]) line else rewriteChordLine(line, rename, isKeepingColumns = true) }
         }
     }
 
@@ -57,7 +57,17 @@ internal object ChordProTabTransposer {
      * viewer prefers reaches a tab, where transposing would mean the frets instead.
      */
     fun rewriteChordNames(lines: List<String>, rename: (String) -> String) =
-        lines.map { line -> if (ChordProTokens.isStaffLine(line)) line else rewriteChordLine(line, rename) }
+        lines.map { line -> if (ChordProTokens.isStaffLine(line)) line else rewriteChordLine(line, rename, isKeepingColumns = true) }
+
+    /**
+     * Renames the chord names of the lines of one tab environment word for word, every space left where it was written.
+     * It is how a text is taken into another notation and back (`ChordProNotation.convertText`): keeping each name in its
+     * column, as [rewriteChordNames] does, takes a space beside a longer name and gives one back beside a shorter one,
+     * which no way back can undo exactly (`Eb G` and `Eb  G` are both `Mib Sol` that way), while a rename alone is undone
+     * by the inverse rename, at the cost of a cramped row's later names standing a column off in the other notation.
+     */
+    fun renameChordNames(lines: List<String>, rename: (String) -> String) =
+        lines.map { line -> if (ChordProTokens.isStaffLine(line)) line else rewriteChordLine(line, rename, isKeepingColumns = false) }
 
     /** The chord names [rewriteChordNames] would rewrite in [lines], in order. */
     fun chordNames(lines: List<String>): List<String> = buildList {
@@ -121,15 +131,22 @@ internal object ChordProTabTransposer {
      * A bare tuning line (`E A D G B E`) is six valid chord names, and is rewritten like a row of six chords would be:
      * nothing on the line itself tells the two apart, and a guess would be wrong as often as right. The spelling that
      * is safe is `Tuning: E A D G B E`, which the word `Tuning:` keeps from being read as chords.
+     *
+     * Where [isKeepingColumns], every later name stays in its column ([replaceKeepingColumns]); otherwise the names are
+     * swapped in place and the rest of the line moves with them.
      */
-    internal fun rewriteChordLine(line: String, rename: (String) -> String): String {
+    internal fun rewriteChordLine(line: String, rename: (String) -> String, isKeepingColumns: Boolean): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProDirectives.matchDirective(trimmedLine) != null) return line
         if (ChordProDirectives.hasBrackets(line)) return ChordProChordRewriter.rewriteLyricsLineChords(line, rename)
         val replacements = chordWords(line)?.map { word ->
             word.range to rename(word.value)
         } ?: return line
-        return if (replacements.isEmpty()) line else replaceKeepingColumns(line, replacements, filler = ' ')
+        return when {
+            replacements.isEmpty() -> line
+            isKeepingColumns -> replaceKeepingColumns(line, replacements, filler = ' ')
+            else -> replacements.asReversed().fold(line) { renamed, (range, name) -> renamed.replaceRange(range, name) }
+        }
     }
 
     /**

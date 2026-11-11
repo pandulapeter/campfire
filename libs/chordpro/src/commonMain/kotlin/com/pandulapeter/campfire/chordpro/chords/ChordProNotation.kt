@@ -174,7 +174,9 @@ public object ChordProNotation {
      *
      * Converting a text out of a notation and back into it returns it, apart from that folding of the accidentals, a
      * German `Bb`, which is read as the B flat its writer meant rather than as a double flat, and a lowercase minor
-     * taken through the Latin notation, which has no lowercase spelling to keep it in (`a` comes back as `Am`).
+     * taken through the Latin notation, which has no lowercase spelling to keep it in (`a` comes back as `Am`). That is
+     * why a row of chord names above a tab has its names renamed where they stand, its spaces as written, rather than
+     * kept in their columns as a song on screen has them: a name changing length moves the rest of its row.
      */
     public fun convertText(text: String, from: ChordNotation, to: ChordNotation): String {
         val written = if (from == ChordNotation.GERMAN) null else ChordProParser.parseAsWritten(text)
@@ -196,7 +198,7 @@ public object ChordProNotation {
         val namesTo = if (to.isNumbering) ChordNotation.STANDARD else to
         return ChordProChordRewriter.rewriteChordNamesInText(
             text = text,
-            rewriteTab = { lines -> ChordProStaffNames.respelledStaffNames(ChordProTabTransposer.rewriteChordNames(lines, rename), namesFrom, namesTo) },
+            rewriteTab = { lines -> ChordProStaffNames.respelledStaffNames(ChordProTabTransposer.renameChordNames(lines, rename), namesFrom, namesTo) },
             rename = rename,
             rewriteDefinition = { rawLine, selector -> ChordProDefinitions.rewrittenLine(rawLine, selector, rename) },
         )
