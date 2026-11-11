@@ -45,8 +45,10 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
 ## Tests
 
 A behaviour spanning devices (renames, conflicts, deletions, synced preferences) gets a case in `TwoDeviceSyncTest`.
-`SyncSimulationTest` drives two or three devices through seeded random edits, runs, and failures and checks the promises
-above; a failure prints its seed and steps, and a change to sync is worth a run by hand with far more seeds. The
+`SyncSimulationTest` drives two or three devices through seeded random edits, runs, and failures (the app killed before
+it writes the index included) and checks the promises above; each device's fake file system compares names as one
+platform's does (`FileSystemNaming`). A failure prints its seed and steps, and a change to sync is worth a run by hand
+with far more seeds. The
 upgrade-5.2.0 test resources, here and in `:data:source:local:implementation`, are what the 5.2.0 release's own code
 wrote; never regenerate them with today's code, which would agree with itself whatever it reads. Further fixtures
 follow the root `CLAUDE.md`'s Stored formats rule.

@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJour
 import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.random.Random
 import kotlin.test.assertIs
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -74,10 +75,12 @@ internal class Device(
     /**
      * A run however it ends, keeping the index the way `SyncRunner` does: a completed run's, with the synced preferences
      * and the shared copies settled after it, and otherwise the last one the engine reported, so that a run that stops,
-     * fails or asks first keeps the files it did move.
+     * fails or asks first keeps the files it did move. Every index the run reported is kept in [writtenIndexes] as well.
      */
     suspend fun attempt(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy): SyncEngine.Result {
         var reported: (() -> SyncIndexDocument)? = null
+        writtenIndexes.clear()
+        writtenIndexes += index
         val result = try {
             synchronize(
                 local = library,
@@ -85,7 +88,10 @@ internal class Device(
                 document = index,
                 setlistComparison = DayBlindSetlistComparison,
                 lock = lock,
-                onIndexChanged = { reported = it },
+                onIndexChanged = { snapshot ->
+                    reported = snapshot
+                    writtenIndexes += snapshot()
+                },
                 deletionPolicy = deletionPolicy,
             )
         } catch (throwable: Throwable) {
@@ -97,6 +103,20 @@ internal class Device(
             is SyncEngine.Result.Completed -> settle(cloud, result)
         }
         return result
+    }
+
+    /**
+     * The indexes the last [attempt] could have left on disk: the one it started from, and every one it reported since,
+     * any of which `SyncRunner`'s throttled writer may have been the last to save.
+     */
+    private val writtenIndexes = mutableListOf<SyncIndexDocument>()
+
+    /**
+     * The app killed during or right after the last [attempt], before it wrote the index it ended with: what the next
+     * launch finds is one of the [writtenIndexes], picked by [random], which the launch marks as finished.
+     */
+    fun killed(random: Random) {
+        index = writtenIndexes.random(random).markedAsFinished()
     }
 
     private suspend fun settle(cloud: FakeSyncProvider, completed: SyncEngine.Result.Completed) {

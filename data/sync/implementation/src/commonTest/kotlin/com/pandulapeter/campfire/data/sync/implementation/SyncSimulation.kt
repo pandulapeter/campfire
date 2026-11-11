@@ -181,6 +181,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 throw exception
             } catch (exception: Exception) {
                 Attempt.Failed(exception.message.orEmpty())
+            } catch (_: ProcessKilled) {
+                Attempt.Killed
             }
         }
         running = job
@@ -188,9 +190,15 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         job.join()
         running = null
         runningDevice = null
+        if (fault == Fault.KILLED && (attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed && random.nextBoolean()) {
+            log += "  ${device.label}'s run completed, killed before writing its index"
+            attempt = Attempt.Killed
+        }
+        if (attempt == Attempt.Killed) device.killed(random)
         fault = null
         device.library.onRead = {}
         device.library.onWrite = {}
+        device.library.onDelete = {}
         log += "  ${device.label}'s run ${attempt.described()}"
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= device
         return attempt
@@ -230,6 +238,15 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             Fault.OFFLINE -> throw SyncNetworkException("Offline")
             Fault.REFUSED -> throw IllegalStateException("Refused")
             Fault.STOPPED -> running?.cancel()
+            Fault.KILLED -> if (random.nextBoolean()) {
+                throw ProcessKilled()
+            } else {
+                runningDevice!!.library.let { library ->
+                    library.onWrite = { throw ProcessKilled() }
+                    library.onDelete = { throw ProcessKilled() }
+                }
+            }
+
             Fault.SAVE_DURING_RUN -> {
                 // The file the request is about, as often as not, since that is where a save meets the run's own change.
                 val device = runningDevice!!.takeIf { it !in lostLibraries } ?: return
@@ -339,6 +356,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         data class Ended(val result: SyncEngine.Result) : Attempt
         data class Failed(val message: String) : Attempt
         data object Stopped : Attempt
+        data object Killed : Attempt
     }
 
     private fun Attempt.described() = when (this) {
@@ -353,10 +371,21 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
         is Attempt.Failed -> "failed: $message"
         Attempt.Stopped -> "stopped"
+        Attempt.Killed -> "killed"
     }
 
-    /** What may happen to a run part way, at the request a step picks: the failures of the storage strike its next call. */
-    private enum class Fault { OFFLINE, REFUSED, STOPPED, READ_FAILS, WRITE_FAILS, SAVE_DURING_RUN, ANOTHER_DEVICE_SYNCS }
+    /**
+     * What may happen to a run part way, at the request a step picks: the failures of the storage strike its next call.
+     * [KILLED] strikes at the request or at the next local write or deletion, or, for a run that gets to its end first,
+     * after it, before the index it ended with is written.
+     */
+    private enum class Fault { OFFLINE, REFUSED, STOPPED, KILLED, READ_FAILS, WRITE_FAILS, SAVE_DURING_RUN, ANOTHER_DEVICE_SYNCS }
+
+    /**
+     * The process gone, which nothing in the app gets to answer: an [Error], which no file's failure is caught as, so
+     * that it ends the run where it struck, and a write it strikes before never lands.
+     */
+    private class ProcessKilled : Error("Killed")
 
     private companion object {
         const val MAXIMUM_SETTLING_ROUNDS = 6
