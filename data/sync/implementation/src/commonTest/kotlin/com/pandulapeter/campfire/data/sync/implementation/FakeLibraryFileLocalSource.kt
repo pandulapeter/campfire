@@ -12,14 +12,16 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.model.library.LibraryFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 
 /**
  * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
  * test makes a file that is there impossible to read, and [onWrite] before a write is stored, with the name it chose,
  * which is where a test makes the disk full, and [onDelete] before a deletion. The last two may suspend, which is
-where a test lets the app write a file in the middle of the engine's own change to it. [canHoldFileName] is where a
-test makes a Windows PC.
+ * where a test lets the app write a file in the middle of the engine's own change to it. [canHoldFileName] is where a
+ * test makes a Windows PC. A free name, and a numbered variant of one, is found under any case or Unicode form, as the
+ * real storage finds it.
  */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -57,21 +59,23 @@ internal class FakeLibraryFileLocalSource(
         val base = desiredName.substringBefore('.')
         val name = generateSequence(2) { it + 1 }
             .map { "$base ($it).$extension" }
-            .first { SyncKey(kind = kind, name = it) !in files && !isTaken(it) }
+            .first { candidate -> files.keys.none { it.kind == kind && LibraryFiles.isSameLibraryName(it.name, candidate) } && !isTaken(candidate) }
         val key = SyncKey(kind = kind, name = name)
         onWrite(key)
         files[key] = bytes
         return name
     }
 
-    /** The variants [writeLibraryFileToFreeName] names, compared by their exact spelling. */
+    /** The variants [writeLibraryFileToFreeName] names, under any case or Unicode form, as the real storage finds them. */
     override suspend fun numberedVariantHolding(kind: LibraryFileKind, name: String, bytes: ByteArray): String? {
-        val extension = name.substringAfter('.', "")
-        val base = name.substringBefore('.')
+        val extension = LibraryFiles.identityKey(name.substringAfter('.', ""))
+        val base = LibraryFiles.identityKey(name.substringBefore('.'))
         val variant = Regex("""${Regex.escape(base)} \((\d+)\)\.${Regex.escape(extension)}""")
         return files.entries
             .filter { (key, _) -> key.kind == kind }
-            .mapNotNull { (key, stored) -> variant.matchEntire(key.name)?.let { it.groupValues[1].toInt() to (key.name to stored) } }
+            .mapNotNull { (key, stored) ->
+                variant.matchEntire(LibraryFiles.identityKey(key.name))?.let { it.groupValues[1].toInt() to (key.name to stored) }
+            }
             .sortedBy { (number, _) -> number }
             .firstOrNull { (_, file) -> file.second.contentEquals(bytes) }
             ?.second

@@ -12,8 +12,10 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
@@ -67,7 +69,38 @@ internal class Device(
 
     /** A run that must complete, after which the index is kept and the synced preferences and shared copies settled. */
     suspend fun sync(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) {
-        val completed = assertIs<SyncEngine.Result.Completed>(syncResult(cloud, deletionPolicy))
+        assertIs<SyncEngine.Result.Completed>(attempt(cloud, deletionPolicy))
+    }
+
+    /**
+     * A run however it ends, keeping the index the way `SyncRunner` does: a completed run's, with the synced preferences
+     * and the shared copies settled after it, and otherwise the last one the engine reported, so that a run that stops,
+     * fails or asks first keeps the files it did move.
+     */
+    suspend fun attempt(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy): SyncEngine.Result {
+        var reported: (() -> SyncIndexDocument)? = null
+        val result = try {
+            synchronize(
+                local = library,
+                provider = cloud,
+                document = index,
+                setlistComparison = DayBlindSetlistComparison,
+                lock = lock,
+                onIndexChanged = { reported = it },
+                deletionPolicy = deletionPolicy,
+            )
+        } catch (throwable: Throwable) {
+            reported?.let { index = it().markedAsFinished() }
+            throw throwable
+        }
+        when (result) {
+            is SyncEngine.Result.DeletionsNeedConfirmation -> reported?.let { index = it().markedAsFinished() }
+            is SyncEngine.Result.Completed -> settle(cloud, result)
+        }
+        return result
+    }
+
+    private suspend fun settle(cloud: FakeSyncProvider, completed: SyncEngine.Result.Completed) {
         val settled = preferencesSync?.synchronize(
             provider = cloud,
             base = completed.index.syncedPreferences,
@@ -91,6 +124,14 @@ internal class Device(
             syncedPreferences = settled?.document ?: completed.index.syncedPreferences,
             syncedPreferencesRevision = settled?.revision,
         )
+    }
+
+    /** How many files the index says the last run saw, which is what the deletion guard measures a run's deletions against. */
+    val indexSize get() = index.toIndex().size
+
+    /** Whether the index says the last run saw a file under this name, in any spelling, holding [bytes]. */
+    fun hasSeen(key: SyncKey, bytes: ByteArray) = index.toIndex().any { (seen, entry) ->
+        seen.kind == key.kind && LibraryFiles.isSameLibraryName(seen.name, key.name) && entry.localHash == localContentHash(bytes)
     }
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
