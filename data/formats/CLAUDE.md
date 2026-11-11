@@ -21,8 +21,8 @@ Documents are read locally, never rendered, uploaded, or kept.
 - Images and font programs are never decoded. `DocxTextExtractor` opens only `word/document.xml` and `word/styles.xml`;
   the XML parser refuses DTDs. Deleted text and external parts are left out.
 - **Every limit bounds untrusted input; keep them all**, including the per-document work budget (re-reading a shared
-  form or contents stream is paid for) and the font-table-entry budget (shared `/W` arrays and CMaps paid for each
-  time). Bridging spaces are charged to the text budget, so a tiny monospace font cannot pad a page to hundreds of
+  form or contents stream is paid for), the font-table-entry budget (shared `/W` and `/Differences` arrays and CMaps
+  paid for each time), and the syntax budget every object parse of a document shares, the recovery scan's included. Bridging spaces are charged to the text budget, so a tiny monospace font cannot pad a page to hundreds of
   megabytes. A budget running out is `PdfLimitException`, not a malformed object.
 - Damage is local: a malformed page, font, or form costs only itself; the document fails only when more than half its
   glyphs or pages do. Budgets, encryption, a broken page tree, and over 2,000 pages fail it whole (a songbook silently
@@ -90,3 +90,8 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
 
 End-to-end document goldens live in `:data:source:local:implementation`. An extraction change is judged by the same
 import corpus as a converter change (`chordpro/convert/CLAUDE.md`).
+
+The `*FuzzTest`s damage valid documents and archives from fixed seeds (`zip/Mutator`): a reader may refuse one only with
+an `Exception` (a `ZipException` for the zip reader), never an `Error`, nor read past its budget; raise the counts to
+explore, never in a commit. A hang a hostile layout causes is tested against a quarter of its own input
+(`assertTakesTimeInProportion`), never a fixed time.
