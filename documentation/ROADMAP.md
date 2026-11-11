@@ -13,7 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Update app version to 5.3.0
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
 ## Short-term
@@ -36,5 +35,8 @@ What's planned for Campfire, grouped by area.
 - **Importing sheet music from MusicXML** (`.musicxml` and `.mxl`, which every notation app exports) as a song with
   its notation and, where the score has lyrics, a chord sheet of its verses; PDF sheet music stays out (it needs OMR).
   Plan: [musicxml-import.md](plans/musicxml-import.md)
-- **A streaming zip writer** on all platforms
+- **Images in songs**: ChordPro's `{image}` directive, pictures kept in the library and named by their content, synced,
+  exported, shared, and printed with the song; a lone image file imports as a song (a chart that only exists on
+  paper or as a PDF, still in the setlist). Plan: [song-images.md](plans/song-images.md)
+- **A streaming zip writer** on all platforms (needed before songs' images go into exports and shared links)
 - Find a solution for storing the library used for screenshot generation and the PDF goldens in the cloud and automate updating screenshots
