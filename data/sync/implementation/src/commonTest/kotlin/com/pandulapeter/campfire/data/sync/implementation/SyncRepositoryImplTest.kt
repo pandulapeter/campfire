@@ -445,6 +445,29 @@ class SyncRepositoryImplTest {
     }
 
     @Test
+    fun `a restore whose credentials the service names no account for reports the connection as failed`() = runTest {
+        val repository = syncRepository(provider = FakeSyncProvider(account = null))
+
+        repository.restore {}
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.AUTHORIZATION), repository.syncState.value)
+    }
+
+    @Test
+    fun `a run whose credentials cannot be read ends as a storage failure`() = runTest {
+        val provider = FakeSyncProvider(account = TEST_ACCOUNT)
+        val repository = syncRepository(provider = provider)
+        repository.restore {}
+
+        provider.onIsConnected = { throw LibraryStorageException("Locked") }
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
+        assertNull(state.progress)
+    }
+
+    @Test
     fun `a run the service refuses reports the connection as failed and keeps the index`() = runTest {
         val stateLocalSource = FakeSyncIndexLocalSource()
         val repository = syncRepository(
