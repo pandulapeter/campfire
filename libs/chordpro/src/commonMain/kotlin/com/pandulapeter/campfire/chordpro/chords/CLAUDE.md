@@ -18,9 +18,7 @@
   root is minor, a lowercase bass a note.
 - **Shown chords draw `♯` and `♭`** (`withAccidentalSigns`, after `toNotation`); anything typed, stored, copied, or
   exported keeps `#` and `b`, and every reader takes both.
-- Tab string names follow the notation; a system that could not come back exactly is left as written. In
-  `convertText` a tab's chord rows are renamed word for word, spaces as written (no column keeping, which no way back
-  can undo), so a text converted and back is exact.
+- Tab string names follow the notation; a system that could not come back exactly is left as written.
 - **Numberings are display only**: counted from the song's key per modulated stretch, else from the key its chords
   suggest (never written into the song), and nothing is ever read from numbers (`[1]` is as often an ending).
   Definitions follow the chords but do not vote on notation.

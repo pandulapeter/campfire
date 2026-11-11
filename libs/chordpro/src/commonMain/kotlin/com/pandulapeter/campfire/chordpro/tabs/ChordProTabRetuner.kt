@@ -293,7 +293,7 @@ internal object ChordProTabRetuner {
                 val line = system.staff.indexOf(index)
                 val prefix = lines[index].take(bodyStarts[position])
                 rewritten[index] = when {
-                    line < 0 -> ChordProTabTransposer.rewriteChordLine(prefix + bodies[position], rename, isKeepingColumns = true).shiftedBy(columnShift)
+                    line < 0 -> ChordProTabTransposer.rewriteChordLine(prefix + bodies[position], rename).shiftedBy(columnShift)
                     names == null -> prefix + bodies[position]
                     else -> names[line].orEmpty().padStart(nameWidth) + BAR + bodies[position]
                 }

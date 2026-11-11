@@ -234,26 +234,17 @@ class ChordProNotationTest {
         val text = "{sot}\n  Bb    B\ne|--0--1--|\nB|--1--2--|\n{eot}"
         val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
 
-        assertEquals("{sot}\n  B    H\ne|--0--1--|\nH|--1--2--|\n{eot}", german)
+        assertEquals("{sot}\n  B     H\ne|--0--1--|\nH|--1--2--|\n{eot}", german)
         assertEquals(text, ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
     }
 
     @Test
-    fun `a tab's chord rows converted to another notation and back keep their spacing exactly`() {
-        val text = "{sot}\nEb G\nEb  G\nEb \n{eot}"
-        listOf(ChordNotation.GERMAN, ChordNotation.LATIN).forEach { notation ->
-            val converted = ChordProNotation.convertText(text, ChordNotation.STANDARD, notation)
-            assertEquals(text, ChordProNotation.convertText(converted, notation, ChordNotation.STANDARD), "$notation: $converted")
-        }
-    }
-
-    @Test
-    fun `a staff renamed in Latin keeps its bar in one column, and its chord row its spacing`() {
+    fun `a staff renamed in Latin keeps its bar in one column, and the chords over their notes`() {
         val text = "{sot}\n  Am     E7\ne|-0-----0-|\nB|-1-----0-|\nG|-2-----1-|\nD|-2-----0-|\nA|-0-----2-|\nE|-------0-|\n{eot}"
         val latin = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.LATIN)
 
         assertEquals(
-            "{sot}\n    Lam     Mi7\n mi|-0-----0-|\n Si|-1-----0-|\nSol|-2-----1-|\n Re|-2-----0-|\n La|-0-----2-|\n Mi|-------0-|\n{eot}",
+            "{sot}\n    Lam    Mi7\n mi|-0-----0-|\n Si|-1-----0-|\nSol|-2-----1-|\n Re|-2-----0-|\n La|-0-----2-|\n Mi|-------0-|\n{eot}",
             latin,
         )
         assertEquals(text, ChordProNotation.convertText(latin, ChordNotation.LATIN, ChordNotation.STANDARD))

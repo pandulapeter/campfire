@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -90,7 +91,11 @@ internal class GeneratedSongPropertyTest {
             val converted = ChordProNotation.convertText(text, ChordNotation.STANDARD, notation)
             assertEquals(pitches(ChordProParser.parse(text)), pitches(ChordProParser.parse(converted, notation)), "In $notation:\n$converted")
             val back = ChordProNotation.convertText(converted, notation, ChordNotation.STANDARD)
-            assertEquals(ChordProParser.parse(text), ChordProParser.parse(back), "Back from $notation:\n$back")
+            assertEquals(
+                ChordProParser.parse(text).withChordRowSpacingFolded(),
+                ChordProParser.parse(back).withChordRowSpacingFolded(),
+                "Back from $notation:\n$back",
+            )
         }
     }
 
@@ -196,6 +201,24 @@ internal class GeneratedSongPropertyTest {
     private fun Random.nextChord(): String {
         val chord = NOTES[nextInt(NOTES.size)] + QUALITIES[nextInt(QUALITIES.size)] + if (nextInt(5) == 0) "/" + NOTES[nextInt(NOTES.size)] else ""
         return if (nextInt(10) == 0) "($chord)" else chord
+    }
+
+    /**
+     * [this] with the spaces of every tab line but a staff line folded: a row of chord names in a tab keeps each name in
+     * its column, which a longer name can only do by taking a space next to it, and the way back cannot tell whether it
+     * took one (`Eb G` and `Eb  G` are both `Mib Sol`), so a cramped row's spacing does not come back.
+     */
+    private fun ChordProSong.withChordRowSpacingFolded(): ChordProSong = copy(blocks = blocks.map { it.withChordRowSpacingFolded() })
+
+    private fun ChordProBlock.withChordRowSpacingFolded(): ChordProBlock = when (this) {
+        is ChordProBlock.Section -> copy(
+            lines = lines.map { line ->
+                if (line !is ChordProLine.Tab || ChordProTokens.isStaffLine(line.text)) line
+                else line.copy(text = line.text.split(' ').filter { it.isNotEmpty() }.joinToString(" "))
+            },
+        )
+        is ChordProBlock.ChorusRecall -> copy(blocks = blocks.map { it.withChordRowSpacingFolded() })
+        else -> this
     }
 
     private fun lines(song: ChordProSong) = song.blocks.flatMap { block ->
