@@ -95,7 +95,7 @@ import.
 
 ### 0. Prerequisite: the streaming zip writer
 
-Already on the roadmap. Exports and shared copies build their zip in memory today, which is fine for text and is not
+[streaming-zip-writer.md](streaming-zip-writer.md). Exports and shared copies build their zip in memory today, which is fine for text and is not
 for a library with a hundred photos, the web build above all. Images in archives (steps 6 and 7) wait for it; steps
 1–5 do not.
 
