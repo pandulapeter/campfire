@@ -277,6 +277,24 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a conflict whose incoming version a numbered file also holds keeps it when that file is deleted elsewhere`() = runTest {
+        val (a, b) = devicesInStep(extra = mapOf(song("song_1 (2)") to "Kept aside".encodeToByteArray()))
+        // B takes the version kept aside back under the song's name while A edits the song, and then B deletes the
+        // numbered file it no longer needs.
+        b.library.files[song(1)] = "Kept aside".encodeToByteArray()
+        b.sync(cloud)
+        a.library.files[song(1)] = "Edited on A".encodeToByteArray()
+        a.sync(cloud)
+        b.library.files -= song("song_1 (2)")
+        b.sync(cloud)
+        a.sync(cloud)
+
+        val expected = sharedContents() + ("song_1.cho" to "Edited on A") + ("song_1 (3).cho" to "Kept aside")
+        assertEverywhere(expected, a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
     fun `a setlist edited differently on both devices gets a conflict copy rather than a merge`() = runTest {
         val setlist = "date:2026-10-14;songs:song_1,song_2"
         val (a, b) = devicesInStep(extra = mapOf(GIG to setlist.encodeToByteArray()))

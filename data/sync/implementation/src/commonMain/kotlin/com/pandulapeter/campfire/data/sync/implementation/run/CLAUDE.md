@@ -19,9 +19,9 @@
   at all can be read, the run ends as a storage failure.
 - **Conflicts**: the incoming version is written next to the local one *before* the local one is uploaded, as ` (2)` or
   the first number free on both sides, and taken back if the service then says the remote file is still there, so the
-  losing version is never held only in memory. A numbered copy already holding the incoming bytes is reused, never taken
-  back, so retries after network failures leave one copy; never one the folder holds another version of, or held and
-  deleted, which the same pass overwrites or deletes. Two exceptions take the folder's version with no copy, written
+  losing version is never held only in memory. A numbered copy an earlier attempt left here (unlisted, unindexed) already
+  holding the incoming bytes is reused, never taken back, so retries after network failures leave one copy; a numbered
+  file another device knows is never the copy, since that device may change or delete it. Two exceptions take the folder's version with no copy, written
   only over the bytes compared:
   - a setlist whose versions differ only in the day, or whose only local change is the day a read gave an undated file
     (`SetlistComparison`, so the engine never sees the setlist format);
