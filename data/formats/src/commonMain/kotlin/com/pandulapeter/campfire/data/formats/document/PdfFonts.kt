@@ -55,7 +55,10 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
                 }
             }
             var code = 0
-            for (value in file.array(encodingDictionary?.get("Differences"))) when (val item = file.resolve(value)) {
+            val differences = file.array(encodingDictionary?.get("Differences"))
+            // Charged like a width array, since thousands of tiny fonts can all name one long shared array.
+            file.chargeFontTables(differences.size)
+            for (value in differences) when (val item = file.resolve(value)) {
                 is PdfNumber -> code = item.value.toInt()
                 is PdfName -> { if (code in 0..255) encoding[code] = glyphName(item.value); code++ }
                 else -> Unit

@@ -250,6 +250,19 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun `many fonts sharing one differences array hit the document budget`() = runTest {
+        val fonts = 200
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << ${(1..fonts).joinToString(" ") { "/F$it ${it + 4} 0 R" }} >> >> >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>")
+        writer.stream("BT 50 700 Td " + (1..fonts).joinToString(" ") { "/F$it 10 Tf (a) Tj" } + " ET")
+        repeat(fonts) { writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Font$it /Encoding << /Differences ${fonts + 5} 0 R >> >>") }
+        writer.add("[0 " + "/uni0041 ".repeat(10_000) + "]")
+        assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(writer.write()) }
+    }
+
+    @Test
     fun `a header after junk is accepted`() = runTest {
         val song = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
         val extracted = PdfTextExtractor.extract("junk line\n".encodeToByteArray() + song)
