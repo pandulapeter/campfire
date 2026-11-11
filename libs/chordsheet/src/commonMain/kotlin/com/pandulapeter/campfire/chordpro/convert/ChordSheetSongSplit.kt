@@ -84,7 +84,10 @@ internal object ChordSheetSongSplit {
      * skips one). Titles that merely start with a number (`7 Years`, `99 Problems`) do not count like that, and keep it.
      */
     private fun numbers(pages: List<List<Line>>, opens: Set<Place>): Map<Place, Int> {
-        val songs = opens.sortedWith(compareBy({ it.page }, { it.line })).map { place -> place to number(pages[place.page][place.line].text) }
+        // The document's first place is an opening even where its first page has no line at all (a PDF's blank cover).
+        val songs = opens.sortedWith(compareBy({ it.page }, { it.line })).map { place ->
+            place to pages.getOrNull(place.page)?.getOrNull(place.line)?.let { number(it.text) }
+        }
         val counted = mutableListOf<Pair<Place, Pair<Int, Int>>>()
         for ((place, number) in songs.asReversed()) {
             if (number == null || counted.lastOrNull()?.let { it.second.first <= number.first } == true) break

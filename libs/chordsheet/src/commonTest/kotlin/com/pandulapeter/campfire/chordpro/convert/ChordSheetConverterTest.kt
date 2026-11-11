@@ -964,6 +964,8 @@ class ChordSheetConverterTest {
         assertEquals(listOf("Alpha", "Beta", "Gamma"), counted.drop(1).map { ChordProParser.parse(it).metadata.title })
         val named = ChordSheetConverter.convert(book("99 Red Balloons", "Alpha", "Beta"))
         assertEquals(listOf("99 Red Balloons", "Alpha", "Beta"), named.drop(1).map { ChordProParser.parse(it).metadata.title })
+        val blankFirstPage = ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(emptyList())) + book("1. Alpha", "2. Beta", "3. Gamma").pages))
+        assertEquals(listOf("Alpha", "Beta", "Gamma"), blankFirstPage.drop(1).map { ChordProParser.parse(it).metadata.title })
     }
 
     @Test
