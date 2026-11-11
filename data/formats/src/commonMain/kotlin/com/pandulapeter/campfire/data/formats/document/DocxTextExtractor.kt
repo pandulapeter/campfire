@@ -80,7 +80,8 @@ object DocxTextExtractor {
                 } else inherited
                 when (element.localName) {
                     "t" -> text(element.text, current)
-                    "tab" -> x = tabStops.firstOrNull { it > x + 0.01 } ?: ((x / 36).toInt() + 1) * 36.0
+                    // Searched rather than walked: a paragraph of as many tabs as stops would walk past every stop again.
+                    "tab" -> x = tabStops.getOrNull(-tabStops.binarySearch { if (it > x + 0.01) 1 else -1 } - 1) ?: ((x / 36).toInt() + 1) * 36.0
                     "br", "cr" -> { line(); if (element.attribute("type") == "page") breakPage() }
                     "lastRenderedPageBreak" -> { if (spans.isNotEmpty()) line(); breakPage() }
                     "noBreakHyphen" -> text("-", current)

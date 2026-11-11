@@ -141,12 +141,20 @@ class DocxTextExtractorTest {
         }
     }
 
+    @Test
+    fun `a paragraph of as many tabs as tab stops takes time in proportion to the document`() = runTest {
+        assertTakesTimeInProportion { size ->
+            val stops = "<w:pPr><w:tabs>" + (1..size).joinToString("") { "<w:tab w:pos='${it * 20}'/>" } + "</w:tabs></w:pPr>"
+            document("<w:p>$stops<w:r>${"<w:tab/>".repeat(size)}<w:t>end</w:t></w:r></w:p>") to null
+        }
+    }
+
     /**
      * Compares the time a document of [size][QUARTER_SIZE] takes with one four times its size rather than with a fixed
      * bound, since a CI runner is several times slower than a laptop: work growing with the product of two parts of a
      * document, such as a style and the paragraphs naming it, outgrows the reader's own per-paragraph work at this size.
      */
-    private suspend fun assertTakesTimeInProportion(documentOf: (size: Int) -> Pair<String, String>) {
+    private suspend fun assertTakesTimeInProportion(documentOf: (size: Int) -> Pair<String, String?>) {
         suspend fun timeOf(size: Int): Duration {
             val (xml, styles) = documentOf(size)
             val started = TimeSource.Monotonic.markNow()
