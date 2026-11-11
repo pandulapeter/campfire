@@ -18,6 +18,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -30,6 +32,7 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -53,6 +56,16 @@ internal class JvmFileStorage(
      */
     private val directoryFiles = ConcurrentHashMap<StorageDirectory, File>()
     private val sweptDirectories = ConcurrentHashMap.newKeySet<StorageDirectory>()
+
+    /**
+     * Windows refuses to replace or delete a file while another replace of the same name is under way, with the same
+     * `AccessDeniedException` an anti-virus scanner causes: the move holds the name open without sharing deletion until
+     * it is done. Sixteen saves of one song racing each other then exhaust [retryingWhileDenied] on each other alone,
+     * so the app's own replacements and deletions of one name take turns, which leaves the retry only for holders
+     * outside the process. Striped rather than one lock per name, so a large library does not grow a lock per song;
+     * two names sharing a stripe only take turns as well. Keyed case-insensitively, as Windows and macOS name files.
+     */
+    private val nameLocks = Array(NAME_LOCK_STRIPES) { Mutex() }
 
     /**
      * One attribute read per entry, which answers whether it is a file, its size and its date at once, where asking
@@ -171,7 +184,7 @@ internal class JvmFileStorage(
         val file = file(directory, name)
         // Not File.delete(), whose false says nothing about why: an AccessDeniedException is a file somebody else is
         // holding open and worth retrying, and anything else belongs in the message.
-        failingAsStorage(name) { retryingWhileDenied { Files.deleteIfExists(file.toPath()) } }
+        failingAsStorage(name) { withNameLock(directory, name) { retryingWhileDenied { Files.deleteIfExists(file.toPath()) } } }
         Unit
     }
 
@@ -234,18 +247,25 @@ internal class JvmFileStorage(
             write(temporary.toFile())
             // Flushed to the device before the rename, or a power loss right after could keep the name and lose the bytes.
             FileChannel.open(temporary, StandardOpenOption.WRITE).use { it.force(true) }
-            retryingWhileDenied {
-                try {
-                    Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-                } catch (_: AtomicMoveNotSupportedException) {
-                    // Some file systems (network shares, some Android storage) cannot do it in one step; the plain move
-                    // still never leaves the target truncated, since it copies first and replaces at the end.
-                    Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+            withNameLock(directory, name) {
+                retryingWhileDenied {
+                    try {
+                        Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+                    } catch (_: AtomicMoveNotSupportedException) {
+                        // Some file systems (network shares, some Android storage) cannot do it in one step; the plain
+                        // move still never leaves the target truncated, since it copies first and replaces at the end.
+                        Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+                    }
                 }
             }
         } finally {
             Files.deleteIfExists(temporary)
         }
+    }
+
+    private suspend inline fun <T> withNameLock(directory: StorageDirectory, name: String, operation: () -> T): T {
+        val key = directory.name + '/' + name.lowercase(Locale.ROOT)
+        return nameLocks[Math.floorMod(key.hashCode(), NAME_LOCK_STRIPES)].withLock { operation() }
     }
 
     /** A file that is there but will not be read or written is a failure of the storage, not of whoever asked. */
@@ -301,6 +321,7 @@ internal class JvmFileStorage(
         const val WINDOWS_RESERVED_CHARACTERS = "?:*\"<>|"
         const val DENIED_RETRIES = 3
         const val DENIED_RETRY_DELAY_MILLIS = 20L
+        const val NAME_LOCK_STRIPES = 64
         val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)
     }
 }

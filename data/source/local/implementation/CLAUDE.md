@@ -48,7 +48,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
   and reported back unchanged.
 - **JVM**: removes its own temp files older than an hour on first touching a directory. Reads via `Files.readAllBytes`,
   not `FileInputStream`, which Windows opens without delete sharing (a scan would block sync's renames). Move and delete
-  retry three times on a Windows `AccessDeniedException` (anti-virus).
+  retry three times on a Windows `AccessDeniedException` (anti-virus), and the app's own moves and deletions of one
+  name take turns, since Windows refuses a replace while another of the same name is under way.
 
 ## `SecretStore` (sync credentials only)
 
