@@ -175,6 +175,13 @@ internal class Device(
         )
     }
 
+    /** Disconnecting and connecting the same account again, which forgets the index, the mirror, and the journal. */
+    suspend fun reconnect() {
+        index = SyncIndexDocument()
+        mirror.clear()
+        sharedLinksJournal.clear()
+    }
+
     /** How many files the index says the last run saw, which is what the deletion guard measures a run's deletions against. */
     val indexSize get() = index.toIndex().size
 

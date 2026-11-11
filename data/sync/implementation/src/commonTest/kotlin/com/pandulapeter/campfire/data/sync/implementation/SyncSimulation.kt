@@ -30,7 +30,8 @@ import kotlin.random.Random
  * step checks what sync promises at all times, and the end lets every device sync until nothing moves and checks that
  * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. Each device's file system
  * compares names as one of the platforms' does ([PLATFORMS]), so one library meets case-sensitive and case-insensitive,
- * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]).
+ * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]);
+ * a device may disconnect and connect again, meeting the folder with no index.
  * What it checks:
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
@@ -80,6 +81,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 val roll = random.nextInt(100)
                 when {
                     roll == 0 -> loseLibrary(device)
+                    roll == 1 -> device.reconnect().also { log += "${device.label} disconnects and connects again" }
                     roll < 50 -> userStep(device)
                     else -> syncStep(scope, device)
                 }
