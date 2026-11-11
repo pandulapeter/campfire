@@ -162,7 +162,7 @@ public object ChordProTransposer {
         val names = writtenChordNames(song)
         val key = song.metadata.key?.let(::keyOf)
             ?: names.firstNotNullOfOrNull { name -> name.takeIf(ChordProChordNames::isChordName)?.let(::keyOf) }
-        return key?.transposedBy(semitones)?.prefersFlats ?: isWrittenInFlats(names)
+        return key?.transposedBy(semitones)?.prefersFlats == true
     }
 
     /** Whether [key] is spelled with flats, as [transposeChord] is told to spell a chord in it; null where it is no key. */
@@ -184,20 +184,6 @@ public object ChordProTransposer {
     private class Key(val tonic: Int, val isMinor: Boolean) {
         val prefersFlats get() = if (isMinor) flatNames[tonic] + "m" in flatMinorKeys else flatNames[tonic] in flatMajorKeys
         fun transposedBy(semitones: Int) = Key((tonic + semitones).mod(NOTE_COUNT), isMinor)
-    }
-
-    private fun isWrittenInFlats(names: List<String>): Boolean {
-        var flats = 0
-        var sharps = 0
-        names.filter(ChordProChordNames::isChordName).flatMap(ChordProChordNames::notes).forEach { note ->
-            if (noteIndices.containsKey(note.getOrNull(0))) {
-                when (accidentals[note.getOrNull(1)]) {
-                    1 -> sharps++
-                    -1 -> flats++
-                }
-            }
-        }
-        return flats > sharps
     }
 
     private fun transposeNote(part: String, semitones: Int, preferFlats: Boolean): String {
