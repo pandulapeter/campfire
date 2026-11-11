@@ -27,6 +27,12 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
  *   none at all, so a hash is the only thing that can say whether a file has changed.
  * - An edit beats a deletion. A file changed on one side and deleted on the other comes back, because a song that
  *   reappears is an annoyance while a song that silently vanishes is lost work.
+ *
+ * The planner knows no moves, so a rename is a deletion of one name and a new file under another. Where the index
+ * already knows the new name holding the same bytes (a run cut off between uploading a rename and deleting its old
+ * name, or a song held twice), the renamed file reads as that file unchanged, and a deletion of it elsewhere would win
+ * while the rename's other half deletes the old name from the folder. So a pass never deletes one version on both
+ * sides: a local deletion of bytes the same plan deletes remotely under another name puts the file back instead.
  */
 internal object SyncPlanner {
 
@@ -37,8 +43,20 @@ internal object SyncPlanner {
     ): List<SyncOperation> {
         val localByKey = local.associateBy { it.key }
         val remoteByKey = remote.associateBy { it.key }
-        return (localByKey.keys + remoteByKey.keys + index.keys).mapNotNull { key ->
+        val operations = (localByKey.keys + remoteByKey.keys + index.keys).mapNotNull { key ->
             operationFor(key = key, local = localByKey[key], remote = remoteByKey[key], indexEntry = index[key])
+        }
+        val deletedRemotely = operations.filterIsInstance<SyncOperation.DeleteRemote>()
+            .mapNotNull { operation -> index[operation.key]?.let { operation.key.kind to it.localHash } }
+            .toSet()
+        if (deletedRemotely.isEmpty()) return operations
+        return operations.map { operation ->
+            val hash = localByKey[operation.key]?.hash
+            if (operation is SyncOperation.DeleteLocal && (operation.key.kind to hash) in deletedRemotely) {
+                SyncOperation.Upload(operation.key, expectedRevision = null)
+            } else {
+                operation
+            }
         }
     }
 

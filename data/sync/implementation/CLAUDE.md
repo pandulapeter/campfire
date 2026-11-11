@@ -33,8 +33,10 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
 
 - **Content decides what changed, never a clock**: the platforms disagree about modification times and the web has none.
   **An edit always beats a deletion**, so a device that edited a renamed song's old name since the last run puts it
-  back, leaving both (`SyncPlanner` knows no moves). A file changed on both sides is never merged. `SyncPlanner` stays a
-  pure, tested function of (local hashes, remote listing, index).
+  back, leaving both (`SyncPlanner` knows no moves). **A pass never deletes one version on both sides**: a local
+  deletion of the bytes the same plan deletes remotely under another name (a rename back onto a name the index knows
+  holding them, deleted elsewhere) uploads the file instead. A file changed on both sides is never merged.
+  `SyncPlanner` stays a pure, tested function of (local hashes, remote listing, index).
 - **A conflict keeps both versions; the index decides which keeps the name.** A file the last run saw keeps this
   device's edit under its name and the other version as the ` (2)` copy. One the index has never seen (a device
   connecting, perhaps with an old copy of the library) keeps the cloud folder's version, so other devices get one new

@@ -12,10 +12,8 @@
 package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.Logger
-import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
-import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.preferences.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
@@ -128,11 +126,6 @@ internal class Device(
 
     /** How many files the index says the last run saw, which is what the deletion guard measures a run's deletions against. */
     val indexSize get() = index.toIndex().size
-
-    /** Whether the index says the last run saw a file under this name, in any spelling, holding [bytes]. */
-    fun hasSeen(key: SyncKey, bytes: ByteArray) = index.toIndex().any { (seen, entry) ->
-        seen.kind == key.kind && LibraryFiles.isSameLibraryName(seen.name, key.name) && entry.localHash == localContentHash(bytes)
-    }
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
     suspend fun journal(entry: SharedLinksJournal.Entry) = SharedLinksJournal(sharedLinks, environment).append(listOf(entry))

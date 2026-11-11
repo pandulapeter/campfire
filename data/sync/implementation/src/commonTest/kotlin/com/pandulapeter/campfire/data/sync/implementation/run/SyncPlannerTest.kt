@@ -157,6 +157,26 @@ class SyncPlannerTest {
         ),
     )
 
+    /**
+     * A song renamed back onto a name the index knows holding the same bytes, while another device deleted that name:
+     * following both deletions would leave the song on no device, though nobody deleted it.
+     */
+    @Test
+    fun `a file deleted remotely is put back when the same pass deletes its bytes remotely under another name`() {
+        val renamed = SyncKey(LibraryFileKind.SONG, "Artist - Old title.cho")
+        assertEquals(
+            expected = listOf(
+                SyncOperation.Upload(SONG, expectedRevision = null),
+                SyncOperation.DeleteRemote(renamed, revision = "r2"),
+            ),
+            actual = SyncPlanner.plan(
+                local = listOf(local(SONG, "a")),
+                remote = listOf(remote(renamed, "r2")),
+                index = mapOf(SONG to entry(hash = "a", revision = "r1"), renamed to entry(hash = "a", revision = "r2")),
+            ),
+        )
+    }
+
     /** Songs and setlists are separate folders, so the same name in each is two different files. */
     @Test
     fun `the same name in the two folders is two files`() {

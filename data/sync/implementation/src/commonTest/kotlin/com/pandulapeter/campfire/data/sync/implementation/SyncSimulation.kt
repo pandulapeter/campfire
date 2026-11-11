@@ -153,12 +153,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         // See newName: while the device's own run is going, no name changes only its spelling.
         val isRespelling = target.isSameFileAs(key) || cloud.files.keys.any { it.isSameFileAs(target) && it != target }
         if (device === runningDevice && isRespelling) return
-        val bytes = files.remove(key)!!
-        files[target] = bytes
+        files[target] = files.remove(key)!!
         log += "${device.label} renames ${key.name} to ${target.name}"
-        // Back to a name the last run saw holding these very bytes, the new file is that one unchanged to sync, which
-        // knows no moves, and a deletion of it elsewhere wins (`documentation/issues/sync-rename-onto-a-known-name.md`).
-        if (device.hasSeen(target, bytes)) saved -= bytes.decodeToString()
     }
 
     private suspend fun syncStep(scope: TestScope, device: Device) {

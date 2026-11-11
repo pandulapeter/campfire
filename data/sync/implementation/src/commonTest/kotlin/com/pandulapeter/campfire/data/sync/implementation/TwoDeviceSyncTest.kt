@@ -176,6 +176,25 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a song renamed back onto a name the other device deleted meanwhile is kept`() = runTest {
+        val (a, b) = devicesInStep()
+        // A's run uploads the new name but cannot delete the old one, so A's index knows both names holding the song.
+        a.library.files[song("song_one")] = a.library.files.remove(song(1))!!
+        cloud.refusedDeletions = setOf("song_1.cho")
+        a.sync(cloud)
+        cloud.refusedDeletions = emptySet()
+        b.sync(cloud)
+        b.library.files -= song(1)
+        b.sync(cloud)
+        a.library.files[song(1)] = a.library.files.remove(song("song_one"))!!
+        a.sync(cloud)
+        b.sync(cloud)
+
+        assertEverywhere(sharedContents(), a, b)
+        assertConverges(a, b)
+    }
+
+    @Test
     fun `a device that sees most of the library deleted elsewhere asks before following`() = runTest {
         val a = Device(librarySongs(10))
         val b = Device()
