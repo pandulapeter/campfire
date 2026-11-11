@@ -32,25 +32,35 @@ internal class RenameSongFileUseCaseImpl(
 ) : RenameSongFileUseCase {
 
     /**
-     * The mirror image of `DeleteSongUseCaseImpl`: the same two places refer to a song by its file name, and where a
-     * deletion drops those references a rename follows them. The file moves first, so that nothing is ever pointed
-     * at a name that does not exist yet - and if the move fails there is nothing to undo.
+     * The mirror image of `DeleteSongUseCaseImpl`: the same places refer to a song by its file name, and where a
+     * deletion drops those references a rename follows them. The order is what keeps a process killed half way from
+     * breaking any of them: the new file is written first, then every reference follows it, and only then is the old
+     * file deleted - a kill anywhere leaves the song twice at worst, both copies whole, and every reference naming a
+     * file that is there. If the write fails there is nothing to undo.
      *
-     * Once the file has moved there is no going back, so every reference is attempted even when an earlier one could
-     * not be written, and whether any failed is reported together at the end, in the result rather than as an
-     * exception: the move has happened, and the caller has to follow it either way. One setlist that cannot be saved
-     * would otherwise leave every setlist after it, and the transposition, pointing at a name that is gone. For the
-     * same reason the walk is not cancellable once the file has moved: a screen going away half way through would
-     * leave the rest of the references on the old name just the same. Which setlists hold the song is asked of the files
-     * rather than the cache (see `followSongReferences`).
+     * Once the new file is written every reference is attempted even when an earlier one could not be written, and
+     * whether any failed is reported together at the end, in the result rather than as an exception: one setlist that
+     * cannot be saved would otherwise leave every setlist after it, and the transposition, on the old name. A reference
+     * that did not follow still names the old file, so the old file is then kept rather than deleted, the same as a
+     * kill would leave it. For the same reason the walk is not cancellable once the new file is there: a screen going
+     * away half way through would leave the rest of the references on the old name just the same. Which setlists hold
+     * the song is asked of the files rather than the cache (see `followSongReferences`). A deletion of the old file that
+     * fails is thrown, after every reference has followed the new one; both files are then listed.
      */
     override suspend operator fun invoke(song: Song): SongFileRename? {
-        val renamed = songRepository.renameSong(song)?.fileName ?: return null
-        val haveReferencesFollowed = withContext(NonCancellable) {
+        val renamed = songRepository.copySongToItsName(song) ?: return null
+        return withContext(NonCancellable) {
             // A link to the song follows it under its new name, which only this device can tell from a deletion.
-            if (renamed != song.fileName) sharedLinksRepository.followRename(SharedLinkKind.SONG, song.fileName, renamed)
-            followSongReferences(setlistRepository, userPreferencesRepository, logger, fileName = song.fileName, newFileName = renamed)
+            if (renamed.fileName != song.fileName) sharedLinksRepository.followRename(SharedLinkKind.SONG, song.fileName, renamed.fileName)
+            val haveReferencesFollowed = followSongReferences(
+                setlistRepository,
+                userPreferencesRepository,
+                logger,
+                fileName = song.fileName,
+                newFileName = renamed.fileName,
+            )
+            songRepository.finishSongRename(fileName = song.fileName, renamed = renamed, shouldKeepOldFile = !haveReferencesFollowed)
+            SongFileRename(fileName = renamed.fileName, haveReferencesFollowed = haveReferencesFollowed)
         }
-        return SongFileRename(fileName = renamed, haveReferencesFollowed = haveReferencesFollowed)
     }
 }

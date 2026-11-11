@@ -40,8 +40,8 @@ The view model facade, the composition root, and the product rules every screen 
   that folds to nothing (punctuation, emoji) is no search. Each list screen's `SearchState` lives here so the desktop's
   Escape handler, outside the composition, can close it (field rules: `screens/CLAUDE.md`).
 - **Renames** (`state/songs/SongFilesController.kt`; metronome and navigator follow themselves): back stack entries on
-  the old name are rewritten, not popped (each song once, or two pages would share a key). The file moves before
-  references follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a playing
+  the old name are rewritten, not popped (each song once, or two pages would share a key). The library drops the old
+  name before the screens follow, so `songsBeingRenamed` carries the song under its old name meanwhile; the metronome holds a playing
   click's changes until its context names the new file (`metronomeRenames`). A state, not a wait: no emission says it is
   the last.
 - The tag/language *filter* (`songFilter`) is neither a file nor a preference: view model and saved state only.

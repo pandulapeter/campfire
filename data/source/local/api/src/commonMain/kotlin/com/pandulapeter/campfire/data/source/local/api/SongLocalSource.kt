@@ -76,16 +76,20 @@ interface SongLocalSource {
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song
 
     /**
-     * Moves the song's file to the name its own metadata gives it and returns it under that name, or null when nothing
-     * moved: the file could not be read before the move, or is already named that way ([Song.canUpdateFileName] is what
-     * asks beforehand). Once the file has moved the answer is never null - a song that cannot be read back is returned
-     * as it was, under the new name - since a caller told that nothing moved would leave everything that names the old
-     * file pointing at one that is gone. A move that fails throws.
+     * The first half of a rename: writes the song's text, unchanged, under the name its own metadata gives it and returns
+     * the song under that name, or null when nothing was written: the file could not be read, or is already named that
+     * way ([Song.canUpdateFileName] is what asks beforehand). Once the new file is written the answer is never null - a
+     * song that cannot be read back is returned as it was, under the new name - since a caller told that nothing was
+     * written would leave a copy behind that nothing knows about. A write that fails throws, and leaves no new file.
      *
-     * Only the file moves. Everything that refers to the song by its old name - the setlists holding it, the saved
-     * transposition - is the caller's to follow, the same way a deletion is.
+     * The old file stays, for the caller to delete ([deleteSong]) once everything that refers to the song by its old
+     * name - the setlists holding it, the saved transposition - follows the new one, so that a process killed in
+     * between leaves the song twice rather than a reference to a file that is gone. The one exception is a new name
+     * that differs from the old one only in case or Unicode form (`LibraryFiles.isSameLibraryName`): it is the same
+     * file to the file systems that ignore those, so it is moved whole here, through a temporary name, and the old name
+     * is not there to be deleted afterwards - deleting it would remove the song.
      */
-    suspend fun renameSong(song: Song): Song?
+    suspend fun copySongToItsName(song: Song): Song?
 
     suspend fun deleteSong(fileName: String)
 

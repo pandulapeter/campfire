@@ -32,7 +32,12 @@ class InterruptedWriteTest {
     @Test
     fun `a song renamed by a run that dies at any step is still in the library on the next start`() = forEveryKillPoint(
         seed = { it.writeText(StorageDirectory.SONGS, "Old name.cho", SONG) },
-        act = { storage -> SongLocalSourceImpl(storage, Logger.Standard).run { renameSong(loadSong("Old name.cho")!!) } },
+        act = { storage ->
+            SongLocalSourceImpl(storage, Logger.Standard).run {
+                copySongToItsName(loadSong("Old name.cho")!!)
+                deleteSong("Old name.cho")
+            }
+        },
         check = { storage ->
             val songs = SongLocalSourceImpl(storage, Logger.Standard)
             val texts = songs.loadSongs { }.map { songs.loadSongContent(it.fileName)?.text }

@@ -60,8 +60,10 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
 
 ### `SongRepositoryImpl`
 
-- `createSong`, `importSong`, and `renameSong` share a lock: finding a free name and writing are two storage trips.
-  Every write holds `LibraryFileLock` (so sync cannot write between `saveSong`'s guard and the write).
+- `createSong`, `importSong`, and `copySongToItsName` share a lock: finding a free name and writing are two storage
+  trips. A rename's copy leaves the list alone; `finishSongRename` swaps the old name for the new in one change (or
+  lists both, where the old file stays or cannot be deleted). Every write holds `LibraryFileLock` (so sync cannot write
+  between `saveSong`'s guard and the write).
 - `saveSong(expectedText)` writes only while the file still holds exactly that text; otherwise it writes nothing, drops
   the cached text, and returns false so the caller rebuilds the edit. The editor's explicit save passes none.
 - `editSongs` reads and writes each file under `LibraryFileLock`, carries on past failures (naming them), then re-reads

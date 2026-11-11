@@ -205,7 +205,9 @@ internal class RecordingSongRepository(
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?): Song =
         throw UnsupportedOperationException()
 
-    override suspend fun renameSong(song: Song): Song? = throw UnsupportedOperationException()
+    override suspend fun copySongToItsName(song: Song): Song? = throw UnsupportedOperationException()
+
+    override suspend fun finishSongRename(fileName: String, renamed: Song, shouldKeepOldFile: Boolean): Unit = throw UnsupportedOperationException()
 
     override suspend fun deleteSong(fileName: String): Unit = throw UnsupportedOperationException()
     override suspend fun deleteAllSongs(): Unit = throw UnsupportedOperationException()

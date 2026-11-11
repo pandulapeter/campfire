@@ -72,9 +72,10 @@ Skipped or unreadable files are logged to the injected `Logger`.
   file system's own folding.
 - ` (2)` (`arrivingCollisionSuffix`) is only for sync's conflict copy, whose name another device chose.
 - `isNamed` keeps "Update file name" from offering itself to a song that was numbered aside.
-- `moveFile` writes the new file before removing the old. A new name differing only by case or Unicode form is not
-  numbered where the file system ignores that (macOS both, Windows case) and moves through a temporary name, or the
-  deletion would remove the only copy. Both functions must share one predicate for this.
+- `moveFile` writes the new file before removing the old; `copyForMove` is its first half, for a song's rename, whose
+  references follow before the old file goes. A new name differing only by case or Unicode form is not numbered where
+  the file system ignores that (macOS both, Windows case) and moves whole through a temporary name, or the deletion
+  would remove the only copy. `uniqueName` and `copyForMove` must share one predicate for this.
 
 ## Sources
 

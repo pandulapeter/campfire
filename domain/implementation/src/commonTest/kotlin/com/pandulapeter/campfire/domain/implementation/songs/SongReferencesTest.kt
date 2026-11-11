@@ -30,8 +30,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * The walk a rename and a deletion make once the song's file has moved or gone: every reference is attempted whatever
- * fails, since the file cannot be put back, and the answer is whether all of them followed.
+ * The walk a rename and a deletion make once the song's new file is written or its file is gone: every reference is
+ * attempted whatever fails, and the answer is whether all of them followed.
  */
 class SongReferencesTest {
 
@@ -127,11 +127,24 @@ class SongReferencesTest {
 
     @Test
     fun `a rename answers the name the file moved to and whether the references followed it`() = runTest {
-        val rename = RenameSongFileUseCaseImpl(FakeSongRepository(renamedTo = "c.cho"), setlists, preferences, sharedLinks, Logger.Standard).invoke(testSong("a.cho"))
+        val songs = FakeSongRepository(renamedTo = "c.cho")
+        val rename = RenameSongFileUseCaseImpl(songs, setlists, preferences, sharedLinks, Logger.Standard).invoke(testSong("a.cho"))
 
         assertEquals(SongFileRename(fileName = "c.cho", haveReferencesFollowed = true), rename)
         assertEquals(listOf("c.cho", "b.cho"), setlists.entriesOf("first.setlist.json"))
         assertEquals(listOf("followRename(song, a.cho, c.cho)"), sharedLinks.noted)
+        assertEquals(listOf("a.cho" to false), songs.finished)
+    }
+
+    @Test
+    fun `a rename whose references did not all follow keeps the old file`() = runTest {
+        setlists.unwritable = setOf("first.setlist.json")
+        val songs = FakeSongRepository(renamedTo = "c.cho")
+
+        val rename = RenameSongFileUseCaseImpl(songs, setlists, preferences, sharedLinks, Logger.Standard).invoke(testSong("a.cho"))
+
+        assertEquals(SongFileRename(fileName = "c.cho", haveReferencesFollowed = false), rename)
+        assertEquals(listOf("a.cho" to true), songs.finished)
     }
 
     @Test
@@ -197,6 +210,13 @@ class SongReferencesTest {
             deleted += fileName
         }
 
-        override suspend fun renameSong(song: Song) = renamedTo?.let(::testSong)
+        /** Every [finishSongRename], as the old name and whether its file was kept. */
+        val finished = mutableListOf<Pair<String, Boolean>>()
+
+        override suspend fun copySongToItsName(song: Song) = renamedTo?.let(::testSong)
+
+        override suspend fun finishSongRename(fileName: String, renamed: Song, shouldKeepOldFile: Boolean) {
+            finished += fileName to shouldKeepOldFile
+        }
     }
 }

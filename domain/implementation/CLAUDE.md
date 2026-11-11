@@ -36,8 +36,9 @@ A failure a use case notes but does not throw goes to the injected `Logger`. `im
   the user may have chosen it. **Update file name** is offered where name and metadata drift apart beyond case or
   Unicode form (`Song.canUpdateFileName`).
 - **Only the use case that renamed or deleted a file can tell the two apart** (sync sees a deletion plus a new file), so
-  it tells `SharedLinksRepository` once the file has moved or gone, not cancellably: a song's rename, a setlist's new
-  title, either deletion, and Delete library (before its run starts). A shared item's link then follows it or stops.
+  it tells `SharedLinksRepository` once the new file is written or the file is gone, not cancellably: a song's rename, a
+  setlist's new title, either deletion, and Delete library (before its run starts). A shared item's link then follows it
+  or stops.
 
 ## Others with logic
 

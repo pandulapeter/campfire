@@ -22,14 +22,17 @@ interface RenameSongFileUseCase {
      * name is the identity of a song: it is what a setlist points at, what sync addresses and, on the platforms
      * where the library is a folder the user can open, something they may have chosen themselves.
      *
-     * The move is not undone when a reference cannot be followed: every setlist and the transposition are still
-     * attempted, and the result says whether all of them were. The setlists among those that were not go on pointing
-     * at the old name, which shows the song as missing there until the entry is fixed by hand. Nothing is thrown once
-     * the file has moved, since the caller has to catch up with the new name whatever else went wrong.
+     * The new file is written before any reference follows it, and the old one deleted only after all of them have, so
+     * that nothing ever names a file that is not there, a process killed half way included: that leaves the song
+     * twice at worst. The rename is not undone when a reference cannot be followed: every setlist and the
+     * transposition are still attempted, and the result says whether all of them were. Those that were not go on
+     * naming the old file, which is then kept. Once the new file is written, the one failure thrown is a deletion of
+     * the old file that failed, after every reference has followed the new one: the song is then there twice, and the
+     * caller, still on the old name, on a file that is there.
      *
-     * @return The new file name and whether everything followed it, or null if nothing moved - the file could not be
-     *   read, or it was already named that way. The caller is what still holds the old name: the screens showing the
-     *   song, and the caches keyed by it.
+     * @return The new file name and whether everything followed it, or null if nothing was written - the file could
+     *   not be read, or it was already named that way. The caller is what still holds the old name: the screens
+     *   showing the song, and the caches keyed by it.
      */
     suspend operator fun invoke(song: Song): SongFileRename?
 }

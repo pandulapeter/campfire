@@ -20,9 +20,9 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toSong
+import com.pandulapeter.campfire.data.source.local.implementation.copyForMove
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
-import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -125,19 +125,20 @@ internal class SongLocalSourceImpl(
         return withContext(Dispatchers.Default) { file.toSong(ChordProParser.summarize(text), text) }
     }
 
-    override suspend fun renameSong(song: Song): Song? {
+    override suspend fun copySongToItsName(song: Song): Song? {
         val extension = song.fileName.knownExtension()
         val desired = songFileName(title = song.title, artist = song.artist, extension = extension)
         if (song.fileName.isNamed(desired)) return null
         val text = fileStorage.readText(StorageDirectory.SONGS, song.fileName) ?: return null
         val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, desired, currentName = song.fileName)
-        fileStorage.moveFile(StorageDirectory.SONGS, currentName = song.fileName, newName = fileName) { name ->
+        fileStorage.copyForMove(StorageDirectory.SONGS, currentName = song.fileName, newName = fileName) { name ->
             fileStorage.writeText(StorageDirectory.SONGS, name, text)
         }
-        // The file has moved by now whatever the read back says, so the answer is where it went: a null here would tell
-        // every caller that nothing moved, and the setlists, the saved transposition and the open screens would stay on
-        // a name that is gone. The text was written unchanged, so the song is the one that was renamed, under the new
-        // name - which only a read that failed (a scanner holding the brand new file open) makes the fallback.
+        // The new file is there by now whatever the read back says, so the answer is where it went: a null here would
+        // tell every caller that nothing was written, and the copy would stay behind with nothing following it (or, where
+        // the name changed only in case, the setlists, the saved transposition and the open screens on a name that is
+        // gone). The text was written unchanged, so the song is the one that was renamed, under the new name - which only
+        // a read that failed (a scanner holding the brand new file open) makes the fallback.
         val moved = try {
             loadSong(fileName)
         } catch (exception: CancellationException) {

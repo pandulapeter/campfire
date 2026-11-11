@@ -47,7 +47,7 @@ class RenameTest {
         fileStorage.writeText(StorageDirectory.SONGS, "Foo.cho", "{title: Foo}\n")
         val song = songLocalSource.loadSong("Foo.cho")!!
 
-        val renamed = songLocalSource.renameSong(song)
+        val renamed = songLocalSource.copySongToItsName(song)
 
         assertNull(renamed)
         assertEquals(listOf("Foo.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
@@ -55,16 +55,17 @@ class RenameTest {
     }
 
     @Test
-    fun `a renamed song is the same bytes under its new name only`() = runBlocking {
+    fun `a renamed song is the same bytes under its new name and the old file stays for the caller to delete`() = runBlocking {
         val text = "{title: Árvíz}\r\n{artist: Tükörfúrógép}\r\n[Am]Őszi szél\r\n"
         fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", text)
         val original = File(root, "library/songs/Old name.cho").readBytes()
 
-        val renamed = songLocalSource.renameSong(songLocalSource.loadSong("Old name.cho")!!)
+        val renamed = songLocalSource.copySongToItsName(songLocalSource.loadSong("Old name.cho")!!)
 
         assertEquals("tukorfurogep-arviz.cho", renamed?.fileName)
-        assertEquals(listOf("tukorfurogep-arviz.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals(listOf("Old name.cho", "tukorfurogep-arviz.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name }.sorted())
         assertContentEquals(original, File(root, "library/songs/tukorfurogep-arviz.cho").readBytes())
+        assertContentEquals(original, File(root, "library/songs/Old name.cho").readBytes())
         assertFalse(renamed!!.canUpdateFileName)
     }
 
@@ -73,12 +74,12 @@ class RenameTest {
         fileStorage.writeText(StorageDirectory.SONGS, "Old name.crd", "{title: Bar}\n")
         fileStorage.writeText(StorageDirectory.SONGS, "Other.chordpro", "{title: Baz}\n")
 
-        val crd = songLocalSource.renameSong(songLocalSource.loadSong("Old name.crd")!!)
-        val chordPro = songLocalSource.renameSong(songLocalSource.loadSong("Other.chordpro")!!)
+        val crd = songLocalSource.copySongToItsName(songLocalSource.loadSong("Old name.crd")!!)
+        val chordPro = songLocalSource.copySongToItsName(songLocalSource.loadSong("Other.chordpro")!!)
 
         assertEquals("bar.crd", crd?.fileName)
         assertEquals("baz.chordpro", chordPro?.fileName)
-        assertEquals(listOf("bar.crd", "baz.chordpro"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals(listOf("Old name.crd", "Other.chordpro", "bar.crd", "baz.chordpro"), fileStorage.list(StorageDirectory.SONGS).map { it.name }.sorted())
     }
 
     @Test
@@ -87,7 +88,7 @@ class RenameTest {
         val song = songLocalSource.loadSong("Old name.cho")!!
         fileStorage.delete(StorageDirectory.SONGS, "Old name.cho")
 
-        assertNull(songLocalSource.renameSong(song))
+        assertNull(songLocalSource.copySongToItsName(song))
         assertEquals(emptyList(), fileStorage.list(StorageDirectory.SONGS))
     }
 
@@ -98,10 +99,10 @@ class RenameTest {
         fileStorage.writeText(StorageDirectory.SONGS, "bar_live.cho", "{title: Something else}\n")
         val song = songLocalSource.loadSong("Old name.cho")!!
 
-        val renamed = songLocalSource.renameSong(song)
+        val renamed = songLocalSource.copySongToItsName(song)
 
         assertEquals("bar_live_2.cho", renamed?.fileName)
-        assertEquals(listOf("bar.cho", "bar_live.cho", "bar_live_2.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals(listOf("Old name.cho", "bar.cho", "bar_live.cho", "bar_live_2.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name }.sorted())
     }
 
     @Test
@@ -128,12 +129,12 @@ class RenameTest {
         fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", "{title: Bar}\n")
         val song = songLocalSource.loadSong("Old name.cho")!!
 
-        val renamed = SongLocalSourceImpl(storage, Logger.Standard).renameSong(song)
+        val renamed = SongLocalSourceImpl(storage, Logger.Standard).copySongToItsName(song)
 
         assertEquals("bar.cho", renamed?.fileName)
         assertEquals("Bar", renamed?.title)
         assertEquals(false, renamed?.canUpdateFileName)
-        assertEquals(listOf("bar.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals(listOf("Old name.cho", "bar.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name }.sorted())
     }
 
     @Test

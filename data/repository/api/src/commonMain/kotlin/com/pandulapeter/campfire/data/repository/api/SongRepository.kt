@@ -91,10 +91,22 @@ interface SongRepository {
     suspend fun adoptImported(songs: Collection<Song>)
 
     /**
-     * See `SongLocalSource.renameSong`: moves the file to the name the song's own metadata gives it and returns it
-     * under that name, or null when nothing moved. The references to the old name are the caller's to follow.
+     * The first half of a rename, see `SongLocalSource.copySongToItsName`: writes the song under the name its own
+     * metadata gives it and returns it under that name, or null when nothing was written. The old file is left for
+     * [finishSongRename], once the caller has had every reference to the old name follow the new one, and the list
+     * goes on showing the song under its old name until then, rather than twice. A write that fails throws.
      */
-    suspend fun renameSong(song: Song): Song?
+    suspend fun copySongToItsName(song: Song): Song?
+
+    /**
+     * The second half of a rename begun by [copySongToItsName], which returned [renamed] for the song at [fileName]:
+     * deletes the old file and lists the song under its new name alone. Where [shouldKeepOldFile] (a reference that
+     * could not follow, which still names the old file) the old file stays, and both are listed. A new name that
+     * differs only in case or Unicode form was the whole move already, and nothing is deleted.
+     *
+     * A deletion that fails throws, with both files listed, since both are still there.
+     */
+    suspend fun finishSongRename(fileName: String, renamed: Song, shouldKeepOldFile: Boolean)
 
     suspend fun deleteSong(fileName: String)
 

@@ -89,10 +89,6 @@ internal suspend fun FileStorage.uniqueName(
  * Moves a file from [currentName] to [newName] (a name [uniqueName] gave out) by writing it anew with [write], then
  * removing the old one. Written before the old one is removed, so that a move that fails halfway leaves the file twice
  * over rather than not at all.
- *
- * A name that differs from the current one only in case or in Unicode form goes through a temporary name in
- * between: on a file system that ignores those, writing it is writing the current file, and the deletion that follows
- * would remove the only copy. That costs three writes, for a move that happens once to a file somebody named by hand.
  */
 internal suspend fun FileStorage.moveFile(
     directory: StorageDirectory,
@@ -100,6 +96,24 @@ internal suspend fun FileStorage.moveFile(
     newName: String,
     write: suspend (name: String) -> Unit,
 ) {
+    if (copyForMove(directory, currentName = currentName, newName = newName, write = write)) delete(directory, currentName)
+}
+
+/**
+ * The first half of [moveFile], for a caller with something to do between writing the new file and removing the old
+ * one: writes [newName] with [write] and answers whether [currentName] is still there for the caller to delete.
+ *
+ * A name that differs from the current one only in case or in Unicode form is moved whole here instead, through a
+ * temporary name, and the answer is false: on a file system that ignores those, writing it is writing the current
+ * file, and a deletion of the current name would remove the only copy. That costs three writes, for a move that
+ * happens once to a file somebody named by hand.
+ */
+internal suspend fun FileStorage.copyForMove(
+    directory: StorageDirectory,
+    currentName: String,
+    newName: String,
+    write: suspend (name: String) -> Unit,
+): Boolean {
     if (newName.isSameFileNameAs(currentName)) {
         val extension = newName.knownExtension()
         val temporaryName = uniqueName(directory, newName.removeSuffix(extension) + TEMPORARY_MOVE_SUFFIX + extension)
@@ -107,15 +121,15 @@ internal suspend fun FileStorage.moveFile(
         delete(directory, currentName)
         write(newName)
         delete(directory, temporaryName)
-    } else {
-        write(newName)
-        delete(directory, currentName)
+        return false
     }
+    write(newName)
+    return true
 }
 
 /**
  * Whether [other] names the same file as this on a file system that ignores case and Unicode form - macOS by default,
- * and Windows for case - where writing the one is writing the other. [uniqueName] and [moveFile] have to agree about
+ * and Windows for case - where writing the one is writing the other. [uniqueName] and [copyForMove] have to agree about
  * it: a name taken for another file's by the first and for this file's by the second is a move that deletes what it
  * just wrote.
  */

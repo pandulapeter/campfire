@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -235,16 +236,62 @@ class SongRepositoryImplTest {
     }
 
     @Test
-    fun `a renamed song is listed under its new name alone`() = runTest {
+    fun `a renamed song is listed under its old name until the rename finishes and then under its new name alone`() = runTest {
         val localSource = FakeSongLocalSource(mapOf("old.cho" to "text"))
         localSource.renames["old.cho"] = "new.cho"
         val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
         val song = repository.loadSongsIfNeeded()!!.single()
 
-        val renamed = repository.renameSong(song)
+        val renamed = repository.copySongToItsName(song)
 
         assertEquals("new.cho", renamed?.fileName)
+        assertEquals(setOf("old.cho", "new.cho"), localSource.files.keys)
+        assertEquals(listOf("old.cho"), repository.songs.first().data?.map { it.fileName })
+
+        repository.finishSongRename(fileName = "old.cho", renamed = renamed!!, shouldKeepOldFile = false)
+
+        assertEquals(setOf("new.cho"), localSource.files.keys)
         assertEquals(listOf("new.cho"), repository.songs.first().data?.map { it.fileName })
+    }
+
+    @Test
+    fun `a rename that keeps the old file lists both`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("old.cho" to "text"))
+        localSource.renames["old.cho"] = "new.cho"
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        val renamed = repository.copySongToItsName(repository.loadSongsIfNeeded()!!.single())!!
+
+        repository.finishSongRename(fileName = "old.cho", renamed = renamed, shouldKeepOldFile = true)
+
+        assertEquals(setOf("old.cho", "new.cho"), localSource.files.keys)
+        assertEquals(setOf("old.cho", "new.cho"), repository.songs.first().data?.map { it.fileName }?.toSet())
+    }
+
+    @Test
+    fun `a rename whose old file cannot be deleted throws and lists both`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("old.cho" to "text"))
+        localSource.renames["old.cho"] = "new.cho"
+        localSource.undeletableFileName = "old.cho"
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        val renamed = repository.copySongToItsName(repository.loadSongsIfNeeded()!!.single())!!
+
+        assertFailsWith<IllegalStateException> { repository.finishSongRename(fileName = "old.cho", renamed = renamed, shouldKeepOldFile = false) }
+
+        assertEquals(setOf("old.cho", "new.cho"), repository.songs.first().data?.map { it.fileName }?.toSet())
+    }
+
+    @Test
+    fun `a rename that changes only the case deletes nothing and lists the new spelling alone`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("Song.cho" to "text"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
+        repository.loadSongsIfNeeded()
+        // What the storage leaves after moving the file whole, as a case-insensitive file system holds it.
+        localSource.files["song.cho"] = localSource.files.remove("Song.cho")!!
+        localSource.undeletableFileName = "Song.cho"
+
+        repository.finishSongRename(fileName = "Song.cho", renamed = localSource.song("song.cho"), shouldKeepOldFile = false)
+
+        assertEquals(listOf("song.cho"), repository.songs.first().data?.map { it.fileName })
     }
 
     @Test
@@ -256,18 +303,18 @@ class SongRepositoryImplTest {
         val song = repository.loadSongsIfNeeded()!!.single()
         songContentRepository.loadSongContent("old.cho")
 
-        repository.renameSong(song)
+        repository.finishSongRename(fileName = "old.cho", renamed = repository.copySongToItsName(song)!!, shouldKeepOldFile = false)
 
         assertEquals(null, songContentRepository.loadSongContent("old.cho"))
     }
 
     @Test
-    fun `a song the local source does not rename leaves the list as it was`() = runTest {
+    fun `a song the local source does not copy leaves the list as it was`() = runTest {
         val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b"))
         val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource, Logger.Standard), LibraryFileLock(), LibraryChanges(), Logger.Standard)
         val before = repository.loadSongsIfNeeded()
 
-        assertNull(repository.renameSong(before!!.first()))
+        assertNull(repository.copySongToItsName(before!!.first()))
         assertEquals(before, repository.songs.first().data)
     }
 

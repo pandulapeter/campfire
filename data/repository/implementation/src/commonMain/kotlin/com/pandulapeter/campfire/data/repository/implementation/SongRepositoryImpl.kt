@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.recovering
@@ -182,12 +183,23 @@ internal class SongRepositoryImpl(
         replaceInCache(fileNames, songs.associateBy { it.fileName }.values)
     }
 
-    override suspend fun renameSong(song: Song): Song? = naming {
-        val renamed = songLocalSource.renameSong(song) ?: return@naming null
-        songContentRepository.invalidate(song.fileName)
-        putInCache(renamed, replacing = song.fileName)
-        libraryChanges.onLibraryChanged()
-        renamed
+    override suspend fun copySongToItsName(song: Song): Song? = naming { songLocalSource.copySongToItsName(song) }
+
+    override suspend fun finishSongRename(fileName: String, renamed: Song, shouldKeepOldFile: Boolean) = libraryFileLock.withLock {
+        withContext(NonCancellable) {
+            // A name differing only in case or Unicode form is the same file on most file systems, moved whole by the copy.
+            val isOldFileGone = LibraryFiles.isSameLibraryName(fileName, renamed.fileName)
+            try {
+                if (!isOldFileGone && !shouldKeepOldFile) songLocalSource.deleteSong(fileName)
+                songContentRepository.invalidate(fileName)
+                putInCache(renamed, replacing = fileName.takeIf { isOldFileGone || !shouldKeepOldFile })
+            } catch (exception: Exception) {
+                putInCache(renamed)
+                throw exception
+            } finally {
+                libraryChanges.onLibraryChanged()
+            }
+        }
     }
 
     override suspend fun deleteSong(fileName: String) = libraryFileLock.withLock {

@@ -38,7 +38,7 @@ internal class FakeSongLocalSource(files: Map<String, String> = emptyMap()) : So
     /** A file whose deletion fails, as one held open by another program would on Windows. */
     var undeletableFileName: String? = null
 
-    /** The name [renameSong] moves each file to; a file not in it is one whose header already gives its name. */
+    /** The name [copySongToItsName] copies each file to; a file not in it is one whose header already gives its name. */
     val renames = mutableMapOf<String, String>()
 
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) = files.keys.map(::song)
@@ -74,9 +74,9 @@ internal class FakeSongLocalSource(files: Map<String, String> = emptyMap()) : So
 
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean, takenNames: Set<String>?) = throw UnsupportedOperationException()
 
-    override suspend fun renameSong(song: Song): Song? {
+    override suspend fun copySongToItsName(song: Song): Song? {
         val newName = renames[song.fileName] ?: return null
-        files[newName] = files.remove(song.fileName) ?: return null
+        files[newName] = files[song.fileName] ?: return null
         return song(newName)
     }
 
