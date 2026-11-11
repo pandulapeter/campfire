@@ -105,6 +105,14 @@ internal object PdfBidi {
     private fun clusters(spans: List<ChordSheet.Span>): List<List<ChordSheet.Span>> {
         val clusters = mutableListOf<MutableList<ChordSheet.Span>>()
         val leading = mutableListOf<ChordSheet.Span>()
+        // The letter after each glyph, found in one pass from the end: a long run of marks would otherwise look past the
+        // rest of itself from every one of its marks.
+        val nextLetter = IntArray(spans.size)
+        var following = -1
+        for (index in spans.indices.reversed()) {
+            nextLetter[index] = following
+            if (!spans[index].isMark()) following = index
+        }
         spans.forEachIndexed { index, span ->
             if (!span.isMark()) {
                 clusters += mutableListOf(span).apply { addAll(leading) }
@@ -113,7 +121,7 @@ internal object PdfBidi {
             }
             val middle = (span.start + span.end) / 2
             val base = clusters.lastOrNull()?.first()
-            val next = (index + 1 until spans.size).firstOrNull { !spans[it].isMark() }?.let(spans::get)
+            val next = spans.getOrNull(nextLetter[index])
             val isOverNext = next != null && middle >= next.start && middle <= next.end && (base == null || middle > base.end)
             if (base == null || isOverNext) leading += span else clusters.last() += span
         }
