@@ -132,6 +132,19 @@ class SyncEngineConflictTest {
     }
 
     @Test
+    fun `a song saved as the incoming version while its download is in flight is not copied`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onDownload = { key -> if (key == song(1)) local.files[song(1)] = THERE }
+
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, indexOf(song(1) to ORIGINAL)))
+
+        assertEquals(emptyList(), completed.summary.conflicts)
+        assertEquals(setOf(song(1)), local.files.keys)
+        assertEquals(setOf(song(1)), provider.files.keys)
+    }
+
+    @Test
     fun `a song created under the name while its download is in flight is kept`() = runTest {
         val mine = "Mine".encodeToByteArray()
         val theirs = "Theirs".encodeToByteArray()
@@ -414,6 +427,22 @@ class SyncEngineConflictTest {
             assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
             assertEquals(2, local.files.size)
         }
+
+    @Test
+    fun `a file met for the first time whose copy name is taken in the cloud during the run keeps all three versions`() = runTest {
+        val copy = song("song_1 (2)")
+        val another = "Another device's song".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { key -> if (key == copy && copy !in provider.files) provider.writeElsewhere(copy, another) }
+
+        synchronize(local, provider, SyncIndexDocument())
+
+        val expected = setOf(HERE, THERE, another).map { it.decodeToString() }.toSet()
+        assertContentEquals(THERE, local.files[song(1)])
+        assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
+        assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
+    }
 
     @Test
     fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {

@@ -154,6 +154,18 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `losing the network while deleting in the cloud folder ends the run`() = runTest {
+        val library = librarySongs(2)
+        val local = FakeLibraryFileLocalSource(files = library - song(1))
+        val provider = FakeSyncProvider(files = library)
+        provider.onDelete = { throw SyncNetworkException("Offline") }
+
+        assertFailsWith<SyncNetworkException> {
+            synchronize(local, provider, syncedIndexOf(library))
+        }
+    }
+
+    @Test
     fun `a deletion made elsewhere reaches a device whose index was filed under the e-mail address`() = runTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
         val provider = FakeSyncProvider()

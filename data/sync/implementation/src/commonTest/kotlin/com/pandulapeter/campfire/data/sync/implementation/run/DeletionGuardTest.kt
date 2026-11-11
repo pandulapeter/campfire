@@ -69,6 +69,11 @@ class DeletionGuardTest {
     }
 
     @Test
+    fun `an empty library folder with nothing to delete in the cloud goes ahead`() {
+        assertNull(check(total = 20, isLocalListingEmpty = true))
+    }
+
+    @Test
     fun `this device is asked about first`() {
         assertEquals(question(6, 10, SyncDeletionDirection.LOCAL), check(localDeletions = 6, remoteDeletions = 6, total = 10))
     }
