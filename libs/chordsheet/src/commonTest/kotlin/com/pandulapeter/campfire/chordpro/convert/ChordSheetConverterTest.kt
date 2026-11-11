@@ -363,12 +363,18 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a text of hundreds of thousands of lines converts within the work bound`() {
-        val text = "[Verse]\nC     G\nhello world\n\n".repeat(150_000)
-        val started = TimeSource.Monotonic.markNow()
-        val result = convert(text)
-        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
-        assertEquals(150_000, result.lines().count { it == "[C]hello [G]world" })
+    fun `a text of tens of thousands of lines takes time in proportion to its length`() {
+        // Compared with a quarter of itself rather than with a fixed bound: a step that goes quadratic only outgrows the
+        // converter's own per-line work at this length, and a CI runner is several times slower than a laptop.
+        fun timeOf(repeats: Int) = "[Verse]\nC     G\nhello world\n\n".repeat(repeats).let { text ->
+            val started = TimeSource.Monotonic.markNow()
+            val result = convert(text)
+            started.elapsedNow().also { assertEquals(repeats, result.lines().count { it == "[C]hello [G]world" }) }
+        }
+        timeOf(QUARTER_LENGTH)
+        val quarter = List(3) { timeOf(QUARTER_LENGTH) }.min()
+        val whole = timeOf(QUARTER_LENGTH * 4)
+        assertTrue(whole < quarter * 7, "$whole for the whole text, $quarter for a quarter of it")
     }
 
     @Test
@@ -1918,5 +1924,8 @@ class ChordSheetConverterTest {
          * quadratic, which is what these tests are for.
          */
         val LINEAR_TIME_BOUND = 30.seconds
+
+        /** Verses in a quarter of the text whose conversion time is compared with the whole's. */
+        const val QUARTER_LENGTH = 10_000
     }
 }
