@@ -35,9 +35,11 @@ internal object PdfRunningLines {
         val isOwnPageCountBySignature = mutableMapOf<String, Boolean>()
         val bodyLinesUnderBySignature = mutableMapOf<String, MutableSet<String?>>()
         pages.forEachIndexed { index, page ->
+            // Searched for every line of the top margin, which may hold as many lines as the page.
+            val body = page.lines.filter { it.text.isNotBlank() }.sortedBy { it.y }
             page.edges.filter { it.text.isNotBlank() }.forEach { line ->
                 val signature = signature(line, page.height)
-                if (line.y < page.height / 2) bodyLinesUnderBySignature.getOrPut(signature) { mutableSetOf() } += bodyLineUnder(line, page)
+                if (line.y < page.height / 2) bodyLinesUnderBySignature.getOrPut(signature) { mutableSetOf() } += bodyLineUnder(line, page, body)
                 numbersBySignature.getOrPut(signature) { mutableMapOf() }
                     .getOrPut(index) { number.findAll(line.text).map { it.value.take(MAX_DIGITS).toLong() }.toList() }
                 isOwnPageCountBySignature[signature] = isOwnPageCountBySignature[signature] != false && isOwnPageCount(line.text.trim())
@@ -51,11 +53,14 @@ internal object PdfRunningLines {
 
     /**
      * The line set next under [line] on [page], at its place and in its own words, where that is a line of the body,
-     * outside the margins.
+     * outside the margins. [body] is the page's lines that are not blank, from the top.
      */
-    private fun bodyLineUnder(line: Line, page: Page): String? {
+    private fun bodyLineUnder(line: Line, page: Page, body: List<Line>): String? {
         val size = line.spans.maxOfOrNull { it.size } ?: 1.0
-        val under = page.lines.filter { it.text.isNotBlank() && it.y - line.y > size * 0.5 }.minByOrNull { it.y } ?: return null
+        var low = 0
+        var high = body.size
+        while (low < high) { val middle = (low + high) / 2; if (body[middle].y - line.y > size * 0.5) high = middle else low = middle + 1 }
+        val under = body.getOrNull(low) ?: return null
         return if (isEdge(under.y, page.height)) null else "${signature(under, page.height)}:${under.text.trim()}"
     }
 

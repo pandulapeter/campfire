@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -105,6 +106,15 @@ class PdfRunningLinesTest {
         assertTrue(PdfRunningLines.isPageCount("Page 2 of 3", page = 2, pageCount = 3))
         assertFalse(PdfRunningLines.isPageCount("2 of 3", page = 1, pageCount = 3))
         assertFalse(PdfRunningLines.isPageCount("One of 3", page = 1, pageCount = 3))
+    }
+
+    @Test
+    fun `a top margin of as many lines as its page takes time in proportion to them`() {
+        assertTakesTimeInProportion(quarterSize = 2_500) { size ->
+            val lines = List(size) { PdfLineLayout.Line(listOf(ChordSheet.Span("Line $it", 0.0, 10.0, 0.1)), 1.0 + it * 0.03) }
+            val page = PdfTextExtractor.Page(lines, height = 1_000_000.0, edges = lines)
+            PdfRunningLines.runningLines(listOf(page, page))
+        }
     }
 
     /** The lines of a document of [count] pages in 10-point Courier, each page's content made by [content]. */

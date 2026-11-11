@@ -16,8 +16,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
-import kotlin.time.Duration
-import kotlin.time.TimeSource
 
 class DocxTextExtractorTest {
     @Test
@@ -125,7 +123,7 @@ class DocxTextExtractorTest {
 
     @Test
     fun `a large style named by many paragraphs takes time in proportion to the document`() = runTest {
-        assertTakesTimeInProportion { size ->
+        assertReadsInProportion { size ->
             val styles = "<w:styles xmlns:w='urn:test'><w:style w:type='paragraph' w:styleId='Big'><w:name w:val='Big'/><w:pPr><w:tabs>" +
                 (1..size).joinToString("") { "<w:tab w:val='left' w:pos='$it'/>" } + "</w:tabs></w:pPr></w:style></w:styles>"
             document("<w:p><w:pPr><w:pStyle w:val='Big'/></w:pPr><w:r><w:t>a</w:t></w:r></w:p>".repeat(size / 4)) to styles
@@ -134,7 +132,7 @@ class DocxTextExtractorTest {
 
     @Test
     fun `a long font name over much text takes time in proportion to the document`() = runTest {
-        assertTakesTimeInProportion { size ->
+        assertReadsInProportion { size ->
             val styles = "<w:styles xmlns:w='urn:test'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii='${"x".repeat(size * 4)}'/>" +
                 "</w:rPr></w:rPrDefault></w:docDefaults></w:styles>"
             document("<w:p><w:r><w:t>abcd</w:t></w:r></w:p>".repeat(size)) to styles
@@ -143,28 +141,15 @@ class DocxTextExtractorTest {
 
     @Test
     fun `a paragraph of as many tabs as tab stops takes time in proportion to the document`() = runTest {
-        assertTakesTimeInProportion { size ->
+        assertReadsInProportion { size ->
             val stops = "<w:pPr><w:tabs>" + (1..size).joinToString("") { "<w:tab w:pos='${it * 20}'/>" } + "</w:tabs></w:pPr>"
             document("<w:p>$stops<w:r>${"<w:tab/>".repeat(size)}<w:t>end</w:t></w:r></w:p>") to null
         }
     }
 
-    /**
-     * Compares the time a document of [size][QUARTER_SIZE] takes with one four times its size rather than with a fixed
-     * bound, since a CI runner is several times slower than a laptop: work growing with the product of two parts of a
-     * document, such as a style and the paragraphs naming it, outgrows the reader's own per-paragraph work at this size.
-     */
-    private suspend fun assertTakesTimeInProportion(documentOf: (size: Int) -> Pair<String, String?>) {
-        suspend fun timeOf(size: Int): Duration {
-            val (xml, styles) = documentOf(size)
-            val started = TimeSource.Monotonic.markNow()
-            DocxTextExtractor.fromXml(xml, styles)
-            return started.elapsedNow()
-        }
-        timeOf(QUARTER_SIZE)
-        val quarter = List(3) { timeOf(QUARTER_SIZE) }.min()
-        val whole = timeOf(QUARTER_SIZE * 4)
-        assertTrue(whole < quarter * 7, "$whole for the whole document, $quarter for a quarter of it")
+    private suspend fun assertReadsInProportion(documentOf: (size: Int) -> Pair<String, String?>) = assertTakesTimeInProportion(QUARTER_SIZE) { size ->
+        val (xml, styles) = documentOf(size)
+        DocxTextExtractor.fromXml(xml, styles)
     }
 
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
