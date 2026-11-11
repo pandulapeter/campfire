@@ -365,15 +365,18 @@ class ChordSheetConverterTest {
     @Test
     fun `a text of tens of thousands of lines takes time in proportion to its length`() {
         // Compared with a quarter of itself rather than with a fixed bound: a step that goes quadratic only outgrows the
-        // converter's own per-line work at this length, and a CI runner is several times slower than a laptop.
+        // converter's own per-line work at this length, and a CI runner is several times slower than a laptop. Both
+        // lengths take their fastest of three alternate runs, since another test worker or a collection pause slows
+        // single runs on a shared runner far more than the 7 allows, and a quadratic step slows every run of the whole.
         fun timeOf(repeats: Int) = "[Verse]\nC     G\nhello world\n\n".repeat(repeats).let { text ->
             val started = TimeSource.Monotonic.markNow()
             val result = convert(text)
             started.elapsedNow().also { assertEquals(repeats, result.lines().count { it == "[C]hello [G]world" }) }
         }
         timeOf(QUARTER_LENGTH)
-        val quarter = List(3) { timeOf(QUARTER_LENGTH) }.min()
-        val whole = timeOf(QUARTER_LENGTH * 4)
+        val runs = List(3) { timeOf(QUARTER_LENGTH) to timeOf(QUARTER_LENGTH * 4) }
+        val quarter = runs.minOf { it.first }
+        val whole = runs.minOf { it.second }
         assertTrue(whole < quarter * 7, "$whole for the whole text, $quarter for a quarter of it")
     }
 
