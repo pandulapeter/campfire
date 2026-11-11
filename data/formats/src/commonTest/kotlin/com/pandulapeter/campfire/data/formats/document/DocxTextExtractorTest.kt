@@ -16,6 +16,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
+import kotlin.time.Duration
+import kotlin.time.TimeSource
 
 class DocxTextExtractorTest {
     @Test
@@ -121,5 +123,28 @@ class DocxTextExtractorTest {
         assertEquals(emptyList(), lines(nested))
     }
 
+    @Test
+    fun `a large style named by many paragraphs takes time in proportion to the document`() = runTest {
+        // Compared with a quarter of itself rather than with a fixed bound, since a CI runner is several times slower
+        // than a laptop: a style read again for every paragraph naming it takes time growing with their product.
+        suspend fun timeOf(size: Int): Duration {
+            val styles = "<w:styles xmlns:w='urn:test'><w:style w:type='paragraph' w:styleId='Big'><w:name w:val='Big'/><w:pPr><w:tabs>" +
+                (1..size).joinToString("") { "<w:tab w:val='left' w:pos='$it'/>" } + "</w:tabs></w:pPr></w:style></w:styles>"
+            val xml = document("<w:p><w:pPr><w:pStyle w:val='Big'/></w:pPr><w:r><w:t>a</w:t></w:r></w:p>".repeat(size / 4))
+            val started = TimeSource.Monotonic.markNow()
+            val lines = DocxTextExtractor.fromXml(xml, styles).pages.flatMap { it.lines }
+            return started.elapsedNow().also { assertEquals(size / 4, lines.size) }
+        }
+        timeOf(QUARTER_SIZE)
+        val quarter = List(3) { timeOf(QUARTER_SIZE) }.min()
+        val whole = timeOf(QUARTER_SIZE * 4)
+        assertTrue(whole < quarter * 7, "$whole for the whole document, $quarter for a quarter of it")
+    }
+
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
+
+    private companion object {
+        /** Style entries and paragraphs in a quarter of the document whose reading time is compared with the whole's. */
+        const val QUARTER_SIZE = 5_000
+    }
 }

@@ -27,14 +27,18 @@ object DocxTextExtractor {
 
     internal suspend fun fromXml(document: String, stylesXml: String? = null): ChordSheet {
         val styles = stylesXml?.let(::parseXml)
-        val definitions = styles?.children?.filter { it.localName == "style" }?.associateBy { it.attribute("styleId").orEmpty() }.orEmpty()
-        val defaultParagraph = definitions.entries.firstOrNull { it.value.attribute("type") == "paragraph" && it.value.attribute("default") in listOf("1", "true") }?.key
+        val definitionElements = styles?.children?.filter { it.localName == "style" }?.associateBy { it.attribute("styleId").orEmpty() }.orEmpty()
+        val defaultParagraph = definitionElements.entries.firstOrNull { it.value.attribute("type") == "paragraph" && it.value.attribute("default") in listOf("1", "true") }?.key
+        val definitions = definitionElements.mapValues { StyleDefinition(it.value) }
         val defaults = Style().with(styles?.child("docDefaults")?.child("rPrDefault")?.child("rPr"))
-        fun style(id: String?, seen: Set<String> = emptySet()): Style {
+        fun chain(id: String?, seen: Set<String>): Style {
             if (id == null || id in seen || seen.size >= 32) return defaults
             val definition = definitions[id] ?: return defaults
-            return style(definition.child("basedOn")?.attribute("val"), seen + id).with(definition.child("rPr"))
+            return chain(definition.basedOn, seen + id).with(definition.runProperties)
         }
+        // Every paragraph naming a style would otherwise walk its chain again.
+        val resolved = mutableMapOf<String?, Style>()
+        fun style(id: String?) = resolved.getOrPut(id) { chain(id, emptySet()) }
         val root = parseXml(document)
         require(root.localName == "document")
         val body = requireNotNull(root.child("body"))
@@ -52,11 +56,10 @@ object DocxTextExtractor {
             val properties = p.child("pPr")
             val styleId = properties?.child("pStyle")?.attribute("val") ?: defaultParagraph
             val definition = definitions[styleId]
-            val name = definition?.child("name")?.attribute("val") ?: styleId.orEmpty()
+            val name = definition?.name ?: styleId.orEmpty()
             val heading = name.contains("title", true) || name.contains("heading", true)
             val base = style(styleId).with(properties?.child("rPr"))
-            val tabStops = (properties?.child("tabs") ?: definition?.child("pPr")?.child("tabs"))?.children
-                ?.filter { it.attribute("val") != "clear" }?.mapNotNull { it.attribute("pos")?.toDoubleOrNull()?.div(20)?.takeIf { position -> position.isFinite() && position in 0.0..1_000_000.0 } }?.sorted().orEmpty()
+            val tabStops = properties?.child("tabs")?.let(::tabStops) ?: definition?.tabStops.orEmpty()
             var x = 0.0
             var spans = mutableListOf<ChordSheet.Span>()
             fun line() { emit(ChordSheet.Line(spans.toList(), heading)); spans = mutableListOf(); x = 0.0 }
@@ -73,7 +76,7 @@ object DocxTextExtractor {
                 val current = if (element.localName == "r") {
                     val rPr = element.child("rPr")
                     val runId = rPr?.child("rStyle")?.attribute("val")
-                    (if (runId != null) inherited.with(definitions[runId]?.child("rPr")) else inherited).with(rPr)
+                    (if (runId != null) inherited.with(definitions[runId]?.runProperties) else inherited).with(rPr)
                 } else inherited
                 when (element.localName) {
                     "t" -> text(element.text, current)
@@ -163,16 +166,44 @@ object DocxTextExtractor {
 
     private const val MAX_CONTENT_CONTROL_DEPTH = 16
 
+    private fun tabStops(tabs: XmlElement) = tabs.children.filter { it.attribute("val") != "clear" }
+        .mapNotNull { it.attribute("pos")?.toDoubleOrNull()?.div(20)?.takeIf { position -> position.isFinite() && position in 0.0..1_000_000.0 } }.sorted()
+
+    /**
+     * One style definition, read once: every paragraph and run in a style names it again, and one definition may be as
+     * large as the document allows, so reading it for each of them would take time growing with their product.
+     */
+    private class StyleDefinition(element: XmlElement) {
+        val name = element.child("name")?.attribute("val")
+        val basedOn = element.child("basedOn")?.attribute("val")
+        val runProperties = RunProperties.of(element.child("rPr"))
+        val tabStops = element.child("pPr")?.child("tabs")?.let(::tabStops)
+    }
+
+    /** What a run properties element sets, null for what it leaves to the style it is applied over. */
+    private class RunProperties(val size: Double?, val bold: Boolean?, val font: String?, val raised: Boolean?) {
+        companion object {
+            fun of(properties: XmlElement?) = properties?.let {
+                RunProperties(
+                    size = it.child("sz")?.attribute("val")?.toDoubleOrNull()?.div(2)?.takeIf { size -> size.isFinite() },
+                    bold = it.child("b")?.let { b -> b.attribute("val") !in listOf("0", "false", "off") },
+                    font = it.child("rFonts")?.let { fonts -> fonts.attribute("ascii") ?: fonts.attribute("hAnsi") },
+                    raised = it.child("vertAlign")?.attribute("val")?.let { value -> value == "superscript" },
+                )
+            }
+        }
+    }
+
     private data class Style(val size: Double = 12.0, val bold: Boolean = false, val font: String = "", val raised: Boolean = false) {
         val monospace get() = listOf("courier", "consolas", "monaco", "menlo", "liberation mono", "dejavu sans mono", "lucida console").any { font.contains(it, true) }
-        fun with(properties: XmlElement?): Style {
+        fun with(properties: XmlElement?) = with(RunProperties.of(properties))
+        fun with(properties: RunProperties?): Style {
             if (properties == null) return this
-            val b = properties.child("b")
             return copy(
-                size = (properties.child("sz")?.attribute("val")?.toDoubleOrNull()?.div(2)?.takeIf { it.isFinite() } ?: size).coerceIn(1.0, 200.0),
-                bold = if (b == null) bold else b.attribute("val") !in listOf("0", "false", "off"),
-                font = properties.child("rFonts")?.let { it.attribute("ascii") ?: it.attribute("hAnsi") } ?: font,
-                raised = properties.child("vertAlign")?.attribute("val")?.let { it == "superscript" } ?: raised,
+                size = (properties.size ?: size).coerceIn(1.0, 200.0),
+                bold = properties.bold ?: bold,
+                font = properties.font ?: font,
+                raised = properties.raised ?: raised,
             )
         }
     }
