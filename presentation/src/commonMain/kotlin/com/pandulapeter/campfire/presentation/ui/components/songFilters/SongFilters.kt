@@ -36,8 +36,6 @@ import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
  *
  * @param state What the filters show, see [SongFilterUiState].
  * @param actions What their controls change.
- * @param uncoveredTopInset The sheet's `BottomSheetContentScope.uncoveredTopInset`, for the height of the sheet at
- *   its tallest rather than at the offset it happens to be at.
  * @param fadeBackgroundColor The opaque color of the sheet the filters stand on, which their top edge fades into.
  * @param normalizeForSearch How a group's search and its chips' names are folded before they are compared:
  *   `SongRenderer.normalizeForSearch`, so that a tag is found the way a song is.
@@ -48,7 +46,6 @@ internal fun SongFilters(
     state: SongFilterUiState,
     actions: SongFilterActions,
     contentPadding: PaddingValues,
-    uncoveredTopInset: () -> Dp,
     fadeBackgroundColor: Color,
     normalizeForSearch: (String) -> String,
 ) = BoxWithConstraints(
@@ -57,7 +54,7 @@ internal fun SongFilters(
     val scrollState = rememberScrollState()
     // The height of what the filters are shown in is only known outside the scroll, which measures its content
     // against an unbounded one.
-    val availableHeight = maxHeight - uncoveredTopInset() - contentPadding.calculateTopPadding() - contentPadding.calculateBottomPadding()
+    val availableHeight = maxHeight - contentPadding.calculateTopPadding() - contentPadding.calculateBottomPadding()
     Box(
         modifier = Modifier
             .fillMaxWidth()

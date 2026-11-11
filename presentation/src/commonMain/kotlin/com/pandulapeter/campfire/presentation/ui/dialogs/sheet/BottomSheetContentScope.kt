@@ -17,7 +17,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.Dp
 import com.pandulapeter.campfire.presentation.resources.close
 
 /**
@@ -34,18 +33,10 @@ internal val LocalIsSheetClosing = compositionLocalOf<() -> Boolean> { { false }
  */
 internal val LocalIsSheetCloseRequested = staticCompositionLocalOf { false }
 
-/**
- * The column of a [CampfireBottomSheet], which its content can also close the sheet from.
- *
- * @param uncoveredTopInset How much of the top inset the sheet is not padded by at the moment: Material pads it by the
- *   part of the inset its top edge has come into, so the height its content is offered changes as it slides up and is
- *   dragged. Content that sizes itself to that height takes this off it to have the height of the sheet at its
- *   tallest, which does not move - or the sheet's height would decide its own offset, and the offset the height.
- */
+/** The column of a [CampfireBottomSheet], which its content can also close the sheet from. */
 internal class BottomSheetContentScope(
     columnScope: ColumnScope,
     private val close: () -> Unit,
-    val uncoveredTopInset: () -> Dp,
 ) : ColumnScope by columnScope {
 
     fun close() = close.invoke()

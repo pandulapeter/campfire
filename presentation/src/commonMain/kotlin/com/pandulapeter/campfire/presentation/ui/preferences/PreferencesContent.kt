@@ -14,8 +14,6 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
@@ -38,10 +35,10 @@ import com.pandulapeter.campfire.presentation.ui.settingsPage.SECTION_GAP
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
 
 /**
- * The page of the Preferences sheet that is picked, the same component Settings shows as the tab of that name, sliding
- * in from the side of its button as another is picked, scrolled above those buttons ([PreferencesFrame]).
+ * The page of the Preferences sheet that is picked, the same component Settings shows as the tab of that name,
+ * crossfading into another as it is picked, scrolled above those buttons ([PreferencesFrame]).
  *
- * @param scrollStates One for each page, so that each keeps its own position and the outgoing one slides away where it
+ * @param scrollStates One for each page, so that each keeps its own position and the outgoing one fades out where it
  *   was; its edges fade into [fadeColor].
  * @param selectedPage Shown only while it is one of [pages]; a page whose feature has just been switched off gives way
  *   to the first one (see [shownPreferencesPage]).
@@ -60,20 +57,13 @@ internal fun PreferencesContent(
     showDialog: (DialogType) -> Unit,
 ) {
     val shownPage = shownPreferencesPage(pages, selectedPage)
-    val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-    // The pages slide in the direction of their buttons, the outgoing one leaving as the next arrives. The size is the
-    // new page's at once: the sheet animates its own height to it, and a second animation of the same height here would
-    // have the two disagree, the buttons under the page bobbing between them.
+    // The size is the new page's at once: the sheet animates its own height to it, and a second animation of the same
+    // height here would have the two disagree, the buttons under the page bobbing between them.
     AnimatedContent(
         modifier = modifier.fillMaxWidth(),
         targetState = shownPage,
-        transitionSpec = {
-            val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-            (slideInHorizontally(slideSpec) { it * direction } + fadeIn(fadeSpec))
-                .togetherWith(slideOutHorizontally(slideSpec) { -it * direction } + fadeOut(fadeSpec))
-                .using(SizeTransform { _, _ -> snap() })
-        },
+        transitionSpec = { fadeIn(fadeSpec).togetherWith(fadeOut(fadeSpec)).using(SizeTransform { _, _ -> snap() }) },
     ) { page ->
         val scrollState = scrollStates.getValue(page)
         Column(

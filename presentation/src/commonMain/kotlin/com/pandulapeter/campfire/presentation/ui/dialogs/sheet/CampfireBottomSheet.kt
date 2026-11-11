@@ -37,13 +37,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -221,7 +219,7 @@ internal fun CampfireBottomSheet(
         properties = ModalBottomSheetProperties(shouldDismissOnClickOutside = isDismissibleByTouch),
         containerColor = sheetContainerColor(),
         dragHandle = null,
-        contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
+        contentWindowInsets = { WindowInsets(0) },
     ) {
         val isKeyboardVisible = keyboardBackHandler()
         val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
@@ -231,6 +229,8 @@ internal fun CampfireBottomSheet(
         // nothing and brings no keyboard up. It is taken a frame in, and only where nothing in the sheet has the focus
         // by then: a form's first field asks for it from an effect of its own, and the order the two effects run in is
         // no promise of which one ends up with it.
+        // Kept clear here rather than by Material, at its tallest in a short window (animateSheetContentHeight says why).
+        val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
         val sheetFocus = remember { FocusRequester() }
         val sheetFocusState = remember { SheetFocusState() }
         LaunchedEffect(Unit) {
@@ -251,7 +251,7 @@ internal fun CampfireBottomSheet(
                 .focusTarget()
                 .then(
                     if (isCompactKeyboard) {
-                        Modifier.heightIn(max = windowHeight).imePadding()
+                        Modifier.windowInsetsPadding(topInset).heightIn(max = windowHeight).imePadding()
                             .fadingTopEdge(scrollState, sheetContainerColor())
                             .bounceVerticalScroll(scrollState)
                     } else {
@@ -264,10 +264,9 @@ internal fun CampfireBottomSheet(
         ) {
             val consumedInsets = remember { MutableWindowInsets() }
             val heightAnimation = remember { SheetHeightAnimation() }
-            val uncoveredTopInset = rememberUncoveredTopInset(sheetState)
             Column(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
-                    .animateSheetContentHeight(heightAnimation) { uncoveredTopInset.value }
+                    .animateSheetContentHeight(heightAnimation) { if (isCompactKeyboard) 0 else topInset.getTop(this) }
                     .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
             ) {
                 CompositionLocalProvider(
@@ -296,27 +295,9 @@ internal fun CampfireBottomSheet(
                     BottomSheetContentScope(
                         columnScope = this,
                         close = close,
-                        uncoveredTopInset = { uncoveredTopInset.value },
                     ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
                 }
             }
-        }
-    }
-}
-
-/**
- * How much of the top inset the sheet's top edge has not come into: Material pads the sheet by as much of it as its offset
- * has not taken up yet (an offset not decided yet takes up none of it).
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun rememberUncoveredTopInset(sheetState: SheetState): State<Dp> {
-    val density = LocalDensity.current
-    val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-    return remember(sheetState, topInset, density) {
-        derivedStateOf {
-            val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
-            with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
         }
     }
 }

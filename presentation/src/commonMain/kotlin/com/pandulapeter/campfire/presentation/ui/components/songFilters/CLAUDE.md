@@ -19,8 +19,8 @@
 - **The fold is decided by room, not a count**: groups report whole and collapsed heights as intrinsics, and
   `chipBudgets` shares the height like vessels. Selected chips are always visible; below the minimum the content
   scrolls. Room is shared in the lookahead pass only; moving chips use `animateBounds` in one `LookaheadScope`.
-- In a sheet, use its tallest height (`uncoveredTopInset`): Material's offset-dependent top padding would make the
-  layout oscillate every frame.
+- In a sheet, the height offered is the sheet's tallest at every offset (`animateSheetContentHeight`), so the sharing
+  never follows a drag.
 - Nothing under the finger moves on a selection: the "any / every" choice (only with two selected) is out of the
   sharing (`FilterSlot.TRANSIENT`); a group's clear action keeps the plain title's height; the header's Reset is always
   passed and fades in place.

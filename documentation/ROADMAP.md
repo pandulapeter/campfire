@@ -13,6 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- Tooltips should respect insets
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
 ## Short-term

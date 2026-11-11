@@ -26,9 +26,13 @@
 - **Content height changes animate**, but a change of the room offered (keyboard, resize) is followed in the same frame
   so the sheet never trails the keyboard. Checklists shift rows by what the sheet still has to grow
   (`followSheetGrowth`) so a ticked row stays under the finger, and a row pinned under the content keeps the sheet's
-  bottom edge (`stayOnSheetBottom`). Content that fills the sheet keeps filling the room at
-  every drag offset (`uncoveredTopInset`), else a grid overflowing by less than the status bar oscillates the anchor and
-  snaps the sheet back under the finger.
+  bottom edge (`LocalSheetHeightLag`, read where the row's parent is placed, never by the row itself: a row only moved is
+  placed again a frame late).
+- **The sheet keeps the status bar clear itself** (`animateSheetContentHeight`; `contentWindowInsets` is empty):
+  Material pads by the sheet's offset, which follows its height a frame late, so a sheet growing to its tallest would
+  draw its header under the status bar for a frame. Content is offered only the room below the inset, at every offset (a
+  drag never changes it, so the expanded anchor holds); filling it, the sheet reaches behind the status bar with the
+  content placed below. A short window with the keyboard up pads the scrolling column by the inset instead.
 - **A mouse wheel or trackpad scrolling the content never moves the sheet** (`keepSheetFromWheelScrolls`): Material
   drags the sheet by what the content leaves of each step, and a wheel never lets go for it to settle, leaving it part
   of the way down. A finger still drags the sheet by its content.

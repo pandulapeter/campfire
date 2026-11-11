@@ -38,7 +38,6 @@ internal fun SongFiltersSheet(
             actions = actions,
             normalizeForSearch = normalizeForSearch,
             contentPadding = contentPadding,
-            uncoveredTopInset = uncoveredTopInset,
             fadeBackgroundColor = sheetContainerColor(),
         )
     }

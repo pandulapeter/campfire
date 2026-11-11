@@ -21,16 +21,17 @@ same setting**: a page is one component wherever it appears (the Metronome page 
   the picked one named and wider. Never a second tab row (tabs nested in Settings') nor chips (read as a setting).
 - **The sheet's buttons are pinned at its bottom** (`PreferencesFrame`): the page scrolls above them and fades out at
   its bottom edge, so another page is picked from anywhere down this one, within the thumb's reach. The sheet takes each
-  page's height, its top edge moving; the buttons stay on its bottom edge meanwhile (`stayOnSheetBottom`), and the page
-  snaps to its size so the sheet's own height animation is the only one. Settings has no buttons: its own tab row
-  picks the page, as nested navigation (tabs over buttons) read as two.
+  page's height, its top edge moving; the buttons stay on its bottom edge meanwhile (`PreferencesFrame` places them
+  itself, in the pass the page changes the lag in), and the page snaps to its size so the sheet's own height animation
+  is the only one. Settings has no buttons: its own tab row picks the page, as nested navigation (tabs over buttons) read
+  as two.
 - Pages: **General** (read only mode, `PerformanceSection`, only while the songs are on; Appearance, ending with the
   Tooltips switch; Language), **Song** (layout and, under pages, turn by; the Chords switch, i.e. lyrics only, scale
   suggestions, section numbers), **Chords** (Diagrams: the instrument and tuning, diagrams, degrees; Names: notation,
   accidentals, chord names with a capo, capo keeps the key), **Metronome** (sound, volume, tempo change, visual beat, vibrate). Same order
   everywhere.
-- Pages slide in their buttons' direction; each page keeps its own scroll position, as Settings' tabs do, and the open
-  page's button pressed again scrolls it to the top.
+- Pages crossfade; each keeps its own scroll position, as Settings' tabs do, and the open page's button pressed again
+  scrolls it to the top.
 - Nothing is typed into the Preferences, so the pinned buttons never meet the keyboard.
 
 ## Contexts (`PreferencesContext`, `preferencesPages`, tested)
