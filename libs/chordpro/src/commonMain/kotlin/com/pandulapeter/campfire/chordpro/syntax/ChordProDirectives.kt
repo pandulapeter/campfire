@@ -42,11 +42,11 @@ public object ChordProDirectives {
         "titlecolour",
     )
 
-    /** Matches a directive in one linear walk, which keeps malformed input cheap while the user types. */
     /**
      * [matchDirective] for a line of an environment ChordPro hands to another program, whose own syntax is full of
-     * braces and `#`: only the `{end_of_…}` that closes it and a directive written with a colon are directives there,
-     * since `{ c d e }` is LilyPond and not `{c: d e}`.
+     * braces and `#`: only an `{end_of_…}` and a directive written with a colon are directives there, since `{ c d e }`
+     * is LilyPond and not `{c: d e}`. The end may name any environment, as the parser reads it: a verse's end after a
+     * tune whose own end was forgotten closes both.
      */
     internal fun matchDelegatedDirective(trimmedLine: String): Directive? {
         val (name, valueStart) = walkDirective(trimmedLine) ?: return null
@@ -54,6 +54,7 @@ public object ChordProDirectives {
         return if (endOfEnvironment(name) != null || hasColon) matchDirective(trimmedLine) else null
     }
 
+    /** Matches a directive in one linear walk, which keeps malformed input cheap while the user types. */
     internal fun matchDirective(trimmedLine: String): Directive? {
         val (name, valueStart) = walkDirective(trimmedLine) ?: return null
         return Directive(name, if (valueStart < 0) null else trimmedLine.substring(valueStart, trimmedLine.length - 1).trim())
