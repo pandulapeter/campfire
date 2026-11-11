@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.data.formats.zip.Deflater
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -140,5 +141,5 @@ internal class PrintPdfWriterTest {
         assertContentEquals(deflated(expected.encodeToByteArray()), content(mixed))
     }
 
-    private suspend fun deflated(input: ByteArray) = PrintBytes().also { PrintDeflater().deflate(input, it) }.result()
+    private suspend fun deflated(input: ByteArray) = PrintBytes().also { Deflater().deflateZlib(input, it) }.result()
 }

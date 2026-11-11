@@ -43,6 +43,8 @@ kotlin {
             kotlin.srcDir(generateVersionFile)
             dependencies {
                 implementation(project(":domain:api"))
+                // The deflater the PDF and the QR code's PNG compress with, the same one the zip writer uses.
+                implementation(project(":data:formats"))
                 // The composables render the ChordPro model directly; parsing and transposing go through use cases.
                 implementation(project(":libs:chordpro"))
                 // Text pasted or shared into the app is read as a chord sheet.
@@ -84,8 +86,6 @@ kotlin {
         desktopTest.dependencies {
             // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.
             implementation(compose.desktop.currentOs)
-            // Reads the exported PDFs back as the import does, for the round trip through Campfire's own PDF.
-            implementation(project(":data:formats"))
             // Reads back the QR codes ui/share draws, as a decoder written by somebody else; nothing ships it.
             implementation(libs.zxing.core)
         }

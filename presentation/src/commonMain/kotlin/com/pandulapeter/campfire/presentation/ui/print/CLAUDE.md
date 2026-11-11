@@ -91,8 +91,9 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
 
 ### Writer
 
-- Each page a 4-bit gray image (16 levels print like 256), compressed by `PrintDeflater` (pure Kotlin: no platform
-  offers common code a compressor; it also packs the share link's QR PNG).
+- Each page a 4-bit gray image (16 levels print like 256), compressed by `:data:formats`' `Deflater` (pure Kotlin: no
+  platform offers common code a compressor; the zip writer uses it too), wrapped as zlib by `deflateZlib`, which also
+  packs the share link's QR PNG.
 - Invisible text (`3 Tr`) at the shaped rectangles, with tiny glyphless Type 3 fonts and ToUnicode maps, so exports are
   searchable, copyable, and reimportable without OCR. Runs on one baseline, font, and size share one `TJ` with explicit
   advances, or PDFium reads dense columns as vertical text. Fonts keep bold and monospace classification for import and

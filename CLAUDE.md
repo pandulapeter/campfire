@@ -49,7 +49,7 @@ app:android / desktop / ios / web     entry points, platform chrome, "open with"
     data:repository:api / :implementation
     data:sync:implementation          the sync engine, planner, index, synced preferences, shared links
       data:source:local:api -> :implementation    files on Android/desktop/iOS, OPFS on web
-        data:formats                  pure-Kotlin zip, PDF, and Word readers
+        data:formats                  pure-Kotlin zip, PDF, and Word readers, the zip writer and its deflater
       data:source:remote:api -> :implementation   every network call
         data:model                    domain models
   libs:*                              code that knows nothing of the app: depends on other libs:* modules only

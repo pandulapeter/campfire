@@ -9,9 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.share
 
+import com.pandulapeter.campfire.data.formats.zip.Deflater
 import com.pandulapeter.campfire.presentation.ui.print.PrintBytes
-import com.pandulapeter.campfire.presentation.ui.print.PrintDeflater
 import com.pandulapeter.campfire.presentation.ui.print.crc32
+import com.pandulapeter.campfire.presentation.ui.print.deflateZlib
 
 /**
  * [code] as a 1-bit grayscale PNG, [moduleSize] pixels to a module, black on white, inside the quiet zone of four
@@ -34,7 +35,7 @@ internal suspend fun qrCodePng(code: QrCode, moduleSize: Int = 8): ByteArray {
             }
         }
     }
-    val compressed = PrintBytes().also { PrintDeflater().deflate(scanlines, it) }.result()
+    val compressed = PrintBytes().also { Deflater().deflateZlib(scanlines, it) }.result()
     val header = ByteArray(13).apply {
         putInt(0, width)
         putInt(4, width)

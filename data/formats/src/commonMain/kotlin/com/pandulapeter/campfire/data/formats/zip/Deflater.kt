@@ -7,37 +7,40 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.print
+package com.pandulapeter.campfire.data.formats.zip
 
 import kotlinx.coroutines.yield
 
 /**
- * A zlib stream (RFC 1950) holding one deflate block with the fixed Huffman codes (RFC 1951), which is what a PDF's
- * FlateDecode reads. No platform offers a compressor to common code, and a page is mostly white paper and repeated
- * glyph edges, where LZ77 matches do nearly all of the work: dynamic codes would save another fifth at several times the
- * code. The hash tables are allocated once and reused for every page a writer encodes.
+ * A raw deflate stream (RFC 1951) of one block with the fixed Huffman codes: what a zip entry holds, and, wrapped in
+ * zlib's header and checksum, what a PDF's FlateDecode and a PNG's image data read. No platform offers a compressor to
+ * common code, and both a printed page (white paper and repeated glyph edges) and ChordPro text (repeated chords, words,
+ * and lines) are where LZ77 matches do nearly all of the work: dynamic codes would save another fifth at several times
+ * the code. The output depends on the input alone, so the same files always make the same archive. The hash tables are
+ * allocated once and reused for every stream an instance encodes, which is why one is kept per writer rather than per
+ * stream.
  */
-internal class PrintDeflater {
+class Deflater {
     private val head = IntArray(HASH_SIZE)
     private val previous = IntArray(WINDOW_SIZE)
     private lateinit var input: ByteArray
-    private lateinit var output: PrintBytes
+    private lateinit var output: DeflateOutput
     private var bitBuffer = 0L
     private var bitCount = 0
     private var matchDistance = 0
 
-    /** Appends the zlib stream of [data] to [destination], yielding (and so checking for cancellation) every 256 KB. */
-    suspend fun deflate(data: ByteArray, destination: PrintBytes) {
+    /**
+     * Appends the deflate stream of [data] to [destination], ending on a byte boundary, yielding (and so checking for
+     * cancellation) every 256 KB.
+     */
+    suspend fun deflate(data: ByteArray, destination: DeflateOutput) {
         input = data
         output = destination
         head.fill(-1)
         previous.fill(-1)
         bitBuffer = 0L
         bitCount = 0
-        // CMF 0x78 is deflate with a 32 KB window, and FLG 0x01 makes the pair a multiple of 31 with no dictionary.
-        output.byte(0x78)
-        output.byte(0x01)
-        // BFINAL, then BTYPE 01: the whole page is one final block with the fixed codes.
+        // BFINAL, then BTYPE 01: the whole input is one final block with the fixed codes.
         bits(1, 1)
         bits(1, 2)
         var position = 0
@@ -74,8 +77,6 @@ internal class PrintDeflater {
         }
         symbol(END_OF_BLOCK)
         if (bitCount > 0) bits(0, 8 - bitCount)
-        val checksum = adler32(data)
-        for (shift in 24 downTo 0 step 8) output.byte(checksum ushr shift and 255)
     }
 
     private fun hash(position: Int): Int {

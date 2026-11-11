@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.print
+package com.pandulapeter.campfire.data.formats.zip
 
 import kotlinx.coroutines.runBlocking
 import java.util.zip.Inflater
@@ -16,8 +16,8 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertTrue
 
-/** Round trips through the JVM's zlib, which is the decoder every PDF viewer's Flate implementation agrees with. */
-internal class PrintDeflaterRoundTripTest {
+/** Round trips through the JVM's zlib, which is the decoder every PDF viewer's Flate implementation and unzip tool agrees with. */
+internal class DeflaterRoundTripTest {
     @Test fun `random bytes round trip`() = runBlocking {
         val input = Random(7).nextBytes(300_000)
         assertContentEquals(input, inflate(deflate(input), input.size))
@@ -44,10 +44,11 @@ internal class PrintDeflaterRoundTripTest {
         assertContentEquals(input, inflate(deflate(input), input.size))
     }
 
-    private suspend fun deflate(input: ByteArray) = PrintBytes().also { PrintDeflater().deflate(input, it) }.result()
+    private suspend fun deflate(input: ByteArray) = ByteArrayBuilder().also { Deflater().deflate(input, it::u8) }.build()
 
     private fun inflate(stream: ByteArray, size: Int): ByteArray {
-        val inflater = Inflater()
+        // Raw deflate, as a zip entry holds it, with no zlib header or checksum around it.
+        val inflater = Inflater(true)
         inflater.setInput(stream)
         val output = ByteArray(size + 1)
         var count = 0

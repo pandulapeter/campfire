@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import com.pandulapeter.campfire.data.formats.zip.DeflateOutput
+import com.pandulapeter.campfire.data.formats.zip.Deflater
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
 
@@ -31,7 +33,7 @@ internal class PrintPdfWriter(
      * output from it: one copy per stream, into a buffer that keeps its capacity from page to page.
      */
     private val scratch = PrintBytes()
-    private val deflater = PrintDeflater()
+    private val deflater = Deflater()
     private val offsets = mutableListOf(0, 0, 0)
     private val pageIds = mutableListOf<Int>()
     private data class FontStyle(val bold: Boolean, val italic: Boolean, val monospace: Boolean)
@@ -87,7 +89,7 @@ internal class PrintPdfWriter(
     suspend fun addPage(pixelWidth: Int, pixelHeight: Int, packed: ByteArray, text: List<PrintPdfText> = emptyList()) {
         require(pixelWidth > 0 && pixelHeight > 0 && packed.size == printRowBytes(pixelWidth) * pixelHeight)
         scratch.reset()
-        deflater.deflate(packed, scratch)
+        deflater.deflateZlib(packed, scratch)
         val image = stream(
             dictionary = "/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight " +
                 "/ColorSpace /DeviceGray /BitsPerComponent 4 /Filter /FlateDecode",
@@ -153,7 +155,7 @@ internal class PrintPdfWriter(
         }
         val uncompressed = scratch.result()
         scratch.reset()
-        deflater.deflate(uncompressed, scratch)
+        deflater.deflateZlib(uncompressed, scratch)
         val content = stream("/Filter /FlateDecode", scratch)
         // IDs 1 and 2 are reserved for the catalog and page tree.
         val pageId = offsets.size
@@ -246,12 +248,12 @@ internal fun packPrintRows(pixels: IntArray, width: Int, rows: Int, packed: Byte
 private fun printLevel(argb: Int) = (printGray(argb) * 15 + 127) / 255
 
 /** A growable byte buffer that keeps its capacity across [reset], so a PDF's streams are built without fresh arrays. */
-internal class PrintBytes {
+internal class PrintBytes : DeflateOutput {
     private var buffer = ByteArray(1024)
     var size = 0
         private set
 
-    fun byte(value: Int) {
+    override fun byte(value: Int) {
         reserve(1)
         buffer[size++] = value.toByte()
     }
