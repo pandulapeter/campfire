@@ -363,6 +363,15 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a text of hundreds of thousands of lines converts within the work bound`() {
+        val text = "[Verse]\nC     G\nhello world\n\n".repeat(150_000)
+        val started = TimeSource.Monotonic.markNow()
+        val result = convert(text)
+        assertTrue(started.elapsedNow() < LINEAR_TIME_BOUND, started.elapsedNow().toString())
+        assertEquals(150_000, result.lines().count { it == "[C]hello [G]world" })
+    }
+
+    @Test
     fun `chords never split supplementary characters`() {
         assertEquals("[C]Hel😀[G]lo wor\n", convert("C   G\nHel😀lo wor"))
         assertEquals("[Am]x😀[G]hello\n", convert("Am G\nx😀hello"))

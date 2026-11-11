@@ -154,8 +154,10 @@ internal object LineKinds {
         if (lyrics.count { isItalic[it] } * 2 > lyrics.size) return lines.map { false }
         val profile = ChordSheetProfile.of(lines.map { it.source })
         val filled = lines.indices.filter { lines[it].text.isNotBlank() }
+        // Looked up rather than searched for, since a long document has as many lines to ask about as to search.
+        val filledAt = IntArray(lines.size) { -1 }.also { at -> filled.forEachIndexed { position, index -> at[index] = position } }
         return lines.indices.map { index ->
-            val at = filled.indexOf(index)
+            val at = filledAt[index]
             val above = filled.getOrNull(at - 1)
             val isUnderTitle = at < 2 || filled.subList(maxOf(0, at - 2), at).any { other -> lines[other].source.spans.any { profile.isLarger(it.size) } }
             val below = filled.getOrNull(at + 1)
