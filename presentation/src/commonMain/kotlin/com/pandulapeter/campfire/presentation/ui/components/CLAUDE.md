@@ -21,7 +21,7 @@ The shared building blocks of the screens; subpackages with something to say hav
   within 300 ms of another tooltip going (a pointer moving along a toolbar; timed by a coroutine, not a clock); a press
   hides it. A long press that is already the control's (a repeating stepper) leaves hover alone (`isShownOnLongPress`);
   a label the control sometimes shows itself turns it off (`isEnabled`). A toggle's tooltip names what a press does. Drawn as the app's tonal pills are,
-  not Material's dark slab. Settings → General's Tooltips switch turns every one off
+  not Material's dark slab. Kept off every inset, keyboard included (`TooltipPosition.kt`, `PopupRoom`). Settings → General's Tooltips switch turns every one off
   (`LocalAreTooltipsEnabled`).
 - **Every keyboard shortcut is an entry of `shortcuts/KeyShortcut.kt`**, matched through it (`KeyShortcut.X.matches`),
   never by comparing keys by hand, and the control it presses names it (`shortcut` on `CampfireTooltip`,

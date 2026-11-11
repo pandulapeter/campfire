@@ -40,12 +40,12 @@ import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.areBeatHapticsFeltInBackground
 import com.pandulapeter.campfire.presentation.ui.platform.rememberBeatHaptics
 import com.pandulapeter.campfire.presentation.ui.components.LocalAreTooltipsEnabled
-import com.pandulapeter.campfire.presentation.ui.components.menu.LocalMenuRoom
+import com.pandulapeter.campfire.presentation.ui.components.LocalPopupRoom
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShowsShortcutHints
 import com.pandulapeter.campfire.presentation.ui.platform.rememberHasHardwareKeyboard
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import com.pandulapeter.campfire.presentation.ui.components.menu.OverlayState
-import com.pandulapeter.campfire.presentation.ui.components.menu.rememberMenuRoom
+import com.pandulapeter.campfire.presentation.ui.components.rememberPopupRoom
 import com.pandulapeter.campfire.presentation.ui.components.labels.LocalTagColors
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
@@ -135,7 +135,7 @@ fun CampfireApp(
     CompositionLocalProvider(
         LocalLayoutDirection provides currentLanguage.value.layoutDirection,
         LocalOverlayState provides viewModel.dialogHost.overlayState,
-        LocalMenuRoom provides rememberMenuRoom(),
+        LocalPopupRoom provides rememberPopupRoom(),
         LocalTagColors provides (userPreferences?.tagColors ?: emptyMap()),
         LocalAreTooltipsEnabled provides (userPreferences?.areTooltipsEnabled != false),
         LocalShowsShortcutHints provides rememberHasHardwareKeyboard(),

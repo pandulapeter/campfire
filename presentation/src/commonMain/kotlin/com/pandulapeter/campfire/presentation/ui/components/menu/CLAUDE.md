@@ -23,6 +23,6 @@
 - `OverflowMenu` counts open menus (for the desktop Escape handler outside the composition), and
   `OverflowMenuState.select` runs an entry once per opening: a `DropdownMenu` stays tappable during its exit, so a
   double tap on Export would export twice.
-- A dropdown is bounded by the window less the system bars and keyboard (`MenuRoom`), resolved once in `CampfireApp` as
+- A dropdown is bounded by the window less the system bars and keyboard (`PopupRoom`), resolved once in `CampfireApp` as
   its own local (`OverlayState` outlives an Android activity; the insets belong to its view), read only while measured,
   so no closed menu resolves insets and a resize recomposes nothing.

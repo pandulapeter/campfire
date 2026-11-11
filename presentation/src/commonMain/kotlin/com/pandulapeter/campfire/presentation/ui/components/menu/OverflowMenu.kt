@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.components.menu
 
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.LocalPopupRoom
+import com.pandulapeter.campfire.presentation.ui.components.rememberPopupRoom
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
@@ -50,8 +52,8 @@ internal fun OverflowMenu(
 ) {
     // Read the app window before entering the popup: its scrolling content needs a finite height even when the iOS popup
     // layer supplies unbounded constraints after rotation. Overlapping keyboard and safe-area insets are counted once,
-    // and the limit follows window resizing and keyboard changes, read while the menu is measured (see MenuRoom).
-    val menuRoom = LocalMenuRoom.current ?: rememberMenuRoom()
+    // and the limit follows window resizing and keyboard changes, read while the menu is measured (see PopupRoom).
+    val popupRoom = LocalPopupRoom.current ?: rememberPopupRoom()
     // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
     // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
     val overlayState = LocalOverlayState.current
@@ -70,7 +72,7 @@ internal fun OverflowMenu(
         button(state::open)
         DropdownMenu(
             modifier = Modifier.layout { measurable, constraints ->
-                val limit = menuRoom.heightPx(this)
+                val limit = popupRoom.heightPx(this)
                 val placeable = measurable.measure(
                     constraints.copy(
                         minHeight = minOf(constraints.minHeight, limit),
