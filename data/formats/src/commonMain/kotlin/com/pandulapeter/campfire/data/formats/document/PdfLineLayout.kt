@@ -129,25 +129,35 @@ internal object PdfLineLayout {
      * above its lyric stays a row of its own.
      */
     private fun attachRaised(groups: List<List<Positioned>>): List<Pair<Double, List<Positioned>>> {
-        val result = groups.map { it.first().y to it }.toMutableList()
-        var index = 0
-        while (index < result.size) {
-            val run = result[index].second
-            val host = listOf(index + 1, index - 1).firstOrNull { it in result.indices && isRaisedOn(run, result[it]) }
-            if (host == null) {
-                index++
-            } else {
-                result[host] = result[host].first to result[host].second + run
-                result.removeAt(index)
+        val lines = groups.map { it.toMutableList() }
+        val baselines = groups.map { it.first().y }
+        // Linked rather than removed from a list, which would move every line after a run each time one joins its line.
+        val previous = IntArray(lines.size) { it - 1 }
+        val next = IntArray(lines.size) { if (it + 1 < lines.size) it + 1 else -1 }
+        val isJoined = BooleanArray(lines.size)
+        var work = 0L
+        val charge = { comparisons: Long -> work += comparisons; work <= MAX_RAISED_WORK }
+        var index = if (lines.isEmpty()) -1 else 0
+        while (index >= 0) {
+            val run = lines[index]
+            val host = listOf(next[index], previous[index]).firstOrNull { it >= 0 && isRaisedOn(run, baselines[it], lines[it], charge) }
+            if (host != null) {
+                lines[host] += run
+                isJoined[index] = true
+                if (previous[index] >= 0) next[previous[index]] = next[index]
+                if (next[index] >= 0) previous[next[index]] = previous[index]
             }
+            index = next[index]
         }
-        return result
+        return lines.indices.filterNot { isJoined[it] }.map { baselines[it] to lines[it] }
     }
 
-    private fun isRaisedOn(run: List<Positioned>, line: Pair<Double, List<Positioned>>): Boolean {
-        val (y, glyphs) = line
+    private fun isRaisedOn(run: List<Positioned>, y: Double, glyphs: List<Positioned>, charge: (Long) -> Boolean): Boolean {
         val size = glyphs.maxOf { it.span.size }
         if (run.any { it.span.size > size * RAISED_SIZE } || run.any { abs(it.y - y) > size * RAISED_OFFSET }) return false
+        // Every glyph of the run is compared with every one of the line's, so a page setting thousands of runs beside one
+        // line pays for the comparisons; once [MAX_RAISED_WORK] is spent, a run stays a line of its own.
+        if (!charge(run.size.toLong() * (glyphs.size + run.size))) return false
         val ink = glyphs.filter { it.span.text.isNotBlank() }
         val ends = glyphs.map { it.span.end }.toMutableList()
         return run.sortedBy { it.span.start }.all { glyph ->
@@ -312,6 +322,9 @@ internal object PdfLineLayout {
 
     /** How many positions a gutter is looked for at, every half point up to this, which bounds the work on a wide page. */
     private const val MAX_GUTTER_POSITIONS = 4096.0
+
+    /** How many glyph comparisons the superscripts and subscripts of one set of lines may take. */
+    private const val MAX_RAISED_WORK = 1L shl 24
 
     /** The largest share of its line's type a superscript or subscript is set in. */
     private const val RAISED_SIZE = 0.8

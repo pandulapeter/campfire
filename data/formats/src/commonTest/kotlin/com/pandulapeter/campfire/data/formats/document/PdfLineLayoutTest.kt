@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.document
 
+import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -24,6 +25,18 @@ class PdfLineLayoutTest {
         val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
 
         assertEquals(listOf("[Capo 2nd]", "H2O", "Lyric line"), lines.map { line -> line.spans.joinToString("") { it.text } })
+    }
+
+    @Test
+    fun `thousands of tiny runs beside a few lines take time in proportion to them`() {
+        assertTakesTimeInProportion(quarterSize = 2_500) { size ->
+            val glyphs = (0 until 5).flatMap { line ->
+                val y = line * 2_000.0
+                listOf(PdfLineLayout.Positioned(ChordSheet.Span("H", 0.0, 600.0, 1_000.0), y)) +
+                    List(size) { PdfLineLayout.Positioned(ChordSheet.Span("r", 600.0 + it * 0.06, 600.06 + it * 0.06, 0.1), y + 1.0 + it * 0.023) }
+            }
+            PdfLineLayout.rows(glyphs) {}
+        }
     }
 
     @Test
