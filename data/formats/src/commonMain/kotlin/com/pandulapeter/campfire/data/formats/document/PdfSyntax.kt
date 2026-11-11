@@ -95,14 +95,29 @@ internal class PdfStreamEnds(private val bytes: ByteArray) {
     }
 }
 
+/**
+ * How many values may be parsed, by one [PdfSyntax] or by every one reading the objects of a document: each value parsed
+ * is kept as an object several times the size of the byte or two that wrote it, so a document of nothing but empty
+ * arrays would otherwise take hundreds of megabytes of memory.
+ */
+internal class PdfSyntaxBudget(private val limit: Int = MAX_VALUES) {
+    private var steps = 0
+
+    fun charge() = requireWithinLimit(++steps <= limit) { "PDF syntax limit" }
+
+    companion object {
+        const val MAX_VALUES = 2_000_000
+    }
+}
+
 /** PDF lexical syntax, including binary strings. Streams retain a range of the input until actually needed. */
 internal class PdfSyntax(
     val bytes: ByteArray,
     var position: Int = 0,
     private val streamEnds: PdfStreamEnds = PdfStreamEnds(bytes),
+    private val budget: PdfSyntaxBudget = PdfSyntaxBudget(),
     private val lengthOf: (PdfValue?) -> Int? = { (it as? PdfNumber)?.value?.toInt() },
 ) {
-    private var steps = 0
     fun skip(limit: Int = bytes.size) {
         val stop = position + minOf(limit, bytes.size - position)
         while (position < stop) when (char()) {
@@ -113,7 +128,7 @@ internal class PdfSyntax(
     }
     fun next(depth: Int = 0, references: Boolean = true): PdfValue? {
         require(depth <= 64) { "PDF syntax limit" }
-        requireWithinLimit(++steps <= 2_000_000) { "PDF syntax limit" }
+        budget.charge()
         skip()
         if (position >= bytes.size) return null
         return when (char()) {

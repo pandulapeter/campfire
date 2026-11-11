@@ -263,6 +263,14 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun `objects of millions of values together hit the syntax budget`() = runTest {
+        val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Song) Tj ET", brokenXref = true, extra = { writer ->
+            repeat(25) { writer.add("[" + "[]".repeat(PdfSyntaxBudget.MAX_VALUES / 24) + "]") }
+        })
+        assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) }
+    }
+
+    @Test
     fun `a header after junk is accepted`() = runTest {
         val song = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
         val extracted = PdfTextExtractor.extract("junk line\n".encodeToByteArray() + song)

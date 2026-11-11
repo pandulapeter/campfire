@@ -27,7 +27,7 @@ internal class PdfFile(input: ByteArray) {
     private data class Location(val offset: Int = -1, val stream: Int = -1)
     /** An object stream's header, read once however many of its objects are asked for. */
     private class ObjectStream(val source: PdfStream, val data: ByteArray, val first: Int, val numbers: IntArray, val offsets: IntArray) {
-        fun parse(index: Int) = PdfSyntax(data, first + offsets[index]).next() ?: error("PDF compressed object")
+        fun parse(index: Int, budget: PdfSyntaxBudget) = PdfSyntax(data, first + offsets[index], budget = budget).next() ?: error("PDF compressed object")
     }
     private val locations = mutableMapOf<PdfReference, Location>()
     private val objects = mutableMapOf<PdfReference, PdfValue>()
@@ -46,6 +46,8 @@ internal class PdfFile(input: ByteArray) {
     /** Found by a lazy recovery scan too, from inside whatever page or font asked, which must not read on regardless. */
     val isEncrypted get() = encrypted
     private val streamEnds = PdfStreamEnds(bytes)
+    /** Shared by every object parsed, the recovery scan's included, which bounds the memory the parsed objects take. */
+    private val syntaxBudget = PdfSyntaxBudget()
 
     init {
         val tail = bytes.latin1(maxOf(0, bytes.size - 4096))
@@ -53,7 +55,8 @@ internal class PdfFile(input: ByteArray) {
         try {
             require(start != null)
             xref(start, mutableSetOf())
-        } catch (_: IllegalArgumentException) { scan() }
+        } catch (exception: PdfLimitException) { throw exception }
+        catch (_: IllegalArgumentException) { scan() }
         catch (_: IllegalStateException) { scan() }
         catch (_: ZipException) { scan() }
         require(!encrypted) { "Encrypted PDF" }
@@ -77,7 +80,8 @@ internal class PdfFile(input: ByteArray) {
             if (location == null) { scan(); objects[value]?.let { return resolve(it) }; location = locations[value] }
             if (location == null) return null
             val parsed = if (location.stream >= 0) compressed(location, value) else {
-                try { indirect(location.offset, value) } catch (_: IllegalArgumentException) { scan(); objects[value] }
+                try { indirect(location.offset, value) } catch (exception: PdfLimitException) { throw exception }
+                catch (_: IllegalArgumentException) { scan(); objects[value] }
                 catch (_: IllegalStateException) { scan(); objects[value] }
             } ?: return null
             requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
@@ -117,7 +121,7 @@ internal class PdfFile(input: ByteArray) {
 
     private fun indirect(offset: Int, expected: PdfReference? = null): PdfValue {
         require(offset in bytes.indices)
-        val parser = PdfSyntax(bytes, offset, streamEnds) { number(it, -1.0).toInt().takeIf { length -> length >= 0 } }
+        val parser = PdfSyntax(bytes, offset, streamEnds, syntaxBudget) { number(it, -1.0).toInt().takeIf { length -> length >= 0 } }
         val number = parser.word().toInt()
         val generation = parser.word().toInt()
         require(parser.word() == "obj" && (expected == null || expected == PdfReference(number, generation)))
@@ -135,7 +139,7 @@ internal class PdfFile(input: ByteArray) {
 
     private fun xref(offset: Int, seen: MutableSet<Int>) {
         require(seen.size < 64 && seen.add(offset) && offset in bytes.indices) { "PDF xref chain" }
-        val parser = PdfSyntax(bytes, offset, streamEnds)
+        val parser = PdfSyntax(bytes, offset, streamEnds, syntaxBudget)
         val dictionary: PdfDictionary
         if (parser.word() == "xref") {
             while (true) {
@@ -199,7 +203,7 @@ internal class PdfFile(input: ByteArray) {
         val first = number(stream.dictionary["First"]).toInt()
         val data = decode(stream)
         require(count in 1..MAX_OBJECTS && first in data.indices)
-        val header = PdfSyntax(data)
+        val header = PdfSyntax(data, budget = syntaxBudget)
         val numbers = IntArray(count)
         val offsets = IntArray(count)
         for (index in 0 until count) {
@@ -224,7 +228,7 @@ internal class PdfFile(input: ByteArray) {
                 val actual = locations[contained]
                 if (actual != null && actual.stream != location.stream) continue
                 requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
-                objects[contained] = stream.parse(index)
+                objects[contained] = stream.parse(index, syntaxBudget)
             }
             parsedStreams += location.stream
         }
@@ -242,7 +246,7 @@ internal class PdfFile(input: ByteArray) {
             val match = marker.find(text, at) ?: break
             require(++count <= MAX_OBJECTS)
             val after = match.range.last + 1
-            val parser = PdfSyntax(bytes, after, streamEnds)
+            val parser = PdfSyntax(bytes, after, streamEnds, syntaxBudget)
             try {
                 val value = parser.next()
                 if (match.groupValues[1].isNotEmpty() && value != null) {
@@ -256,7 +260,8 @@ internal class PdfFile(input: ByteArray) {
                     trailer(value)
                 }
                 at = maxOf(after, parser.position)
-            } catch (_: IllegalArgumentException) { at = after }
+            } catch (exception: PdfLimitException) { throw exception }
+            catch (_: IllegalArgumentException) { at = after }
             catch (_: IllegalStateException) { at = after }
         }
         require(!encrypted) { "Encrypted PDF" }
@@ -275,7 +280,7 @@ internal class PdfFile(input: ByteArray) {
                 val previous = definedAt[reference]
                 if (previous == null && objects.containsKey(reference) || previous != null && previous > streamOffset) continue
                 requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
-                objects[reference] = stream.parse(index)
+                objects[reference] = stream.parse(index, syntaxBudget)
                 definedAt[reference] = streamOffset
             }
         }
