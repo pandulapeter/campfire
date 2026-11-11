@@ -116,3 +116,16 @@ tasks.named<JavaExec>("run") {
     systemProperty("campfire.screenshots.appIcon", rootProject.file("app/desktop/src/main/composeResources/drawable/app_icon.png").absolutePath)
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
 }
+
+/**
+ * The timings of a large library (`Benchmark.kt`), printed rather than written anywhere. Not a test: the numbers are
+ * the machine's, so nothing runs it but the owner.
+ */
+tasks.register<JavaExec>("benchmark") {
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.pandulapeter.campfire.screenshots.BenchmarkKt"
+    // As the desktop app runs: without it the largest Composables are never compiled, which the timings would show.
+    jvmArgs("-XX:-DontCompileHugeMethods")
+    systemProperty("java.awt.headless", "true")
+    systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
+}

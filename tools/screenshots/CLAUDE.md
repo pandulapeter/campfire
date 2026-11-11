@@ -52,6 +52,17 @@ as each platform's listing shows it, at its device's own pixels, then framed. Th
   frames at the label's middle, since `tap` settles between them. A clip that types raises `OnScreenKeyboard`, which
   the app is told of as the platform's keyboard inset.
 
+## Benchmark
+
+`./gradlew :tools:screenshots:benchmark` (`Benchmark.kt`; `--args="--runs <n> --songs <n>"`, by default 3 and 3,000)
+prints a table of how long a large library takes: the start until the songs list shows its first song, a long song
+until its first line is drawn, a PDF of 60 songs from opening the export screen until the picker gets it, and a zip of
+the library imported into an empty one (until the review, until listed), plus the first start's resident set and the
+peak heap. The library is made up from a seed (`BenchmarkLibrary.kt`), never committed. Each figure is taken cold (the
+first, in a fresh process: what a launch feels like) and then as the median of warm runs, each in an app started anew.
+Nothing runs it but the owner and nothing is written: the numbers are the machine's, comparable only with its own
+earlier runs. Sync is not measured, since its fake provider is `:data:sync:implementation`'s test code.
+
 ## UI tests
 
 `./gradlew :tools:screenshots:test`, run by `tests.yml`. Each test starts the whole app with `runAppTest` — real view

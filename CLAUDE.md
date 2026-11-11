@@ -261,6 +261,7 @@ JVM; a release is still checked by hand. Add or update tests with every change t
 ./gradlew -p gradle :build-logic:test      # packaging helpers
 ./gradlew :tools:screenshots:test          # UI tests (tools/screenshots/CLAUDE.md)
 ./gradlew :data:source:local:implementation:iosSimulatorArm64Test   # the file storage contract on the iOS simulator
+./gradlew :tools:screenshots:benchmark       # timings of a 3,000-song library, by hand only (machine-dependent)
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
