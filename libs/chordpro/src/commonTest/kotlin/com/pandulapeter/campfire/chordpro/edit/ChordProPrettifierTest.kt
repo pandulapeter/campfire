@@ -284,6 +284,22 @@ class ChordProPrettifierTest {
         )
     }
 
+    @Test
+    fun `a stray end of a tab or grid leaves the paragraph it stands in whole`() {
+        for (raw in listOf("la\n{eot}\nlo", "la\n{end_of_grid}\nlo")) {
+            val formatted = ChordProPrettifier.prettify(raw)
+            assertEquals("$raw\n", formatted)
+            assertEquals(ChordProParser.parse(raw).blocks, ChordProParser.parse(formatted).blocks)
+        }
+    }
+
+    @Test
+    fun `a break after a stray end of a section is formatted the same the second time`() {
+        val formatted = ChordProPrettifier.prettify("la\n{end_of_chorus}\n{np}\n{c: x}")
+        assertEquals("la\n{end_of_chorus}\n\n{np}\n\n{c: x}\n", formatted)
+        assertEquals(formatted, ChordProPrettifier.prettify(formatted))
+    }
+
     private companion object {
         const val NEW_SONG_IN_CHORUS =
             "{title: A}\n{start_of_chorus}\nla\n{new_song}\n{title: B}\nlb\n{tempo: 100}\n{end_of_chorus}\n{new_song}\n{title: C}\n\nlc"

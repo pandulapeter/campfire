@@ -27,7 +27,9 @@ public object ChordProPrettifier {
      * with a final newline. Repeated directives keep their relative order. Source comments and settings anchor
      * metadata groups; body directives (including key changes) stay where they were written. Lyrics and the inside
      * of environments retain their whitespace, including blank lines in tabs, grids and delegated notation, except for
-     * the blank lines that end a section, right before its `{end_of_…}`.
+     * the blank lines that end a section, right before its `{end_of_…}`. An `{end_of_…}` that closes nothing ends the
+     * paragraph it stands in as the parser reads it: any other closes it, so a break after it is set apart, and a stray
+     * `{end_of_tab}` or `{end_of_grid}` does not, so no blank line is put after it.
      *
      * A `{tempo}` or a `{time}` is the exception, since what it means depends on where it stands: the first readable one
      * in the body of a song whose header has none is the song's own value (see [ChordProParser]), so it is moved into
@@ -178,7 +180,7 @@ public object ChordProPrettifier {
             output += if (directive == null) rawLine else trimmed
             when {
                 directive == null || isLegacyHeading || isLineMode -> isImplicitSectionRunning = true
-                start != null || directive.name == "chorus" || directive.name == "new_song" || directive.name == "ns" ->
+                start != null || directive.name == "chorus" || isNewSong || (end != null && end != "tab" && end != "grid") ->
                     isImplicitSectionRunning = false
             }
             when {
@@ -188,7 +190,7 @@ public object ChordProPrettifier {
                     song++
                     gap()
                 }
-                (directive?.name in breakNames && !cutsRunningSection) || end != null -> gapBeforeNext = true
+                (directive?.name in breakNames && !cutsRunningSection) || (end != null && end != "tab" && end != "grid") -> gapBeforeNext = true
             }
         }
         flushTimings()
