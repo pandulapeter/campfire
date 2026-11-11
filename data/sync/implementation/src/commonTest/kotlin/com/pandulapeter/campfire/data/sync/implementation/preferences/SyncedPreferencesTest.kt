@@ -183,6 +183,17 @@ class SyncedPreferencesTest {
     )
 
     @Test
+    fun `every value cleared here is left out of what this device holds`() = assertEquals(
+        document("""{}"""),
+        SyncedPreferencesDocument.localDocument(
+            base = document(
+                """{"a.cho":{"transposition":1,"tempo":90,"capo":2,"autoScrollSpeed":130,"beatLevels":{"3/4":["accent","normal","muted"]}}}""",
+            ),
+            preferences = SyncedPreferences(),
+        ),
+    )
+
+    @Test
     fun `values that could not have been written are not read`() = assertEquals(
         SyncedPreferences(transpositions = mapOf("a.cho" to 2), tempos = mapOf("a.cho" to 120)),
         SyncedPreferencesDocument.preferencesOf(
