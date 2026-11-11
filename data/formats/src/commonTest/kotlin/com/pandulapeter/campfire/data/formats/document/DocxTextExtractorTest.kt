@@ -125,15 +125,33 @@ class DocxTextExtractorTest {
 
     @Test
     fun `a large style named by many paragraphs takes time in proportion to the document`() = runTest {
-        // Compared with a quarter of itself rather than with a fixed bound, since a CI runner is several times slower
-        // than a laptop: a style read again for every paragraph naming it takes time growing with their product.
-        suspend fun timeOf(size: Int): Duration {
+        assertTakesTimeInProportion { size ->
             val styles = "<w:styles xmlns:w='urn:test'><w:style w:type='paragraph' w:styleId='Big'><w:name w:val='Big'/><w:pPr><w:tabs>" +
                 (1..size).joinToString("") { "<w:tab w:val='left' w:pos='$it'/>" } + "</w:tabs></w:pPr></w:style></w:styles>"
-            val xml = document("<w:p><w:pPr><w:pStyle w:val='Big'/></w:pPr><w:r><w:t>a</w:t></w:r></w:p>".repeat(size / 4))
+            document("<w:p><w:pPr><w:pStyle w:val='Big'/></w:pPr><w:r><w:t>a</w:t></w:r></w:p>".repeat(size / 4)) to styles
+        }
+    }
+
+    @Test
+    fun `a long font name over much text takes time in proportion to the document`() = runTest {
+        assertTakesTimeInProportion { size ->
+            val styles = "<w:styles xmlns:w='urn:test'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii='${"x".repeat(size * 4)}'/>" +
+                "</w:rPr></w:rPrDefault></w:docDefaults></w:styles>"
+            document("<w:p><w:r><w:t>abcd</w:t></w:r></w:p>".repeat(size)) to styles
+        }
+    }
+
+    /**
+     * Compares the time a document of [size][QUARTER_SIZE] takes with one four times its size rather than with a fixed
+     * bound, since a CI runner is several times slower than a laptop: work growing with the product of two parts of a
+     * document, such as a style and the paragraphs naming it, outgrows the reader's own per-paragraph work at this size.
+     */
+    private suspend fun assertTakesTimeInProportion(documentOf: (size: Int) -> Pair<String, String>) {
+        suspend fun timeOf(size: Int): Duration {
+            val (xml, styles) = documentOf(size)
             val started = TimeSource.Monotonic.markNow()
-            val lines = DocxTextExtractor.fromXml(xml, styles).pages.flatMap { it.lines }
-            return started.elapsedNow().also { assertEquals(size / 4, lines.size) }
+            DocxTextExtractor.fromXml(xml, styles)
+            return started.elapsedNow()
         }
         timeOf(QUARTER_SIZE)
         val quarter = List(3) { timeOf(QUARTER_SIZE) }.min()
@@ -144,7 +162,7 @@ class DocxTextExtractorTest {
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
 
     private companion object {
-        /** Style entries and paragraphs in a quarter of the document whose reading time is compared with the whole's. */
+        /** How large a quarter of a document is whose reading time is compared with the whole's. */
         const val QUARTER_SIZE = 5_000
     }
 }

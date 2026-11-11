@@ -165,6 +165,7 @@ object DocxTextExtractor {
     }
 
     private const val MAX_CONTENT_CONTROL_DEPTH = 16
+    private const val MAX_FONT_NAME_LENGTH = 64
 
     private fun tabStops(tabs: XmlElement) = tabs.children.filter { it.attribute("val") != "clear" }
         .mapNotNull { it.attribute("pos")?.toDoubleOrNull()?.div(20)?.takeIf { position -> position.isFinite() && position in 0.0..1_000_000.0 } }.sorted()
@@ -187,7 +188,9 @@ object DocxTextExtractor {
                 RunProperties(
                     size = it.child("sz")?.attribute("val")?.toDoubleOrNull()?.div(2)?.takeIf { size -> size.isFinite() },
                     bold = it.child("b")?.let { b -> b.attribute("val") !in listOf("0", "false", "off") },
-                    font = it.child("rFonts")?.let { fonts -> fonts.attribute("ascii") ?: fonts.attribute("hAnsi") },
+                    // Only the name of a monospace font is looked for in it, which the start of any name holds; a longer one
+                    // would be searched again for every run in its style.
+                    font = it.child("rFonts")?.let { fonts -> fonts.attribute("ascii") ?: fonts.attribute("hAnsi") }?.take(MAX_FONT_NAME_LENGTH),
                     raised = it.child("vertAlign")?.attribute("val")?.let { value -> value == "superscript" },
                 )
             }
@@ -195,7 +198,8 @@ object DocxTextExtractor {
     }
 
     private data class Style(val size: Double = 12.0, val bold: Boolean = false, val font: String = "", val raised: Boolean = false) {
-        val monospace get() = listOf("courier", "consolas", "monaco", "menlo", "liberation mono", "dejavu sans mono", "lucida console").any { font.contains(it, true) }
+        /** Every character's width asks, so it is decided once per style. */
+        val monospace = listOf("courier", "consolas", "monaco", "menlo", "liberation mono", "dejavu sans mono", "lucida console").any { font.contains(it, true) }
         fun with(properties: XmlElement?) = with(RunProperties.of(properties))
         fun with(properties: RunProperties?): Style {
             if (properties == null) return this
