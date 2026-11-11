@@ -241,6 +241,19 @@ class SharedCopySyncTest {
     }
 
     @Test
+    fun `a setlist shared under another spelling of its name is read under this device's`() = runTest {
+        val device = Device(library())
+        cloud.share(sharedEntry(shareId = SETLIST.shareId, kind = SharedLinkKind.SETLIST, fileName = "Gig.setlist.json", title = "Gig"))
+        device.sync(cloud)
+
+        device.library.files[song(1)] = "One, edited".encodeToByteArray()
+        device.sync(cloud)
+
+        assertTrue("One, edited" in cloud.copyOf(SETLIST.shareId))
+        assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SETLIST.shareId).state)
+    }
+
+    @Test
     fun `copies deleted by hand mark their shares as dead`() = runTest {
         val device = sharedDevice()
 
