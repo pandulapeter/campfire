@@ -169,7 +169,7 @@ internal class ConflictResolver(
      * This device's version is written to its copy before the folder's goes over it, so that it is on disk throughout;
      * a copy left by an earlier attempt that already holds it is used again. A save landing on the file in between
      * leaves the file to the next pass and takes the copy back, since the save supersedes what the copy holds. The
-     * copy goes up as a new file, or is left to its own operation where the folder already lists its name.
+     * copy goes up as a new file: its name is one the folder did not list.
      */
     private suspend fun keepRemoteUnderName(
         pass: SyncPass,
@@ -206,9 +206,6 @@ internal class ConflictResolver(
         if (taken.isUnresolved) {
             if (!isReused) discardCopy(copyKey, localBytes, onLocalFileChanged)
             return taken
-        }
-        if (copyKey.folded().name in remoteNames) {
-            return taken.copy(summary = taken.summary.copy(conflicts = listOf(copyName)))
         }
         return when (val uploaded = pass.run.provider.upload(copyKey.kind, copyKey.name, localBytes, expectedRevision = null)) {
             is RemoteWriteResult.Written -> SyncEngine.OperationOutcome(
