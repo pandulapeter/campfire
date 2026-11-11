@@ -277,6 +277,24 @@ class TwoDeviceSyncTest {
     }
 
     @Test
+    fun `a song saved under another spelling of a name while the run downloads it becomes a conflict`() = runTest {
+        // A file system that tells the spellings apart, as Android, Linux, and the web do, while the service does not.
+        val cloud = FakeSyncProvider(ignoresCase = true)
+        val c = Device(mapOf(song("Hallelujah") to ORIGINAL))
+        val d = Device()
+        c.sync(cloud)
+        cloud.onDownload = { d.library.files[song("hallelujah")] = HERE }
+        d.sync(cloud)
+        cloud.onDownload = {}
+        c.sync(cloud)
+
+        val expected = mapOf("Hallelujah (2).cho" to ORIGINAL.decodeToString())
+        assertEquals(expected + ("hallelujah.cho" to HERE.decodeToString()), d.contents)
+        assertEquals(expected + ("Hallelujah.cho" to HERE.decodeToString()), c.contents)
+        assertConverges(c, d, cloud)
+    }
+
+    @Test
     fun `a conflict whose incoming version a numbered file still holds here keeps it when the folder changed that file`() = runTest {
         val (a, b) = devicesInStep(extra = mapOf(song("song_1 (2)") to "Kept aside".encodeToByteArray()))
         // B takes the version kept aside back under the song's name and writes something new over the numbered file.

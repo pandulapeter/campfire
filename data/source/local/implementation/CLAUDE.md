@@ -14,8 +14,10 @@ Skipped or unreadable files are logged to the injected `Logger`.
 ## `FileStorage` (the only per-platform part)
 
 - **Performance**: saving must not list the directory (`listNames`, `info`); on OPFS a listing opens every file, which
-  made an import quadratic. `readTexts` is one browser call per batch on OPFS. The scan uses `listForScan` / `readScan`
-  (size and date read with the text, oversized files reported and never read).
+  made an import quadratic. The one exception is sync's write over a downloaded name: `existingSpellingOf` lists names
+  once where the exact name is missing, so a file made meanwhile under another spelling is not given a twin.
+  `readTexts` is one browser call per batch on OPFS. The scan uses `listForScan` / `readScan` (size and date read with
+  the text, oversized files reported and never read).
 - **Directories**: Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path;
   moving a directory or renaming the file means changing those XML files. iOS backs up whole directories, so
   `SyncIndexLocalSourceImpl`, `SharedLinksLocalSourceImpl`, `EditorDraftLocalSourceImpl`, and `CoverArtLocalSourceImpl`

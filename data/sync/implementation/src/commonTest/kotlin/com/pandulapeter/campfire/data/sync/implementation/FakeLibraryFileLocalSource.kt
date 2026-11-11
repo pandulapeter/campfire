@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
  * which is where a test makes the disk full, and [onDelete] before a deletion. The last two may suspend, which is
  * where a test lets the app write a file in the middle of the engine's own change to it. [canHoldFileName] is where a
  * test makes a Windows PC. A free name, and a numbered variant of one, is found under any case or Unicode form, as the
- * real storage finds it.
+ * real storage finds it, and so is the spelling a file is held under.
  */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -41,6 +41,10 @@ internal class FakeLibraryFileLocalSource(
         val key = SyncKey(kind = kind, name = name)
         onRead(key)
         return files[key]
+    }
+
+    override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = SyncKey(kind = kind, name = name).let { key ->
+        if (key in files) name else files.keys.firstOrNull { it.kind == kind && LibraryFiles.isSameLibraryName(it.name, name) }?.name
     }
 
     override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {

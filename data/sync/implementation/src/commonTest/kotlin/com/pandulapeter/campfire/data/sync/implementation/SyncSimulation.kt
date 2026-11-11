@@ -117,10 +117,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     }
 
     /**
-     * A name from the pool, or the file already holding it under another spelling, which a save then edits. While the
-     * device's own run is going, a new file takes the folder's spelling of its name, and a rename never changes only the
-     * spelling: a run decides about a file by its exact name, so one made meanwhile under another spelling is a second
-     * file to a file system that tells spellings apart (`documentation/issues/sync-spelling-made-during-a-run.md`).
+     * A name from the pool, or the file already holding it under another spelling, which a save then edits. A new file
+     * may take another spelling than the folder's, also while the device's own run is going.
      */
     private fun newName(device: Device): SyncKey {
         val key = if (random.nextInt(4) == 0) {
@@ -128,9 +126,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         } else {
             SyncKey(kind = LibraryFileKind.SONG, name = SONG_NAMES.random(random))
         }
-        return device.library.files.keys.firstOrNull { it.isSameFileAs(key) }
-            ?: cloud.files.keys.firstOrNull { device === runningDevice && it.isSameFileAs(key) }
-            ?: key
+        return device.library.files.keys.firstOrNull { it.isSameFileAs(key) } ?: key
     }
 
     private fun save(device: Device, key: SyncKey) {
@@ -150,9 +146,6 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         val target = SyncKey(kind = key.kind, name = names.random(random))
         val files = device.library.files
         if (target == key || files.keys.any { it != key && it.isSameFileAs(target) }) return
-        // See newName: while the device's own run is going, no name changes only its spelling.
-        val isRespelling = target.isSameFileAs(key) || cloud.files.keys.any { it.isSameFileAs(target) && it != target }
-        if (device === runningDevice && isRespelling) return
         files[target] = files.remove(key)!!
         log += "${device.label} renames ${key.name} to ${target.name}"
     }

@@ -17,7 +17,10 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/** The copy sync brings down of a file changed on both sides lands next to what is there, never over it. */
+/**
+ * The copy sync brings down of a file changed on both sides lands next to what is there, never over it, and a file is
+ * found under any spelling of its name.
+ */
 class LibraryFileLocalSourceImplTest {
 
     @Test
@@ -98,6 +101,19 @@ class LibraryFileLocalSourceImplTest {
         localSource.writeLibraryFile(LibraryFileKind.SONG, "song_1 (2) copy.cho", REMOTE)
 
         assertNull(localSource.numberedVariantHolding(LibraryFileKind.SONG, "song_1.cho", REMOTE))
+    }
+
+    @Test
+    fun `a file is found under another case or Unicode form where the file system tells them apart`() = runTest {
+        val localSource = LibraryFileLocalSourceImpl(InMemoryFileStorage(foldsNames = false))
+        localSource.writeLibraryFile(LibraryFileKind.SONG, COMPOSED_LOWERCASE, LOCAL)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "Song.cho", LOCAL)
+        localSource.writeLibraryFile(LibraryFileKind.SONG, "song.cho", OTHER)
+
+        assertEquals(COMPOSED_LOWERCASE, localSource.existingSpellingOf(LibraryFileKind.SONG, DECOMPOSED_CAPITAL))
+        assertEquals("song.cho", localSource.existingSpellingOf(LibraryFileKind.SONG, "song.cho"))
+        assertNull(localSource.existingSpellingOf(LibraryFileKind.SONG, "other.cho"))
+        assertNull(localSource.existingSpellingOf(LibraryFileKind.SETLIST, "song.cho"))
     }
 
     private companion object {

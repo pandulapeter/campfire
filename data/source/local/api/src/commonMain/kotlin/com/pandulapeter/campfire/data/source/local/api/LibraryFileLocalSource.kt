@@ -35,6 +35,15 @@ interface LibraryFileLocalSource {
      */
     suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray?
 
+    /**
+     * The name a file here has that is [name] under any case or Unicode form (`LibraryFiles.isSameLibraryName`):
+     * [name] itself where the file system finds it, else the first listed spelling of it, or null where there is none.
+     * Sync asks it just before writing over a name, since a file made under another spelling meanwhile is the same file
+     * to the cloud folder and every other device, but a second one to a file system that tells spellings apart
+     * (Android, Linux, the web). Costs one listing where [name] itself is missing.
+     */
+    suspend fun existingSpellingOf(kind: LibraryFileKind, name: String): String?
+
     /** Creates the file or overwrites it. */
     suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray)
 

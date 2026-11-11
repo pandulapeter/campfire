@@ -241,12 +241,14 @@ internal class ConflictResolver(
         onLocalFileChanged: suspend (SyncKey) -> Unit,
     ): SyncEngine.OperationOutcome {
         val isWritten = libraryFileLock.withLock {
-            val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            // Under the spelling the compared bytes may be held under here, see spellingHeldOf.
+            val held = libraryFileLocalSource.spellingHeldOf(key)
+            val current = libraryFileLocalSource.readLibraryFile(held.kind, held.name)
             (current != null && current.contentEquals(localBytes)).also { isSame ->
                 if (isSame) {
                     withContext(NonCancellable) {
-                        libraryFileLocalSource.writeLibraryFile(key.kind, key.name, remote)
-                        onLocalFileChanged(key)
+                        libraryFileLocalSource.writeLibraryFile(held.kind, held.name, remote)
+                        onLocalFileChanged(held)
                     }
                 }
             }

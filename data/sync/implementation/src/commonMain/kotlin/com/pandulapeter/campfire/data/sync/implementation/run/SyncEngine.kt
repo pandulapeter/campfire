@@ -391,11 +391,11 @@ internal class SyncEngine(
             return resolve(pass, SyncOperation.Resolve(key, operation.revision), isFirstMeeting = false)
         }
         val downloaded = downloadWithinLimit(pass, key)
-        // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
-        // decided again on what is there now. The conflict it may turn out to be is resolved with the lock let go,
-        // since resolving it is more requests.
+        // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile, under
+        // any spelling: decided again on what is there now, and the conflict it may be is resolved without the lock.
         val changed = libraryFileLock.withLock {
-            val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            val held = libraryFileLocalSource.spellingHeldOf(key)
+            val current = libraryFileLocalSource.readLibraryFile(held.kind, held.name)
             if (current != null && !current.contentEquals(local)) {
                 current
             } else {
@@ -403,8 +403,8 @@ internal class SyncEngine(
                 // otherwise leave the file changed on disk, unknown to the repositories, and the lock let go before the
                 // write has settled (the web resumes a cancelled call while its write is still in flight).
                 withContext(NonCancellable) {
-                    libraryFileLocalSource.writeLibraryFile(key.kind, key.name, downloaded.bytes)
-                    pass.run.onLocalFileChanged(key)
+                    libraryFileLocalSource.writeLibraryFile(held.kind, held.name, downloaded.bytes)
+                    pass.run.onLocalFileChanged(held)
                 }
                 null
             }

@@ -38,7 +38,8 @@ Plain suspend functions over `:data:model` types: no flows, no platform types.
 - `DocumentLocalSource`: on `Dispatchers.Default`; null means unsupported or unreadable; cancellation propagates.
 - `LibraryFileLocalSource` (the library as bytes for sync) never looks inside files, so unparseable songs still travel.
   `writeLibraryFileToFreeName` lands a conflict copy as ` (2)` on a name also free in the cloud folder;
-  `numberedVariantHolding` finds one already holding the incoming bytes, so sync reuses it.
+  `numberedVariantHolding` finds one already holding the incoming bytes, so sync reuses it; `existingSpellingOf` finds a
+  file under any case or Unicode form of a name, so sync writes over it rather than beside it.
 - `SetlistComparison` is sync's one look inside a file (setlists differing only in their day, or a file before a read
   dated it). False or null for non-setlist bytes.
 - Outside `library/`, never exported, synced, or backed up: `CoverArtLocalSource` (never throws),

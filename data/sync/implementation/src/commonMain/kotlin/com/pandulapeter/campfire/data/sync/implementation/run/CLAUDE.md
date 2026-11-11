@@ -28,7 +28,9 @@
   - a demo file this device planted that still hashes to `UserPreferences.demoLibraryContentHashes` and has no index
     entry. With an index entry it was changed back on purpose and keeps its copy.
 - **A download is decided twice**: before the request and just before the write, so a save made meanwhile becomes a
-  conflict. The index records the revision the download fetched. Every local change happens under `LibraryFileLock`,
+  conflict. The second time, and `takeRemote`'s check, look under any spelling of the name (`spellingHeldOf`) and write
+  under the one found: a file made meanwhile as `hallelujah.cho` is that conflict, not a twin of `Hallelujah.cho` on a
+  file system that tells them apart. The index records the revision the download fetched. Every local change happens under `LibraryFileLock`,
   which the repositories hold from their check to their write, so a save is never overwritten or deleted silently.
 - **Deletion guard** (`DeletionGuard`): a plan stops with `Result.DeletionsNeedConfirmation` if its deletions on one
   side exceed half the index (at least `MIN_DELETIONS_TO_ASK`) or are all of it, or if it would delete remotely while

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.library.LibraryFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -36,6 +37,12 @@ internal class LibraryFileLocalSourceImpl(
     }
 
     override suspend fun readLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.readBytes(kind.directory, name)
+
+    override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = if (fileStorage.exists(kind.directory, name)) {
+        name
+    } else {
+        fileStorage.listNames(kind.directory).firstOrNull { LibraryFiles.isSameLibraryName(it, name) }
+    }
 
     override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) =
         fileStorage.writeBytes(kind.directory, name, bytes)
