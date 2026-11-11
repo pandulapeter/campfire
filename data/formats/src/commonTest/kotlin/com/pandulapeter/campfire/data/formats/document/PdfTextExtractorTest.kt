@@ -271,6 +271,13 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun `nested actual text sequences over many glyphs hit the work budget`() = runTest {
+        val shown = "BT /F1 10 Tf 50 700 Td (" + "a".repeat(55_000) + ") Tj 0 -20 Td (" + "a".repeat(55_000) + ") Tj ET "
+        val content = "/Span << /ActualText (x) >> BDC ".repeat(1_000) + shown + "EMC ".repeat(1_000)
+        assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(PdfTestWriter.song(content)) }
+    }
+
+    @Test
     fun `inherited rotation keeps horizontal text and drops the other orientation`() = runTest {
         val writer = PdfTestWriter()
         writer.add("<< /Type /Catalog /Pages 2 0 R >>")

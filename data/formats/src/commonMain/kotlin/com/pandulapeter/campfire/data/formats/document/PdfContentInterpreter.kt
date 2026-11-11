@@ -159,7 +159,9 @@ internal class PdfContentInterpreter(
                 "BDC" -> marked += glyphs.size to ((operands.getOrNull(1) as? PdfDictionary)?.get("ActualText") as? PdfString)
                 "EMC" -> if (marked.isNotEmpty()) {
                     val (from, actual) = marked.removeAt(marked.lastIndex)
-                    if (actual != null) replace(from, actual)
+                    // Every glyph shown inside is looked at again, and nested sequences each look at all of them, so the
+                    // look is paid for like content read again.
+                    if (actual != null) { budget.chargeWork(maxOf(0, glyphs.size - from).toLong()); replace(from, actual) }
                 }
                 "Tf" -> {
                     val name = operands.firstOrNull().name()
