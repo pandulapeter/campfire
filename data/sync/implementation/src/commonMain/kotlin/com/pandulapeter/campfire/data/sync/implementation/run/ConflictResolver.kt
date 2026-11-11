@@ -106,9 +106,9 @@ internal class ConflictResolver(
             withContext(NonCancellable) {
                 // A copy an earlier attempt left - one the network cut off before the file was settled - already holds
                 // the incoming version, and another one each attempt would pile up identical songs on every device.
-                // Not one the folder lost since it went up: this pass deletes it here, and the version with it.
+                // Only one the folder holds no other version of, see isReusableCopy.
                 val reusable = libraryFileLocalSource.numberedVariantHolding(key.kind, key.name, remote)
-                    ?.takeUnless { name -> SyncKey(kind = key.kind, name = name).isDeletedElsewhere(pass, remoteNames) }
+                    ?.takeIf { name -> SyncKey(kind = key.kind, name = name).isReusableCopy(pass, remote) }
                 if (reusable != null) {
                     reusable to true
                 } else {
@@ -183,7 +183,7 @@ internal class ConflictResolver(
         val (copyName, isReused) = libraryFileLock.withLock {
             withContext(NonCancellable) {
                 val reusable = libraryFileLocalSource.numberedVariantHolding(key.kind, key.name, localBytes)
-                    ?.takeUnless { name -> SyncKey(kind = key.kind, name = name).isDeletedElsewhere(pass, remoteNames) }
+                    ?.takeIf { name -> SyncKey(kind = key.kind, name = name).isReusableCopy(pass, localBytes) }
                 if (reusable != null) {
                     reusable to true
                 } else {
@@ -221,10 +221,17 @@ internal class ConflictResolver(
         }
     }
 
-    /** Whether the folder held this file once (the pass's index has it) and no longer lists it: deleted elsewhere. */
-    private fun SyncKey.isDeletedElsewhere(pass: SyncPass, remoteNames: Set<String>): Boolean {
+    /**
+     * Whether this numbered file, which holds [bytes], can be their copy: the folder lists it holding them too, or it
+     * never held it. Not where the folder held it once (the pass's index has it) and no longer lists it, deleted
+     * elsewhere, nor where it lists other bytes under it, changed elsewhere: this pass deletes the file here or downloads
+     * the other version over it, and the version the copy was to keep with it.
+     */
+    private fun SyncKey.isReusableCopy(pass: SyncPass, bytes: ByteArray): Boolean {
         val folded = folded()
-        return folded.name !in remoteNames && pass.index.keys.any { it.folded() == folded }
+        val listed = pass.remoteFiles.values.firstOrNull { it.key.folded() == folded }
+            ?: return pass.index.keys.none { it.folded() == folded }
+        return listed.contentHash != null && listed.contentHash == pass.run.provider.contentHashOf(bytes)
     }
 
     /**
