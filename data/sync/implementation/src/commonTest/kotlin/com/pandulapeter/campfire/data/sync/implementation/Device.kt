@@ -33,14 +33,15 @@ import kotlin.time.TimeSource
  * One device connected to a cloud folder that other devices share: its library, the index its runs keep, and, where a
  * test gives it [preferences], the synced part of those settled after every completed run the way `SyncRunner` does it.
  * Its shared links' mirror and journal are [sharedLinks], and every completed run brings the shared copies up to date
- * after the preferences, as [buildNumber] builds them, as `SyncRunner` does.
+ * after the preferences, as [buildNumber] builds them, as `SyncRunner` does. Its file system compares names by [naming].
  */
 internal class Device(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     val preferences: FakeUserPreferencesRepository? = null,
+    naming: FileSystemNaming = FileSystemNaming.EXACT,
 ) {
 
-    val library = FakeLibraryFileLocalSource(files)
+    val library = FakeLibraryFileLocalSource(files, naming = naming)
     private val lock = LibraryFileLock()
     private val preferencesSync = preferences?.let { SyncedPreferencesSync(it, library, Logger.Standard) }
     private var index = SyncIndexDocument()

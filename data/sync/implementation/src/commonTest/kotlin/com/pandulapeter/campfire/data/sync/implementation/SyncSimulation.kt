@@ -28,7 +28,9 @@ import kotlin.random.Random
  * do: songs and setlists created, edited, renamed, and deleted, under names that differ only by case or Unicode form
  * too; runs on any device, some of them stopped, failed, or raced part way by a save or by another device's run. Every
  * step checks what sync promises at all times, and the end lets every device sync until nothing moves and checks that
- * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. What it checks:
+ * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. Each device's file system
+ * compares names as one of the platforms' does ([PLATFORMS]), so one library meets case-sensitive and case-insensitive,
+ * composing and decomposing devices at once. What it checks:
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
  * - no device and no folder holds one name in two spellings;
@@ -42,7 +44,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     private val random = Random(seed)
     private val cloud = FakeSyncProvider(ignoresCase = seed % 2 == 0, resolvesListedNames = seed % 2 != 0)
-    private val devices = List(2 + random.nextInt(2)) { Device() }
+    private val devices = List(2 + random.nextInt(2)) { Device(naming = PLATFORMS.random(random)) }
     private val log = mutableListOf<String>()
 
     /** Every version a user saved that no user has replaced or deleted since: what sync must never lose. */
@@ -131,13 +133,13 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     private fun save(device: Device, key: SyncKey) {
         val version = "v${++versions} by ${device.label}"
-        device.library.files.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
+        device.library.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
         saved += version
         log += "${device.label} saves ${key.name} = $version"
     }
 
     private fun delete(device: Device, key: SyncKey) {
-        device.library.files.remove(key)?.let { saved -= it.decodeToString() }
+        device.library.remove(key)?.let { saved -= it.decodeToString() }
         log += "${device.label} deletes ${key.name}"
     }
 
@@ -146,7 +148,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         val target = SyncKey(kind = key.kind, name = names.random(random))
         val files = device.library.files
         if (target == key || files.keys.any { it != key && it.isSameFileAs(target) }) return
-        files[target] = files.remove(key)!!
+        device.library.put(target, files.remove(key)!!)
         log += "${device.label} renames ${key.name} to ${target.name}"
     }
 
@@ -323,7 +325,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         appendLine("Steps:")
         log.forEach { appendLine("  $it") }
         devices.forEach { device ->
-            appendLine("${device.label}: ${device.library.files.entries.joinToString { (key, bytes) -> "${key.name}=${bytes.decodeToString()}" }}")
+            appendLine("${device.label} (${device.library.naming}): ${device.library.files.entries.joinToString { (key, bytes) -> "${key.name}=${bytes.decodeToString()}" }}")
         }
         appendLine("Cloud: ${cloud.files.entries.joinToString { (key, file) -> "${key.name}=${file.first.decodeToString()}" }}")
         append("Saved: ${saved.sorted()}")
@@ -362,7 +364,20 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         // Escaped, so that no editor or formatter folds the composed and the decomposed spelling into one.
         val SONG_NAMES = listOf(
             "song_1.cho", "song_2.cho", "song_3.cho", "song_4.cho", "song_5.cho", "song_6.cho", "song_1 (2).cho",
-            "hallelujah.cho", "Hallelujah.cho", "HALLELUJAH.cho", "café.cho", "café.cho", "Café.cho",
+            "hallelujah.cho", "Hallelujah.cho", "HALLELUJAH.cho", "café.cho", "café.cho", "Café.cho", "CAFE\u0301.cho",
+        )
+        /**
+         * The file systems a library lives on, a Mac's twice: as APFS keeps the name it was given, and as an HFS+ volume
+         * keeps every name decomposed. A write through another spelling may leave the file under either spelling.
+         */
+        val PLATFORMS = listOf(
+            FileSystemNaming.EXACT,
+            FileSystemNaming.WINDOWS,
+            FileSystemNaming.WINDOWS.copy(takesWrittenSpelling = true),
+            FileSystemNaming.IPHONE,
+            FileSystemNaming.MAC,
+            FileSystemNaming.MAC.copy(takesWrittenSpelling = true),
+            FileSystemNaming.MAC.copy(storesDecomposed = true),
         )
         val SETLIST_NAMES = listOf("gig.setlist.json", "Gig.setlist.json", "gig (2).setlist.json", "rehearsal.setlist.json")
     }
