@@ -21,9 +21,12 @@ import.
 ## Decisions
 
 - **Images are library files, not embedded data.** ChordPro documents no data URI or base64 form, and a picture inside
-  the text would bloat the editor, the sync of every edit, and every diff. Images live in `library/images/`, a third
+  the text would bloat the editor, the sync of every edit, and every diff. Images live in `library/files/`, a third
   `LibraryFileKind` beside songs and setlists, and the song names one with a bare file name: `{image: src=name.jpg}`,
-  the form the spec calls portable (it looks a bare name up beside the song and in an `images/` folder).
+  the form the spec calls portable (it looks a bare name up beside the song and in an `images/` folder). The folder
+  is named for files, not images, so that other files kept with a song (a PDF chart opened in the system viewer,
+  say) could later use the same storage, sync, and pruning without renaming a folder every user's cloud already
+  holds. Archives still put images in `images/`, where ChordPro looks.
 - **An image's name is its content.** Campfire names an image it writes by the first 16 hex digits of its SHA-256 plus
   its type's extension (`3f9a…c1.jpg`); a different file that would take an existing name takes more digits. So an
   image is never edited, only added or removed, and the same picture in two songs or on two devices is one file:
@@ -60,7 +63,7 @@ import.
   its title, artist, tags, and text, so it is listed, searched, and in its setlists as before.
 - **Older versions pass images through.** `LibraryFileKind.matches()` already leaves unknown cloud folders alone, and
   the parser drops `{image}` today without touching the text, so a device on v5.3 keeps every image directive and
-  never deletes `images/`. No stored document gains a field; the sync index only gains `images/<name>` keys (step 4
+  never deletes `files/`. No stored document gains a field; the sync index only gains `files/<name>` keys (step 4
   checks the v5.3.1 index reader ignores a key of an unknown kind, and bumps nothing if it does).
 
 ## Where it hooks in today
@@ -112,24 +115,24 @@ small file per format and orientation, truncated and malformed headers.
 
 ### 3. The library's images (storage, repository)
 
-- `StorageDirectory.IMAGES` → `library/images`, `LibraryFileKind.IMAGE("images")`.
+- `StorageDirectory.FILES` → `library/files`, `LibraryFileKind.FILE("files")`.
 - `ImageRepository`: `add(bytes): name?` (refuses unknown formats and >8 MiB, names by content), `read(name)`,
   `info(name)` (header read once, cached), and pruning of unreferenced images after a full library read, skipping
   every name the open draft's text holds.
 - `LibraryFiles`: the image name rule (hex + extension, never normalized), and image extensions out of
   `BINARY_EXTENSIONS`' "never read" use once step 6 reads them.
-- Android backup: `library/images` **excluded** in both rules files. Android's Auto Backup stops backing up an app
+- Android backup: `library/files` **excluded** in both rules files. Android's Auto Backup stops backing up an app
   whose data passes 25 MB, so photos would cost the user their songs' backup; a restored library shows placeholders
   until sync or a re-import brings the pictures back. iOS keeps them in its backup (no such cap).
 - Tests: naming, a collision taking more digits, pruning that keeps referenced and drafted names.
 
 ### 4. Sync
 
-- The planner syncs `images/` like the other kinds, by content hash. Since an image never changes, both sides
+- The planner syncs `files/` like the other kinds, by content hash. Since an image never changes, both sides
   creating one name is the same file; a "modified" image on either side is treated as a new file plus a deletion.
 - A reference beats a deletion (Decisions); the run that would delete most of the library counts songs and setlists
   only, since images follow them.
-- `SharedCopySync` and the index: `images/<name>` keys; check against the v5.3.1 tag that its index reader ignores
+- `SharedCopySync` and the index: `files/<name>` keys; check against the v5.3.1 tag that its index reader ignores
   them; a test reading the current index fixture unchanged.
 - Tests: the planner cases (added on one side, both, deleted under a reference, deleted unreferenced), and the live
   recipe (`sync-live-testing`) once by hand with two devices.
@@ -180,7 +183,7 @@ every page and is left out. PDF golden: a page with a photo and a page with a pl
 
 ### 10. Documentation
 
-- Root `CLAUDE.md`: `library/images/` in the library layout; the privacy section's backup line (images excluded on
+- Root `CLAUDE.md`: `library/files/` in the library layout; the privacy section's backup line (images excluded on
   Android); a product rule (images are library files named by content, kept while a song names them); sync's
   invariants (a reference beats a deletion).
 - `CLAUDE.md` of `chordpro`, `data/formats`, storage, sync, `ui/songView`, `ui/print`, the editor toolbar, and import.
