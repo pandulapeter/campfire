@@ -85,6 +85,24 @@ internal object PdfRunningLines {
     fun liftedFooter(page: Page) = page.lines.filter { it.text.isNotBlank() && !isEdge(it.y, page.height) }.maxByOrNull { it.y }
         ?.takeIf { it.y > page.height / 2 }
 
+    /**
+     * Whether a baseline is one of [lines]', within a fifth of an em of it: a dropped running line takes its whole
+     * baseline. Searched rather than compared with each of them, since a margin may hold as many lines as the page.
+     */
+    fun onBaselineOf(lines: List<Line>): (Double) -> Boolean {
+        val bands = lines.map { line ->
+            val reach = (line.spans.maxOfOrNull { it.size } ?: 1.0) * 0.22
+            line.y - reach to line.y + reach
+        }.sortedBy { it.first }
+        val furthest = bands.map { it.second }.runningReduce(::maxOf)
+        return { y ->
+            var low = 0
+            var high = bands.size
+            while (low < high) { val middle = (low + high) / 2; if (bands[middle].first <= y) low = middle + 1 else high = middle }
+            low > 0 && furthest[low - 1] >= y
+        }
+    }
+
     /** Whether a line at [y] is in the top or the bottom margin, where a running line is printed. */
     fun isEdge(y: Double, height: Double) = y < height * 0.08 || y > height * 0.92
 

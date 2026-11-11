@@ -117,6 +117,20 @@ class PdfRunningLinesTest {
         }
     }
 
+    @Test
+    fun `a top margin of page numbers between lines of text takes time in proportion to them`() = runTest {
+        assertTakesTimeInProportion(quarterSize = 30_000) { size ->
+            val content = (0 until size).joinToString(" ") { "1 0 0 1 0 ${999_000.0 - it * 0.05} Tm (${if (it % 2 == 0) "1" else "a"}) Tj" }
+            val writer = PdfTestWriter()
+            writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+            writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 999999] /Resources << /Font << /F1 4 0 R >> >> >>")
+            writer.add("<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>")
+            writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+            writer.stream("BT /F1 0.1 Tf $content ET")
+            assertEquals(size / 2, PdfTextExtractor.extract(writer.write()).pages.single().lines.size)
+        }
+    }
+
     /** The lines of a document of [count] pages in 10-point Courier, each page's content made by [content]. */
     private suspend fun extract(count: Int, content: (page: Int) -> String): List<List<String>> {
         val writer = PdfTestWriter()

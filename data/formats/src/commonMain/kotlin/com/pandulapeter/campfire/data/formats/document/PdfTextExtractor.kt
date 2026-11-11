@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.hasLifted
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isEdge
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.isPageCount
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.liftedFooter
+import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.onBaselineOf
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.runningLines
 import com.pandulapeter.campfire.data.formats.document.PdfRunningLines.signature
 import kotlinx.coroutines.CancellationException
@@ -143,13 +144,13 @@ object PdfTextExtractor {
             fun isRunning(line: Line) = line.text.trim().let { text ->
                 text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated
             }
-            val running = page.edges.filter { it.text.isNotBlank() && isRunning(it) }
+            val isOnRunningLine = onBaselineOf(page.edges.filter { it.text.isNotBlank() && isRunning(it) })
             // A wide margin lifts a page number above the bottom band, so the page's lowest line is also dropped wherever in
             // the lower half it stands when it counts this page among the document's; a time signature never reads so.
             val lowest = page.lines.maxByOrNull { it.y }
             val footer = if (isFooterLifted) liftedFooter(page) else null
             page.lines.filterNot { line ->
-                isEdge(line.y, page.height) && (isRunning(line) || running.any { abs(it.y - line.y) <= (it.spans.maxOfOrNull { span -> span.size } ?: 1.0) * 0.22 }) ||
+                isEdge(line.y, page.height) && (isRunning(line) || isOnRunningLine(line.y)) ||
                     line === lowest && line.y > page.height / 2 && isPageCount(line.text.trim(), index + 1, pages.size) ||
                     line === footer
             }
