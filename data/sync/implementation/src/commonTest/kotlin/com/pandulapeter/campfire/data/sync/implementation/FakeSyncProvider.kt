@@ -57,7 +57,7 @@ internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     private val sizes: Map<SyncKey, Long> = emptyMap(),
     var onDownload: suspend (SyncKey) -> Unit = {},
-    var onUpload: (SyncKey) -> Unit = {},
+    var onUpload: suspend (SyncKey) -> Unit = {},
     private val account: SyncAccount? = null,
     private val ignoresCase: Boolean = false,
     private val resolvesListedNames: Boolean = false,
@@ -85,7 +85,7 @@ internal class FakeSyncProvider(
 
     var refusedDeletions = emptySet<String>()
 
-    var onDelete: () -> Unit = {}
+    var onDelete: suspend () -> Unit = {}
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2

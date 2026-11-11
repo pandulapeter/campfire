@@ -20,10 +20,15 @@ import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedCopyContents
 import com.pandulapeter.campfire.data.sync.implementation.shared.FakeSharedLinksLocalSource
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksFormat
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedCopySync
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournal
-import com.pandulapeter.campfire.data.sync.implementation.shared.sharedCopySync
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJournalApplier
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
+import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRepositoryImpl
+import com.pandulapeter.campfire.data.model.sync.SyncState
+import com.pandulapeter.campfire.data.source.remote.api.sync.SyncProviders
 import kotlinx.coroutines.Dispatchers
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.random.Random
 import kotlin.test.assertIs
 import kotlin.time.Clock
@@ -34,7 +39,9 @@ import kotlin.time.TimeSource
  * One device connected to a cloud folder that other devices share: its library, the index its runs keep, and, where a
  * test gives it [preferences], the synced part of those settled after every completed run the way `SyncRunner` does it.
  * Its shared links' mirror and journal are [sharedLinks], and every completed run brings the shared copies up to date
- * after the preferences, as [buildNumber] builds them, as `SyncRunner` does. Its file system compares names by [naming].
+ * after the preferences, as [buildNumber] builds them, as `SyncRunner` does; [sharing] is what the app's sharing actions
+ * and its notes of renames and deletions go through, over the same mirror and journal. Its file system compares names by
+ * [naming].
  */
 internal class Device(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -55,14 +62,35 @@ internal class Device(
     var areSharedCopiesSettled = true
         private set
 
-    /** Only what the mirror and the journal use: nothing here launches or waits. */
+    /**
+     * What the mirror, the journal, and the sharing actions use. Unconfined, so that what a sharing action applies
+     * without waiting (`SharedLinksJournalApplier.applySoon`) runs in the caller's turn, as a test can replay it.
+     */
     private val environment = SyncEnvironment(
-        context = EmptyCoroutineContext,
+        context = Dispatchers.Unconfined,
         timeSource = TimeSource.Monotonic,
         clock = Clock.System,
         computation = Dispatchers.Unconfined,
         logger = Logger.Standard,
     )
+
+    private val mirror = SharedLinksMirror(sharedLinks, environment)
+    private val registry = SharedLinksRegistry(mirror, environment)
+    private val sharedLinksJournal = SharedLinksJournal(sharedLinks, environment)
+    private var sharingRepository: SharedLinksRepositoryImpl? = null
+
+    /** The sharing actions against [cloud], connected; one repository per device, as the app has one. */
+    fun sharing(cloud: FakeSyncProvider) = sharingRepository ?: SharedLinksRepositoryImpl(
+        syncProviders = SyncProviders(listOf(cloud)) { cloud.id },
+        stateHolder = SyncStateHolder(Logger.Standard).apply {
+            update { SyncState.Connected(account = TEST_ACCOUNT, progress = null, lastSyncedAt = null, lastOutcome = null) }
+        },
+        mirror = mirror,
+        registry = registry,
+        journal = sharedLinksJournal,
+        journalApplier = SharedLinksJournalApplier(sharedLinksJournal, registry, environment),
+        environment = environment,
+    ).also { sharingRepository = it }
 
     /** The library by file name, as text. */
     val contents get() = library.files.entries.associate { (key, bytes) -> key.name to bytes.decodeToString() }
@@ -127,11 +155,13 @@ internal class Device(
             keptFileNames = completed.summary.failed,
             onLocalSettled = {},
         )
-        areSharedCopiesSettled = sharedCopySync(
-            library = library,
-            environment = environment,
-            localSource = sharedLinks,
+        areSharedCopiesSettled = SharedCopySync(
+            libraryFileLocalSource = library,
             contents = sharedContents,
+            registry = registry,
+            mirror = mirror,
+            journal = sharedLinksJournal,
+            logger = Logger.Standard,
             buildNumber = buildNumber,
         ).synchronize(
             folder = cloud,
@@ -149,7 +179,7 @@ internal class Device(
     val indexSize get() = index.toIndex().size
 
     /** What the app's rename and deletion of a shared item leave for the next run. */
-    suspend fun journal(entry: SharedLinksJournal.Entry) = SharedLinksJournal(sharedLinks, environment).append(listOf(entry))
+    suspend fun journal(entry: SharedLinksJournal.Entry) = sharedLinksJournal.append(listOf(entry))
 
     /** A run whatever it comes to; only [sync] keeps what a completed one leaves. */
     suspend fun syncResult(cloud: FakeSyncProvider, deletionPolicy: SyncDeletionPolicy) = synchronize(

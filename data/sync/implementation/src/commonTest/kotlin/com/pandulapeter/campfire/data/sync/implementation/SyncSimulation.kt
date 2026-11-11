@@ -30,7 +30,8 @@ import kotlin.random.Random
  * step checks what sync promises at all times, and the end lets every device sync until nothing moves and checks that
  * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. Each device's file system
  * compares names as one of the platforms' does ([PLATFORMS]), so one library meets case-sensitive and case-insensitive,
- * composing and decomposing devices at once. What it checks:
+ * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]).
+ * What it checks:
  * - no version a user saved, and nobody replaced or deleted since, is gone from every device and the folder: an edit
  *   beats a deletion, and a conflict keeps both versions;
  * - no device and no folder holds one name in two spellings;
@@ -46,6 +47,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private val cloud = FakeSyncProvider(ignoresCase = seed % 2 == 0, resolvesListedNames = seed % 2 != 0)
     private val devices = List(2 + random.nextInt(2)) { Device(naming = PLATFORMS.random(random)) }
     private val log = mutableListOf<String>()
+    private val sharing = SimulatedSharing(cloud)
 
     /** Every version a user saved that no user has replaced or deleted since: what sync must never lose. */
     private val saved = mutableSetOf<String>()
@@ -65,6 +67,10 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         }
         cloud.onUpload = { key -> dueFault(canRunElsewhere = false)?.let { strike(it, key) } }
         cloud.onDelete = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
+        // The run's last step, bringing the shared copies and the list up to date, fails and is stopped like the rest.
+        cloud.onUploadDocument = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
+        cloud.onUploadSharedFile = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
+        cloud.onDeleteSharedFile = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
     }
 
     suspend fun run(scope: TestScope) {
@@ -90,11 +96,15 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private val Device.label get() = "ABC"[devices.indexOf(this)].toString()
 
     /** Changes [device]'s library the way the app does: never two files whose names differ only by case or form. */
-    private fun userStep(device: Device) {
+    private suspend fun userStep(device: Device) {
         if (device in lostLibraries) return
         val files = device.library.files
         val existing = files.keys.sortedBy { it.path }
         when {
+            existing.isNotEmpty() && random.nextInt(8) == 0 -> existing.random(random).let { key ->
+                log += "${device.label} shares ${key.name}: ${sharing.share(device, key)}"
+            }
+
             existing.isEmpty() || random.nextInt(10) < 5 -> {
                 save(device, existing.takeIf { random.nextBoolean() }?.randomOrNull(random) ?: newName(device))
             }
@@ -138,18 +148,20 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         log += "${device.label} saves ${key.name} = $version"
     }
 
-    private fun delete(device: Device, key: SyncKey) {
+    private suspend fun delete(device: Device, key: SyncKey) {
         device.library.remove(key)?.let { saved -= it.decodeToString() }
         log += "${device.label} deletes ${key.name}"
+        sharing.noteDeletion(device, key)
     }
 
-    private fun rename(device: Device, key: SyncKey) {
+    private suspend fun rename(device: Device, key: SyncKey) {
         val names = if (key.kind == LibraryFileKind.SONG) SONG_NAMES else SETLIST_NAMES
         val target = SyncKey(kind = key.kind, name = names.random(random))
         val files = device.library.files
         if (target == key || files.keys.any { it != key && it.isSameFileAs(target) }) return
         device.library.put(target, files.remove(key)!!)
         log += "${device.label} renames ${key.name} to ${target.name}"
+        sharing.noteRename(device, from = key, to = target)
     }
 
     private suspend fun syncStep(scope: TestScope, device: Device) {
@@ -233,7 +245,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     }
 
     /** What [fault] does to the run, whose request is about the file [key] where it is about one. */
-    private fun strike(fault: Fault, key: SyncKey?) {
+    private suspend fun strike(fault: Fault, key: SyncKey?) {
         when (fault) {
             Fault.OFFLINE -> throw SyncNetworkException("Offline")
             Fault.REFUSED -> throw IllegalStateException("Refused")
@@ -303,6 +315,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             val twice = keys.groupBy { it.folded() }.filterValues { it.size > 1 }
             check(twice.isEmpty()) { "$label holds one name in several spellings: ${twice.values}" }
         }
+        sharing.observe()
     }
 
     /**
@@ -333,10 +346,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             check(library == folder) { "${device.label} settled on another library than the folder's" }
         }
         check(folder.values.containsAll(saved)) { "Saved versions lost: ${saved - folder.values.toSet()}" }
+        sharing.checkSettled()
     }
 
     private fun worldState() = devices.map { it.library.files.entries.associate { (key, bytes) -> key.path to bytes.decodeToString() } } +
-        listOf(cloud.files.entries.associate { (key, file) -> key.path to file.first.decodeToString() + "@" + file.second })
+        listOf(cloud.files.entries.associate { (key, file) -> key.path to file.first.decodeToString() + "@" + file.second }) +
+        listOf(sharing.state().associateWith { "" })
 
     private fun describeWorld() = buildString {
         appendLine("Steps:")
@@ -345,7 +360,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             appendLine("${device.label} (${device.library.naming}): ${device.library.files.entries.joinToString { (key, bytes) -> "${key.name}=${bytes.decodeToString()}" }}")
         }
         appendLine("Cloud: ${cloud.files.entries.joinToString { (key, file) -> "${key.name}=${file.first.decodeToString()}" }}")
-        append("Saved: ${saved.sorted()}")
+        appendLine("Saved: ${saved.sorted()}")
+        append(sharing.describe())
     }
 
     private fun SyncKey.isSameFileAs(other: SyncKey) = kind == other.kind && LibraryFiles.isSameLibraryName(name, other.name)
