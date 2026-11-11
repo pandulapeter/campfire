@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.sync.implementation.Device
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
@@ -143,6 +144,19 @@ class SharedCopySyncTest {
         device.sync(cloud)
         assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SETLIST.shareId).state)
         assertTrue("One, edited" in cloud.copyOf(SETLIST.shareId))
+    }
+
+    @Test
+    fun `a copy compressed under the import limit that unpacks past it is too large to share`() = runTest {
+        val device = sharedDevice()
+        val copy = cloud.copyOf(SETLIST.shareId)
+        device.sharedContents.isCompressing = true
+
+        device.library.files[song(1)] = ByteArray((ImportLimits.MAX_IMPORT_SIZE + 1).toInt())
+        device.sync(cloud)
+
+        assertEquals(SharedLinksEntry.STATE_TOO_LARGE, cloud.entryOf(SETLIST.shareId).state)
+        assertEquals(copy, cloud.copyOf(SETLIST.shareId))
     }
 
     @Test

@@ -146,6 +146,17 @@ class ExportControllerTest {
     }
 
     @Test
+    fun `a backup compressed under the import limit that unpacks past it is saved with a warning`() = runTest {
+        val file = zip("campfire.zip", size = 1_000).copy(unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1)
+        libraryExport = ExportLibraryUseCase.Result(file = file, skippedFileNames = emptyList())
+        val (controller, _, messageSink) = controller(visibleDialog = null)
+        controller.exportLibrary(picker)
+        runCurrent()
+        assertEquals(listOf("campfire.zip"), picker.saved.map { it.name })
+        assertEquals(listOf<Message>(Message.ExportTooLargeToImport), messageSink.messages())
+    }
+
+    @Test
     fun `a second transfer is ignored while the first one runs`() = runTest {
         val (controller, _, _) = controller(visibleDialog = null)
         val gate = CompletableDeferred<Unit>()

@@ -22,13 +22,16 @@ import kotlinx.serialization.json.jsonObject
  * The library's formats as the shared-copy step's tests write them: a setlist is its title on the first line and the
  * song file names it holds on the following ones, a song's title is its first line, and a pack is every file's name and
  * bytes one after the other, which is as deterministic as the real zip. [packCount] is how many copies were built, and
- * [isOversized] makes every copy one byte more than a share may hold.
+ * [isOversized] makes every copy one byte more than a share may hold, and [isCompressing] every copy a few bytes, as a zip of
+ * text deflated far below what it unpacks to would be.
  */
 internal class FakeSharedCopyContents : SharedCopyContents {
 
     var packCount = 0
 
     var isOversized = false
+
+    var isCompressing = false
 
     override suspend fun setlistSongFileNames(bytes: ByteArray) = bytes.decodeToString().lines().drop(1).filter { it.isNotBlank() }
 
@@ -37,6 +40,7 @@ internal class FakeSharedCopyContents : SharedCopyContents {
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packCount++
         if (isOversized) return ByteArray((ImportLimits.MAX_IMPORT_SIZE + 1).toInt())
+        if (isCompressing) return files.keys.joinToString(separator = "\n").encodeToByteArray()
         return files.entries.joinToString(separator = "\n") { (name, bytes) -> "[$name]\n${bytes.decodeToString()}" }.encodeToByteArray()
     }
 }

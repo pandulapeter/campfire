@@ -61,6 +61,13 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
+    fun `the backup knows what an import unpacks it to`() = runTest {
+        val result = useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("c"))).invoke()
+
+        assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(result).file.unpackedSize)
+    }
+
+    @Test
     fun `names the songs it could not read`() = runTest {
         val result = useCase(
             songs = listOf(song("a"), song("b"), song("c")),

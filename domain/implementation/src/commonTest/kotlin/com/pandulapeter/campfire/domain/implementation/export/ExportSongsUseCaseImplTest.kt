@@ -46,6 +46,13 @@ class ExportSongsUseCaseImplTest {
     }
 
     @Test
+    fun `an archive of songs knows what an import unpacks it to`() = runTest {
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: Bee}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = true, rewrite = asStored)
+
+        assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(exported).unpackedSize)
+    }
+
+    @Test
     fun `songs asked for as an archive are zipped even when one is left`() = runTest {
         val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isDated = true, rewrite = asStored)
 
