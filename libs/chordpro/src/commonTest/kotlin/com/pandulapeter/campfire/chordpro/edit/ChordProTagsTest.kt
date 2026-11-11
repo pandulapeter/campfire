@@ -89,6 +89,13 @@ class ChordProTagsTest {
     }
 
     @Test
+    fun `a blank tag is not written`() {
+        val text = "{title: T}\nThe first line"
+
+        assertEquals(text, ChordProTags.addTag(text, "   "))
+    }
+
+    @Test
     fun `removing a tag takes its whole line with it`() {
         val text = "{title: T}\n{tag: slow}\n{tag: campfire}\nThe first line"
 

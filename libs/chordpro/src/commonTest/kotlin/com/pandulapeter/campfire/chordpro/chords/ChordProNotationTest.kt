@@ -63,6 +63,12 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a shown key's note is drawn with signs and its words are kept`() {
+        assertEquals("B♭ major", ChordProNotation.keyWithAccidentalSigns("Bb major"))
+        assertEquals("F♯m", ChordProNotation.keyWithAccidentalSigns("F#m"))
+    }
+
+    @Test
     fun `a shown step's accidentals are drawn as signs`() {
         assertEquals("♭7(7sus4)", ChordProNotation.withAccidentalSigns("b7(7sus4)"))
         assertEquals("♭VII", ChordProNotation.withAccidentalSigns("bVII"))
