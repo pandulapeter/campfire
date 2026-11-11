@@ -32,6 +32,11 @@ object ChordProSerializer {
         val chunks = mutableListOf<String>()
         serializeMetadata(song.metadata).takeIf { it.isNotEmpty() }?.let { chunks += it.joinToString("\n") }
         val writer = Writer(song.metadata)
+        // A change the song opens with was read after something that ended the header, an empty section that left no
+        // block of its own; written straight after the header, it would be read as part of it.
+        if (song.blocks.firstOrNull().let { it is ChordProBlock.Timing || it is ChordProBlock.Transpose }) {
+            chunks += "{start_of_verse}\n{end_of_verse}"
+        }
         var index = 0
         while (index < song.blocks.size) {
             val block = song.blocks[index]
@@ -162,7 +167,14 @@ object ChordProSerializer {
         val section = pieces.first { it is ChordProBlock.Section } as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that, where its lines do not carry it themselves; see `SectionBuilder.openLineMode`.
-        if (section.type == SectionType.Paragraph) return serializeLines(pieces, writer, section.label)
+        // Where the lines of its first environment carry another label, the paragraph's came from an environment opened
+        // again before any line of its own, so that empty environment is written to give it back.
+        if (section.type == SectionType.Paragraph) {
+            val first = section.lines.firstOrNull { it is ChordProLine.Tab || it is ChordProLine.Grid }
+            if (section.label == null || first == null || first.environmentLabel == section.label) return serializeLines(pieces, writer, section.label)
+            val name = if (first is ChordProLine.Grid) "grid" else "tab"
+            return "{start_of_$name: ${section.label}}\n" + serializeLines(pieces, writer)
+        }
         val name = environmentName(section.type)
         val body = serializeLines(pieces, writer, sectionEnvironment = name)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
@@ -226,6 +238,13 @@ object ChordProSerializer {
                 return@forEachIndexed
             }
             val line = item as ChordProLine
+            // A paragraph's blank line outside every environment would have ended it, so one there stood in the
+            // environment of the line after it, which opened before it.
+            if (line == ChordProLine.Blank && openEnvironment == null && sectionEnvironment == null) {
+                val environmentLine = items.subList(index + 1, items.size).firstOrNull { it is ChordProLine.Tab || it is ChordProLine.Grid } as ChordProLine?
+                environmentLine?.let { startEnvironment(it, lineEnvironmentName(it, openEnvironment = null)) }
+                isEnvironmentAwaitingLine = true
+            }
             val environment = lineEnvironmentName(line, openEnvironment)
             // A tab line that starts an environment of its own is written in one, even straight after another, and so
             // is a grid line whose environment was labelled differently from the one before it.
