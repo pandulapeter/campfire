@@ -56,13 +56,16 @@ internal object PdfChordDiagrams {
 
     /** What a row of [ink], in reading order, could be to a diagram. */
     private fun kind(ink: List<Positioned>): Kind {
-        val words = mutableListOf<String>()
+        // Built up rather than joined again for every glyph, which a row of one word as long as the page allows would make
+        // take time growing with the square of its length.
+        val builders = mutableListOf<StringBuilder>()
         var end = Double.NEGATIVE_INFINITY
         for (glyph in ink) {
-            if (words.isEmpty() || glyph.span.start - end > glyph.span.size * 0.25) words += glyph.span.text.trim()
-            else words[words.lastIndex] += glyph.span.text.trim()
+            if (builders.isEmpty() || glyph.span.start - end > glyph.span.size * 0.25) builders += StringBuilder()
+            builders.last().append(glyph.span.text.trim())
             end = glyph.span.end
         }
+        val words = builders.map { it.toString() }
         return when {
             words.isNotEmpty() && words.all(::isMark) -> if (words.size == 1) Kind.MARK else Kind.MARKS
             ChordSheetConverter.isChordLine(words.joinToString(" ")) -> Kind.NAMES
