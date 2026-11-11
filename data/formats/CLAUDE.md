@@ -71,8 +71,11 @@ Documents are read locally, never rendered, uploaded, or kept.
 Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`); ZIP64
 archives are rejected, ZIP64, encrypted, or otherwise compressed entries left out.
 
-- **`ZipWriter` writes STORED only, on purpose**: a stored archive's size is what an import unpacks, so the export can
-  warn past `ImportLimits.MAX_IMPORT_SIZE`. Over 65,534 entries are refused rather than written as ZIP64.
+- **`ZipWriter` deflates each entry where that makes it smaller, else stores it** (decided by trying, never by name),
+  with `Deflater`'s fixed Huffman codes. Every Campfire version reads both. The output depends on the entries alone,
+  since a shared copy is rebuilt from the library's files and must come out as the same bytes. An archive is smaller
+  than what it unpacks to, so whether an import would take an export is judged by its entries' sizes
+  (`ExportedFile.unpackedSize`). Over 65,534 entries are refused rather than written as ZIP64.
 - **Declared sizes are only a first guess.** Entries are judged by name and declared size before inflating
   (`EntryPolicy`), or under an uninformative name by a 512-byte peek (`Sniff`); a declined peek costs no budget. The
   caller's import budget is charged before an entry is read; inflation stops at the declared size. Each entry's

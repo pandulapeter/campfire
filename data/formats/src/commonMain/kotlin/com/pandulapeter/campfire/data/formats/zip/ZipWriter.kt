@@ -9,37 +9,51 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.yield
+
 /**
- * Writes zip archives with one STORED (uncompressed) entry per input. Storing keeps the writer to the headers - this
- * module has no DEFLATE encoder, only the reader's `Inflater` - and keeps an archive's size equal to what an import
- * unpacks it to (plus its headers), which is what the export's too-large-to-import warning compares with
- * `ImportLimits.MAX_IMPORT_SIZE`. ChordPro text would deflate to about half its size, so a whole library's export is
- * about twice the file it could be.
+ * Writes zip archives with one entry per input, each DEFLATEd where that makes it smaller and STORED where it does not
+ * (a tiny file, or one already compressed, such as an image): the writer decides by trying, not by the name. Every
+ * Campfire version reads both, and the same entries always make the same bytes, which shared copies rely on. An
+ * archive is smaller than what an import unpacks it to, so whether an import takes it is a question for the entries'
+ * own sizes, not the archive's.
  */
 object ZipWriter {
 
-    fun write(entries: List<ZipEntry>, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ByteArray {
+    /** Yields (and so checks for cancellation) between entries and every 256 KB of deflating. */
+    suspend fun write(entries: List<ZipEntry>, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ByteArray {
         if (entries.size >= ZIP64_MARKER) throw ZipException("An archive cannot hold ${entries.size} entries, the most is ${ZIP64_MARKER - 1}.")
         val names = entries.map { it.name.encodeToByteArray() }
         names.forEachIndexed { index, name -> if (name.size > MAX_NAME_SIZE) throw ZipException("The name of entry \"${entries[index].name.take(64)}…\" is too long for an archive.") }
         val builder = ByteArrayBuilder(entries.sumOf { it.bytes.size + it.name.length * 2 + 128 })
         val offsets = IntArray(entries.size)
-        val checksums = LongArray(entries.size) { Crc32.of(entries[it].bytes) }
+        val checksums = LongArray(entries.size)
+        val methods = IntArray(entries.size)
+        val compressedSizes = IntArray(entries.size)
+        val deflater = Deflater()
+        val deflated = ByteArrayBuilder()
         entries.forEachIndexed { index, entry ->
+            yield()
+            checksums[index] = Crc32.of(entry.bytes)
+            deflated.clear()
+            deflater.deflate(entry.bytes, deflated::u8)
+            val isDeflated = deflated.size < entry.bytes.size
+            methods[index] = if (isDeflated) METHOD_DEFLATED else METHOD_STORED
+            compressedSizes[index] = if (isDeflated) deflated.size else entry.bytes.size
             offsets[index] = builder.size
             builder.u32(LOCAL_HEADER_SIGNATURE)
             builder.u16(VERSION)
             builder.u16(FLAG_UTF8_NAMES)
-            builder.u16(METHOD_STORED)
+            builder.u16(methods[index])
             builder.u16(modifiedAt.time)
             builder.u16(modifiedAt.date)
             builder.u32(checksums[index])
-            builder.u32(entry.bytes.size.toLong())
+            builder.u32(compressedSizes[index].toLong())
             builder.u32(entry.bytes.size.toLong())
             builder.u16(names[index].size)
             builder.u16(0) // Extra field length.
             builder.bytes(names[index])
-            builder.bytes(entry.bytes)
+            if (isDeflated) builder.bytes(deflated) else builder.bytes(entry.bytes)
         }
         val centralDirectoryOffset = builder.size
         entries.forEachIndexed { index, entry ->
@@ -47,11 +61,11 @@ object ZipWriter {
             builder.u16(VERSION) // Version made by.
             builder.u16(VERSION) // Version needed to extract.
             builder.u16(FLAG_UTF8_NAMES)
-            builder.u16(METHOD_STORED)
+            builder.u16(methods[index])
             builder.u16(modifiedAt.time)
             builder.u16(modifiedAt.date)
             builder.u32(checksums[index])
-            builder.u32(entry.bytes.size.toLong())
+            builder.u32(compressedSizes[index].toLong())
             builder.u32(entry.bytes.size.toLong())
             builder.u16(names[index].size)
             builder.u16(0) // Extra field length.
@@ -80,6 +94,7 @@ object ZipWriter {
     private const val VERSION = 20
     private const val FLAG_UTF8_NAMES = 0x0800
     private const val METHOD_STORED = 0
+    private const val METHOD_DEFLATED = 8
     private const val ZIP64_MARKER = 0xFFFF
     private const val MAX_NAME_SIZE = 0xFFFF
 }

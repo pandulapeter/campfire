@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
-import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -86,7 +85,7 @@ internal class ExportLibraryUseCaseImpl(
         }
         if (files.isEmpty()) return@withContext null
         ExportLibraryUseCase.Result(
-            file = ExportedFile(name = ARCHIVE_NAME, mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = archiveRepository.pack(files = files, isDated = true)),
+            file = archiveRepository.exportedArchive(name = ARCHIVE_NAME, files = files, isDated = true),
             skippedFileNames = skipped,
         )
     }

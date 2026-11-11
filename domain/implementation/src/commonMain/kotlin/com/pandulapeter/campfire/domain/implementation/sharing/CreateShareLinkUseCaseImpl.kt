@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.domain.implementation.sharing
 
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.ShareState
@@ -47,7 +46,7 @@ internal class CreateShareLinkUseCaseImpl(
             SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false) { _, text -> text }
         } ?: return CreateShareResult.Missing
         // Anyone opening the link takes the copy in as an import, which refuses anything larger.
-        if (copy.bytes.size > ImportLimits.MAX_IMPORT_SIZE) return CreateShareResult.TooLarge
+        if (copy.isTooLargeToImport) return CreateShareResult.TooLarge
         return sharedLinksRepository.share(kind = kind, fileName = fileName, title = title, copy = copy.bytes)
     }
 }

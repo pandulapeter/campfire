@@ -42,12 +42,12 @@ internal class ExportSetlistUseCaseImpl(
                     ?.let { put(it.fileName, it.text.encodeToByteArray()) }
             }
         }
-        return ExportedFile(
+        return archiveRepository.exportedArchive(
             // Named after its title, the one thing about a setlist the user named: the file name only follows it, and
             // is numbered where two setlists share one.
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
-            mimeType = ExportedFile.ZIP_MIME_TYPE,
-            bytes = archiveRepository.pack(files = files, isDated = isDated),
+            files = files,
+            isDated = isDated,
         )
     }
 }

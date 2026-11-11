@@ -65,7 +65,7 @@ class DocumentLocalSourceImplTest {
 
     private fun paragraph(text: String) = "<w:p><w:r><w:t xml:space='preserve'>$text</w:t></w:r></w:p>"
 
-    private fun docx(body: String, vararg extraEntries: ZipEntry) = ZipWriter.write(
+    private suspend fun docx(body: String, vararg extraEntries: ZipEntry) = ZipWriter.write(
         listOf(ZipEntry("word/document.xml", "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>".encodeToByteArray())) +
             extraEntries,
     )

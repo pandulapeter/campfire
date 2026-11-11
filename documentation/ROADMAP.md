@@ -17,8 +17,6 @@ What's planned for Campfire, grouped by area.
 
 ## Short-term
 
-- **Compressed archives**: exports and shared links deflated (text shrinks to about a third), reusing the PDF's
-  deflater; every version already reads them. Plan: [zip-compression.md](plans/zip-compression.md)
 - **A streaming zip writer** on all platforms: exports (archives and PDFs) written to a file instead of held in memory,
   needed before songs' images go into exports and shared links. Plan:
   [streaming-zip-writer.md](plans/streaming-zip-writer.md)

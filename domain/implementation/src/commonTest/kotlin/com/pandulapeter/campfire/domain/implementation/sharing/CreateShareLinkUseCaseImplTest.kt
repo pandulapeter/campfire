@@ -84,6 +84,17 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
+    fun `a copy compressed under the import limit that unpacks past it is not shared`() = runTest {
+        val repository = FakeSharedLinksRepository()
+        val copy = zip(1_000).copy(unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1)
+
+        val result = useCase(repository, songs = { _, _, _ -> copy }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
+
+        assertEquals(CreateShareResult.TooLarge, result)
+        assertNull(repository.shared)
+    }
+
+    @Test
     fun `an item no longer in the library is missing`() = runTest {
         val result = useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> null }).invoke(SharedLinkKind.SONG, "gone.cho", "Gone")
 

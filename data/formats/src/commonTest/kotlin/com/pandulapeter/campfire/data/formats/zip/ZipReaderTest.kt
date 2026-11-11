@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -219,10 +220,9 @@ internal class ZipReaderTest {
     }
 
     @Test
-    fun `a sniffed entry that is wanted is read whole and charged once`() {
+    fun `a sniffed entry that is wanted is read whole and charged once`() = runTest {
         val content = ByteArray(5000) { 'a'.code.toByte() }
         val archive = ZipWriter.write(listOf(ZipEntry("backup", content)))
-        assertTrue(content.size > archive.size * 9 / 10)
 
         val read = ZipReader.read(archive, limitOf = { _, _ -> EntryPolicy.Sniff }, sniffedLimitOf = { _, _ -> Long.MAX_VALUE })
 

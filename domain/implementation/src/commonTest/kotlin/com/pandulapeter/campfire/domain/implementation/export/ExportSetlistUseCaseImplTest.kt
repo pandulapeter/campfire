@@ -49,6 +49,15 @@ class ExportSetlistUseCaseImplTest {
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
     }
 
+    @Test
+    fun `the archive knows what an import unpacks it to`() = runTest {
+        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho"))
+
+        val exported = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho")).invoke("gig.setlist.json", isDated = true)
+
+        assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(exported).unpackedSize)
+    }
+
     private fun useCase(setlist: Setlist) = useCase(FakeSetlistRepository(setlist))
 
     private fun useCase(setlistRepository: FakeSetlistRepository, readable: Set<String> = emptySet()) = ExportSetlistUseCaseImpl(

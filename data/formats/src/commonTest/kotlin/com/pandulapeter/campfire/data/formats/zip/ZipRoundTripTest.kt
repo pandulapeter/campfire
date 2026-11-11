@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.test.runTest
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -18,7 +19,7 @@ import kotlin.test.assertTrue
 internal class ZipRoundTripTest {
 
     @Test
-    fun `writes and reads back every entry in order`() {
+    fun `writes and reads back every entry in order`() = runTest {
         val entries = listOf(
             ZipEntry("empty.cho", ByteArray(0)),
             ZipEntry("songs/Plain ASCII.cho", "{title: Plain}\n[Am]Hello [C]world\n".encodeToByteArray()),
@@ -35,7 +36,7 @@ internal class ZipRoundTripTest {
     }
 
     @Test
-    fun `writes and reads back an empty archive`() {
+    fun `writes and reads back an empty archive`() = runTest {
         val archive = ZipWriter.write(emptyList())
 
         assertEquals(22, archive.size)
@@ -43,11 +44,41 @@ internal class ZipRoundTripTest {
     }
 
     @Test
-    fun `writes and reads back a single empty entry`() {
+    fun `writes and reads back a single empty entry`() = runTest {
         val read = ZipReader.read(ZipWriter.write(listOf(ZipEntry("nothing.cho", ByteArray(0))))).entries
 
         assertEquals(1, read.size)
         assertEquals("nothing.cho", read[0].name)
         assertEquals(0, read[0].bytes.size)
+    }
+
+    @Test
+    fun `a song is deflated to well under its size`() = runTest {
+        val song = buildString {
+            appendLine("{title: Riverlight}")
+            repeat(40) { appendLine("[Am]Down by the [C]river where the [G]light comes [E]home") }
+        }.encodeToByteArray()
+
+        val archive = ZipWriter.write(listOf(ZipEntry("riverlight.cho", song)))
+
+        assertTrue(archive.size < song.size / 3, "${archive.size} bytes for a ${song.size} byte song.")
+        assertContentEquals(song, ZipReader.read(archive).entries.single().bytes)
+    }
+
+    @Test
+    fun `an entry deflating does not shrink costs no more than its headers`() = runTest {
+        val noise = Random(99).nextBytes(10_000)
+
+        val archive = ZipWriter.write(listOf(ZipEntry("cover.jpg", noise)))
+
+        assertTrue(archive.size <= noise.size + 22 + 2 * (46 + "cover.jpg".length), "${archive.size} bytes for ${noise.size}.")
+        assertContentEquals(noise, ZipReader.read(archive).entries.single().bytes)
+    }
+
+    @Test
+    fun `the same entries make the same bytes`() = runTest {
+        val entries = { listOf(ZipEntry("a.cho", "{title: A}\n[C]La la la la".encodeToByteArray()), ZipEntry("b.bin", Random(4).nextBytes(500))) }
+
+        assertContentEquals(ZipWriter.write(entries()), ZipWriter.write(entries()))
     }
 }

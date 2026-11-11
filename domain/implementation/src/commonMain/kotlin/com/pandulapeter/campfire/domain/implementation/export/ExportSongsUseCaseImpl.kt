@@ -45,10 +45,10 @@ internal class ExportSongsUseCaseImpl(
                 )
             }
 
-            else -> ExportedFile(
+            else -> archiveRepository.exportedArchive(
                 name = ARCHIVE_NAME,
-                mimeType = ExportedFile.ZIP_MIME_TYPE,
-                bytes = archiveRepository.pack(files = contents.associate { it.fileName to rewrite(it.fileName, it.text).encodeToByteArray() }, isDated = isDated),
+                files = contents.associate { it.fileName to rewrite(it.fileName, it.text).encodeToByteArray() },
+                isDated = isDated,
             )
         }
     }

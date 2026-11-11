@@ -9,12 +9,15 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 import java.util.zip.ZipInputStream
+import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-/** Reads the dates [ZipWriter] gives its entries back through `java.util.zip`, the way any other unzip tool sees them. */
+/** Reads what [ZipWriter] writes back through `java.util.zip`, the way any other unzip tool sees it. */
 internal class ZipWriterJvmTest {
 
     @Test
@@ -33,8 +36,23 @@ internal class ZipWriterJvmTest {
         assertEquals(LocalDateTime.of(2107, 12, 31, 23, 59, 58), modifiedAt(DosTimestamp.of(2200, 1, 1, 0, 0, 0)))
     }
 
+    @Test
+    fun `deflated and stored entries both read back`() {
+        val song = "{title: Riverlight}\n".repeat(200).encodeToByteArray()
+        val noise = Random(8).nextBytes(5_000)
+        val entries = listOf(ZipEntry("songs/riverlight.cho", song), ZipEntry("cover.jpg", noise), ZipEntry("empty.cho", ByteArray(0)))
+
+        val read = ZipInputStream(runBlocking { ZipWriter.write(entries) }.inputStream()).use { zip ->
+            generateSequence { zip.nextEntry }.map { Triple(it.name, it.method, zip.readBytes()) }.toList()
+        }
+
+        assertEquals(entries.map { it.name }, read.map { it.first })
+        assertEquals(listOf(java.util.zip.ZipEntry.DEFLATED, java.util.zip.ZipEntry.STORED, java.util.zip.ZipEntry.STORED), read.map { it.second })
+        entries.forEachIndexed { index, entry -> assertContentEquals(entry.bytes, read[index].third) }
+    }
+
     private fun modifiedAt(timestamp: DosTimestamp) =
-        ZipInputStream(ZipWriter.write(listOf(ZipEntry("song.cho", byteArrayOf(1))), modifiedAt = timestamp).inputStream()).use { zip ->
+        ZipInputStream(runBlocking { ZipWriter.write(listOf(ZipEntry("song.cho", byteArrayOf(1))), modifiedAt = timestamp) }.inputStream()).use { zip ->
             zip.nextEntry!!.timeLocal
         }
 }

@@ -50,4 +50,5 @@ A failure a use case notes but does not throw goes to the injected `Logger`. `im
 - Connecting and restoring at startup start a sync run at once (not debounced) and do not wait for it.
 - `CreateShareLinkUseCaseImpl` answers an existing share of the item (never one whose copy is gone,
   `ShareState.COPY_MISSING`, which the new share replaces), builds the copy undated (the same files make the same bytes
-  on every device), and refuses one over `ImportLimits.MAX_IMPORT_SIZE`, which the recipient's import would refuse.
+  on every device), and refuses one the recipient's import would refuse (`ExportedFile.isTooLargeToImport`: unpacking to over
+  `ImportLimits.MAX_IMPORT_SIZE`, or larger itself).

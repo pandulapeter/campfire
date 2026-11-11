@@ -76,7 +76,7 @@ import.
   `readBytes` / `writeBytes`, OPFS included; `LibraryFileLocalSource` is bytes-based.
 - Sync: `LibraryFileKind` (`data/model/.../library/LibraryFile.kt`), `DropboxSyncProvider.remotePath`
   (`/<kind>/<name>`), the byte-based `SyncFolder`, `SyncIndexDocument` (keys `songs/<name>`), and the planner.
-- Export and shared links: `ArchiveLocalSourceImpl.pack` over the STORED-only `ZipWriter`; `SharedCopySync` packs the
+- Export and shared links: `ArchiveLocalSourceImpl.pack` over `ZipWriter`, which stores an entry deflating does not shrink (a JPEG); `SharedCopySync` packs the
   library's raw files and skips a rebuild by `sharedCopyFingerprint`.
 - Import: `ArchiveLocalSourceImpl.unpack` skips every `LibraryFiles.BINARY_EXTENSIONS` entry unread and flattens
   `songs/`; `ImportLimits` (8 MiB text, 24 MiB archive budget).

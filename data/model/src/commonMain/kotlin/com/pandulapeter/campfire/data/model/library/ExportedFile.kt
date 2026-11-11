@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.library
 
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
+
 /**
  * A file on its way out of the library. The name and the type are decided where the content is (a lone song leaves
  * as the `.cho` file it already is, everything else as a zip), so that the platform's save dialog only has to hand
@@ -18,12 +20,20 @@ data class ExportedFile(
     val name: String,
     val mimeType: String,
     val bytes: ByteArray,
+    /** What an import unpacks the file to: an archive's entries added up, which its compressed [bytes] are fewer than. */
+    val unpackedSize: Long = bytes.size.toLong(),
 ) {
 
-    override fun equals(other: Any?) = this === other ||
-        (other is ExportedFile && name == other.name && mimeType == other.mimeType && bytes.contentEquals(other.bytes))
+    /** Whether an import would refuse the archive: one larger than it reads, or unpacking to more than it holds. */
+    val isTooLargeToImport get() = mimeType == ZIP_MIME_TYPE && maxOf(bytes.size.toLong(), unpackedSize) > ImportLimits.MAX_IMPORT_SIZE
 
-    override fun hashCode() = 31 * (31 * name.hashCode() + mimeType.hashCode()) + bytes.contentHashCode()
+    override fun equals(other: Any?) = this === other ||
+        (
+            other is ExportedFile && name == other.name && mimeType == other.mimeType && bytes.contentEquals(other.bytes) &&
+                unpackedSize == other.unpackedSize
+            )
+
+    override fun hashCode() = 31 * (31 * (31 * name.hashCode() + mimeType.hashCode()) + bytes.contentHashCode()) + unpackedSize.hashCode()
 
     companion object {
         const val TEXT_MIME_TYPE = "text/plain"

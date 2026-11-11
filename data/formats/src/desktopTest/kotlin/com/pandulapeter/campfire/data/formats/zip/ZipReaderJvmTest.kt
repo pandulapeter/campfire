@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipOutputStream
 import kotlin.random.Random
@@ -90,7 +91,7 @@ internal class ZipReaderJvmTest {
 
     @Test
     fun `JVM reads an archive written by the zip writer`() {
-        val archive = ZipWriter.write(contents.map { ZipEntry(it.key, it.value) })
+        val archive = runBlocking { ZipWriter.write(contents.map { ZipEntry(it.key, it.value) }) }
 
         val read = mutableMapOf<String, ByteArray>()
         java.util.zip.ZipInputStream(archive.inputStream()).use { zip ->

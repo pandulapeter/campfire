@@ -9,9 +9,9 @@
 -->
 # Plan: exports written to a file, not held in memory
 
-**Status:** not started. Written against the code on 2026-11-11 (95af1c4f5). Lands after
-[compressed archives](zip-compression.md) and before the export step of [images in songs](song-images.md), which
-needs it.
+**Status:** not started. Written against the code on 2026-11-11 (95af1c4f5). Starts from
+the compressing `ZipWriter` (each entry deflated where that makes it smaller, else stored), and lands before the
+export step of [images in songs](song-images.md), which needs it.
 
 Every export is a `ByteArray` from end to end: the files read whole into a map, `ZipWriter` copying them all into
 one buffer, `ExportedFile.bytes`, then a platform copy (Android's pending export and share copy, the web's

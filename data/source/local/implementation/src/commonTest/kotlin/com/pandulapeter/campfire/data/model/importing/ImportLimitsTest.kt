@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.data.model.importing
 
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
+import kotlinx.coroutines.test.runTest
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -25,7 +27,7 @@ import kotlin.test.assertTrue
 internal class ImportLimitsTest {
 
     @Test
-    fun `a file of an unknown type is kept only where it is an archive`() {
+    fun `a file of an unknown type is kept only where it is an archive`() = runTest {
         val budget = ImportBudget()
         val video = ByteArray(10 shl 20)
         val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray())))
@@ -89,9 +91,10 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun `a zip over the text limit under a text name is read whole`() {
+    fun `a zip over the text limit under a text name is read whole`() = runTest {
         val budget = ImportBudget()
-        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", ByteArray(ImportLimits.MAX_TEXT_FILE_SIZE.toInt()))))
+        // Random, so that the entry is stored and the archive is as large as it.
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", Random(0).nextBytes(ImportLimits.MAX_TEXT_FILE_SIZE.toInt()))))
 
         val file = budget.read(name = "backup.txt", size = archive.size.toLong()) { archive }
 

@@ -40,6 +40,18 @@ internal class ByteArrayBuilder(initialCapacity: Int = 64) {
         size += value.size
     }
 
+    /** Appends what [value] holds so far, without the copy [build] would make. */
+    fun bytes(value: ByteArrayBuilder) {
+        ensureCapacity(value.size)
+        value.buffer.copyInto(buffer, size, 0, value.size)
+        size += value.size
+    }
+
+    /** Empties the buffer and keeps its capacity, for the next entry. */
+    fun clear() {
+        size = 0
+    }
+
     fun build(): ByteArray = buffer.copyOf(size)
 
     private fun ensureCapacity(additional: Int) {

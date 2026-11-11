@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.library.ExportedFile
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -478,8 +477,7 @@ internal class ExportController(
             file == null -> messageSink.sendMessage(Message.ExportFailed)
             isShare -> filePicker.shareFile(file)
             filePicker.saveFile(file) -> {
-                val isTooLargeToImport = file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE
-                val messages = listOfNotNull(Message.ExportTooLargeToImport.takeIf { isTooLargeToImport }) + warnings()
+                val messages = listOfNotNull(Message.ExportTooLargeToImport.takeIf { file.isTooLargeToImport }) + warnings()
                 messages.ifEmpty { listOf(savedMessage) }.forEach(messageSink::sendMessage)
                 onSaved()
             }

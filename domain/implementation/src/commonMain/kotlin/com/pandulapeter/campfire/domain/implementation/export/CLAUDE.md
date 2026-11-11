@@ -11,7 +11,8 @@
 
 - A single song exported alone is the `.cho` as on disk; anything else is a zip. Transposition is never baked in.
 - A zip is dated when the user saves it; a shared link's copy is undated, so it packs to the same bytes wherever and
-  whenever it is built.
+  whenever it is built. Its entries are compressed, so an `ExportedFile` carries what an import unpacks it to
+  (`exportedArchive`), and `isTooLargeToImport` judges that as well as the archive's own size.
 - A single song is named by the import's rule (`SongRepository.importFileName`), so it comes back under the same name.
   Inside an archive, library names are kept, since setlists point at songs by file name.
 - A setlist is exported whole, its document the stored file unchanged; a song missing from the library is still named.
