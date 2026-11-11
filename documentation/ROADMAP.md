@@ -24,7 +24,6 @@ What's planned for Campfire, grouped by area.
   exported, shared, and printed with the song; a lone image file imports as a song (a chart that only exists on
   paper or as a PDF, still in the setlist). Plan: [song-images.md](plans/song-images.md)
 - Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
-- **Rename the new `master` branch to `main`**
 - **Simpler comments and annotations** on songs, add ability to make notes / markups on music
 - **Comments in setlists**, between songs
 - **External monitor support**: an audience screen (a projector, a TV, or a monitor) showing the song in big text,

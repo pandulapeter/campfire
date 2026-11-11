@@ -266,7 +266,7 @@ JVM; a release is still checked by hand. Add or update tests with every change t
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
 beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck` and the scripts'
 checks, runs the unit tests again on Windows, and compiles every platform (iOS on macOS, where the storage tests also
-run on the simulator), on every PR, on every push to `master` that changes more than `documentation/`, and before
+run on the simulator), on every PR, on every push to `main` that changes more than `documentation/`, and before
 `publish-all.yml` builds anything.
 
 The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by

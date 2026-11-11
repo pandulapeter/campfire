@@ -239,7 +239,7 @@ behind a surprising design, platform quirks; each rule in one file, at the level
 
 ## This repository: Campfire
 
-- **Plans folder:** `documentation/issues/` (`README.md`, `EXECUTION.md`, `NN-*.md`). Branch: `master`.
+- **Plans folder:** `documentation/issues/` (`README.md`, `EXECUTION.md`, `NN-*.md`). Branch: `main`.
 - **Areas that have worked as reviewer splits:** `:libs:chordpro`; storage and sync (`:data:*`, `SyncPlanner`,
   `SyncEngine`, Dropbox); `:domain`; `:presentation`; the platform shells, docs and CI (`app/*`, `.github/`).
 - **Unit tests**: what may be tested and the command are in the root `CLAUDE.md`'s Tests section.

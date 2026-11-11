@@ -70,8 +70,8 @@ locales are filled in from the language), Play's `update-priority`, and a `submi
 ## The workflows
 
 - `fix-issues.yml` (by hand): Claude Code lands the plans in `documentation/issues/`, one commit each in the README's
-  merge order (or by `EXECUTION.md`), skipping a plan that needs iOS or changes `.github/workflows/`; it pushes master
-  (a branch if master moved) and dispatches `tests.yml`.
+  merge order (or by `EXECUTION.md`), skipping a plan that needs iOS or changes `.github/workflows/`; it pushes main
+  (a branch if main moved) and dispatches `tests.yml`.
 - `publish-web.yml` `rsync --delete`s the distribution over `app/` of the `campfire-website` repository
   (https://campfire-songbook.com/app/), a folder that holds only the distribution.
 

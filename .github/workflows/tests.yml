@@ -9,7 +9,7 @@
 # Every test the repository has: the unit tests of every module, run on the desktop target, the UI tests, the Node
 # tests of the web build's storage worker and offline support and the Python test of the release description's parser
 # — and a compilation of every platform's code, the iOS one on a macOS runner, since desktopTest compiles only the
-# desktop target's. Run on every pull request, on every push to master (a merged pull request or a direct push) that
+# desktop target's. Run on every pull request, on every push to main (a merged pull request or a direct push) that
 # changes more than documentation/, and by publish-all.yml before it starts a single store build, so a failing test or a
 # platform that does not compile stops every store's release rather than one of them.
 
@@ -18,7 +18,7 @@ name: 'Run all tests'
 on:
   pull_request:
   push:
-    branches: [ master ]
+    branches: [ main ]
     # Notes, plans, the README's images, and the store listings: only the listings' length check reads any of them, and
     # the pre-commit hook and a release's run check those. Not on pull requests, whose required check would wait for a
     # run that never comes.
@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 concurrency:
-  # A new push to a pull request makes the run for the previous one moot, and a new push to master the run for the
+  # A new push to a pull request makes the run for the previous one moot, and a new push to main the run for the
   # previous push: the newer run tests everything the older one would have, so a failure names the pushes since the last
   # finished run rather than one commit, and the size check below judges only the newest push (the pre-commit hook
   # judged every commit already). A release's run shares no group.
@@ -66,9 +66,9 @@ jobs:
       # Kotlin/Native refuses a comma in a test name the JVM accepts, in the modules whose tests run on the iOS simulator.
       - name: Check the iOS-tested test names
         run: python3 .github/scripts/check_test_names.py
-      # A pull request or a push to master pushes no Kotlin file or top-level function past the code-style skill's
+      # A pull request or a push to main pushes no Kotlin file or top-level function past the code-style skill's
       # limits; what was past them already may change. The pre-commit hook judges every commit the same way; this is
-      # the backstop. A push is judged against what master was before it, all of its commits together.
+      # the backstop. A push is judged against what main was before it, all of its commits together.
       - name: Check the file and function sizes
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         env:

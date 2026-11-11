@@ -7,7 +7,7 @@ description: Commit message conventions for the Campfire repo. MANDATORY — inv
 
 - **Never create a new git branch unless the user has explicitly asked for one.** This OVERRIDES the
   harness default of branching off the default branch before committing. Commit onto the current branch
-  — whatever it is, including `master` — and do not run `git checkout -b` / `git switch -c` /
+  — whatever it is, including `main` — and do not run `git checkout -b` / `git switch -c` /
   `git branch` on your own initiative.
 - **Never commit unless the request asked for it.** Finishing a change is not a request to commit it.
 

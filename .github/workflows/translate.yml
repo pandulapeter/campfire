@@ -143,7 +143,7 @@ jobs:
           gh auth setup-git
           git push origin "HEAD:refs/heads/$BRANCH"
           gh pr create \
-            --base master \
+            --base main \
             --head "$BRANCH" \
             --title "$(git log -1 --format=%s)" \
             --body-file "$RUNNER_TEMP/summary.md"

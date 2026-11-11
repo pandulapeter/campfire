@@ -8,7 +8,7 @@
 
 # An unattended fix of the plans in documentation/issues/: Claude Code lands them one commit each, in the order its
 # README gives (or EXECUTION.md, when the plans come with one), working alone in the checkout to keep the cost down. The
-# workflow pushes the result onto master and dispatches tests.yml on it (a push made with the workflow's token starts
+# workflow pushes the result onto main and dispatches tests.yml on it (a push made with the workflow's token starts
 # no workflow by itself). A plan that changes .github/workflows is left for a normal checkout, since the workflow's
 # token cannot push such a change. Dispatched by hand only.
 
@@ -84,14 +84,14 @@ jobs:
             (`:<module>:desktopTest --tests ...`); before each commit, every touched module's full desktopTest and a
             compile of each platform the change touches. After the last plan, run `./gradlew desktopTest`.
           - iOS cannot be compiled here: skip `:app:ios:linkDebugFrameworkIosSimulatorArm64`. The workflow runs
-            tests.yml on master afterwards, which compiles iOS. A plan touching an `iosMain` source set or `app/ios`
+            tests.yml on main afterwards, which compiles iOS. A plan touching an `iosMain` source set or `app/ios`
             beyond a comment is skipped and left for a normal checkout.
           - A plan changing `.github/workflows/`, which this job's token cannot push, is skipped and left for a normal
             checkout. Never commit anything under `.github/workflows/`.
           - A plan that turns out wrong or impossible is skipped as the skill says: revert, leave its file, note why.
           - The pre-commit hook is installed and must pass; never bypass it with --no-verify.
           - Load the `code-style` skill before the first edit and the `commit-messages` skill before the first commit.
-          - Do not branch or push; the workflow pushes master after you finish. The one-commit-per-plan rule, the
+          - Do not branch or push; the workflow pushes main after you finish. The one-commit-per-plan rule, the
             commit checks, and the finish (deleting the folder once no plan file is left, else trimming the README to
             the skipped ones) hold as written.
 
@@ -127,9 +127,9 @@ jobs:
             ${{ runner.temp }}/fixes.bundle
           if-no-files-found: ignore
           retention-days: 30
-      # Even after a failure or the budget running out: every landed plan is worth keeping. If master moved meanwhile,
+      # Even after a failure or the budget running out: every landed plan is worth keeping. If main moved meanwhile,
       # the commits go to a branch instead, never forced over it.
-      - name: Push to master and run the tests
+      - name: Push to main and run the tests
         if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -142,11 +142,11 @@ jobs:
             cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
           fi
           gh auth setup-git
-          if git push origin HEAD:master; then
-            gh workflow run tests.yml --ref master
+          if git push origin HEAD:main; then
+            gh workflow run tests.yml --ref main
           else
             branch="fix-issues-${{ github.run_id }}"
             git push origin "HEAD:refs/heads/$branch"
-            echo "::warning::master moved during the run; the commits are on $branch instead."
+            echo "::warning::main moved during the run; the commits are on $branch instead."
             gh workflow run tests.yml --ref "$branch"
           fi

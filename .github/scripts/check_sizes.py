@@ -23,7 +23,7 @@ judged against its old path, and a function or class against its old self wherev
 never fails: a word count cannot tell a needed rule from narration.
 
 With no arguments it judges the staged change against HEAD (.githooks/pre-commit); `--base <rev>` judges the working
-tree against that revision (tests.yml, on a pull request or a push to master). `--hook` is the Claude Code edit hook
+tree against that revision (tests.yml, on a pull request or a push to main). `--hook` is the Claude Code edit hook
 (.claude/settings.json): it reads the hook's JSON from stdin and judges the file the edit wrote against HEAD, so that a
 file is split while it is being written; an edit that adds lines to a CLAUDE.md past its budget gets a note instead.
 `--shell-hook` is the Claude Code hook after a shell command, which may have written any file without the edit hook

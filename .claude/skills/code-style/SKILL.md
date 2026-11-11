@@ -108,7 +108,7 @@ wrong or undo it".
   fails a crossing, and a file, function or constructor already past its limit that ends the change longer than it
   began, judged against the base revision — after every edit and every shell command (the Claude Code hooks in
   `.claude/settings.json`), before every commit (`.githooks/pre-commit`), and in CI (`tests.yml`, on a pull request or a
-  push to `master`). One already past it may stay as long or shrink, so a change it needs moves as many lines out as it
+  push to `main`). One already past it may stay as long or shrink, so a change it needs moves as many lines out as it
   adds (a new responsibility gets a file of its own); splitting the rest is a planned refactor, not a side task. A
   `CLAUDE.md` past its budget only gets a note: cut narration, never a rule. Moves and renames are judged against the
   old path. Pure data is exempt by name in the script's `EXEMPT` list (the chord tables, the PDF glyph names, the color
