@@ -48,7 +48,9 @@ internal object WrittenModulations {
         var shift = 0
         var next = 0
         units.forEachIndexed { index, unit ->
-            val copied = (index - 1 downTo 0).firstNotNullOfOrNull { earlier ->
+            // Too short to copy anything, so not compared with every earlier unit: a file of nothing but recalls of a
+            // short chorus is hundreds of thousands of them.
+            val copied = if (unit.chords.size < MIN_CHORDS) null else (index - 1 downTo 0).firstNotNullOfOrNull { earlier ->
                 units[earlier].takeIf { it.kind matches unit.kind }?.let { shiftOf(it.chords, unit.chords) }?.let { (units[earlier].shift + it).mod(12) }
             }
             unit.shift = copied ?: shift

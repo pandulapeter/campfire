@@ -66,9 +66,11 @@ internal object SongParts {
                     val chords = playedIn(block.blocks.filterIsInstance<ChordProBlock.Section>())
                     val names = chords.map { it.name }
                     val recalled = chorus
-                    val sameRecall = parts.firstOrNull { part -> part.blocks.all { it is ChordProBlock.ChorusRecall } && part.names == names }
+                    // A part is all recalls where it starts with one, and a chorus part's names are its sections' chords: both
+                    // asked without walking the recalls a part has gathered, since a file may hold hundreds of thousands.
+                    val sameRecall = parts.firstOrNull { part -> part.blocks.first() is ChordProBlock.ChorusRecall && part.names == names }
                     when {
-                        recalled != null && names == playedIn(recalled.sections).map { it.name } -> recalled.blocks += block
+                        recalled != null && names == recalled.names -> recalled.blocks += block
                         sameRecall != null -> sameRecall.blocks += block
                         chords.isNotEmpty() -> parts += SongPart(mutableListOf(block), key, capo).apply { add(chords) }
                     }
@@ -125,8 +127,6 @@ internal class SongPart(val blocks: MutableList<ChordProBlock>, val key: SongKey
     val names = mutableListOf<String>()
     val chords = mutableListOf<Chord>()
     val roots = mutableListOf<SpelledNote>()
-
-    val sections get() = blocks.filterIsInstance<ChordProBlock.Section>()
 
     /**
      * What a part is of, so that a second verse finds the first: its first section's type, and its label without a

@@ -251,7 +251,10 @@ public object SongScaleSuggestions {
         } else {
             val sections = chosen.filterIsInstance<SectionMoment>().sortedBy { song.indexOf(it.row.blocks.first()) }
             val shownBlocks = sections.flatMap { it.row.blocks }
-            val homeBlocks = home.group.blocks.filter { block -> shownBlocks.none { it === block } }.ifEmpty { home.group.blocks }
+            // Only a block equal to a shown one can be that very block, so the rest are kept without a search: a home of a
+            // chorus recalled a hundred thousand times would otherwise be searched for in as many shown recalls.
+            val shownValues = shownBlocks.toHashSet()
+            val homeBlocks = home.group.blocks.filter { block -> block !in shownValues || shownBlocks.none { it === block } }.ifEmpty { home.group.blocks }
             listOf(home to home.group.copy(blocks = homeBlocks, isHome = true)) + sections.map { it.group.takeIf { _ -> it.isKey } to it.row }
         }
         val chords = chosen.filterIsInstance<ChordMoment>()

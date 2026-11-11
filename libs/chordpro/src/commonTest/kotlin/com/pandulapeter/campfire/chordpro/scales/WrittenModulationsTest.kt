@@ -14,6 +14,9 @@ import com.pandulapeter.campfire.chordpro.chords.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class WrittenModulationsTest {
 
@@ -77,5 +80,16 @@ class WrittenModulationsTest {
         val groups = SongScaleSuggestions.of(song)
         assertEquals(listOf("C" to true, "D" to false), groups.map { it.rootName to it.isHome })
         assertEquals(song.blocks.subList(2, 4), groups[1].blocks)
+    }
+
+    @Test
+    fun `a file of nothing but recalls of a short chorus, some of them transposed, is read in linear time`() {
+        val recalls = "{chorus}\n".repeat(50_000)
+        val song = parse(section("chorus", "C G"), recalls, "{transpose: 2}", recalls)
+        val start = TimeSource.Monotonic.markNow()
+
+        SongScaleSuggestions.of(song)
+
+        assertTrue(start.elapsedNow() < 5.seconds, start.elapsedNow().toString())
     }
 }
