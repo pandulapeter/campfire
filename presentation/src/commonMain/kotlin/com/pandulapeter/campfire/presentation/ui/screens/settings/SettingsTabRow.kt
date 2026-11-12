@@ -13,7 +13,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
@@ -31,15 +30,15 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.controls.IndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.components.controls.pagerIndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
-import com.pandulapeter.campfire.presentation.ui.settingsPage.SETTINGS_TAB_ROW_MAX_WIDTH
 import kotlin.math.roundToInt
 
 /**
  * The tabs of the settings screen, which stay where they are while a page scrolls under them.
  *
- * The tabs are capped at [SETTINGS_TAB_ROW_MAX_WIDTH] and start where every list of the app starts - five tabs spread across a
- * wide window are five words a hand's width apart. Each is as wide as its name rather than a fifth of the row, and the row
- * scrolls where they add up to more than a phone's width: five equal tabs at 360dp leave every name cut short.
+ * The tabs start where every list of the app starts, each as wide as its name rather than an equal share of the row - five
+ * tabs spread across a wide window are five words a hand's width apart, and five equal tabs at 360dp leave every name cut
+ * short. The row reaches the window's edge (inside its insets) rather than stopping at a width cap, so the tabs it scrolls
+ * are not cut off in the middle of the screen.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
  *   others. The dot rather than the tab opening itself, which would be the screen moving under a reader's finger.
@@ -65,9 +64,7 @@ internal fun SettingsTabRow(
     onTabSelected: (SettingsTab) -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
     PrimaryScrollableTabRow(
-        modifier = Modifier
-            .padding(start = startPadding, end = endPadding)
-            .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH),
+        modifier = Modifier.padding(start = startPadding, end = endPadding),
         selectedTabIndex = tabs.indexOf(selectedTab).coerceAtLeast(0),
         scrollState = scrollState,
         containerColor = Color.Transparent,

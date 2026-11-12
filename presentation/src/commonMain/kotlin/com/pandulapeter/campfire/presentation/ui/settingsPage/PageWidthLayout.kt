@@ -82,7 +82,7 @@ internal val SECTION_GAP = 16.dp
 /** What the first row of a page keeps free under the tabs. */
 internal val PAGE_TOP_PADDING = 8.dp
 
-/** Above this four tabs are four words spread apart rather than a row of tabs. */
+/** The page width the tabs want before the wide layout trades them for a category pane beside the page. */
 internal val SETTINGS_TAB_ROW_MAX_WIDTH = MAX_COLUMN_WIDTH
 
 /** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */

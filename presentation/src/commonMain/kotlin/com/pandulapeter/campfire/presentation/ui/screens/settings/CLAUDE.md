@@ -10,8 +10,9 @@
 
 # :presentation — ui/screens/settings
 
-Eight tabs under a tab row (capped at 560dp) while that fits, else a category pane beside the selected page; the layouts
-crossfade across the breakpoint, as do the wide layout's pages. A build without sync leaves Sharing out.
+Eight tabs under a tab row reaching the window's edges (inside the insets, never capped) while the page is at most
+740dp wide, else a category pane beside the selected page; the layouts crossfade across the breakpoint, as do the wide
+layout's pages. A build without sync leaves Sharing out.
 
 ## Tab contents
 
