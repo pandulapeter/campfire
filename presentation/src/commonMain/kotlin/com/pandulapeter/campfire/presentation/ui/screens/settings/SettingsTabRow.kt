@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +21,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.controls.IndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.components.controls.pagerIndicatorSpan
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -37,8 +39,8 @@ import kotlin.math.roundToInt
  *
  * The tabs start where every list of the app starts, each as wide as its name rather than an equal share of the row - five
  * tabs spread across a wide window are five words a hand's width apart, and five equal tabs at 360dp leave every name cut
- * short. The row reaches the window's edge (inside its insets) rather than stopping at a width cap, so the tabs it scrolls
- * are not cut off in the middle of the screen.
+ * short. The row scrolls all the way to the window's edges, under its insets, which only pad its first and last tab, so
+ * the tabs it scrolls are neither cut off in the middle of the screen nor at a cutout.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
  *   others. The dot rather than the tab opening itself, which would be the screen moving under a reader's finger.
@@ -48,7 +50,8 @@ import kotlin.math.roundToInt
  *   recomposing the row.
  * @param scrollState Where the row is scrolled, kept by the caller for the session: the row animates to the selected tab
  *   on its first layout unless it is already there, and a state made with the row would start at the first tab every time.
- * @param startPadding The window insets on the start edge, so the tabs start after the cutout rather than under it.
+ * @param startPadding The window insets on the start edge, so the first tab starts after the cutout rather than under it.
+ * @param endPadding The window insets on the end edge, so the last tab can be scrolled out from under the cutout.
  */
 @Composable
 internal fun SettingsTabRow(
@@ -62,13 +65,13 @@ internal fun SettingsTabRow(
     startPadding: Dp,
     endPadding: Dp,
     onTabSelected: (SettingsTab) -> Unit,
-) = Column(modifier = modifier.fillMaxWidth()) {
+) = Column(modifier = modifier.fillMaxWidth().clipToBounds()) {
     PrimaryScrollableTabRow(
-        modifier = Modifier.padding(start = startPadding, end = endPadding),
+        modifier = Modifier.overflowNarrowerInset(startPadding = startPadding, endPadding = endPadding),
         selectedTabIndex = tabs.indexOf(selectedTab).coerceAtLeast(0),
         scrollState = scrollState,
         containerColor = Color.Transparent,
-        edgePadding = 0.dp,
+        edgePadding = maxOf(startPadding, endPadding),
         indicator = {
             TabRowDefaults.PrimaryIndicator(
                 modifier = Modifier.tabIndicatorLayout { measurable, constraints, tabPositions ->
@@ -103,4 +106,18 @@ internal fun SettingsTabRow(
             )
         }
     }
+}
+
+/**
+ * The row pads both of its ends by one edge padding, the larger inset, so it is laid out wider than its parent by the
+ * difference between the two insets, overflowing on the side of the smaller one: the part of that padding beyond what
+ * the smaller inset asks for falls outside the parent, which clips it, and the last tab still scrolls up to that inset.
+ */
+private fun Modifier.overflowNarrowerInset(startPadding: Dp, endPadding: Dp) = layout { measurable, constraints ->
+    val difference = (startPadding - endPadding).roundToPx()
+    val overflow = if (constraints.hasBoundedWidth) abs(difference) else 0
+    val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + overflow, maxWidth = constraints.maxWidth + overflow))
+    // A larger end inset overflows on the start side, so the row is shifted back by the overflow; placeRelative mirrors
+    // both cases for a right-to-left layout.
+    layout(placeable.width - overflow, placeable.height) { placeable.placeRelative(if (difference < 0) -overflow else 0, 0) }
 }
