@@ -33,7 +33,8 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
 - **A chord row that opens with a bar line is a grid**, over a lyric too: its chords are counted by bars (and beats),
   not set over syllables, so it stays a one-row grid above its lyric, which loses the indent that lined it up under the
   row. Its cells are written a space apart, chords spelled as a chord row's, and `||:` / `:||` as ChordPro's `|:` /
-  `:|`, which it would read as chords.
+  `:|`, which it would read as chords. Its margins may hold text, as ChordPro's do: a label before the first bar line
+  opens it as a bar would, and a word or two may follow the last (`x2`); `|.` and voltas (`|1`, `:|2`) are bar lines.
 - Over a lyric, the bar lines and repeat counts of any other chord row are dropped, but `N.C.` stays where it stands. A
   row of chord names right over a tab staff is a line of the tab, kept as it stands.
 

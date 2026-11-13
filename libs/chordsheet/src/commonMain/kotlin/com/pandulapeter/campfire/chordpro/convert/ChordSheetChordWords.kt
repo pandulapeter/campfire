@@ -98,9 +98,14 @@ internal object ChordSheetChordWords {
     /** Text laid out in characters, whose columns are where its chords stand; a measured row's spacing says nothing. */
     internal fun isCharacterColumns(line: Rendered) = line.source.spans.all { it.isMonospace }
 
-    /** A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). */
     internal val noChord = setOf("N.C.", "NC")
-    private val token = Regex("\\|\\|:?|:\\|:|:\\|\\|?|\\|:?|[^\\s|]+")
+
+    /**
+     * A word, or a bar line or repeat sign standing for itself even where a chord is glued to it (`||:Am`). A final bar
+     * (`|.`) and a volta (`|1`, `:|2>`) are one only where a space or the line's end follows them, which a glued chord or
+     * a tab's frets never are.
+     */
+    private val token = Regex("\\|\\.(?=\\s|$)|:?\\|\\d+>?(?=\\s|$)|\\|\\|:?|:\\|:|:\\|\\|?|\\|:?|[^\\s|]+")
 
     internal val parentheses = Regex("\\(([^()]+)\\)")
 }

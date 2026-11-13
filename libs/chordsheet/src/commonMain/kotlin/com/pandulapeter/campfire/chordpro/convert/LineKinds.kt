@@ -102,15 +102,30 @@ internal object LineKinds {
      * instead, whether it marks the beats between them (`| Dm . Am . | G . |`) or not (`| Am | F |`); its lyric stands
      * under the row rather than in it. The rest of a row a column wrapped (`D . . . | G . . . |`) needs its beats, and is
      * weak evidence, kept where no lyric follows it, since a chord row over a lyric may mark its bars and beats too.
+     *
+     * Its margins may hold text, as ChordPro's do: a label before the first bar line (`Intro |: Am . |`), which then opens
+     * the row as the bar line would, and a word or two after the last one (`x2`, `(twice)`).
      */
     private fun grid(context: Context, index: Int): Evidence? {
-        val words = tokens(context.lines[index].text)
-        val opensWithBar = words.firstOrNull()?.text in gridBars
-        val isGrid = words.count { it.text in gridBars } >= 2 && words.any { rowChord(it.text) } &&
-            words.all { it.text in gridBars || it.text in gridBeats || rowChord(it.text) } &&
-            (opensWithBar || words.any { it.text in gridBeats })
+        val words = tokens(context.lines[index].text).map { it.text }
+        val first = words.indexOfFirst(::isGridBar)
+        val last = words.indexOfLast(::isGridBar)
+        if (first < 0) return null
+        val margin = words.take(first)
+        val trailing = words.drop(last + 1)
+        val isLabelled = margin.size == 1 && !isGridCell(margin.single())
+        val cells = (if (isLabelled) emptyList() else margin) + words.subList(first, last + 1) +
+            (if (trailing.all(::isGridCell)) trailing else emptyList())
+        val opensWithBar = first == 0 || isLabelled
+        val isGrid = cells.count(::isGridBar) >= 2 && cells.any(::rowChord) && cells.all(::isGridCell) &&
+            (trailing.all(::isGridCell) || trailing.size <= MAX_TRAILING_WORDS) &&
+            (opensWithBar || cells.any { it in gridBeats })
         return if (isGrid) Evidence(LineKind.GRID, isStrong = opensWithBar) else null
     }
+
+    private fun isGridBar(word: String) = word in gridBars || gridVolta.matches(word)
+
+    private fun isGridCell(word: String) = isGridBar(word) || word in gridBeats || rowChord(word)
 
     /**
      * A row of chord names right over a staff names its bars, its columns the staff's, so it stays in the tab as it stands
@@ -238,7 +253,9 @@ internal object LineKinds {
     }
 
     private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")
-    private val gridBeats = setOf(".", "/", "%")
+    private val gridBeats = setOf(".", "/", "%", "%%")
+    private val gridVolta = Regex(":?\\|\\d+>?")
+    private const val MAX_TRAILING_WORDS = 2
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
 
     /** A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites print it. */

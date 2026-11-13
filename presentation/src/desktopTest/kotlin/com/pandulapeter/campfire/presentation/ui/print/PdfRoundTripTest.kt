@@ -81,6 +81,17 @@ class PdfRoundTripTest {
         assertEquals(emptyList(), failures, failures.joinToString("\n\n"))
     }
 
+    @Test
+    fun `a drawn grid printed to a PDF and imported back is its grid lines again`() = runBlocking {
+        val text = "{title: Grid song}\n\n{start_of_grid}\nIntro |: Am . . . | C . G . :| x2\n| F . . . |1 % :|2 E7 . . . |.\n{end_of_grid}\n"
+        val original = songRenderer.transposedSong(text, transposition = 0, spelling = UserPreferences.ChordSpelling.Default)
+        val imported = roundTrip(original, PrintSettings())
+        assertEquals(gridLinesOf(original), gridLinesOf(imported))
+    }
+
+    private fun gridLinesOf(song: ChordProSong) = song.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+        .filterIsInstance<ChordProLine.Grid>().map { it.tokens }
+
     /** [song] printed as the export prints it and read back as the import reads it. */
     private suspend fun roundTrip(song: ChordProSong, settings: PrintSettings): ChordProSong {
         val printed = songRenderer.notatedSong(song, UserPreferences.ChordSpelling.Default)

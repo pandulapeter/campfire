@@ -1750,6 +1750,19 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a grid keeps a margin label, a repeat count after it, its final bar, and its voltas`() {
+        assertEquals(
+            "{start_of_grid}\nIntro |: Am . . . | C . G . :| x2\n| F . . . |1 % :|2 E7 . . . |.\n{end_of_grid}\n",
+            convert("Intro |: Am . . . | C . G . :| x2\n| F . . . |1 % :|2 E7 . . . |."),
+        )
+    }
+
+    @Test
+    fun `a chord row with a word before its bars is still set over its lyric`() {
+        assertEquals("[G]Hello [C]world\n", convert("G   | C | x2\nHello world"))
+    }
+
+    @Test
     fun `a chord row opening with a bar line is a grid over its lyric, which loses its indent`() {
         assertEquals(
             "{start_of_grid}\n| C . . . | Dm . . . |\n{end_of_grid}\nI follow the Moskva\n{start_of_grid}\n| Am | F |\n{end_of_grid}\n" +
