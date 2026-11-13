@@ -75,10 +75,14 @@ class PdfBidiTest {
 
     @Test
     fun `a letter followed by a long run of marks takes time in proportion to it`() {
-        assertTakesTimeInProportion(partSize = 10_000) { size ->
-            val marks = List(size) { ChordSheet.Span("\u05b8", 6.0 + it * 0.2, 6.2 + it * 0.2, 10.0) }
-            val spans = listOf(ChordSheet.Span("\u05e9", 0.0, 6.0, 10.0)) + marks + ChordSheet.Span("\u05dc", 10_000.0, 10_006.0, 10.0)
-            assertEquals(size + 2, PdfBidi.readingOrder(spans, column(10_006.0)).single().text.length)
+        assertTakesTimeInProportion(
+            partSize = 10_000,
+            inputOf = { size ->
+                val marks = List(size) { ChordSheet.Span("\u05b8", 6.0 + it * 0.2, 6.2 + it * 0.2, 10.0) }
+                listOf(ChordSheet.Span("\u05e9", 0.0, 6.0, 10.0)) + marks + ChordSheet.Span("\u05dc", 10_000.0, 10_006.0, 10.0)
+            },
+        ) { spans ->
+            assertEquals(spans.size, PdfBidi.readingOrder(spans, column(10_006.0)).single().text.length)
         }
     }
 }

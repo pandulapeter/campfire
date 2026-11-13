@@ -110,24 +110,33 @@ class PdfRunningLinesTest {
 
     @Test
     fun `a top margin of as many lines as its page takes time in proportion to them`() {
-        assertTakesTimeInProportion(partSize = 2_500) { size ->
-            val lines = List(size) { PdfLineLayout.Line(listOf(ChordSheet.Span("Line $it", 0.0, 10.0, 0.1)), 1.0 + it * 0.03) }
-            val page = PdfTextExtractor.Page(lines, height = 1_000_000.0, edges = lines)
+        assertTakesTimeInProportion(
+            partSize = 2_500,
+            inputOf = { size ->
+                val lines = List(size) { PdfLineLayout.Line(listOf(ChordSheet.Span("Line $it", 0.0, 10.0, 0.1)), 1.0 + it * 0.03) }
+                PdfTextExtractor.Page(lines, height = 1_000_000.0, edges = lines)
+            },
+        ) { page ->
             PdfRunningLines.runningLines(listOf(page, page))
         }
     }
 
     @Test
     fun `a top margin of page numbers between lines of text takes time in proportion to them`() = runTest {
-        assertTakesTimeInProportion(partSize = 15_000) { size ->
-            val content = (0 until size).joinToString(" ") { "1 0 0 1 0 ${999_000.0 - it * 0.05} Tm (${if (it % 2 == 0) "1" else "a"}) Tj" }
-            val writer = PdfTestWriter()
-            writer.add("<< /Type /Catalog /Pages 2 0 R >>")
-            writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 999999] /Resources << /Font << /F1 4 0 R >> >> >>")
-            writer.add("<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>")
-            writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
-            writer.stream("BT /F1 0.1 Tf $content ET")
-            assertEquals(size / 2, PdfTextExtractor.extract(writer.write()).pages.single().lines.size)
+        assertTakesTimeInProportion(
+            partSize = 15_000,
+            inputOf = { size ->
+                val content = (0 until size).joinToString(" ") { "1 0 0 1 0 ${999_000.0 - it * 0.05} Tm (${if (it % 2 == 0) "1" else "a"}) Tj" }
+                val writer = PdfTestWriter()
+                writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+                writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 999999] /Resources << /Font << /F1 4 0 R >> >> >>")
+                writer.add("<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>")
+                writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+                writer.stream("BT /F1 0.1 Tf $content ET")
+                size to writer.write()
+            },
+        ) { (size, document) ->
+            assertEquals(size / 2, PdfTextExtractor.extract(document).pages.single().lines.size)
         }
     }
 

@@ -147,8 +147,10 @@ class DocxTextExtractorTest {
         }
     }
 
-    private suspend fun assertReadsInProportion(documentOf: (size: Int) -> Pair<String, String?>) = assertTakesTimeInProportion(PART_SIZE) { size ->
-        val (xml, styles) = documentOf(size)
+    private suspend fun assertReadsInProportion(documentOf: (size: Int) -> Pair<String, String?>) = assertTakesTimeInProportion(
+        partSize = PART_SIZE,
+        inputOf = documentOf,
+    ) { (xml, styles) ->
         DocxTextExtractor.fromXml(xml, styles)
     }
 

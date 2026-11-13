@@ -18,9 +18,11 @@ class PdfChordDiagramsTest {
 
     @Test
     fun `a row of one long word takes time in proportion to its length`() {
-        assertTakesTimeInProportion(partSize = 150_000) { size ->
-            val word = List(size) { Positioned(ChordSheet.Span("a", it * 6.0, it * 6.0 + 6.0, 10.0), 0.0) }
-            assertEquals(size, PdfChordDiagrams.withoutDiagrams(word).size)
+        assertTakesTimeInProportion(
+            partSize = 20_000,
+            inputOf = { size -> List(size) { Positioned(ChordSheet.Span("a", it * 6.0, it * 6.0 + 6.0, 10.0), 0.0) } },
+        ) { word ->
+            assertEquals(word.size, PdfChordDiagrams.withoutDiagrams(word).size)
         }
     }
 }

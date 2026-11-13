@@ -29,12 +29,16 @@ class PdfLineLayoutTest {
 
     @Test
     fun `thousands of tiny runs beside a few lines take time in proportion to them`() {
-        assertTakesTimeInProportion(partSize = 2_500) { size ->
-            val glyphs = (0 until 5).flatMap { line ->
-                val y = line * 2_000.0
-                listOf(PdfLineLayout.Positioned(ChordSheet.Span("H", 0.0, 600.0, 1_000.0), y)) +
-                    List(size) { PdfLineLayout.Positioned(ChordSheet.Span("r", 600.0 + it * 0.06, 600.06 + it * 0.06, 0.1), y + 1.0 + it * 0.023) }
-            }
+        assertTakesTimeInProportion(
+            partSize = 2_500,
+            inputOf = { size ->
+                (0 until 5).flatMap { line ->
+                    val y = line * 2_000.0
+                    listOf(PdfLineLayout.Positioned(ChordSheet.Span("H", 0.0, 600.0, 1_000.0), y)) +
+                        List(size) { PdfLineLayout.Positioned(ChordSheet.Span("r", 600.0 + it * 0.06, 600.06 + it * 0.06, 0.1), y + 1.0 + it * 0.023) }
+                }
+            },
+        ) { glyphs ->
             PdfLineLayout.rows(glyphs) {}
         }
     }
