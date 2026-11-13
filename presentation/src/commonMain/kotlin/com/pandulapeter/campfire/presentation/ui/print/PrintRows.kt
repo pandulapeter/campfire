@@ -241,7 +241,7 @@ internal class PrintRows(
     }
 
     private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> =
-        printGridRows(lines.filterIsInstance<ChordProLine.Grid>(), lineWidth, options.fontSize.toFloat(), isRightToLeft, ::measure)
+        printGridRows(lines.filterIsInstance<ChordProLine.Grid>(), lineWidth, capacity, options.fontSize.toFloat(), isRightToLeft, ::measure)
 
     /**
      * The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its

@@ -681,6 +681,17 @@ internal class PrintLayoutTest {
         assertTrue(written.first().style.size < 20f)
     }
 
+    @Test fun `a grid line taller than a page goes on over the next pages, every bar inside one`() = runTest {
+        val bars = 400
+        val line = ChordProLine.Grid((1..bars).flatMap { listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Beat, GridToken.Beat) } + GridToken.Bar("|"))
+        val document = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(line))))))
+        val outlines = document.pages.map { page -> page.boxes.filter { it.strokeGray != null } }
+        assertTrue(outlines.count { it.isNotEmpty() } > 1)
+        assertEquals(bars, outlines.sumOf { it.size })
+        outlines.flatten().forEach { box -> assertTrue(box.y >= 0f && box.y + box.height <= document.height, box.toString()) }
+        assertEquals(1, document.pages.sumOf { page -> page.texts.count { !it.isDrawn } })
+    }
+
     @Test fun `a multi line description takes a row per line`() = runTest {
         val entry = song(lyrics(1)).copy(index = 1)
         val document = layout(PrintSource("Concert", "a\nb", kind = PrintSource.Kind.SETLIST, songs = listOf(entry)))

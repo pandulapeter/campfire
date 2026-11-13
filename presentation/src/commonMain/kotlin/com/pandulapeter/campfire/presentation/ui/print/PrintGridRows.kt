@@ -29,11 +29,13 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.repeatSpan
  * None of the drawing is in the text layer: read back, a chord name in a box would be a chord over a lyric. Each line
  * reaches it as ChordPro writes it instead, an invisible text over the drawing, which an import reads back as the grid
  * line it is. A right-to-left song moves the run to its line end as one block ([isRightToLeft]); its insides read left to
- * right.
+ * right. A line taller than a column ([capacity]) is cut between its rows, as a tab's system is, rather than run off the
+ * page; the line as written stays with its first row.
  */
 internal fun printGridRows(
     lines: List<ChordProLine.Grid>,
     lineWidth: Float,
+    capacity: Float,
     fontSize: Float,
     isRightToLeft: Boolean,
     measure: (String, PrintStyle) -> Float,
@@ -46,12 +48,12 @@ internal fun printGridRows(
         textWidth = { measure(it, styles.text) },
     )
     val shift = if (isRightToLeft) (lineWidth - layout.width).coerceAtLeast(0f) else 0f
-    return lines.indices.map { index ->
+    return lines.indices.flatMap { index ->
         val placement = layout.placeLine(index, lineWidth)
         val written = lines[index].writtenText()
         // The line as written is wider than its drawing, and a text running into the next column would be read with it.
         val writtenStyle = styles.written.let { style -> style.copy(size = style.size * minOf(1f, lineWidth / measure(written, style))) }
-        PrintGridLine(placement, layout.metrics, styles, measure).row(written, writtenStyle, shift)
+        PrintGridLine(placement, layout.metrics, styles, measure).rows(written, writtenStyle, shift, capacity)
     }
 }
 
@@ -74,17 +76,27 @@ private class PrintGridLine(
     private val rules = mutableListOf<PrintRule>()
     private val boxes = mutableListOf<PrintBox>()
 
-    fun row(writtenText: String, writtenStyle: PrintStyle, shift: Float): Row {
+    fun rows(writtenText: String, writtenStyle: PrintStyle, shift: Float, capacity: Float): List<Row> {
         parts += Part(writtenText, style = writtenStyle, isDrawn = false)
         placement.margin?.let { drawn(it, x = 0f, top = placement.rowTops.first(), styles.text) }
         placement.bars.forEachIndexed { index, placed -> bar(index, placed) }
         placement.trailing?.let { drawn(it.text, it.x, placement.rowTops[it.row], styles.text) }
-        return Row(
-            parts = parts.map { it.copy(x = it.x + shift) },
-            height = placement.height,
-            rules = rules.map { it.copy(x = it.x + shift) },
-            boxes = boxes.map { it.copy(x = it.x + shift) },
-        )
+        // A cut falls where a row's boxes end, so that the gap and any volta over the next row go with that row.
+        val cuts = if (placement.height <= capacity) listOf(0f) else listOf(0f) + placement.rowTops.dropLast(1).map { it + metrics.boxHeight }
+        val ends = cuts.drop(1) + placement.height
+        fun pieceOf(y: Float) = cuts.indexOfLast { it <= y }.coerceAtLeast(0)
+        val pieceParts = parts.groupBy { pieceOf(it.y) }
+        val pieceRules = rules.groupBy { pieceOf(it.y) }
+        val pieceBoxes = boxes.groupBy { pieceOf(it.y) }
+        return cuts.indices.map { piece ->
+            val top = cuts[piece]
+            Row(
+                parts = pieceParts[piece].orEmpty().map { it.copy(x = it.x + shift, y = it.y - top) },
+                height = ends[piece] - top,
+                rules = pieceRules[piece].orEmpty().map { it.copy(x = it.x + shift, y = it.y - top) },
+                boxes = pieceBoxes[piece].orEmpty().map { it.copy(x = it.x + shift, y = it.y - top) },
+            )
+        }
     }
 
     private fun bar(index: Int, placed: PlacedGridBar) {
