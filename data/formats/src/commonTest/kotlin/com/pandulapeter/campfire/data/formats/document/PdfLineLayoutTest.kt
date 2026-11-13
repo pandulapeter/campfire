@@ -30,7 +30,7 @@ class PdfLineLayoutTest {
     @Test
     fun `thousands of tiny runs beside a few lines take time in proportion to them`() {
         assertTakesTimeInProportion(
-            partSize = 2_500,
+            wholeSize = 20_000,
             inputOf = { size ->
                 (0 until 5).flatMap { line ->
                     val y = line * 2_000.0

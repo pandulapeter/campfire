@@ -111,7 +111,7 @@ class PdfRunningLinesTest {
     @Test
     fun `a top margin of as many lines as its page takes time in proportion to them`() {
         assertTakesTimeInProportion(
-            partSize = 2_500,
+            wholeSize = 20_000,
             inputOf = { size ->
                 val lines = List(size) { PdfLineLayout.Line(listOf(ChordSheet.Span("Line $it", 0.0, 10.0, 0.1)), 1.0 + it * 0.03) }
                 PdfTextExtractor.Page(lines, height = 1_000_000.0, edges = lines)
@@ -124,7 +124,7 @@ class PdfRunningLinesTest {
     @Test
     fun `a top margin of page numbers between lines of text takes time in proportion to them`() = runTest {
         assertTakesTimeInProportion(
-            partSize = 15_000,
+            wholeSize = 120_000,
             inputOf = { size ->
                 val content = (0 until size).joinToString(" ") { "1 0 0 1 0 ${999_000.0 - it * 0.05} Tm (${if (it % 2 == 0) "1" else "a"}) Tj" }
                 val writer = PdfTestWriter()

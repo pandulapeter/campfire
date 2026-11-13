@@ -148,7 +148,7 @@ class DocxTextExtractorTest {
     }
 
     private suspend fun assertReadsInProportion(documentOf: (size: Int) -> Pair<String, String?>) = assertTakesTimeInProportion(
-        partSize = PART_SIZE,
+        wholeSize = WHOLE_SIZE,
         inputOf = documentOf,
     ) { (xml, styles) ->
         DocxTextExtractor.fromXml(xml, styles)
@@ -157,7 +157,7 @@ class DocxTextExtractorTest {
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
 
     private companion object {
-        /** How large an eighth of a document is whose reading time is compared with the whole's. */
-        const val PART_SIZE = 5_000
+        /** How large a document is whose reading time is compared with a sixty-fourth of it. */
+        const val WHOLE_SIZE = 40_000
     }
 }
