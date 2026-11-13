@@ -31,6 +31,9 @@ internal object SongStructure {
     data class Song(val header: List<String>, val parts: List<Part>)
 
     /** A grid's shape as ChordPro writes it, its measures by beats with an optional margin each side (`1+4x2+4`). */
+    /** The repeat signs a sheet types with a double bar that ChordPro writes with a single one. */
+    private val gridBarLines = mapOf("||:" to "|:", ":||" to ":|")
+
     private val gridShape = Regex("(?:[0-9]+\\+)?[0-9]+[x\u00d7][0-9]+(?:\\+[0-9]+)?", RegexOption.IGNORE_CASE)
 
     sealed interface Part {
@@ -129,8 +132,9 @@ internal object SongStructure {
                 LineKind.GRID -> {
                     if (!isInGrid) openGrid()
                     // ChordPro reads a grid's cells between spaces, so a bar typed against its chord (`|Am F|`) is set apart,
-                    // and its chords are spelled as a chord row's are.
-                    val cells = tokens(line.text).map { if (rowChord(it.text)) rowChordName(it.text) else it.text }
+                    // its chords are spelled as a chord row's are, and a repeat it has no bar line for (`||:`, `:||`) is
+                    // written as the one it has, which it would otherwise read as a chord.
+                    val cells = tokens(line.text).map { if (rowChord(it.text)) rowChordName(it.text) else gridBarLines[it.text] ?: it.text }
                     add(Line.Raw(cells.joinToString(" ")))
                 }
                 LineKind.SECTION -> {

@@ -273,7 +273,7 @@ class ChordSheetConverterTest {
     @Test
     fun `a repeat sign glued to a chord is a mark of its own and a double bar line stays one`() {
         val intro = convert("Intro\n\n||:Am |    | C    :||\n\nVerse 1\nAm   C\nHello world")
-        assertTrue("\n{start_of_grid}\n||: Am | | C :||\n{end_of_grid}\n" in intro, intro)
+        assertTrue("\n{start_of_grid}\n|: Am | | C :|\n{end_of_grid}\n" in intro, intro)
         val outro = convert("Verse 1\nAm   C\nHello world\n\nOutro\n\nAm | F ||")
         assertTrue("\n[Am] | [F] ||\n" in outro, outro)
     }
