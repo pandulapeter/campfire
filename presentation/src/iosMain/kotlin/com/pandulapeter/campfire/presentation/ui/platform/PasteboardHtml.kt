@@ -15,6 +15,8 @@ import platform.Foundation.NSData
 import platform.Foundation.NSPropertyListImmutable
 import platform.Foundation.NSPropertyListSerialization
 import platform.Foundation.NSString
+import platform.Foundation.NSStringEncoding
+import platform.Foundation.NSUTF16StringEncoding
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.create
 import platform.UIKit.UIPasteboard
@@ -35,13 +37,15 @@ internal object PasteboardHtml {
     fun read(pasteboard: UIPasteboard): ClipboardText? {
         val item = pasteboard.items.firstOrNull() as? Map<*, *> ?: return null
         val html = item[HTML]?.let(::textOf) ?: WEB_ARCHIVES.firstNotNullOfOrNull { type -> (item[type] as? NSData)?.let(::webArchiveHtml) }
-        return clipboardTextOf(text = TEXTS.firstNotNullOfOrNull { type -> item[type]?.let(::textOf) }, html = html)
+        val text = TEXTS.firstNotNullOfOrNull { type -> item[type]?.let(::textOf) }
+            ?: UTF16_TEXTS.firstNotNullOfOrNull { type -> item[type]?.let { textOf(it, NSUTF16StringEncoding) } }
+        return clipboardTextOf(text = text, html = html)
     }
 
     @OptIn(BetaInteropApi::class)
-    private fun textOf(value: Any): String? = when (value) {
+    private fun textOf(value: Any, encoding: NSStringEncoding = NSUTF8StringEncoding): String? = when (value) {
         is String -> value
-        is NSData -> NSString.create(data = value, encoding = NSUTF8StringEncoding)?.toString()
+        is NSData -> NSString.create(data = value, encoding = encoding)?.toString()
         else -> null
     }
 
@@ -55,4 +59,7 @@ internal object PasteboardHtml {
     private const val HTML = "public.html"
     private val WEB_ARCHIVES = listOf("com.apple.webarchive", "Apple Web Archive pasteboard type")
     private val TEXTS = listOf("public.utf8-plain-text", "public.plain-text", "public.text")
+
+    /** The text some apps put on the pasteboard as UTF-16 alone, which `UIPasteboard.string` read as well as the rest. */
+    private val UTF16_TEXTS = listOf("public.utf16-plain-text", "public.utf16-external-plain-text")
 }
