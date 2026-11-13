@@ -338,6 +338,14 @@ internal class PrintLayoutTest {
         assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly || "Tab" in chordsOnly)
     }
 
+    @Test fun `a grid line too wide for the column starts every row with a bar line`() = runTest {
+        val tokens = List(24) { listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Beat, GridToken.Beat) }.flatten() + GridToken.Bar("|")
+        val grid = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
+        val rows = layout(source(grid)).pages.flatMap { it.texts }.filter { it.style.monospace && it.text.contains("Am") }
+        assertTrue(rows.size > 1)
+        assertTrue(rows.all { it.text.startsWith("| Am") }, rows.joinToString { it.text })
+    }
+
     @Test fun `a bare grid is headed grid and left out with its heading when chords are hidden`() = runTest {
         val grid = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"))),
@@ -666,8 +674,10 @@ internal class PrintLayoutTest {
         val rows = rows(tokens)
         assertTrue(rows.size > 2, rows.toString())
         rows.dropLast(1).forEach { assertTrue(it.substringAfterLast(' ') in bars, rows.toString()) }
-        rows.drop(1).forEach { assertFalse(it.substringBefore(' ') in bars, rows.toString()) }
-        assertEquals(tokens.joinToString(" ") { (it as? GridToken.Chord)?.name ?: (it as? GridToken.Bar)?.text ?: "." }, rows.joinToString(" "))
+        // A row the line wraps onto starts with a bar line of its own, as a chart's rows do.
+        rows.drop(1).forEach { assertTrue(it.startsWith("| "), rows.toString()) }
+        val unwrapped = (rows.take(1) + rows.drop(1).map { it.removePrefix("| ") }).joinToString(" ")
+        assertEquals(tokens.joinToString(" ") { (it as? GridToken.Chord)?.name ?: (it as? GridToken.Bar)?.text ?: "." }, unwrapped)
         assertTrue(rows(grid(listOf(GridToken.Text("Intro")))).first().startsWith("Intro"))
     }
 

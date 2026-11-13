@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.songLayout.wrappedOpening
 import com.pandulapeter.campfire.presentation.ui.songLayout.firstSection
 import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
@@ -244,22 +245,24 @@ internal class PrintRows(
 
     /**
      * A run of grid lines (`groupIntoRuns`), aligned into columns as the viewer aligns them, each line broken
-     * between bars as the viewer breaks it, a row taking as many whole bars as fit; only a bar wider than the column is
-     * wrapped inside itself.
+     * between bars as the viewer breaks it, a row taking as many whole bars as fit and starting with the bar line the
+     * viewer starts it with ([wrappedOpening]); only a bar wider than the column is wrapped inside itself.
      */
     private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> {
         val run = lines.map { (it as ChordProLine.Grid).tokens }
-        return run.alignedGridBars { it.printText() }.flatMap { bars -> gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, lineWidth) }
-            .atLineEnd(lineWidth)
+        return run.alignedGridBars { it.printText() }.flatMap { bars ->
+            gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, bars.indices.map { bars.wrappedOpening(it) }, lineWidth)
+        }.atLineEnd(lineWidth)
     }
 
-    private fun gridLineRows(bars: List<String>, lineWidth: Float): List<Row> = buildList {
+    private fun gridLineRows(bars: List<String>, openings: List<String?>, lineWidth: Float): List<Row> = buildList {
         var row = ""
-        bars.forEach { text ->
-            if (row.isNotEmpty() && measure(row + text.trimEnd(), gridStyle) <= lineWidth) {
-                row += text
+        bars.forEachIndexed { index, bar ->
+            if (row.isNotEmpty() && measure(row + bar.trimEnd(), gridStyle) <= lineWidth) {
+                row += bar
             } else {
                 if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
+                val text = openings[index]?.let { "$it $bar" } ?: bar
                 if (measure(text.trimEnd(), gridStyle) <= lineWidth) {
                     row = text
                 } else {

@@ -118,6 +118,17 @@ private fun MutableList<GridCell>.addAligned(
     }
 }
 
+/**
+ * The bar line a grid line broken before its bar at [index] starts the new row with, as every row of a chart starts
+ * with one: an opening repeat where the bar line the row broke at opens one (`||:`, `:|:`), else a plain one. Null for
+ * the line's first bar, which has its own, and for what follows its last bar line (a repeat count), which is no bar.
+ */
+internal fun List<List<GridCell>>.wrappedOpening(index: Int): String? {
+    if (index == 0 || this[index].none { it.token is GridToken.Bar }) return null
+    val brokenAt = this[index - 1].lastOrNull { it.token is GridToken.Bar }?.token as? GridToken.Bar
+    return if (brokenAt?.text?.endsWith(":") == true) "|:" else "|"
+}
+
 /** A bar cut into its margin, its opening bar line, its cells and its closing bar line, see [alignedGridBars]. */
 private class BarParts(
     val margin: List<GridToken>,

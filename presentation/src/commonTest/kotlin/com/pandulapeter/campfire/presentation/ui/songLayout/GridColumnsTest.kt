@@ -154,4 +154,11 @@ class GridColumnsTest {
             gridTokens("|: Am | C :| x2").single().bars().map { bar -> bar.map { it.text() } },
         )
     }
+
+    @Test
+    fun `a wrapped grid row starts with a bar line, an opening repeat where the line broke at one`() {
+        val bars = gridTokens("| C . | Dm . :|: G . :| x2").alignedGridBars { it.text() }.single()
+
+        assertEquals(listOf(null, "|", "|:", null), bars.indices.map { bars.wrappedOpening(it) })
+    }
 }

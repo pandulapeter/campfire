@@ -54,7 +54,8 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   column; other lines from the column each word starts at, moved right only where it would touch the word before.
   Preformatted runs stay monospaced. A line of chord names in a tab run is drawn as the page's chords.
 - Grids: bar lines align across lines (`alignedGridBars`, shared with the PDF); each bar is one text, since only one
-  monospaced text keeps its columns. A too-wide grid line breaks between bars.
+  monospaced text keeps its columns. A too-wide grid line breaks between bars, and the row it wraps onto starts with a
+  bar line of its own (`wrappedOpening`, shared with the PDF).
 - A paragraph holding only one tab or grid run is headed "Tab" / "Grid" (screen and PDF).
 
 ### The Scales section
