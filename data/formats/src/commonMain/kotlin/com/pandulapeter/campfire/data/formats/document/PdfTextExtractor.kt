@@ -49,7 +49,7 @@ object PdfTextExtractor {
      * is printed: a page short of text can be read as columns, which would cut a running line into parts that no other
      * page's running line matches.
      */
-    internal data class Page(val lines: List<Line>, val height: Double, val edges: List<Line> = emptyList())
+    internal data class Page(val lines: List<Line>, val height: Double, val edges: List<Line> = emptyList(), val pictureRows: Int = 0)
 
     suspend fun extract(bytes: ByteArray): ChordSheet {
         val file = PdfFile(bytes)
@@ -103,7 +103,8 @@ object PdfTextExtractor {
             val height = if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0
             val glyphs = PdfChordDiagrams.withoutDiagrams(interpreter.glyphs)
             val edges = rows(glyphs.filter { isEdge(it.y, height) }, budget::chargeText)
-            return Page(buildLines(glyphs, budget::chargeText), height, edges)
+            val pictureRows = PdfPictureRows.textlessRows(interpreter.pictures, interpreter.glyphs.map { it.y }, height)
+            return Page(buildLines(glyphs, budget::chargeText), height, edges, pictureRows)
         }
 
         // A malformed page costs only itself: its slot stays, empty, so that page numbers and the running lines still
@@ -138,6 +139,8 @@ object PdfTextExtractor {
         walk(file.catalog()["Pages"], null, listOf(PdfNumber(0.0), PdfNumber(0.0), PdfNumber(612.0), PdfNumber(792.0)), 0)
         require(budget.shown > 0 && budget.unreadable * 2 <= budget.shown) { "PDF has no readable font mapping" }
         require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
+        val lines = pages.sumOf { page -> page.lines.count { it.text.isNotBlank() } }
+        require(!PdfPictureRows.isDrawn(pages.sumOf { it.pictureRows }, lines)) { "PDF draws its text as pictures" }
         val repeated = runningLines(pages)
         val isFooterLifted = hasLiftedFooter(pages)
         val kept = pages.mapIndexed { index, page ->

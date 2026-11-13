@@ -27,6 +27,10 @@ Documents are read locally, never rendered, uploaded, or kept.
 - Damage is local: a malformed page, font, or form costs only itself; the document fails only when more than half its
   glyphs or pages do. Budgets, encryption, a broken page tree, and over 2,000 pages fail it whole (a songbook silently
   losing its tail is worse than one reported unreadable).
+- A song drawn as pictures under a header of text (a site's export) is unreadable too (`PdfPictureRows`): where images
+  are placed, never what they hold, is counted in rows that no baseline crosses, leaving out pictures under 3 pt (rules)
+  or over a quarter of the page (a cover, a background, a scan under its text); at least 8 such rows, and more than twice
+  the document's lines of text, fail it. A logo, a cover, or a few rows of chord diagram pictures stay far below that.
 - Must stay linear: `PdfStreamEnds` finds every `endstream` once per file; at most 1 KiB of whitespace is walked past a
   declared `/Length`.
 - Columns: a gutter is a 0.8 em whitespace band crossed by at most a fifth of the lines, with a fifth of the characters

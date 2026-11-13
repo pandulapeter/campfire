@@ -62,6 +62,7 @@ internal class PdfContentInterpreter(
     private val point: (Point) -> Point,
 ) {
     val glyphs = mutableListOf<Positioned>()
+    val pictures = mutableListOf<PdfPictureRows.Picture>()
     private val activeForms = mutableSetOf<PdfStream>()
 
     /**
@@ -107,6 +108,10 @@ internal class PdfContentInterpreter(
         fun matrix(values: List<PdfValue>): Matrix {
             require(values.all { it.number().isFinite() && abs(it.number()) <= 1_000_000 })
             return Matrix(values.getOrNull(0).number(1.0), values.getOrNull(1).number(), values.getOrNull(2).number(), values.getOrNull(3).number(1.0), values.getOrNull(4).number(), values.getOrNull(5).number())
+        }
+        fun picture() {
+            val corners = listOf(0.0 to 0.0, 1.0 to 0.0, 0.0 to 1.0, 1.0 to 1.0).map { (x, y) -> point(state.ctm.point(x, y)).y }
+            pictures += PdfPictureRows.Picture(corners.min(), corners.max())
         }
         fun nextLine() { state.line = state.line.translated(0.0, -state.leading); state.text = state.line }
         suspend fun show(value: PdfValue?) {
@@ -189,6 +194,7 @@ internal class PdfContentInterpreter(
                 "Do" -> {
                     val objectValue = file.dictionary(resource?.get("XObject"))?.get(operands.firstOrNull().name().orEmpty())
                     val form = file.resolve(objectValue) as? PdfStream
+                    if (form?.dictionary?.get("Subtype").name() == "Image") picture()
                     if (form?.dictionary?.get("Subtype").name() == "Form") {
                         // The cycle is tested outside the try, whose finally would otherwise remove the entry of the
                         // invocation of the same form that is still running further up.
@@ -212,6 +218,7 @@ internal class PdfContentInterpreter(
                 }
                 "BI" -> {
                     // Inline image data is binary, not content syntax. Skip its dictionary and byte range.
+                    picture()
                     while (true) {
                         val item = parser.next(references = false) ?: error("Truncated inline image")
                         if (item is PdfKeyword && item.value == "ID") break
