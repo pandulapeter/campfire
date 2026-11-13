@@ -67,11 +67,11 @@ internal class SongTextMeasurementsTest {
     }
 
     @Test
-    fun `every chunk of a grid run shares one alignment of its bars`() {
+    fun `every chunk of a grid run shares one layout of its bars`() {
         val run = listOf(
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Bar("|"))),
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("C"), GridToken.Chord("G"), GridToken.Bar("|"))),
         )
-        assertSame(measurements.gridBars(run), measurements.gridBars(run.toList()))
+        assertSame(measurements.gridLayout(run, styles), measurements.gridLayout(run.toList(), styles))
     }
 }

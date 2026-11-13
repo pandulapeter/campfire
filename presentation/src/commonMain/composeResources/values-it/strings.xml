@@ -1039,6 +1039,13 @@
     <string name="song_details_section_abc">Spartito</string>
     <string name="song_details_sheet_music_chords">Accordi: %1$s</string>
     <string name="song_details_sheet_music_words">Testo: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s tempo</item>
+        <item quantity="other">%1$s tempi</item>
+    </plurals>
+    <string name="song_details_grid_held">tenuto</string>
+    <string name="song_details_grid_repeat_bar">ripeti la battuta</string>
+    <string name="song_details_grid_repeat_two_bars">ripeti due battute</string>
     <string name="song_details_sheet_music_parts">Parti</string>
     <string name="song_details_sheet_music_part_unnamed">Voce %1$s</string>
     <string name="song_details_sheet_music_part_choose">Scegli la parte mostrata</string>

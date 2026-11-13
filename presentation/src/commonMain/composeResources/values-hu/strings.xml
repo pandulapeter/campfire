@@ -1038,6 +1038,13 @@
     <string name="song_details_section_abc">Kotta</string>
     <string name="song_details_sheet_music_chords">Akkordok: %1$s</string>
     <string name="song_details_sheet_music_words">Dalszöveg: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s ütés</item>
+        <item quantity="other">%1$s ütés</item>
+    </plurals>
+    <string name="song_details_grid_held">kitartva</string>
+    <string name="song_details_grid_repeat_bar">ütem ismétlése</string>
+    <string name="song_details_grid_repeat_two_bars">két ütem ismétlése</string>
     <string name="song_details_sheet_music_parts">Szólamok</string>
     <string name="song_details_sheet_music_part_unnamed">%1$s szólam</string>
     <string name="song_details_sheet_music_part_choose">Válaszd ki a megjelenített szólamot</string>

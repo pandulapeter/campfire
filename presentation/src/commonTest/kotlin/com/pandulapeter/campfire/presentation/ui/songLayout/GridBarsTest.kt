@@ -174,7 +174,7 @@ class GridBarsTest {
     @Test
     fun `a row holding a volta leaves room above it for the bracket`() {
         val layout = layout("| C . |1 D . :|")
-        assertEquals(layout.metrics.voltaHeight, layout.placeLine(0, Float.POSITIVE_INFINITY).rowTops.single())
-        assertEquals(0f, layout("| C . | D . |").placeLine(0, Float.POSITIVE_INFINITY).rowTops.single())
+        val plain = layout("| C . | D . |").placeLine(0, Float.POSITIVE_INFINITY).rowTops.single()
+        assertEquals(plain + layout.metrics.voltaHeight, layout.placeLine(0, Float.POSITIVE_INFINITY).rowTops.single())
     }
 }

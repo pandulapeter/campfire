@@ -20,6 +20,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_grid_beats
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.openSong
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.unclippedBounds
 import com.pandulapeter.campfire.screenshots.AppTestScope
@@ -57,10 +59,9 @@ internal class SongDirectionTest {
         // The closing bar line is drawn in the middle of the tab's last column.
         assertTrue(tab.right - tabInk.last <= DRAWN_EDGE_TOLERANCE, "The short tab ends at ${tabInk.last} of a column ending at ${tab.right}.")
         assertTrue(tabInk.first > tab.center.x, "The short tab starts at ${tabInk.first}, in the left half of $tab.")
-        val firstBar = barBounds(FIRST_BAR)
-        val lastBar = barBounds(LAST_BAR)
-        assertTrue(abs(tab.right - lastBar.right) <= EDGE_TOLERANCE, "The grid ends at ${lastBar.right} of a column ending at ${tab.right}.")
-        assertTrue(firstBar.left - tab.left > WRAPPED_SHIFT_LIMIT, "The grid starts at ${firstBar.left}, unmoved in $tab.")
+        val grid = inkColumns(gridBounds())
+        assertTrue(abs(tab.right - grid.last) <= DRAWN_EDGE_TOLERANCE, "The grid ends at ${grid.last} of a column ending at ${tab.right}.")
+        assertTrue(grid.first - tab.left > WRAPPED_SHIFT_LIMIT, "The grid starts at ${grid.first}, unmoved in $tab.")
         // A tab wider than the column wraps into systems that fill it, so it barely moves, and its systems move together.
         val wide = blockBounds(WIDE_TAB)
         val firstSystem = inkColumns(wide)
@@ -78,15 +79,17 @@ internal class SongDirectionTest {
         val tab = blockBounds(SHORT_TAB)
         val tabInk = inkColumns(tab)
         assertTrue(tabInk.first - tab.left <= EDGE_TOLERANCE, "The short tab starts at ${tabInk.first} of a column starting at ${tab.left}.")
-        assertTrue(abs(barBounds(FIRST_BAR).left - tab.left) <= EDGE_TOLERANCE, "The grid does not start at the column's left edge.")
+        assertTrue(abs(inkColumns(gridBounds()).first - tab.left) <= EDGE_TOLERANCE, "The grid does not start at the column's left edge.")
     }
 
     private fun AppTestScope.blockBounds(lines: String) =
         onAllNodes(hasContentDescription(lines), useUnmergedTree = true).fetchSemanticsNodes().single().unclippedBounds()
 
-    /** The bar of the grid naming [chord], told from the Chords section's name by the beats beside it. */
-    private fun AppTestScope.barBounds(chord: String) =
-        onAllNodes(hasText(chord, substring = true) and hasText(BEAT, substring = true), useUnmergedTree = true).fetchSemanticsNodes().single().unclippedBounds()
+    /** The grid line, read aloud as its four-beat bars. */
+    private fun AppTestScope.gridBounds() = onAllNodes(
+        hasContentDescription(GRID_BARS.joinToString("; ") { "$it, ${pluralString(Res.plurals.song_details_grid_beats, 4)}" }),
+        useUnmergedTree = true,
+    ).fetchSemanticsNodes().single().unclippedBounds()
 
     /** The first and the last column of [bounds] on screen holding anything other than the most common colour in it. */
     private fun AppTestScope.inkColumns(bounds: Rect): IntRange {
@@ -127,9 +130,8 @@ private val WIDE_TAB = listOf(
     "A|--3--3--3--3--3--3--3---3---3---3--3--3--3--3--3--3--3--3--3--3--3---3---3---3--3--3--3--3--3--|",
     "E|-----------------------------------------------------------------------------------------------|",
 ).joinToString("\n")
-private const val FIRST_BAR = "Bm7"
-private const val LAST_BAR = "Dm7"
-private const val BEAT = "\u00B7"
+/** Four bars, too wide to stand beside the short tab, so the grid has the column to itself. */
+private val GRID_BARS = listOf("Bm7", "Em7", "Am7", "Dm7")
 
 /** Tall enough for the whole song to be on screen at once, a column as wide as a phone's. */
 private val TALL_PHONE = TestWindow(width = 360.dp, height = 1_600.dp)

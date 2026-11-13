@@ -237,6 +237,21 @@ internal data class PrintRule(
     val gray: Int = 0,
 )
 
+/**
+ * A rounded rectangle, the way a grid's bars and their repeat dots are drawn: filled in [fillGray] and outlined in
+ * [strokeGray] [lineWidth] wide where either is given, in PDF points like the texts and grays from 0 (black) to 255.
+ */
+internal data class PrintBox(
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+    val cornerRadius: Float = 0f,
+    val fillGray: Int? = null,
+    val strokeGray: Int? = null,
+    val lineWidth: Float = 0f,
+)
+
 /** A chord diagram drawn into the [width] by [height] box at [x], [y], in PDF points like the texts. */
 internal data class PrintDiagram(
     val geometry: ChordDiagramGeometry,
@@ -258,10 +273,14 @@ internal data class PrintNotation(
     val scale: Float,
 )
 
-/** Everything on one page, in PDF points from its top left corner; the rules are drawn under the texts and the diagrams. */
+/**
+ * Everything on one page, in PDF points from its top left corner; the boxes are drawn first, then the rules, both under
+ * the texts and the diagrams.
+ */
 internal data class PrintPage(
     val texts: List<PrintText>,
     val rules: List<PrintRule> = emptyList(),
+    val boxes: List<PrintBox> = emptyList(),
     val diagrams: List<PrintDiagram> = emptyList(),
     val notations: List<PrintNotation> = emptyList(),
 )

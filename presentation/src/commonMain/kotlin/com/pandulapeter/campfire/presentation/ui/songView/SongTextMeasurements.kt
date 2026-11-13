@@ -16,9 +16,10 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
-import com.pandulapeter.campfire.presentation.ui.songLayout.GridCell
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridBarLayout
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridMetrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.PADDING
-import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.songLayout.gridBarLinesOf
 
 /**
  * What the chorded lines of one page have had measured, shared between them because they keep asking for the
@@ -61,8 +62,8 @@ internal class SongTextMeasurements(
     private val annotationLayouts = HashMap<String, TextLayoutResult>()
     private val fragmentWidths = HashMap<String, Float>()
     private val tabRows = HashMap<TabRunKey, TabRows>()
-    private val gridBars = HashMap<List<ChordProLine>, List<List<List<GridCell>>>>()
-    private val gridWidths = HashMap<Pair<List<List<List<GridCell>>>, RunStyles>, Int>()
+    private val gridLayouts = HashMap<Pair<List<ChordProLine>, RunStyles>, GridBarLayout>()
+    private val gridTexts = HashMap<Pair<String, TextStyle>, TextLayoutResult>()
 
     /** The laid out name of [chord], which is drawn as it is: the colour is given where it is drawn. */
     fun chordLayout(chord: ChordProLine.Lyrics.Chord) = if (chord.isAnnotation) {
@@ -81,19 +82,24 @@ internal class SongTextMeasurements(
     fun tabRows(lines: List<String>, styles: RunStyles, isPreformatted: Boolean = false) =
         tabRows.boundedTo(MAX_TAB_RUNS).getOrPut(TabRunKey(lines, styles, isPreformatted)) { TabRows(lines, styles, textMeasurer, isPreformatted) }
 
-    /** The bars of the grid run [run], aligned once for every chunk the run is drawn as. */
-    fun gridBars(run: List<ChordProLine>) = gridBars.boundedTo(MAX_TAB_RUNS).getOrPut(run) {
-        run.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
+    /**
+     * The bars of the grid run [run] in [styles], their columns measured once for every chunk the run is drawn as, so that
+     * its lines stay in columns and break after the same bar; its [GridBarLayout.width] is what a right-to-left song
+     * moves the run to its line end by ([atLineEnd]).
+     */
+    fun gridLayout(run: List<ChordProLine>, styles: RunStyles) = gridLayouts.boundedTo(MAX_TAB_RUNS).getOrPut(run to styles) {
+        val sample = gridText(LINE_HEIGHT_SAMPLE, styles.chord)
+        GridBarLayout(
+            lines = gridBarLinesOf(run.filterIsInstance<ChordProLine.Grid>().map { it.tokens }),
+            metrics = GridMetrics(em = gridText(EM_SAMPLE, styles.chord).size.width.toFloat(), textHeight = sample.size.height.toFloat()),
+            labelWidth = { gridText(it, styles.chord).size.width.toFloat() },
+            textWidth = { gridText(it, styles.text).size.width.toFloat() },
+        )
     }
 
-    /**
-     * How wide the widest line of the aligned grid [bars] is unwrapped in [styles], which is what a right-to-left song
-     * moves the run to its start edge by ([atLineEnd]); every chunk of the run asks, so that its lines stay in columns.
-     */
-    fun gridWidth(bars: List<List<List<GridCell>>>, styles: RunStyles) = gridWidths.boundedTo(MAX_TAB_RUNS).getOrPut(bars to styles) {
-        bars.maxOfOrNull { line ->
-            line.sumOf { bar -> textMeasurer.measure(gridBarText(bar, styles.monospaceChord), styles.monospaceText).size.width }
-        } ?: 0
+    /** A chord name, a sign, or a label of a drawn grid laid out in [style], which it is drawn from as it is measured. */
+    fun gridText(text: String, style: TextStyle) = gridTexts.boundedTo(MAX_MEASURED_TEXTS).getOrPut(text to style) {
+        textMeasurer.measure(AnnotatedString(text), style)
     }
 
     private fun measureFragment(fragment: String) = textMeasurer.measure(AnnotatedString(fragment), lyricsStyle).size.width.toFloat()
@@ -112,6 +118,8 @@ internal class SongTextMeasurements(
 }
 
 internal const val LINE_HEIGHT_SAMPLE = "X"
+
+private const val EM_SAMPLE = "M"
 
 private const val MAX_MEASURED_TEXTS = 4096
 

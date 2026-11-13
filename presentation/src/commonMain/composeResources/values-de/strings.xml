@@ -1039,6 +1039,13 @@
     <string name="song_details_section_abc">Noten</string>
     <string name="song_details_sheet_music_chords">Akkorde: %1$s</string>
     <string name="song_details_sheet_music_words">Text: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s Schlag</item>
+        <item quantity="other">%1$s Schläge</item>
+    </plurals>
+    <string name="song_details_grid_held">gehalten</string>
+    <string name="song_details_grid_repeat_bar">Takt wiederholen</string>
+    <string name="song_details_grid_repeat_two_bars">zwei Takte wiederholen</string>
     <string name="song_details_sheet_music_parts">Stimmen</string>
     <string name="song_details_sheet_music_part_unnamed">Stimme %1$s</string>
     <string name="song_details_sheet_music_part_choose">Angezeigte Stimme wählen</string>

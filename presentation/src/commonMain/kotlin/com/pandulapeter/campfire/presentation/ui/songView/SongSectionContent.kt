@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.notation.SongNotations
 import com.pandulapeter.campfire.presentation.ui.notation.abcTune
 import com.pandulapeter.campfire.presentation.ui.notation.describedAs
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
+import kotlin.math.ceil
 
 /**
  * The optional header of a section followed by its lines, with the chords drawn above the lyrics.
@@ -400,17 +401,16 @@ private fun SectionRun(
             }
 
             else -> {
-                val alignedLines = remember(run, textMeasurements) { textMeasurements.gridBars(run) }
-                val extent = remember(alignedLines, runStyles, textMeasurements, isAtEnd) {
-                    if (isAtEnd) textMeasurements.gridWidth(alignedLines, runStyles) else 0
-                }
+                val gridLayout = remember(run, runStyles, textMeasurements) { textMeasurements.gridLayout(run, runStyles) }
+                val extent = if (isAtEnd) ceil(gridLayout.width).toInt() else 0
                 Column(modifier = runModifier.fillMaxWidth().atLineEnd(isAtEnd, extent)) {
                     shownSlots.forEach { slot ->
-                        alignedLines.getOrNull(slot)?.let { bars ->
+                        if (slot < gridLayout.lines.size) {
                             SongGridLine(
-                                bars = bars,
-                                lyricsStyle = runStyles.monospaceText,
-                                chordStyle = runStyles.monospaceChord,
+                                layout = gridLayout,
+                                lineIndex = slot,
+                                styles = runStyles,
+                                textMeasurements = textMeasurements,
                             )
                         }
                     }

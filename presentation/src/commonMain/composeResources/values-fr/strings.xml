@@ -1044,6 +1044,13 @@
     <string name="song_details_section_abc">Partition</string>
     <string name="song_details_sheet_music_chords">Accords : %1$s</string>
     <string name="song_details_sheet_music_words">Paroles : %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s temps</item>
+        <item quantity="other">%1$s temps</item>
+    </plurals>
+    <string name="song_details_grid_held">tenu</string>
+    <string name="song_details_grid_repeat_bar">répéter la mesure</string>
+    <string name="song_details_grid_repeat_two_bars">répéter deux mesures</string>
     <string name="song_details_sheet_music_parts">Parties</string>
     <string name="song_details_sheet_music_part_unnamed">Voix %1$s</string>
     <string name="song_details_sheet_music_part_choose">Choisir la partie affichée</string>

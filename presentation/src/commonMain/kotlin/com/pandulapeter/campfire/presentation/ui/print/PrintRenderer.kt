@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.AnnotatedString
@@ -150,6 +152,7 @@ internal class PrintRenderer(
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
         drawRect(Color.White)
         scale(scale, scale, pivot = Offset.Zero) {
+            page.boxes.forEach { box -> drawBox(box) }
             page.rules.forEach { rule ->
                 drawRect(
                     color = Color(rule.gray, rule.gray, rule.gray),
@@ -321,4 +324,12 @@ private fun String.paddingRuns() = BooleanArray(length).also { runs ->
         isPadding = character == PADDING_MARK || character == PADDING && isPadding
         runs[index] = character == PADDING && isPadding
     }
+}
+
+private fun DrawScope.drawBox(box: PrintBox) {
+    val topLeft = Offset(box.x, box.y)
+    val size = Size(box.width, box.height)
+    val corner = CornerRadius(box.cornerRadius)
+    box.fillGray?.let { drawRoundRect(Color(it, it, it), topLeft, size, corner) }
+    box.strokeGray?.let { drawRoundRect(Color(it, it, it), topLeft, size, corner, style = Stroke(box.lineWidth)) }
 }

@@ -15,7 +15,7 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 
 ### Rendering
 
-- Tabs and grids are columns of characters that must line up. **Nothing on the page scrolls sideways.**
+- Tabs are columns of characters that must line up. **Nothing on the page scrolls sideways.**
 - **A song has one direction** (`SongLyricsModel.textDirection`), whatever the UI's: the body is laid out in it and
   every lyric line is a paragraph of it, so chords follow one another leftwards in an RTL song. Each chord hangs from
   its character in its run's direction: a Latin word in a Hebrew line has its chord right of its first character, its
@@ -53,9 +53,11 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   columns only say where things go: frets in the lyrics' face's bold tabular figures, centred on their string and
   column; other lines from the column each word starts at, moved right only where it would touch the word before.
   Preformatted runs stay monospaced. A line of chord names in a tab run is drawn as the page's chords.
-- Grids: bar lines align across lines (`alignedGridBars`, shared with the PDF); each bar is one text, since only one
-  monospaced text keeps its columns. A too-wide grid line breaks between bars, and the row it wraps onto starts with a
-  bar line of its own (`wrappedOpening`, shared with the PDF).
+- **Grids are drawn as bars** (`songLayout/GridBars.kt` reads them, `GridBarLayout` places them for the screen and the
+  PDF alike): a box per bar, a chord's part as wide as its beats or its name, `%` and `%%` kept as signs (a file
+  writing one means it), an empty bar the run's most common length. Bars stand in the run's columns, and a run too wide
+  breaks every line after the same bar; a row starts with a whole box. Chords in the page's chord style and names,
+  colours from the scheme. Read aloud as chords and beats (`gridLineDescription`), never bar characters.
 - A paragraph holding only one tab or grid run is headed "Tab" / "Grid" (screen and PDF).
 
 ### The Scales section

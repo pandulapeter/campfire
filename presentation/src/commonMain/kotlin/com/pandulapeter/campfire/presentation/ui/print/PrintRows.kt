@@ -18,13 +18,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
-import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
-import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
-import com.pandulapeter.campfire.presentation.ui.songLayout.wrappedOpening
 import com.pandulapeter.campfire.presentation.ui.songLayout.firstSection
 import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.groupIntoRuns
@@ -243,36 +240,8 @@ internal class PrintRows(
         }
     }
 
-    /**
-     * A run of grid lines (`groupIntoRuns`), aligned into columns as the viewer aligns them, each line broken
-     * between bars as the viewer breaks it, a row taking as many whole bars as fit and starting with the bar line the
-     * viewer starts it with ([wrappedOpening]); only a bar wider than the column is wrapped inside itself.
-     */
-    private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> {
-        val run = lines.map { (it as ChordProLine.Grid).tokens }
-        return run.alignedGridBars { it.printText() }.flatMap { bars ->
-            gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, bars.indices.map { bars.wrappedOpening(it) }, lineWidth)
-        }.atLineEnd(lineWidth)
-    }
-
-    private fun gridLineRows(bars: List<String>, openings: List<String?>, lineWidth: Float): List<Row> = buildList {
-        var row = ""
-        bars.forEachIndexed { index, bar ->
-            if (row.isNotEmpty() && measure(row + bar.trimEnd(), gridStyle) <= lineWidth) {
-                row += bar
-            } else {
-                if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
-                val text = openings[index]?.let { "$it $bar" } ?: bar
-                if (measure(text.trimEnd(), gridStyle) <= lineWidth) {
-                    row = text
-                } else {
-                    addAll(wrapped(text.trimEnd(), gridStyle, lineWidth))
-                    row = ""
-                }
-            }
-        }
-        if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
-    }
+    private fun gridRows(lines: List<ChordProLine>, lineWidth: Float): List<Row> =
+        printGridRows(lines.filterIsInstance<ChordProLine.Grid>(), lineWidth, options.fontSize.toFloat(), isRightToLeft, ::measure)
 
     /**
      * The key a `{transpose}` further down takes the song to, for a song that declares one, as the heading names its
@@ -422,6 +391,7 @@ internal class PrintRows(
             rules = row.rules.map { it.copy(x = it.x + indent) } +
                 PrintRule(x = if (isRightToLeft) width - CHORUS_BAR_WIDTH else 0f, y = top, width = CHORUS_BAR_WIDTH, height = row.height - top),
             notations = row.notations.map { it.copy(x = it.x + indent) },
+            boxes = row.boxes.map { it.copy(x = it.x + indent) },
         )
     }
 }
@@ -450,6 +420,7 @@ internal data class Row(
     val rules: List<PrintRule> = emptyList(),
     val diagrams: List<PrintDiagram> = emptyList(),
     val notations: List<PrintNotation> = emptyList(),
+    val boxes: List<PrintBox> = emptyList(),
 )
 
 /**
@@ -471,11 +442,3 @@ private sealed interface SectionPart {
 
 /** The segments of a section's group, and whether one of them carries its label. */
 private class SectionSegments(val segments: List<List<Row>>, val isLabelled: Boolean)
-
-private fun GridToken.printText() = when (this) {
-    is GridToken.Bar -> text
-    is GridToken.Chord -> name
-    is GridToken.Text -> text
-    is GridToken.Repeat -> text
-    GridToken.Beat -> "."
-}

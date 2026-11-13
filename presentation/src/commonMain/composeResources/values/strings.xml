@@ -1039,6 +1039,13 @@
     <string name="song_details_section_abc">Sheet music</string>
     <string name="song_details_sheet_music_chords">Chords: %1$s</string>
     <string name="song_details_sheet_music_words">Words: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s beat</item>
+        <item quantity="other">%1$s beats</item>
+    </plurals>
+    <string name="song_details_grid_held">held</string>
+    <string name="song_details_grid_repeat_bar">repeat bar</string>
+    <string name="song_details_grid_repeat_two_bars">repeat two bars</string>
     <string name="song_details_sheet_music_parts">Parts</string>
     <string name="song_details_sheet_music_part_unnamed">Voice %1$s</string>
     <string name="song_details_sheet_music_part_choose">Choose the part shown</string>

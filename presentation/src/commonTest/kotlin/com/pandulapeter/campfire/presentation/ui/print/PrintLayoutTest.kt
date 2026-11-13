@@ -338,12 +338,15 @@ internal class PrintLayoutTest {
         assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly || "Tab" in chordsOnly)
     }
 
-    @Test fun `a grid line too wide for the column starts every row with a bar line`() = runTest {
-        val tokens = List(24) { listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Beat, GridToken.Beat) }.flatten() + GridToken.Bar("|")
-        val grid = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
-        val rows = layout(source(grid)).pages.flatMap { it.texts }.filter { it.style.monospace && it.text.contains("Am") }
-        assertTrue(rows.size > 1)
-        assertTrue(rows.all { it.text.startsWith("| Am") }, rows.joinToString { it.text })
+    @Test fun `a grid line is drawn as boxes and reaches the text layer once, as ChordPro writes it`() = runTest {
+        val tokens = listOf(GridToken.Text("Intro"), GridToken.Bar("|:"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Chord("C"), GridToken.Beat, GridToken.Bar(":|"), GridToken.Text("x2"))
+        val page = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens))))))).pages.single()
+        val written = page.texts.single { !it.isDrawn }
+        assertEquals("Intro |: Am . C . :| x2", written.text)
+        assertTrue(written.isSelectable)
+        assertEquals(listOf("Am", "C"), page.texts.filter { it.isDrawn && it.text in setOf("Am", "C") }.map { it.text })
+        assertTrue(page.texts.filter { it.isSelectable }.none { it.text == "Am" || it.text == "Intro" || it.text == "x2" })
+        assertTrue(page.boxes.isNotEmpty())
     }
 
     @Test fun `a bare grid is headed grid and left out with its heading when chords are hidden`() = runTest {
@@ -355,8 +358,10 @@ internal class PrintLayoutTest {
         assertTrue(heading.style.bold)
         assertEquals(90, heading.style.gray)
         assertTrue(texts.any { it.text.contains("G") && it.style.monospace && it.y > heading.y })
-        val hidden = layout(source(grid), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        val hiddenPages = layout(source(grid), PrintSettings(showChords = false)).pages
+        val hidden = hiddenPages.flatMap { it.texts }.map { it.text }
         assertFalse("Grid" in hidden || hidden.any { it.contains("G |") })
+        assertTrue(hiddenPages.all { it.boxes.isEmpty() })
     }
 
     @Test fun `an abc block prints preformatted and unselectable under its kind, and is left out with the sheet music, not with the chords`() = runTest {
@@ -659,26 +664,21 @@ internal class PrintLayoutTest {
         assertEquals(listOf("Verse", "Verse 2"), texts.filter { it.style.bold && it.style.size == labelSize }.map { it.text })
     }
 
-    @Test fun `a grid line breaks between bars`() = runTest {
-        val chords = listOf("C", "F", "G", "Am", "Dm", "Em", "F", "G")
-        fun grid(prefix: List<GridToken>) = prefix + listOf(GridToken.Bar("|:")) + chords.flatMapIndexed { index, chord ->
-            listOf(GridToken.Chord(chord), GridToken.Beat, GridToken.Bar(if (index == chords.lastIndex) ":|" else "|"))
-        }
-        suspend fun rows(tokens: List<GridToken>): List<String> {
-            val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
-            // A two-column A4 page at 20 points holds three of these bars to a row, and not four.
-            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.style.size == 20f && it.style.bold }.map { it.text }
-        }
-        val bars = setOf("|", "|:", ":|")
-        val tokens = grid(emptyList())
-        val rows = rows(tokens)
-        assertTrue(rows.size > 2, rows.toString())
-        rows.dropLast(1).forEach { assertTrue(it.substringAfterLast(' ') in bars, rows.toString()) }
-        // A row the line wraps onto starts with a bar line of its own, as a chart's rows do.
-        rows.drop(1).forEach { assertTrue(it.startsWith("| "), rows.toString()) }
-        val unwrapped = (rows.take(1) + rows.drop(1).map { it.removePrefix("| ") }).joinToString(" ")
-        assertEquals(tokens.joinToString(" ") { (it as? GridToken.Chord)?.name ?: (it as? GridToken.Bar)?.text ?: "." }, unwrapped)
-        assertTrue(rows(grid(listOf(GridToken.Text("Intro")))).first().startsWith("Intro"))
+    @Test fun `a wrapped grid run breaks every line after the same bar, keeping its columns`() = runTest {
+        fun line(vararg chords: String) = ChordProLine.Grid(
+            chords.flatMap { listOf(GridToken.Bar("|"), GridToken.Chord(it), GridToken.Beat, GridToken.Beat, GridToken.Beat) } + GridToken.Bar("|"),
+        )
+        val run = listOf(line("C", "F", "G", "Am", "Dm", "Em", "F", "G"), line("Am", "Cmaj7", "G", "D", "E"))
+        val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, run)))
+        val page = layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.first()
+        val rows = page.boxes.filter { it.strokeGray != null }.groupBy { it.y }.values.map { row -> row.map { it.x } }
+        assertTrue(rows.size > run.size, rows.toString())
+        val columns = rows.maxBy { it.size }
+        rows.forEach { assertEquals(columns.take(it.size), it, rows.toString()) }
+        val written = page.texts.filter { !it.isDrawn }
+        assertEquals(run.size, written.size)
+        // The longer line as written would run into the next column, so it is set smaller rather than wrapped.
+        assertTrue(written.first().style.size < 20f)
     }
 
     @Test fun `a multi line description takes a row per line`() = runTest {

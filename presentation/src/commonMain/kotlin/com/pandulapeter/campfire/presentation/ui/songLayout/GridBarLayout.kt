@@ -17,7 +17,7 @@ internal data class GridMetrics(
     val em: Float,
     val textHeight: Float,
 ) {
-    val beatWidth get() = em * 1.3f
+    val beatWidth get() = em * 1f
     val segmentPadding get() = em * 0.4f
     val barGap get() = em * 0.35f
     val marginGap get() = em * 0.6f
@@ -25,7 +25,7 @@ internal data class GridMetrics(
     val heavyInset get() = em * 0.3f
     val repeatInset get() = em * 0.65f
     val boxHeight get() = textHeight + em * 0.7f
-    val voltaHeight get() = em * 0.95f
+    val voltaHeight get() = em * 1.1f
     val rowGap get() = em * 0.35f
     val cornerRadius get() = em * 0.3f
     val strokeWidth get() = em * 0.06f
@@ -103,7 +103,9 @@ internal class GridBarLayout(
         val rowCount = maxOf(bars.lastOrNull()?.row ?: 0, trailing?.row ?: 0) + 1
         val hasVolta = BooleanArray(rowCount).also { rows -> bars.forEach { if (it.bar.volta != null) rows[it.row] = true } }
         val rowTops = FloatArray(rowCount)
-        var y = 0f
+        // Half the gap between rows stands above the line and half under it, so that lines are spaced as rows are and
+        // the first row keeps clear of whatever heads the run.
+        var y = metrics.rowGap / 2
         repeat(rowCount) { row ->
             if (row > 0) y += metrics.rowGap
             if (hasVolta[row]) y += metrics.voltaHeight
@@ -115,7 +117,7 @@ internal class GridBarLayout(
             trailing?.let { it.x + textWidth(it.text) } ?: 0f,
             line.margin?.let { textWidth(it) } ?: 0f,
         )
-        return GridLinePlacement(margin = line.margin, bars = bars, trailing = trailing, rowTops = rowTops.toList(), height = y, width = width)
+        return GridLinePlacement(margin = line.margin, bars = bars, trailing = trailing, rowTops = rowTops.toList(), height = y + metrics.rowGap / 2, width = width)
     }
 
     /** The bars from [from] until [until] side by side, the gaps between them included. */

@@ -1079,6 +1079,14 @@
     <string name="song_details_section_abc">Partitură</string>
     <string name="song_details_sheet_music_chords">Acorduri: %1$s</string>
     <string name="song_details_sheet_music_words">Versuri: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s timp</item>
+        <item quantity="few">%1$s timpi</item>
+        <item quantity="other">%1$s de timpi</item>
+    </plurals>
+    <string name="song_details_grid_held">ținut</string>
+    <string name="song_details_grid_repeat_bar">repetă măsura</string>
+    <string name="song_details_grid_repeat_two_bars">repetă ultimele două măsuri</string>
     <string name="song_details_sheet_music_parts">Partide</string>
     <string name="song_details_sheet_music_part_unnamed">Vocea %1$s</string>
     <string name="song_details_sheet_music_part_choose">Alege partida afișată</string>

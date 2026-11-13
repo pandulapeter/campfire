@@ -9,121 +9,70 @@
  */
 package com.pandulapeter.campfire.presentation.ui.songView
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Constraints
-import com.pandulapeter.campfire.chordpro.model.GridToken
-import com.pandulapeter.campfire.presentation.ui.songLayout.GridCell
-import com.pandulapeter.campfire.presentation.ui.songLayout.alignedGridBars
-import com.pandulapeter.campfire.presentation.ui.songLayout.wrappedOpening
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridBarLayout
+import com.pandulapeter.campfire.presentation.ui.songLayout.GridLinePlacement
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+import kotlin.math.ceil
 
 /**
- * One `{start_of_grid}` line: bars, chords, beats and repeats laid out as a chord chart, in the columns
- * [alignedGridBars] lined them up in with the other lines of the run. A line wider than its column breaks between bars
- * rather than being cut off, the way a staff of tablature is broken into systems, and the new row starts with a bar line
- * of its own ([wrappedOpening]), as a chart's rows do; a single bar wider than the column wraps inside itself, so every
- * chord of it stays on the page at any text size.
+ * One `{start_of_grid}` line drawn as a row of bars ([drawGridLine]), placed by the run's [layout] at the width it is
+ * given: its bars stand in the run's columns, and a line too wide for the width breaks after the same bar as every other
+ * line of the run. Measured without a bound (how a section's widest line is found), it is one row as wide as its bars.
  *
- * Each bar is one text rather than a text per token, since only the characters of one monospaced text are sure to
- * stand in the columns of the line above it: the gaps between them are spaces of the same font. Where a row breaks is
- * only known once the bars are measured, so every bar after the first has its opening measured too, placed only where
- * the bar starts a row.
+ * Where a width places the line is only known once it is measured, so the placement is kept from the measurement for the
+ * drawing that follows it; it is not state, since a new placement always comes with a new measurement.
  */
 @Composable
 internal fun SongGridLine(
-    bars: List<List<GridCell>>,
-    lyricsStyle: TextStyle,
-    chordStyle: TextStyle,
+    layout: GridBarLayout,
+    lineIndex: Int,
+    styles: RunStyles,
+    textMeasurements: SongTextMeasurements,
 ) {
-    val chordColor = LocalSecondAccentColor.current
-    val barColor = MaterialTheme.colorScheme.outline
-    val beatColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val openings = remember(bars) { bars.indices.map { bars.wrappedOpening(it) } }
-    Layout(
-        modifier = Modifier.fillMaxWidth(),
-        content = {
-            bars.forEach { bar ->
-                Text(
-                    text = gridBarText(bar, chordStyle, chordColor = chordColor, barColor = barColor, beatColor = beatColor),
-                    style = lyricsStyle,
-                )
-            }
-            // A bar line drawn again where a row breaks says nothing a screen reader has not read already.
-            openings.forEach { opening ->
-                Text(
-                    modifier = Modifier.clearAndSetSemantics {},
-                    text = opening?.let { "$it " }.orEmpty(),
-                    style = lyricsStyle,
-                    color = barColor,
-                )
-            }
-        },
-    ) { measurables, constraints ->
-        val openingPlaceables = measurables.drop(bars.size).map { it.measure(constraints.copy(minWidth = 0)) }
-        // A bar is only ever too wide for a row it starts, which also holds the opening drawn before it. Measured
-        // without a bound (how a section's widest line is found), the line is one row as wide as its bars.
-        val barPlaceables = measurables.take(bars.size).mapIndexed { index, measurable ->
-            val maxWidth = if (constraints.hasBoundedWidth) (constraints.maxWidth - openingPlaceables[index].width).coerceAtLeast(0) else Constraints.Infinity
-            measurable.measure(constraints.copy(minWidth = 0, maxWidth = maxWidth))
-        }
-        val positions = gridRowPositions(
-            barWidths = barPlaceables.map { it.width },
-            barHeights = barPlaceables.map { it.height },
-            openingWidths = openingPlaceables.map { it.width },
-            maxWidth = constraints.maxWidth,
+    val secondAccent = LocalSecondAccentColor.current
+    val scheme = MaterialTheme.colorScheme
+    val colors = remember(scheme, secondAccent) {
+        GridColors(
+            box = scheme.outlineVariant,
+            fill = scheme.surfaceContainerLow,
+            divider = scheme.surfaceContainerHighest,
+            chord = secondAccent,
+            hold = secondAccent.copy(alpha = HOLD_ALPHA),
+            sign = scheme.outline,
+            text = scheme.onSurfaceVariant,
         )
-        val width = if (constraints.hasBoundedWidth) {
-            constraints.maxWidth
-        } else {
-            positions.bars.indices.maxOfOrNull { positions.bars[it].x + barPlaceables[it].width } ?: 0
-        }
-        layout(width.coerceAtLeast(constraints.minWidth), positions.height) {
-            positions.bars.forEachIndexed { index, bar ->
-                if (bar.opensRow && index > 0) openingPlaceables[index].place(bar.x - openingPlaceables[index].width, bar.y)
-                barPlaceables[index].place(bar.x, bar.y)
-            }
-        }
+    }
+    val texts = remember(styles, textMeasurements) {
+        val voltaStyle = styles.text.copy(fontSize = styles.text.fontSize * VOLTA_TEXT_SCALE)
+        GridTextLayouts(
+            chord = { textMeasurements.gridText(it, styles.chord) },
+            text = { textMeasurements.gridText(it, styles.text) },
+            volta = { textMeasurements.gridText(it, voltaStyle) },
+        )
+    }
+    val words = rememberGridLineWords()
+    val description = remember(layout, lineIndex, words) { gridLineDescription(layout.lines[lineIndex], words) }
+    val placement = remember(layout, lineIndex) { arrayOfNulls<GridLinePlacement>(1) }
+    Layout(
+        modifier = Modifier
+            .semantics { contentDescription = description }
+            .drawBehind { placement[0]?.let { drawGridLine(it, layout.metrics, texts, colors) } },
+        content = {},
+    ) { _, constraints ->
+        val placed = layout.placeLine(lineIndex, if (constraints.hasBoundedWidth) constraints.maxWidth.toFloat() else Float.POSITIVE_INFINITY)
+        placement[0] = placed
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else ceil(placed.width).toInt()
+        layout(width.coerceAtLeast(constraints.minWidth), ceil(placed.height).toInt().coerceAtLeast(constraints.minHeight)) {}
     }
 }
 
-/** One bar of a grid line as it is drawn, its chords in [chordStyle]; the colours change nothing of its width. */
-internal fun gridBarText(
-    bar: List<GridCell>,
-    chordStyle: TextStyle,
-    chordColor: Color = Color.Unspecified,
-    barColor: Color = Color.Unspecified,
-    beatColor: Color = Color.Unspecified,
-) = buildAnnotatedString {
-    bar.forEach { cell ->
-        val spanStyle = when (cell.token) {
-            is GridToken.Bar -> SpanStyle(color = barColor)
-            is GridToken.Chord -> chordStyle.toSpanStyle().copy(color = chordColor)
-            GridToken.Beat, is GridToken.Repeat -> SpanStyle(color = beatColor)
-            is GridToken.Text, null -> null
-        }
-        if (spanStyle == null) append(cell.text) else withStyle(spanStyle) { append(cell.text) }
-    }
-}
-
-/** What a grid token is drawn as: a beat as a raised dot, which reads as a beat where a full stop reads as text. */
-internal fun GridToken.displayText() = when (this) {
-    is GridToken.Bar -> text
-    is GridToken.Chord -> name
-    GridToken.Beat -> BEAT_SYMBOL
-    is GridToken.Repeat -> text
-    is GridToken.Text -> text
-}
-
-private const val BEAT_SYMBOL = "\u00B7"
+private const val HOLD_ALPHA = 0.35f
+private const val VOLTA_TEXT_SCALE = 0.6f

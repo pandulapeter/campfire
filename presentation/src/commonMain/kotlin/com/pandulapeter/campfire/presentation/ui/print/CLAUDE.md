@@ -50,6 +50,8 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   the padding out (and drops the direction marks closing in a piece read against its line).
 - Tablature is engraved as on screen, none of it selectable; each line reaches the text layer as the file has it, an
   invisible monospaced text sized to the columns on the string's baseline, so it reads back as a tab.
+- Grids are drawn as on screen (`printGridRows`, the screen's `GridBarLayout` in points: `PrintBox`es, rules, and
+  unselectable names); each line reaches the text layer once, as ChordPro writes it, an invisible monospaced text.
 - The playing row **follows the reader's settings as the screen does**: transposition, capo, and tempo are the
   setlist's, else the reader's, else the file's. Key (the inferred one where the file names none), transposition, and
   non-zero capo with `showKey` ("2 (Em shapes)" where chords are named by the shapes, whose key the import reads back as

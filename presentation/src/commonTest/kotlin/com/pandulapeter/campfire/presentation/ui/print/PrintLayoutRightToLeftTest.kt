@@ -102,10 +102,11 @@ internal class PrintLayoutRightToLeftTest {
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("C"), GridToken.Bar("|"))),
         )
         val document = layout(listOf(verse(ChordProLine.Lyrics("שלום עולם", emptyList()), *grid.toTypedArray())))
-        val rows = document.pages.single().texts.filter { it.style.monospace }
-        assertEquals(2, rows.size)
-        assertEquals(rows.first().x, rows.last().x, 0.01f)
-        assertEquals(document.width - margin, rows.maxOf { it.end() }, 0.01f)
+        val boxes = document.pages.single().boxes.filter { it.strokeGray != null }
+        val lineStarts = boxes.groupBy { it.y }.values.map { row -> row.minOf { it.x } }
+        assertEquals(2, lineStarts.size)
+        assertEquals(lineStarts.first(), lineStarts.last(), 0.01f)
+        assertEquals(document.width - margin, boxes.maxOf { it.x + it.width }, 0.01f)
     }
 
     @Test fun `a right-to-left song's chord diagrams are listed from the right`() = runTest {

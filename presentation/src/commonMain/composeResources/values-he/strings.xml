@@ -1076,6 +1076,14 @@
     <string name="song_details_section_abc">תווים</string>
     <string name="song_details_sheet_music_chords">אקורדים: %1$s</string>
     <string name="song_details_sheet_music_words">מילים: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">פעמה אחת</item>
+        <item quantity="two">שתי פעמות</item>
+        <item quantity="other">%1$s פעמות</item>
+    </plurals>
+    <string name="song_details_grid_held">מוחזק</string>
+    <string name="song_details_grid_repeat_bar">חזרה על התיבה</string>
+    <string name="song_details_grid_repeat_two_bars">חזרה על שתי התיבות</string>
     <string name="song_details_sheet_music_parts">תפקידים</string>
     <string name="song_details_sheet_music_part_unnamed">קול %1$s</string>
     <string name="song_details_sheet_music_part_choose">בחירת התפקיד המוצג</string>

@@ -181,6 +181,7 @@ private class PrintLayouter(
             }
             row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style, part.isSelectable, part.formatting, part.isDrawn)) }
             row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
+            row.boxes.forEach { box -> pages.last().boxes.add(box.copy(x = x + box.x, y = y + box.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             row.notations.forEach { notation -> pages.last().notations.add(notation.copy(x = x + notation.x, y = y + notation.y)) }
             y += row.height
@@ -435,7 +436,7 @@ private class PrintLayouter(
                 } else {
                     page.texts
                 }
-                PrintPage(texts, page.rules, page.diagrams, page.notations)
+                PrintPage(texts, page.rules, page.boxes, page.diagrams, page.notations)
             },
         )
     }
@@ -467,6 +468,7 @@ private fun List<DiagramNamePart>.lineHeight() = maxOf { it.style.size } * 1.45f
 private class PageContent {
     val texts = mutableListOf<PrintText>()
     val rules = mutableListOf<PrintRule>()
+    val boxes = mutableListOf<PrintBox>()
     val diagrams = mutableListOf<PrintDiagram>()
     val notations = mutableListOf<PrintNotation>()
 
