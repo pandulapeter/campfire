@@ -42,7 +42,9 @@
   chorus's number.
 - A run's toggle is labelled by its environment's label, else "Tab" / "Grid" / the verbatim kind ("Sheet music" for
   ABC); back-to-back environments with different labels fold apart; a section that is only one run folds as the
-  section, with no second toggle (always so for a verbatim run).
+  section, with no second toggle (always so for a verbatim run). A single unnamed grid row among a section's lines has
+  no toggle or heading at all (`SectionItem.RunSlot.isFoldable`): it is a lyric's bars, and imported beat charts have
+  one over every line.
 
 ### Building the model, and the budget
 

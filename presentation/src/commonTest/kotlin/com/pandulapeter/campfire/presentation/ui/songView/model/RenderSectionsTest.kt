@@ -263,6 +263,23 @@ class RenderSectionsTest {
         assertTrue(abcTunesOf(ChordProParser.parse(text).blocks).containsAll(runs))
     }
 
+    @Test
+    fun `a single unnamed row of a grid among a section's lines has no fold toggle of its own`() {
+        val text = "{start_of_grid}\n| C . . . |\n{end_of_grid}\nI follow the Moskva\n" +
+            "{start_of_grid}\n| Dm . . . |\n| G . . . |\n{end_of_grid}\nDown to Gorky Park\n" +
+            "{start_of_grid: label=\"Turnaround\"}\n| C . . . |\n{end_of_grid}\nListening to the wind of change\n" +
+            "{start_of_tab}\ne|--0--|\n{end_of_tab}\nAn August summer night"
+
+        val runs = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels, showsTiming = true)
+            .sections
+            .filterIsInstance<RenderSection.Lines>()
+            .flatMap { it.sectionItems }
+            .filterIsInstance<SectionItem.RunSlot>()
+            .distinctBy { it.runFoldKey }
+
+        assertEquals(listOf(false, true, true, true), runs.map { it.isFoldable })
+    }
+
     /** The ABC runs of the song [text], each as the tune its key change makes it. */
     private fun abcRunsOf(text: String) = prepareSongLyrics(song = ChordProParser.parse(text), shouldShowChords = true, labels = labels, showsTiming = true)
         .sections

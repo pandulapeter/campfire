@@ -230,7 +230,7 @@ internal fun SongSectionContent(
                         tuneOffset = sectionItem.tuneOffset,
                         slotCount = sectionItem.slotCount,
                         shownSlots = sectionItem.slot..sectionItem.slot + lastSlotItem - item,
-                        hasToggle = wholeSectionKind == null,
+                        hasToggle = wholeSectionKind == null && sectionItem.isFoldable,
                         foldedRuns = foldedRuns,
                         defaultLabels = defaultLabels,
                         headerStyle = headerStyle,

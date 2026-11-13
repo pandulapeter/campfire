@@ -270,7 +270,15 @@ internal sealed interface SectionItem {
         val slotCount: Int,
         val runFoldKey: String,
         val tuneOffset: Int,
-    ) : SectionItem
+    ) : SectionItem {
+
+        /**
+         * Whether the run is headed by a fold toggle of its own. A single unnamed row of a grid among a section's lines
+         * reads as one of them, the bars counted over the lyric under it, and a "Grid" toggle over every such row of a
+         * song would bury its words; one the file names keeps its heading.
+         */
+        val isFoldable get() = kind != FoldableKind.GRID || run.size > 1 || run.first().environmentLabel != null
+    }
 }
 
 /**
