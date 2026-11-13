@@ -496,6 +496,13 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `chords written with dashes for their beats are not a tab`() {
+        for (text in listOf("Intro\nA - - -\nE - - -", "Chorus\nE - x2\nA - x2", "A - 1 2 3 4\nB - 1 2 3 4", "A-\nE- x2")) {
+            assertFalse(convert(text).contains("{start_of_tab}"), text)
+        }
+    }
+
+    @Test
     fun `tablature needs at least two staff lines`() {
         assertEquals("{start_of_tab}\ne|---0---|\nB|---1---|\n{end_of_tab}\n", convert("e|---0---|\nB|---1---|"))
         assertEquals("e|---0---|\n", convert("e|---0---|"))

@@ -258,6 +258,10 @@ internal object LineKinds {
     private const val MAX_TRAILING_WORDS = 2
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
 
-    /** A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites print it. */
-    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*[|-][-0-9|hpbrx/\\\\~(). :]+$")
+    /**
+     * A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites
+     * print it. The second needs the dash to touch the name and at least three dashes on the line, since a chord written
+     * with dashes for its beats (`A - - -`, `E - x2`) is otherwise a staff too, two such lines a tab, its chords lost.
+     */
+    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?(?:\\s*\\||-(?=(?:[^-]*-){2}))[-0-9|hpbrx/\\\\~(). :]+$")
 }
