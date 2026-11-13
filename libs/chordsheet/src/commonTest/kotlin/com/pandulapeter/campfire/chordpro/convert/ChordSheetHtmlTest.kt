@@ -13,6 +13,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class ChordSheetHtmlTest {
 
@@ -30,6 +32,16 @@ class ChordSheetHtmlTest {
             """.trimMargin(),
             ChordSheetHtml.chordSheetText(HALLELUJAH),
         )
+    }
+
+    @Test
+    fun `a fragment of many tags left open or closed astray is read in linear time`() {
+        val count = 400_000
+        val html = "<span data-chord=\"Am\"></span>" + "<span>a".repeat(count) + "</i>".repeat(count)
+        val started = TimeSource.Monotonic.markNow()
+        val text = ChordSheetHtml.chordSheetText(html)
+        assertTrue(started.elapsedNow() < 30.seconds, started.elapsedNow().toString())
+        assertEquals("Am\n" + "a".repeat(count), text)
     }
 
     @Test

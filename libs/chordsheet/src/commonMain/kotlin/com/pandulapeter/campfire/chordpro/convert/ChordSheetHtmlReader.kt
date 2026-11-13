@@ -23,15 +23,23 @@ internal class ChordSheetHtmlReader(private val html: String) {
         val isEmpty get() = text.isBlank() && chords.isEmpty()
     }
 
-    /**
-     * @property chord The chord the element names, placed where it closes if nothing was put inside it.
-     * @property hasContent Whether anything but whitespace was put inside it: text, a chord, or a line break.
-     */
-    private class Element(val name: String, val chord: String?, var hasContent: Boolean = false)
+    /** @property chord The chord the element names, placed where it closes if nothing was put inside it. */
+    private class Element(val name: String, val chord: String?)
 
     private val lines = mutableListOf<Line>()
     private var line = Line()
     private val open = mutableListOf<Element>()
+
+    /**
+     * How many of the [open] elements, counted from the outermost, had anything but whitespace put inside them: text, a
+     * chord, or a line break. Content marks every element open at the time, and later ones open above them, so the marked
+     * ones are always the outermost and a count says it in constant time, where a flag on each would make a fragment of
+     * many unclosed tags take time growing with the square of its length.
+     */
+    private var withContent = 0
+
+    /** How many elements of each name are [open], so that a stray close tag is passed over without a search. */
+    private val openCounts = mutableMapOf<String, Int>()
     private var preformatted = 0
 
     fun read(): List<Line> {
@@ -86,24 +94,28 @@ internal class ChordSheetHtmlReader(private val html: String) {
         }
         if (name == "pre") preformatted++
         open += Element(name, chordOf(tag.drop(name.length)))
+        openCounts[name] = (openCounts[name] ?: 0) + 1
         if (name in VOID || tag.endsWith("/")) close(name)
         return after
     }
 
     private fun close(name: String) {
+        if ((openCounts[name] ?: 0) == 0) return
         val index = open.indexOfLast { it.name == name }
-        if (index < 0) return
         while (open.size > index) {
+            val hasContent = open.lastIndex < withContent
             val element = open.removeAt(open.lastIndex)
+            withContent = minOf(withContent, open.size)
+            openCounts[element.name] = openCounts.getValue(element.name) - 1
             if (element.name == "pre") preformatted--
-            if (!element.hasContent && element.chord != null) {
+            if (!hasContent && element.chord != null) {
                 line.chords += line.text.length to element.chord
                 markContent()
             }
             if (element.name in BLOCKS) {
                 // An empty block is a blank line, which is how a page spaces its verses with empty divs; any other only
                 // ends the line it was on, and a paragraph leaves a blank line after it, as a browser's plain text does.
-                breakLine(force = !element.hasContent && element.name !in VOID)
+                breakLine(force = !hasContent && element.name !in VOID)
                 if (element.name == "p" && lines.lastOrNull()?.isEmpty == false) breakLine(force = true)
             }
         }
@@ -116,7 +128,9 @@ internal class ChordSheetHtmlReader(private val html: String) {
         markContent()
     }
 
-    private fun markContent() = open.forEach { it.hasContent = true }
+    private fun markContent() {
+        withContent = open.size
+    }
 
     private fun appendText(text: String) {
         for (c in text) {
