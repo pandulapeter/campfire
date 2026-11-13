@@ -80,7 +80,7 @@ class ChordSheetConverterTest {
     @Test
     fun `recognizes German and lowercase chords and keeps furniture`() {
         assertEquals("[am] [H7] | % x2 N.C.\n", convert("am H7 | % x2 N.C."))
-        assertEquals("| [Am] [F] | [C] [G] |\n", convert("|Am F|C G|"))
+        assertEquals("{start_of_grid}\n| Am F | C G |\n{end_of_grid}\n", convert("|Am F|C G|"))
         assertFalse(ChordSheetConverter.isChordLine("Am I"))
         assertTrue(ChordSheetConverter.isChordLine("F\u266fm B\u266d"))
         assertEquals("[F#m] [Bb]\n", convert("F\u266fm B\u266d"))
@@ -273,7 +273,7 @@ class ChordSheetConverterTest {
     @Test
     fun `a repeat sign glued to a chord is a mark of its own and a double bar line stays one`() {
         val intro = convert("Intro\n\n||:Am |    | C    :||\n\nVerse 1\nAm   C\nHello world")
-        assertTrue("\n||: [Am] | | [C] :||\n" in intro, intro)
+        assertTrue("\n{start_of_grid}\n||: Am | | C :||\n{end_of_grid}\n" in intro, intro)
         val outro = convert("Verse 1\nAm   C\nHello world\n\nOutro\n\nAm | F ||")
         assertTrue("\n[Am] | [F] ||\n" in outro, outro)
     }
@@ -1729,30 +1729,27 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a row of bars holding chords and beats is a grid, and the rest of one a column wrapped too, but not a chord row over a lyric`() {
+    fun `a row of bars holding chords and beats is a grid, and the rest of one a column wrapped too`() {
         assertEquals(
-            "{start_of_grid}\n| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n{end_of_grid}\n\n[G]Hello     [C]world\n",
-            convert("| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n\n| G . . . | C . . . |\n  Hello     world"),
+            "{start_of_grid}\n| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n{end_of_grid}\n",
+            convert("| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |"),
         )
     }
 
     @Test
-    fun `a song counting every chord row in bars and beats keeps each row as a grid over its lyric, unindented`() {
+    fun `a chord row opening with a bar line is a grid over its lyric, which loses its indent`() {
         assertEquals(
-            "{start_of_grid}\n| C . . . | Dm . . . |\n{end_of_grid}\nI follow the Moskva\n{start_of_grid}\n| C . . . |\n{end_of_grid}\n" +
-                "Down to Gorky Park\n{start_of_grid}\n| Dm . Am . | G . |\n{end_of_grid}\nListening to the wind of change\n",
-            convert("| C . . . | Dm . . . |\nI follow the Moskva\n| C . . . |\n  Down to Gorky Park\n| Dm . Am . | G . |\nListening to the wind of change"),
+            "{start_of_grid}\n| C . . . | Dm . . . |\n{end_of_grid}\nI follow the Moskva\n{start_of_grid}\n| Am | F |\n{end_of_grid}\n" +
+                "Down to Gorky Park\n",
+            convert("| C . . . | Dm . . . |\nI follow the Moskva\n| Am | F |\n  Down to Gorky Park"),
         )
     }
 
     @Test
-    fun `rows of bars and beats over lyrics in a song with other chord rows are set over their syllables`() {
+    fun `a chord row over a lyric that only marks its bars after its first chord is set over the syllables`() {
         assertEquals(
-            "[G]Hello     [C]world\n[G]Hello     [C]world\n[G]Hello     [C]world\n[Am]Goodbye   [F]now\n",
-            convert(
-                "| G . . . | C . . . |\n  Hello     world\n| G . . . | C . . . |\n  Hello     world\n" +
-                    "| G . . . | C . . . |\n  Hello     world\nAm        F\nGoodbye   now",
-            ),
+            "[G]Hello [C]world\n",
+            convert("G   | C |\nHello world"),
         )
     }
 

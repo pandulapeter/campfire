@@ -14,6 +14,9 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.inlin
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.isUnaligned
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordPlacement.merge
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.chordRow
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChord
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.rowChordName
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetChordWords.tokens
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headerValue
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetText.headingLabel
 
@@ -123,7 +126,13 @@ internal object SongStructure {
                     add(Line.Comment(headerValue((index..end).joinToString(" ") { lines[it].text.trim() }), isBoxed = false))
                     index = end
                 }
-                LineKind.GRID -> { if (!isInGrid) openGrid(); add(Line.Raw(line.text.trimEnd())) }
+                LineKind.GRID -> {
+                    if (!isInGrid) openGrid()
+                    // ChordPro reads a grid's cells between spaces, so a bar typed against its chord (`|Am F|`) is set apart,
+                    // and its chords are spelled as a chord row's are.
+                    val cells = tokens(line.text).map { if (rowChord(it.text)) rowChordName(it.text) else it.text }
+                    add(Line.Raw(cells.joinToString(" ")))
+                }
                 LineKind.SECTION -> {
                     closeSection()
                     flushChanges()

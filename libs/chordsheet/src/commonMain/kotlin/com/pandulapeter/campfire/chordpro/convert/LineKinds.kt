@@ -39,7 +39,6 @@ internal object LineKinds {
         val isStaff: List<Boolean>,
         val hasStructure: Boolean,
         val hasUnambiguousChords: Boolean,
-        val isBeatChart: Boolean,
         val isItalicComment: List<Boolean>,
     )
 
@@ -73,7 +72,7 @@ internal object LineKinds {
             tab.matches(lines[index].text.trim()) && (lines.getOrNull(index - 1)?.let { tab.matches(it.text.trim()) } == true ||
                 lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true)
         }
-        val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), isBeatChart(lines, candidates), italicComments(lines, features, candidates))
+        val context = Context(lines, features, candidates, isStaff, hasStructure(lines, candidates), hasUnambiguousChords(candidates), italicComments(lines, features, candidates))
         val firstPass = lines.indices.map { index -> rules.firstNotNullOfOrNull { rule -> rule.give(context, index) }?.kind ?: LineKind.LYRIC }
         val kinds = firstPass.toMutableList()
         for (index in lines.indices.reversed()) {
@@ -91,21 +90,6 @@ internal object LineKinds {
     internal fun hasStructure(lines: List<Rendered>, candidates: List<List<Token>?>) =
         hasUnambiguousChords(candidates) || lines.any { ChordSheetHeadings.parse(it.text) != null }
 
-    /**
-     * Whether the song places its chords by beats rather than over syllables: its every chord row is a row of bars and
-     * beats, and several stand over a line of words. One such row over a lyric may be a chord row marking its bars, its
-     * chords over their syllables, but a sheet setting every line under bars and dots is counting time, and taking its
-     * cells for columns would set each chord over whatever letter happens to stand under it.
-     */
-    private fun isBeatChart(lines: List<Rendered>, candidates: List<List<Token>?>): Boolean {
-        val isGridRow = lines.map { isGridRow(it.text) }
-        val hasOtherChordRow = lines.indices.any { index -> !isGridRow[index] && candidates[index]?.any { rowChord(it.text) } == true }
-        val rowsOverWords = lines.indices.count { index ->
-            isGridRow[index] && lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && !isGridRow[index + 1] } == true
-        }
-        return !hasOtherChordRow && rowsOverWords >= MIN_BEAT_ROWS_OVER_WORDS
-    }
-
     private fun Boolean.gives(kind: LineKind) = if (this) Evidence(kind, isStrong = true) else null
 
     private fun blank(context: Context, index: Int) = context.lines[index].text.isBlank().gives(LineKind.BLANK)
@@ -113,17 +97,19 @@ internal object LineKinds {
     private fun label(context: Context, index: Int) = context.features[index].isLabel.gives(LineKind.SECTION)
 
     /**
-     * A row of bars holding chords and the beats between them (`| G . . . | C . / . |`), or the rest of one a column
-     * wrapped: a chord grid, weak evidence, kept where no lyric follows it, since a chord row over a lyric may mark its
-     * bars and beats too, except in a song that counts beats on every row ([isBeatChart]).
+     * A row of bars holding chords: a chord grid. One that opens with a bar line is strong evidence, since a chord row
+     * typed over its syllables starts with its first chord, and a sheet starting its rows with bars counts them out
+     * instead, whether it marks the beats between them (`| Dm . Am . | G . |`) or not (`| Am | F |`); its lyric stands
+     * under the row rather than in it. The rest of a row a column wrapped (`D . . . | G . . . |`) needs its beats, and is
+     * weak evidence, kept where no lyric follows it, since a chord row over a lyric may mark its bars and beats too.
      */
-    private fun grid(context: Context, index: Int) =
-        if (isGridRow(context.lines[index].text)) Evidence(LineKind.GRID, isStrong = context.isBeatChart) else null
-
-    private fun isGridRow(text: String): Boolean {
-        val words = tokens(text)
-        return words.count { it.text in gridBars } >= 2 && words.any { it.text in gridBeats } && words.any { rowChord(it.text) } &&
-            words.all { it.text in gridBars || it.text in gridBeats || rowChord(it.text) }
+    private fun grid(context: Context, index: Int): Evidence? {
+        val words = tokens(context.lines[index].text)
+        val opensWithBar = words.firstOrNull()?.text in gridBars
+        val isGrid = words.count { it.text in gridBars } >= 2 && words.any { rowChord(it.text) } &&
+            words.all { it.text in gridBars || it.text in gridBeats || rowChord(it.text) } &&
+            (opensWithBar || words.any { it.text in gridBeats })
+        return if (isGrid) Evidence(LineKind.GRID, isStrong = opensWithBar) else null
     }
 
     /**
@@ -250,9 +236,6 @@ internal object LineKinds {
             tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
             spans.all { span -> lyrics.all { ChordSheetProfile.isSameSize(it.size, span.size) || it.size > span.size } }
     }
-
-    /** Rows of bars over words it takes before a song reads as counting beats rather than marking bars over syllables. */
-    private const val MIN_BEAT_ROWS_OVER_WORDS = 3
 
     private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")
     private val gridBeats = setOf(".", "/", "%")

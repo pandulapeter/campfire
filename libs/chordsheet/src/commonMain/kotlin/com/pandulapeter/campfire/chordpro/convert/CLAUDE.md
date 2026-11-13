@@ -30,12 +30,11 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
   row or a blank line after it. A pre-chorus is the editor's `pre-chorus`, never a site's bridge.
 - A row's columns are read only in text laid out in characters: a row of three or more chords typed one space apart
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
-- Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands. A row of chord
-  names right over a tab staff is a line of the tab, kept as it stands.
-- **A song that counts beats on every chord row is a beat chart** (`LineKinds.isBeatChart`: no other chord row, and
-  several rows of bars and beats over words): its chords are placed by beat, not syllable, so each row stays a one-row
-  grid above its lyric, and the lyric loses the indent that lined it up under the row. One such row among ordinary chord
-  rows is still set over its syllables.
+- **A chord row that opens with a bar line is a grid**, over a lyric too: its chords are counted by bars (and beats),
+  not set over syllables, so it stays a one-row grid above its lyric, which loses the indent that lined it up under the
+  row. Its cells are written a space apart, chords spelled as a chord row's.
+- Over a lyric, the bar lines and repeat counts of any other chord row are dropped, but `N.C.` stays where it stands. A
+  row of chord names right over a tab staff is a line of the tab, kept as it stands.
 
 ## Words any sheet may print
 
