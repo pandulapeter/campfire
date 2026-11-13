@@ -483,6 +483,19 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a staff whose string names are followed by dashes alone is a tab, its repeat count kept`() {
+        val text = "John Williams\nStar Wars Main Theme\n\nINTRO\n" +
+            "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
+            "A------------------|\nE------------------|"
+        assertEquals(
+            "John Williams\nStar Wars Main Theme\n\n{comment: INTRO}\n{start_of_tab}\n" +
+                "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
+                "A------------------|\nE------------------|\n{end_of_tab}\n",
+            convert(text),
+        )
+    }
+
+    @Test
     fun `tablature needs at least two staff lines`() {
         assertEquals("{start_of_tab}\ne|---0---|\nB|---1---|\n{end_of_tab}\n", convert("e|---0---|\nB|---1---|"))
         assertEquals("e|---0---|\n", convert("e|---0---|"))

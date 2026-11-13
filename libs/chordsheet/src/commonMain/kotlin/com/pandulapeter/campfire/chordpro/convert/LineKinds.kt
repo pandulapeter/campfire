@@ -240,5 +240,7 @@ internal object LineKinds {
     private val gridBars = setOf("|", "||", "|:", ":|", "||:", ":||", ":|:", "|.")
     private val gridBeats = setOf(".", "/", "%")
     private val bracketedLine = Regex("^\\[([^\\[\\]]+)\\]$")
-    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*\\|[-0-9|hpbrx/\\\\~(). :]+$")
+
+    /** A string's name, then its staff: after a bar line (`e|---`), or straight after the name (`e-----`), as many sites print it. */
+    private val tab = Regex("^[eEaAbBdDgG](?:[#b])?\\s*[|-][-0-9|hpbrx/\\\\~(). :]+$")
 }
