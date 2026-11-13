@@ -112,6 +112,11 @@ public sealed interface ChordProLine {
         val text: String,
         /** The environment the line was written in, lowercase: `abc`, `ly`, or `svg`. */
         val environment: String,
+        /**
+         * The selector of the `{start_of_…}` the line was written in (`piano` for `{start_of_abc-piano}`), on every line
+         * of it, read as a tab's is ([Tab.selector]).
+         */
+        val selector: String? = null,
     ) : ChordProLine
 
     /** An empty line inside an environment. */

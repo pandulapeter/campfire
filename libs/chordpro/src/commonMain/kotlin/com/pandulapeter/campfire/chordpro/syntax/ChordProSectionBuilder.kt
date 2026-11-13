@@ -29,7 +29,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
     /** The label of the tab or grid environment that is open, which each of its lines carries. */
     private var lineModeLabel: String? = null
 
-    /** The selector of the tab environment that is open, which each of its lines and comments carries. */
+    /** The selector of the tab or delegated environment that is open, which each of its lines and comments carries. */
     private var lineModeSelector: String? = null
 
     /** The delegated environment that is open (`abc`, `textblock`, …), which says what its lines are. */
@@ -145,13 +145,13 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      * anywhere else a section of its own, named after it. Only an explicit section holds it, since a blank line or a
      * heading ends any other, and Prettify sets the environment apart from what stands before it with one.
      */
-    fun openDelegated(environment: String, sectionType: SectionType, label: String?) {
+    fun openDelegated(environment: String, sectionType: SectionType, label: String?, selector: String?) {
         val isInSection = isExplicit && lineMode == null
         if (!isInSection) {
             close()
             open(sectionType, label, isExplicit = true)
         }
-        startLineMode(LineMode.VERBATIM, label = null, selector = null, delegatedEnvironment = environment)
+        startLineMode(LineMode.VERBATIM, label = null, selector = selector, delegatedEnvironment = environment)
         isDelegatedInSection = isInSection
     }
 
@@ -165,7 +165,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         }
         lineMode = mode
         lineModeLabel = label
-        lineModeSelector = selector.takeIf { mode == LineMode.TAB }
+        lineModeSelector = selector.takeIf { mode != LineMode.GRID }
         this.delegatedEnvironment = delegatedEnvironment
         hasTabLine = false
         hasLineModeLine = false
@@ -225,7 +225,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
      */
     private fun finishLineMode() {
         if (lineMode == null) return
-        if (!hasLineModeLine) lineModeComments.forEach { blocks.replaceComment(it) { copy(isInTabOrGrid = false, isInTab = false, tabSelector = null) } }
+        if (!hasLineModeLine) lineModeComments.forEach { blocks.replaceComment(it) { copy(isInTabOrGrid = false, isInTab = false, selector = null) } }
         lineModeComments.clear()
     }
 
@@ -315,7 +315,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
             },
             isInTabOrGrid = lineMode == LineMode.TAB || lineMode == LineMode.GRID,
             isInTab = lineMode == LineMode.TAB,
-            tabSelector = lineModeSelector,
+            selector = lineModeSelector,
         )
     }
 
@@ -348,7 +348,7 @@ internal class SectionBuilder(private val blocks: MutableList<ChordProBlock>) {
         return if (environment == null || environment == TEXTBLOCK) {
             ChordProLine.Lyrics(text = rawLine, chords = emptyList())
         } else {
-            ChordProLine.Verbatim(text = rawLine, environment = environment)
+            ChordProLine.Verbatim(text = rawLine, environment = environment, selector = lineModeSelector)
         }
     }
 

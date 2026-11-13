@@ -15,7 +15,8 @@
   draws rows by; the transposition, the chord list, and the editor's colours all read it so.
 - `ChordProTabColumns`: a column widens or narrows on every line by exactly what its widest fret gained or lost, never
   borrowing a neighbouring dash, so **transposing up and back gives back the same text**, and an author's padding stays.
-- `ChordProTabs.select` keeps, of adjacent selector tabs, the reader's, else `guitar`, else the first.
+- `ChordProTabs.select` keeps, of adjacent selector tabs, the reader's, else `guitar`, else the first. Delegated
+  environments with a selector (`{start_of_abc-piano}`, a part's notation) are chosen the same way, in the same groups.
 - **A staff's string names are its tuning**; an unnamed staff is in the standard tuning `TabPlayer.assumedTuning` picks.
   Retuning happens in the same move as the transposition, so one octave decision covers both. A run that cannot be
   moved is shown as written, transposition only. **Text transposition and notation conversion never retune.**

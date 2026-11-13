@@ -68,10 +68,10 @@ class SongRenderer(
      * notation, which is what its chords are read from for their diagrams — in a numbering the page names a chord by a
      * step of the key, which says nothing about the notes without the stretch of the song it stands in.
      *
-     * @param tabs Who the tabs are shown to: of the ones written for several instruments only theirs are kept, every
-     *   tab is moved to their strings along with the transposition, and what was decided for them is written above it
-     *   (see `ChordProTabs`). Null leaves every tab as the transposition alone moves it, which is all a reader of the
-     *   chords alone needs.
+     * @param tabs Who the tabs are shown to: of the ones written for several instruments only theirs are kept, and so is
+     *   the notation written for theirs (`{start_of_abc-piano}`), every tab is moved to their strings along with the
+     *   transposition, and what was decided for them is written above it (see `ChordProTabs`). Null leaves every tab and
+     *   tune as written and the transposition alone moves them, which is all a reader of the chords alone needs.
      * @param readsKeyOfChords Whether a capo chart's `{key}` is read as the key its chords are in before it is moved
      *   (`SongKeys.withKeyOfChords`), so that a page in the sounding key names the key it sounds in, whichever key the
      *   file wrote. Only the editor's preview, which shows the file as written, reads it as written.

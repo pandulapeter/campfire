@@ -107,8 +107,8 @@ internal object ChordProEnvironments {
     /**
      * [environment] without a selector suffix. An environment is part of the song itself, so `{start_of_chorus-guitar}`
      * is read as the chorus it selects rather than left out; its `{end_of_chorus}` carries no selector, as the spec has
-     * it. A tab's selector is the one that is matched against anything: it is kept on its lines ([selectorOf]), and the
-     * viewer shows the tab to the players of the instrument it names.
+     * it. A tab's selector and a delegated environment's (`{start_of_abc-piano}`) are the ones matched against anything:
+     * they are kept on their lines ([selectorOf]), and the viewer shows them to the players of the instrument they name.
      */
     private fun withoutSelector(environment: String): String {
         val base = environment.substringBeforeLast('-', missingDelimiterValue = environment)

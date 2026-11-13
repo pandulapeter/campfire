@@ -29,8 +29,9 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentTuning
 
 /**
  * How the tabs of a song are shown to one reader: the [player] they are chosen for and moved to, and the [labels] what
- * was done to them is said in. Where [selects] is false (the editor's preview) every tab written for an instrument is
- * shown, since the preview shows the song as it is written.
+ * was done to them is said in. The [player] also picks the notation written for an instrument (`{start_of_abc-piano}`).
+ * Where [selects] is false (the editor's preview) every tab and tune written for an instrument is shown, since the
+ * preview shows the song as it is written.
  */
 internal class TabReading(val player: TabPlayer, val labels: TabNoticeLabels, val selects: Boolean)
 

@@ -177,7 +177,9 @@ object ChordProSerializer {
         }
         val name = environmentName(section.type)
         val body = serializeLines(pieces, writer, sectionEnvironment = name)
-        val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
+        // A delegated environment that is the section says who it is for on its lines, which the start writes back.
+        val selected = section.lines.filterIsInstance<ChordProLine.Verbatim>().firstOrNull()?.selector?.let { "$name-$it" } ?: name
+        val header = section.label?.let { "{start_of_$selected: $it}" } ?: "{start_of_$selected}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
     }
 
@@ -202,6 +204,7 @@ object ChordProSerializer {
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var openEnvironmentLabel: String? = null
+        var openEnvironmentSelector: String? = null
         var label = environmentLabel
         // Whether the environment that is open was opened for a comment and has had no line yet, which is then the
         // line that started it rather than one that starts another.
@@ -209,9 +212,11 @@ object ChordProSerializer {
         fun startEnvironment(line: ChordProLine, environment: String?) {
             environment?.let { environmentName ->
                 val environmentLabel = line.environmentLabel ?: label
-                val name = (line as? ChordProLine.Tab)?.selector?.let { "$environmentName-$it" } ?: environmentName
+                val selector = (line as? ChordProLine.Tab)?.selector ?: (line as? ChordProLine.Verbatim)?.selector
+                val name = selector?.let { "$environmentName-$it" } ?: environmentName
                 add(environmentLabel?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
                 openEnvironmentLabel = environmentLabel
+                openEnvironmentSelector = selector
                 label = null
             }
             openEnvironment = environment
@@ -250,8 +255,9 @@ object ChordProSerializer {
             // is a grid line whose environment was labelled differently from the one before it.
             val startsTab = line is ChordProLine.Tab && !line.continuesEnvironment && openEnvironment == "tab" && !isEnvironmentAwaitingLine
             val startsGrid = line is ChordProLine.Grid && openEnvironment == "grid" && line.label != openEnvironmentLabel
+            val startsVerbatim = line is ChordProLine.Verbatim && environment != null && environment == openEnvironment && line.selector != openEnvironmentSelector
             if (line != ChordProLine.Blank) isEnvironmentAwaitingLine = false
-            if (environment != openEnvironment || startsTab || startsGrid) {
+            if (environment != openEnvironment || startsTab || startsGrid || startsVerbatim) {
                 openEnvironment?.let { add("{end_of_$it}") }
                 startEnvironment(line, environment)
             }

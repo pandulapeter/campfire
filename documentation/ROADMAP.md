@@ -13,8 +13,6 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- **Chord grids drawn as bars**: a rounded box per bar, each chord's part as wide as its beats, lined up in columns,
-  on screen and in the PDF. Plan: [drawn-chord-grids.md](plans/drawn-chord-grids.md)
 - Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
 - Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.

@@ -27,15 +27,16 @@ import com.pandulapeter.campfire.chordpro.model.TabTuning
 public object ChordProTabs {
 
     /**
-     * [song] with only the tabs [selectors] pick out of the ones written for particular instruments.
+     * [song] with only the tabs and the delegated environments (`{start_of_abc-piano}`, the notation of a part) [selectors]
+     * pick out of the ones written for particular instruments.
      *
-     * A tab written for an instrument (`{start_of_tab-ukulele}`) is one of the versions of the music around it, so the
-     * tabs with selectors written one after the other, with nothing but blank lines and comments between them, are one
-     * group, and of each group only the ones for the first of [selectors] it has are kept. A group with none for the
+     * A tab or a tune written for an instrument (`{start_of_tab-ukulele}`) is one of the versions of the music around it,
+     * so the ones with selectors written one after the other, with nothing but blank lines and comments between them,
+     * are one group, and of each group only the ones for the first of [selectors] it has are kept. A group with none for the
      * reader keeps its guitar tab, or its first one where it has none, rather than nothing: the song's author wrote the
      * music down once for somebody, and a tab moved to the reader's strings, or shown with a notice, is more use than a
      * gap. A tab with a negated selector (`{start_of_tab-guitar!}`) is for everybody but the players of that instrument,
-     * and a tab without a selector for everybody. A comment written inside a tab goes with it.
+     * and a tab without a selector for everybody. A comment written inside a tab or a selected environment goes with it.
      */
     public fun select(song: ChordProSong, selectors: List<String>): ChordProSong =
         song.copy(blocks = selectBlocks(song.blocks, selectors))
@@ -183,8 +184,8 @@ public object ChordProTabs {
     }
 
     /**
-     * The tab environments of a list of blocks, numbered in the order they are written: which one each tab line and
-     * each comment written inside a tab belongs to, and the selector of each.
+     * The tab and delegated environments of a list of blocks, numbered in the order they are written: which one each of
+     * their lines and each comment written inside one belongs to, and the selector of each.
      */
     private class TabEnvironments(blocks: List<ChordProBlock>) {
 
@@ -198,49 +199,63 @@ public object ChordProTabs {
         init {
             var current = -1
             var isGroupOpen = false
+            // A delegated environment's lines say nothing of where it began, so one goes on for as long as the lines
+            // after its last one are of the same environment, with the same selector.
+            var previousVerbatim: ChordProLine.Verbatim? = null
             // A comment written inside a tab before its first line belongs to the environment that line opens.
             val pendingComments = mutableListOf<Pair<Int, ChordProBlock.Comment>>()
             fun settlePending(next: Int?) {
                 pendingComments.forEach { (blockIndex, comment) ->
-                    val environment = next?.takeIf { selectors[it] == comment.tabSelector } ?: current.takeIf { it >= 0 } ?: next
+                    val environment = next?.takeIf { selectors[it] == comment.selector } ?: current.takeIf { it >= 0 } ?: next
                     environment?.let { commentEnvironments[blockIndex] = it }
                 }
                 pendingComments.clear()
+            }
+            fun open(selector: String?) {
+                val environment = selectors.size
+                selectors += selector
+                settlePending(environment)
+                if (selector != null && !selector.endsWith(NEGATION)) {
+                    if (isGroupOpen) groups.last() += environment else groups += mutableListOf(environment)
+                    isGroupOpen = true
+                } else {
+                    groups += mutableListOf(environment)
+                    isGroupOpen = false
+                }
+                current = environment
             }
             blocks.forEachIndexed { blockIndex, block ->
                 when (block) {
                     is ChordProBlock.Section -> block.lines.forEachIndexed { lineIndex, line ->
                         when {
                             line is ChordProLine.Tab -> {
-                                if (!line.continuesEnvironment || current < 0) {
-                                    val environment = selectors.size
-                                    selectors += line.selector
-                                    settlePending(environment)
-                                    val selector = line.selector
-                                    if (selector != null && !selector.endsWith(NEGATION)) {
-                                        if (isGroupOpen) groups.last() += environment else groups += mutableListOf(environment)
-                                        isGroupOpen = true
-                                    } else {
-                                        groups += mutableListOf(environment)
-                                        isGroupOpen = false
-                                    }
-                                    current = environment
+                                if (!line.continuesEnvironment || current < 0) open(line.selector) else settlePending(current)
+                                lineEnvironments[blockIndex to lineIndex] = current
+                                previousVerbatim = null
+                            }
+                            line is ChordProLine.Verbatim -> {
+                                val previous = previousVerbatim
+                                if (previous == null || previous.environment != line.environment || previous.selector != line.selector) {
+                                    open(line.selector)
                                 } else {
                                     settlePending(current)
                                 }
                                 lineEnvironments[blockIndex to lineIndex] = current
+                                previousVerbatim = line
                             }
                             line == ChordProLine.Blank -> Unit
                             else -> {
                                 settlePending(null)
                                 isGroupOpen = false
+                                previousVerbatim = null
                             }
                         }
                     }
-                    is ChordProBlock.Comment -> if (block.isInTab) pendingComments += blockIndex to block
+                    is ChordProBlock.Comment -> if (block.isInTab || block.selector != null) pendingComments += blockIndex to block
                     else -> {
                         settlePending(null)
                         isGroupOpen = false
+                        previousVerbatim = null
                     }
                 }
             }

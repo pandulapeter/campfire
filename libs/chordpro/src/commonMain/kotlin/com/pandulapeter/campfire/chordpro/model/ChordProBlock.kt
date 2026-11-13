@@ -62,8 +62,11 @@ public sealed interface ChordProBlock {
         val isInTabOrGrid: Boolean = false,
         /** Whether that environment is a `{start_of_tab}`, whose comments go with it wherever the tab is not shown. */
         val isInTab: Boolean = false,
-        /** The selector of that `{start_of_tab}` (see [ChordProLine.Tab.selector]), which shows the comment with it. */
-        val tabSelector: String? = null,
+        /**
+         * The selector of the `{start_of_tab}` or the delegated environment (`{start_of_abc-piano}`) it was written in
+         * (see [ChordProLine.Tab.selector]), which shows the comment with it.
+         */
+        val selector: String? = null,
     ) : ChordProBlock
 
     /**

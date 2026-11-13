@@ -1289,6 +1289,15 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `an abc block written for an instrument carries its selector on every line and comment`() {
+        val blocks = ChordProParser.parse("{start_of_abc-piano}\nX:1\n{comment: Left hand}\nCDEF|\n{end_of_abc}").blocks
+
+        assertEquals(listOf(ChordProLine.Verbatim("X:1", "abc", selector = "piano")), (blocks[0] as ChordProBlock.Section).lines)
+        assertEquals("piano", (blocks[1] as ChordProBlock.Comment).selector)
+        assertEquals(listOf(ChordProLine.Verbatim("CDEF|", "abc", selector = "piano")), (blocks[2] as ChordProBlock.Section).lines)
+    }
+
+    @Test
     fun `an abc block cut by a comment keeps its lines verbatim on both sides`() {
         val blocks = ChordProParser.parse("{start_of_abc}\nX:1\n{comment: Second part}\n|:GABc:|\n{end_of_abc}").blocks
 

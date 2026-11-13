@@ -235,6 +235,29 @@ class ChordProTabsTest {
     }
 
     @Test
+    fun `of the tunes written for several instruments the reader sees the one for theirs with its comments`() {
+        val song = ChordProParser.parse(
+            "{start_of_abc-piano}\nX:1\n{comment: Left hand}\nCDEF|\n{end_of_abc}\n\n{start_of_abc-bass}\nX:1\nC,,4|\n{end_of_abc}\n\n{start_of_abc}\nX:2\n{end_of_abc}",
+        )
+
+        val piano = ChordProTabs.select(song, listOf("keyboard", "piano"))
+        val bass = ChordProTabs.select(song, listOf("bass"))
+
+        assertEquals(listOf("X:1", "CDEF|", "X:2"), piano.verbatimLines())
+        assertEquals(listOf("Left hand"), piano.comments().map { it.text })
+        assertEquals(listOf("X:1", "C,,4|", "X:2"), bass.verbatimLines())
+        assertEquals(emptyList(), bass.comments())
+    }
+
+    @Test
+    fun `a tune with a negated selector is hidden from the players of that instrument only`() {
+        val song = ChordProParser.parse("{start_of_verse}\n[C]La la\n{start_of_abc-guitar!}\nX:1\nCDEF|\n{end_of_abc}\n{end_of_verse}")
+
+        assertEquals(emptyList(), ChordProTabs.select(song, listOf("guitar")).verbatimLines())
+        assertEquals(listOf("X:1", "CDEF|"), ChordProTabs.select(song, listOf("violin")).verbatimLines())
+    }
+
+    @Test
     fun `a tab with a negated selector is shown to everybody but the players of that instrument`() {
         val song = ChordProParser.parse("{start_of_tab-guitar!}\nA|--3--|\n{end_of_tab}")
 
@@ -276,6 +299,8 @@ class ChordProTabsTest {
     private fun ChordProSong.notices() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Tab>().mapNotNull { it.notice }
 
     private fun ChordProSong.comments() = blocks.filterIsInstance<ChordProBlock.Comment>()
+
+    private fun ChordProSong.verbatimLines() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.filterIsInstance<ChordProLine.Verbatim>().map { it.text }
 
     /** [this] with a notice on the first line of its every run, whatever moving it said, so that one is written. */
     private fun ChordProSong.withTopLineNotice() = copy(

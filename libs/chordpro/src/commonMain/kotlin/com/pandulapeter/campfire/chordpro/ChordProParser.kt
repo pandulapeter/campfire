@@ -232,7 +232,7 @@ public object ChordProParser {
                 return
             }
             if (environment.lowercase() in ChordProEnvironments.delegateEnvironments) {
-                section.openDelegated(environment.lowercase(), sectionType(environment), ChordProEnvironments.label(directive.value))
+                section.openDelegated(environment.lowercase(), sectionType(environment), ChordProEnvironments.label(directive.value), ChordProEnvironments.selectorOf(name))
                 return
             }
             section.close()
