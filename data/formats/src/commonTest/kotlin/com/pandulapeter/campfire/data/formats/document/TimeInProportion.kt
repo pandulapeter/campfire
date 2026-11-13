@@ -15,22 +15,24 @@ import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
 /**
- * Compares the time [read] takes over an input of [quarterSize] with the time it takes over one four times as large,
+ * Compares the time [read] takes over an input of [partSize] with the time it takes over one eight times as large,
  * rather than with a fixed bound, since a CI runner is several times slower than a laptop: work growing with the product
  * of two parts of a hostile document (a margin's lines and the page's, a run of marks and what follows each) outgrows the
  * reader's own work in proportion to the input at the sizes these tests pick. Both sizes are timed three times,
  * alternately, and their fastest runs compared: a shared runner's other test workers and a collection pause land on
- * single runs, often ten times slower than the rest, while a step gone quadratic slows every run of the whole sixteenfold.
+ * single runs, often ten times slower than the rest. Even the fastest runs of a linear reader there take up to three
+ * times its eightfold growth, collections growing with the larger input's garbage, so the bound sits far above it, while
+ * a step gone quadratic slows every run sixty-four times.
  */
-internal inline fun assertTakesTimeInProportion(quarterSize: Int, read: (size: Int) -> Unit) {
-    read(quarterSize)
-    val quarters = mutableListOf<Duration>()
+internal inline fun assertTakesTimeInProportion(partSize: Int, read: (size: Int) -> Unit) {
+    read(partSize)
+    val parts = mutableListOf<Duration>()
     val wholes = mutableListOf<Duration>()
     repeat(3) {
-        quarters += TimeSource.Monotonic.measureTime { read(quarterSize) }
-        wholes += TimeSource.Monotonic.measureTime { read(quarterSize * 4) }
+        parts += TimeSource.Monotonic.measureTime { read(partSize) }
+        wholes += TimeSource.Monotonic.measureTime { read(partSize * 8) }
     }
-    val quarter = quarters.min()
+    val part = parts.min()
     val whole = wholes.min()
-    assertTrue(whole < quarter * 7, "$whole for the whole input, $quarter for a quarter of it")
+    assertTrue(whole < part * 24, "$whole for the whole input, $part for an eighth of it")
 }

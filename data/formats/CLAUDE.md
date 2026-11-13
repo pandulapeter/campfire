@@ -97,5 +97,5 @@ import corpus as a converter change (`chordpro/convert/CLAUDE.md`).
 
 The `*FuzzTest`s damage valid documents and archives from fixed seeds (`zip/Mutator`): a reader may refuse one only with
 an `Exception` (a `ZipException` for the zip reader), never an `Error`, nor read past its budget; raise the counts to
-explore, never in a commit. A hang a hostile layout causes is tested against a quarter of its own input
+explore, never in a commit. A hang a hostile layout causes is tested against an eighth of its own input
 (`assertTakesTimeInProportion`), never a fixed time.
