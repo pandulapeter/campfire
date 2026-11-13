@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
+import com.pandulapeter.campfire.presentation.ui.platform.pastedText
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,7 +46,10 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
                     // Asked again rather than trusted from the start of the drag, during which a dialog or the editor can
                     // have come.
                     if (!viewModel.pastedSongController.isNewSongDropAvailable) return false
-                    val text = items.mapNotNull { it.text?.toString() }.joinToString("\n").ifEmpty { return false }
+                    val text = pastedText(
+                        text = items.mapNotNull { it.text?.toString() }.joinToString("\n"),
+                        html = items.mapNotNull { it.htmlText }.joinToString("\n").ifEmpty { null },
+                    ).orEmpty().ifEmpty { return false }
                     viewModel.pastedSongController.newSongFromText(text)
                     return true
                 }

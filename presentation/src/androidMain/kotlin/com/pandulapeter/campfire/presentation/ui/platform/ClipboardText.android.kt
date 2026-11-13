@@ -17,8 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 /**
  * The description is asked first, since it reads nothing and the system shows no "pasted from your clipboard" toast
  * for it: a clip with no text in it is answered without reading it. A clip that is only an address of content has no
- * text of its own and is nothing to paste - resolving it would read a file the user never picked. Android only ever
- * refuses an app in the background, and this is a tap.
+ * text of its own and is nothing to paste - resolving it would read a file the user never picked. A browser's copy also
+ * carries its HTML, read for the chords a page draws with CSS ([pastedText]). Android only ever refuses an app in the
+ * background, and this is a tap.
  */
 @Composable
 internal actual fun rememberClipboardTextReader(): ClipboardTextReader {
@@ -29,7 +30,8 @@ internal actual fun rememberClipboardTextReader(): ClipboardTextReader {
             if (clipboard?.primaryClipDescription?.hasMimeType("text/*") != true) {
                 ClipboardText.None
             } else {
-                clipboardTextOf(clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString())
+                val item = clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)
+                clipboardTextOf(text = item?.text?.toString(), html = item?.htmlText)
             }
         }
     }

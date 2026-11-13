@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.presentation.ui.platform.pastedText
 import kotlinx.browser.window
 import org.w3c.dom.events.Event
 import kotlin.js.ExperimentalWasmJsInterop
@@ -31,7 +32,8 @@ internal fun PasteShortcutEffect(viewModel: CampfireViewModel) = DisposableEffec
     val listener: (Event) -> Unit = { event ->
         if (!isEditableTarget(event) && viewModel.pastedSongController.isNewSongPasteAvailable) {
             event.preventDefault()
-            viewModel.pastedSongController.newSongFromText(pastedText(event).orEmpty())
+            val text = pastedText(text = pastedData(event, "text/plain"), html = pastedData(event, "text/html"))
+            viewModel.pastedSongController.newSongFromText(text.orEmpty())
         }
     }
     window.addEventListener(EVENT_PASTE, listener, true)
@@ -47,6 +49,7 @@ private fun isEditableTarget(event: Event): Boolean = js(
     })()"""
 )
 
-private fun pastedText(event: Event): String? = js("event.clipboardData ? event.clipboardData.getData('text/plain') : null")
+/** One of the paste's flavours; its HTML is read for the chords a page draws with CSS, see [pastedText]. */
+private fun pastedData(event: Event, type: String): String? = js("event.clipboardData ? event.clipboardData.getData(type) : null")
 
 private const val EVENT_PASTE = "paste"

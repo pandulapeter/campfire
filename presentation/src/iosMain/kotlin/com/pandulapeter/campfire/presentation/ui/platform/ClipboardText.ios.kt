@@ -17,7 +17,8 @@ import platform.UIKit.UIPasteboard
 
 /**
  * `hasStrings` is asked first, since it never prompts; `string` then asks Allow Paste on iOS 16 and later, unless Paste
- * from Other Apps in the app's settings says otherwise. Text that was there and came back nil is the user's no.
+ * from Other Apps in the app's settings says otherwise. Text that was there and came back nil is the user's no. A copy
+ * from a browser is read with its HTML ([PasteboardHtml]).
  */
 @Composable
 internal actual fun rememberClipboardTextReader(): ClipboardTextReader = remember {
@@ -25,6 +26,7 @@ internal actual fun rememberClipboardTextReader(): ClipboardTextReader = remembe
         val pasteboard = UIPasteboard.generalPasteboard
         when {
             !pasteboard.hasStrings -> ClipboardText.None
+            PasteboardHtml.isOn(pasteboard) -> PasteboardHtml.read(pasteboard) ?: ClipboardText.Refused(Res.string.paste_refused_ios)
             else -> pasteboard.string?.let(::clipboardTextOf) ?: ClipboardText.Refused(Res.string.paste_refused_ios)
         }
     }

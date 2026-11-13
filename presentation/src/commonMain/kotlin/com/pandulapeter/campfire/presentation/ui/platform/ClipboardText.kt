@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.Composable
+import com.pandulapeter.campfire.chordpro.convert.ChordSheetHtml
 import org.jetbrains.compose.resources.StringResource
 
 /** What the clipboard held when it was asked for text. */
@@ -41,5 +42,12 @@ internal fun interface ClipboardTextReader {
 @Composable
 internal expect fun rememberClipboardTextReader(): ClipboardTextReader
 
-/** What any reader's answer is for [text] the platform handed over, which may be nothing. */
-internal fun clipboardTextOf(text: String?) = text?.takeIf { it.isNotBlank() }?.let(ClipboardText::Text) ?: ClipboardText.None
+/** What any reader's answer is for the [text] and the [html] the platform handed over, either of which may be nothing. */
+internal fun clipboardTextOf(text: String?, html: String? = null) =
+    pastedText(text, html)?.takeIf { it.isNotBlank() }?.let(ClipboardText::Text) ?: ClipboardText.None
+
+/**
+ * The text a paste or a drop makes a song of: the chord sheet in the [html] beside the plain [text] where the HTML draws
+ * chords the text lost (a page that draws its chord names with CSS, [ChordSheetHtml]), else the text, unchanged.
+ */
+internal fun pastedText(text: String?, html: String?): String? = html?.let(ChordSheetHtml::chordSheetText) ?: text

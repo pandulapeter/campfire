@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.escapeStepOf
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.openUrl
+import com.pandulapeter.campfire.presentation.ui.platform.pastedText
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -101,7 +102,7 @@ fun CampfireDesktopApp(
                                     // Checked again rather than trusted from the start of the drag, during which a dialog
                                     // or the editor can have opened.
                                     if (!viewModel.pastedSongController.isNewSongDropAvailable) return false
-                                    val text = transferable.getTransferData(DataFlavor.stringFlavor) as? String ?: return false
+                                    val text = transferable.pastedText() ?: return false
                                     viewModel.pastedSongController.newSongFromText(text)
                                     return true
                                 }

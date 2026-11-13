@@ -45,6 +45,11 @@ which the script checks; everything else is handed the holders, state, and callb
 - The editor waits, as the import screen does (`ImportReportState.awaitNothingInTheWay`), for any open dialog, unsaved
   editor text, and the onboarding; replaces an editor with nothing unsaved; and holds the queue until no editor is left,
   so texts arriving together (an iOS inbox drained at once) open one after another.
+- A paste, and a drop on Android and the desktop, is read with its HTML flavour too, and is that HTML's chord sheet
+  where it draws chords the plain text lost (`pastedText`, `:libs:chordsheet`'s `ChordSheetHtml`), else the text as it
+  is. The web's Paste button reads `clipboard.read()` (`readText()` only where there is no `read()`, never after a
+  refused one, which would ask twice); iOS reads `public.html` or Safari's web archive in a single `items` access, since
+  each access may ask Allow Paste.
 - A share's subject (a page title) fills in, selected, the title the text does not declare, and the artist only from
   `<title> Chords by <artist>` (`sharedTextTitle`): a bare " by " or a dash is never split.
 - A blank, links-only (an address, alone or beside a one-line title), or over-8 MB paste or share is a snackbar before
