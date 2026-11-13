@@ -32,6 +32,10 @@ cannot say: the principles, the contracts, and the limits kept on purpose.
   over a much longer lyric lost them on copy and is written above its lyric, not into it.
 - Over a lyric, a chord row's bar lines and repeat counts are dropped, but `N.C.` stays where it stands. A row of chord
   names right over a tab staff is a line of the tab, kept as it stands.
+- **A song that counts beats on every chord row is a beat chart** (`LineKinds.isBeatChart`: no other chord row, and
+  several rows of bars and beats over words): its chords are placed by beat, not syllable, so each row stays a one-row
+  grid above its lyric, and the lyric loses the indent that lined it up under the row. One such row among ordinary chord
+  rows is still set over its syllables.
 
 ## Words any sheet may print
 

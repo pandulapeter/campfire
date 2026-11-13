@@ -160,7 +160,10 @@ internal object SongStructure {
                 LineKind.LYRIC -> {
                     openUnlabelled(index)
                     follow(index)
-                    addLyric(inline(lyricAt(index), convertParentheses), continues(index))
+                    val lyric = inline(lyricAt(index), convertParentheses)
+                    // A lyric under a row of beats was indented to line up under it, which means nothing once the row is a
+                    // grid of its own.
+                    addLyric(if (kinds.getOrNull(index - 1) == LineKind.GRID) lyric.trimStart() else lyric, continues(index))
                 }
                 LineKind.BLANK -> { closeNumbered(); add(Line.Blank) }
                 LineKind.METADATA -> Unit

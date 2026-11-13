@@ -1737,6 +1737,26 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun `a song counting every chord row in bars and beats keeps each row as a grid over its lyric, unindented`() {
+        assertEquals(
+            "{start_of_grid}\n| C . . . | Dm . . . |\n{end_of_grid}\nI follow the Moskva\n{start_of_grid}\n| C . . . |\n{end_of_grid}\n" +
+                "Down to Gorky Park\n{start_of_grid}\n| Dm . Am . | G . |\n{end_of_grid}\nListening to the wind of change\n",
+            convert("| C . . . | Dm . . . |\nI follow the Moskva\n| C . . . |\n  Down to Gorky Park\n| Dm . Am . | G . |\nListening to the wind of change"),
+        )
+    }
+
+    @Test
+    fun `rows of bars and beats over lyrics in a song with other chord rows are set over their syllables`() {
+        assertEquals(
+            "[G]Hello     [C]world\n[G]Hello     [C]world\n[G]Hello     [C]world\n[Am]Goodbye   [F]now\n",
+            convert(
+                "| G . . . | C . . . |\n  Hello     world\n| G . . . | C . . . |\n  Hello     world\n" +
+                    "| G . . . | C . . . |\n  Hello     world\nAm        F\nGoodbye   now",
+            ),
+        )
+    }
+
+    @Test
     fun `a line alone in italics among plain lyrics is a comment, while a run of italic lines is lyrics`() {
         fun line(text: String, italic: Boolean = false) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
