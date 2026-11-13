@@ -7,19 +7,19 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.sync
+package com.pandulapeter.campfire.presentation.ui.progress
 
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class SyncProgressPulseTest {
+class WorkProgressPulseTest {
 
     @Test
     fun `the pulse always stays clear of the fill and inside the window`() {
         for (step in 0..100) {
-            val span = syncPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = step / 100f) ?: continue
+            val span = workPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = step / 100f) ?: continue
             assertTrue(span.start >= 306f, "starts at ${span.start}")
             assertTrue(span.end <= 998f, "ends at ${span.end}")
         }
@@ -27,21 +27,21 @@ class SyncProgressPulseTest {
 
     @Test
     fun `the pulse travels away from the fill as its cycle goes on`() {
-        val early = assertNotNull(syncPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0.2f))
-        val late = assertNotNull(syncPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0.8f))
+        val early = assertNotNull(workPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0.2f))
+        val late = assertNotNull(workPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0.8f))
         assertTrue(late.start > early.start)
     }
 
     @Test
     fun `the pulse is out of sight at the ends of its cycle`() {
-        assertNull(syncPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0f))
-        assertNull(syncPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 1f))
+        assertNull(workPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 0f))
+        assertNull(workPulseSpan(width = 1000f, fillEnd = 300f, capRadius = 2f, phase = 1f))
     }
 
     @Test
     fun `a full bar leaves no room for the pulse`() {
         for (step in 0..10) {
-            assertNull(syncPulseSpan(width = 1000f, fillEnd = 1000f, capRadius = 2f, phase = step / 10f))
+            assertNull(workPulseSpan(width = 1000f, fillEnd = 1000f, capRadius = 2f, phase = step / 10f))
         }
     }
 }

@@ -22,7 +22,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
-import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.Navigator
 import com.pandulapeter.campfire.presentation.ui.navigation.SettingsTab
@@ -49,7 +48,6 @@ internal fun SettingsTabPager(
     navigator: Navigator,
     tabs: List<SettingsTab>,
     badgedTab: SettingsTab?,
-    isImporting: Boolean,
     startPadding: Dp,
     endPadding: Dp,
     backProgress: () -> Float?,
@@ -112,7 +110,6 @@ internal fun SettingsTabPager(
                 if (page == pagerState.targetPage) onSelectedTabPressed(it) else coroutineScope.launch { pagerState.animateScrollToPage(page) }
             },
         )
-        ImportProgress(isImporting = isImporting)
         HorizontalPager(
             modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
                 .weight(1f)

@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.presentation.ui.sync
+package com.pandulapeter.campfire.presentation.ui.progress
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -25,25 +25,25 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.unit.LayoutDirection
 
 /**
- * A short, faint segment that keeps leaving the end of [SyncProgressBar]'s fill and running to the window's edge, so
- * that a run moving a large file, whose fill may not visibly grow for many seconds, still shows that it is working.
+ * A short, faint segment that keeps leaving the end of [WorkProgressBar]'s fill and running to the window's edge, so
+ * that work moving a large file, whose fill may not visibly grow for many seconds, still shows that it is working.
  * It fades out as the unfilled room shrinks below [FADE_ROOM_HEIGHTS] bar heights, instead of vanishing at a threshold.
  */
 @Composable
-internal fun SyncProgressPulse(
+internal fun WorkProgressPulse(
     modifier: Modifier = Modifier,
     fraction: () -> Float,
 ) {
-    val phase by rememberInfiniteTransition(label = "syncPulse").animateFloat(
+    val phase by rememberInfiniteTransition(label = "workPulse").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(animation = tween(durationMillis = CYCLE_MILLIS, easing = LinearEasing), repeatMode = RepeatMode.Restart),
-        label = "syncPulsePhase",
+        label = "workPulsePhase",
     )
     val color = ProgressIndicatorDefaults.linearColor
     Canvas(modifier = modifier) {
         val capRadius = size.height / 2
-        val span = syncPulseSpan(width = size.width, fillEnd = size.width * fraction(), capRadius = capRadius, phase = phase) ?: return@Canvas
+        val span = workPulseSpan(width = size.width, fillEnd = size.width * fraction(), capRadius = capRadius, phase = phase) ?: return@Canvas
         val alpha = PULSE_ALPHA * (span.room / (size.height * FADE_ROOM_HEIGHTS)).coerceIn(0f, 1f)
         // LinearProgressIndicator fills from the end in a right-to-left layout, so the pulse has to mirror with it.
         scale(scaleX = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f, scaleY = 1f) {
@@ -63,12 +63,12 @@ internal fun SyncProgressPulse(
  * is out of sight. The room it travels starts one cap's gap after the fill's own cap and ends a cap short of [width], and
  * the segment enters it from the fill and leaves it at the edge, shortened by both rather than drawn over them.
  */
-internal fun syncPulseSpan(
+internal fun workPulseSpan(
     width: Float,
     fillEnd: Float,
     capRadius: Float,
     phase: Float,
-): SyncPulseSpan? {
+): WorkPulseSpan? {
     val roomStart = fillEnd + capRadius * 3
     val roomEnd = width - capRadius
     val room = roomEnd - roomStart
@@ -77,11 +77,11 @@ internal fun syncPulseSpan(
     val head = roomStart + (room + length) * phase
     val start = (head - length).coerceIn(roomStart, roomEnd)
     val end = head.coerceIn(roomStart, roomEnd)
-    return if (end > start) SyncPulseSpan(start = start, end = end, room = room) else null
+    return if (end > start) WorkPulseSpan(start = start, end = end, room = room) else null
 }
 
-/** A [syncPulseSpan] result: the line's ends, and the length of the room it travels. */
-internal data class SyncPulseSpan(
+/** A [workPulseSpan] result: the line's ends, and the length of the room it travels. */
+internal data class WorkPulseSpan(
     val start: Float,
     val end: Float,
     val room: Float,

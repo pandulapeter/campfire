@@ -222,7 +222,7 @@ private val SyncState.Connected.outcomeKey: KClass<out SyncOutcome>?
  * The one line under the account name: what is happening now, or what the last run ended in. A failure stays there
  * until something replaces it, rather than going past in a snackbar the user may not have been looking at. A run's
  * progress takes this line rather than a row of its own, so a run starting resizes nothing above Sync now; how far it
- * has got is already drawn by `SyncProgressBar` along the top of the window.
+ * has got is already drawn by `WorkProgressBar` along the top of the window.
  */
 @Composable
 private fun SyncState.Connected.statusText(): String = when (val current = progress) {

@@ -14,13 +14,11 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +40,6 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -155,44 +152,41 @@ internal fun SettingsScreen(
         animationSpec = fadeSpec,
     ) { isWide ->
         if (isWide) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                ImportProgress(isImporting = isImporting)
-                Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    SettingsCategoryPane(
-                        modifier = Modifier.padding(start = startPadding),
-                        tabs = tabs,
-                        selectedTab = viewModel.navigator.settingsTab,
-                        badgedTab = badgedTab,
-                        label = { it.label() },
-                        onTabSelected = { if (it == viewModel.navigator.settingsTab) scrollTabToTop(it) else viewModel.navigator.settingsTab = it },
-                    )
-                    // Seekable, so that a back gesture can hold the fade to the first tab at the fraction the finger has
-                    // reached; letting go carries it on to the first tab, and a cancelled gesture fades back from there.
-                    val pageTransition = remember { SeekableTransitionState(viewModel.navigator.settingsTab) }
-                    LaunchedEffect(pageTransition) {
-                        snapshotFlow { viewModel.navigator.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
-                            if (progress != null && tab != SettingsTab.HOME) {
-                                pageTransition.seekTo(fraction = progress, targetState = SettingsTab.HOME)
-                            } else {
-                                pageTransition.animateTo(tab)
-                            }
+            Row(modifier = Modifier.fillMaxSize()) {
+                SettingsCategoryPane(
+                    modifier = Modifier.padding(start = startPadding),
+                    tabs = tabs,
+                    selectedTab = viewModel.navigator.settingsTab,
+                    badgedTab = badgedTab,
+                    label = { it.label() },
+                    onTabSelected = { if (it == viewModel.navigator.settingsTab) scrollTabToTop(it) else viewModel.navigator.settingsTab = it },
+                )
+                // Seekable, so that a back gesture can hold the fade to the first tab at the fraction the finger has
+                // reached; letting go carries it on to the first tab, and a cancelled gesture fades back from there.
+                val pageTransition = remember { SeekableTransitionState(viewModel.navigator.settingsTab) }
+                LaunchedEffect(pageTransition) {
+                    snapshotFlow { viewModel.navigator.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
+                        if (progress != null && tab != SettingsTab.HOME) {
+                            pageTransition.seekTo(fraction = progress, targetState = SettingsTab.HOME)
+                        } else {
+                            pageTransition.animateTo(tab)
                         }
                     }
-                    rememberTransition(pageTransition).Crossfade(
-                        modifier = Modifier.weight(1f),
-                        animationSpec = fadeSpec,
-                    ) { tab ->
-                        SettingsTabContent(
-                            viewModel = viewModel,
-                            tab = tab,
-                            scrollState = scrollStates[tab.ordinal],
-                            contentPadding = contentPadding.only(bottom = true, extraEnd = endPadding),
-                            isImporting = isImporting,
-                            isPerformanceModeEnabled = isPerformanceModeEnabled,
-                            userPreferences = userPreferences,
-                            urlOpener = urlOpener,
-                        )
-                    }
+                }
+                rememberTransition(pageTransition).Crossfade(
+                    modifier = Modifier.weight(1f),
+                    animationSpec = fadeSpec,
+                ) { tab ->
+                    SettingsTabContent(
+                        viewModel = viewModel,
+                        tab = tab,
+                        scrollState = scrollStates[tab.ordinal],
+                        contentPadding = contentPadding.only(bottom = true, extraEnd = endPadding),
+                        isImporting = isImporting,
+                        isPerformanceModeEnabled = isPerformanceModeEnabled,
+                        userPreferences = userPreferences,
+                        urlOpener = urlOpener,
+                    )
                 }
             }
         } else {
@@ -200,7 +194,6 @@ internal fun SettingsScreen(
                 navigator = viewModel.navigator,
                 tabs = tabs,
                 badgedTab = badgedTab,
-                isImporting = isImporting,
                 startPadding = startPadding,
                 endPadding = endPadding,
                 backProgress = backProgress,

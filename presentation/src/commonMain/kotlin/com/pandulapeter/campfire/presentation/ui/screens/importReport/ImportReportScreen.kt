@@ -64,7 +64,6 @@ import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_status_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
-import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.textResource
@@ -135,8 +134,6 @@ internal fun ImportReportScreen(
             },
             onClose = onBack,
         )
-        // Files dropped or opened while the review is up are read into it, which can take a while for an archive.
-        ImportProgress(isImporting = isAddingToReview)
         Box(
             Modifier
                 .fillMaxWidth()

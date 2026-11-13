@@ -22,7 +22,7 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
   previewed instead (`ui/screens/songDetails/CLAUDE.md`), and one the library holds as it is is opened, saying so in one
   line rather than in counts. A single song file is read behind no screen; anything else shows Loading here first.
 - **One review at a time**: a batch arriving while a review is up (dropped, opened with, shared, picked, a shared link)
-  is read on its own and appended to it under a progress bar that holds Import back, the import screen brought to the
+  is read on its own and appended to it under the window's progress bar (`ui/progress`), Import held back meanwhile, the import screen brought to the
   front at once (a preview over it closes, a one-song preview becomes this screen), so the batch never lands under a
   screen showing nothing of it; ticks and choices made stay. What the review lists already is left out (a song by its
   text, a setlist by its fields, a skipped name), so the same zip twice changes nothing; a taken name stays one

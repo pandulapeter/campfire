@@ -39,6 +39,7 @@ away and uncovers the one under it as it was (sheet, draft, scroll), never re-op
 - Imports run one at a time (`importQueue`); a batch from the OS that comes down to one song opens it once it is in
   (over the editor only once everything there is saved).
 - An import's read-only phases offer Cancel; the writing ones are never cancelled. There is no progress dialog: an
-  import that cannot put its screen up yet is read behind the list screens' progress bar; the demo import shows nothing.
+  import that cannot put its screen up yet is read under the window's progress bar (`ui/progress`); the demo import
+  shows nothing.
 - The delete confirmations say when the item, or anything, is shared as a link, which the deletion stops, read from
   `ShareLinkController.shares` (this device's copy, never a request). A song only inside a shared setlist gets no word.

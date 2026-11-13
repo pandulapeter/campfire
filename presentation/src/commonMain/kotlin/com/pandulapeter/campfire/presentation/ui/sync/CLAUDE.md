@@ -20,9 +20,7 @@
 - `rememberSyncNotifications` only reports "nothing to show" after showing something; otherwise opening the app onto a
   background run would stop the Android service.
 - A run on every ON_START but the first (the launch's run is the restore's); the folder watched while STARTED.
-- `SyncProgressBar` is the only sign of a run outside Settings: a trackless line along the top of the window, over
-  everything, for every run with files to transfer, automatic ones included; a run that only lists never shows it, and
-  once shown it stays at least 500 ms. A faint segment keeps running from the fill's end to the edge, so a slow transfer
-  still moves, fading as that room shrinks.
+- The window's progress bar (`ui/progress`) is the only sign of a run outside Settings, for every run with files to
+  transfer, automatic ones included.
 - On a launch with no preferences document the stored credentials are forgotten inside `startRestoring`'s coroutine,
   before `restore` reads them.

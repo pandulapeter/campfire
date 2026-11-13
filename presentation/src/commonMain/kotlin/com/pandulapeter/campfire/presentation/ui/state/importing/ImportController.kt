@@ -97,7 +97,7 @@ internal class ImportController(
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
 
-    /** True while an import is running, which the screens that can start one show as a progress bar. */
+    /** True while an import is running, which the bar along the top of the window shows (`WorkProgressBar`). */
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
@@ -121,7 +121,7 @@ internal class ImportController(
 
     /**
      * True while a batch that arrived during the review is read to be added to it (see [addToReview]), which the import
-     * screen shows as a progress bar under its app bar, holding Import back until the list is whole.
+     * bar along the top of the window shows, the import screen holding Import back until the list is whole.
      */
     private val _isAddingToReview = MutableStateFlow(false)
     val isAddingToReview: StateFlow<Boolean> = _isAddingToReview.asStateFlow()

@@ -58,8 +58,9 @@ import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.update.AppUpdateGate
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeHapticsEffect
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeNotificationEffect
+import com.pandulapeter.campfire.presentation.ui.progress.WorkProgressBar
+import com.pandulapeter.campfire.presentation.ui.progress.workProgress
 import com.pandulapeter.campfire.presentation.ui.sync.SyncLifecycleEffects
-import com.pandulapeter.campfire.presentation.ui.sync.SyncProgressBar
 import com.pandulapeter.campfire.presentation.ui.sync.rememberSyncNotifications
 import com.pandulapeter.campfire.presentation.ui.launch.LaunchScreenGate
 import kotlinx.coroutines.flow.Flow
@@ -199,15 +200,39 @@ fun CampfireApp(
                         launchScreenColors = launchScreenColors,
                         onAppReady = onAppReady,
                     )
-                    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
-                    SyncProgressBar(
+                    AppWorkProgressBar(
                         modifier = Modifier.align(Alignment.TopCenter),
-                        progress = (syncState as? SyncState.Connected)?.progress,
+                        viewModel = viewModel,
                     )
                 }
             }
         }
     }
+}
+
+/** The [WorkProgressBar], reading its work in a scope of its own, so that every file it counts recomposes only the bar. */
+@Composable
+private fun AppWorkProgressBar(
+    modifier: Modifier,
+    viewModel: CampfireViewModel,
+) {
+    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
+    val isDemoLibraryPending by viewModel.firstRunController.isDemoLibraryPending.collectAsStateWithLifecycle()
+    val importProgress by viewModel.importController.importProgress.collectAsStateWithLifecycle()
+    val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
+    val isEditingSongs by viewModel.selectionEditing.isEditingSongs.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+    WorkProgressBar(
+        modifier = modifier,
+        progress = workProgress(
+            isImporting = isImporting,
+            isDemoLibraryPending = isDemoLibraryPending,
+            importProgress = importProgress,
+            isAddingToReview = isAddingToReview,
+            isEditingSongs = isEditingSongs,
+            syncProgress = (syncState as? SyncState.Connected)?.progress,
+        ),
+    )
 }
 
 /**

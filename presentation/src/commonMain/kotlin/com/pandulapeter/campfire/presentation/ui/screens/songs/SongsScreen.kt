@@ -58,7 +58,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.appBar.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.appBar.PillIconButton
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.list.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.list.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
@@ -92,7 +91,6 @@ internal fun SongsScreen(
     val isSearchOpen by viewModel.songListState.songsSearch.isOpen.collectAsStateWithLifecycle()
     val songGroups by viewModel.songListState.songGroups.collectAsStateWithLifecycle()
     val placeholder by viewModel.songListState.songsPlaceholder.collectAsStateWithLifecycle()
-    val isImporting by viewModel.importController.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.dialogHost.visibleDialog.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.songListState.isSongFilterActive.collectAsStateWithLifecycle()
@@ -239,7 +237,6 @@ internal fun SongsScreen(
                 )
             }
         }
-        ImportProgress(isImporting = isImporting || isEditingSongs)
     }
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
