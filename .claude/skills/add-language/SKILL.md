@@ -214,10 +214,12 @@ If this run had to touch a place `wiring` does not check, add it to `check_wirin
 
 Tell the user, in a few lines: the language added and its own name in the picker; what was wired (code, iOS, web,
 docs); the test and check results; the translation choices worth a native speaker's look (address, key terms, the
-agents' doubts you kept); every preflight `NOTE` as a known limitation; and that nothing was committed. Also tell them to
-add the language's listing by hand, once, in every console (Play Console, App Store Connect for iOS and for the Mac, and
-Partner Center), with its screenshots, before the next release: the release writes every listing's text from the files
-but creates none, so a store without the language fails the release on the missing listing. If the store spells the
+agents' doubts you kept); every preflight `NOTE` as a known limitation; and that nothing was committed. Also tell them
+that the next release creates the language's listing in every store, with its text and its screenshots (it turns its
+`screenshots` switch on by itself, and stops if the description says `screenshots: false` or a store's `listings:
+false`), and that the website gets the language's screenshots only once its pages exist there (`localize.py` in the
+website's repository). Every store needs the language in `.github/scripts/store_listings.py`'s `LOCALES`, the locale its
+listing is created in (`store_listings.py --check` fails without it). If the store spells the
 language other than by its ISO 639-1 code (Play's `iw` for Hebrew) or splits it by script (`zh-CN`, `zh-TW`), it needs
 an alias in `.github/scripts/store_listings.py`'s `ALIASES` (`wiring` checks it for a retired code), and a line in
 `test_store_listings.py`'s `STORE_LOCALES`. Name each store's code for the language in the report.

@@ -27,6 +27,11 @@ jobs:
   build:
     name: Build and Publish
     runs-on: ubuntu-latest
+    # Shared with publish-all.yml's website-screenshots, so that the two commits a release makes to the website never
+    # race: the second waits for the first to push.
+    concurrency:
+      group: campfire-website
+      cancel-in-progress: false
     steps:
       - name: Check out repository
         uses: actions/checkout@v5

@@ -21,6 +21,10 @@ the tool is `tools/screenshots`, which no app module depends on, and the only se
 in `:presentation`'s desktop source set, which the desktop app never sets. See `tools/screenshots/CLAUDE.md` for how the
 tool works.
 
+**Publishing is the release's**: a release whose description says `<!-- screenshots: true -->` renders these same
+images on CI and replaces them in every store (`.github/CLAUDE.md`). This skill is for looking at a change locally;
+nothing here uploads anything. A new device or image also needs its entry in `.github/scripts/store_images.py`.
+
 ## What a run needs
 
 - **The library**, committed in `tools/screenshots/library/`, holding only what the images show of each song (its

@@ -174,7 +174,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
    Keep the four descriptions saying the same thing in each platform's words. Apple's fields other than the
    promotional text change only with a version submitted for review. What the files say is what ships: the release
    overwrites every listing's text in the consoles, so an edit made in a console is lost unless it is in the files
-   too. Images (screenshots, the icon, the feature graphic) and the fields `store_listings.py` lists as `MANUAL` (the
+   too. The images are the release's too, when its description says `screenshots: true` (below); the ones
+   `.github/scripts/store_images.py` lists as `MANUAL` and the fields `store_listings.py` lists as `MANUAL` (the
    Microsoft title and "Developed by", the Mac's App Sandbox Information) stay by hand. Run
    `.github/scripts/store_listings.py --check` too.
 
@@ -345,6 +346,7 @@ all of them are always written:
 <!-- app-store listings: true -->
 <!-- mac-app-store listings: true -->
 <!-- microsoft-store listings: true -->
+<!-- screenshots: false -->
 ```
 
 - **`whats-new en`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
@@ -379,11 +381,16 @@ all of them are always written:
   Never pick a number above 0 on your own; mention the line when reporting back, so a release that fixes
   something serious can be raised before it is published.
 - **`<store> submit`** says, per store, whether the release is sent for review / certification (`true`) or
-  only uploaded and left as a draft there (`false`) — for new screenshots, say, which the pipeline cannot
-  add, to be put in by hand before sending it from the store's console (the Microsoft Store's draft keeps the
+  only uploaded and left as a draft there (`false`), to be looked over and sent from the store's console (the
+  Microsoft Store's draft keeps the
   last release's package, which is replaced there with the Windows run's `.msix` artifact). Always write all four, **`true`**
   unless the user asked otherwise, so they can see them and flip one before publishing; anything but
   `true` or `false` stops the release. Mention them when reporting back.
+- **`screenshots`** renders every store image, the website's screenshots, and the README banners from the tag and
+  publishes them (`.github/CLAUDE.md`). Write **`true`** when a release changes what any shot shows (a screen, a
+  string on one, the library in `tools/screenshots/library/`, `Shot.kt`, `Website.kt`, `Banners.kt`,
+  `Compositions.kt`, or the `screenshot-texts`), else **`false`**, and say which and why when reporting back. A
+  language added since the last release turns it on anyway, and stops the release if it says `false`.
 - **Nothing misspelt is taken as absent** (see `.github/CLAUDE.md`): a misspelt store name or comment stops
   the release, so write the four store names exactly as above.
 

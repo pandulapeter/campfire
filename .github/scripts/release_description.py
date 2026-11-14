@@ -10,7 +10,7 @@
 Reads what a release's description tells the stores, for publish-all.yml.
 
 The instructions are HTML comments the rendered release page hides (the format is in publish-all.yml's header), and
-every one of them has a default that is the stronger action: a store is submitted to and its listing written, the notes
+every one of them but screenshots has a default that is the stronger action: a store is submitted to and its listing written, the notes
 are the visible description. So a comment this script cannot read is never taken as absent - a store name it does not
 know, a submit or listings value other than true or false, a priority outside 0-5, a whats-new block in a language the
 app does not have stop the release, and so does a comment that looks like one of them but is not written the way one is
@@ -19,6 +19,13 @@ was meant to block the old version. The notes of every language are held against
 whatever that store's submit value is, because the store scripts check them before they look at whether they were
 asked to submit, and they run after the builds: an over-long note found there fails the release at the very end, with
 a build already uploaded.
+
+The screenshots switch is the one whose default is the weaker action: rendering costs an hour of macOS runners and
+replaces what every store shows, so it is asked for, and absent it is false. It is still read as strictly as the
+others. A language the app gained since the previous release (PREVIOUS_LANGUAGES, the app's languages at that
+release's tag, comma separated) turns it on where it is absent, since a store may need a new listing's images; an
+explicit "screenshots: false" or any store's "listings: false" beside a new language stops the release, since either
+would leave a listing that cannot be created whole.
 
 Run with the description in RELEASE_BODY; writes the outputs publish-all.yml hands to the six workflows into the file
 GITHUB_OUTPUT names.
@@ -49,6 +56,7 @@ WHATS_NEW = re.compile(r"<!--[ \t]*whats-new[ \t]+(\S+)[ \t]*\n.*-->", re.S | re
 PRIORITY = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+update-priority:[ \t]*([^\n]*?)\s*-->")
 SWITCH = re.compile(r"<!--[ \t]*([^\n]*?)[ \t]+(submit|listings):[ \t]*([^\n]*?)\s*-->")
 SWITCHES = ["submit", "listings"]
+SCREENSHOTS = re.compile(r"<!--[ \t]*screenshots:[ \t]*([^\n]*?)\s*-->")
 
 
 class ReleaseDescriptionError(Exception):
@@ -73,20 +81,21 @@ def unreadable_instructions(body):
                 language = re.split(r"[-_]", tag)[0]
                 messages.append(f"The release has a \"whats-new {tag}\" block; it is named by the language alone, \"whats-new {language}\".")
             continue
-        if PRIORITY.fullmatch(text) or SWITCH.fullmatch(text):
+        if PRIORITY.fullmatch(text) or SWITCH.fullmatch(text) or SCREENSHOTS.fullmatch(text):
             continue
         inner = text[4:-3].strip().lower().replace("_", "-")
         first = inner.split()[0].rstrip(":") if inner.split() else ""
         if first in STORES or first in {"whats-new", "whatsnew"} or "submit" in inner or "listings" in inner \
-                or "priority" in inner:
+                or "priority" in inner or "screenshot" in inner:
             messages.append(f"The release has a comment I cannot read: \"{text}\". The format is in publish-all.yml's header.")
     return messages
 
 
-def read(body, languages=None):
+def read(body, languages=None, previous_languages=None):
     """
-    The notes, in English and per language of the app (`languages`, the app's own by default), the update priority, and
-    each store's submit and listings values the description asks for, with the warnings about it.
+    The notes, in English and per language of the app (`languages`, the app's own by default), the update priority,
+    each store's submit and listings values, and the screenshots switch the description asks for, with the warnings and
+    notices about it. previous_languages are the app's languages at the previous release, None where there is none.
 
     Raises ReleaseDescriptionError naming every problem at once, so that one edit of the release fixes all of them.
     """
@@ -140,6 +149,28 @@ def read(body, languages=None):
             switches[switch][store] = value.lower()
             seen.add((store, switch))
 
+    screenshots = None
+    for value in SCREENSHOTS.findall(body):
+        if value.lower() not in {"true", "false"}:
+            errors.append(f"The release says \"screenshots: {value}\"; it takes true or false.")
+        elif screenshots is None:
+            screenshots = value.lower()
+    notices = []
+    new_languages = [code for code in languages if previous_languages is not None and code not in previous_languages]
+    if new_languages:
+        named = ", ".join(new_languages)
+        if screenshots == "false":
+            errors.append(f"The app has gained {named} since the previous release, and its listings are created with "
+                          "their images: take out \"screenshots: false\".")
+        off = [store for store in STORES if switches["listings"][store] == "false"]
+        if off:
+            errors.append(f"The app has gained {named} since the previous release, and its listings are created by the "
+                          f"release: take out \"listings: false\" ({', '.join(off)}).")
+        if screenshots is None:
+            notices.append(f"The app has gained {named} since the previous release, so the screenshots are rendered and "
+                           "published with it, as every store's new listing needs them.")
+            screenshots = "true"
+
     # Characters, not bytes, which is how every one of the stores counts.
     for code in ["en"] + [code for code in languages if code != "en"]:
         text = notes if code == "en" else by_language[code]
@@ -161,22 +192,27 @@ def read(body, languages=None):
         "release_notes": notes,
         "release_notes_by_language": json.dumps(by_language, ensure_ascii=False),
         "update_priority": priority,
+        "screenshots": screenshots or "false",
+        "new_languages": ",".join(new_languages),
     }
     for switch in SWITCHES:
         for store in STORES:
             outputs[f"{store.replace('-', '_')}_{switch}"] = switches[switch][store]
-    return {"outputs": outputs, "warnings": warnings}
+    return {"outputs": outputs, "warnings": warnings, "notices": notices}
 
 
 def main():
     try:
-        result = read(os.environ["RELEASE_BODY"])
+        previous = os.environ.get("PREVIOUS_LANGUAGES")
+        result = read(os.environ["RELEASE_BODY"], previous_languages=previous.split(",") if previous else None)
     except ReleaseDescriptionError as error:
         for message in error.messages:
             print(f"::error::{message}", file=sys.stderr)
         sys.exit(1)
     for message in result["warnings"]:
         print(f"::warning::{message}")
+    for message in result["notices"]:
+        print(f"::notice::{message}")
     outputs = result["outputs"]
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"release_notes<<END_OF_RELEASE_NOTES\n{outputs['release_notes']}\nEND_OF_RELEASE_NOTES\n")

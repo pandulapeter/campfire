@@ -135,6 +135,34 @@ class ReadTest(unittest.TestCase):
             with self.assertRaises(ReleaseDescriptionError):
                 read(body)
 
+    def test_screenshots_are_off_unless_asked_for(self):
+        self.assertEqual("false", read("Visible.")["outputs"]["screenshots"])
+        self.assertEqual("true", read("<!-- screenshots: true -->")["outputs"]["screenshots"])
+        self.assertEqual("true", read("<!-- screenshots: TRUE\n-->")["outputs"]["screenshots"])
+        self.assertEqual("false", read("<!-- screenshots: false -->")["outputs"]["screenshots"])
+
+    def test_an_unreadable_screenshots_switch_stops_the_release(self):
+        for body in ["<!-- screenshots: yes -->", "<!-- screenshot: true -->", "<!-- play-store screenshots: true -->",
+                     "<!-- screenshots true -->"]:
+            with self.assertRaises(ReleaseDescriptionError, msg=body):
+                read(body)
+
+    def test_a_new_language_turns_the_screenshots_on(self):
+        result = read("Visible.", ["de", "en", "pt"], previous_languages=["de", "en"])
+        self.assertEqual("true", result["outputs"]["screenshots"])
+        self.assertEqual("pt", result["outputs"]["new_languages"])
+        self.assertEqual(1, len(result["notices"]))
+        unchanged = read("Visible.", ["de", "en"], previous_languages=["de", "en"])
+        self.assertEqual(("false", "", []), (unchanged["outputs"]["screenshots"], unchanged["outputs"]["new_languages"], unchanged["notices"]))
+        self.assertEqual("false", read("Visible.", ["de", "en"])["outputs"]["screenshots"])
+
+    def test_a_new_language_with_screenshots_or_a_listing_off_stops_the_release(self):
+        with self.assertRaises(ReleaseDescriptionError) as context:
+            read("<!-- screenshots: false -->\n<!-- app-store listings: false -->", ["en", "pt"], previous_languages=["en"])
+        self.assertEqual(2, len(context.exception.messages))
+        self.assertIn("\"screenshots: false\"", context.exception.messages[0])
+        self.assertIn("(app-store)", context.exception.messages[1])
+
     def test_a_closing_on_its_own_line_reads(self):
         self.assertEqual(read("<!-- play-store submit: false\n-->")["outputs"]["play_store_submit"], "false")
         self.assertEqual(read("<!-- play-store update-priority: 4\n-->")["outputs"]["update_priority"], "4")

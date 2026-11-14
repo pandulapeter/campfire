@@ -16,7 +16,8 @@ description: Retake campfire-songbook.com's images — its screenshots in every 
 # Campfire website and README images
 
 Made like the store images (the `store-screenshots` skill): the desktop build drawn offscreen as each platform by
-`tools/screenshots` (see its `CLAUDE.md`). The website's screenshots go to the site as rendered; its link preview and
+`tools/screenshots` (see its `CLAUDE.md`). A release whose description says `<!-- screenshots: true -->` renders and
+commits them itself, to the website and to main (`.github/CLAUDE.md`); this skill is for looking at a change locally. The website's screenshots go to the site as rendered; its link preview and
 the README banners are composed from the same tool's renders (`Compositions.kt`).
 
 ## What a run needs

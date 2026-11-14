@@ -12,12 +12,18 @@
 # made by hand. A green run means submitted, not certified - certification answers by email. With "submit" off - the box
 # of a hand dispatch, or a release whose description says <!-- microsoft-store submit: false --> - it leaves the
 # submission as a draft in Partner Center with the notes written but the last release's package still in it, for the
-# package to be replaced with the run's campfire-msix artifact, the release's screenshots to be added and the submission
-# sent from there: Partner Center takes screenshots from nowhere else, and only takes in a package the API uploaded when
-# the API commits the submission, so an upload would never reach a draft sent from Partner Center.
+# package to be replaced with the run's campfire-msix artifact and the submission sent from there: Partner Center only
+# takes in a file the API uploaded when the API commits the submission, so an upload would never reach a draft sent from
+# Partner Center. For the same reason the release's screenshots go in only with a submission the run commits.
 # The listing text of documentation/store-listings/microsoft-store is written into every language's listing of the
 # submission, with each language's notes; with "listings" off - the box, or <!-- microsoft-store listings: false --> -
 # only the notes are written.
+# With "screenshots" (publish-all.yml, when the release asked for them) or a hand dispatch's "screenshots_run" (the run
+# of screenshots.yml on this tag, or of the release, whose artifact to take), the listings' screenshots are replaced with the
+# rendered ones (.github/actions/screenshots); without either they stay as they are. A store whose listings are off
+# keeps its images too.
+# An app language Partner Center has no listing in gets one, which Partner Center accepts only with screenshots: without
+# the rendered ones the run stops before changing anything.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
 # needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and
@@ -48,6 +54,9 @@ on:
       listings:
         type: boolean
         default: true
+      screenshots:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       release_tag:
@@ -59,16 +68,22 @@ on:
         type: string
         required: false
       submit:
-        description: 'Submit for certification (off: leave a draft in Partner Center, to upload the run''s .msix artifact and add screenshots to by hand)'
+        description: 'Submit for certification (off: leave a draft in Partner Center, to upload the run''s .msix artifact into by hand)'
         type: boolean
         default: true
       listings:
         description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
         default: true
+      screenshots_run:
+        description: 'ID of a run whose screenshots artifact to publish, made from this tag (leave empty to keep the store''s images)'
+        type: string
+        required: false
 
 permissions:
   contents: read
+  # Another run's screenshots artifact (screenshots_run).
+  actions: read
   id-token: write
 
 jobs:
@@ -190,6 +205,13 @@ jobs:
           name: campfire-msix
           path: ${{ steps.package.outputs.path }}
           retention-days: 30
+      # The release's images (publish-all.yml, after screenshots.yml rendered them), or a run's named by hand.
+      - name: Download the screenshots
+        if: inputs.screenshots || inputs.screenshots_run != ''
+        uses: ./.github/actions/screenshots
+        with:
+          run_id: ${{ inputs.screenshots_run }}
+          path: ${{ runner.temp }}/screenshots
       # Creates the submission, or amends the draft one already there, swaps in the package, writes the notes and the
       # listings, commits it and waits for Partner Center to accept the commit (.github/scripts/microsoft_store_submission.py).
       - name: Submit for certification
@@ -200,11 +222,13 @@ jobs:
           SUBMIT: ${{ inputs.submit }}
           RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
           LISTINGS: ${{ inputs.listings }}
+          SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
         run: |
-          # Without the submission the run writes the notes and leaves the package and the screenshots to be put in by hand.
+          # Without the submission the run writes the notes and leaves the package (and new screenshots) for a run that submits.
           FLAGS=()
           [ "$SUBMIT" = true ] || FLAGS+=(--prepare)
           [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
+          [ -z "$SCREENSHOTS" ] || FLAGS+=(--screenshots "$SCREENSHOTS")
           # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then

@@ -15,6 +15,11 @@
 # <!-- play-store submit: false --> - the release is left as a draft in the Play Console, to be rolled out from there.
 # With "listings" off - the box, or <!-- play-store listings: false --> - the listing text is left as it is in the Play
 # Console and only the notes are written.
+# With "screenshots" (publish-all.yml, when the release asked for them) or a hand dispatch's "screenshots_run" (the run
+# of screenshots.yml on this tag, or of the release, whose artifact to take), the store's images are replaced with the
+# rendered ones (.github/actions/screenshots); without either they stay as they are. A store whose listings are off
+# keeps its images too.
+# An app language Play has no listing in gets one, created in the same edit.
 
 name: 'Publish Android'
 
@@ -40,6 +45,9 @@ on:
       listings:
         type: boolean
         default: true
+      screenshots:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       update_priority:
@@ -63,9 +71,15 @@ on:
         description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
         default: true
+      screenshots_run:
+        description: 'ID of a run whose screenshots artifact to publish, made from this tag (leave empty to keep the store''s images)'
+        type: string
+        required: false
 
 permissions:
   contents: read
+  # Another run's screenshots artifact (screenshots_run).
+  actions: read
 
 jobs:
   build:
@@ -159,6 +173,13 @@ jobs:
             campfire.android.keystoreFile=:release.keystore \
             campfire.android.keystorePassword=ANDROID_KEYSTORE_PASSWORD
           ./gradlew :app:android:assembleRelease
+      # The release's images (publish-all.yml, after screenshots.yml rendered them), or a run's named by hand.
+      - name: Download the screenshots
+        if: inputs.screenshots || inputs.screenshots_run != ''
+        uses: ./.github/actions/screenshots
+        with:
+          run_id: ${{ inputs.screenshots_run }}
+          path: ${{ runner.temp }}/screenshots
       # Uploads the APK and its mapping file, puts it on the production track with the notes in every language (each cut to
       # Play's 500 characters at a line boundary), writes every listing's text, and commits all of it as one edit, so it
       # goes to review as one change (.github/scripts/play_store_release.py).
@@ -168,10 +189,12 @@ jobs:
           RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
           SUBMIT: ${{ inputs.submit }}
           LISTINGS: ${{ inputs.listings }}
+          SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
         run: |
           FLAGS=()
           [ "$SUBMIT" = true ] || FLAGS+=(--draft)
           [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
+          [ -z "$SCREENSHOTS" ] || FLAGS+=(--screenshots "$SCREENSHOTS")
           APK=$(find app/android/build/outputs/apk/release -maxdepth 1 -name '*.apk' | head -n 1)
           if [ -z "$APK" ]; then
             echo "::error::No release APK was built." >&2

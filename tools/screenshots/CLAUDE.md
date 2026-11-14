@@ -11,11 +11,14 @@
 # :tools:screenshots
 
 The store and website screenshots, rendered rather than taken: the desktop build drawn offscreen (`ImageComposeScene`)
-as each platform's listing shows it, at its device's own pixels, then framed. The `store-screenshots` and
-`website-screenshots` skills drive it; its test source set holds the app's UI tests.
+as each platform's listing shows it, at its device's own pixels, then framed. A release that asks for it renders and
+publishes them on CI (`.github/workflows/screenshots.yml`, `.github/CLAUDE.md`); the `store-screenshots` and
+`website-screenshots` skills drive it locally, to look at a change. Its test source set holds the app's UI tests.
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
-  `--args="--out <folder> --only <names>"`.
+  `--args="--out <folder> --only <names>"`; `--shard <index>/<count>` renders a part, as the release's jobs do.
+- **Every framed file is named by `.github/scripts/store_images.py`** (`SETS`, what a store's API takes; `MANUAL`, what
+  stays by hand): a new device or image fails the release's check until it is named there, with its store's rules.
 - **A run is split across processes** (`ParallelRun.kt`, each about 1.6 GB), since one process holds one app start at
   a time. A render is mostly waiting for the app to settle, so four take little longer than one.
 - **The library** (`library/`) is a data folder's `library/`, `covers/`, and `preferences/preferences.json`, committed

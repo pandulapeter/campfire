@@ -30,6 +30,7 @@
 #   <!-- app-store listings: true -->
 #   <!-- mac-app-store listings: true -->
 #   <!-- microsoft-store listings: true -->
+#   <!-- screenshots: true -->
 #
 # The notes are written for every store that shows them, each language's into every locale of that language the store
 # has (fr-FR and fr-CA alike; a block is named by the language alone): Play gets them as its release notes, the App
@@ -39,7 +40,7 @@
 # decides). A store's "submit: false" is its workflow's submit input turned off: the release is uploaded and left there
 # as a draft - a draft Play release, a version prepared in App Store Connect, an uncommitted Partner Center submission
 # (which still holds the last release's package, for the run's .msix artifact to be uploaded into by hand) - for
-# whatever it needs by hand, new screenshots say, and is sent from there. Every store's listing text is written from
+# whatever it needs by hand, and is sent from there. Every store's listing text is written from
 # documentation/store-listings/<store>/<language>.md by its workflow (.github/scripts/store_listings.py); a store's
 # "listings: false" leaves that store's listing text as it is in its console and writes only the notes. All of them
 # are optional. Without the English notes the visible description stands in for them, with its markdown and HTML (the
@@ -50,6 +51,16 @@
 # written the way one is read, and so do notes in any language longer than App Store Connect's 4000 characters or
 # Partner Center's 1500, whatever those stores' submit says; over Play's 500 is a warning, since Play gets the lines
 # that fit.
+#
+# "screenshots: true" renders every store image, the website's screenshots and link preview, and the README banners from
+# the tag (screenshots.yml, beside the tests) and publishes them: each store's images are replaced (a store whose
+# listings are off keeps its own), the website gets a commit of them (website-screenshots), and so does main
+# (readme-screenshots). It is the one switch whose default is the weaker action, false: the render costs an hour of
+# macOS runners and replaces what every store shows. A language the app gained since the previous release turns it on
+# where it is absent, since a store may need the new listing's images, and stops the release where it says
+# "screenshots: false" or a store's "listings: false", either of which would leave that listing unmade. The images
+# never hold the app back: the store jobs wait for the render, but where it failed they ship with the images they
+# have, and the run ends red with the reason in the Screenshots job.
 
 name: 'Publish all'
 
@@ -60,6 +71,8 @@ on:
 
 permissions:
   contents: write
+  # A store job dispatched by hand reads another run's screenshots artifact; a called workflow gets no more than this.
+  actions: read
 
 jobs:
   prepare:
@@ -77,6 +90,7 @@ jobs:
       app_store_listings: ${{ steps.notes.outputs.app_store_listings }}
       mac_app_store_listings: ${{ steps.notes.outputs.mac_app_store_listings }}
       microsoft_store_listings: ${{ steps.notes.outputs.microsoft_store_listings }}
+      screenshots: ${{ steps.notes.outputs.screenshots }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -97,6 +111,7 @@ jobs:
       # release is the last one published, whatever its version: Play wants the code higher than every one it has had,
       # so a fix to an older line is compared with the newest release too. Pre-releases reach no store and are left out.
       - name: Check the build numbers against the previous release
+        id: previous
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -109,6 +124,11 @@ jobs:
           fi
           git fetch --depth=1 origin "refs/tags/$PREVIOUS_TAG:refs/tags/$PREVIOUS_TAG"
           git show "refs/tags/$PREVIOUS_TAG:gradle.properties" > "$RUNNER_TEMP/previous.properties"
+          # The app's languages then, its values-* folders, so that one added since gets its store listings made.
+          LANGUAGES=$(git ls-tree -d --name-only "refs/tags/$PREVIOUS_TAG:presentation/src/commonMain/composeResources" \
+            | sed -n -e 's/^values$/en/p' -e 's/^values-//p' | paste -sd, -)
+          echo "languages=$LANGUAGES" >> "$GITHUB_OUTPUT"
+          echo "The app's languages at $PREVIOUS_TAG: $LANGUAGES"
           CURRENT=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties | tr -d '\r')
           # A release from before the platforms shared one counter carries one per store; the highest of them is the
           # number every store has seen by now.
@@ -135,6 +155,7 @@ jobs:
         id: notes
         env:
           RELEASE_BODY: ${{ github.event.release.body }}
+          PREVIOUS_LANGUAGES: ${{ steps.previous.outputs.languages }}
         run: python3 .github/scripts/release_description.py
 
   # A failing test, or a platform that does not compile, stops the release before anything is built, signed or
@@ -143,9 +164,132 @@ jobs:
     name: Tests
     uses: ./.github/workflows/tests.yml
 
+  # Beside the tests, so that the stores wait only for whatever of the render outlasts them.
+  screenshots:
+    name: Screenshots
+    needs: prepare
+    if: needs.prepare.outputs.screenshots == 'true'
+    uses: ./.github/workflows/screenshots.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+
+  # The website's images, after the render succeeded, without waiting for the stores: the website describes the app as
+  # released. It shares publish-web.yml's concurrency group, so that the two commits to the website never race.
+  website-screenshots:
+    name: Website screenshots
+    needs: [test, screenshots]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: campfire-website
+      cancel-in-progress: false
+    steps:
+      - name: Download the screenshots
+        uses: actions/download-artifact@v8
+        with:
+          name: screenshots
+          path: screenshots
+      - name: Check out the website repository
+        uses: actions/checkout@v5
+        with:
+          repository: pandulapeter/campfire-website
+          ref: main
+          ssh-key: ${{ secrets.CAMPFIRE_WEBSITE_DEPLOY_KEY }}
+          path: website
+      # A language the website has no pages for yet gets no images: they land with the first release after its pages
+      # exist (localize.py in the website's repository writes them). --delete leaves no file behind for a shot taken out
+      # of the site, or for a language's image that became the same as the English one and is no longer written.
+      - name: Copy the screenshots into the website
+        run: |
+          SOURCE=screenshots/website/assets
+          EXCLUDES=()
+          for folder in "$SOURCE"/screenshots/*/; do
+            language=$(basename "$folder")
+            if [ ! -d "website/$language" ]; then
+              echo "::warning::The website has no pages in $language yet, so its screenshots wait for the first release after they exist."
+              EXCLUDES+=(--exclude "/$language/")
+            fi
+          done
+          for folder in website/assets/screenshots/*/; do
+            language=$(basename "$folder")
+            [ -d "website/$language" ] || EXCLUDES+=(--exclude "/$language/")
+          done
+          rsync --archive --delete "${EXCLUDES[@]}" "$SOURCE/screenshots/" website/assets/screenshots/
+          cp "$SOURCE/og-image.jpg" website/assets/og-image.jpg
+      # stamp.py is what the website's own pre-commit hook runs: it marks every link to a changed file with its hash, so
+      # browsers fetch the new screenshots, and writes the pages of the other languages, which link theirs.
+      - name: Mark the links with the files' hashes
+        working-directory: website
+        run: python3 stamp.py
+      # A new screenshot needs its page written by hand in the website's repository first, so one no page shows never
+      # goes live unseen.
+      - name: Check that every screenshot is shown by a page
+        working-directory: website
+        run: |
+          UNUSED=0
+          for file in $(cd assets && find screenshots -type f -name '*.webp'); do
+            if ! grep -rqF --include='*.html' --include='*.js' --include='*.css' "$file" .; then
+              echo "::error::assets/$file is shown by no page of the website: write its page there first." >&2
+              UNUSED=1
+            fi
+          done
+          exit $UNUSED
+      - name: Commit and push to the website
+        working-directory: website
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          if git diff --cached --quiet; then
+            echo "The website's screenshots are already up to date, nothing to push."
+            exit 0
+          fi
+          git status --short
+          git commit --message "Update the screenshots to $VERSION."
+          git push origin main
+
+  # The README's banners, committed to main after the render succeeded. Main may have moved since the tag, so a refused
+  # push is rebased and tried again; only documentation/ changes, which never conflicts and starts no test run.
+  readme-screenshots:
+    name: README screenshots
+    needs: [test, screenshots]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+      - name: Download the screenshots
+        uses: actions/download-artifact@v8
+        with:
+          name: screenshots
+          path: ${{ runner.temp }}/screenshots
+      - name: Commit and push the banners
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          cp "$RUNNER_TEMP"/screenshots/readme/*.webp documentation/screenshots/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add documentation/screenshots
+          if git diff --cached --quiet; then
+            echo "The README's banners are already up to date, nothing to push."
+            exit 0
+          fi
+          git commit --message "Update the README screenshots to $VERSION."
+          for attempt in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git pull --rebase origin main
+          done
+          exit 1
+
   android:
     name: Android
-    needs: [prepare, test]
+    needs: [prepare, test, screenshots]
+    # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
+    # it: without the images the store keeps the ones it has.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
     uses: ./.github/workflows/publish-android.yml
     with:
       update_priority: ${{ needs.prepare.outputs.update_priority }}
@@ -154,6 +298,7 @@ jobs:
       submit: ${{ needs.prepare.outputs.play_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.play_store_listings == 'true' }}
+      screenshots: ${{ needs.screenshots.result == 'success' }}
     secrets: inherit
 
   web:
@@ -172,12 +317,16 @@ jobs:
 
   windows:
     name: Windows
-    needs: [prepare, test]
+    needs: [prepare, test, screenshots]
+    # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
+    # it: without the images the store keeps the ones it has.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
     uses: ./.github/workflows/publish-windows.yml
     # The Microsoft Store is signed into with the job's OIDC token (see publish-windows.yml), and a called workflow
     # gets no permission its caller does not grant.
     permissions:
       contents: read
+      actions: read
       id-token: write
     with:
       release_tag: ${{ github.event.release.tag_name }}
@@ -185,32 +334,43 @@ jobs:
       submit: ${{ needs.prepare.outputs.microsoft_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.microsoft_store_listings == 'true' }}
+      screenshots: ${{ needs.screenshots.result == 'success' }}
     secrets: inherit
 
   ios:
     name: iOS
-    needs: [prepare, test]
+    needs: [prepare, test, screenshots]
+    # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
+    # it: without the images the store keeps the ones it has.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
     uses: ./.github/workflows/publish-ios.yml
     permissions:
       contents: read
+      actions: read
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       submit: ${{ needs.prepare.outputs.app_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.app_store_listings == 'true' }}
+      screenshots: ${{ needs.screenshots.result == 'success' }}
     secrets: inherit
 
   macos:
     name: macOS
-    needs: [prepare, test]
+    needs: [prepare, test, screenshots]
+    # Waits for the render, since each store takes the images in the submission it makes, but never fails because of
+    # it: without the images the store keeps the ones it has.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.test.result == 'success' }}
     uses: ./.github/workflows/publish-macos.yml
     permissions:
       contents: read
+      actions: read
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       submit: ${{ needs.prepare.outputs.mac_app_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.mac_app_store_listings == 'true' }}
+      screenshots: ${{ needs.screenshots.result == 'success' }}
     secrets: inherit

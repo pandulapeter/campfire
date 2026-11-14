@@ -12,7 +12,11 @@
 # another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a warning
 # instead. With "submit" off - the box of a hand dispatch, or a release whose description says
 # <!-- app-store submit: false --> - it stops short of the submission and leaves the version prepared in App Store
-# Connect, for the release's screenshots to be added to and the version submitted from there.
+# Connect, to be finished and submitted from there.
+# With "screenshots" (publish-all.yml, when the release asked for them) or a hand dispatch's "screenshots_run" (the run
+# of screenshots.yml on this tag, or of the release, whose artifact to take), the store's images are replaced with the
+# rendered ones (.github/actions/screenshots); without either they stay as they are. A store whose listings are off
+# keeps its images too.
 # The listing text of documentation/store-listings/app-store is written into every language's localization of the
 # version and the app info before the submission, with each language's notes; with "listings" off - the box, or
 # <!-- app-store listings: false --> - only the notes are written.
@@ -48,6 +52,9 @@ on:
       listings:
         type: boolean
         default: true
+      screenshots:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       release_tag:
@@ -63,16 +70,22 @@ on:
         type: string
         required: false
       submit:
-        description: 'Submit for review (off: leave the version prepared in App Store Connect, to add screenshots to)'
+        description: 'Submit for review (off: leave the version prepared in App Store Connect, to finish there)'
         type: boolean
         default: true
       listings:
         description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
         default: true
+      screenshots_run:
+        description: 'ID of a run whose screenshots artifact to publish, made from this tag (leave empty to keep the store''s images)'
+        type: string
+        required: false
 
 permissions:
   contents: read
+  # Another run's screenshots artifact (screenshots_run).
+  actions: read
 
 env:
   XCODE_PROJECT: app/ios/iosApp/iosApp.xcodeproj
@@ -288,9 +301,17 @@ jobs:
           fi
           xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
+      # The release's images (publish-all.yml, after screenshots.yml rendered them), or a run's named by hand.
+      - name: Download the screenshots
+        if: inputs.screenshots || inputs.screenshots_run != ''
+        uses: ./.github/actions/screenshots
+        with:
+          run_id: ${{ inputs.screenshots_run }}
+          path: ${{ runner.temp }}/screenshots
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
       # notes as its "What's New" - in the draft version already prepared in App Store Connect where there is one, whose
-      # screenshots and release option are kept (.github/scripts/app_store_submission.py).
+      # release option is kept, and whose screenshots are kept unless the run has new ones
+      # (.github/scripts/app_store_submission.py).
       - name: Submit for review
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -299,11 +320,13 @@ jobs:
           SUBMIT: ${{ inputs.submit }}
           RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
           LISTINGS: ${{ inputs.listings }}
+          SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
         run: |
-          # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
+          # Without the submission the run leaves the version ready, its screenshots included, to be submitted by hand.
           FLAGS=()
           [ "$SUBMIT" = true ] || FLAGS+=(--prepare)
           [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
+          [ -z "$SCREENSHOTS" ] || FLAGS+=(--screenshots "$SCREENSHOTS")
           # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then

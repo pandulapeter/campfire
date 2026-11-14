@@ -1,0 +1,56 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# The images screenshots.yml rendered, for a publish workflow's store script: the `screenshots` artifact of this run
+# (a release's), or of the run named by run_id (a store dispatched by hand, after its release's artifact expired or to
+# retry one store), into path. Another run's is refused unless it was made from the commit this job checked out, the
+# release's tag, since the images have to show the code the store gets; then dispatch screenshots.yml on the tag and
+# pass that run.
+
+name: 'Download the screenshots'
+description: 'The screenshots artifact of this run or of another one made from the same commit.'
+
+inputs:
+  run_id:
+    description: 'The run whose artifact to use; empty for this one'
+    required: false
+    default: ''
+  path:
+    description: 'Where to put it'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download this run's screenshots
+      if: inputs.run_id == ''
+      uses: actions/download-artifact@v8
+      with:
+        name: screenshots
+        path: ${{ inputs.path }}
+    - name: Check the other run's commit
+      if: inputs.run_id != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_ID: ${{ inputs.run_id }}
+      run: |
+        RUN_SHA=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq .head_sha)
+        HEAD_SHA=$(git rev-parse HEAD)
+        if [ "$RUN_SHA" != "$HEAD_SHA" ]; then
+          echo "::error::Run $RUN_ID rendered $RUN_SHA, and this job builds $HEAD_SHA: dispatch screenshots.yml on the release's tag and pass that run." >&2
+          exit 1
+        fi
+    - name: Download the other run's screenshots
+      if: inputs.run_id != ''
+      uses: actions/download-artifact@v8
+      with:
+        name: screenshots
+        path: ${{ inputs.path }}
+        run-id: ${{ inputs.run_id }}
+        github-token: ${{ github.token }}

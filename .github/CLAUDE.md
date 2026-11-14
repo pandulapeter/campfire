@@ -40,8 +40,8 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
 
 `publish-all.yml` reads hidden comments in the release description (format in its header): the `whats-new` notes (one
 block per app language, named by the language alone: a country in the tag stops the release, since each store's
-locales are filled in from the language), Play's `update-priority`, and a `submit` and a `listings` switch per store
-(`submit: false` leaves a draft, `listings: false` writes only the notes).
+locales are filled in from the language), Play's `update-priority`, a `submit` and a `listings` switch per store
+(`submit: false` leaves a draft, `listings: false` writes only the notes), and `screenshots` (below).
 
 - Anything unreadable is not taken as absent, since every default is the stronger action: an unknown store, a switch
   other than `true`/`false`, a priority outside 0–5, a `whats-new` block in a language the app lacks, or notes over
@@ -61,11 +61,44 @@ locales are filled in from the language), Play's `update-priority`, and a `submi
 - **Keyed by language, locales from the store**: a language is written into every store locale of it (`fr-FR` and
   `fr-CA` alike), so a regional copy added in a console is filled with no code change; a store locale of a language the
   app lacks is left alone with a warning. A store code that is not the ISO 639-1 code needs an entry in `ALIASES`.
-- **A language's first listing is added by hand**, once, in every console, with its screenshots. A store without one
-  of the app's languages fails the run before any text is written (unless `listings: false`); no listing is ever
-  created.
-- **Never touched**: every image, the Microsoft title and "Developed by", and the Mac's App Sandbox Information (not in
-  the API). Apple's copyright, URLs, and review notes come from `en.md`.
+- **A language's first listing is created by the release**, in each store that lacks it (asked of the store, never
+  worked out from git), at the locale `LOCALES` names: Play's in the edit, App Store Connect's version and app info
+  localizations (the privacy policy the website's page in that language, else the English one), and a Partner Center
+  listing copied from the English one with its own text. Partner Center takes no listing without screenshots, so there
+  a run without the rendered images stops before changing anything; Play and App Store Connect create it anyway.
+  `prepare` compares the app's languages with the previous release's tag: a new one turns `screenshots` on where it is
+  absent and stops the release where it says `screenshots: false` or a store's `listings: false`.
+- **Never touched**: the Microsoft title and "Developed by", and the Mac's App Sandbox Information (not in the API).
+  Apple's copyright, URLs, and review notes come from `en.md`.
+
+### Screenshots are rendered and published by the release
+
+- **`<!-- screenshots: true -->`** in the description: the one switch whose default is the weaker action (false),
+  since the render costs an hour of macOS runners and replaces what every store shows. Read as strictly as the others.
+- **`screenshots.yml`** renders from the tag, beside the tests, on macOS (the iOS and Mac chrome is SF Pro): three
+  shards of two processes, each with a timeout; then one job frames the store images, composes the banners and the link
+  preview, lays out the website's tree (`website_screenshots.py --website` into an empty folder), checks every store
+  image against its store's rules (`store_images.py --check`: count, sizes, alpha, file size, every language, and every
+  framed file named by `SETS` or `MANUAL`), draws contact sheets (`contact_sheets.py`, Pillow), and uploads one
+  artifact, `screenshots`, kept 14 days (`store/`, `website/`, `readme/`, `contact-sheets/`). Dispatchable by hand on
+  any ref; it publishes nothing and needs no secret.
+- **The store jobs wait for it, never on it**: `android`, `ios`, `macos`, and `windows` need `screenshots` but run on
+  `!cancelled()` with `prepare` and `test` succeeded, given `screenshots: true` only if it succeeded. A failed render
+  ships every build with the images the stores have, the run red. Each store script replaces a set by emptying and
+  refilling it (idempotent on a rerun); a set the run has no images for is left alone; a store whose `listings` are off
+  keeps its images.
+- **By store**: Play replaces phone, 7" and 10" screenshots and the feature graphic in the release's edit. App Store
+  Connect replaces the 6.9" iPhone, 13" iPad, and Mac sets of each localization and submits only once every image is
+  `COMPLETE`. Partner Center replaces the desktop screenshots in the submission it commits; with `submit` off they wait,
+  since it takes an uploaded file only on the API's commit.
+- **Still by hand** (`store_images.py`'s `MANUAL`): Play's Chromebook screenshots and icon, the iPhone Duo set (no
+  display type yet), Apple's product page header and search results image, and Microsoft's poster and box art.
+- **The website and the README**: `website-screenshots` rsyncs the artifact over the website's `assets/screenshots/`
+  (`--delete`; a language without pages there yet is skipped with a warning), replaces `og-image.jpg`, runs its
+  `stamp.py`, fails on an image no page shows, and commits; it shares `publish-web.yml`'s `campfire-website` concurrency
+  group. `readme-screenshots` commits `documentation/screenshots/01–06.webp` to main, rebasing on a refused push.
+- **A store dispatched by hand** publishes images only with `screenshots_run`: a run's ID whose artifact to take
+  (`.github/actions/screenshots`), refused unless that run rendered the commit being built.
 
 ## The workflows
 
@@ -92,10 +125,9 @@ locales are filled in from the language), Play's `update-priority`, and a `submi
 - **A draft the script made whose commit failed** is reused: only package, "What's new", and listing text replaced.
 - **A draft started in Partner Center stops the run**, untouched: the API cannot change a submission it did not create.
   Finish it there with the run's `.msix` artifact, or delete it.
-- **New screenshots or a newly declared language: dispatch by hand with `submit` off** (and `listings` off for a new
-  language). The run writes its own draft without the package (Partner Center only takes an API-uploaded package when
-  the API commits); then, in Partner Center, replace the package with the run's artifact, add the screenshots or the
-  listing, and submit.
+- **`submit` off** writes the run's own draft without the package or new screenshots (Partner Center only takes an
+  API-uploaded file when the API commits); finish it in Partner Center with the run's artifact, or let a later run take
+  it up.
 - A committed submission with this version is left alone (reruns succeed); one with another version stops the run.
 - Auth: Microsoft Entra application with the Manager role and **no secret** — a federated credential trusts GitHub's
   OIDC token for `repo:pandulapeter/campfire:environment:microsoft-store`, hence the `microsoft-store` environment and
@@ -115,8 +147,8 @@ locales are filled in from the language), Play's `update-priority`, and a `submi
   version, writes the listing (on iOS also the app info's name and subtitle; the Mac shares the app record), and
   submits; `submit` off stops before submitting. A name another app holds fails the run before submitting; with no
   editable app info (a version in review) the name and subtitle wait, with a warning.
-- An existing **draft** is used as is: only build, "What's New", and listing text replaced, release option and
-  screenshots kept, submitted in its existing review submission.
+- An existing **draft** is used as is: only build, "What's New", listing text, and (with the rendered images)
+  screenshots replaced, release option kept, submitted in its existing review submission.
 - Already in review with this build: left alone. Another version still waiting for Apple: the build stays in
   TestFlight and the run ends green with a warning. Green means submitted, not approved.
 
@@ -137,6 +169,6 @@ locales are filled in from the language), Play's `update-priority`, and a `submi
 
 - `.github/scripts/play_store_release.py` does everything in one Play edit, one review: the APK and its mapping onto
   production (a draft with `submit` off), the update priority, the notes per locale (cut to 500 at a line boundary),
-  the listing text (images never touched), and the commit. Standard library only, the JWT signed by `openssl`.
+  the listing text, the images (with the rendered ones), new languages' listings, and the commit. Standard library only, the JWT signed by `openssl`.
 - **An APK, not a bundle**: the Play listing predates the bundle requirement and was never migrated; `bundleRelease`
   would be rejected.
