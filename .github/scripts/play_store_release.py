@@ -7,22 +7,35 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Publishes a release APK to the production track of the Play Console, with its release notes and the listing text, in
-one edit, so that all of it goes to review as one change.
+Publishes a release APK to the production track of the Play Console, with its release notes, the listing text, and
+optionally the listing images, in one edit, so that all of it goes to review as one change.
 
     play_store_release.py <package name> <.apk file> <mapping file> <release name> <update priority> <release notes file>
-        [--draft] [--no-listings]
+        [--draft] [--no-listings] [--screenshots <folder>]
 
-The edit uploads the APK and its mapping file, puts the APK on the production track under the release name with the
-in-app update priority (completed, or with --draft a draft to be rolled out from the Play Console), writes the release
-notes, and writes the title, short description, and full description of documentation/store-listings/google-play
-into every listing (Play keeps the images apart, so they are never touched), then commits it. The notes are each
-language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any language it does
-not name, each cut to Play's 500 characters at a line boundary. Every listing the app has is written by its language
-(store_listings.py: fr-FR and fr-CA alike), and the notes go to the same locales, since Play refuses notes in a
-language the listing lacks. An app language with no listing fails the run before anything is uploaded, since a
-language's first listing is added by hand in the Play Console, with its screenshots. With --no-listings only the notes
-are written, and a missing listing is no failure.
+The edit writes the title, short description, and full description of documentation/store-listings/google-play into
+every listing, replaces the images (with --screenshots), uploads the APK and its mapping file, puts the APK on the
+production track under the release name with the in-app update priority (completed, or with --draft a draft to be
+rolled out from the Play Console), writes the release notes, then commits it. Nothing reaches the store before the
+commit, but the listings and images go first so that a failure among them stops the run before the APK is sent.
+
+Every listing the app has is written by its language (store_listings.py: fr-FR and fr-CA alike). An app language the
+listings lack gets its listing created, at the locale store_listings.py's LOCALES names, since an update of a listing
+Play does not have creates it; that comes before the notes, which Play refuses in a language the listing lacks. Play
+shows the default language's images in a listing without its own, so a new language needs no --screenshots, though
+the run warns that it will look English until it has them.
+
+The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any
+language it does not name, each cut to Play's 500 characters at a line boundary, and go to every locale written.
+
+--screenshots names the store folder the screenshot tool's framing wrote (store_images.py, which has already checked
+the images). For every locale written, each set it has images for in that locale's language is emptied and refilled
+in the listing's order, so a shot taken out of the listing leaves the store too, and running it again ends the same.
+A set with no images is left alone. The Chromebook screenshots are not among them: Play's API has no image type for
+them, so they are still uploaded by hand. Without --screenshots no image is touched.
+
+With --no-listings only the notes are written: no listing text, no images (they follow the listings, whatever
+--screenshots says), and an app language with no listing is skipped rather than created.
 
 Signs in as the service account PLAY_SERVICE_ACCOUNT_JSON holds (its JSON key), with a token for a JWT signed by
 openssl, so that only the Python standard library is needed.
@@ -39,6 +52,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import store_images
 import store_listings
 from store_http import fail, request_json
 
@@ -97,7 +111,10 @@ def request(method, path, body=None):
 
 
 def upload(path, file, content_type):
-    """Sends a file's bytes as they are to one of the API's upload addresses, and returns its JSON answer."""
+    """
+    Sends a file's bytes as they are to one of the API's upload addresses (an APK, its mapping file, or a listing's
+    image), and returns its JSON answer.
+    """
     with open(file, "rb") as data:
         call = urllib.request.Request(UPLOAD + path + "?uploadType=media", data=data.read(), method="POST", headers={
             "Authorization": f"Bearer {token()}", "Content-Type": content_type,
@@ -132,21 +149,54 @@ def cut(text, limit=NOTES_LIMIT):
     return result, result != "\n".join(lines)
 
 
-def main(package_name, apk, mapping, release_name, priority, notes_file, draft, write_listings):
+def replace_images(edit_path, locale, sets):
+    """Empties each of a listing's image sets the run has images for, then uploads them in the listing's order."""
+    for kind, paths in sets.items():
+        request("DELETE", f"{edit_path}/listings/{locale}/{kind}")
+        for path in paths:
+            upload(f"{edit_path}/listings/{locale}/{kind}", path, "image/png")
+        print(f"{locale}: replaced {kind} with {len(paths)} image{'' if len(paths) == 1 else 's'}.")
+
+
+def main(package_name, apk, mapping, release_name, priority, notes_file, draft, write_listings, screenshots=None):
     with open(notes_file, encoding="utf-8") as file:
         notes = store_listings.notes_by_language(file.read().strip())
     listings = store_listings.read("google-play")
     for path in [apk, mapping]:
         if not os.path.isfile(path):
             fail(f"There is no file at {path}.")
+    if screenshots is not None and not os.path.isdir(screenshots):
+        fail(f"There is no folder at {screenshots}.")
     edit = request("POST", f"/{package_name}/edits", {})["id"]
     edit_path = f"/{package_name}/edits/{edit}"
     current = {listing["language"]: listing for listing in request("GET", f"{edit_path}/listings").get("listings", [])}
     locales, missing, unknown = store_listings.match_locales(list(current), store_listings.app_languages())
-    if missing and write_listings:
-        fail(store_listings.missing_listing_message("The Play Console", missing))
     for locale in unknown:
         print(f"::warning::The {locale} listing is in a language the app does not have, so it is left as it is.")
+
+    if write_listings:
+        created = store_listings.new_listing_locales("google-play", missing)
+        for locale, code in created.items():
+            # An update of a listing Play does not have creates it, and must come before the notes in its language.
+            request("PUT", f"{edit_path}/listings/{locale}", {"language": locale, **listings[code]})
+            print(f"{locale}: created the listing.")
+            if screenshots is None:
+                print(f"::warning::The new {locale} listing shows the default language's images until a release "
+                      f"with screenshots gives it its own.")
+        for locale, code in locales.items():
+            print(store_listings.changes(locale, current[locale], listings[code]))
+            request("PATCH", f"{edit_path}/listings/{locale}", {"language": locale, **listings[code]})
+        locales = {**locales, **created}
+        if screenshots is not None:
+            for locale, code in locales.items():
+                sets = store_images.images(screenshots, "google-play", code)
+                if not sets:
+                    print(f"::warning::{screenshots} has no Play images in {code}, so the {locale} images are left as "
+                          f"they are.")
+                replace_images(edit_path, locale, sets)
+    elif missing:
+        print(f"::warning::Play has no listing in {', '.join(missing)}, and with the listings off none is created, so "
+              f"those languages get no release notes.")
 
     version_code = upload(f"{edit_path}/apks", apk, "application/vnd.android.package-archive")["versionCode"]
     print(f"Uploaded {os.path.basename(apk)} as version code {version_code}.")
@@ -171,19 +221,30 @@ def main(package_name, apk, mapping, release_name, priority, notes_file, draft, 
     print(f"Put {release_name} on the production track ({'a draft' if draft else 'completed'}, update priority "
           f"{priority}) with notes in {', '.join(locales)}.")
 
-    if write_listings:
-        for locale, code in locales.items():
-            print(store_listings.changes(locale, current[locale], listings[code]))
-            request("PATCH", f"{edit_path}/listings/{locale}", {"language": locale, **listings[code]})
     # With a body, since Google's front end refuses a POST without a length.
     request("POST", f"{edit_path}:commit?changesNotSentForReview=false", {})
     print(f"Committed the edit: {release_name} is {'a draft in the Play Console' if draft else 'sent for review'}.")
 
 
+def arguments_of(arguments):
+    """main's arguments from the command line's, or None where they do not read as the usage line says."""
+    if len(arguments) < 6 or arguments[4] not in {"0", "1", "2", "3", "4", "5"}:
+        return None
+    flags, screenshots, rest = set(), None, arguments[6:]
+    while rest:
+        flag, rest = rest[0], rest[1:]
+        if flag in flags or flag not in {"--draft", "--no-listings", "--screenshots"}:
+            return None
+        flags.add(flag)
+        if flag == "--screenshots":
+            if not rest or rest[0].startswith("--"):
+                return None
+            screenshots, rest = rest[0], rest[1:]
+    return [*arguments[:6], "--draft" in flags, "--no-listings" not in flags, screenshots]
+
+
 if __name__ == "__main__":
-    arguments = sys.argv[1:]
-    flags = arguments[6:]
-    if len(arguments) < 6 or not set(flags) <= {"--draft", "--no-listings"} or len(set(flags)) != len(flags) \
-            or arguments[4] not in {"0", "1", "2", "3", "4", "5"}:
+    parsed = arguments_of(sys.argv[1:])
+    if parsed is None:
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*arguments[:6], "--draft" in flags, "--no-listings" not in flags)
+    main(*parsed)

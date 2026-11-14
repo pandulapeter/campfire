@@ -15,6 +15,7 @@ from unittest import mock
 
 import play_store_release
 import store_listings
+from pathlib import Path
 
 LISTINGS = {
     "en": {"title": "Campfire", "shortDescription": "Songbook", "fullDescription": "Long"},
@@ -64,7 +65,8 @@ class SignedJwtTest(unittest.TestCase):
 
 class RunTest(unittest.TestCase):
 
-    def run_main(self, locales, *, draft=False, listings=True):
+    def run_main(self, locales, *, draft=False, listings=True, images=None):
+        """The calls main makes, with images ({language: [file names]}) framed into a store folder when given."""
         calls = []
 
         def request(method, path, body=None):
@@ -77,7 +79,7 @@ class RunTest(unittest.TestCase):
             return None
 
         def upload(path, file, content_type):
-            calls.append(("UPLOAD", path, None))
+            calls.append(("UPLOAD", path, os.path.basename(file)))
             return {"versionCode": 7}
 
         with tempfile.TemporaryDirectory() as folder:
@@ -85,6 +87,14 @@ class RunTest(unittest.TestCase):
             for name, path in paths.items():
                 with open(path, "w", encoding="utf-8") as file:
                     file.write("- New\n" if name == "notes.txt" else "x")
+            screenshots = None
+            if images is not None:
+                screenshots = os.path.join(folder, "store")
+                for code, names in images.items():
+                    language = Path(screenshots, "google-play", code)
+                    language.mkdir(parents=True)
+                    for name in names:
+                        (language / name).write_bytes(b"png")
             with mock.patch.object(play_store_release, "request", request), \
                     mock.patch.object(play_store_release, "upload", upload), \
                     mock.patch.object(store_listings, "app_languages", return_value=["de", "en"]), \
@@ -93,7 +103,7 @@ class RunTest(unittest.TestCase):
                     mock.patch("builtins.print"):
                 try:
                     play_store_release.main("com.example", paths["app.apk"], paths["mapping.txt"], "5.1.0 (510)", "3",
-                                            paths["notes.txt"], draft, listings)
+                                            paths["notes.txt"], draft, listings, screenshots)
                 except SystemExit:
                     pass
         return calls
@@ -108,9 +118,58 @@ class RunTest(unittest.TestCase):
         self.assertEqual({"language": "de-AT", **LISTINGS["de"]}, patches["/com.example/edits/e1/listings/de-AT"])
         self.assertEqual(("POST", "/com.example/edits/e1:commit?changesNotSentForReview=false", {}), calls[-1])
 
-    def test_an_app_language_without_a_listing_fails_before_anything_is_uploaded(self):
+    def test_an_app_language_without_a_listing_gets_one_before_the_notes_name_it(self):
         calls = self.run_main(["en-US"])
-        self.assertFalse(any(method in {"UPLOAD", "PUT", "PATCH"} or path.endswith(":commit") for method, path, _ in calls))
+        create = calls.index(("PUT", "/com.example/edits/e1/listings/de-DE", {"language": "de-DE", **LISTINGS["de"]}))
+        track = next(index for index, (method, path, _) in enumerate(calls) if path.endswith("/tracks/production"))
+        apk = next(index for index, (method, path, _) in enumerate(calls) if path.endswith("/apks"))
+        self.assertLess(create, apk)
+        self.assertLess(apk, track)
+        self.assertEqual([{"language": "en-US", "text": "- New"}, {"language": "de-DE", "text": "- Neu"}],
+                         calls[track][2]["releases"][0]["releaseNotes"])
+        self.assertTrue(calls[-1][1].endswith(":commit?changesNotSentForReview=false"))
+
+    def test_listings_off_skip_an_app_language_without_a_listing(self):
+        calls = self.run_main(["en-US"], listings=False, images={"en": ["phone-1.png", "phone-2.png"]})
+        self.assertFalse(any(method in {"PATCH", "DELETE"} or "/listings/" in path for method, path, _ in calls))
+        track = next(body for method, path, body in calls if method == "PUT")["releases"][0]
+        self.assertEqual([{"language": "en-US", "text": "- New"}], track["releaseNotes"])
+        self.assertTrue(calls[-1][1].endswith(":commit?changesNotSentForReview=false"))
+
+    def test_screenshots_replace_each_set_of_every_locale_in_the_listings_order(self):
+        calls = self.run_main(["en-US", "de-DE", "de-AT"], images={
+            "en": ["phone-2.png", "phone-1.png", "feature-graphic.png", "chromebook-1.png"],
+            "de": ["large-tablet-1.png"],
+        })
+        images = [(method, path.split("/listings/")[1], file) for method, path, file in calls
+                  if method in {"DELETE", "UPLOAD"} and "/listings/" in path]
+        self.assertEqual([
+            ("DELETE", "en-US/phoneScreenshots", None),
+            ("UPLOAD", "en-US/phoneScreenshots", "phone-1.png"),
+            ("UPLOAD", "en-US/phoneScreenshots", "phone-2.png"),
+            ("DELETE", "en-US/featureGraphic", None),
+            ("UPLOAD", "en-US/featureGraphic", "feature-graphic.png"),
+            ("DELETE", "de-DE/tenInchScreenshots", None),
+            ("UPLOAD", "de-DE/tenInchScreenshots", "large-tablet-1.png"),
+            ("DELETE", "de-AT/tenInchScreenshots", None),
+            ("UPLOAD", "de-AT/tenInchScreenshots", "large-tablet-1.png"),
+        ], images)
+        last_image = max(index for index, (method, path, _) in enumerate(calls)
+                         if "/listings/" in path and method != "GET")
+        apk = next(index for index, (method, path, _) in enumerate(calls) if path.endswith("/apks"))
+        self.assertLess(last_image, apk)
+
+    def test_a_new_language_gets_its_images_after_its_listing(self):
+        calls = self.run_main(["en-US"], images={"de": ["phone-1.png"]})
+        paths = [(method, path) for method, path, _ in calls if "/listings/de-DE" in path]
+        self.assertEqual([("PUT", "/com.example/edits/e1/listings/de-DE"),
+                          ("DELETE", "/com.example/edits/e1/listings/de-DE/phoneScreenshots"),
+                          ("UPLOAD", "/com.example/edits/e1/listings/de-DE/phoneScreenshots")], paths)
+
+    def test_without_screenshots_no_image_is_touched(self):
+        calls = self.run_main(["en-US", "de-DE"])
+        self.assertFalse(any(method == "DELETE" or (method == "UPLOAD" and "/listings/" in path)
+                             for method, path, _ in calls))
 
     def test_listings_off_and_a_draft_write_only_the_notes(self):
         calls = self.run_main(["en-US"], draft=True, listings=False)
@@ -118,6 +177,21 @@ class RunTest(unittest.TestCase):
         track = next(body for method, path, body in calls if method == "PUT")["releases"][0]
         self.assertEqual("draft", track["status"])
         self.assertTrue(calls[-1][1].endswith(":commit?changesNotSentForReview=false"))
+
+
+class ArgumentsTest(unittest.TestCase):
+
+    POSITIONAL = ["com.example", "app.apk", "mapping.txt", "5.1.0 (510)", "3", "notes.txt"]
+
+    def test_the_flags_read_in_any_order(self):
+        self.assertEqual([*self.POSITIONAL, True, False, "store"], play_store_release.arguments_of(
+            [*self.POSITIONAL, "--screenshots", "store", "--no-listings", "--draft"]))
+        self.assertEqual([*self.POSITIONAL, False, True, None], play_store_release.arguments_of(self.POSITIONAL))
+
+    def test_a_misread_command_line_is_refused(self):
+        for flags in [["--screenshots"], ["--screenshots", "--draft"], ["--draft", "--draft"], ["--images", "x"]]:
+            self.assertIsNone(play_store_release.arguments_of([*self.POSITIONAL, *flags]), flags)
+        self.assertIsNone(play_store_release.arguments_of([*self.POSITIONAL[:4], "6", "notes.txt"]))
 
 
 if __name__ == "__main__":

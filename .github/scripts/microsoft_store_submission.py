@@ -11,32 +11,47 @@ Submits a new .msix to the Microsoft Store for certification, which is everythin
 open for.
 
     microsoft_store_submission.py <package identity name> <package version> <.msix file> <release notes file>
-        [--prepare] [--no-listings]
+        [--prepare] [--no-listings] [--screenshots <folder>]
 
 The app is found by its package identity name (campfire.windows.identityName), so no Store ID has to be kept anywhere.
 A new submission is a copy of the last published one: this replaces its package with the new one, writes the release
 notes as its "What's new in this version" and the listing text from documentation/store-listings/microsoft-store into
-every language's listing (store_listings.py; the images, the title, and every other field are sent back as they came),
-sets it to be published as soon as it passes certification, uploads the package and commits it, then waits until
-Partner Center has accepted the commit (which is where a package that does not match the product's identity is
-refused). A green run means submitted, not certified: certification answers by email, usually within a few days.
+every language's listing (store_listings.py; the title and every other field are sent back as they came), replaces the
+screenshots when it is given the release's, sets it to be published as soon as it passes certification, uploads the
+package and commits it, then waits until Partner Center has accepted the commit (which is where a package that does
+not match the product's identity is refused). A green run means submitted, not certified: certification answers by
+email, usually within a few days.
 
 The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_description.py's JSON), the notes file's for any
-language it does not name, and every listing is written by its language (fr-fr and fr-ca alike). An app language with
-no listing in Partner Center fails the run before any text is written or the package uploaded (a submission the run
-copied from the last published one stays behind as a draft, which the next run takes up), since a language's first
-listing is added there by hand, with its screenshots. With --no-listings only the notes are written, and a missing
-listing is no failure.
+language it does not name, and every listing is written by its language (fr-fr and fr-ca alike).
 
-With --prepare it writes the release notes, the listings, and the publish mode and leaves the packages alone, leaving
-the submission as a draft in Partner Center for somebody to add the release's screenshots to, replace the package by
-hand with the one the run keeps, and submit it there. The package is not uploaded then, because Partner Center only
-takes in a package uploaded through the API when the API commits the submission: one sent from Partner Center's own
-Submit button goes out with whatever package Partner Center shows, which for a copy is the last release's. A draft
-that nobody has changed in Partner Center can still be taken up and committed by a later run.
+With --screenshots, the folder is the framing's store folder (store/ of the screenshots artifact, store_images.py):
+every listing of an app language marks the screenshots it has for deletion and gets the run's in their place, in the
+listing's order, their files going into the zip beside the package. The images replace rather than merge, so a shot
+taken out of the listing disappears from the Store too; the poster and the box art are set by hand and left as they
+are. Without it every image is sent back as it came.
+
+An app language with no listing in Partner Center gets one, at the locale store_listings.py's LOCALES names: a copy of
+the English listing, which carries what stays by hand (the title and "Developed by"), with the language's own text,
+notes, and screenshots. Partner Center lists a language only for a package that declares it, and the app's .msix
+declares every language of the app, so the package this run uploads is what makes room for it. Partner Center takes
+no listing without screenshots, so a missing language without the run's images stops the run before anything is
+written (a submission the run copied from the last published one stays behind as a draft, which the next run takes
+up): the workflow is dispatched again with screenshots_run, the ID of a run of screenshots.yml on this tag or of the
+release's run, whose screenshots artifact to use. With --no-listings only the notes are written: a missing listing is
+no failure, and the images are left as they are.
+
+With --prepare it writes the release notes, the listings, and the publish mode and leaves the packages and the images
+alone, leaving the submission as a draft in Partner Center for somebody to replace the package by hand with the one the
+run keeps and submit it there. Neither the package nor the screenshots are uploaded then, because Partner Center only
+takes in a file uploaded through the API when the API commits the submission: one sent from Partner Center's own
+Submit button goes out with whatever package Partner Center shows, which for a copy is the last release's. So a new
+language's listing gets its text there and its screenshots wait for a run that submits. A draft that nobody has changed
+in Partner Center can still be taken up and committed by a later run.
 
 A draft this script made and did not get through - one whose commit failed - is used instead of a new copy: its package
-is replaced with the new one, its "What's new in this version" with the notes, and its listing text with the files',
+is replaced with the new one, its "What's new in this version" with the notes, its listing text with the files', and its
+screenshots with the run's (the ones an earlier attempt added and never got in are dropped rather than added twice);
 everything else in it is kept exactly as it is, the publish mode included, and it is committed. A draft started in
 Partner Center cannot be: the API refuses to change a submission it did not create, and hands out no upload address for
 one, so the run stops and says so - that draft is finished in Partner Center with the package this run keeps, or
@@ -57,6 +72,7 @@ anywhere expires. Only needs the Python standard library.
 """
 
 import base64
+import copy
 import json
 import os
 import sys
@@ -67,6 +83,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+import store_images
 import store_listings
 from store_http import REQUEST_TIMEOUT_SECONDS, fail, request_json
 
@@ -178,24 +195,98 @@ def replace_package(submission, package_name):
     submission["applicationPackages"] = packages
 
 
-def matched_locales(submission, write_listings):
+def matched_locales(submission):
     """
-    {Partner Center locale: the app's language} of the submission's listings. An app language without one fails where
-    the listings are written, since its text would go nowhere; a locale of a language the app lacks is left alone.
+    ({Partner Center locale: the app's language} of the submission's listings, [the app's languages it has none of]).
+    A locale of a language the app lacks is left alone.
     """
     listings = submission.get("listings", {})
     if not listings:
         fail("The submission has no Store listing to write the release notes into.")
     matched, missing, unknown = store_listings.match_locales(list(listings), store_listings.app_languages())
-    if missing and write_listings:
-        fail(store_listings.missing_listing_message("Partner Center", missing)
-             + " Partner Center offers a listing in the languages AppxManifest.xml declares.")
     for locale in unknown:
         print(f"::warning::The {locale} listing is in a language the app does not have, so it is left as it is.")
     # Read once, so the next release's step 0 of a field rename shows in the log.
     first = next(iter(listings.values()), {}).get("baseListing", {})
     print(f"Partner Center's listings: {', '.join(listings)}; their fields: {', '.join(sorted(first))}.")
-    return matched
+    return matched, missing
+
+
+def run_screenshots(folder):
+    """
+    {language: {the file's path inside the zip: the image}} of the run's screenshots, in the listing's order, or None
+    without a folder. A language the run has no screenshots of maps to an empty dict.
+    """
+    if folder is None:
+        return None
+    if not os.path.isdir(folder):
+        fail(f"There are no screenshots at {folder}.")
+    return {
+        code: {f"screenshots/{code}/{path.name}": str(path)
+               for path in store_images.images(folder, "microsoft-store", code).get("Screenshot", [])}
+        for code in store_listings.app_languages()
+    }
+
+
+def check_new_languages(missing, screenshots, prepare_only):
+    """
+    Stops the run before anything is written where an app language has no listing and the run cannot create one whole:
+    Partner Center takes no listing without screenshots, and takes them only from a run that commits.
+    """
+    if prepare_only:
+        print(f"::warning::Partner Center has no listing in {', '.join(missing)}: it gets its text now, and its "
+              "screenshots wait for a run that submits, since Partner Center takes them only from the API's own commit.")
+        return
+    without = [code for code in missing if not (screenshots or {}).get(code)]
+    if without:
+        fail(f"Partner Center has no listing in {', '.join(without)}, and it creates none without screenshots, which this "
+             "run was not given. Dispatch the workflow again with screenshots_run: the ID of a run of screenshots.yml on "
+             "this tag, or of the release's run, whose screenshots artifact to use.")
+
+
+def add_listings(submission, locales, new_locales, listings, notes):
+    """
+    Creates a listing for each of the app's languages Partner Center has none of: a copy of the English one, which
+    carries what stays by hand (the reserved title and "Developed by"), with the language's own text and notes. Its
+    images are left empty for the run's screenshots, since the English ones would show the wrong language.
+    """
+    english = sorted((locale for locale, code in locales.items() if code == "en"), key=lambda locale: locale != "en-us")
+    if not english:
+        fail("Partner Center has no English listing to copy into the new languages' listings.")
+    for locale, code in new_locales.items():
+        base = copy.deepcopy(submission["listings"][english[0]].get("baseListing", {}))
+        base.update(listings[code])
+        base["releaseNotes"] = notes(code)
+        base["images"] = []
+        submission["listings"][locale] = {"baseListing": base, "platformOverrides": {}}
+        print(f"Created the {locale} listing from the {english[0]} one.")
+
+
+def replace_screenshots(submission, locales, screenshots):
+    """
+    Marks every listing's screenshots for deletion and adds the run's of its language in their place, leaving the other
+    images as they came. A screenshot still waiting for its upload is one an earlier attempt at this draft added and
+    never got in, so it is dropped rather than added twice. Returns {path inside the zip: image} of every file named.
+    """
+    files = {}
+    for locale, code in locales.items():
+        added = screenshots.get(code, {})
+        if not added:
+            print(f"::warning::The run has no {code} screenshots, so the {locale} listing keeps the ones it has.")
+            continue
+        base = submission["listings"][locale].setdefault("baseListing", {})
+        images = [image for image in base.get("images", [])
+                  if not (image.get("imageType") == "Screenshot" and image.get("fileStatus") == "PendingUpload")]
+        for image in images:
+            if image.get("imageType") == "Screenshot":
+                image["fileStatus"] = "PendingDelete"
+        base["images"] = images + [
+            {"fileName": name, "fileStatus": "PendingUpload", "imageType": "Screenshot", "description": ""}
+            for name in added
+        ]
+        files.update(added)
+        print(f"Replaced the {locale} screenshots with the run's {len(added)}.")
+    return files
 
 
 def write_release_notes(submission, locales, notes):
@@ -218,13 +309,19 @@ def write_listings(submission, locales, listings):
         base.update(fields)
 
 
-def upload(upload_url, package):
-    """Puts the package into a zip at the top level, the way the submission names it, and uploads it block by block."""
+def upload(upload_url, package, images):
+    """
+    Puts the package into a zip at the top level and every image ({path inside the zip: file}) at its path, the way the
+    submission names them, and uploads it block by block.
+    """
     with tempfile.TemporaryDirectory() as directory:
         archive = os.path.join(directory, "submission.zip")
-        # Stored rather than compressed: an .msix already is a zip, and deflating it again only costs time.
+        # Stored rather than compressed: an .msix already is a zip and a PNG is deflated, so deflating them again only
+        # costs time.
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_STORED, allowZip64=True) as zip_file:
             zip_file.write(package, os.path.basename(package))
+            for name, image in images.items():
+                zip_file.write(image, name)
         block_ids = []
         with open(archive, "rb") as file:
             while chunk := file.read(UPLOAD_BLOCK_BYTES):
@@ -233,7 +330,7 @@ def upload(upload_url, package):
                 block_ids.append(block_id)
         block_list = "".join(f"<Latest>{block_id}</Latest>" for block_id in block_ids)
         blob_request(f"{upload_url}&comp=blocklist", f'<?xml version="1.0" encoding="utf-8"?><BlockList>{block_list}</BlockList>'.encode())
-        print(f"Uploaded {os.path.basename(package)} in {len(block_ids)} blocks.")
+        print(f"Uploaded {os.path.basename(package)} and {len(images)} images in {len(block_ids)} blocks.")
 
 
 def blob_request(url, data, attempts=3):
@@ -285,7 +382,20 @@ def wait_for_commit(app_id, submission_id):
         time.sleep(POLL_INTERVAL_SECONDS)
 
 
-def main(identity_name, version, package, notes_file, prepare_only, write_listing_text):
+def prepare(app_id, submission, package, has_screenshots):
+    """
+    Sends the draft without its package and its images: an upload is only taken in by the API's own commit, so Partner
+    Center would show the last release's files next to new ones that never arrive.
+    """
+    request("PUT", f"/applications/{app_id}/submissions/{submission['id']}", submission)
+    if has_screenshots:
+        print("::warning::The screenshots are left as they are: Partner Center takes them only from a run that submits.")
+    print(f"::warning::Prepared submission {submission['id']} without its package: in Partner Center, replace the "
+          f"package with {os.path.basename(package)} from this run's campfire-msix artifact{run_url()} and submit it "
+          "there.")
+
+
+def main(identity_name, version, package, notes_file, prepare_only, write_listing_text, screenshots_folder=None):
     with open(notes_file, encoding="utf-8") as file:
         notes = store_listings.notes_by_language(file.read().strip())
     for code in store_listings.app_languages():
@@ -294,6 +404,7 @@ def main(identity_name, version, package, notes_file, prepare_only, write_listin
         if not notes(code):
             fail("An update needs release notes for its \"What's new in this version\", and there are none.")
     listings = store_listings.read("microsoft-store")
+    screenshots = run_screenshots(screenshots_folder)
     if not os.path.isfile(package):
         fail(f"There is no package at {package}.")
     app = find_app(identity_name)
@@ -328,30 +439,49 @@ def main(identity_name, version, package, notes_file, prepare_only, write_listin
              f"campfire-msix artifact ({os.path.basename(package)}), write the release notes and submit it - or delete "
              "it there and run this again, which submits a copy of the last published submission instead.")
     # Before the package, so that a refused listing fails before the upload.
-    locales = matched_locales(submission, write_listing_text)
+    locales, missing = matched_locales(submission)
+    new_locales = {}
+    if missing and write_listing_text:
+        check_new_languages(missing, screenshots, prepare_only)
+        new_locales = store_listings.new_listing_locales("microsoft-store", missing)
     write_release_notes(submission, locales, notes)
     if write_listing_text:
         write_listings(submission, locales, listings)
+        add_listings(submission, locales, new_locales, listings, notes)
+    elif screenshots is not None:
+        print("The listings are not written, so their images are left as they are too.")
     if prepare_only:
-        # The package is left as it is: an upload is only taken in by the API's own commit, so Partner Center would show
-        # the last release's package next to a new one that never arrives.
-        request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
-        print(f"::warning::Prepared submission {submission_id} without its package: in Partner Center, replace the "
-              f"package with {os.path.basename(package)} from this run's campfire-msix artifact{run_url()}, add the "
-              "screenshots and submit it there.")
+        prepare(app["id"], submission, package, screenshots is not None)
         return
+    images = {}
+    if screenshots is not None and write_listing_text:
+        images = replace_screenshots(submission, {**locales, **new_locales}, screenshots)
     replace_package(submission, os.path.basename(package))
     request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
-    upload(upload_url, package)
+    upload(upload_url, package, images)
     request("POST", f"/applications/{app['id']}/submissions/{submission_id}/commit")
     status = wait_for_commit(app["id"], submission_id)
     print(f"Submitted version {version} for certification ({status}), to be published "
           f"{'as soon as it passes' if submission.get('targetPublishMode') == 'Immediate' else 'as the submission says (' + str(submission.get('targetPublishMode')) + ')'}.")
 
 
+def parse_flags(flags):
+    """(--prepare, not --no-listings, the --screenshots folder or None), or None where the flags do not read."""
+    screenshots = None
+    if "--screenshots" in flags:
+        index = flags.index("--screenshots")
+        if index + 1 >= len(flags) or flags[index + 1].startswith("--"):
+            return None
+        screenshots = flags[index + 1]
+        flags = flags[:index] + flags[index + 2:]
+    if not set(flags) <= {"--prepare", "--no-listings"} or len(set(flags)) != len(flags):
+        return None
+    return "--prepare" in flags, "--no-listings" not in flags, screenshots
+
+
 if __name__ == "__main__":
     arguments = sys.argv[1:]
-    flags = arguments[4:]
-    if len(arguments) < 4 or not set(flags) <= {"--prepare", "--no-listings"} or len(set(flags)) != len(flags):
+    parsed = parse_flags(arguments[4:])
+    if len(arguments) < 4 or parsed is None:
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*arguments[:4], "--prepare" in flags, "--no-listings" not in flags)
+    main(*arguments[:4], *parsed)

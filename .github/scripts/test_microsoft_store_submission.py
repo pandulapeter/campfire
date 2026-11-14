@@ -7,9 +7,11 @@
 # https://mozilla.org/MPL/2.0/.
 
 import copy
+import io
 import os
 import tempfile
 import unittest
+import zipfile
 from unittest import mock
 
 import microsoft_store_submission
@@ -37,9 +39,29 @@ def submission(*locales):
     }
 
 
+def with_images(draft):
+    """The draft with a screenshot of each listing already in the Store and a poster art beside it."""
+    for listing in draft["listings"].values():
+        listing["baseListing"]["images"] = [
+            {"id": "1", "fileName": "old.png", "fileStatus": "Uploaded", "imageType": "Screenshot"},
+            {"id": "2", "fileName": "poster.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
+        ]
+    return draft
+
+
+def write_screenshots(folder, *languages):
+    """Two framed Windows screenshots per language and a box art that stays by hand, as the framing writes them."""
+    for code in languages:
+        directory = os.path.join(folder, "microsoft-store", code)
+        os.makedirs(directory)
+        for name in ["windows-2.png", "windows-1.png", "box-art.png"]:
+            with open(os.path.join(directory, name), "wb") as file:
+                file.write(f"{code}/{name}".encode())
+
+
 class RunTest(unittest.TestCase):
 
-    def run_main(self, draft, *, prepare=False, listings=True):
+    def run_main(self, draft, *, prepare=False, listings=True, screenshots=None):
         calls = []
 
         def request(method, url, body=None):
@@ -58,6 +80,10 @@ class RunTest(unittest.TestCase):
                 file.write("- New\n")
             with open(package, "wb") as file:
                 file.write(b"msix")
+            folder_of_screenshots = None
+            if screenshots is not None:
+                folder_of_screenshots = os.path.join(folder, "store")
+                write_screenshots(folder_of_screenshots, *screenshots)
             with mock.patch.object(microsoft_store_submission, "request", request), \
                     mock.patch.object(microsoft_store_submission, "upload") as upload, \
                     mock.patch.object(store_listings, "app_languages", return_value=LANGUAGES), \
@@ -65,10 +91,12 @@ class RunTest(unittest.TestCase):
                     mock.patch.dict(os.environ, {"RELEASE_NOTES_BY_LANGUAGE": '{"de": "- Neu"}'}), \
                     mock.patch("builtins.print"):
                 try:
-                    microsoft_store_submission.main("Campfire", "2.0.0.0", package, notes, prepare, listings)
+                    microsoft_store_submission.main("Campfire", "2.0.0.0", package, notes, prepare, listings,
+                                                    folder_of_screenshots)
                 except SystemExit:
                     pass
         puts = [body for method, url, body in calls if method == "PUT"]
+        self.uploaded_images = list(upload.call_args.args[2]) if upload.called else None
         return puts, upload.called, calls
 
     def test_every_locale_gets_its_languages_fields_and_notes_and_keeps_its_images_and_title(self):
@@ -106,6 +134,90 @@ class RunTest(unittest.TestCase):
         self.assertFalse(uploaded)
         self.assertEqual("Lang", puts[0]["listings"]["de-de"]["baseListing"]["description"])
         self.assertEqual(["old.msix"], [package["fileName"] for package in puts[0]["applicationPackages"]])
+
+
+    def test_screenshots_replace_the_listings_and_leave_the_other_images(self):
+        puts, _, _ = self.run_main(with_images(submission("en-us", "de-de", "de-at")), screenshots=["en", "de"])
+        for locale, code in [("en-us", "en"), ("de-de", "de"), ("de-at", "de")]:
+            self.assertEqual([
+                {"id": "1", "fileName": "old.png", "fileStatus": "PendingDelete", "imageType": "Screenshot"},
+                {"id": "2", "fileName": "poster.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
+                {"fileName": f"screenshots/{code}/windows-1.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                 "description": ""},
+                {"fileName": f"screenshots/{code}/windows-2.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                 "description": ""},
+            ], puts[0]["listings"][locale]["baseListing"]["images"])
+        self.assertEqual(["screenshots/en/windows-1.png", "screenshots/en/windows-2.png",
+                          "screenshots/de/windows-1.png", "screenshots/de/windows-2.png"], self.uploaded_images)
+
+    def test_a_reused_draft_gets_the_screenshots_once(self):
+        first, _, _ = self.run_main(with_images(submission("en-us", "de-de")), screenshots=["en", "de"])
+        draft = first[0]
+        draft.update({"status": "CommitFailed", "fileUploadUrl": "https://upload.example/?sig=2"})
+        again, _, _ = self.run_main(draft, screenshots=["en", "de"])
+        self.assertEqual(first[0]["listings"], again[0]["listings"])
+
+    def test_prepare_leaves_the_images_alone(self):
+        puts, uploaded, _ = self.run_main(with_images(submission("en-us", "de-de")), prepare=True, screenshots=["en", "de"])
+        self.assertFalse(uploaded)
+        self.assertEqual(with_images(submission("de-de"))["listings"]["de-de"]["baseListing"]["images"],
+                         puts[0]["listings"]["de-de"]["baseListing"]["images"])
+
+    def test_a_missing_language_without_screenshots_fails_before_anything_is_sent(self):
+        puts, uploaded, _ = self.run_main(submission("en-us"), screenshots=["en"])
+        self.assertEqual([], puts)
+        self.assertFalse(uploaded)
+
+    def test_a_missing_language_with_screenshots_gets_a_listing_copied_from_english(self):
+        puts, uploaded, _ = self.run_main(with_images(submission("en-us")), screenshots=["en", "de"])
+        self.assertTrue(uploaded)
+        listing = puts[0]["listings"]["de-de"]
+        self.assertEqual({}, listing["platformOverrides"])
+        base = listing["baseListing"]
+        for field, text in LISTINGS["de"].items():
+            self.assertEqual(text, base[field])
+        self.assertEqual("Campfire", base["title"])
+        self.assertEqual("- Neu", base["releaseNotes"])
+        self.assertEqual(["screenshots/de/windows-1.png", "screenshots/de/windows-2.png"],
+                         [image["fileName"] for image in base["images"]])
+        self.assertEqual({"PendingUpload"}, {image["fileStatus"] for image in base["images"]})
+        self.assertIn("screenshots/de/windows-1.png", self.uploaded_images)
+
+    def test_prepare_creates_a_missing_languages_text_without_images(self):
+        puts, uploaded, _ = self.run_main(submission("en-us"), prepare=True)
+        self.assertFalse(uploaded)
+        base = puts[0]["listings"]["de-de"]["baseListing"]
+        self.assertEqual("Lang", base["description"])
+        self.assertEqual([], base["images"])
+
+
+class UploadTest(unittest.TestCase):
+
+    def test_the_images_go_into_the_zip_beside_the_package(self):
+        sent = []
+        with tempfile.TemporaryDirectory() as folder:
+            package, image = os.path.join(folder, "campfire.msix"), os.path.join(folder, "windows-1.png")
+            for path, content in [(package, b"msix"), (image, b"png")]:
+                with open(path, "wb") as file:
+                    file.write(content)
+            with mock.patch.object(microsoft_store_submission, "blob_request", lambda url, data: sent.append(data)), \
+                    mock.patch("builtins.print"):
+                microsoft_store_submission.upload("https://upload.example/?sig=1", package,
+                                                  {"screenshots/en/windows-1.png": image})
+        with zipfile.ZipFile(io.BytesIO(b"".join(sent[:-1]))) as archive:
+            self.assertEqual(b"msix", archive.read("campfire.msix"))
+            self.assertEqual(b"png", archive.read("screenshots/en/windows-1.png"))
+
+
+class FlagsTest(unittest.TestCase):
+
+    def test_flags(self):
+        self.assertEqual((True, False, "store"), microsoft_store_submission.parse_flags(
+            ["--no-listings", "--screenshots", "store", "--prepare"]))
+        self.assertEqual((False, True, None), microsoft_store_submission.parse_flags([]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--screenshots"]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--screenshots", "--prepare"]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--prepare", "--prepare"]))
 
 
 if __name__ == "__main__":
