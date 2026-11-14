@@ -106,7 +106,8 @@ jobs:
     name: Frame, check, and upload
     needs: render
     runs-on: macos-latest
-    timeout-minutes: 60
+    # Framing and checking take a quarter of an hour; the bound is for a runner that hangs, not for a slow one.
+    timeout-minutes: 90
     steps:
       - name: Check out repository
         uses: actions/checkout@v5

@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideScriptFaces
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.skia.Image
 import java.io.File
@@ -44,7 +43,8 @@ internal suspend fun frameListing(renders: File, texts: File, output: File): Int
                 }
                 val file = File(output, "${canvas.store}/$language/${canvas.name}-${index + 1}.png")
                 file.parentFile.mkdirs()
-                file.writeBytes(encodeImage(image = frame(canvas = canvas, shot = shot, text = text, language = language, screen = Image.makeFromEncoded(source.readBytes())), extension = "png"))
+                val framed = Image.makeFromEncoded(source.readBytes()).use { screen -> frame(canvas = canvas, shot = shot, text = text, language = language, screen = screen) }
+                file.writeBytes(framed.use { encodeImage(image = it, extension = "png") })
             }
             println("framed ${device.folder} / $language")
         }
@@ -78,15 +78,8 @@ private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, 
             )
         }
     }
-    // The bundled fonts and icons load after the first frame.
-    var time = 0L
-    repeat(LOADING_FRAMES) {
-        scene.render(time)
-        time += FRAME_MILLIS * 1_000_000
-        delay(FRAME_MILLIS)
-    }
     return try {
-        scene.render(time)
+        scene.renderLoaded()
     } finally {
         scene.close()
     }
@@ -95,5 +88,3 @@ private suspend fun frame(canvas: ListingCanvas, shot: Shot, text: ListingText, 
 /** Whether the language whose id is [language] is set from the right. */
 internal fun isRightToLeft(language: String) =
     AppLanguage.entries.first { it.id == language }.layoutDirection == AppLanguage.Direction.RIGHT_TO_LEFT
-
-private const val LOADING_FRAMES = 30

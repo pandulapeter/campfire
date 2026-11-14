@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.Density
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideScriptFaces
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.skia.Image
 import org.jetbrains.skia.Rect
@@ -83,15 +82,8 @@ private suspend fun draw(
             CompositionImage(composition = composition, screens = screens, lightSlots = lightSlots, texts = texts, isRightToLeft = isRightToLeft)
         }
     }
-    // The bundled fonts and the mark load after the first frame.
-    var time = 0L
-    repeat(LOADING_FRAMES) {
-        scene.render(time)
-        time += FRAME_MILLIS * 1_000_000
-        delay(FRAME_MILLIS)
-    }
     return try {
-        scene.render(time)
+        scene.renderLoaded()
     } finally {
         scene.close()
     }
@@ -103,7 +95,5 @@ private fun Image.part(left: Int, width: Int): Image {
     surface.canvas.drawImageRect(this, Rect.makeXYWH(left.toFloat(), 0f, width.toFloat(), height.toFloat()), Rect.makeWH(width.toFloat(), height.toFloat()))
     return surface.makeImageSnapshot()
 }
-
-private const val LOADING_FRAMES = 30
 
 private const val ENGLISH = "en"
