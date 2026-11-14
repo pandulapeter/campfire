@@ -65,6 +65,14 @@ private val PLURAL_RULES: Map<String, (Int) -> PluralCategory> = mapOf(
             else -> MANY
         }
     },
+    // Czech keeps many for fractions, so a whole count is one, few (2 to 4 alone, never 22: "22 písní"), or other.
+    "cs" to { n ->
+        when (n) {
+            1 -> ONE
+            in 2..4 -> FEW
+            else -> OTHER
+        }
+    },
 )
 
 /** The `many` of the Romance languages, which a whole million takes ("un million de chansons"). */

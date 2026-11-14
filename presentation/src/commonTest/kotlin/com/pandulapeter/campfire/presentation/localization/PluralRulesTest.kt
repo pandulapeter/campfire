@@ -83,6 +83,15 @@ class PluralRulesTest {
     }
 
     @Test
+    fun `czech reads only 2 to 4 as few and every other count but 1 as other`() {
+        assertEquals(PluralCategory.ONE, pluralCategoryOf("cs", 1))
+        listOf(2, 3, 4).forEach { assertEquals(PluralCategory.FEW, pluralCategoryOf("cs", it), it.toString()) }
+        listOf(0, 5, 11, 21, 22, 104, 1_000_000).forEach {
+            assertEquals(PluralCategory.OTHER, pluralCategoryOf("cs", it), it.toString())
+        }
+    }
+
+    @Test
     fun `a language without a rule reads like english`() {
         assertEquals(PluralCategory.ONE, pluralCategoryOf("xx", 1))
         assertEquals(PluralCategory.OTHER, pluralCategoryOf("xx", 2))
