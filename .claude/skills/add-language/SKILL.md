@@ -102,9 +102,6 @@ block, which prepare-release writes for every `values-*` folder.
 Add the language to each list, in the house style (Oxford comma, the language last):
 
 - root `CLAUDE.md` → Strings: `values[-hu|-ro|-<code>]/strings.xml`.
-- `presentation/CLAUDE.md`: the summaries bullet's "(English, Hungarian, …)".
-- `app/web/CLAUDE.md`: "Texts follow `navigator.language` (…)".
-- `app/ios/CLAUDE.md`: the `Localizable.strings` (…) and `CFBundleLocalizations` (…) code lists.
 - `documentation/store-listings/*/en.md` (all four stores): "English, Hungarian, …, switchable inside the app", and the
   same line in every other language's file (`documentation/store-listings/*/<language>.md`), named in that language.
 

@@ -19,10 +19,10 @@ from store_listings import app_languages, changes, check, language, match_locale
 # documentation lists them: Play (and its Hebrew iw-IL), App Store Connect, and Partner Center, which writes them in
 # lowercase.
 STORE_LOCALES = {
-    "google-play": ["en-US", "en-GB", "de-DE", "es-ES", "es-419", "es-US", "fr-FR", "fr-CA", "hu-HU", "it-IT", "ro", "iw-IL"],
-    "app-store": ["en-US", "en-GB", "de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "hu", "it", "ro", "he"],
+    "google-play": ["en-US", "en-GB", "de-DE", "es-ES", "es-419", "es-US", "fr-FR", "fr-CA", "hu-HU", "it-IT", "pt-BR", "pt-PT", "ro", "iw-IL"],
+    "app-store": ["en-US", "en-GB", "de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "hu", "it", "pt-BR", "pt-PT", "ro", "he"],
     "microsoft-store": ["en", "en-us", "en-gb", "de", "de-de", "es", "es-es", "es-mx", "fr", "fr-fr", "fr-ca", "hu",
-                        "hu-hu", "it", "it-it", "ro", "ro-ro", "he", "he-il"],
+                        "hu-hu", "it", "it-it", "pt", "pt-br", "pt-pt", "ro", "ro-ro", "he", "he-il"],
 }
 
 
@@ -131,11 +131,11 @@ class CheckTest(unittest.TestCase):
     def test_a_language_without_a_store_locale_fails(self):
         with tempfile.TemporaryDirectory() as name:
             folder, resources = Path(name), Path(name) / "resources"
-            for path in ["values", "values-pt"]:
+            for path in ["values", "values-ja"]:
                 (resources / path).mkdir(parents=True)
             errors = check(folder, resources)
-        self.assertIn("google-play: store_listings.py's LOCALES names no locale for pt", errors)
-        self.assertIn("microsoft-store: store_listings.py's LOCALES names no locale for pt", errors)
+        self.assertIn("google-play: store_listings.py's LOCALES names no locale for ja", errors)
+        self.assertIn("microsoft-store: store_listings.py's LOCALES names no locale for ja", errors)
 
 
 class NewListingLocalesTest(unittest.TestCase):

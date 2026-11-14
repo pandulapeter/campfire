@@ -540,9 +540,17 @@
                 alreadyOpen: 'Campfire כבר פתוח בכרטיסייה אחרת. סגרו קודם את הכרטיסייה ההיא, או המשיכו שם.',
                 sentToOtherTab: 'נשלח ל־Campfire בכרטיסייה האחרת.',
                 retry: 'ניסיון חוזר'
+            },
+            pt: {
+                loadFailed: 'Não foi possível carregar o Campfire. Verifique a conexão e tente novamente.',
+                loadFailedFirstVisit: 'Não foi possível carregar o Campfire. Ele precisa de conexão na primeira vez que é aberto neste navegador, então verifique a conexão e tente novamente.',
+                unsupported: 'Este navegador não consegue executar o Campfire. É preciso Chrome ou Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) ou uma versão mais recente.',
+                alreadyOpen: 'O Campfire já está aberto em outra aba. Feche essa aba primeiro ou continue por lá.',
+                sentToOtherTab: 'Enviado ao Campfire na sua outra aba.',
+                retry: 'Tentar novamente'
             }
         };
-        var language = (/^(hu|ro|de|es|fr|it|he)\b/i.exec(navigator.language || '') || [])[1];
+        var language = (/^(hu|ro|de|es|fr|it|he|pt)\b/i.exec(navigator.language || '') || [])[1];
         var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
         // A language written from the right says so in its block, and the page turns with it: the bar fills from the right.
         if (language) {

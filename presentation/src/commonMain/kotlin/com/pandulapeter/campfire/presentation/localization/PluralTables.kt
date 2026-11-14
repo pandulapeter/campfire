@@ -33,6 +33,7 @@ private val AppLocale.plurals
         AppLocale.HE -> StringsHe.plurals
         AppLocale.HU -> StringsHu.plurals
         AppLocale.IT -> StringsIt.plurals
+        AppLocale.PT -> StringsPt.plurals
         AppLocale.RO -> StringsRo.plurals
     }
 

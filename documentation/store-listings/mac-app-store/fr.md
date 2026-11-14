@@ -37,7 +37,7 @@ Lecture
 • Ou une colonne qui défile seule, à la vitesse de chaque chanson
 • Airs ABC en partition, PDF inclus
 • Taille du texte réglable, sections repliables, pochettes et liens d'écoute
-• Affichage Paroles seules pour qui ne fait que chanter
+• Affichage Paroles seules pour les chanteurs
 • Le mode Lecture seule protège tes chansons d'un clic égaré en plein concert
 
 Accords et gammes
@@ -82,7 +82,7 @@ Import, export, partage et synchro
 • Thèmes clair et sombre, curseur sépia et dix palettes de couleurs
 • L'icône du Dock suit la couleur que tu choisis
 • Désactive ce dont tu ne te sers jamais
-• Anglais, hongrois, roumain, allemand, espagnol, français, italien et hébreu, au choix dans l'app
+• Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu et portugais, au choix dans l'app
 
 Tes chansons t'appartiennent
 Ta bibliothèque : un dossier de simples fichiers ChordPro sur ton appareil. Campfire marche hors ligne, sans compte, et ne collecte aucune donnée : ni statistiques, ni pistage, ni pub. Il ne va en ligne qu'à ta demande : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, récupérer pochettes et infos des chansons. Tout s'exporte à tout moment.

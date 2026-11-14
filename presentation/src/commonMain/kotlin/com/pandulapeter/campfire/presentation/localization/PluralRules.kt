@@ -46,6 +46,8 @@ private val PLURAL_RULES: Map<String, (Int) -> PluralCategory> = mapOf(
     "es" to { n -> if (n == 1) ONE else millionsOrOther(n) },
     "it" to { n -> if (n == 1) ONE else millionsOrOther(n) },
     "fr" to { n -> if (n == 0 || n == 1) ONE else millionsOrOther(n) },
+    // CLDR's pt is Brazilian Portuguese, the app's Portuguese, which reads 0 in the singular ("0 música"); pt_PT does not.
+    "pt" to { n -> if (n == 0 || n == 1) ONE else millionsOrOther(n) },
     "ro" to { n ->
         when {
             n == 1 -> ONE

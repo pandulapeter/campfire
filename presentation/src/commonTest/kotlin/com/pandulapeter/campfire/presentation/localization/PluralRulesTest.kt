@@ -36,8 +36,15 @@ class PluralRulesTest {
     }
 
     @Test
-    fun `spanish, italian, and french read a whole million as many`() {
-        listOf("es", "it", "fr").forEach { language ->
+    fun `portuguese reads 0 and 1 as one`() {
+        assertEquals(PluralCategory.ONE, pluralCategoryOf("pt", 0))
+        assertEquals(PluralCategory.ONE, pluralCategoryOf("pt", 1))
+        assertEquals(PluralCategory.OTHER, pluralCategoryOf("pt", 2))
+    }
+
+    @Test
+    fun `spanish, italian, french, and portuguese read a whole million as many`() {
+        listOf("es", "it", "fr", "pt").forEach { language ->
             assertEquals(PluralCategory.MANY, pluralCategoryOf(language, 2_000_000), language)
             assertEquals(PluralCategory.OTHER, pluralCategoryOf(language, 1_000_001), language)
         }

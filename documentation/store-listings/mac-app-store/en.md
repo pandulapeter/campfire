@@ -35,7 +35,7 @@ Reading
 • Or one column that scrolls by itself at each song's own speed
 • ABC tunes drawn as sheet music, in the PDF too
 • Adjustable text size, foldable sections, cover art, and links to recordings
-• A lyrics-only view for the people who only sing
+• A lyrics-only view for singers
 • Read only mode keeps a stray click from changing a song mid-set
 
 Chords and scales
@@ -80,7 +80,7 @@ Make it yours
 • Light and dark themes, a sepia slider, and ten color schemes
 • The Dock icon follows the color you choose
 • Switch off any feature you never use
-• English, Hungarian, Romanian, German, Spanish, French, Italian, and Hebrew, switchable inside the app
+• English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, and Portuguese, switchable inside the app
 
 Your songs are yours
 Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images and song details. You can export everything at any time.

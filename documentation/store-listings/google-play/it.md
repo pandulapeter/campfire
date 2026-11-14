@@ -42,7 +42,7 @@ Lettura
 • Le melodie ABC come spartito, anche nel PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
 • Vista Solo testo per chi canta
-• La modalità Sola lettura protegge le canzoni da un tocco accidentale sul palco
+• Sola lettura protegge le canzoni da un tocco accidentale sul palco
 
 Accordi e scale
 • Diagrammi per chitarra, ukulele, mandolino, banjo o tastiera, anche in accordature alternative, nelle posizioni che usi davvero
@@ -83,7 +83,7 @@ Importa, esporta, condividi e sincronizza
 Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori, oppure i colori del tuo sfondo
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano ed ebraico, selezionabili nell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico e portoghese, selezionabili nell'app
 
 Le tue canzoni sono tue
 La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta: per sincronizzare e condividere col tuo Dropbox, senza server in mezzo, aprire un link condiviso e scaricare copertine e dati delle canzoni. Puoi esportare tutto quando vuoi.

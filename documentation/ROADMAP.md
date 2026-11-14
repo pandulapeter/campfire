@@ -13,7 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
+- Add Polish, Czech, Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
 ## Short-term

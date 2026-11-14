@@ -50,7 +50,7 @@ Lesen
 • Oder eine selbst scrollende Spalte, je Song eigene Geschwindigkeit
 • ABC-Melodien als Noten, auch im PDF
 • Einstellbare Textgröße, einklappbare Abschnitte, Cover und Links zu Aufnahmen
-• „Nur Text“ für alle, die nur singen
+• „Nur Text“ zum Singen
 • „Nur lesen“ schützt Songs mitten im Set vor versehentlichem Tippen
 
 Akkorde und Tonleitern
@@ -94,7 +94,7 @@ Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata
 • Das App-Symbol folgt der Farbe, die du wählst
 • Schalte ab, was du nie nutzt
-• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch und Hebräisch, in der App umschaltbar
+• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch und Portugiesisch, in der App umschaltbar
 
 Deine Songs gehören dir
 Deine Bibliothek ist ein Ordner normaler ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur, wenn du es willst: für Sync und Teilen über deine eigene Dropbox (ohne Server dazwischen), geteilte Links sowie Cover und Songangaben. Du kannst jederzeit alles exportieren.

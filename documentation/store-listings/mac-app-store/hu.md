@@ -37,7 +37,7 @@ Olvasás
 • Vagy olvasd egy magától gördülő hasábban, dalonként saját sebességgel
 • ABC-dallamok kottaként, a PDF-ben is
 • Állítható szövegméret, összecsukható szakaszok, borítókép, linkek a felvételekhez
-• Csak dalszöveg nézet az énekeseknek
+• Csak dalszöveg nézet énekeseknek
 • Csak olvasás módban egy véletlen kattintás sem írja át a dalt fellépés közben
 
 Akkordok és skálák
@@ -45,7 +45,7 @@ Akkordok és skálák
 • Akkordok fül minden hangnem gyakori akkordjaival; Skálák fül, amely minden skálát megmutat és lejátszik a hangszereden
 • Minden dalhoz illő skálákat javasol, a tabulatúrákat pedig a hangszeredre írja át
 • Transzponálj, tegyél fel capót: a Campfire megmondja, milyen hangnemet hall a zenekar
-• Akkordjelölés: szabványos, német (H), latin (Do Re Mi), Nashville-számok vagy római számok
+• Akkordjelölés: szabványos, német (H), latin (Do Re Mi), Nashville- vagy római számok
 
 Hangoló
 • Gitár, basszusgitár, ukulele, hegedű, mandolin vagy bendzsó hangolása húronként, sokféle hangolásban, kromatikusan bármely hangszeré
@@ -82,7 +82,7 @@ Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma
 • A Dock-ikon a választott színt követi
 • Kapcsold ki, amit sosem használsz
-• Angol, magyar, román, német, spanyol, francia, olasz és héber nyelv, az appban váltható
+• Angol, magyar, román, német, spanyol, francia, olasz, héber és portugál nyelv, az appban váltható
 
 A dalaid a tieid
 A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek és daladatok letöltéséhez. Bármikor mindent exportálhatsz.

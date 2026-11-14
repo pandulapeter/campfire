@@ -97,13 +97,13 @@ ALIASES = {"iw": "he"}
 # Connect for some). A regional copy beside it (fr-CA) is still added in a console, then filled in by every release.
 LOCALES = {
     "google-play": {
-        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "iw-IL", "hu": "hu-HU", "it": "it-IT", "ro": "ro",
+        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "iw-IL", "hu": "hu-HU", "it": "it-IT", "pt": "pt-BR", "ro": "ro",
     },
     "app-store": {
-        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "he", "hu": "hu", "it": "it", "ro": "ro",
+        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "he", "hu": "hu", "it": "it", "pt": "pt-BR", "ro": "ro",
     },
     "microsoft-store": {
-        "de": "de-de", "en": "en-us", "es": "es-es", "fr": "fr-fr", "he": "he-il", "hu": "hu-hu", "it": "it-it", "ro": "ro-ro",
+        "de": "de-de", "en": "en-us", "es": "es-es", "fr": "fr-fr", "he": "he-il", "hu": "hu-hu", "it": "it-it", "pt": "pt-br", "ro": "ro-ro",
     },
 }
 LOCALES["mac-app-store"] = LOCALES["app-store"]

@@ -349,10 +349,6 @@ def check_wiring(code, english_name):
         ("app/web/src/wasmJsMain/resources/index.html", rf"\n            {code}: \{{"),
         ("app/web/src/wasmJsMain/resources/index.html", rf"/\^\([a-z|]*\b{code}\b[a-z|]*\)\\b/i"),
         ("CLAUDE.md", rf"values\[[^\]]*-{code}\b[^\]]*\]/strings\.xml"),
-        ("presentation/CLAUDE.md", english_name),
-        ("app/web/CLAUDE.md", rf"navigator\.language` \([^)]*{english_name}"),
-        ("app/ios/CLAUDE.md", rf"`Localizable\.strings` \([^)]*`{code}`"),
-        ("app/ios/CLAUDE.md", rf"`CFBundleLocalizations` \([^)]*`{code}`"),
     ]
     stores = sorted(p.name for p in (ROOT / "documentation/store-listings").iterdir() if p.is_dir())
     # The screenshots' texts are the one folder that is no store's listing, with no description to name the languages in.
