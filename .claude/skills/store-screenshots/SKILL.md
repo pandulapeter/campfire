@@ -84,12 +84,12 @@ Each shot's headline and chips are in `documentation/store-listings/screenshot-t
 |---|---|
 | 1 | Songs, English only, by artist, from the top (the library's copy of Gimme! Gimme! Gimme! has no subtitle) |
 | 2 | House of the Rising Sun (Traditional American) with the Scales section folded, and on phones the Picking pattern too; the phones at the largest text that keeps the whole first verse on the first page (the least room left spread between its sections): the iPhone at 110%, the Android phone and the Chromebook at 100% |
-| 3 | Home on the Range on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat |
+| 3 | Amazing Grace on a guitar, its metronome panel open (not playing: the tuner sheet stops the click) under the tuner sheet, which hears the A string 12 cents flat; Chords and Scales folded, as shot 2 shows them; the phones in one scrolling column moved on to its Intro grid, so the grid and the sheet music show above the sheet |
 | 4 | Setlists by date: Frey-Tully Nuptials "In 2 days", Friday Night by the Lake "Tomorrow" |
-| 5 | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open |
+| 5 | Home on the Range in the editor; Split wherever the app offers it, Edit otherwise; Shortcuts always open; the text scrolled past the directives and the preview past the details to the first verse |
 | 6 | Scales tab on a guitar in standard tuning, in A, under the sheet of A minor pentatonic |
 | 7 | Chords tab on a ukulele in standard tuning, the chords of C |
-| 8 | Home on the Range exported: PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
+| 8 | Amazing Grace exported (the whole song on one page): PDF, A4, landscape (portrait on the small Android tablet), two columns, every option on |
 
 The Play Store feature graphic is the Android phone's shots 1 and 2; Apple's header the iPad's 4, the Mac's 2, and
 the iPhone's 1, and its search results image the iPad's 2 and the iPhone's 3, all dark. The README banners and the

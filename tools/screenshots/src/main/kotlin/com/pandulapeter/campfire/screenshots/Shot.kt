@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
+import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
 import com.pandulapeter.campfire.presentation.localization.StringsDe
@@ -302,24 +303,41 @@ internal val shots = listOf(
         },
         drive = { openSong(HOUSE_OF_THE_RISING_SUN) },
     ),
-    // The tools a song is played with: the public domain Home on the Range on a guitar, its metronome panel open under
-    // the title at the song's 100 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click
-    // is not playing, since opening the tuner sheet stops it.
+    // The tools a song is played with: the public domain Amazing Grace on a guitar, its metronome panel open under the
+    // title at the song's 80 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click is not
+    // playing, since opening the tuner sheet stops it. The sheet covers most of the screen, so what is left of the song
+    // shows what the other shots do not: the Chords and Scales sections are folded, and a phone, whose first page would
+    // be nothing but the song's controls above the sheet, reads the song as one scrolling column moved on to its intro,
+    // a chord grid, with the sheet music after it.
     Shot(
         id = "03-metronome-tuner",
         uiMode = UserPreferences.UiMode.LIGHT,
-        preferences = {
-            mapOf(
-                "instrument" to JsonPrimitive(UserPreferences.Instrument.GUITAR.id),
-                "tunerSettings" to buildJsonObject {
-                    put("referencePitch", 440)
-                    put("hasTurnedOnMicrophone", true)
-                },
-                "metronomeSettings" to buildJsonObject { put("isSongPanelShown", true) },
-            )
+        preferences = { device ->
+            buildMap {
+                put("instrument", JsonPrimitive(UserPreferences.Instrument.GUITAR.id))
+                put(
+                    "tunerSettings",
+                    buildJsonObject {
+                        put("referencePitch", 440)
+                        put("hasTurnedOnMicrophone", true)
+                    },
+                )
+                put("metronomeSettings", buildJsonObject { put("isSongPanelShown", true) })
+                put(
+                    "foldedSections",
+                    buildJsonObject {
+                        putJsonArray(AMAZING_GRACE) {
+                            add("chords")
+                            add("scales")
+                        }
+                    },
+                )
+                if (device.isPhone) put("songLayout", JsonPrimitive(SongLayout.CONTINUOUS.id))
+            }
         },
         drive = {
-            openSong(HOME_ON_THE_RANGE)
+            openSong(AMAZING_GRACE)
+            if (device.isPhone) scrollTo(string("song_editor_section_intro"), INTRO_Y)
             viewModel.dialogHost.showDialog(DialogType.Tuner)
             settle()
             (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading(note = 45, cents = -12f))
@@ -335,7 +353,9 @@ internal val shots = listOf(
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Setlists) },
     ),
     // The ChordPro editor on the public domain Home on the Range: the text on its own where the window has room for one
-    // pane, side by side with its live preview where it has room for two, and the Shortcuts always unfolded.
+    // pane, side by side with its live preview where it has room for two, and the Shortcuts always unfolded. The text is
+    // scrolled past the directives the file starts with, and the preview past the song's details to its comment and first verse, so
+    // that the page shows the song being written. The iPhone Duo draws the text largest, so its text goes furthest.
     Shot(
         id = "05-editor",
         uiMode = UserPreferences.UiMode.DARK,
@@ -343,6 +363,12 @@ internal val shots = listOf(
             viewModel.editorSession.openEditor(HOME_ON_THE_RANGE)
             settle()
             tapIfPresent(string("song_editor_show_shortcuts"))
+            scrollTextField(if (device == Device.IPHONE_DUO) EDITOR_SCROLL_LARGE_TEXT else EDITOR_SCROLL)
+            // Where the preview is a narrow pane, its details are taller than the window, the comment below it until they
+            // are moved up out of the way.
+            val year = string("song_details_year")
+            if (centerOf(year) != null) scrollTo(year, EDITOR_PREVIEW_DETAILS_Y)
+            if (centerOf(SONG_COMMENT) != null) scrollTo(SONG_COMMENT, EDITOR_PREVIEW_COMMENT_Y)
         },
     ),
     // The scales: the Scales tab on a guitar in its standard tuning, in the key of A, with the sheet of A minor
@@ -366,7 +392,7 @@ internal val shots = listOf(
         preferences = { mapOf("instrument" to JsonPrimitive(UserPreferences.Instrument.UKULELE.id)) },
         drive = { viewModel.selectTopLevelDestination(CampfireDestination.Chords) },
     ),
-    // Home on the Range exported as a PDF, from the library's own song menu: A4 in landscape (in portrait on the small
+    // Amazing Grace exported as a PDF, from the library's own song menu: A4 in landscape (in portrait on the small
     // Android tablet, whose upright window shows a portrait page larger), two columns and every option ticked, so the
     // preview shows the chord diagrams, the key, the tempo, the comments and the details. Share stands next to Save on
     // the phones and tablets, as the platforms' file pickers offer it there and not on a desktop.
@@ -378,7 +404,7 @@ internal val shots = listOf(
                 "printSettings" to printSettings(isLandscape = device != Device.ANDROID_SMALL_TABLET),
             )
         },
-        drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(HOME_ON_THE_RANGE))) },
+        drive = { viewModel.dialogHost.showDialog(DialogType.Export(song = song(AMAZING_GRACE))) },
     ),
 )
 
@@ -405,7 +431,28 @@ internal fun printSettings(isLandscape: Boolean) = buildJsonObject {
 }
 
 internal const val HOUSE_OF_THE_RISING_SUN = "traditional_american-house_of_the_rising_sun.cho"
+private const val AMAZING_GRACE = "john_newton-amazing_grace.cho"
 private const val HOME_ON_THE_RANGE = "traditional_american-home_on_the_range_my_western_home.cho"
+
+/** How far the editor's text is scrolled, as a fraction of the screen's height: past Home on the Range's directives. */
+private const val EDITOR_SCROLL = 0.35f
+private const val EDITOR_SCROLL_LARGE_TEXT = 0.55f
+
+/**
+ * Home on the Range's comment, the line just above its first verse, which the editor's preview is scrolled up by: the
+ * first verse itself is still below the preview's window on a tablet whose details take more room.
+ */
+private const val SONG_COMMENT =
+    "Written as a poem in Kansas and set to music soon after, it was sung around cattle drive campfires long before anyone knew who wrote it."
+
+/** Where the editor's preview first moves its details' Year to, as a fraction of the screen's height: off its top. */
+private const val EDITOR_PREVIEW_DETAILS_Y = 0.02f
+
+/** Where the editor's preview scrolls [SONG_COMMENT] to, as a fraction of the screen's height: under the Shortcuts. */
+private const val EDITOR_PREVIEW_COMMENT_Y = 0.27f
+
+/** Where a phone's tuner shot scrolls the Intro heading to, as a fraction of the screen's height: just under the metronome panel. */
+private const val INTRO_Y = 0.2f
 
 internal const val FRAME_MILLIS = 16L
 private const val SCROLL_FRAMES = 24
