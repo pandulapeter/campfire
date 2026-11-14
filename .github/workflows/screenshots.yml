@@ -8,7 +8,7 @@
 
 # Renders every store image, the website's screenshots and link preview, and the README banners from the checked-out
 # code (tools/screenshots, from the library it commits), frames them, checks every store image against its store's
-# rules (.github/scripts/store_images.py), and uploads them as one artifact, `screenshots`, kept 14 days:
+# rules (.github/scripts/store_images.py), and uploads them as one artifact, `screenshots`, kept 90 days:
 #
 #   store/            the store images as `--frame store` writes them: <store>/<language>/<device>-<n>.png
 #   website/          the website repository's own tree: assets/screenshots/**, assets/og-image.jpg
@@ -162,4 +162,5 @@ jobs:
         with:
           name: screenshots
           path: screenshots
-          retention-days: 14
+          # Long enough to upload the images no API takes by hand, after a release (store_images.py's MANUAL).
+          retention-days: 90

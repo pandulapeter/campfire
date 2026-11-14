@@ -20,8 +20,9 @@ image added to the tool is never left out unnoticed. Each set is held to its sto
 sizes or the sides' range, the long side against the short, no alpha channel, the file's size, PNG.
 
 With --check (screenshots.yml, before the artifact is uploaded): every store has every language of the app, every set
-there, and every image within its rules. Prints a Markdown table of the counts for the job's summary, each failure as an
-error, and exits 1 on any failure. Standard library only, like the store scripts that read it.
+there, and every image within its rules. Prints a Markdown table of the counts and a list of what MANUAL leaves to be
+uploaded by hand, where it is in the artifact, for the job's summary, each failure as an error, and exits 1 on any
+failure. Standard library only, like the store scripts that read it.
 """
 
 import re
@@ -56,7 +57,7 @@ SETS = {
 MANUAL = {
     "google-play": {
         "chromebook": "Play's API has no image type for Chromebook screenshots",
-        "icon": "the icon is the APK's",
+        "icon": "set once, in the Play Console",
     },
     "app-store": {
         "iphone-duo": "App Store Connect has no display type for a foldable iPhone yet",
@@ -210,12 +211,33 @@ def summary(counts):
     return "\n".join(lines)
 
 
+def manual_summary(folder):
+    """The images the release cannot upload, where they are in the artifact, and why, for the job's summary."""
+    folder = Path(folder)
+    lines = ["### Uploaded by hand", "",
+             "In the run's `screenshots` artifact, under `store/` (download it from this page, or "
+             "`gh run download <run id> -n screenshots`), every language in a folder of its own:", ""]
+    for store, names in MANUAL.items():
+        for name, reason in names.items():
+            found = [path for path in (folder / store).rglob("*.png")
+                     if (match := NAME.fullmatch(path.name)) and match["name"] == name]
+            if not found:
+                continue
+            numbered = any(NAME.fullmatch(path.name)["number"] for path in found)
+            per_language = any(path.parent != folder / store for path in found)
+            pattern = f"{'<language>/' if per_language else ''}{name}{'-<n>' if numbered else ''}.png"
+            lines.append(f"- `{store}/{pattern}`: {reason}.")
+    return "\n".join(lines)
+
+
 def main():
     if len(sys.argv) != 3 or sys.argv[1] != "--check":
         print(__doc__.strip().split("\n\n")[1].strip(), file=sys.stderr)
         return 2
     errors, counts = check(sys.argv[2])
     print(summary(counts))
+    print()
+    print(manual_summary(sys.argv[2]))
     for error in errors:
         print(f"::error::{error}", file=sys.stderr)
     return 1 if errors else 0

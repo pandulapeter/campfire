@@ -12,7 +12,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from store_images import check, images, png_info
+from store_images import check, images, manual_summary, png_info
 
 
 def chunk(kind, data):
@@ -115,6 +115,14 @@ class StoreImagesTest(unittest.TestCase):
         errors, _ = check(self.folder, ["en"])
         self.assertEqual(["google-play/en: has 1 phoneScreenshots, and the store takes 2-8",
                           "microsoft-store/en: has 11 Screenshot, and the store takes 1-10"], errors)
+
+    def test_the_images_left_by_hand_are_listed_once_each_with_where_they_are(self):
+        framed(self.folder, ["en", "hu"])
+        lines = [line for line in manual_summary(self.folder).splitlines() if line.startswith("- ")]
+        self.assertIn("- `google-play/<language>/chromebook-<n>.png`: Play's API has no image type for Chromebook screenshots.", lines)
+        self.assertIn("- `app-store/<language>/header.png`: the product page's header is not in App Store Connect's API.", lines)
+        self.assertIn("- `microsoft-store/poster-art.png`: set once, in Partner Center.", lines)
+        self.assertEqual(6, len(lines))
 
     def test_a_file_that_is_not_a_png_fails(self):
         framed(self.folder)

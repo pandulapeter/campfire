@@ -75,14 +75,15 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 
 - **`<!-- screenshots: true -->`** in the description: the one switch whose default is the weaker action (false),
   since the render costs an hour of macOS runners and replaces what every store shows. Read as strictly as the others.
-- **`screenshots.yml`** renders from the tag, beside the tests: the devices with Apple's chrome on three macOS runners (SF Pro
-  is only on macOS), the rest on Linux runners (`--apple-chrome`), each job two processes with a
-  timeout and the build's daemons stopped before it renders (a macOS runner has 7 GB); then one macOS job frames the store images, composes the banners and the link
-  preview, lays out the website's tree (`website_screenshots.py --website` into an empty folder), checks every store
-  image against its store's rules (`store_images.py --check`: count, sizes, alpha, file size, every language, and every
-  framed file named by `SETS` or `MANUAL`), draws contact sheets (`contact_sheets.py`, Pillow), and uploads one
-  artifact, `screenshots`, kept 14 days (`store/`, `website/`, `readme/`, `contact-sheets/`). Dispatchable by hand on
-  any ref; it publishes nothing and needs no secret.
+- **`screenshots.yml`** renders from the tag, beside the tests: the devices with Apple's chrome on three macOS runners
+  (SF Pro is only on macOS), the rest on Linux runners (`--apple-chrome`), each job two processes with a timeout and the
+  build's daemons stopped before it renders (a macOS runner has 7 GB); then one macOS job frames the store images,
+  composes the banners and the link preview, lays out the website's tree (`website_screenshots.py --website` into an
+  empty folder), checks every store image against its store's rules (`store_images.py --check`: count, sizes, alpha,
+  file size, every language, and every framed file named by `SETS` or `MANUAL`), draws contact sheets
+  (`contact_sheets.py`, Pillow), and uploads one artifact, `screenshots`, kept 90 days (`store/`, `website/`, `readme/`,
+  `contact-sheets/`), whose summary lists the images left to upload by hand and where they are in it. Dispatchable by
+  hand on any ref; it publishes nothing and needs no secret.
 - **The store jobs wait for it, never on it**: `android`, `ios`, `macos`, and `windows` need `screenshots` but run on
   `!cancelled()` with `prepare` and `test` succeeded, given `screenshots: true` only if it succeeded. A failed render
   ships every build with the images the stores have, the run red. Each store script replaces a set by emptying and
