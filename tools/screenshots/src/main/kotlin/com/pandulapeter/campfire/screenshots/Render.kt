@@ -13,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -27,6 +26,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.EncodedImageFormat
 import java.io.File
 import java.time.LocalDate
@@ -104,7 +104,7 @@ internal suspend fun render(
         while (left > 0) {
             val step = minOf(left, stepSize)
             time += step * 1_000_000
-            screen.render(time)
+            screen.advance(time)
             delay(step)
             left -= step
         }
@@ -112,10 +112,11 @@ internal suspend fun render(
     var frameCount = 0
     suspend fun captureFrame() {
         time += RECORDING_FRAME_NANOS
-        val image = screen.render(time)
-        if (frames != null) {
-            frames.mkdirs()
-            File(frames, "%05d.jpg".format(frameCount++)).writeBytes(checkNotNull(image.encodeToData(EncodedImageFormat.JPEG, JPEG_QUALITY)).bytes)
+        screen.render(time).use { image ->
+            if (frames != null) {
+                frames.mkdirs()
+                File(frames, "%05d.jpg".format(frameCount++)).writeBytes(checkNotNull(image.encodeToData(EncodedImageFormat.JPEG, JPEG_QUALITY)).bytes)
+            }
         }
         // The scene's clock is what animations follow; the real pause is for the app's own coroutines (a beat
         // collected, a state arriving from another thread) to run before the next frame is drawn.
@@ -139,9 +140,7 @@ internal suspend fun render(
         settle(SETTLE_MILLIS)
         // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather
         // than for a fixed while that a slower start would outlast.
-        fun frameHash() = screen.render(time).toComposeImageBitmap().let { frame ->
-            IntArray(frame.width * frame.height).also { frame.readPixels(it) }.contentHashCode()
-        }
+        fun frameHash() = screen.render(time).use { image -> Bitmap.makeFromImage(image).use { checkNotNull(it.readPixels()).contentHashCode() } }
         var previous = frameHash()
         var checks = 0
         while (checks++ < STABLE_CHECKS) {
@@ -155,7 +154,7 @@ internal suspend fun render(
             settle(FRAME_MILLIS * 3)
         }
         output.parentFile.mkdirs()
-        output.writeBytes(checkNotNull(screen.render(time).encodeToData(EncodedImageFormat.PNG)).bytes)
+        output.writeBytes(screen.render(time).use { checkNotNull(it.encodeToData(EncodedImageFormat.PNG)).bytes })
     } finally {
         screen.close()
     }

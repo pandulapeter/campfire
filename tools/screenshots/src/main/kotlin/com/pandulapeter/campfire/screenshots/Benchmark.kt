@@ -163,7 +163,7 @@ private suspend fun withBenchmarkApp(writeData: (File) -> Unit, block: suspend (
             // run in, as they would between two frames of a window.
             suspend fun frame() {
                 time += FRAME_MILLIS * 1_000_000
-                screen.render(time)
+                screen.advance(time)
                 delay(FRAME_MILLIS)
             }
             while (viewModel == null) frame()

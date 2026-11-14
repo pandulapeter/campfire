@@ -47,15 +47,20 @@ internal class DeviceScreen(
     )
     private val surface = Surface.makeRasterN32Premul(device.widthPx, device.heightPx)
 
-    /** Draws both scenes at [nanoTime] of their clock, and the screen they make together. */
+    /**
+     * Draws both scenes at [nanoTime] of their clock, and the screen they make together, which the caller closes. Every
+     * image here holds a whole screen of native memory that only a garbage collection would otherwise free, and a run
+     * with a bounded heap collects too seldom: hundreds of frames would pile up, more than a CI runner has.
+     */
     fun render(nanoTime: Long): Image {
-        val windowImage = window.render(nanoTime)
-        val chromeImage = chromeScene.render(nanoTime)
         surface.canvas.clear(Color.TRANSPARENT)
-        surface.canvas.drawImage(windowImage, 0f, windowTop.toFloat())
-        surface.canvas.drawImage(chromeImage, 0f, 0f)
+        window.render(nanoTime).use { surface.canvas.drawImage(it, 0f, windowTop.toFloat()) }
+        chromeScene.render(nanoTime).use { surface.canvas.drawImage(it, 0f, 0f) }
         return surface.makeImageSnapshot()
     }
+
+    /** Draws a frame that nothing looks at, to move the scenes' clock and let what it drives happen. */
+    fun advance(nanoTime: Long) = render(nanoTime).close()
 
     override fun close() {
         window.close()
