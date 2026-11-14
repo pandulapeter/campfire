@@ -43,6 +43,11 @@ on:
 permissions:
   contents: read
 
+# GitHub's default shell for run steps has no pipefail, and a render piped into tee would pass whatever it did.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   render:
     name: Render (${{ matrix.shard }}/3)
@@ -59,11 +64,19 @@ jobs:
           ref: ${{ inputs.release_tag || inputs.ref || github.ref }}
       - name: Set up JDK 21 and Gradle
         uses: ./.github/actions/setup-jdk
+      - name: Build the screenshot tool
+        run: ./gradlew :tools:screenshots:classes :tools:screenshots:downloadFonts
+      # A hosted macOS runner has 7 GB, and the Gradle and Kotlin daemons the build left behind may each hold 4 GB
+      # (gradle.properties): with them alive beside the render, the system kills its processes mid-image. So they are
+      # stopped, and the run is started by a Gradle of its own with a small heap, which compiles nothing.
       - name: Render
         env:
           SHARD: ${{ matrix.shard }}
         run: |
-          ./gradlew :tools:screenshots:run --args="--shard $SHARD/3 --parallel 2 --out $GITHUB_WORKSPACE/renders" 2>&1 \
+          ./gradlew --stop
+          pkill -f KotlinCompileDaemon || true
+          ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx768m -Pkotlin.compiler.execution.strategy=in-process \
+            :tools:screenshots:run --args="--shard $SHARD/3 --parallel 2 --out $GITHUB_WORKSPACE/renders" 2>&1 \
             | tee "$RUNNER_TEMP/render.log"
           # A broken class fails a shot that the run may still count as written.
           if grep -n 'Exception' "$RUNNER_TEMP/render.log"; then

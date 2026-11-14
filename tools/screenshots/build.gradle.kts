@@ -107,6 +107,10 @@ tasks.named<JavaExec>("run") {
     dependsOn(downloadFonts)
     // Every run renders afresh from the library, which Gradle cannot see change.
     outputs.upToDateWhen { false }
+    // Each part of a parallel run starts with this JVM's options (ParallelRun.kt), so this bounds every one of them: a
+    // render needs about 1.6 GB, and without a bound each JVM may take a quarter of the machine, more than a CI runner
+    // has for two of them.
+    maxHeapSize = "2g"
     systemProperty("java.awt.headless", "true")
     systemProperty("campfire.screenshots.library", file("library").absolutePath)
     systemProperty("campfire.screenshots.renders", file("renders").absolutePath)
