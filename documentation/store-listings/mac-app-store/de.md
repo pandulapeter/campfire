@@ -83,7 +83,7 @@ Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata
 • Das Dock-Symbol folgt der Farbe, die du wählst
 • Schalte ab, was du nie nutzt
-• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch, Portugiesisch und Polnisch, in der App wählbar
+• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch, Portugiesisch, Polnisch und Tschechisch, in der App wählbar
 
 Deine Songs gehören dir
 Deine Bibliothek ist ein Ordner normaler ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur, wenn du es willst, ohne Campfire-Server dazwischen. Du kannst jederzeit alles exportieren.

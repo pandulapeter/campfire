@@ -22,15 +22,16 @@ import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.SongSection
+import com.pandulapeter.campfire.presentation.localization.StringsCs
 import com.pandulapeter.campfire.presentation.localization.StringsDe
 import com.pandulapeter.campfire.presentation.localization.StringsDefault
 import com.pandulapeter.campfire.presentation.localization.StringsEs
 import com.pandulapeter.campfire.presentation.localization.StringsFr
 import com.pandulapeter.campfire.presentation.localization.StringsHe
+import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.localization.StringsIt
 import com.pandulapeter.campfire.presentation.localization.StringsPl
 import com.pandulapeter.campfire.presentation.localization.StringsPt
-import com.pandulapeter.campfire.presentation.localization.StringsHu
 import com.pandulapeter.campfire.presentation.localization.StringsRo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -110,6 +111,7 @@ internal open class PrepareScope(
             AppLanguage.HEBREW -> StringsHe.strings[key]
             AppLanguage.PORTUGUESE -> StringsPt.strings[key]
             AppLanguage.POLISH -> StringsPl.strings[key]
+            AppLanguage.CZECH -> StringsCs.strings[key]
             AppLanguage.ENGLISH, AppLanguage.SYSTEM_DEFAULT -> StringsDefault.strings[key]
         } ?: StringsDefault.strings[key],
     ) { "There is no string resource called $key." }

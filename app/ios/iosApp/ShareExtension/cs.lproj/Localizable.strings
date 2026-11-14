@@ -1,0 +1,23 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+/* The share extension's Czech strings. Keep in step with en.lproj. */
+"share_saving" = "Ukládání do Campfire…";
+"share_saved" = "Uloženo do Campfire";
+"share_saved_detail" = "Otevři Campfire a přidej to do knihovny.";
+"share_link" = "Campfire neotevírá webové stránky.";
+"share_link_detail" = "Označ text s akordy a sdílej místo stránky ten.";
+"share_unsupported" = "Tohle Campfire neumí importovat.";
+"share_unsupported_detail" = "Importuje písně, prostý text, dokumenty PDF a Word a archivy zip.";
+"share_too_large" = "Tohle je na import příliš velké.";
+"share_too_large_detail" = "Campfire importuje najednou až 24 MB, 16 MB na jeden dokument a 8 MB na jeden textový soubor nebo soubor písně.";
+"share_inbox_full" = "Některá sdílení ještě čekají.";
+"share_inbox_full_detail" = "Nejdřív otevři Campfire a dokonči je.";
+"share_failed" = "Pro Campfire se to nepodařilo uložit.";
+"share_done" = "Hotovo";

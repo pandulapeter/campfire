@@ -83,7 +83,7 @@ Po twojemu
 • Jasny i ciemny motyw, suwak sepii i dziesięć schematów kolorów
 • Ikona w Docku przyjmuje wybrany przez ciebie kolor
 • Wyłącz każdą funkcję, której nie używasz
-• Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski i polski, przełączane w aplikacji
+• Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, przełączane w aplikacji
 
 Twoje piosenki należą do ciebie
 Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z siecią tylko na twoją prośbę, bez serwera Campfire pośrodku. W każdej chwili możesz wszystko wyeksportować.

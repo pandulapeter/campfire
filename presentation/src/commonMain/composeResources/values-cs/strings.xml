@@ -1,0 +1,1492 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<resources>
+
+    <!-- Shared -->
+    <string name="back">Zpět</string>
+    <string name="close">Zavřít</string>
+    <string name="cancel">Zrušit</string>
+    <string name="done">Hotovo</string>
+    <string name="confirm">Potvrdit</string>
+    <string name="delete">Smazat</string>
+    <string name="create">Vytvořit</string>
+    <string name="duplicate">Duplikovat</string>
+    <string name="share_or_export">Sdílet nebo exportovat</string>
+    <string name="save">Uložit</string>
+    <string name="select_all">Vybrat vše</string>
+    <string name="deselect_all">Zrušit výběr</string>
+    <string name="retry">Zkusit znovu</string>
+    <string name="add_demo_library">Přidat ukázkovou knihovnu</string>
+    <string name="confirm_exit_title">Zavřít Campfire?</string>
+    <string name="confirm_exit_message">Opravdu chceš aplikaci opustit?</string>
+
+    <!-- Import and export -->
+    <string name="import_progress_title">Import souborů</string>
+    <string name="import_progress_unpacking">Otevírání vybraných souborů a archivů</string>
+    <string name="import_progress_reading">Čtení a převod písní</string>
+    <string name="import_progress_comparing">Kontrola duplicit a konfliktů</string>
+    <string name="import_progress_importing">Přidávání souborů do knihovny</string>
+    <string name="import_progress_finishing">Aktualizace knihovny</string>
+    <string name="import_progress_count">Zpracováno %1$d z %2$d</string>
+    <string name="import_progress_wait">Nech prosím Campfire otevřený, dokud import neskončí.</string>
+    <string name="import_status_title">Import dokončen</string>
+    <string name="import_status_stopped">Import zastaven</string>
+    <string name="import_status_partial">Import se po chybě zastavil. Už importované soubory jsou v knihovně, zbývající soubory se nezpracovaly.</string>
+    <string name="import_status_unknown_failure">Import se nepodařilo dokončit. Než to zkusíš znovu, zkontroluj knihovnu.</string>
+    <plurals name="import_status_songs">
+        <item quantity="one">%1$d píseň importována</item>
+        <item quantity="few">%1$d písně importovány</item>
+        <item quantity="other">%1$d písní importováno</item>
+    </plurals>
+    <plurals name="import_status_setlists">
+        <item quantity="one">%1$d setlist importován</item>
+        <item quantity="few">%1$d setlisty importovány</item>
+        <item quantity="other">%1$d setlistů importováno</item>
+    </plurals>
+    <plurals name="import_status_duplicates">
+        <item quantity="one">%1$d soubor už je v knihovně</item>
+        <item quantity="few">%1$d soubory už jsou v knihovně</item>
+        <item quantity="other">%1$d souborů už je v knihovně</item>
+    </plurals>
+    <plurals name="import_status_left_out">
+        <item quantity="one">%1$d soubor vynechán podle tvé volby</item>
+        <item quantity="few">%1$d soubory vynechány podle tvé volby</item>
+        <item quantity="other">%1$d souborů vynecháno podle tvé volby</item>
+    </plurals>
+    <plurals name="import_status_skipped">
+        <item quantity="one">%1$d nepodporovaný nebo neplatný soubor</item>
+        <item quantity="few">%1$d nepodporované nebo neplatné soubory</item>
+        <item quantity="other">%1$d nepodporovaných nebo neplatných souborů</item>
+    </plurals>
+    <plurals name="import_status_oversized">
+        <item quantity="one">%1$d soubor přesahuje limit velikosti importu</item>
+        <item quantity="few">%1$d soubory přesahují limit velikosti importu</item>
+        <item quantity="other">%1$d souborů přesahuje limit velikosti importu</item>
+    </plurals>
+    <plurals name="import_status_unreadable">
+        <item quantity="one">%1$d dokument bez čitelného textu</item>
+        <item quantity="few">%1$d dokumenty bez čitelného textu</item>
+        <item quantity="other">%1$d dokumentů bez čitelného textu</item>
+    </plurals>
+    <plurals name="import_status_failed">
+        <item quantity="one">%1$d soubor, který nešlo importovat</item>
+        <item quantity="few">%1$d soubory, které nešlo importovat</item>
+        <item quantity="other">%1$d souborů, které nešlo importovat</item>
+    </plurals>
+    <plurals name="import_status_unprocessed">
+        <item quantity="one">%1$d soubor nezpracován</item>
+        <item quantity="few">%1$d soubory nezpracovány</item>
+        <item quantity="other">%1$d souborů nezpracováno</item>
+    </plurals>
+    <string name="import_report_search">Hledat soubory</string>
+    <string name="import_files_empty">Žádné odpovídající soubory</string>
+    <string name="import_report_clean">Nic nebylo vynecháno.</string>
+    <string name="import_report_left_out">Některé soubory nebyly importovány. Každý je uvedený níže pod svým důvodem.</string>
+    <string name="import_report_converted">Převedeno, stojí za kontrolu v editoru</string>
+    <string name="import_report_edit">Otevřít v editoru</string>
+    <string name="import_details">Podrobnosti</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">Nahradit %1$d soubor?</item>
+        <item quantity="few">Nahradit %1$d soubory?</item>
+        <item quantity="other">Nahradit %1$d souborů?</item>
+    </plurals>
+    <plurals name="import_replace_message">
+        <item quantity="one">Soubor v knihovně bude přepsán. Tuto akci nelze vrátit zpět.</item>
+        <item quantity="other">Soubory v knihovně budou přepsány. Tuto akci nelze vrátit zpět.</item>
+    </plurals>
+    <string name="import_files">Importovat soubory</string>
+    <plurals name="import_result_songs">
+        <item quantity="one">%1$d píseň importována</item>
+        <item quantity="few">%1$d písně importovány</item>
+        <item quantity="other">%1$d písní importováno</item>
+    </plurals>
+    <plurals name="import_result_setlists">
+        <item quantity="one">%1$d setlist importován</item>
+        <item quantity="few">%1$d setlisty importovány</item>
+        <item quantity="other">%1$d setlistů importováno</item>
+    </plurals>
+    <plurals name="import_result_songs_already_there">
+        <item quantity="one">%1$d píseň už je v knihovně</item>
+        <item quantity="few">%1$d písně už jsou v knihovně</item>
+        <item quantity="other">%1$d písní už je v knihovně</item>
+    </plurals>
+    <plurals name="import_result_setlists_already_there">
+        <item quantity="one">%1$d setlist už je v knihovně</item>
+        <item quantity="few">%1$d setlisty už jsou v knihovně</item>
+        <item quantity="other">%1$d setlistů už je v knihovně</item>
+    </plurals>
+    <plurals name="import_result_skipped">
+        <item quantity="one">Přeskočeno: %1$d</item>
+        <item quantity="other">Přeskočeno: %1$d</item>
+    </plurals>
+    <string name="import_result_nothing">Nic nebylo importováno</string>
+    <string name="import_converted">Převedeno: %1$d — stojí za kontrolu v editoru.</string>
+    <plurals name="import_unreadable_documents">
+        <item quantity="one">Jeden dokument neobsahuje text, který Campfire dokáže přečíst (sken, chráněné PDF nebo starý formát Wordu).</item>
+        <item quantity="few">%1$d dokumenty neobsahují text, který Campfire dokáže přečíst (skeny, chráněná PDF nebo starý formát Wordu).</item>
+        <item quantity="other">%1$d dokumentů neobsahuje text, který Campfire dokáže přečíst (skeny, chráněná PDF nebo starý formát Wordu).</item>
+    </plurals>
+    <string name="import_failed">Import se nezdařil</string>
+    <string name="import_interrupted">Import byl přerušen. Pro import soubory otevři znovu.</string>
+    <string name="export_failed">Uložení ani sdílení se nepodařilo</string>
+    <string name="export_pdf_saved">PDF uloženo</string>
+    <string name="export_song_saved">Píseň uložena</string>
+    <string name="export_setlist_saved">Setlist uložen</string>
+    <string name="export_songs_saved">Písně uloženy</string>
+    <string name="export_library_saved">Knihovna exportována</string>
+    <string name="export_log_saved">Protokol uložen</string>
+    <string name="export_too_large_to_import">Tento archiv je větší než 24 MB, které Campfire dokáže najednou importovat. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících.</string>
+    <plurals name="export_skipped_files">
+        <item quantity="one">Jeden soubor nešlo přečíst a v archivu chybí: %2$s</item>
+        <item quantity="few">%1$d soubory nešlo přečíst a v archivu chybí. Mezi nimi: %2$s</item>
+        <item quantity="other">%1$d souborů nešlo přečíst a v archivu chybí. Mezi nimi: %2$s</item>
+    </plurals>
+    <plurals name="import_review_skipped">
+        <item quantity="one">Jeden soubor není píseň ani setlist a nelze ho importovat.</item>
+        <item quantity="few">Nelze importovat %1$d soubory, které nejsou písně ani setlisty.</item>
+        <item quantity="other">Nelze importovat %1$d souborů, které nejsou písně ani setlisty.</item>
+    </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">Jeden soubor je příliš velký a nelze ho importovat.</item>
+        <item quantity="few">%1$d soubory jsou příliš velké a nelze je importovat.</item>
+        <item quantity="other">%1$d souborů je příliš velkých a nelze je importovat.</item>
+    </plurals>
+    <string name="import_conflicts_keep_both">Ponechat oba</string>
+    <string name="import_conflicts_keep_both_description">Importovat je vedle souborů, se kterými kolidují, s číslem „_2“</string>
+    <string name="import_conflicts_replace">Nahradit</string>
+    <string name="import_conflicts_replace_description">Přepsat jimi soubory v knihovně. Nahrazené soubory zmizí.</string>
+    <string name="import_conflicts_mixed">Různě</string>
+    <string name="import_loading_title">Čtení souborů</string>
+    <string name="import_progress_downloading">Stahování souboru</string>
+    <string name="import_failed_unreachable">Zdroj %1$s není dostupný. Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="import_failed_not_found">Na této adrese není nic ke stažení. Platnost odkazu možná vypršela nebo byl odstraněn.</string>
+    <string name="import_failed_too_large">Tento soubor je větší než 24 MB, které Campfire dokáže najednou importovat.</string>
+    <string name="import_failed_unreadable">Soubory nešlo přečíst. Nic nebylo importováno.</string>
+    <string name="import_failed_link_gone">Tento odkaz už nefunguje. Ten, kdo ho sdílel, ho možná přestal sdílet.</string>
+    <string name="import_failed_link_unreachable">„%1$s“ se nepodařilo stáhnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="import_failed_link_unreachable_untitled">Obsah odkazu se nepodařilo stáhnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="import_retry">Zkusit znovu</string>
+    <string name="import_review_title">Kontrola importu</string>
+    <string name="import_review_title_empty">Nic k importu</string>
+    <plurals name="import_review_from_files">
+        <item quantity="one">Zdroj: %1$d soubor</item>
+        <item quantity="few">Zdroj: %1$d soubory</item>
+        <item quantity="other">Zdroj: %1$d souborů</item>
+    </plurals>
+    <string name="import_review_from">Zdroj: %1$s</string>
+    <string name="import_warning_songs_off">Písně jsou v Nastavení vypnuté, takže nic z tohoto importu se nezobrazí, dokud je znovu nezapneš.</string>
+    <string name="import_warning_setlists_off">Setlisty jsou v Nastavení vypnuté, takže zde importované setlisty se nezobrazí, dokud je znovu nezapneš.</string>
+    <string name="import_review_demo_library">Ukázková knihovna</string>
+    <plurals name="import_review_shared_updates">
+        <item quantity="one">Jeden soubor dříve importovaný z tohoto odkazu se aktualizuje na sdílenou verzi. Pokud si chceš ponechat vlastní změny, zvol Ponechat oba.</item>
+        <item quantity="few">%1$d soubory dříve importované z tohoto odkazu se aktualizují na sdílenou verzi. Pokud si chceš ponechat vlastní změny, zvol Ponechat oba.</item>
+        <item quantity="other">%1$d souborů dříve importovaných z tohoto odkazu se aktualizuje na sdílenou verzi. Pokud si chceš ponechat vlastní změny, zvol Ponechat oba.</item>
+    </plurals>
+    <plurals name="import_review_confirm">
+        <item quantity="one">Importovat %1$d soubor</item>
+        <item quantity="few">Importovat %1$d soubory</item>
+        <item quantity="other">Importovat %1$d souborů</item>
+    </plurals>
+    <string name="import_review_summary_counts">Písně k importu: %1$d · Setlisty: %2$d</string>
+    <string name="import_review_name_taken_counts">Obsazené názvy: nahradit %1$d · ponechat oba %2$d</string>
+    <plurals name="import_review_already_there">
+        <item quantity="one">Jeden soubor už je v knihovně a zůstane beze změny</item>
+        <item quantity="few">%1$d soubory už jsou v knihovně a zůstanou beze změny</item>
+        <item quantity="other">%1$d souborů už je v knihovně a zůstane beze změny</item>
+    </plurals>
+    <string name="import_review_left_out_count">Vynecháno tebou: %1$d</string>
+    <string name="import_review_tags">Štítky pro importované písně</string>
+    <plurals name="import_review_tags_subtitle">
+        <item quantity="one">Přidají se k jediné písni, kterou tento import zapíše</item>
+        <item quantity="other">Přidají se ke všem %1$d písním, které tento import zapíše</item>
+    </plurals>
+    <plurals name="import_review_conflicts">
+        <item quantity="one">%1$d název už je obsazený</item>
+        <item quantity="few">%1$d názvy už jsou obsazené</item>
+        <item quantity="other">%1$d názvů už je obsazeno</item>
+    </plurals>
+    <plurals name="import_review_songs">
+        <item quantity="one">%1$d píseň</item>
+        <item quantity="few">%1$d písně</item>
+        <item quantity="other">%1$d písní</item>
+    </plurals>
+    <plurals name="import_review_setlists">
+        <item quantity="one">%1$d setlist</item>
+        <item quantity="few">%1$d setlisty</item>
+        <item quantity="other">%1$d setlistů</item>
+    </plurals>
+    <string name="import_review_will_be_numbered">Dostane číslo vedle té, kterou už máš</string>
+    <string name="import_review_will_replace">Nahradí tu, kterou už máš: %1$s</string>
+    <string name="import_review_show_library_song">Zobrazit tu, kterou máš</string>
+    <plurals name="import_review_setlist_songs">
+        <item quantity="one">Jedna píseň</item>
+        <item quantity="few">%1$d písně</item>
+        <item quantity="other">%1$d písní</item>
+    </plurals>
+    <string name="import_review_setlist_songs_in_import">Z toho v tomto importu: %1$d</string>
+    <plurals name="import_review_repeated">
+        <item quantity="one">V souborech se objevuje jednou</item>
+        <item quantity="other">V souborech se objevuje %1$dkrát</item>
+    </plurals>
+    <!-- The preview of songs an import has not written yet -->
+    <string name="import_preview_title">Náhled: zatím není v knihovně</string>
+    <string name="import_preview_name_taken">V knihovně už je jiná píseň s tímto názvem.</string>
+    <string name="import_preview_shared_update">Tuto sdílenou píseň už máš z dřívějšího importu. Nahrazením ji aktualizuješ na tuto verzi.</string>
+    <string name="import_preview_include">Importovat tuto píseň</string>
+    <string name="import_preview_choices">Možnosti pro tuto píseň</string>
+    <string name="import_preview_name_taken_choice">Název obsazen: %1$s</string>
+    <string name="import_preview_left_out">Vynecháno z importu</string>
+    <string name="import_preview_already_there">Už je v knihovně, není co importovat</string>
+    <string name="import_preview_import">Importovat</string>
+    <string name="import_preview_import_as_copy">Importovat jako kopii</string>
+    <string name="import_preview_importing">Importování písně</string>
+    <string name="import_preview_imported">Přidáno do knihovny</string>
+    <string name="import_preview_open">Číst píseň</string>
+
+    <!-- Errors -->
+    <string name="error_no_data">Nic se nepodařilo načíst</string>
+    <string name="error_no_data_hint">Knihovnu nešlo přečíst.</string>
+    <string name="error_operation_failed">Něco se pokazilo</string>
+    <string name="error_link_not_opened">Nepodařilo se otevřít %1$s</string>
+
+    <!-- Songs screen -->
+    <string name="songs">Písně</string>
+    <string name="songs_search">Hledat v písních</string>
+    <string name="songs_clear">Vymazat</string>
+    <string name="songs_sort">Řadit písně</string>
+    <string name="songs_filter">Filtrovat písně</string>
+    <string name="songs_filter_active">Filtrovat písně, filtry jsou zapnuté</string>
+    <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_unknown_artist">Neznámý interpret</string>
+    <string name="songs_random_picks">Náhodný výběr</string>
+    <string name="songs_random_picks_refresh">Vylosovat nový výběr</string>
+    <string name="random_picks_question_title">Ponechat náhodný výběr?</string>
+    <string name="random_picks_question_text">Pět písní z tvé knihovny, losovaných znovu každou hodinu nebo kdykoli si řekneš o nové. Kdykoli je můžeš zapnout nebo vypnout v Nastavení v části Funkce.</string>
+    <string name="random_picks_question_keep">Ponechat</string>
+    <string name="random_picks_question_turn_off">Vypnout</string>
+    <string name="songs_sorting_mode_by_artist">Interpret</string>
+    <string name="songs_sorting_mode_by_title">Název</string>
+    <string name="songs_empty_title">Tvoje knihovna je prázdná</string>
+    <string name="songs_empty_hint">Vytvoř píseň, vlož ji ze schránky, importuj písně, dokumenty PDF či Word a archivy zip, nebo přidej ukázkovou knihovnu.</string>
+    <string name="songs_create_song">Vytvořit píseň</string>
+    <string name="songs_paste_from_clipboard">Vložit ze schránky</string>
+    <string name="add_songs_hint_title">Přidej vlastní písně</string>
+    <string name="add_songs_tip_paste_title">Zkopíruj píseň z libovolného webu</string>
+    <string name="add_songs_tip_paste_hint">Zkopíruj text a akordy písně z libovolné webové stránky, klidně neuspořádané, a vlož je sem. Campfire z nich udělá úhlednou píseň, kterou můžeš uložit.</string>
+    <string name="add_songs_tip_import_title">Přenes písně z jiné aplikace</string>
+    <string name="add_songs_tip_import_hint">Exportuj písně z jiné zpěvníkové aplikace, ideálně jako archiv zip nebo zálohu, a importuj je sem. Fungují i soubory ChordPro, PDF, Word a textové soubory.</string>
+    <string name="songs_paste_converted">Převedeno z akordů zapsaných nad textem. Zkontroluj název a interpreta a pak ulož.</string>
+    <string name="songs_paste_chordpro">Ponecháno ve formátu ChordPro, ve kterém je zapsáno. Zkontroluj název a interpreta a pak ulož.</string>
+    <string name="songs_paste_no_chords">Nenašly se žádné akordy, takže jde o píseň jen s textem. Zkontroluj název a interpreta a pak ulož.</string>
+    <string name="songs_paste_notation_without_chords">Nenašly se žádné akordy, takže notový zápis zůstává, jak je zapsaný. Zkontroluj název a interpreta a pak ulož.</string>
+    <string name="new_song_placeholder_title">Nová píseň</string>
+    <string name="new_song_placeholder_artist">Neznámý interpret</string>
+    <string name="paste_clipboard_empty">Ve schránce není žádný text k vložení.</string>
+    <string name="paste_only_links">Odkaz není píseň a Campfire neotevírá stránky. Zkopíruj přímo akordy a text.</string>
+    <string name="paste_too_large">Text je delší než 8 MB, které jeden import zvládne.</string>
+    <string name="shared_link_not_imported">Campfire neotevírá webové stránky. Označ text s akordy a nasdílej ten.</string>
+    <string name="shared_link_from_newer_version">Tento odkaz vytvořila novější verze Campfire. Pokud ho chceš otevřít, aktualizuj Campfire.</string>
+    <string name="clipboard_not_campfire_link">To není odkaz Campfire.</string>
+    <string name="paste_refused_ios">Campfire nemá povolené vkládání. Rozhoduje o tom volba Vložit z jiných aplikací u Campfire v aplikaci Nastavení.</string>
+    <string name="paste_refused_web">Prohlížeč Campfire nedovolil číst schránku. Místo toho stiskni v seznamu písní Ctrl+V (na Macu Cmd+V).</string>
+    <string name="songs_new_song">Nová píseň</string>
+    <string name="optional_field_label">%1$s (nepovinné)</string>
+    <string name="songs_new_song_title">Název</string>
+    <string name="songs_new_song_artist">Interpret</string>
+    <string name="songs_artist_and_title">%1$s - %2$s</string>
+    <string name="songs_actions">Akce s písní</string>
+    <string name="songs_edit_song">Upravit soubor písně</string>
+    <string name="songs_choose_setlists">Vybrat setlisty</string>
+    <string name="songs_update_file_name">Aktualizovat název souboru</string>
+    <string name="songs_duplicate_song">Duplikovat píseň</string>
+    <string name="songs_update_file_name_partly">Soubor byl přejmenován, ale některý setlist nebo uložená transpozice stále odkazuje na starý název</string>
+    <string name="songs_delete_song_partly">Píseň byla smazána, ale některý setlist nebo uložená transpozice ji stále uvádí</string>
+    <string name="songs_delete_song">Smazat píseň</string>
+    <string name="songs_share_song">Sdílet píseň</string>
+    <string name="songs_delete_song_confirmation">Smazat „%1$s“? Soubor se odstraní z knihovny i ze všech setlistů.</string>
+    <string name="songs_delete_song_confirmation_shared">Smazat „%1$s“? Soubor se odstraní z knihovny i ze všech setlistů a jeho sdílený odkaz přestane fungovat.</string>
+    <string name="songs_select_multiple">Vybrat více</string>
+    <string name="songs_selection_actions">Akce s výběrem</string>
+    <string name="songs_share_songs">Sdílet písně</string>
+    <plurals name="songs_selection_done">
+        <item quantity="one">Hotovo, vybrána %1$d píseň</item>
+        <item quantity="few">Hotovo, vybrány %1$d písně</item>
+        <item quantity="other">Hotovo, vybráno %1$d písní</item>
+    </plurals>
+    <plurals name="songs_selection_count">
+        <item quantity="one">%1$d píseň</item>
+        <item quantity="few">%1$d písně</item>
+        <item quantity="other">%1$d písní</item>
+    </plurals>
+    <plurals name="songs_selection_updated">
+        <item quantity="one">%1$d píseň aktualizována</item>
+        <item quantity="few">%1$d písně aktualizovány</item>
+        <item quantity="other">%1$d písní aktualizováno</item>
+    </plurals>
+    <plurals name="songs_selection_failed">
+        <item quantity="one">%1$d píseň nešlo aktualizovat</item>
+        <item quantity="few">%1$d písně nešlo aktualizovat</item>
+        <item quantity="other">%1$d písní nešlo aktualizovat</item>
+    </plurals>
+    <string name="songs_all_hidden">Všechny písně jsou skryté</string>
+    <string name="songs_all_hidden_hint">Filtry skrývají celou tvou knihovnu.</string>
+    <string name="songs_no_search_results">Žádné odpovídající písně</string>
+    <string name="songs_no_search_results_hint">Tomuto hledání nic v knihovně neodpovídá.</string>
+    <string name="songs_lyrics_only">Jen text</string>
+    <string name="songs_key">Tónina: %1$s</string>
+    <!-- A song card's tempo and the time signature it is counted in, which the metronome mark in front of them stands for. -->
+    <string name="songs_tempo_and_time">%1$s BPM %2$s</string>
+    <string name="songs_tags">Štítky</string>
+    <string name="songs_filters_show_all">Zobrazit vše (%1$d)</string>
+    <string name="songs_filters_show_less">Zobrazit méně</string>
+    <string name="songs_tags_search">Najít štítek</string>
+    <string name="songs_tags_no_search_results">Hledání neodpovídá žádný štítek.</string>
+    <string name="songs_tags_clear">Zrušit výběr</string>
+    <string name="songs_tags_match_mode">Píseň musí mít</string>
+    <string name="songs_tags_match_mode_any">Kterýkoli štítek</string>
+    <string name="songs_tags_match_mode_all">Všechny štítky</string>
+    <string name="songs_languages">Jazyky</string>
+    <string name="songs_languages_unknown">Neznámý</string>
+    <string name="songs_languages_search">Najít jazyk</string>
+    <string name="songs_languages_no_search_results">Hledání neodpovídá žádný jazyk.</string>
+    <string name="songs_languages_clear">Zrušit výběr</string>
+    <string name="songs_languages_match_mode">Píseň musí být</string>
+    <string name="songs_languages_match_mode_any">V kterémkoli jazyce</string>
+    <string name="songs_languages_match_mode_all">Ve všech jazycích</string>
+    <string name="songs_labels_sorted_by_usage">Podle použití</string>
+    <string name="songs_labels_sorted_alphabetically">Abecedně</string>
+    <string name="songs_labels_sort_by_usage">Řadit podle použití</string>
+    <string name="songs_labels_sort_alphabetically">Řadit abecedně</string>
+    <string name="songs_filters_reset">Obnovit</string>
+
+    <!-- Setlists screen -->
+    <string name="setlists">Setlisty</string>
+    <string name="setlists_no_data">Zatím žádné setlisty</string>
+    <string name="setlists_no_data_hint">Vytvoř setlist a vyber písně, které do něj patří, nebo importuj setlisty ze souborů.</string>
+    <string name="setlists_create_setlist">Vytvořit setlist</string>
+    <string name="setlists_new_setlist">Nový setlist</string>
+    <string name="setlists_new_setlist_title">Název setlistu</string>
+    <string name="setlists_remove_song">Odebrat ze setlistu</string>
+    <string name="setlists_remove_song_confirmation">Odebrat „%1$s“ z tohoto setlistu? Píseň zůstane v knihovně i v ostatních setlistech.</string>
+    <string name="setlists_reorder">Změnit pořadí</string>
+    <string name="setlists_done_reordering">Dokončit změnu pořadí</string>
+    <string name="setlists_move_up">Posunout nahoru</string>
+    <string name="setlists_move_down">Posunout dolů</string>
+    <string name="setlists_actions">Akce setlistu</string>
+    <string name="setlists_edit_details">Upravit podrobnosti setlistu</string>
+    <string name="setlists_choose_songs">Vybrat písně</string>
+    <string name="checklist_selected">Vybráno: %1$d</string>
+    <string name="setlists_description">Popis (nepovinný)</string>
+    <string name="setlists_date">Datum</string>
+    <string name="setlists_date_value">%3$s. %2$s. %1$s</string>
+    <string name="setlists_pick_date">Vybrat datum</string>
+    <string name="setlists_countdown">Odpočet</string>
+    <string name="setlists_countdown_today">Dnes</string>
+    <string name="setlists_countdown_tomorrow">Zítra</string>
+    <string name="setlists_countdown_yesterday">Včera</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">Za %1$d den</item>
+        <item quantity="few">Za %1$d dny</item>
+        <item quantity="other">Za %1$d dní</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">Před %1$d dnem</item>
+        <item quantity="other">Před %1$d dny</item>
+    </plurals>
+    <!-- A setlist's total duration, as a show's length is named: how long its songs take to play. -->
+    <string name="setlists_total_duration">Délka: %1$s</string>
+    <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
+    <string name="setlists_total_duration_minimum">%1$s+</string>
+    <string name="setlists_duplicate_setlist">Duplikovat setlist</string>
+    <string name="setlists_duplicate_title">%1$s (kopie)</string>
+    <string name="setlists_archive">Archivovat setlist</string>
+    <string name="setlists_unarchive">Obnovit z archivu</string>
+    <string name="setlists_archived">Archivovaný</string>
+    <string name="setlists_share">Sdílet setlist</string>
+    <string name="setlists_missing_song">Soubor nenalezen</string>
+    <string name="setlists_delete_setlist">Smazat setlist</string>
+    <string name="setlists_delete_setlist_confirmation">Smazat setlist „%1$s“? Písně zůstanou v knihovně.</string>
+    <string name="setlists_delete_setlist_confirmation_shared">Smazat setlist „%1$s“? Písně zůstanou v knihovně. Jeho sdílený odkaz přestane fungovat.</string>
+    <string name="setlists_search">Hledat v setlistech</string>
+    <string name="setlists_no_search_results">Žádné odpovídající setlisty</string>
+    <string name="setlists_no_search_results_hint">Hledání neodpovídá žádný setlist, ani názvem, ani písněmi, které obsahuje.</string>
+    <string name="setlists_sort">Řadit setlisty</string>
+    <string name="setlists_sorting_mode_by_date">Datum</string>
+    <string name="setlists_sorting_mode_by_title">Název</string>
+    <string name="setlists_show_archived">Zobrazit archivované setlisty</string>
+    <string name="setlists_all_hidden">Všechny setlisty jsou archivované</string>
+    <string name="setlists_all_hidden_hint">Zapni „Zobrazit archivované setlisty“ a uvidíš je.</string>
+
+    <!-- Settings screen -->
+    <string name="settings">Nastavení</string>
+    <string name="settings_library">Knihovna</string>
+    <string name="settings_library_summary">Písně: %1$d · Setlisty: %2$d</string>
+    <string name="settings_library_size">%1$s na disku</string>
+    <string name="settings_library_size_bytes">%1$s B</string>
+    <string name="settings_library_size_kilobytes">%1$s kB</string>
+    <string name="settings_library_size_megabytes">%1$s MB</string>
+    <string name="settings_library_size_gigabytes">%1$s GB</string>
+    <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_cover_art_cache">Mezipaměť obalů</string>
+    <string name="settings_library_cover_art_cache_clear">Vymazat mezipaměť obalů</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">Obaly uložené v tomto zařízení budou smazány. Každý se znovu stáhne, až bude příště zobrazen.</string>
+    <string name="settings_library_cover_art_cache_clear_action">Vymazat</string>
+    <string name="settings_library_delete">Smazat knihovnu</string>
+    <string name="settings_library_delete_confirmation">Všechny písně a setlisty v tomto zařízení budou smazány. Tuto akci nelze vrátit zpět.</string>
+    <string name="settings_library_delete_confirmation_shared">Všechny sdílené odkazy přestanou fungovat.</string>
+    <string name="settings_library_delete_confirmation_sync">Synchronizace s Dropboxem se spustí hned po jejich smazání a smaže je také z tvé složky v Dropboxu a ze všech zařízení, která jsou s ní synchronizovaná.</string>
+    <string name="settings_library_delete_prompt">Pro potvrzení napiš %1$s</string>
+    <string name="settings_library_storage">Úložiště</string>
+    <string name="settings_library_storage_granted">Prohlížeč souhlasil, že knihovnu uchová, dokud nevymažeš data tohoto webu.</string>
+    <string name="settings_library_storage_best_effort">Prohlížeč knihovnu uchovává, ale zatím neslíbil, že ji nesmaže, když v zařízení dojde místo. Přidání této stránky do záložek nebo její pravidelné používání to slíbení obvykle zajistí; do té doby uchová kopii jinde export nebo synchronizace.</string>
+    <string name="settings_library_storage_offline_granted">Campfire se v tomto prohlížeči otevře i bez připojení k internetu. Prohlížeč souhlasil, že aplikaci i knihovnu uchová, dokud nevymažeš data tohoto webu.</string>
+    <string name="settings_library_storage_offline_best_effort">Campfire se v tomto prohlížeči otevře i bez připojení k internetu. Prohlížeč aplikaci i knihovnu uchovává, ale zatím neslíbil, že je nesmaže, když v zařízení dojde místo. Přidání této stránky do záložek nebo její pravidelné používání to slíbení obvykle zajistí; do té doby uchová kopii knihovny jinde export nebo synchronizace.</string>
+    <string name="settings_library_storage_online_only">Campfire se nepodařilo uložit v tomto prohlížeči, takže k jeho otevření je potřeba připojení k internetu.</string>
+    <string name="settings_import">Importovat písně, dokumenty nebo archivy zip…</string>
+    <string name="settings_export_all">Exportovat knihovnu jako zip</string>
+    <string name="settings_preferences">Předvolby</string>
+    <string name="settings_features">Funkce</string>
+    <string name="settings_group_performance">Vystoupení</string>
+    <string name="settings_read_only_mode">Jen pro čtení</string>
+    <string name="settings_read_only_mode_description">Zamkne aplikaci, když hraješ: úpravy, mazání, změna pořadí a transpozice jsou skryté, takže nic nezměníš omylem</string>
+    <string name="settings_read_only_mode_description_without_setlists">Zamkne aplikaci, když hraješ: úpravy, mazání a transpozice jsou skryté, takže nic nezměníš omylem</string>
+    <string name="settings_songs_description">Karty Písně a Setlisty. Vypni je, pokud chceš Campfire používat jen jako metronom, ladičku a příručku akordů a stupnic: písně se jen skryjí, žádná se nesmaže.</string>
+    <string name="settings_songs_description_without_setlists">Karta Písně. Vypni ji, pokud chceš Campfire používat jen jako metronom, ladičku a příručku akordů a stupnic: písně se jen skryjí, žádná se nesmaže.</string>
+    <string name="settings_everything_off">Všechno je vypnuté, takže Campfire je teď aplikace na změnu nastavení Campfire. Zapni zase něco, aby byla k užitku.</string>
+    <string name="settings_chords">Akordy</string>
+    <string name="settings_chords_description">Zobrazovat akordy nad textem spolu s tóninou, transpozicí a kapodastrem. Když je vypnuto, je každá píseň jen text.</string>
+    <string name="settings_chord_diagrams">Diagramy akordů</string>
+    <string name="settings_chord_diagrams_description">Zobrazovat na začátku písně, jak se hraje každý její akord.</string>
+    <string name="settings_chord_degrees">Stupně akordů</string>
+    <string name="settings_chord_degrees_description">Uvádět, na kterém stupni tóniny písně stojí každý diagram akordu, například V7 vedle G7.</string>
+    <string name="settings_chord_names">Názvy akordů s kapodastrem</string>
+    <string name="settings_chord_names_description">Akordy písně se pojmenují podle hmatů nad kapodastrem, nebo podle toho, jak znějí. Tónina písně vždy udává, jak zní, a na klávesách to platí i pro akordy.</string>
+    <string name="settings_chord_names_shapes">Hmaty</string>
+    <string name="settings_chord_names_sounding">Jak zní</string>
+    <string name="settings_capo_keeps_key">Kapodastr zachová tóninu</string>
+    <string name="settings_capo_keeps_key_description">Kapodastr nasazený na píseň mění jen hmaty a píseň zůstává ve své tónině. Kapodastr zapsaný v souboru písně její tóninu dál určuje.</string>
+    <string name="settings_metronome_description">Karta Metronom a klikání na obrazovce písně spolu s tempem a taktem každé písně</string>
+    <string name="settings_tuner_description">Karta Ladička a mikrofon, přes který poslouchá</string>
+    <string name="settings_scales_description">Karta Stupnice: všechny stupnice a módy, které aplikace zná, zakreslené na tvém nástroji</string>
+    <string name="settings_chord_library_description">Karta Akordy: všechny akordy, které aplikace zná, zakreslené na tvém nástroji</string>
+    <string name="settings_scale_suggestions">Návrhy stupnic</string>
+    <string name="settings_scale_suggestions_description">Zobrazovat za akordy písně stupnice, na které se dá hrát v každé její části, a stupnice k akordu v textu s akordy.</string>
+    <string name="settings_setlists_description">Karta Setlisty a přidávání písní do setlistů. Když je vypnuto, jsou jen skryté: žádný setlist se nesmaže.</string>
+    <string name="settings_random_picks_description">Pět náhodných písní na začátku seznamu s více než 20 písněmi, každou hodinu nové</string>
+    <string name="settings_song_details_lookup">Podrobnosti o písni online</string>
+    <string name="settings_song_details_lookup_description">Při úpravě podrobností písně nabízet vyhledání interpreta, alba, roku a autorů na MusicBrainz a iTunes</string>
+    <string name="settings_cover_art">Obaly</string>
+    <string name="settings_cover_art_description">Zobrazovat vedle písně obal alba, který uvádí, jednou stažený a uložený v tomto zařízení</string>
+    <string name="settings_group_song_page">Stránka písně</string>
+    <string name="preferences_page_song">Píseň</string>
+    <string name="settings_group_diagrams">Diagramy</string>
+    <string name="settings_group_chord_names">Názvy</string>
+    <string name="settings_instrument">Nástroj</string>
+    <string name="settings_instrument_description">Nástroj, na který hraješ, a jeho ladění, podle kterých se řídí diagramy, tabulatury a ladička</string>
+    <string name="read_only_mark">Režim jen pro čtení: otevřít Předvolby</string>
+    <string name="settings_group_appearance">Vzhled</string>
+    <string name="settings_group_playing">Hraní</string>
+    <string name="settings_group_online">Online</string>
+    <string name="settings_group_sync">Synchronizace</string>
+    <string name="settings_group_import_export">Import a export</string>
+    <string name="settings_group_on_this_device">V tomto zařízení</string>
+    <string name="settings_group_campfire">Campfire</string>
+    <string name="settings_group_help">Nápověda</string>
+    <string name="settings_group_legal">Právní informace</string>
+    <string name="settings_number_sections">Číslovat části</string>
+    <string name="settings_number_sections_description">Rozlišovat opakované části bez vlastního názvu, například Sloka 1 a Sloka 2</string>
+    <string name="settings_song_layout">Rozvržení</string>
+    <string name="settings_song_layout_description">Stránky zobrazí na obrazovce co nejvíc z písně najednou. Plynulé je jeden sloupec, který se může sám posouvat v tempu písně.</string>
+    <string name="settings_page_turn">Listování</string>
+    <string name="settings_page_turn_description">Má význam jen při více sloupcích na obrazovce: Sloupec posouvá píseň vždy o jeden sloupec, takže další je pořád vidět.</string>
+    <string name="settings_notation">Zápis akordů</string>
+    <string name="settings_notation_description">Jak se akordy zapisují, když písně čteš a upravuješ. Písně se vždy ukládají ve standardním zápisu, takže v každé aplikaci vypadají stejně.</string>
+    <string name="settings_notation_choose">Vybrat zápis</string>
+    <string name="settings_notation_standard">Standardní</string>
+    <string name="settings_notation_standard_description">C D E F G A B</string>
+    <string name="settings_notation_german">Německý</string>
+    <string name="settings_notation_german_description">H místo B a B místo B♭, jak je zvykem ve zpěvnících ve střední Evropě a Skandinávii</string>
+    <string name="settings_notation_latin">Latinský</string>
+    <string name="settings_notation_latin_description">Do Re Mi Fa Sol La Si, jak je zvykem ve zpěvnících v jižní Evropě a Latinské Americe</string>
+    <string name="settings_notation_nashville">Nashvillská čísla</string>
+    <string name="settings_notation_nashville_description">1 4 5 6-, počítáno od tóniny písně, u mollové písně od její vlastní toniky. Píseň bez uvedené tóniny se počítá od tóniny, kterou naznačují její akordy, a editor vždy používá písmena.</string>
+    <string name="settings_notation_roman">Římské číslice</string>
+    <string name="settings_notation_roman_description">I IV V vi, počítáno od tóniny písně: velká písmena pro durové akordy, malá pro mollové. Píseň bez uvedené tóniny se počítá od tóniny, kterou naznačují její akordy, a editor vždy používá písmena.</string>
+    <string name="settings_accidentals">Posuvky</string>
+    <string name="settings_accidentals_description">Zda se akord na černé klávese zapisuje s béčkem (%1$s), nebo s křížkem (%2$s). Při volbě „Původní“ vybere Campfire to, co odpovídá tónině písně.</string>
+    <string name="settings_accidentals_original">Původní</string>
+    <string name="settings_accidentals_flats">Béčka (♭)</string>
+    <string name="settings_accidentals_sharps">Křížky (♯)</string>
+    <!-- The one instrument in the player's hands, which the chord diagrams, the tuner, and the capo rule read. -->
+    <string name="instrument_choose">Vybrat nástroj</string>
+    <string name="instrument_tuning_standard">Standardní</string>
+    <string name="instrument_tuning_choose">Vybrat ladění</string>
+    <string name="instrument_guitar">Kytara</string>
+    <string name="instrument_guitar_strings">%1$d strunná kytara</string>
+    <string name="instrument_bass">Baskytara</string>
+    <string name="instrument_bass_strings">%1$d strunná baskytara</string>
+    <string name="instrument_ukulele">Ukulele</string>
+    <string name="instrument_banjo">Banjo</string>
+    <string name="instrument_mandolin">Mandolína</string>
+    <string name="instrument_violin">Housle</string>
+    <string name="instrument_keyboard">Klávesy</string>
+    <string name="instrument_other">Jiný</string>
+    <string name="instrument_strings_four">Čtyři struny</string>
+    <string name="instrument_strings_five">Pět strun</string>
+    <string name="instrument_strings_banjo">Pět strun, z toho jedna krátká</string>
+    <string name="instrument_strings_six">Šest strun</string>
+    <string name="instrument_strings_seven">Sedm strun</string>
+    <string name="instrument_strings_eight">Osm strun</string>
+    <string name="instrument_strings_pairs">Čtyři páry strun</string>
+    <string name="instrument_strings_six_pairs">Šest párů strun</string>
+    <string name="instrument_no_chord_diagrams">%1$s · Bez diagramů akordů</string>
+    <string name="instrument_keyboard_description">Tóny každého akordu, s kapodastrem započteným do transpozice</string>
+    <string name="instrument_other_description">Bez strun a diagramů akordů</string>
+    <string name="settings_general">Obecné</string>
+    <string name="settings_onboarding">Nastavit Campfire znovu</string>
+    <string name="settings_onboarding_description">Vyber si znovu vzhled, nástroj a funkce, krok za krokem</string>
+    <string name="settings_user_interface_theme">Motiv</string>
+    <string name="settings_user_interface_theme_system_default">Systémový</string>
+    <string name="settings_user_interface_theme_dark">Tmavý</string>
+    <string name="settings_user_interface_theme_light">Světlý</string>
+    <string name="settings_user_interface_theme_color">Barva</string>
+    <string name="settings_background_warmth">Sépie</string>
+    <string name="settings_background_warmth_description">Posouvá pozadí k teplé barvě starého papíru, která může být šetrnější k očím. Kontrast zůstává na každém stupni stejný.</string>
+    <string name="settings_app_icon_launcher">Obarvit ikonu v launcheru</string>
+    <string name="settings_app_icon_launcher_description">Ikona na ploše převezme barvu zvolenou výše. První změna se projeví, až Campfire opustíš, a některé launchery ikonu při změně z plochy odstraní.</string>
+    <string name="settings_app_icon_home_screen">Obarvit ikonu aplikace</string>
+    <string name="settings_app_icon_home_screen_description">Ikona na ploše převezme barvu zvolenou výše. iOS každou změnu potvrdí zprávou.</string>
+    <string name="settings_app_icon_window">Obarvit ikonu okna</string>
+    <string name="settings_app_icon_window_description">Ikona okna převezme barvu zvolenou výše, dokud je Campfire otevřený</string>
+    <string name="settings_app_icon_browser_tab">Obarvit ikonu karty</string>
+    <string name="settings_app_icon_browser_tab_description">Ikona karty prohlížeče převezme barvu zvolenou výše</string>
+    <string name="settings_tooltips">Popisky</string>
+    <string name="settings_tooltips_description">Ukáže, co dělá tlačítko se samotnou ikonou, když se na něm zastavíš</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">Šedá</string>
+    <string name="settings_user_interface_theme_color_system">Systémová</string>
+    <string name="settings_user_interface_theme_color_red">Červená</string>
+    <string name="settings_user_interface_theme_color_orange">Oranžová</string>
+    <string name="settings_user_interface_theme_color_yellow">Žlutá</string>
+    <string name="settings_user_interface_theme_color_green">Zelená</string>
+    <string name="settings_user_interface_theme_color_teal">Modrozelená</string>
+    <string name="settings_user_interface_theme_color_blue">Modrá</string>
+    <string name="settings_user_interface_theme_color_purple">Fialová</string>
+    <string name="settings_user_interface_theme_color_pink">Růžová</string>
+    <string name="settings_user_interface_language">Jazyk</string>
+    <string name="settings_user_interface_language_system_default">Systémový</string>
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
+    <string name="settings_user_interface_language_english">Angličtina</string>
+    <string name="settings_user_interface_language_hungarian">Maďarština</string>
+    <string name="settings_user_interface_language_romanian">Rumunština</string>
+    <string name="settings_user_interface_language_german">Němčina</string>
+    <string name="settings_user_interface_language_spanish">Španělština</string>
+    <string name="settings_user_interface_language_french">Francouzština</string>
+    <string name="settings_user_interface_language_italian">Italština</string>
+    <string name="settings_user_interface_language_hebrew">Hebrejština</string>
+    <string name="settings_user_interface_language_portuguese">Portugalština</string>
+    <string name="settings_user_interface_language_polish">Polština</string>
+    <string name="settings_user_interface_language_czech">Čeština</string>
+    <string name="settings_website">Web</string>
+    <string name="settings_distributions_all">Všechny verze Campfire</string>
+    <string name="settings_distributions_all_description">Pro tvá další zařízení</string>
+    <string name="settings_distribution_play_store">Google Play</string>
+    <string name="settings_distribution_app_store">App Store</string>
+    <string name="settings_distribution_mac_app_store">Mac App Store</string>
+    <string name="settings_distribution_microsoft_store">Microsoft Store</string>
+    <string name="settings_rate">Ohodnotit Campfire</string>
+    <string name="settings_rate_description">Napsat recenzi na %1$s</string>
+    <string name="settings_share_app">Doporučit Campfire</string>
+    <string name="settings_share_app_description">Pošli kamarádovi odkaz na aplikaci</string>
+    <string name="settings_about">O aplikaci</string>
+    <string name="settings_git_hub">Campfire na GitHubu</string>
+    <string name="settings_git_hub_description">Zdrojový kód a hlášení chyb</string>
+    <string name="settings_log_email">Poslat protokol aplikace e-mailem</string>
+    <string name="settings_log_share">Sdílet protokol aplikace</string>
+    <string name="settings_log_save">Uložit protokol aplikace</string>
+    <string name="settings_log_description">Pomůže vývojáři zjistit, co se pokazilo</string>
+    <string name="log_dialog_text">Protokol ukazuje, co Campfire v poslední době dělal: otevřené obrazovky, názvy tvých písní a případné chyby. Nic dalšího o tobě neobsahuje a přečte si ho jen ten, komu ho pošleš.</string>
+    <string name="log_dialog_send_to">Pošli ho prosím na adresu %1$s.</string>
+    <string name="log_dialog_email">E-mail</string>
+    <string name="log_dialog_share">Sdílet</string>
+    <string name="log_dialog_copy_address">Kopírovat adresu</string>
+    <string name="log_dialog_address_copied">Adresa zkopírována</string>
+    <string name="crash_report_title">Campfire se neočekávaně ukončil</string>
+    <string name="crash_report_text">Campfire při posledním použití přestal fungovat. Když pošleš jeho protokol vývojáři, pomůžeš to opravit.</string>
+    <string name="crash_report_not_now">Teď ne</string>
+    <string name="settings_help">Nápověda a podpora</string>
+    <string name="settings_help_description">Časté otázky a jak nahlásit problém</string>
+    <string name="settings_privacy_policy">Zásady ochrany soukromí</string>
+    <string name="settings_privacy_policy_description">Co aplikace dělá s tvými daty</string>
+    <string name="settings_open_source_licenses">Licence open source</string>
+    <string name="settings_open_source_licenses_description">Knihovny, písma a hmaty akordů, ze kterých je Campfire postavený, a jejich licence</string>
+    <string name="open_source_licenses_intro">Campfire je open source a je postavený na práci druhých. Vyber položku a zobrazí se její licence.</string>
+    <string name="open_source_licenses_show">Zobrazit licenci</string>
+    <string name="open_source_licenses_project">Stránka projektu</string>
+    <string name="open_source_licenses_license">Licence</string>
+    <string name="settings_support">Kup mi kávu</string>
+    <string name="settings_support_description">Podpoř vývoj aplikace</string>
+    <string name="settings_version">Verze %1$s</string>
+    <string name="settings_created_by">Autor: Péter Pandula</string>
+
+    <!-- Metronome screen -->
+    <string name="metronome">Metronom</string>
+    <string name="metronome_start">Spustit</string>
+    <string name="metronome_stop">Zastavit</string>
+    <string name="metronome_tempo_slider">Tempo v dobách za minutu</string>
+    <string name="metronome_tap_description">Vyťukat tempo</string>
+    <string name="metronome_group_rhythm">Rytmus</string>
+    <string name="metronome_group_playback">Přehrávání</string>
+    <string name="metronome_time_signature">Takt</string>
+    <string name="metronome_accent_hint">Vyber dobu v taktu výše, chceš-li ji zdůraznit nebo ztlumit.</string>
+    <string name="metronome_beats_decrease">Méně dob</string>
+    <string name="metronome_beats_increase">Více dob</string>
+    <string name="metronome_beat_unit_decrease">Delší nota</string>
+    <string name="metronome_beat_unit_increase">Kratší nota</string>
+    <!-- One beat of the bar as a screen reader names it; how it sounds (metronome_level_…) is read as its state. -->
+    <string name="metronome_beat">Doba %1$d</string>
+    <!-- What tapping a beat does, read by a screen reader as "double-tap to change the accent". -->
+    <string name="metronome_beat_change">Změnit přízvuk</string>
+    <string name="metronome_level_accent">s přízvukem</string>
+    <string name="metronome_level_normal">běžná</string>
+    <string name="metronome_level_muted">ztlumená</string>
+    <string name="metronome_subdivision">Dělení doby</string>
+    <string name="metronome_subdivision_description">Kliknutí na dobu</string>
+    <string name="metronome_change_timing">Změna tempa</string>
+    <string name="metronome_change_timing_description">Při přechodu na jinou píseň nebo při změně v ní</string>
+    <string name="metronome_change_next_bar">Další takt</string>
+    <string name="metronome_change_next_beat">Další doba</string>
+    <string name="metronome_sound">Zvuk</string>
+    <string name="metronome_sound_click">Cvaknutí</string>
+    <string name="metronome_sound_woodblock">Woodblock</string>
+    <string name="metronome_sound_beep">Pípnutí</string>
+    <string name="metronome_sound_hi_hat">Hi-hat</string>
+    <string name="metronome_sound_cowbell">Cowbell</string>
+    <string name="metronome_volume">Hlasitost</string>
+    <string name="metronome_animate">Animace v rytmu</string>
+    <string name="metronome_vibrate">Vibrace v rytmu</string>
+    <string name="metronome_audio_unavailable">Není k dispozici žádný zvukový výstup, takže se rytmus jen zobrazuje.</string>
+    <string name="metronome_audio_waiting">Vyber cokoli na stránce nebo stiskni klávesu, aby prohlížeč mohl přehrát zvuk.</string>
+    <string name="metronome_stopped_refused">Metronom teď nemohl přehrát zvuk, možná kvůli hovoru.</string>
+    <string name="metronome_stopped_interrupted">Metronom se zastavil kvůli hovoru nebo jiné aplikaci.</string>
+    <string name="metronome_stopped_disconnected">Metronom se zastavil, protože se odpojilo zvukové zařízení.</string>
+    <string name="metronome_stopped_failed">Metronom se zastavil, protože selhal zvukový výstup.</string>
+    <string name="metronome_stopped_silent">Metronom se zastavil, když Campfire zmizel z obrazovky, protože s nulovou hlasitostí nebo se všemi dobami ztlumenými nebylo nic slyšet.</string>
+    <!-- The channel of the notification a playing metronome keeps up, as the system's settings list it. -->
+    <string name="metronome_notification_channel">Metronom</string>
+
+    <!-- Tuner screen, and the tuner sheet over a song -->
+    <string name="tuner">Ladička</string>
+    <string name="tuner_play_a_note">Zahraj tón</string>
+    <string name="tuner_reference_tone">Referenční tón</string>
+    <!-- The display as a screen reader reads it while a reference tone sounds, e.g. "Reference tone, A4". -->
+    <string name="tuner_reading_tone">Referenční tón, %1$s</string>
+    <!-- What is heard and what it is tuned to, in Hz. -->
+    <string name="tuner_frequency">%1$s Hz</string>
+    <string name="tuner_target_frequency">Cíl %1$s Hz</string>
+    <!-- The reading under the meter: how many cents off, with its sign ("−18", "+3", "0"), or that the note is in tune. -->
+    <plurals name="tuner_cents">
+        <item quantity="one">%1$s cent</item>
+        <item quantity="few">%1$s centy</item>
+        <item quantity="other">%1$s centů</item>
+    </plurals>
+    <string name="tuner_in_tune">Naladěno</string>
+    <string name="tuner_flat">Nízko</string>
+    <string name="tuner_sharp">Vysoko</string>
+    <!-- How a screen reader reads the meter: the note, then how far it is off, e.g. "E2, 12 cents flat". -->
+    <plurals name="tuner_reading_flat">
+        <item quantity="one">%1$s, o %2$d cent níž</item>
+        <item quantity="few">%1$s, o %2$d centy níž</item>
+        <item quantity="other">%1$s, o %2$d centů níž</item>
+    </plurals>
+    <plurals name="tuner_reading_sharp">
+        <item quantity="one">%1$s, o %2$d cent výš</item>
+        <item quantity="few">%1$s, o %2$d centy výš</item>
+        <item quantity="other">%1$s, o %2$d centů výš</item>
+    </plurals>
+    <string name="tuner_reading_in_tune">%1$s, naladěno</string>
+    <!-- What a screen reader announces once a reading has settled: the note, and roughly how far it is off. -->
+    <string name="tuner_reading_far_flat">%1$s, hodně nízko</string>
+    <string name="tuner_reading_coarse_flat">%1$s, nízko</string>
+    <string name="tuner_reading_coarse_sharp">%1$s, vysoko</string>
+    <string name="tuner_reading_far_sharp">%1$s, hodně vysoko</string>
+    <string name="tuner_tuning_standard">Standardní</string>
+    <string name="tuner_tuning_half_step_down">O půltón níž</string>
+    <string name="tuner_tuning_full_step_down">O celý tón níž</string>
+    <string name="tuner_tuning_baritone">Barytonové</string>
+    <string name="tuner_tuning_drop">Drop %1$s</string>
+    <string name="tuner_tuning_double_drop">Double drop %1$s</string>
+    <string name="tuner_tuning_open">Open %1$s</string>
+    <string name="tuner_tuning_high">High %1$s</string>
+    <string name="tuner_tuning_low">Low %1$s</string>
+    <string name="tuner_tuning_double">Double %1$s</string>
+    <string name="tuner_tuning_key">Ladění %1$s</string>
+    <string name="tuner_tuning_modal">%1$s modal</string>
+    <string name="tuner_strings">Struny</string>
+    <string name="tuner_mode_chromatic">Chromatický</string>
+    <string name="tuner_strings_description">Vyber strunu a uslyšíš její tón, dalším výběrem ho zastavíš.</string>
+    <!-- A string chip as a screen reader reads it, e.g. "String 6, E2". -->
+    <string name="tuner_string">Struna %1$d, %2$s</string>
+    <string name="tuner_string_pair">Dvojice strun %1$d, %2$s</string>
+    <!-- A sharp note as a screen reader says it, given its name without the sign: "C sharp", or for the syllables of the
+         Latin notation, "Do sharp". -->
+    <string name="tuner_note_sharp_letter">%1$sis</string>
+    <string name="tuner_note_sharp_syllable">%1$s s křížkem</string>
+    <!-- How a screen reader reads the unlabeled reference pitch pill, e.g. "Reference pitch (A4), 440 Hz". -->
+    <string name="tuner_reference_pitch">Referenční ladění (%1$s), %2$d Hz</string>
+    <string name="tuner_reference_pitch_value">%1$d Hz</string>
+    <string name="tuner_reference_pitch_decrease">Snížit referenční ladění</string>
+    <string name="tuner_reference_pitch_increase">Zvýšit referenční ladění</string>
+    <string name="tuner_reference_pitch_reset">Obnovit referenční ladění na 440 Hz</string>
+    <string name="tuner_play_reference">Přehrát referenční tón %1$s</string>
+    <string name="tuner_notice_not_asked">Campfire poslouchá nástroj přes mikrofon. Zvuk se analyzuje v tomto zařízení a nikdy se nenahrává ani nikam neposílá.</string>
+    <string name="tuner_notice_refused">Mikrofon je pro Campfire vypnutý. Tóny níže můžeš přehrávat i tak.</string>
+    <string name="tuner_notice_refused_web">Mikrofon je pro Campfire vypnutý. Povolit ho můžeš v nastavení webu v prohlížeči, vedle adresy. Tóny níže můžeš přehrávat i tak.</string>
+    <string name="tuner_notice_refused_no_strings">Mikrofon je pro Campfire vypnutý.</string>
+    <string name="tuner_notice_refused_web_no_strings">Mikrofon je pro Campfire vypnutý. Povolit ho můžeš v nastavení webu v prohlížeči, vedle adresy.</string>
+    <string name="tuner_notice_no_microphone">Nebyl nalezen žádný mikrofon.</string>
+    <string name="tuner_notice_busy">Mikrofon používá hovor nebo jiná aplikace.</string>
+    <string name="tuner_notice_not_supported">Tento prohlížeč nedovoluje stránkám používat mikrofon.</string>
+    <string name="tuner_notice_failed">Mikrofon se nepodařilo otevřít.</string>
+    <string name="tuner_notice_silent">Zatím není nic slyšet. Pokud struna zní, zkontroluj, že mikrofon není ztlumený ani úplně stažený a že ho Campfire smí používat.</string>
+    <string name="tuner_notice_waiting">Vyber cokoli na stránce nebo stiskni klávesu, aby prohlížeč mohl poslouchat.</string>
+    <string name="tuner_use_microphone">Použít mikrofon</string>
+    <string name="tuner_notice_silent_enhancements">Zkontroluj, že mikrofon není ztlumený a že ho Campfire smí používat. Windows také může držený tón odstranit jako šum: v nastavení zvuku vypni pro tento mikrofon Vylepšení zvuku.</string>
+    <string name="tuner_open_settings">Otevřít nastavení</string>
+    <string name="tuner_open_sound_settings">Otevřít nastavení zvuku</string>
+    <string name="tuner_ask_again">Zeptat se znovu</string>
+    <string name="tuner_try_again">Zkusit znovu</string>
+
+    <!-- Chords screen, and the Tools item of a navigation bar with no room for every screen, which holds it with the
+         Metronome and the Tuner -->
+    <string name="chords">Akordy</string>
+    <string name="tools">Pomůcky</string>
+    <!-- The two buttons of the pill beside the search stepping the key the chords and scales are listed in. -->
+    <string name="library_key_down">Tónina o půltón níž</string>
+    <string name="library_key_up">Tónina o půltón výš</string>
+    <string name="chords_search">Najít libovolný akord</string>
+    <!-- Over the chords the picked key lists, e.g. "Common C chords": not every chord there is, which a search finds. -->
+    <string name="chords_common">Běžné akordy v %1$s</string>
+    <!-- Over the chords of the picked key a search found, e.g. "Chords matching “m7” in C". -->
+    <string name="chords_search_heading">Akordy odpovídající „%1$s“ v %2$s</string>
+    <string name="chords_instrument_other">Vyber nástroj a uvidíš, jak se na něm akordy hrají.</string>
+    <string name="chords_instrument_without_diagrams">%1$s: žádné diagramy akordů. Vyber jiný nástroj a uvidíš, jak se na něm akordy hrají.</string>
+    <!-- A search no chord of the picked key matches, e.g. "No chord in this key matches “Emaj7”." -->
+    <string name="chords_search_no_chord">Hledání „%1$s“ neodpovídá žádný akord v této tónině.</string>
+
+    <!-- Scales screen and the scale sheet. The scale names follow the usual theory terms of each language. -->
+    <string name="scales">Stupnice</string>
+    <string name="scales_instrument_other">Zobrazeno na klaviatuře. Vyber nástroj a uvidíš stupnice na jeho strunách.</string>
+    <string name="scales_search">Najít stupnici nebo mód</string>
+    <!-- Over the scales a search found, e.g. "Scales matching “dorian” in C". -->
+    <string name="scales_search_heading">Stupnice odpovídající „%1$s“ v %2$s</string>
+    <string name="scales_search_no_scale">Hledání „%1$s“ neodpovídá žádná stupnice.</string>
+    <string name="scale_family_common">Běžné</string>
+    <string name="scale_family_major_modes">Módy dur</string>
+    <string name="scale_family_harmonic_minor_modes">Módy harmonické moll</string>
+    <string name="scale_family_melodic_minor_modes">Módy melodické moll</string>
+    <string name="scale_family_minor_and_harmonic">Další harmonické</string>
+    <string name="scale_family_pentatonic">Pentatonické</string>
+    <string name="scale_family_blues_and_hexatonic">Bluesové a hexatonické</string>
+    <string name="scale_family_symmetric">Symetrické</string>
+    <string name="scale_family_bebop">Bebopové</string>
+    <string name="scale_family_world">Etnické</string>
+    <!-- A scale in a key, its root first, e.g. "C Dorian" or "C major": the scale names are written as this puts them, and
+         capitalized in code where a name stands alone. -->
+    <string name="scales_sheet_title">%1$s %2$s</string>
+    <!-- What a screen reader says of a scale diagram: the scale, then its notes, e.g. "C major: C D E F G A B". -->
+    <string name="scales_diagram">%1$s: %2$s</string>
+    <string name="scales_labels_degrees">Stupně</string>
+    <string name="scales_labels_notes">Tóny</string>
+    <string name="scales_labels_show_notes">Zobrazit názvy tónů</string>
+    <string name="scales_labels_show_degrees">Zobrazit stupně</string>
+    <!-- The steps between a scale's notes, e.g. "W W H W W W H": a whole step, a half step, and three semitones. A language may
+         write them as numbers, as Hungarian does: "1 1 ½", and "1½" for three semitones. -->
+    <string name="scales_steps_whole">1</string>
+    <string name="scales_steps_half">½</string>
+    <string name="scales_steps_augmented">1½</string>
+    <string name="scales_play">Přehrát stupnici</string>
+    <!-- Which mode of which scale this one is, e.g. "Mode 2 of C major" for D Dorian. -->
+    <string name="scales_mode_of">%1$s. mód %2$s</string>
+    <!-- The other names of a scale, e.g. "Also called Hijaz, Freygish". -->
+    <string name="scales_also_called">Jinak též %1$s</string>
+    <string name="scales_relative_minor">Paralelní moll: %1$s</string>
+    <string name="scales_chords">Akordy v této stupnici</string>
+    <string name="scales_sevenths">Septakordy</string>
+    <!-- The scales a chord sheet ends in, built on its root and holding its notes. -->
+    <string name="song_details_chord_scales">Stupnice pro tento akord</string>
+    <!-- Over the scales of the parts of a song that have no heading of their own, where its other parts are named. -->
+    <string name="song_details_scales_other">Zbytek písně</string>
+    <!-- Over the scales of the parts of a song without a heading, where several such groups are told apart by the first words they sing. -->
+    <string name="song_details_scales_from">Od „%1$s“</string>
+    <!-- Over the scales of one named part of a song that also hold its parts without a heading, e.g. "Chorus and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed">%1$s a části bez nadpisu</string>
+    <!-- The same over a list of several named parts, e.g. "Verse, Chorus, and the parts without a heading". -->
+    <string name="song_details_scales_and_unnamed_several">%1$s a části bez nadpisu</string>
+    <!-- Over the scales for one chord the scales above it leave out, e.g. "Over E7". -->
+    <string name="song_details_scales_over">Pro %1$s</string>
+    <!-- The same for two chords one scale serves, e.g. "Over F♯7 and F♯". -->
+    <string name="song_details_scales_over_two">Pro %1$s a %2$s</string>
+    <!-- The same for more chords, the first of them joined by commas, e.g. "Over A7, D7, and G7". -->
+    <string name="song_details_scales_over_several">Pro %1$s a %2$s</string>
+    <!-- Under the heading of the parts of a song that fit none of the scales shown for it, where the row has no scale chips. -->
+    <string name="song_details_scales_unheld">Žádná stupnice výše tyto akordy nepokrývá</string>
+    <string name="scale_major">dur</string>
+    <string name="scale_dorian">dórská</string>
+    <string name="scale_phrygian">frygická</string>
+    <string name="scale_lydian">lydická</string>
+    <string name="scale_mixolydian">mixolydická</string>
+    <string name="scale_natural_minor">moll přirozená</string>
+    <string name="scale_locrian">lokrická</string>
+    <string name="scale_harmonic_minor">moll harmonická</string>
+    <string name="scale_locrian_natural_6">lokrická ♮6</string>
+    <string name="scale_ionian_sharp_5">jónská ♯5</string>
+    <string name="scale_dorian_sharp_4">dórská ♯4</string>
+    <string name="scale_phrygian_dominant">frygická dominantní</string>
+    <string name="scale_lydian_sharp_2">lydická ♯2</string>
+    <string name="scale_ultralocrian">ultralokrická</string>
+    <string name="scale_melodic_minor">moll melodická</string>
+    <string name="scale_dorian_flat_2">dórská ♭2</string>
+    <string name="scale_lydian_augmented">lydická zvětšená</string>
+    <string name="scale_lydian_dominant">lydická dominantní</string>
+    <string name="scale_mixolydian_flat_6">mixolydická ♭6</string>
+    <string name="scale_locrian_natural_2">lokrická ♮2</string>
+    <string name="scale_altered">alterovaná</string>
+    <string name="scale_harmonic_major">dur harmonická</string>
+    <string name="scale_double_harmonic">dvojitá harmonická</string>
+    <string name="scale_hungarian_minor">maďarská moll</string>
+    <string name="scale_hungarian_major">maďarská dur</string>
+    <string name="scale_neapolitan_major">neapolská dur</string>
+    <string name="scale_neapolitan_minor">neapolská moll</string>
+    <string name="scale_major_pentatonic">durová pentatonika</string>
+    <string name="scale_minor_pentatonic">mollová pentatonika</string>
+    <string name="scale_minor_6_pentatonic">mollová pentatonika se sextou</string>
+    <string name="scale_dominant_pentatonic">dominantní pentatonika</string>
+    <string name="scale_egyptian">egyptská</string>
+    <string name="scale_man_gong">Man Gong</string>
+    <string name="scale_ritusen">Ritusen</string>
+    <string name="scale_hirajoshi">Hirajoshi</string>
+    <string name="scale_in">In</string>
+    <string name="scale_insen">Insen</string>
+    <string name="scale_iwato">Iwato</string>
+    <string name="scale_kumoi">Kumoi</string>
+    <string name="scale_chinese">čínská</string>
+    <string name="scale_blues">bluesová</string>
+    <string name="scale_major_blues">durová bluesová</string>
+    <string name="scale_major_hexatonic">durová hexatonika</string>
+    <string name="scale_minor_hexatonic">mollová hexatonika</string>
+    <string name="scale_prometheus">prométheovská</string>
+    <string name="scale_tritone">tritonová</string>
+    <string name="scale_whole_tone">celotónová</string>
+    <string name="scale_augmented">zvětšená</string>
+    <string name="scale_diminished">zmenšená (celý–půl)</string>
+    <string name="scale_dominant_diminished">dominantní zmenšená (půl–celý)</string>
+    <string name="scale_chromatic">chromatická</string>
+    <string name="scale_bebop_dominant">bebopová dominantní</string>
+    <string name="scale_bebop_major">bebopová dur</string>
+    <string name="scale_bebop_dorian">bebopová dórská</string>
+    <string name="scale_bebop_melodic_minor">bebopová moll melodická</string>
+    <string name="scale_bebop_harmonic_minor">bebopová moll harmonická</string>
+    <string name="scale_persian">perská</string>
+    <string name="scale_enigmatic">enigmatická</string>
+    <string name="scale_oriental">orientální</string>
+    <string name="scale_major_locrian">lokrická dur</string>
+    <string name="scale_lydian_minor">lydická moll</string>
+    <string name="scale_leading_whole_tone">celotónová s citlivým tónem</string>
+    <string name="scale_flamenco">flamenco</string>
+    <string name="scale_spanish_eight_tone">španělská osmitónová</string>
+    <!-- The other names a scale is known by, comma-separated, shown as "Also called …" and found by the search. -->
+    <string name="scale_aliases_major">Jónská</string>
+    <string name="scale_aliases_mixolydian">Dominantní</string>
+    <string name="scale_aliases_natural_minor">Aiolská</string>
+    <string name="scale_aliases_ionian_sharp_5">Zvětšená durová</string>
+    <string name="scale_aliases_dorian_sharp_4">Rumunská mollová, Ukrajinská dórská</string>
+    <string name="scale_aliases_phrygian_dominant">Španělská frygická, Frygická durová, Hidžáz, Freygish, Ahava Rabba</string>
+    <string name="scale_aliases_ultralocrian">Superlokrická ♭♭7</string>
+    <string name="scale_aliases_melodic_minor">Jazzová mollová</string>
+    <string name="scale_aliases_dorian_flat_2">Frygická ♮6</string>
+    <string name="scale_aliases_lydian_dominant">Akustická, Alikvotní, Lydická ♭7, Mixolydická ♯4</string>
+    <string name="scale_aliases_mixolydian_flat_6">Aiolská dominantní, Hindská</string>
+    <string name="scale_aliases_locrian_natural_2">Polozmenšená</string>
+    <string name="scale_aliases_altered">Superlokrická, Zmenšená celotónová</string>
+    <string name="scale_aliases_double_harmonic">Byzantská, Hidžáz Kar, Arabská, Cikánská durová</string>
+    <string name="scale_aliases_hungarian_minor">Cikánská mollová, Dvojitě harmonická mollová</string>
+    <string name="scale_aliases_egyptian">Suspendovaná pentatonika</string>
+    <string name="scale_aliases_man_gong">Bluesová mollová pentatonika</string>
+    <string name="scale_aliases_minor_6_pentatonic">Mollová pentatonika se sextou, Dórská pentatonika</string>
+    <string name="scale_aliases_dominant_pentatonic">Mixolydická pentatonika, Dominantní septimová pentatonika</string>
+    <string name="scale_aliases_ritusen">Yo, Bluesová durová pentatonika</string>
+    <string name="scale_aliases_in">Sakura</string>
+    <string name="scale_aliases_blues">Mollová bluesová</string>
+    <string name="scale_aliases_prometheus">Mystická</string>
+    <string name="scale_aliases_tritone">Petruška</string>
+    <string name="scale_aliases_augmented">Hexatonická</string>
+    <string name="scale_aliases_diminished">Oktatonická</string>
+
+    <!-- Song editor screen -->
+    <string name="song_editor_edit">Úpravy</string>
+    <string name="song_editor_preview">Náhled</string>
+    <string name="song_editor_split">Rozdělení</string>
+    <string name="song_editor_undo">Vrátit zpět</string>
+    <string name="song_editor_redo">Opakovat</string>
+    <string name="song_editor_shortcuts">Zkratky</string>
+    <string name="song_editor_show_shortcuts">Zobrazit zkratky</string>
+    <string name="song_editor_hide_shortcuts">Skrýt zkratky</string>
+    <string name="song_editor_insert_chord">Akord</string>
+    <string name="song_editor_insert_annotation">Anotace</string>
+    <string name="song_editor_format_bold">Tučné</string>
+    <string name="song_editor_format_italic">Kurzíva</string>
+    <string name="song_editor_format_underline">Podtržení</string>
+    <string name="song_editor_section_intro">Intro</string>
+    <string name="song_editor_section_verse">Sloka</string>
+    <string name="song_editor_section_pre_chorus">Předrefrén</string>
+    <string name="song_editor_section_chorus">Refrén</string>
+    <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_solo">Sólo</string>
+    <string name="song_editor_section_outro">Outro</string>
+    <string name="song_editor_section_tab">Tabulatura</string>
+    <string name="song_editor_tab_any_instrument">Libovolný nástroj</string>
+    <string name="song_editor_section_grid">Mřížka</string>
+    <string name="song_editor_section_abc">Noty</string>
+    <string name="song_editor_insert_chorus_recall">Opakovat refrén</string>
+    <string name="song_editor_insert_comment">Komentář</string>
+    <string name="song_editor_insert_comment_italic">Komentář kurzívou</string>
+    <string name="song_editor_insert_comment_box">Komentář v rámečku</string>
+    <string name="song_editor_insert_key_change">Změna tóniny</string>
+    <string name="song_editor_insert_title">Název</string>
+    <string name="song_editor_insert_subtitle">Podtitul</string>
+    <string name="song_editor_insert_artist">Interpret</string>
+    <string name="song_editor_insert_composer">Skladatel</string>
+    <string name="song_editor_insert_lyricist">Textař</string>
+    <string name="song_editor_insert_more_details">Další údaje</string>
+    <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_cover_art">Obal</string>
+    <string name="song_editor_insert_year">Rok</string>
+    <string name="song_editor_insert_key">Tónina</string>
+    <string name="song_editor_insert_capo">Kapodastr</string>
+    <string name="song_editor_insert_tempo">Tempo</string>
+    <string name="song_editor_insert_time">Takt</string>
+    <string name="song_editor_insert_duration">Délka</string>
+    <string name="song_editor_insert_tag">Štítek</string>
+    <string name="song_editor_insert_language">Jazyk</string>
+    <string name="song_editor_insert_link">Odkaz</string>
+    <string name="song_editor_insert_chord_shape">Hmat akordu</string>
+    <string name="song_editor_insert_chord_color">Barva akordů</string>
+    <string name="song_editor_insert_text_color">Barva textu</string>
+    <string name="song_editor_chord_color_magenta">Purpurová</string>
+    <string name="song_editor_transpose_text_up">Transponovat text nahoru</string>
+    <string name="song_editor_transpose_text_down">Transponovat text dolů</string>
+    <string name="song_editor_prettify">Uhladit ChordPro</string>
+    <string name="song_editor_revert">Vrátit všechny změny</string>
+    <string name="song_editor_chordpro_reference">Příručka ChordPro</string>
+    <string name="song_editor_find">Najít</string>
+    <string name="song_editor_find_and_replace">Najít a nahradit</string>
+    <string name="song_editor_find_query">Hledaný text</string>
+    <string name="song_editor_find_replacement">Nahradit textem</string>
+    <string name="song_editor_find_match_count">%1$d z %2$d</string>
+    <string name="song_editor_find_no_matches">Žádné shody</string>
+    <string name="song_editor_find_match_case">Rozlišovat velikost písmen</string>
+    <string name="song_editor_find_previous">Předchozí shoda</string>
+    <string name="song_editor_find_next">Další shoda</string>
+    <string name="song_editor_replace">Nahradit</string>
+    <string name="song_editor_replace_all">Nahradit vše</string>
+    <string name="song_editor_revert_confirmation">Chceš se vrátit k poslední uložené verzi této písně? Všechno, co je od té doby napsané, se ztratí.</string>
+    <string name="song_editor_unsaved_changes">Neuložené změny</string>
+    <string name="song_editor_unsaved_changes_confirmation">Chceš před odchodem z editoru uložit změny?</string>
+    <string name="song_editor_discard">Zahodit</string>
+    <string name="song_editor_save_failed">Píseň se nepodařilo uložit</string>
+    <string name="song_editor_draft_lost">Neuložené změny se nepodařilo obnovit</string>
+    <string name="song_editor_draft_restored">Neuložené změny byly obnoveny</string>
+    <string name="song_editor_file_gone">Soubor této písně už v knihovně není. Ulož ji a vrátí se tam.</string>
+    <string name="song_editor_untitled">Aby šla píseň uložit, dej jí název</string>
+
+    <!-- Song details screen -->
+    <string name="song_details_previous_song">Předchozí píseň</string>
+    <string name="song_details_next_song">Další píseň</string>
+    <string name="song_details_previous_page">Předchozí stránka</string>
+    <string name="song_details_next_page">Další stránka</string>
+    <string name="song_details_previous_section">Předchozí část</string>
+    <string name="song_details_next_section">Další část</string>
+    <string name="song_details_step_progress_page">Stránka %1$d z %2$d</string>
+    <string name="song_details_step_progress_section">Část %1$d z %2$d</string>
+    <string name="song_details_scroll_up">Posunout nahoru</string>
+    <string name="song_details_scroll_down">Posunout dolů</string>
+    <string name="song_details_auto_scroll_play">Spustit posouvání</string>
+    <string name="song_details_auto_scroll_pause">Zastavit posouvání</string>
+    <string name="song_details_auto_scroll_speed">Rychlost posouvání</string>
+    <string name="song_layout_title">Jak mají být písně rozvržené?</string>
+    <string name="song_layout_message">Vyber, jak má píseň vyplnit obrazovku, když hraješ.</string>
+    <string name="song_preference_change_hint">Platí to pro všechny písně. Změnit to můžeš kdykoli v Předvolbách, z Nastavení nebo z nabídky kterékoli písně.</string>
+    <string name="song_layout_pages">Stránky</string>
+    <string name="song_layout_pages_description">Co nejvíc písně najednou na obrazovce, ve sloupcích otáčených po stránkách</string>
+    <string name="song_layout_continuous">Plynulé</string>
+    <string name="song_layout_continuous_description">Jeden sloupec, který se sám posouvá tempem písně, rychlostí nastavenou zvlášť pro každou píseň</string>
+    <string name="page_turn_page">Stránka</string>
+    <string name="page_turn_column">Sloupec</string>
+    <string name="chord_names_title">Jak čteš akordy s kapodastrem?</string>
+    <string name="chord_names_example">S kapodastrem na pražci %1$s lze akordy této písně pojmenovat podle hmatů, které hraješ, nebo podle toho, jak znějí. Píseň také může zůstat ve své tónině a kapodastr změní jen hmaty.</string>
+    <string name="chord_names_shapes_description">Akordy, které hmatáš nad kapodastrem, jak se zapisují ve zpěvnících s kapodastrem</string>
+    <string name="chord_names_sounding_description">Akordy, které je slyšet, pro hraní bez kapodastru</string>
+    <string name="chord_names_keep_key">Zachovat tóninu</string>
+    <string name="chord_names_keep_key_description">Píseň zůstane ve své tónině, kapodastr mění jen hmaty a akordy jsou pojmenované tak, jak znějí</string>
+    <string name="song_details_song_position">%1$d / %2$d</string>
+    <string name="song_details_up_next">Další: %1$s</string>
+    <string name="song_details_step_again">Přejdi dál ještě jednou a otevře se</string>
+    <string name="song_details_transposition">Transpozice</string>
+    <string name="song_details_transpose_up">Transponovat nahoru</string>
+    <string name="song_details_transpose_down">Transponovat dolů</string>
+    <string name="song_details_transpose_reset">Resetovat transpozici</string>
+    <string name="song_details_tempo_decrease">Pomaleji</string>
+    <string name="song_details_tempo_increase">Rychleji</string>
+    <string name="song_details_tempo_reset">Resetovat tempo</string>
+    <string name="song_details_capo_decrease">Kapodastr níž</string>
+    <string name="song_details_capo_increase">Kapodastr výš</string>
+    <string name="song_details_capo_reset">Resetovat kapodastr</string>
+    <string name="song_details_playing_edit">Upravit výchozí hodnoty písně</string>
+    <string name="song_details_playing_description_setlist">Tyto hodnoty jsou uložené v souboru písně a určují, jak píseň všude začíná. Ovládací prvky u písně je mění jen pro tento setlist, aniž by se změnil soubor. Pokud chceš použít výchozí hodnotu, nech pole prázdné.</string>
+    <string name="song_details_playing_description_library">Tyto hodnoty jsou uložené v souboru písně a určují, jak píseň všude začíná. Ovládací prvky u písně je mění, když ji otevřeš z knihovny, aniž by se změnil soubor nebo některý setlist. Pokud chceš použít výchozí hodnotu, nech pole prázdné.</string>
+    <string name="song_details_playing_override_setlist">Upraveno pro tento setlist</string>
+    <string name="song_details_playing_override_library">Upraveno v knihovně</string>
+    <string name="song_details_playing_override_transposition">Transpozice %1$s</string>
+    <string name="song_details_playing_override_reset">Resetovat</string>
+    <plurals name="song_details_playing_key_transposed">
+        <item quantity="one">Tónina, ve které jsou akordy zapsané. Soubor je při zobrazení písně posune o %1$s půltón.</item>
+        <item quantity="few">Tónina, ve které jsou akordy zapsané. Soubor je při zobrazení písně posune o %1$s půltóny.</item>
+        <item quantity="other">Tónina, ve které jsou akordy zapsané. Soubor je při zobrazení písně posune o %1$s půltónů.</item>
+    </plurals>
+    <string name="song_details_playing_tempo">Tempo (BPM)</string>
+    <string name="song_details_playing_range">%1$d až %2$d</string>
+    <string name="song_details_metronome_show">Zobrazit metronom</string>
+    <string name="song_details_metronome_hide">Skrýt metronom</string>
+    <string name="song_details_scroll_to_top">Posunout na začátek</string>
+    <string name="song_details_text_size_increase">Zvětšit text</string>
+    <string name="song_details_text_size_decrease">Zmenšit text</string>
+    <string name="song_details_text_size_reset">Resetovat velikost textu</string>
+    <string name="song_details_text_size">Velikost textu</string>
+    <string name="song_details_section_chorus">Refrén</string>
+    <string name="song_details_section_bridge">Bridge</string>
+    <string name="song_details_section_tab">Tabulatura</string>
+    <string name="song_details_section_grid">Mřížka</string>
+    <string name="song_details_section_abc">Noty</string>
+    <string name="song_details_sheet_music_chords">Akordy: %1$s</string>
+    <string name="song_details_sheet_music_words">Text: %1$s</string>
+    <plurals name="song_details_grid_beats">
+        <item quantity="one">%1$s doba</item>
+        <item quantity="few">%1$s doby</item>
+        <item quantity="other">%1$s dob</item>
+    </plurals>
+    <string name="song_details_grid_held">výdrž</string>
+    <string name="song_details_grid_repeat_bar">opakovat takt</string>
+    <string name="song_details_grid_repeat_two_bars">opakovat dva takty</string>
+    <string name="song_details_sheet_music_parts">Hlasy</string>
+    <string name="song_details_sheet_music_part_unnamed">Hlas %1$s</string>
+    <string name="song_details_sheet_music_part_choose">Vybrat zobrazený hlas</string>
+    <string name="song_details_section_lilypond">LilyPond</string>
+    <string name="song_details_section_svg">SVG</string>
+    <string name="song_details_tab_expand">Zobrazit tabulaturu</string>
+    <string name="song_details_tab_collapse">Skrýt tabulaturu</string>
+    <string name="song_details_grid_expand">Zobrazit mřížku</string>
+    <string name="song_details_grid_collapse">Skrýt mřížku</string>
+    <string name="song_details_section_expand">Zobrazit část</string>
+    <string name="song_details_section_collapse">Skrýt část</string>
+    <string name="song_details_section_expand_starting">Zobrazit část začínající „%1$s“</string>
+    <string name="song_details_section_collapse_starting">Skrýt část začínající „%1$s“</string>
+    <string name="song_details_tags_manage">Spravovat štítky</string>
+    <string name="song_details_tags_add">Přidat štítky</string>
+    <string name="song_details_tags_search">Najít nebo vytvořit štítek</string>
+    <string name="song_details_tag_create">Vytvořit štítek „%1$s“</string>
+    <string name="song_details_tag_color">Barva štítku „%1$s“</string>
+    <string name="song_details_tag_color_none">Bez barvy</string>
+    <string name="song_details_tag_color_lime">Limetková</string>
+    <string name="song_details_tag_color_cyan">Azurová</string>
+    <string name="song_details_tag_color_indigo">Indigová</string>
+    <string name="song_details_tag_color_brown">Hnědá</string>
+    <string name="song_details_tag_color_black">Černá</string>
+    <string name="song_details_metadata_edit">Upravit údaje o písni</string>
+    <string name="song_details_song_info">O písni</string>
+    <string name="song_details_info_tags">Štítky</string>
+    <string name="song_details_info_languages">Jazyky</string>
+    <string name="song_details_info_links">Odkazy</string>
+    <string name="song_details_links_edit">Spravovat odkazy</string>
+    <string name="song_details_links_add">Přidat odkazy</string>
+    <string name="song_details_link_name">Název (nepovinné)</string>
+    <string name="song_details_link_duplicate">Tato adresa už v seznamu je</string>
+    <string name="song_details_languages_edit">Spravovat jazyky</string>
+    <string name="song_details_languages_add">Přidat jazyky</string>
+    <string name="song_details_remove_cover_art_confirmation">Odebrat obal písně %1$s?</string>
+    <string name="song_details_link_add">Přidat odkaz</string>
+    <string name="song_details_link_remove">Odebrat odkaz na %1$s</string>
+    <string name="song_details_link_move_up">Posunout odkaz na %1$s nahoru</string>
+    <string name="song_details_link_move_down">Posunout odkaz na %1$s dolů</string>
+    <string name="song_details_link_address">Webová adresa</string>
+    <string name="song_details_link_address_hint">Video, nahrávka, tabulatura nebo jakákoli jiná stránka o písni</string>
+    <string name="song_details_language_search">Hledat jazyk</string>
+    <string name="song_details_language_no_search_results">Tomuto hledání neodpovídá žádný jazyk. Dvou- nebo třípísmenný kód jazyk najde, i když pro něj neexistuje název.</string>
+    <string name="song_details_set_cover_art">Nastavit obal</string>
+    <string name="song_details_change_cover_art">Změnit obal</string>
+    <string name="cover_art_search">Hledat</string>
+    <string name="cover_art_search_hint">Zadej název alba nebo samotné písně a najdi vydání, na kterých vyšla</string>
+    <string name="cover_art_search_loading">Hledání v MusicBrainz a iTunes…</string>
+    <string name="cover_art_search_busy">MusicBrainz je vytížený, další pokus za chvíli…</string>
+    <string name="cover_art_search_no_results">Nenašlo se žádné vydání s obalem. Zkus název alba nebo méně slov.</string>
+    <string name="cover_art_search_failed">Hledání se nepodařilo dokončit.</string>
+    <string name="cover_art_search_remove">Odebrat obal</string>
+    <string name="cover_art_search_attribution">Vydání z MusicBrainz a iTunes, obaly z Cover Art Archive a od Apple</string>
+    <string name="cover_art_address_mode">Webová adresa</string>
+    <string name="cover_art_address">Adresa obrázku</string>
+    <string name="cover_art_address_hint">Vlož adresu obrázku z webu</string>
+    <string name="cover_art_address_failed">Z této adresy se nepodařilo načíst žádný obrázek</string>
+    <string name="song_details_lookup">Najít údaje o písni online</string>
+    <string name="song_details_lookup_fill_in">Doplnit</string>
+    <string name="song_details_lookup_hint">Zadej název písně, a pokud ho znáš, i interpreta, a najdi nahrávky, které jí odpovídají</string>
+    <string name="song_details_lookup_no_results">Žádná nahrávka této písně se nenašla. Zkus méně slov nebo vynech album.</string>
+    <string name="song_details_lookup_now">Teď: %1$s</string>
+    <string name="song_details_lookup_credits_loading">Zjišťování autorů z MusicBrainz…</string>
+    <string name="song_details_lookup_credits_none">MusicBrainz u této nahrávky neuvádí žádné autory</string>
+    <string name="song_details_lookup_credits_failed">Autory se nepodařilo dohledat</string>
+    <string name="song_details_lookup_nothing_new">Tato nahrávka neříká nic, co by už ve formuláři nebylo</string>
+    <string name="song_details_lookup_attribution">Data z MusicBrainz a iTunes.</string>
+    <string name="song_details_capo">Kapodastr %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_time_signature">Takt: %1$s</string>
+    <string name="song_details_key_change">Tónina: %1$s</string>
+    <string name="tab_notice_octave_up">Posunuto o oktávu výš, aby se vešlo na hmatník</string>
+    <string name="tab_notice_octave_down">Posunuto o oktávu níž, aby se vešlo na hmatník</string>
+    <string name="tab_notice_other_instrument">Tabulatura (%1$s), převedená na tvůj nástroj</string>
+    <string name="tab_notice_not_moved">Zobrazeno tak, jak je zapsáno: nelze to převést na tvé ladění</string>
+    <string name="tab_notice_not_moved_instrument">Tabulatura (%1$s), zobrazená tak, jak je zapsaná: nelze ji převést na tvůj nástroj</string>
+    <string name="tab_notice_hidden">Tabulatura skrytá</string>
+    <string name="tab_notice_hidden_instrument">Tabulatura (%1$s) skrytá</string>
+    <string name="song_details_chords">Akordy</string>
+    <string name="song_details_chord_tuning">Ladění: %1$s</string>
+    <string name="song_details_chord_defined_standard_tuning">Definováno v této písni pro standardní ladění</string>
+    <string name="song_details_chord_defined_standard_tuning_show">Zobrazit hmat z písně</string>
+    <string name="song_details_chord_defined_standard_tuning_hide">Zobrazit hmaty pro tvé ladění</string>
+    <string name="song_details_chord_diagram">%1$s: %2$s</string>
+    <string name="song_details_chord_diagram_none">%1$s: bez diagramu</string>
+    <string name="song_details_chord_letters">%1$s, tedy %2$s</string>
+    <string name="song_details_chord_degree">%1$s, stupeň %2$s</string>
+    <string name="song_details_chord_shape_choose">Vybrat hmat akordu – %1$s</string>
+    <string name="song_details_chord_shape_capo">Hmat %1$s, kapodastr %2$s</string>
+    <string name="song_details_chord_sounding_capo">Zní jako %1$s, kapodastr %2$s</string>
+    <string name="song_details_shapes_capo">hmaty, kapodastr</string>
+    <string name="song_details_capo_shapes">%1$s (hmaty %2$s)</string>
+    <string name="song_details_chord_defined">Definováno v této písni</string>
+    <plurals name="song_details_chord_defined_moved">
+        <item quantity="one">Definováno v této písni, posunuto o %1$d pražec</item>
+        <item quantity="few">Definováno v této písni, posunuto o %1$d pražce</item>
+        <item quantity="other">Definováno v této písni, posunuto o %1$d pražců</item>
+    </plurals>
+    <string name="song_details_timing">Odsud: %1$s</string>
+    <string name="song_details_composer">Skladatel</string>
+    <string name="song_details_lyricist">Textař</string>
+    <string name="song_details_album">Album</string>
+    <string name="song_details_year">Rok</string>
+    <string name="song_details_duration">Délka</string>
+    <string name="song_details_empty">Tento soubor zatím nemá žádný obsah.</string>
+    <string name="song_details_cut">Tato píseň je příliš dlouhá na to, aby se tu zobrazila celá, proto v tomto místě končí. Samotný soubor je kompletní a editor ukazuje celý.</string>
+    <string name="song_details_no_data">Tuto píseň se nepodařilo načíst</string>
+    <string name="song_details_no_data_hint">Soubor se nepodařilo přečíst.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync_unavailable">Tato verze Campfire vznikla bez přístupových údajů pro synchronizaci, takže není k čemu se připojit.</string>
+    <string name="settings_sync_description">Měj stejnou knihovnu na všech zařízeních díky vlastní složce v cloudu, včetně toho, jak je každá píseň transponovaná, s jakým kapodastrem a jak se hraje. Campfire nemá žádný server: soubory putují přímo mezi tvými zařízeními a tvým vlastním úložištěm.</string>
+    <string name="settings_sync_connect_dropbox">Připojit Dropbox</string>
+    <string name="settings_sync_connecting">Připojování…</string>
+    <string name="settings_sync_connection_failed_network">Službu se nepodařilo zastihnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="settings_sync_connection_failed_authorization">Dropbox připojení odmítl.</string>
+    <string name="settings_sync_connection_failed_unknown">Připojení se nezdařilo.</string>
+    <string name="settings_sync_connection_failed_storage">Campfire nemohl na tomto zařízení načíst ani uložit připojení. Zkusí to znovu při příštím spuštění.</string>
+    <string name="settings_sync_connected_as">Připojeno jako %1$s</string>
+    <string name="settings_sync_disconnect">Odpojit</string>
+    <string name="settings_sync_disconnect_confirmation">Odpojit %1$s? Campfire zapomene účet a přestane synchronizovat. Z knihovny ani ze složky v cloudu se nic neodstraní.</string>
+    <string name="settings_sync_now">Synchronizovat</string>
+    <string name="settings_sync_never">Zatím nesynchronizováno</string>
+    <string name="settings_sync_last_synced_moments_ago">Naposledy úspěšně synchronizováno před chvílí</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">Naposledy úspěšně synchronizováno před minutou</item>
+        <item quantity="other">Naposledy úspěšně synchronizováno před %1$d minutami</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">Naposledy úspěšně synchronizováno před hodinou</item>
+        <item quantity="other">Naposledy úspěšně synchronizováno před %1$d hodinami</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">Naposledy úspěšně synchronizováno včera</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">Naposledy úspěšně synchronizováno před %1$d dnem</item>
+        <item quantity="other">Naposledy úspěšně synchronizováno před %1$d dny</item>
+    </plurals>
+    <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
+    <string name="settings_sync_failed_network">Službu se nepodařilo zastihnout. Campfire to zkusí znovu příště.</string>
+    <string name="settings_sync_failed_authorization">Připojení bylo odmítnuto. Připoj účet znovu.</string>
+    <string name="settings_sync_failed_storage">Knihovnu se nepodařilo načíst nebo zapsat.</string>
+    <string name="settings_sync_failed_unknown">Synchronizace se nedokončila.</string>
+    <string name="settings_sync_failed_remote_full">Složka v cloudu je plná, takže už nejde nic nahrát. Uvolni v ní místo a synchronizuj znovu.</string>
+    <plurals name="settings_sync_files_failed">
+        <item quantity="one">Jeden soubor se nepodařilo synchronizovat: %2$s</item>
+        <item quantity="few">%1$d soubory se nepodařilo synchronizovat. Mezi nimi: %2$s</item>
+        <item quantity="other">%1$d souborů se nepodařilo synchronizovat. Mezi nimi: %2$s</item>
+    </plurals>
+    <string name="settings_sync_preferences_failed">Nastavení písní (transpozici, kapodastr a tempo) se nepodařilo synchronizovat. Campfire to zkusí znovu příště.</string>
+    <plurals name="settings_sync_conflicts">
+        <item quantity="one">Zachovány obě verze souboru, který se změnil na dvou místech: %2$s</item>
+        <item quantity="few">Zachovány obě verze %1$d souborů, které se změnily na dvou místech. Mezi nimi: %2$s</item>
+        <item quantity="other">Zachovány obě verze %1$d souborů, které se změnily na dvou místech. Mezi nimi: %2$s</item>
+    </plurals>
+
+    <string name="settings_sync_cancel">Zastavit synchronizaci</string>
+    <string name="settings_sync_progress">Synchronizace {completed} z {total}…</string>
+    <string name="settings_sync_preparing">Hledání změn…</string>
+    <string name="settings_sync_interrupted">Poslední synchronizace byla zastavena před dokončením. Vše, co se už stihlo přenést, zůstalo zachováno.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">Synchronizovaný soubor zmizel ze složky v cloudu. Smazat ho i tady, nebo ho zachovat a znovu nahrát?</item>
+        <item quantity="few">%1$d z tvých %2$d synchronizovaných souborů zmizely ze složky v cloudu. Smazat je i tady, nebo je zachovat a znovu nahrát?</item>
+        <item quantity="other">%1$d z tvých %2$d synchronizovaných souborů zmizelo ze složky v cloudu. Smazat je i tady, nebo je zachovat a znovu nahrát?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">Smazat je i tady</string>
+    <string name="settings_sync_keep_and_upload">Zachovat a nahrát</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">Synchronizovaný soubor zmizel z tohoto zařízení. Smazat ho i ze složky v cloudu, nebo ho zachovat a znovu stáhnout?</item>
+        <item quantity="few">%1$d z tvých %2$d synchronizovaných souborů zmizely z tohoto zařízení. Smazat je i ze složky v cloudu, nebo je zachovat a znovu stáhnout?</item>
+        <item quantity="other">%1$d z tvých %2$d synchronizovaných souborů zmizelo z tohoto zařízení. Smazat je i ze složky v cloudu, nebo je zachovat a znovu stáhnout?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">Smazat je i z cloudu</string>
+    <string name="settings_sync_keep_and_download">Zachovat a stáhnout</string>
+    <string name="settings_sync_notification_channel">Synchronizace</string>
+    <string name="settings_sync_notification_title">Synchronizace knihovny</string>
+    <string name="settings_sync_redirect_page_title">Zpět do Campfire</string>
+    <string name="settings_sync_redirect_page_message">Tuto kartu můžeš zavřít a vrátit se do aplikace.</string>
+
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">Co je nového v Campfire %1$s</string>
+    <string name="whats_new_message">• **Posun po sloupcích** Píseň se teď může posouvat o jeden sloupec místo celé stránky, takže další sloupec máš vždy na očích.\n• **Lepší notový zápis** Notový zápis ukazuje jen part tvého nástroje, kreslí kytarové a basové tabulatury podle tvého ladění a kapodastru a už neusekává dlouhé melodie.\n• **Nové Předvolby** Předvolby jsou rozdělené na stránky Obecné, Píseň, Akordy a Metronom a otevřeš je přímo z písně, z Akordů nebo ze Stupnic.\n• **Barvy akordů a textu** Obarvi akordy nebo text písně novými tlačítky editoru Barva akordů a Barva textu; v PDF se vytisknou černě.\n• **Přehled klávesových zkratek** Stiskni Ctrl nebo Cmd + lomítko a uvidíš všechny klávesové zkratky, včetně nových pro transpozici, vrácení zpět a opakování a přepínání obrazovek.</string>
+
+    <!-- Onboarding, shown once on the first run and again from Settings -->
+    <string name="onboarding_skip">Přeskočit</string>
+    <string name="onboarding_next">Další</string>
+    <string name="onboarding_start_playing">Začít hrát</string>
+    <string name="onboarding_welcome_title">Vítej v Campfire!</string>
+    <string name="onboarding_welcome_message">Pár rychlých otázek a aplikace bude tvoje.\nNejdřív se ujisti, že je čteš ve svém jazyce.</string>
+    <string name="onboarding_language">Jazyk: %1$s</string>
+    <string name="onboarding_settings_note">Všechno, co v těchto krocích zvolíš, můžeš později změnit v Nastavení.</string>
+    <string name="onboarding_look_title">Vyber si vzhled</string>
+    <string name="onboarding_look_message">Tmavý motiv tě na šerém pódiu neoslní a teplejší stránka je při dlouhém setu šetrnější k očím.</string>
+    <string name="onboarding_features_title">Co potřebuješ?</string>
+    <string name="onboarding_features_message">Nech si jen to, co budeš používat, ať je aplikace přehledná a sedí tomu, jak hraješ.</string>
+    <string name="onboarding_chord_diagram_description">Jak zahrát %1$s</string>
+    <string name="onboarding_progress">Krok %1$d z %2$d</string>
+    <string name="onboarding_instrument_title">Na co hraješ?</string>
+    <string name="onboarding_instrument_message">Diagramy akordů a ladička se řídí tím, co vybereš.</string>
+    <string name="onboarding_instrument_strings">Ladička bude poslouchat struny: %1$s</string>
+    <string name="onboarding_notation_title">Jak zapisuješ akordy?</string>
+    <string name="onboarding_notation_message">Vyber, jak se mají akordy zobrazovat. Písně se vždy ukládají standardním způsobem, takže se v každé aplikaci čtou stejně.</string>
+    <string name="onboarding_feature_chords_description">Akordy nad textem v libovolné tónině, s diagramy pro tvůj nástroj. Jen zpíváš? Odškrtni to a uvidíš jen text.</string>
+    <string name="onboarding_feature_metronome_description">Drží rytmus v tempu každé písně, přímo v písních i na vlastní obrazovce</string>
+    <string name="onboarding_feature_tuner_description">Naladí tvůj nástroj přes mikrofon, přímo v písních i na vlastní obrazovce</string>
+    <string name="onboarding_feature_scales_description">Všechny stupnice a módy nakreslené pro tvůj nástroj a ty, které sedí ke každé písni</string>
+    <string name="onboarding_sync_title">Tvoje písně všude</string>
+    <string name="onboarding_sync_message">Připoj Dropbox a měj stejnou knihovnu na všech svých zařízeních. Mezi tím není žádný server: soubory jdou přímo do tvého vlastního úložiště.</string>
+    <string name="onboarding_clipboard_link_question">Poslal ti někdo píseň nebo setlist?</string>
+    <string name="onboarding_clipboard_link_open">Otevřít</string>
+    <string name="welcome_get_started">Začít</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">Je k dispozici aktualizace</string>
+    <string name="app_update_available_hint">Nová verze Campfire je připravená ke stažení. Stáhne se na pozadí, takže můžeš mezitím pokračovat.</string>
+    <string name="app_update_update">Aktualizovat</string>
+    <string name="app_update_continue_offline">Pokračovat offline</string>
+    <string name="app_update_later">Později</string>
+    <string name="app_update_downloaded">Aktualizace stažena</string>
+    <string name="app_update_downloaded_hint">Campfire se musí restartovat, aby dokončil instalaci.</string>
+    <string name="app_update_restart">Restartovat</string>
+    <string name="app_update_required">Je nutná aktualizace</string>
+    <string name="app_update_required_hint">Tuto verzi Campfire už nelze používat. Tvoje knihovna zůstane přesně tam, kde je. Aktualizace vyžaduje připojení k internetu.</string>
+
+    <!-- Export -->
+    <string name="print_save">Uložit</string>
+    <string name="print_share">Sdílet</string>
+    <string name="print_format">Sdílet jako</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">ZIP</string>
+    <string name="print_format_pdf_description">Nejlepší pro tisk a pro každého bez zpěvníkové aplikace</string>
+    <string name="print_format_chordpro_description">Standardní formát souborů, se kterým pracuje většina zpěvníkových aplikací</string>
+    <string name="print_format_zip_description">Soubory ChordPro v jednom archivu, pro většinu zpěvníkových aplikací</string>
+    <string name="print_files_song_description">Text a akordy jako prostý text, který zůstane upravitelný a půjde transponovat, pro každou aplikaci, která čte ChordPro, včetně Campfire.</string>
+    <string name="print_as_played">Jak se hraje tady</string>
+    <string name="print_as_played_songs_description">Každá píseň s transpozicí, kapodastrem a tempem, se kterými se hraje tady, stejně jako ji vytiskne PDF</string>
+    <string name="print_as_written">Jak je zapsáno</string>
+    <string name="print_as_written_description">Každý soubor přesně tak, jak ho uchovává tvoje knihovna, stejně jako ho sdílí odkaz</string>
+    <plurals name="print_files_setlist_description">
+        <item quantity="one">%1$d píseň ze setlistu jako soubor ChordPro pro jakoukoli zpěvníkovou aplikaci, s pořadím, které Campfire načte zpět jako setlist.</item>
+        <item quantity="few">%1$d písně ze setlistu jako soubory ChordPro pro jakoukoli zpěvníkovou aplikaci, s pořadím, které Campfire načte zpět jako setlist.</item>
+        <item quantity="other">%1$d písní ze setlistu jako soubory ChordPro pro jakoukoli zpěvníkovou aplikaci, s pořadím, které Campfire načte zpět jako setlist.</item>
+    </plurals>
+    <plurals name="print_files_songs_description">
+        <item quantity="one">%1$d píseň jako soubor ChordPro pro každou aplikaci, která čte ChordPro, včetně Campfire.</item>
+        <item quantity="few">%1$d písně jako soubory ChordPro pro každou aplikaci, která čte ChordPro, včetně Campfire.</item>
+        <item quantity="other">%1$d písní jako soubory ChordPro pro každou aplikaci, která čte ChordPro, včetně Campfire.</item>
+    </plurals>
+    <plurals name="print_files_missing">
+        <item quantity="one">Vynechána %1$d píseň, která chybí nebo nejde přečíst.</item>
+        <item quantity="few">Vynechány %1$d písně, které chybí nebo nejdou přečíst.</item>
+        <item quantity="other">Vynecháno %1$d písní, které chybí nebo nejdou přečíst.</item>
+    </plurals>
+    <string name="print_section_page">Stránka</string>
+    <string name="print_a4">A4</string>
+    <string name="print_letter">Letter</string>
+    <string name="print_portrait">Na výšku</string>
+    <string name="print_landscape">Na šířku</string>
+    <string name="print_font_size">%1$d pt</string>
+    <string name="print_margins">Okraje</string>
+    <string name="print_margin">%1$d mm</string>
+    <string name="print_margin_decrease">Zmenšit okraje</string>
+    <string name="print_margin_increase">Zvětšit okraje</string>
+    <string name="print_columns">Sloupce</string>
+    <string name="print_columns_decrease">Méně sloupců</string>
+    <string name="print_columns_increase">Více sloupců</string>
+    <string name="print_chords">Akordy a mřížky</string>
+    <string name="print_tabs">Tabulatury</string>
+    <string name="print_sheet_music">Notový zápis</string>
+    <string name="print_comments">Komentáře</string>
+    <string name="print_key">Tónina, transpozice a kapodastr</string>
+    <string name="print_tempo">Tempo a takt</string>
+    <string name="print_metadata">Interpret</string>
+    <string name="print_page_numbers">Čísla stránek</string>
+    <string name="print_overview">Přidat pořadí písní</string>
+    <string name="print_overview_details">Datum, popis a interpreti</string>
+    <string name="print_running_order">Pořadí písní</string>
+    <string name="print_song_sheets">Texty písní</string>
+    <string name="print_song_sheets_include">Přidat texty písní</string>
+    <string name="print_song_sheet">Text písně</string>
+    <string name="print_new_page">Každou píseň začít na nové stránce</string>
+    <string name="print_missing">Soubor písně chybí nebo nejde přečíst</string>
+    <string name="print_load_failed">PDF se nepodařilo připravit.</string>
+    <string name="print_setlist_empty">Tento setlist zatím nemá žádné písně.</string>
+    <string name="print_page">Stránka %1$d z %2$d</string>
+    <string name="print_previous">Předchozí</string>
+    <string name="print_next">Další</string>
+    <string name="print_time">Takt</string>
+    <string name="print_label_value">%1$s: %2$s</string>
+    <string name="print_capo_sounding">%1$s (akordy tak, jak znějí)</string>
+
+    <!-- Export: link -->
+    <string name="print_format_link">Odkaz</string>
+    <string name="print_format_link_description">Doporučeno pro současné i budoucí uživatele Campfire</string>
+    <string name="share_not_connected">Sdílej odkaz, který se otevře přímo v Campfire nebo v prohlížeči bez nutnosti cokoli instalovat. Odkazy vznikají v tvém vlastním Dropboxu, takže ho nejdřív připoj; zároveň tím budeš mít celou knihovnu synchronizovanou na všech svých zařízeních.</string>
+    <string name="share_connect_again">Připojit znovu</string>
+    <string name="share_create">Vytvořit odkaz</string>
+    <string name="share_try_again">Zkusit znovu</string>
+    <string name="share_copy">Kopírovat odkaz</string>
+    <string name="share_send">Poslat odkaz</string>
+    <string name="share_not_shared_song">Kdokoli s odkazem může tuto píseň otevřít přímo v Campfire nebo v prohlížeči bez nutnosti cokoli instalovat. Odkaz sleduje tvoje změny: po dalším otevření ukáže nejnovější verzi, zatímco už importované kopie zůstanou, jak jsou.</string>
+    <string name="share_not_shared_setlist">Kdokoli s odkazem může tento setlist i jeho písně otevřít přímo v Campfire nebo v prohlížeči bez nutnosti cokoli instalovat. Odkaz sleduje tvoje změny: po dalším otevření ukáže nejnovější verzi, zatímco už importované kopie zůstanou, jak jsou.</string>
+    <string name="share_shared_on">Sdíleno %1$s</string>
+    <string name="share_too_large_to_update">Nejnovější verze je na sdílení příliš velká; odkaz vede na poslední, která se vešla.</string>
+    <string name="share_scope_missing">Připoj Dropbox znovu, aby Campfire mohl vytvářet odkazy.</string>
+    <string name="share_authorization">Dropbox už připojení nepřijímá. Připoj ho znovu, abys mohl vytvářet odkazy.</string>
+    <string name="share_too_large">Na sdílení odkazem je to příliš velké (přes %1$d MB).</string>
+    <string name="share_not_public">Tvůj účet Dropbox nepovoluje veřejné odkazy.</string>
+    <string name="share_network">Dropbox se nepodařilo zastihnout. Zkontroluj připojení a zkus to znovu.</string>
+    <string name="share_remote_full">Tvůj Dropbox je plný.</string>
+    <string name="share_newer_version">Odkazy tohoto účtu Dropbox naposledy změnila novější verze Campfire. Pokud chceš sdílet odsud, aktualizuj Campfire.</string>
+    <string name="share_missing">Tohle už ve tvé knihovně není.</string>
+    <string name="share_copy_missing">Tento odkaz už nefunguje: jeho kopie byla z tvého Dropboxu odstraněna. Pokud to chceš znovu sdílet, vytvoř nový odkaz.</string>
+    <string name="share_failed">Odkaz se nepodařilo vytvořit. Zkus to za chvíli znovu.</string>
+    <string name="share_qr_code">QR kód odkazu</string>
+    <string name="share_save_qr_code">Uložit QR kód</string>
+    <string name="share_stop">Přestat sdílet</string>
+    <string name="share_stop_confirmation">Přestat sdílet „%1$s“? Odkaz přestane fungovat pro všechny. Kopie, které si už lidé importovali, jim zůstanou.</string>
+    <string name="share_link_copied">Odkaz zkopírován</string>
+    <string name="share_qr_code_saved">QR kód uložen</string>
+    <string name="share_stop_failed">Sdílení se nepodařilo zastavit. Odkaz stále funguje.</string>
+    <string name="share_stop_failed_network">Zastavení sdílení vyžaduje připojení k Dropboxu. Odkaz stále funguje.</string>
+
+    <!-- Export: link, under the progress indicator while the link is made or stopped -->
+    <string name="share_creating">Vytváření odkazu…</string>
+    <string name="share_stopping">Zastavování sdílení…</string>
+
+    <!-- Settings: sharing -->
+    <string name="settings_sharing">Sdílení</string>
+    <string name="settings_group_shared_links">Sdílené odkazy</string>
+    <string name="settings_group_all_links">Všechny odkazy</string>
+    <string name="settings_sharing_description">Sdílej píseň nebo setlist jako odkaz, který může otevřít kdokoli, vytvořený z tvého Dropboxu. Připojením Dropboxu budeš mít zároveň celou knihovnu synchronizovanou na všech svých zařízeních.</string>
+    <string name="settings_sharing_nothing_shared">Zatím nic nesdílíš. Při sdílení písně nebo setlistu vyber Odkaz.</string>
+    <string name="settings_sharing_stale">Odkazy se z Dropboxu nepodařilo načíst. Tento seznam ukazuje, co toto zařízení vidělo naposledy.</string>
+    <string name="settings_sharing_orphaned">Už není v knihovně</string>
+    <string name="settings_sharing_copy_missing">Odkaz už nefunguje</string>
+    <string name="settings_sharing_too_large">Příliš velké na aktualizaci</string>
+    <string name="settings_sharing_actions">Akce sdílení</string>
+    <string name="settings_sharing_show_qr_code">Zobrazit QR kód</string>
+    <string name="settings_sharing_stop_all">Přestat sdílet vše</string>
+    <plurals name="settings_sharing_stop_all_confirmation">
+        <item quantity="one">Přestat sdílet %1$d položku? Její odkaz přestane fungovat pro všechny, stejně jako odkazy, které zůstaly po nezdařených sdíleních. Kopie, které si už lidé importovali, jim zůstanou.</item>
+        <item quantity="few">Přestat sdílet všechny %1$d položky? Jejich odkazy přestanou fungovat pro všechny, stejně jako odkazy, které zůstaly po nezdařených sdíleních. Kopie, které si už lidé importovali, jim zůstanou.</item>
+        <item quantity="other">Přestat sdílet všech %1$d položek? Jejich odkazy přestanou fungovat pro všechny, stejně jako odkazy, které zůstaly po nezdařených sdíleních. Kopie, které si už lidé importovali, jim zůstanou.</item>
+    </plurals>
+    <string name="share_stop_all_failed">Nepodařilo se zastavit sdílení všeho. Odkazy, které jsou stále v seznamu, stále fungují.</string>
+    <string name="share_stop_all_failed_network">Zastavení sdílení vyžaduje připojení k Dropboxu. Odkazy, které jsou stále v seznamu, stále fungují.</string>
+    <string name="settings_sync_disconnect_shared_links">Sdílené odkazy budou dál fungovat. Pokud je chceš spravovat, připoj znovu stejný účet.</string>
+    <string name="settings_sync_disconnect_pending_stops">Některé písně nebo setlisty smazané na tomto zařízení ještě nebyly synchronizovány. Pokud je některý z nich sdílený, jeho odkaz bude fungovat dál, pokud před odpojením nesynchronizuješ.</string>
+    <!-- Settings screen: sync, a reconnect that did not go through -->
+    <string name="settings_sync_reconnect_failed">Dropbox se nepodařilo znovu připojit. Původní připojení stále funguje.</string>
+    <!-- Keyboard shortcut hints: the names of keys, as printed on the keyboards of the language -->
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_space">Mezerník</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_scroll">Kolečko</string>
+
+    <!-- Keyboard shortcuts sheet: every shortcut, grouped by where it is heard, and its Settings → About entry -->
+    <string name="keyboard_shortcuts">Klávesové zkratky</string>
+    <string name="settings_keyboard_shortcuts_description">Všechny klávesy, na které aplikace na tomto zařízení reaguje</string>
+    <string name="shortcut_group_app">Kdekoli</string>
+    <string name="shortcut_group_main_screens">Hlavní obrazovky</string>
+    <string name="shortcut_group_lists">Písně a setlisty</string>
+    <string name="shortcut_group_song">Čtení písně</string>
+    <string name="shortcut_group_metronome">Metronom</string>
+    <string name="shortcut_group_editor">Editor písní</string>
+    <string name="shortcut_group_print_preview">Náhled tisku</string>
+    <string name="shortcut_shortcuts">Zobrazit klávesové zkratky</string>
+    <string name="shortcut_back">Zpět nebo zavřít, co je otevřené</string>
+    <string name="shortcut_find">Hledat</string>
+    <string name="shortcut_find_on">Hledat v: %1$s</string>
+    <string name="shortcut_save">Uložit, Vytvořit nebo Hotovo</string>
+    <string name="shortcut_export_setlist">Sdílet nebo exportovat setlist</string>
+    <string name="shortcut_screen">Přejít na: %1$s</string>
+    <string name="shortcut_new">Nová píseň nebo setlist</string>
+    <string name="shortcut_paste">Nová píseň ze zkopírovaného textu</string>
+    <string name="shortcut_select_all">Při výběru vybrat všechny zobrazené písně</string>
+    <string name="shortcut_edit">Upravit píseň</string>
+    <string name="shortcut_zoom">Větší nebo menší text</string>
+    <string name="shortcut_zoom_reset">Text v obvyklé velikosti</string>
+    <string name="shortcut_transpose">Transponovat o půltón nahoru nebo dolů</string>
+    <string name="shortcut_play">Spustit nebo zastavit automatické posouvání písně</string>
+    <string name="shortcut_song_step_page">Předchozí nebo další stránka</string>
+    <string name="shortcut_song_step_column">Předchozí nebo další sloupec</string>
+    <string name="shortcut_song_step_nudge">Posunout kousek nahoru nebo dolů</string>
+    <string name="shortcut_song_neighbours">Předchozí nebo další píseň setlistu</string>
+    <string name="shortcut_metronome">Spustit nebo zastavit klikání</string>
+    <string name="shortcut_tap_tempo">Vyťukat tempo</string>
+    <string name="shortcut_find_step">Další nebo předchozí shoda</string>
+    <string name="shortcut_find_step_from_query">Další nebo předchozí shoda, z pole hledání</string>
+    <string name="shortcut_preview_turn">Předchozí nebo další stránka</string>
+    <string name="shortcut_preview_ends">První nebo poslední stránka</string>
+    <string name="shortcut_preview_zoom">Zvětšit stránku</string>
+    <!-- A list in a sentence: two items, and the last of three or more. -->
+    <string name="list_of_two">%1$s a %2$s</string>
+    <string name="list_with_last">%1$s a %2$s</string>
+</resources>

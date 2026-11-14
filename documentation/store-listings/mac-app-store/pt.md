@@ -83,7 +83,7 @@ Do seu jeito
 • Temas claro e escuro, um controle de sépia e dez esquemas de cores
 • O ícone do Dock segue a cor que você escolher
 • Desative qualquer recurso que você não usa
-• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português e polonês, alternáveis dentro do app
+• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas
 Sua biblioteca é uma pasta de arquivos de texto ChordPro no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Só se conecta para o que você pede, sem servidor do Campfire no meio. Você pode exportar tudo quando quiser.

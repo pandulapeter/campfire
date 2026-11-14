@@ -35,6 +35,7 @@ private val AppLocale.plurals
         AppLocale.IT -> StringsIt.plurals
         AppLocale.PT -> StringsPt.plurals
         AppLocale.PL -> StringsPl.plurals
+        AppLocale.CS -> StringsCs.plurals
         AppLocale.RO -> StringsRo.plurals
     }
 

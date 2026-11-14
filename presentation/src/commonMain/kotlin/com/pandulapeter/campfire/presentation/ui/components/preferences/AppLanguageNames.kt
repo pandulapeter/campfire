@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_czech
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_french
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_german
@@ -43,4 +44,5 @@ internal val AppLanguage.nameResource
         AppLanguage.HEBREW -> Res.string.settings_user_interface_language_hebrew
         AppLanguage.PORTUGUESE -> Res.string.settings_user_interface_language_portuguese
         AppLanguage.POLISH -> Res.string.settings_user_interface_language_polish
+        AppLanguage.CZECH -> Res.string.settings_user_interface_language_czech
     }

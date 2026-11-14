@@ -28,6 +28,7 @@
 		<string>he</string>
 		<string>pt</string>
 		<string>pl</string>
+		<string>cs</string>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>

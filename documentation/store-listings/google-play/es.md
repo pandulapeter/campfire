@@ -83,7 +83,7 @@ Importar, exportar, compartir y sincronizar
 A tu manera
 • Temas claro y oscuro, un control de sepia y diez paletas de colores, o los colores de tu fondo de pantalla
 • Desactiva cualquier función que no uses
-• Inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo, portugués y polaco, a elegir en la app
+• Inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo, portugués, polaco y checo, a elegir en la app
 
 Tus canciones son tuyas
 Tu biblioteca es una carpeta de archivos de texto ChordPro en tu dispositivo. Campfire funciona sin conexión, no necesita cuenta y no recopila datos: sin analíticas, sin rastreo y sin anuncios. Solo se conecta para lo que le pides, sin servidores de Campfire de por medio. Puedes exportarlo todo cuando quieras.

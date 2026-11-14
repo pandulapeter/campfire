@@ -556,9 +556,17 @@
                 alreadyOpen: 'Campfire jest już otwarty w innej karcie. Najpierw zamknij tamtą kartę albo korzystaj z niej.',
                 sentToOtherTab: 'Wysłano do aplikacji Campfire w Twojej drugiej karcie.',
                 retry: 'Spróbuj ponownie'
+            },
+            cs: {
+                loadFailed: 'Campfire se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.',
+                loadFailedFirstVisit: 'Campfire se nepodařilo načíst. Při prvním otevření v tomto prohlížeči potřebuje připojení, takže zkontroluj připojení a zkus to znovu.',
+                unsupported: 'V tomto prohlížeči Campfire nepoběží. Potřebuje Chrome nebo Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) nebo novější verzi.',
+                alreadyOpen: 'Campfire je už otevřený na jiné kartě. Nejdřív tamtu kartu zavři, nebo pokračuj v ní.',
+                sentToOtherTab: 'Odesláno do Campfire na tvé druhé kartě.',
+                retry: 'Zkusit znovu'
             }
         };
-        var language = (/^(hu|ro|de|es|fr|it|he|pt|pl)\b/i.exec(navigator.language || '') || [])[1];
+        var language = (/^(hu|ro|de|es|fr|it|he|pt|pl|cs)\b/i.exec(navigator.language || '') || [])[1];
         var text = language ? TEXTS[language.toLowerCase()] : TEXTS.en;
         // A language written from the right says so in its block, and the page turns with it: the bar fills from the right.
         if (language) {

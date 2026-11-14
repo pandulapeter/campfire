@@ -50,6 +50,7 @@
         <Resource Language="he" />
         <Resource Language="pt" />
         <Resource Language="pl" />
+        <Resource Language="cs" />
     </Resources>
 
     <Applications>

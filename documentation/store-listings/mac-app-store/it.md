@@ -83,7 +83,7 @@ Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori
 • L'icona nel Dock segue il colore che scegli
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese e polacco, a scelta nell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese, polacco e ceco, a scelta nell'app
 
 Le tue canzoni sono tue
 La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta, senza server di Campfire in mezzo. Puoi esportare tutto quando vuoi.

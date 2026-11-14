@@ -82,7 +82,7 @@ Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma
 • A Dock-ikon a választott színt követi
 • Kapcsold ki, amit sosem használsz
-• Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál és lengyel nyelv, az appban váltható
+• Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál, lengyel és cseh nyelv, az appban váltható
 
 A dalaid a tieid
 A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred, és nincs közben Campfire-szerver. Bármikor mindent exportálhatsz.

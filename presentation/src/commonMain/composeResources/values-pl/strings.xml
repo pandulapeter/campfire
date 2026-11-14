@@ -588,6 +588,7 @@
     <string name="settings_user_interface_language_hebrew">Hebrajski</string>
     <string name="settings_user_interface_language_portuguese">Portugalski</string>
     <string name="settings_user_interface_language_polish">Polski</string>
+    <string name="settings_user_interface_language_czech">Czeski</string>
     <string name="settings_website">Strona internetowa</string>
     <string name="settings_distributions_all">Wszystkie wersje Campfire</string>
     <string name="settings_distributions_all_description">Na twoje inne urządzenia</string>

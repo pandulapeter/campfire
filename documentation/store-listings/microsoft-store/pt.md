@@ -93,7 +93,7 @@ Do seu jeito
 • Temas claro e escuro, um controle de sépia que esquenta o fundo e dez esquemas de cores
 • O ícone da barra de tarefas segue a cor que você escolher
 • Desative o metrônomo, o afinador, as escalas, os repertórios, os acordes ou as capas se você não usa
-• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português e polonês, alternáveis dentro do app
+• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português, polonês e tcheco, alternáveis dentro do app
 
 Suas músicas são suas
 Sua biblioteca é uma pasta de arquivos de texto ChordPro comuns no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Ele só se conecta para o que você pede: sincronizar e compartilhar pelo seu próprio Dropbox, sem nenhum servidor no meio, abrir um link compartilhado e buscar capas e detalhes das músicas. Você pode exportar tudo a qualquer momento.

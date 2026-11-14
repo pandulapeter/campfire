@@ -92,7 +92,7 @@ Po twojemu
 • Jasny i ciemny motyw, suwak sepii, który ociepla tło, i dziesięć schematów kolorów
 • Ikona na pasku zadań przyjmuje wybrany przez ciebie kolor
 • Wyłącz metronom, tuner, skale, setlisty, akordy lub okładki, jeśli ich nie używasz
-• Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski i polski, do przełączenia w aplikacji
+• Angielski, węgierski, rumuński, niemiecki, hiszpański, francuski, włoski, hebrajski, portugalski, polski i czeski, do przełączenia w aplikacji
 
 Twoje piosenki należą do ciebie
 Twoja biblioteka to folder zwykłych plików tekstowych ChordPro na twoim urządzeniu. Campfire działa offline, nie wymaga konta i nie zbiera danych: żadnej analityki, śledzenia ani reklam. Łączy się z internetem tylko wtedy, gdy o to prosisz: by synchronizować i udostępniać przez twojego Dropboxa, bez żadnego serwera pośrodku, by otworzyć udostępniony link oraz by pobrać okładki i szczegóły piosenek. W każdej chwili możesz wszystko wyeksportować.
