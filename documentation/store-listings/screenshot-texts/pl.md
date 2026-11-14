@@ -101,11 +101,11 @@ Wklej z dowolnej strony
 ```
 
 ```
-Podświetlanie składni
+Kolorowa składnia
 ```
 
 ```
-Uporządkuj ChordPro jednym ruchem
+Uporządkuj jednym ruchem
 ```
 
 ## 06-scales headline (50 characters max)
