@@ -13,7 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Find a solution for storing the library used for screenshot generation in the cloud and automate updating screenshots
+- **Screenshots published by the release**: Plan: [automated-screenshots.md](plans/automated-screenshots.md)
 - Add Portuguese, Polish, Czech, Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
