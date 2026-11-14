@@ -1,0 +1,71 @@
+{title: Purple Rain}
+{artist: Prince}
+{meta: language en}
+{album: Purple Rain}
+{meta: cover https://coverartarchive.org/release-group/b9dd6193-4cb7-4ea0-8dd7-e92bb9109f1d/front-250}
+{year: 1984}
+{key: B}
+{tempo: 115}
+{tag: Olive Room}
+{tag: Rock}
+
+{start_of_intro}
+[Bsus2] [G#m7] [F#] [E]
+{end_of_intro}
+
+{start_of_verse}
+[Bsus2] [G#m7]
+[F#] [E]
+[Bsus2] [G#m7]
+[F#] [Bsus2]
+{end_of_verse}
+
+{start_of_chorus}
+[E]
+[Bsus2] [G#m7]
+[F#]
+[Bsus2]
+{end_of_chorus}
+
+{start_of_verse}
+[Bsus2] [G#m7]
+[F#] [E]
+[Bsus2] [G#m7]
+[F#] [Bsus2]
+{end_of_verse}
+
+{start_of_chorus}
+[E]
+[Bsus2] [G#m7]
+[F#]
+[Bsus2]
+{end_of_chorus}
+
+{start_of_verse}
+[Bsus2] [G#m7]
+[F#] [E]
+[Bsus2] [G#m7]
+[F#] [E]
+{end_of_verse}
+
+{start_of_chorus}
+[E]
+[Bsus2] [G#m7]
+[F#]
+[Bsus2]
+{end_of_chorus}
+
+{start_of_solo}
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+{end_of_solo}
+
+{start_of_outro}
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+[Bsus2] [G#m7] [F#] [E]
+[B]
+{end_of_outro}

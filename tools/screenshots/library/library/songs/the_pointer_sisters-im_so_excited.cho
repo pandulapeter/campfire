@@ -1,0 +1,80 @@
+{title: I'm So Excited}
+{artist: The Pointer Sisters}
+{meta: language en}
+{album: So Excited!}
+{meta: cover https://coverartarchive.org/release-group/1154287a-4ec3-4e75-ac16-3e7f29f2a426/front-250}
+{year: 1982}
+{key: Gm}
+{tag: Pop}
+
+{start_of_intro}
+[Gm] [Cm7] [Eb] [Bbsus4] [Bb]
+[Gm] [Cm7] [Eb] [Bbsus4] [Bb]
+{end_of_intro}
+
+{start_of_verse}
+[Gm] [Cm7]
+[Eb] [Bbsus4] [Bb]
+[Gm] [Cm7]
+[Eb] [Bbsus4] [Bb]
+{end_of_verse}
+
+{start_of_prechorus}
+[Am]
+[Gm] [Dm7]
+[Am]
+[Gm]
+[Cm] [Dm] [F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Gm] [Eb]
+[Eb] [F] [Gm]
+[Gm] [Eb]
+[Eb] [F] [Gm]
+{end_of_chorus}
+
+{start_of_verse}
+[Gm] [Cm7]
+[Eb] [Bbsus4] [Bb]
+[Gm] [Cm7]
+[Eb] [Bbsus4] [Bb]
+{end_of_verse}
+
+{start_of_chorus}
+[Gm] [Eb]
+[Eb] [F] [Gm]
+[Gm] [Eb]
+[Eb] [F] [Gm]
+{end_of_chorus}
+
+{start_of_solo}
+[Gm] [Cm7] [Eb] [Bbsus4] [Bb]
+[Gm] [Cm7] [Eb] [Bbsus4] [Bb]
+{end_of_solo}
+
+{start_of_prechorus}
+[Am]
+[Gm] [Dm7]
+[Am]
+[Gm]
+[Cm] [Dm] [F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Gm] [Eb]
+[Eb] [F] [Gm]
+[Gm] [Eb]
+[Eb] [F] [Gm]
+{end_of_chorus}
+
+{start_of_outro}
+[Gm] [Eb]
+[Eb] [F] [Gm]
+[Gm] [Eb]
+[Eb] [F] [Gm]
+[Gm]
+[Eb] [Eb] [F] [Gm]
+[Gm] [Eb] [Eb] [F] [Gm]
+[Gm] [Eb] [Eb] [F] [Gm]
+{end_of_outro}

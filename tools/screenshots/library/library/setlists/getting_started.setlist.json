@@ -1,0 +1,13 @@
+{
+    "title": "Getting started",
+    "description": "The songs Campfire comes with, which between them show off most of what a ChordPro file can hold. Open one in the editor to see how it is written.",
+    "date": "2026-10-06",
+    "songs": [
+        {
+            "file": "traditional_american-home_on_the_range_my_western_home.cho"
+        },
+        {
+            "file": "traditional_american-house_of_the_rising_sun.cho"
+        }
+    ]
+}

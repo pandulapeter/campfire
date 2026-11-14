@@ -1,0 +1,102 @@
+{title: We're Not Gonna Take It}
+{artist: Twisted Sister}
+{meta: language en}
+{album: Stay Hungry}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/fd/c8/04/fdc80494-b3cc-eb07-7a96-0cb08b53c9b9/0603497879861.jpg/250x250bb.jpg}
+{year: 1984}
+{key: E}
+{tag: Metal}
+
+{start_of_intro}
+[E5]
+[D#5] [C#5] [B5]
+[E5] [D#5] [C#5] [B5]
+{end_of_intro}
+
+{start_of_verse}
+[E] [B]
+[E] [A]
+[E] [B] [E] [B]
+{end_of_verse}
+
+{start_of_verse}
+[E] [B]
+[E] [A]
+[E] [B] [E] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[E] [B]
+[E] [A]
+[E] [B] [E5] [D#5] [C#5] [B5]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [B]
+[E] [A]
+[E] [B] [E] [B]
+{end_of_verse}
+
+{start_of_verse}
+[E] [B]
+[E] [A]
+[E] [B] [E5] [D#5] [C#5] [B5]
+{end_of_verse}
+
+{start_of_bridge}
+[D5] [C#5] [B5]
+[D5] [C#5] [B5]
+[E]
+[F]
+[F#]
+[B]
+{end_of_bridge}
+
+{start_of_chorus}
+[E] [B]
+[E] [A]
+[E] [B] [E] [B]
+{end_of_chorus}
+
+{start_of_chorus}
+[E] [B]
+[E] [A]
+[E] [B] [E5] [D#5] [C#5] [B5]
+{end_of_chorus}
+
+{start_of_solo}
+[E] [B] [E] [A]
+[E] [B] [E] [B]
+[E] [B] [E] [A]
+[E] [B] [E5] [D#5] [C#5] [B5]
+{end_of_solo}
+
+{start_of_bridge}
+[D5] [C#5] [B5]
+[D5] [C#5] [B5]
+[E]
+[F]
+[F#]
+[B]
+{end_of_bridge}
+
+{start_of_chorus}
+[B]
+{end_of_chorus}
+
+{start_of_chorus}
+[E] [B]
+[E] [A]
+[E] [B] [E]
+[B]
+{end_of_chorus}
+
+{start_of_outro}
+[E] [B]
+[E] [A]
+[E] [B] [E]
+[B]
+[E] [B]
+[E] [A]
+[E] [B] [E]
+{end_of_outro}

@@ -1,0 +1,96 @@
+{title: Azt mondom állj}
+{artist: Tankcsapda}
+{meta: language hu}
+{key: F#}
+{tag: Rock}
+
+{start_of_intro}
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[D]
+
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+{end_of_intro}
+
+{start_of_verse}
+[F#5] [A5] [E5] [B5] [F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5] [F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5] [F#5]
+[A5] [E5] [B5] [F#5] [A5]
+[A5] [B5] [D]
+{end_of_verse}
+
+{start_of_verse}
+[F#5] [A5] [E5] [B5] [F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5] [F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [A5] [B5] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[F#5] [A5] [E5] [B5]
+[D] [E]
+[F#5] [A5] [A5] [B5]
+[D] [E] [F#5] [A5] [E5] [B5]
+[F#4] [A5] [E5] [B5]
+{end_of_chorus}
+
+{start_of_verse}
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[D]
+{end_of_verse}
+
+{start_of_chorus}
+[F#5] [A5] [E5] [B5]
+[D] [E]
+[F#5] [A5] [A5] [B5]
+[D] [E]
+{end_of_chorus}
+
+{start_of_chorus}
+[F#5] [A5] [E5] [B5]
+[D] [E]
+[F#5] [A5] [A5] [B5]
+[D] [E]
+{end_of_chorus}
+
+{start_of_solo}
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[D]
+{end_of_solo}
+
+{start_of_bridge}
+[F#5] [E5] [F#5] [E5] [F#5] [B5] [A5]
+[F#5] [E5] [F#5] [E5] [F#5] [B5] [A5]
+[F#5] [E5] [F#5] [E5] [F#5] [B5] [A5]
+[F#5] [E5] [F#5] [E5] [F#5] [B5] [A5]
+{end_of_bridge}
+
+{start_of_solo}
+[F#5] [F#5] [F#5] [E5]
+[F#5] [F#5] [F#5] [E5]
+[F#5] [F#5] [F#5] [E5]
+[D]
+{end_of_solo}
+
+{start_of_chorus}
+[F#5] [A5] [E5] [B5]
+[D] [E]
+[F#5] [A5] [A5] [B5]
+[D] [E]
+{end_of_chorus}
+
+{start_of_outro}
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[F#5] [A5] [E5] [B5]
+[D] [E]
+[F#5] [A5] [E5] [B5]
+{end_of_outro}

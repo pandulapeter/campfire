@@ -1,0 +1,104 @@
+{title: I'll Be There for You}
+{artist: Bon Jovi}
+{meta: language en}
+{album: New Jersey}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/00/49/77/004977a7-3c53-8f48-968d-404828e9573c/06UMGIM05419.rgb.jpg/250x250bb.jpg}
+{year: 1988}
+{key: D}
+{tag: Rock}
+
+{start_of_intro}
+[D]
+{end_of_intro}
+
+{start_of_verse}
+[Em]
+[G] [D]
+[Em]
+[G] [D]
+{end_of_verse}
+
+{start_of_verse}
+[-] [Em]
+[G] [D]
+[Em]
+[G] [A]
+[-]
+{end_of_verse}
+
+{start_of_chorus}
+[D]
+[Bm]
+[G]
+[A] [C] [G] [D]
+[Bm]
+[G]
+[A] [C] [G] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[Em]
+[G] [D]
+[Em]
+[G] [A]
+{end_of_verse}
+
+{start_of_verse}
+[G]
+[A]
+[D] [D/C#] [Bm]
+[G]
+[A]
+{end_of_verse}
+
+{start_of_chorus}
+[D]
+[Bm]
+[G]
+[A] [C] [G] [D]
+[Bm]
+[G]
+[A] [C] [G]
+{end_of_chorus}
+
+{start_of_solo}
+[D] [Bm] [G] [A]
+[D] [Bm] [G] [A]
+{end_of_solo}
+
+{start_of_bridge}
+[A] [G]
+[A]
+[D] [D/C#] [Bm]
+[G]
+[A]
+{end_of_bridge}
+
+{start_of_chorus}
+[D]
+[Bm]
+[G]
+[A] [C] [G] [D]
+[Bm]
+[G]
+[A] [C] [G]
+{end_of_chorus}
+
+{start_of_chorus}
+[E]
+[C#m]
+[A]
+[B] [D] [A] [E]
+[C#m]
+[A]
+[B] [D] [A] [E]
+{end_of_chorus}
+
+{start_of_outro}
+[C#m]
+[A] [B] [D] [A]
+[E]
+[C#m]
+[A] [B] [D] [A]
+[E]
+{end_of_outro}

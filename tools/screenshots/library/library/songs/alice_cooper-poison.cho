@@ -1,0 +1,107 @@
+{title: Poison}
+{artist: Alice Cooper}
+{meta: language en}
+{album: Trash}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/20/86/46/208646e0-5959-1699-1db5-5e2b9a4c3e5f/mzi.kvmupcyx.jpg/250x250bb.jpg}
+{year: 1989}
+{key: Dm}
+{tag: Hard Rock}
+
+{start_of_intro}
+[D5]
+[D5]
+[Bb] [Dm]
+[Bb] [Dm]
+[Bb] [Dm]
+[Bb]
+[Dm]
+{end_of_intro}
+
+{start_of_verse}
+[Dm] [Bb]
+[F] [C]
+[Gm] [Eb]
+[Bb] [D]
+{end_of_verse}
+
+{start_of_prechorus}
+[Gm] [Eb] [Bb] [F] [Cm]
+[Ab] [Eb] [Bb] [Am]
+[F] [C] [G] [Dm]
+[Bb] [F] [C] [Dm]
+[Bb] [F] [C]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Bb]
+{end_of_chorus}
+
+{start_of_verse}
+[Dm] [Bb]
+[F] [C]
+[Gm] [Eb]
+[Bb] [D]
+{end_of_verse}
+
+{start_of_prechorus}
+[Gm] [Eb] [Bb] [F] [Cm]
+[Ab] [Eb] [Bb] [Am]
+[F] [C] [G] [Dm]
+[Bb] [F] [C] [Dm]
+[Bb] [F] [C]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+{end_of_chorus}
+
+{start_of_solo}
+[Bb]
+[Bb] [Dm]
+[Bb] [Dm]
+[Bb] [Dm]
+[Bb] [Dm]
+{end_of_solo}
+
+{start_of_bridge}
+[Gm] [Eb]
+[Bb] [D]
+{end_of_bridge}
+
+{start_of_prechorus}
+[Gm] [Eb] [Bb] [F] [Cm]
+[Ab] [Eb] [Bb] [Am]
+[F] [C] [G] [Dm]
+[Bb] [F] [C] [Dm]
+[Bb] [F] [C]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[Gm] [Bb]
+{end_of_bridge}
+
+{start_of_outro}
+[Dm] [Bb] [F] [C] [Dm]
+[Bb] [F] [C] [Dm]
+[Bb] [F] [C] [Dm]
+[Bb] [F] [C] [Dm] [Bb]
+[F] [C] [Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+[Dm] [Bb] [F] [C]
+{end_of_outro}

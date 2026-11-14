@@ -1,0 +1,53 @@
+{
+    "title": "Kata & Balázs esküvő - 1",
+    "description": "Gyimesi Skanzen",
+    "date": "2026-08-15",
+    "isCountdownShown": true,
+    "songs": [
+        {
+            "file": "olivia_dean-so_easy_to_fall_in_love.cho"
+        },
+        {
+            "file": "charlie-mindenki_valakie.cho",
+            "transposition": 5
+        },
+        {
+            "file": "mate_peter-zene_nelkul_mit_erek_en.cho",
+            "transposition": 2
+        },
+        {
+            "file": "lgt-elfelejtett_szo.cho",
+            "transposition": 1
+        },
+        {
+            "file": "fenyo_miklos-csavard_fel_a_szonyeget.cho",
+            "transposition": 5
+        },
+        {
+            "file": "chuck_berry-johnny_b_goode.cho",
+            "transposition": 1
+        },
+        {
+            "file": "quimby-most_mulik_pontosan.cho",
+            "transposition": 2
+        },
+        {
+            "file": "republic-ha_itt_lennel_velem.cho"
+        },
+        {
+            "file": "quimby-auto_egy_szerpentinen.cho"
+        },
+        {
+            "file": "bikini-ki_visz_haza.cho"
+        },
+        {
+            "file": "bikini-mielott_elmegyek.cho"
+        },
+        {
+            "file": "ac_dc-you_shook_me_all_night_long.cho"
+        },
+        {
+            "file": "frankie_valli-cant_take_my_eyes_off_you.cho"
+        }
+    ]
+}

@@ -1,0 +1,67 @@
+{title: Blowin' in the Wind}
+{artist: Bob Dylan}
+{meta: language en}
+{album: The Freewheelin' Bob Dylan}
+{meta: cover https://coverartarchive.org/release-group/169b62aa-c3a5-3ed9-bed1-cc47c4bc51ad/front-250}
+{year: 1963}
+{key: E}
+{tag: Folk}
+
+{start_of_intro}
+[E]
+{end_of_intro}
+
+{start_of_verse}
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [B]
+[E] [A] [E]
+[E] [A] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[A] [B]
+[E] [A]
+[A]
+[B] [E]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [B]
+[E] [A] [E]
+[E] [A] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[A] [B]
+[E] [A]
+[A]
+[B] [E]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [E]
+[E] [A] [B]
+[E] [A] [E]
+[E] [A] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[A] [B]
+[E] [A]
+[A]
+[B] [E]
+{end_of_chorus}
+
+{start_of_chorus}
+[A] [B]
+[E] [A]
+[A]
+[B] [E]
+{end_of_chorus}

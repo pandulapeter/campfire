@@ -1,0 +1,74 @@
+{title: Bad Moon Rising}
+{artist: Creedence Clearwater Revival}
+{meta: language en}
+{album: Green River}
+{meta: cover https://coverartarchive.org/release-group/6c08878c-d6a1-37b6-84c3-9566748545c1/front-250}
+{year: 1969}
+{key: D}
+{tempo: 90}
+{duration: 2:21}
+{tag: Rock}
+
+{start_of_intro}
+[D] [A] [G]
+[D] [D]
+{end_of_intro}
+
+{start_of_verse}
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[D]
+[A] [G] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[D]
+[A] [G] [D]
+{end_of_chorus}
+
+{start_of_solo}
+[D] [A] [G]
+[D] [D]
+
+[D] [A] [G]
+[D] [D]
+
+[G] [G]
+[D] [D]
+
+[A] [G]
+[D] [D]
+{end_of_solo}
+
+{start_of_verse}
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+[D] [A] [G] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[D]
+[A] [G] [D]
+{end_of_chorus}
+
+{start_of_chorus}
+[G]
+[D]
+[A] [G] [D]
+{end_of_chorus}

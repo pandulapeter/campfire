@@ -19,8 +19,8 @@ How the video is built, and the owner's decisions it keeps, are in `tools/promo-
 
 ## What a run needs
 
-- `tools/screenshots/library/` (gitignored), the store screenshots' copy of a Campfire data folder. If it is missing,
-  stop and ask; never point the tool at the user's real data folder.
+- `tools/screenshots/library/`, the store screenshots' committed library, holding only what the images show of each
+  song (`tools/screenshots/CLAUDE.md`); never point the tool at the user's real data folder.
 - JDK/Gradle as the repo needs, Node 24 with npm, ffmpeg, and Python 3. The script runs `npm ci` when `node_modules/`
   is missing.
 

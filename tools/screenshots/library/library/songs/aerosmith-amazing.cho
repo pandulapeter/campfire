@@ -1,0 +1,95 @@
+{title: Amazing}
+{artist: Aerosmith}
+{album: Get a Grip}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/8b/04/87/8b048775-ed10-439d-18a6-5ecb21effcf8/06UMGIM14760.rgb.jpg/250x250bb.jpg}
+{year: 1993}
+{key: C}
+{tag: Hard Rock}
+{meta: language en}
+
+{start_of_intro}
+[Am] [G]
+[Am] [G]
+{end_of_intro}
+
+{start_of_verse}
+[Am]
+[G]
+[C]
+[F]
+[Fm/G#]
+[C/G]
+[D/F#]
+[F]
+{end_of_verse}
+
+{start_of_verse}
+[Am]
+[G]
+[C]
+[F]
+[Fm/G#]
+[C/G]
+[D/F#]
+[F]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [Em]
+[F]
+[Em] [G] [G]
+[C] [Em]
+[F]
+[Em] [G] [G]
+[F] [Em]
+[D]
+[G] [C] [C]
+{end_of_chorus}
+
+{start_of_verse}
+[Am]
+[D]
+[F]
+[C]
+[Am]
+[D]
+[F]
+[G] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am]
+[G]
+[C]
+[F]
+[Fm/G#]
+[C/G]
+[D/F#]
+[F]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [Em]
+[F]
+[Em] [G] [G]
+[C] [Em]
+[F]
+[Em] [G] [G]
+[F] [Em]
+[D]
+[G] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[D]
+[Em]
+[F]
+{end_of_bridge}
+
+{start_of_outro}
+[C] [Dm] [Em] [F] [G] [Am] [G] [F]
+[C] [Dm] [Em] [F] [G] [Am] [G] [F]
+[C] [Dm] [Em] [F] [G] [Am] [G] [F]
+[C] [Dm] [Em] [F] [G] [Am] [G] [F]
+[C]
+{end_of_outro}

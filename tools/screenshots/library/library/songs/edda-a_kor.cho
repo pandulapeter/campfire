@@ -1,0 +1,114 @@
+{title: A kör}
+{artist: Edda}
+{meta: language hu}
+{album: Edda Művek 1.}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/72/99/28/729928a5-06b5-ac6a-736b-a93d02561ea5/cover.jpg/250x250bb.jpg}
+{year: 1980}
+{key: Am}
+{tag: Rock}
+
+{start_of_intro}
+[Am] [Am]
+[Am] [Am] [C5/A]
+[Am] [Am]
+[Am] [F] [G]
+{end_of_intro}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_solo}
+[Am] [Am]
+[Am] [Am] [C5/A]
+[Am] [Am]
+[Am] [F] [G]
+
+[Am] [Am]
+[Am] [Am] [C5/A]
+[Am] [Am]
+[Am] [F] [G]
+
+[C] [G]
+[Am] [Em]
+[F] [Em]
+[Am] [Am]
+
+[C] [G]
+[Am] [Em]
+[F] [Em]
+[Am] [Am]
+[Am] [F] [G]
+{end_of_solo}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [C5/A]
+[Am] [Dm]
+[Am] [Em] [Am] [F] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_chorus}
+[C] [G]
+[Am] [Em]
+[F] [Em] [Am] [F] [G]
+{end_of_chorus}
+
+{start_of_outro}
+[Am]
+{end_of_outro}

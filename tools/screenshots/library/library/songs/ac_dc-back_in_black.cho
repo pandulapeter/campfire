@@ -1,0 +1,43 @@
+{title: Back in Black}
+{artist: AC/DC}
+{meta: language en}
+{album: Back in Black}
+{meta: cover https://coverartarchive.org/release-group/d3bc1a64-7561-3787-b680-0003aa50f8f1/front-250}
+{year: 1980}
+{key: E}
+{duration: 4:13}
+{tag: Hard Rock}
+{meta: link https://www.youtube.com/watch?v=pAgnJDJN4VA YouTube}
+
+{start_of_intro}
+{end_of_intro}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_solo}
+{end_of_solo}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_solo}
+{end_of_solo}
+
+{start_of_outro}
+{end_of_outro}

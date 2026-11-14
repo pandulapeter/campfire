@@ -1,0 +1,110 @@
+{title: Mamma Mia}
+{artist: ABBA}
+{meta: language en}
+{album: ABBA}
+{meta: cover https://coverartarchive.org/release-group/6da9e7d5-4de7-345e-9707-ad500d65e7f5/front-250}
+{year: 1975}
+{key: D}
+{tag: Pop}
+
+{start_of_intro}
+[D] [Daug]
+[D] [Daug]
+[D] [Daug]
+[D] [Daug]
+{end_of_intro}
+
+{start_of_verse}
+[D] [G]
+[D] [G]
+[D] [Daug]
+[D] [Daug] [G]
+[A]
+{end_of_verse}
+
+{start_of_prechorus}
+[G] [D] [A]
+[G] [D] [A]
+{end_of_prechorus}
+
+{start_of_chorus}
+[D]
+[G]
+[D]
+[G]
+{end_of_chorus}
+
+{start_of_chorus}
+[D] [A/C#]
+[Bm] [F#m/A] [G]
+[C] [G] [Em] [A]
+{end_of_chorus}
+
+{start_of_postchorus}
+[D] [Bm] [G]
+[C] [G] [Em] [A]
+{end_of_postchorus}
+
+{start_of_bridge}
+[D] [Daug]
+[D] [Daug]
+{end_of_bridge}
+
+{start_of_verse}
+[D] [G]
+[D] [G]
+[D] [Daug]
+[D] [Daug] [G]
+[A]
+{end_of_verse}
+
+{start_of_prechorus}
+[G] [D] [A]
+[G] [D] [A]
+{end_of_prechorus}
+
+{start_of_chorus}
+[D]
+[G]
+[D]
+[G]
+{end_of_chorus}
+
+{start_of_chorus}
+[D] [A/C#]
+[Bm] [F#m/A] [G]
+[C] [G] [Em] [A]
+{end_of_chorus}
+
+{start_of_bridge}
+[D] [G]
+[C] [G]
+
+[D] [G]
+[C] [G]
+
+[D] [G]
+[C] [G]
+
+[D] [G]
+[C] [G]
+{end_of_bridge}
+
+{start_of_chorus}
+[D] [A/C#]
+[Bm] [F#m/A] [G]
+[C] [G] [Em] [A]
+{end_of_chorus}
+
+{start_of_postchorus}
+[D] [Bm] [G]
+[C] [G] [Em] [A]
+{end_of_postchorus}
+
+{start_of_outro}
+[D] [Daug]
+[D] [Daug]
+[D] [Daug]
+[D] [Daug]
+[D]
+{end_of_outro}

@@ -1,0 +1,75 @@
+{title: Amarillo by Morning}
+{artist: George Strait}
+{meta: language en}
+{album: Strait from the Heart}
+{meta: cover https://coverartarchive.org/release-group/3ee6bb1a-4cda-3cfa-b515-00f43bd6a0c0/front-250}
+{year: 1982}
+{key: D}
+{tag: Country}
+
+{start_of_intro}
+[D] [F#m] [G] [A]
+[D] [F#m] [G] [A]
+{end_of_intro}
+
+{start_of_verse}
+[D] [F#m]
+[G] [D]
+[D] [F#m]
+[G] [A] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[G] [A]
+[D] [F#m] [G]
+{end_of_prechorus}
+
+{start_of_chorus}
+[D] [A]
+[G] [A] [D] [F#m] [G] [A]
+{end_of_chorus}
+
+{start_of_verse}
+[D] [F#m]
+[G] [D]
+[D] [F#m]
+[G] [A] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[G] [A]
+[D] [F#m] [G]
+{end_of_prechorus}
+
+{start_of_chorus}
+[D] [A]
+[G] [A] [D] [F#m] [G] [A]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [G#m]
+[A] [E]
+[E] [G#m]
+[A] [B] [B]
+{end_of_verse}
+
+{start_of_prechorus}
+[A] [B]
+[E] [G#m] [A]
+{end_of_prechorus}
+
+{start_of_chorus}
+[E] [B]
+[A] [B] [E] [A] [B]
+{end_of_chorus}
+
+{start_of_chorus}
+[E] [B]
+[A] [B] [E] [G#m] [A] [B]
+{end_of_chorus}
+
+{start_of_outro}
+[E] [G#m] [A] [B]
+[E] [G#m] [A] [B]
+[E]
+{end_of_outro}

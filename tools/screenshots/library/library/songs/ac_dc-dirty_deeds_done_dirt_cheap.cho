@@ -1,0 +1,100 @@
+{title: Dirty Deeds Done Dirt Cheap}
+{artist: AC/DC}
+{meta: language en}
+{album: Dirty Deeds Done Dirt Cheap}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/51/b1/f7/51b1f7d1-f157-39b1-f850-e08e5206ff63/886443673489.jpg/250x250bb.jpg}
+{year: 1976}
+{key: E}
+{tempo: 135}
+{duration: 4:11}
+{tag: Hard Rock}
+
+{start_of_intro}
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+{end_of_intro}
+
+{start_of_verse}
+[D5] [E5]
+[D5]
+[E5]
+[D5]
+[E5]
+[D5] [E5] [D5] [E5] [D5]
+[E5] [D5] [E5]
+{end_of_verse}
+
+{start_of_chorus}
+[A5] [A5] [G5] [A5]
+[E5] [E5] [D5] [E5]
+[A5] [A5] [G5] [A5]
+[E5]
+[D5]
+{end_of_chorus}
+
+{start_of_verse}
+[E5]
+[D5]
+[E5]
+[D5]
+[E5]
+[D5]
+[E5] [D5] [E5] [D5]
+[E5] [D5] [E5]
+{end_of_verse}
+
+{start_of_chorus}
+[A5] [A5] [G5] [A5]
+[E5] [E5] [D5] [E5]
+[A5] [A5] [G5] [A5]
+[E5]
+{end_of_chorus}
+
+{start_of_solo}
+[B5] [A5]
+[B5] [A5]
+[B5] [A5]
+[B5] [D5]
+
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+[E5] [G5] [E5] [A5] [E5] [D5] [E5]
+{end_of_solo}
+
+{start_of_verse}
+[D5] [E5]
+[D5]
+[E5]
+[D5]
+[E5]
+[D5]
+[E5] [D5] [E5] [D5]
+[E5] [D5] [E5]
+{end_of_verse}
+
+{start_of_chorus}
+[A5] [A5] [G5] [A5]
+[E5] [E5] [D5] [E5]
+[A5] [A5] [G5] [A5]
+[E5]
+{end_of_chorus}
+
+{start_of_bridge}
+[E5] [G5]
+[E5] [A5]
+[E5] [E5] [D5] [E5]
+[E5] [G5]
+[E5] [A5]
+[E5] [E5] [D5] [E5]
+{end_of_bridge}
+
+{start_of_outro}
+[E5] [G5] [E5]
+[A5] [E5]
+[E5] [D5] [E5]
+[E5] [G5]
+[E5] [A5]
+[E5]
+[E5] [D5] [E5]
+{end_of_outro}

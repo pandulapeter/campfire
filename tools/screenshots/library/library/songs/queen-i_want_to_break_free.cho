@@ -1,0 +1,88 @@
+{title: I Want to Break Free}
+{artist: Queen}
+{meta: language en}
+{album: The Works}
+{meta: cover https://coverartarchive.org/release-group/44c90c72-76b5-3c13-890e-3d37f21c10c9/front-250}
+{year: 1984}
+{key: E}
+{tempo: 109}
+{tag: Rock}
+
+{start_of_intro}
+[A] [B] [C#m] [C#m] [B]
+[A] [B] [C#m] [C#m] [B]
+[A] [B] [E]
+
+[E] [E]
+[A] [A]
+
+[E] [E]
+[B] [A]
+
+[E] [E-]
+{end_of_intro}
+
+{start_of_verse}
+[E]
+[E]
+[E]
+[A]
+[E]
+[B] [A] [E]
+{end_of_verse}
+
+{start_of_verse}
+[E]
+[E]
+[A]
+[E]
+[B] [A] [E]
+{end_of_verse}
+
+{start_of_bridge}
+[B] [A]
+[B] [A]
+[C#m]
+[F#]
+[A] [B] [C#m]
+[A] [B] [C#m]
+[A] [B] [E]
+{end_of_bridge}
+
+{start_of_solo}
+[E] [E]
+[E] [E]
+
+[A] [A]
+[E] [E]
+
+[B] [A]
+[E] [E-]
+{end_of_solo}
+
+{start_of_bridge}
+[E] [E]
+[E] [E]
+
+[A] [A]
+[E] [E]
+
+[B] [A]
+[E] [E-]
+{end_of_bridge}
+
+{start_of_verse}
+[E]
+[E]
+[A]
+[E]
+[B] [A] [E]
+[B]
+[A] [E]
+{end_of_verse}
+
+{start_of_outro}
+[E]
+[E]
+[E] [E]
+{end_of_outro}

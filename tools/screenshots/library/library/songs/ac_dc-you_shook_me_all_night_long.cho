@@ -1,0 +1,129 @@
+{title: You Shook Me All Night Long}
+{artist: AC/DC}
+{album: Back in Black}
+{meta: cover https://coverartarchive.org/release-group/d3bc1a64-7561-3787-b680-0003aa50f8f1/front-250}
+{year: 1980}
+{key: G}
+{tempo: 128}
+{duration: 3:28}
+{tag: Olive Room}
+{tag: Hard Rock}
+{meta: language en}
+{meta: link https://www.youtube.com/watch?v=Lo2qQmj0_h4 Original}
+
+{start_of_intro}
+[G] [G]
+[D] [D]
+[G] [G]
+[D]
+
+[G] [C] [G] [C] [G]
+[D] [G] [D] [G] [D]
+
+[G] [C] [G] [C] [G]
+[D] [G] [D] [G]
+{end_of_intro}
+
+{start_of_verse}
+[D] [G]
+[C] [G] [C]
+[G] [D] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[D] [G]
+[C] [G] [C] [G]
+[D] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[D] [G]
+[C] [G] [C] [G]
+[D] [G] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[D] [G]
+[C] [G] [C]
+[G] [D]
+[D7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G] [G/C] [G/B] [D] [G/C] [G/B]
+[G] [G/C] [G/B] [D] [G/C] [G/B]
+{end_of_chorus}
+
+{start_of_verse}
+[G]
+[C] [G] [C]
+[G] [D] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[D] [G]
+[C] [G] [C]
+[G] [D] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[D] [G]
+[C] [G] [C]
+[G] [C] [G] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[D] [G]
+[C] [G] [C]
+[G] [D]
+[D7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G] [G/C] [G/B] [D] [G/C] [G/B]
+[G] [G/C] [G/B] [D]
+[G/C] [G/B]
+{end_of_chorus}
+
+{start_of_chorus}
+[G] [G/C] [G/B] [D] [G/C]
+[G/B]
+[G] [G/C] [G/B] [D]
+{end_of_chorus}
+
+{start_of_bridge}
+[G]
+[D]
+{end_of_bridge}
+
+{start_of_solo}
+[G] [G/C] [G/B]
+[D] [G/C] [G/B]
+
+[G] [G/C] [G/B]
+[D] [G/C] [G/B]
+
+[G] [G/C] [G/B]
+[D] [G/C] [G/B]
+
+[G] [G/C] [G/B]
+[D]
+{end_of_solo}
+
+{start_of_chorus}
+[G/C] [G/B]
+[G] [G/C] [G/B] [D] [G/C]
+[G/B] [G] [G/C] [G/B] [D] [G/C]
+{end_of_chorus}
+
+{start_of_chorus}
+[G/B] [G] [G/C] [G/B] [D] [G/C]
+[G/B]
+[G] [G/C] [G/B] [D]
+{end_of_chorus}
+
+{start_of_outro}
+[G/C] [G/B] [D]
+[G/C] [G/B]
+[D]
+{end_of_outro}

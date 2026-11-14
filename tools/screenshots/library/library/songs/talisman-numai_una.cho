@@ -1,0 +1,59 @@
+{title: Numai una}
+{artist: Talisman}
+{meta: language ro}
+{key: A}
+{tag: Pop}
+
+{start_of_intro}
+[A] [F#m] [E] [A]
+[A] [F#m] [E] [A]
+[D] [E] [F#m]
+[A] [C#] [-]
+{end_of_intro}
+
+{start_of_bridge}
+[A] [F#m]
+[A] [F#m]
+{end_of_bridge}
+
+{start_of_verse}
+[A] [F#m] [A] [F#m]
+[A] [F#m] [A] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+{end_of_verse}
+
+{start_of_bridge}
+[A] [F#m]
+[A] [F#m]
+{end_of_bridge}
+
+{start_of_verse}
+[A] [F#m] [A] [F#m]
+[A] [F#m] [A] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+{end_of_verse}
+
+{start_of_solo}
+[D] [E] [F#m] [F#m]
+[A] [C#] [F#m] [F#m]
+{end_of_solo}
+
+{start_of_verse}
+[A] [F#m] [A] [F#m]
+[A] [F#m] [A] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+[D] [E] [F#m]
+[A] [C#] [F#m]
+{end_of_verse}
+
+{start_of_outro}
+[A] [F#m]
+[A]
+{end_of_outro}

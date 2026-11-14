@@ -1,0 +1,72 @@
+{title: Ring of Fire}
+{artist: Johnny Cash}
+{meta: language en}
+{album: Ring of Fire: The Best of Johnny Cash}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5f/13/bc/5f13bc30-0f68-ed45-466c-b491e9201558/dj.yjweejkt.jpg/250x250bb.jpg}
+{year: 1963}
+{key: G}
+{tempo: 103}
+{duration: 2:38}
+{tag: Country}
+
+{start_of_intro}
+[G] [C] [G] [G]
+[G] [D] [G] [G]
+{end_of_intro}
+
+{start_of_verse}
+[G] [C] [G] [C] [G] [G]
+[G] [D] [G] [D] [G] [G]
+[G] [C] [G] [C] [G] [G]
+[G] [D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[D] [C] [G]
+[D] [C] [G]
+[G]
+[D] [G] [D] [G]
+{end_of_chorus}
+
+{start_of_bridge}
+[G] [C] [G] [G]
+[G] [D] [G] [G]
+
+[G] [C] [G] [G]
+[G] [D] [G] [G]
+{end_of_bridge}
+
+{start_of_chorus}
+[D] [C] [G]
+[D] [C] [G]
+[G]
+[D] [G] [D] [G]
+{end_of_chorus}
+
+{start_of_verse}
+[G] [C] [G] [C] [G] [G]
+[G] [D] [G] [D] [G] [G]
+[G] [C] [G] [C] [G] [G]
+[G] [D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[D] [C] [G]
+[D] [C] [G]
+[G]
+[D] [G] [D] [G]
+{end_of_chorus}
+
+{start_of_chorus}
+[D] [C] [G]
+[D] [C] [G]
+[G]
+[D] [G] [D] [G]
+{end_of_chorus}
+
+{start_of_outro}
+[G]
+[D] [G] [D] [G]
+[D] [G] [D] [G]
+[D] [G]
+{end_of_outro}

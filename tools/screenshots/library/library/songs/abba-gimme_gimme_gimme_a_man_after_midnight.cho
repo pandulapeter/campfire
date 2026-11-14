@@ -1,0 +1,145 @@
+{title: Gimme! Gimme! Gimme!}
+{artist: ABBA}
+{meta: language en}
+{album: Greatest Hits}
+{meta: cover https://coverartarchive.org/release-group/763dbe66-d5fb-332e-8b2d-599f8b272edc/front-250}
+{year: 1979}
+{key: Dm}
+{tempo: 120}
+{duration: 3:16}
+{tag: Olive Room}
+{tag: Disco}
+{meta: link https://www.youtube.com/watch?v=XEjLoHdbVeE Original}
+
+{start_of_intro}
+[Dm] [Dm#5] [Dm4] [Dm]
+[Dm#5] [Dm] [Dm4] [Dm]
+
+[Dm] [Dm#5] [Dm4] [Dm]
+[Dm#5] [Dm] [Dm4] [Dm]
+{end_of_intro}
+
+{start_of_bridge}
+[Dm] [F]
+[Am] [Dm]
+
+[Dm] [F]
+[Am] [Dm]
+
+[Dm]
+{end_of_bridge}
+
+{start_of_verse}
+[Dm] [C] [A]
+[F] [G]
+[Dm]
+{end_of_verse}
+
+{start_of_verse}
+[Dm] [C] [A]
+[F] [G]
+[Dm]
+{end_of_verse}
+
+{start_of_prechorus}
+[Bb]
+[Gm] [A7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+{end_of_chorus}
+
+{start_of_bridge}
+[Dm] [F]
+[Am] [Dm]
+
+[Dm] [F]
+[Am] [Dm]
+
+[Dm]
+{end_of_bridge}
+
+{start_of_verse}
+[Dm] [C] [A]
+[F] [G]
+[Dm]
+{end_of_verse}
+
+{start_of_verse}
+[Dm] [C] [A] [F]
+[G]
+[Dm]
+{end_of_verse}
+
+{start_of_prechorus}
+[Bb]
+[Gm] [A7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+{end_of_chorus}
+
+{start_of_bridge}
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+{end_of_bridge}
+
+{start_of_solo}
+[Dm]
+[Dm]
+[Dm]
+[Dm]
+
+[Dm]
+[Dm]
+[Dm]
+[Dm]
+
+[Dm]
+[Dm]
+[Dm]
+[Dm]
+{end_of_solo}
+
+{start_of_prechorus}
+[Bb]
+[Gm] [A7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+{end_of_chorus}
+
+{start_of_chorus}
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+[Dm] [Bb] [C] [Dm]
+[Bb] [Dm] [C] [Dm]
+{end_of_chorus}
+
+{start_of_outro}
+[Dm] [F]
+[Am] [Dm]
+
+[Dm] [F]
+[Am] [Dm]
+
+[Dm] [F]
+[Am] [Dm]
+
+[Dm] [F]
+[Am] [Dm]
+{end_of_outro}

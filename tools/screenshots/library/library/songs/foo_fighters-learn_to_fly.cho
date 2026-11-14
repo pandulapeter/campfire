@@ -1,0 +1,103 @@
+{title: Learn to Fly}
+{artist: Foo Fighters}
+{meta: language en}
+{album: There Is Nothing Left to Lose}
+{meta: cover https://coverartarchive.org/release-group/1cfc9a17-1fdb-30dd-83ca-dce93c481492/front-250}
+{year: 1999}
+{key: B}
+{tag: Rock}
+
+{start_of_intro}
+[B] [F#m] [E] [E]
+[B] [F#m] [E] [E]
+{end_of_intro}
+
+{start_of_verse}
+[B] [F#m]
+[E]
+[B] [F#m]
+[E]
+{end_of_verse}
+
+{start_of_verse}
+[B] [F#m]
+[E]
+[B]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_chorus}
+[B] [F#m]
+[E]
+[B] [F#m] [E]
+[B] [F#m]
+[E]
+[G] [A]
+{end_of_chorus}
+
+{start_of_bridge}
+[B] [F#m] [E] [E]
+[B] [F#m] [E] [E]
+{end_of_bridge}
+
+{start_of_verse}
+[B] [F#m]
+[E]
+[B]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_verse}
+[B] [F#m]
+[E]
+[B]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_chorus}
+[B] [F#m]
+[E]
+[B] [F#m] [E]
+[B] [F#m]
+[E]
+[G] [A]
+[E]
+{end_of_chorus}
+
+{start_of_bridge}
+[G] [A]
+[B]
+[G]
+[D] [E]
+[G] [A]
+[B] [G]
+[D] [E]
+[G] [A]
+{end_of_bridge}
+
+{start_of_chorus}
+[B] [F#m]
+[E]
+[B] [F#m] [E]
+[B] [F#m]
+[E]
+[G] [A]
+{end_of_chorus}
+
+{start_of_chorus}
+[B] [F#m]
+[E]
+[B] [F#m] [E]
+[B] [F#m]
+[E]
+[G] [A]
+[E]
+{end_of_chorus}
+
+{start_of_outro}
+[G] [A]
+[E]
+[G] [A]
+[B] [B]
+[B] [D#] [F#]
+{end_of_outro}

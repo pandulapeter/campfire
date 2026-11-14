@@ -1,0 +1,54 @@
+{title: I Can See Clearly Now}
+{artist: Johnny Nash}
+{meta: language en}
+{album: I Can See Clearly Now}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/9f/8a/a2/9f8aa233-34cd-881b-02fd-1589a0bd94e4/mzi.isuednif.jpg/250x250bb.jpg}
+{year: 1972}
+{key: D}
+{tempo: 123}
+{duration: 2:45}
+{tag: Reggae}
+
+{start_of_intro}
+[D]
+{end_of_intro}
+
+{start_of_verse}
+[D] [G] [D]
+[D] [G] [A]
+[D] [G] [D]
+[C] [G] [D]
+[C] [G] [D]
+{end_of_verse}
+
+{start_of_verse}
+[D] [G] [D]
+[D] [G] [A]
+[D] [G] [D]
+[C] [G] [D]
+{end_of_verse}
+
+{start_of_bridge}
+[F] [C]
+[F] [A]
+{end_of_bridge}
+
+{start_of_solo}
+[C#m] [G]
+[C#m] [G]
+[C] [Bm]
+[A] [A7]
+{end_of_solo}
+
+{start_of_verse}
+[D] [G] [D]
+[D] [G] [A]
+[D] [G] [D]
+[C] [G] [D]
+[C] [G] [D]
+{end_of_verse}
+
+{start_of_outro}
+[C] [G] [D]
+[C] [G] [D]
+{end_of_outro}

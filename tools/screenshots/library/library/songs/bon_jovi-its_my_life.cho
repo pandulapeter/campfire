@@ -1,0 +1,93 @@
+{title: It's My Life}
+{artist: Bon Jovi}
+{meta: language en}
+{album: Crush}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/d5/ad/05/d5ad0586-8108-8da1-6017-3e915f26ad0b/14UMGIM44520.rgb.jpg/250x250bb.jpg}
+{year: 2000}
+{key: Cm}
+{tag: Rock}
+
+{start_of_intro}
+[Cm] [Ab] [G]
+[Cm] [Ab] [G]
+{end_of_intro}
+
+{start_of_verse}
+[Cm]
+[Cm] [Ab] [G]
+[Cm]
+[Cm] [Ab] [G]
+[Cm]
+[F]
+{end_of_verse}
+
+{start_of_chorus}
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+{end_of_chorus}
+
+{start_of_bridge}
+[Cm] [Ab] [G]
+[Cm] [Ab] [G]
+{end_of_bridge}
+
+{start_of_verse}
+[Cm]
+[Cm] [Ab] [G]
+[Cm]
+[Cm] [Ab] [G]
+[Cm]
+[F]
+{end_of_verse}
+
+{start_of_chorus}
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+{end_of_chorus}
+
+{start_of_solo}
+[Ab] [Bb]
+[Cm] [F]
+{end_of_solo}
+
+{start_of_bridge}
+[Cm]
+{end_of_bridge}
+
+{start_of_chorus}
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+{end_of_chorus}
+
+{start_of_chorus}
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+[Cm] [Ab]
+[Eb] [Bb]
+[Cm] [Ab] [Bb]
+[Bdim]
+{end_of_chorus}
+
+{start_of_outro}
+[Cm]
+{end_of_outro}

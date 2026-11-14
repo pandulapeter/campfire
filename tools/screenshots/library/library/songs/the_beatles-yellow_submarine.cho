@@ -1,0 +1,72 @@
+{title: Yellow Submarine}
+{artist: The Beatles}
+{meta: language en}
+{album: Revolver}
+{meta: cover https://coverartarchive.org/release-group/72d15666-99a7-321e-b1f3-a3f8c09dff9f/front-250}
+{year: 1966}
+{key: F#}
+{tag: Rock}
+
+{start_of_verse}
+[C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+{end_of_verse}
+
+{start_of_verse}
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+{end_of_verse}
+
+{start_of_chorus}
+[F#] [C#]
+[C#] [F#]
+[F#] [C#]
+[C#] [F#]
+{end_of_chorus}
+
+{start_of_verse}
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+[F#] [C#] [B] [F#]
+[B] [C#] [B] [F#]
+{end_of_verse}
+
+{start_of_chorus}
+[F#] [C#]
+[C#] [F#]
+[F#] [C#]
+[C#] [F#]
+{end_of_chorus}
+
+{start_of_solo}
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+{end_of_solo}
+
+{start_of_verse}
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+[F#] [C#] [B] [F#]
+[D#m] [G#m] [B] [C#]
+{end_of_verse}
+
+{start_of_chorus}
+[F#] [C#]
+[C#] [F#]
+[F#] [C#]
+[C#] [F#]
+{end_of_chorus}
+
+{start_of_chorus}
+[F#] [C#]
+[C#] [F#]
+[F#] [C#]
+[C#] [F#]
+{end_of_chorus}

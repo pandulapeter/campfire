@@ -1,0 +1,68 @@
+{title: Elhagyom a várost}
+{artist: Edda}
+{meta: language hu}
+{key: G}
+{tag: Rock}
+
+{start_of_intro}
+[D]
+[Em] [C7] [G] [D]
+{end_of_intro}
+
+{start_of_verse}
+[Em] [C7]
+[G] [C7]
+[D] [Em]
+[Cmaj7] [D]
+{end_of_verse}
+
+{start_of_verse}
+[Em] [C7]
+[G] [C7]
+[D] [Em]
+[Cmaj7] [D] [D7]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[Em7] [F] [D7]
+[G] [Em7]
+[F] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[Em] [C7]
+[G] [C7]
+[D] [Em]
+[Cmaj7] [D]
+{end_of_verse}
+
+{start_of_verse}
+[Em] [C7]
+[G] [C7]
+[D] [Em]
+[Cmaj7] [D] [D7]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[Em7] [F] [D7]
+[G] [Em7]
+[F] [D]
+{end_of_chorus}
+
+{start_of_solo}
+[C] [C] [G] [C]
+[D] [Em] [C] [D]
+{end_of_solo}
+
+{start_of_chorus}
+[G]
+[Em7] [F] [D7]
+[G] [Em7]
+[F] [D]
+{end_of_chorus}
+
+{start_of_outro}
+[G]
+{end_of_outro}

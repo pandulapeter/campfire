@@ -1,0 +1,86 @@
+{title: Blue Suede Shoes}
+{artist: Elvis Presley}
+{meta: language en}
+{album: Elvis Presley}
+{meta: cover https://coverartarchive.org/release-group/755ec54b-8632-4930-930d-0aaab9e55904/front-250}
+{year: 1956}
+{key: A}
+{tag: Rock and Roll}
+
+{start_of_verse}
+[A] [-]
+[A] [-]
+[A] [-]
+{end_of_verse}
+
+{start_of_chorus}
+[D7]
+[A7]
+[E7]
+[D7] [A7]
+{end_of_chorus}
+
+{start_of_verse}
+[A] [-]
+[A] [-]
+[A] [-] [A] [-]
+[A] [-] [A] [-]
+[A] [-]
+{end_of_verse}
+
+{start_of_chorus}
+[D7]
+[A7]
+[E7]
+[D7] [A7]
+{end_of_chorus}
+
+{start_of_solo}
+[A7] [A7] [A7] [A7]
+[D7] [D7] [A7] [A7]
+[E7] [D7] [A7] [A7]
+{end_of_solo}
+
+{start_of_verse}
+[A] [-]
+[A] [-]
+[A] [-] [A] [-]
+[A] [-] [A] [-]
+[A] [-]
+{end_of_verse}
+
+{start_of_chorus}
+[D7]
+[A7]
+[E7]
+[D7] [A7]
+{end_of_chorus}
+
+{start_of_solo}
+[A7] [A7] [A7] [A7]
+[D7] [D7] [A7] [A7]
+[E7] [D7] [A7] [A7]
+{end_of_solo}
+
+{start_of_verse}
+[A] [-]
+[A] [-]
+[A] [-]
+[A] [-]
+{end_of_verse}
+
+{start_of_chorus}
+[D7]
+[A7]
+[E7]
+[D7] [A7]
+{end_of_chorus}
+
+{start_of_outro}
+[A7]
+[A7]
+[D7]
+[A7]
+[E7]
+[D7] [A7]
+{end_of_outro}

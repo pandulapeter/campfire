@@ -6,8 +6,5 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# The library the store screenshots are taken of is somebody's own songs, and stays on their machine.
-/library/
-
 # What a run renders, before the framing: regenerated every time.
 /renders/

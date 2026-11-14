@@ -1,0 +1,100 @@
+{title: Crazy Little Thing Called Love}
+{artist: Queen}
+{meta: language en}
+{album: The Game}
+{meta: cover https://coverartarchive.org/release-group/75702ddf-a46c-3cac-bace-0a466eb3c37c/front-250}
+{year: 1980}
+{key: D}
+{tempo: 153}
+{duration: 2:42}
+{tag: Rock}
+
+{start_of_intro}
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+{end_of_intro}
+
+{start_of_verse}
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D]
+[A#] [C] [D]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G]
+[C] [G]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D]
+[A#] [C] [D]
+{end_of_verse}
+
+{start_of_bridge}
+[G]
+[C] [G]
+[A#]
+[E] [A]
+[F-]
+[D5] [C#5] [C]
+[A5] [G#5] [G]
+[E]
+[A]
+{end_of_bridge}
+
+{start_of_verse}
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D]
+[A#] [C] [D]
+{end_of_verse}
+
+{start_of_solo}
+[A#]
+[D]
+[A#]
+[E] [A] [F-]
+
+[D5] [C#5] [C]
+[A5] [G#5] [G]
+[E]
+[A]
+{end_of_solo}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_verse}
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D] [Dsus4] [D]
+[D] [Dsus4] [D]
+[G] [C] [G]
+[D]
+[A#] [C] [D]
+{end_of_verse}
+
+{start_of_outro}
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+[A#] [C] [D]
+{end_of_outro}

@@ -1,0 +1,47 @@
+{title: Jump}
+{artist: Van Halen}
+{meta: language en}
+{album: 1984}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/79/98/f7/7998f761-20e0-aa8e-4fb2-190062af1638/603497894161.jpg/250x250bb.jpg}
+{year: 1984}
+{key: C}
+{tag: Hard Rock}
+
+{start_of_intro}
+{end_of_intro}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_solo}
+{end_of_solo}
+
+{start_of_solo}
+{end_of_solo}
+
+{start_of_bridge}
+{end_of_bridge}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_outro}
+{end_of_outro}

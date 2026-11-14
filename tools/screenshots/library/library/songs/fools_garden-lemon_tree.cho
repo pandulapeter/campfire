@@ -1,0 +1,85 @@
+{title: Lemon Tree}
+{artist: Fools Garden}
+{meta: language en}
+{album: Dish of the Day}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/d5/fb/80/d5fb804e-5f24-37dd-e0c8-b305393e06bc/4250330544736.jpg/250x250bb.jpg}
+{year: 1995}
+{key: Fm}
+{tag: Pop}
+
+{start_of_intro}
+[Fm] [Fm] [Cm] [Cm]
+[Fm] [Fm] [Cm] [Cm]
+[Bbm] [Bbm] [Cm] [Cm]
+[Fm] [Cm] [Fm] [-]
+{end_of_intro}
+
+{start_of_verse}
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Bbm] [Cm] [Fm] [Cm] [Fm] [-]
+{end_of_verse}
+
+{start_of_verse}
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Bbm] [Cm] [Fm] [Cm] [Fm]
+{end_of_verse}
+
+{start_of_chorus}
+[Ab] [Eb]
+[Fm] [Cm]
+[Db] [Eb] [Ab] [Eb]
+[Ab] [Eb]
+[Fm] [Cm]
+[Db] [Bb7] [Eb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Fm] [Fm] [Cm] [Cm]
+[Fm] [Fm] [Cm] [Cm]
+[Bbm] [Bbm] [Cm] [Cm]
+[Fm] [Cm] [Fm] [-]
+{end_of_bridge}
+
+{start_of_verse}
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Fm] [Cm]
+[Bbm] [Cm] [Fm] [Cm] [Fm]
+{end_of_verse}
+
+{start_of_bridge}
+[Bbm] [Fm]
+[Eb] [Ab] [Cm]
+{end_of_bridge}
+
+{start_of_verse}
+[Fm] [Cm]
+[Fm] [Cm]
+[Bbm] [Cm] [Fm] [Cm] [Fm]
+{end_of_verse}
+
+{start_of_chorus}
+[Ab] [Eb]
+[Fm] [Cm]
+[Db] [Eb] [Ab] [Eb]
+[Ab] [Eb]
+[Fm] [Cm]
+[Db] [Bb7] [Eb]
+[Eb]
+{end_of_chorus}
+
+{start_of_outro}
+[Ab] [Eb]
+[Fm] [Cm]
+[Db] [Eb]
+[Db] [Eb]
+[Db] [Eb]
+[Ab]
+{end_of_outro}

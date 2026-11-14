@@ -1,0 +1,99 @@
+{title: Basket Case}
+{artist: Green Day}
+{meta: language en}
+{album: Dookie}
+{meta: cover https://coverartarchive.org/release-group/314cffd4-daa5-3337-85e5-e54165a96113/front-250}
+{year: 1994}
+{key: Eb}
+{tag: Punk}
+
+{start_of_verse}
+[Eb] [Bb]
+[Cm] [Gm]
+[Ab] [Eb] [Bb]
+{end_of_verse}
+
+{start_of_verse}
+[Eb] [Bb]
+[Cm] [Gm]
+[Ab] [Eb] [Bb]
+{end_of_verse}
+
+{start_of_chorus}
+[Ab] [Bb] [Eb]
+[Ab] [Bb] [Eb]
+[Ab] [Bb]
+[Eb] [Db] [Cm]
+[Ab] [Bb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Eb] [Bb] [Cm] [Bb]
+[Eb] [Bb] [Cm] [Bb]
+{end_of_bridge}
+
+{start_of_verse}
+[Eb] [Bb]
+[Cm] [Gm]
+[Ab] [Eb] [Bb]
+{end_of_verse}
+
+{start_of_verse}
+[Eb] [Bb]
+[Cm] [Gm]
+[Ab] [Eb] [Bb]
+{end_of_verse}
+
+{start_of_chorus}
+[Ab] [Bb] [Eb]
+[Ab] [Bb] [Eb]
+[Ab] [Bb]
+[Eb] [Db] [Cm]
+[Ab] [Bb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Eb] [Bb] [Cm] [Bb]
+[Eb] [Bb] [Cm] [Bb]
+{end_of_bridge}
+
+{start_of_bridge}
+[Eb] [Bb] [Cm] [Bb]
+[Eb] [Bb] [Cm] [Bb]
+{end_of_bridge}
+
+{start_of_bridge}
+[Ab] [Bb]
+{end_of_bridge}
+
+{start_of_solo}
+[Eb] [Bb] [Cm] [Gm]
+[Ab] [Eb] [Bb] [Bb]
+
+[Eb] [Bb] [Cm] [Gm]
+[Ab] [Eb] [Bb] [Bb]
+{end_of_solo}
+
+{start_of_chorus}
+[Ab] [Bb] [Eb]
+[Ab] [Bb] [Eb]
+[Ab] [Bb]
+[Eb] [Db] [Cm]
+[Ab] [Bb]
+{end_of_chorus}
+
+{start_of_outro}
+[Eb] [Eb] [Cm] [Cm]
+[Ab] [Eb] [Bb] [Bb]
+
+[Eb] [Eb] [Cm] [Cm]
+[Ab] [Eb] [Bb] [Bb]
+
+[Eb] [Eb] [Cm] [Cm]
+[Ab] [Eb] [Bb] [Bb]
+
+[Eb] [Eb] [Cm] [Cm]
+[Ab] [Eb] [Bb] [Bb]
+
+[Ab] [Eb] [Bb]
+{end_of_outro}

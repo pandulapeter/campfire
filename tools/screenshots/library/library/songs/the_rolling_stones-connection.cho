@@ -1,0 +1,75 @@
+{title: Connection}
+{artist: The Rolling Stones}
+{meta: language en}
+{album: Between the Buttons}
+{meta: cover https://coverartarchive.org/release-group/72a77b05-0006-3838-a378-c56b65abc733/front-250}
+{year: 1967}
+{key: C}
+{tag: Rock}
+
+{start_of_intro}
+[E] [F]
+[C] [G]
+[C]
+{end_of_intro}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_verse}
+[C] [G] [E]
+[C] [G] [F]
+[Am] [D] [F]
+[C] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_verse}
+[C] [G] [C]
+[C] [G] [F]
+[Am] [D] [F]
+[C] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_chorus}
+[E]
+[E7] [F]
+[C] [G]
+[C]
+{end_of_chorus}
+
+{start_of_outro}
+[E] [F]
+[C] [G] [C]
+{end_of_outro}

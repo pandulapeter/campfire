@@ -1,0 +1,86 @@
+{title: I'm a Believer}
+{artist: The Monkees}
+{meta: language en}
+{album: More of the Monkees}
+{meta: cover https://coverartarchive.org/release-group/60d3909e-2ef6-36fa-bf36-269c5ff82566/front-250}
+{year: 1967}
+{key: G}
+{tag: Pop}
+
+{start_of_intro}
+[G] [C] [D] [D]
+{end_of_intro}
+
+{start_of_verse}
+[G] [D] [G]
+[G] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [G]
+[C] [G]
+[C] [G] [D]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C]
+[G]
+[F] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[G] [D] [G]
+[G] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [G]
+[C] [G]
+[C] [G] [D]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C]
+[G]
+[F] [D]
+{end_of_chorus}
+
+{start_of_solo}
+[G] [D] [G] [G]
+[G] [D] [G] [G]
+{end_of_solo}
+
+{start_of_prechorus}
+[C] [G]
+[C] [G]
+[C] [G] [D]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C]
+[G]
+[F] [D]
+{end_of_chorus}
+
+{start_of_outro}
+[G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C]
+[G] [C] [G] [C] [G]
+[C] [G] [C] [G]
+[C] [G] [C] [G]
+{end_of_outro}

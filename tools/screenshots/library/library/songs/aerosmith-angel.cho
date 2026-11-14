@@ -1,0 +1,106 @@
+{title: Angel}
+{artist: Aerosmith}
+{meta: language en}
+{album: Permanent Vacation}
+{meta: cover https://coverartarchive.org/release-group/c522e905-3986-3f09-89f3-5d8bb09cc93e/front-250}
+{year: 1987}
+{key: Eb}
+{tag: Hard Rock}
+
+{start_of_intro}
+[Eb] [Bb] [Ab]
+[Bb] [Eb] [Bb] [Ab]
+[Bb] [Eb] [Bb] [Ab]
+[Bb] [Cm] [Bb] [Ab]
+[Absus4] [Ab]
+{end_of_intro}
+
+{start_of_verse}
+[Eb]
+[Ab] [Absus4] [Ab]
+[Eb]
+[Cm] [Gm] [Ab]
+{end_of_verse}
+
+{start_of_bridge}
+[Bb] [Cm]
+[Ab]
+[Bb] [Cm]
+[Ab]
+[Bb] [Cm]
+[Ab] [Bb]
+{end_of_bridge}
+
+{start_of_chorus}
+[Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+[Bb] [Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab] [Absus4] [Ab]
+{end_of_chorus}
+
+{start_of_verse}
+[Eb]
+[Ab] [Absus4] [Ab]
+[Eb]
+[Cm] [Gm] [Ab]
+{end_of_verse}
+
+{start_of_bridge}
+[Bb] [Cm]
+[Ab]
+[Bb] [Cm]
+[Ab]
+[Bb] [Cm]
+[Ab] [Bb]
+{end_of_bridge}
+
+{start_of_chorus}
+[Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+[Bb] [Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+[Bb]
+{end_of_chorus}
+
+{start_of_solo}
+[Eb] [Bb] [Ab]
+[Bb] [Cm] [Bb] [Ab]
+
+[Bb] [Eb] [Bb] [Ab]
+[Bb] [Cm] [Bb] [Ab]
+
+[Bb] [Bb]
+{end_of_solo}
+
+{start_of_bridge}
+[Ab]
+[Eb]
+[Cm]
+[Ab]
+[Bb]
+{end_of_bridge}
+
+{start_of_chorus}
+[Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+[Bb] [Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+{end_of_chorus}
+
+{start_of_chorus}
+[Bb] [Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+[Bb] [Eb] [Bb]
+[Ab] [Bb] [Cm] [Bb] [Ab]
+{end_of_chorus}
+
+{start_of_outro}
+[Bb] [Eb]
+[Bb] [Ab]
+[Bb] [Cm]
+[Bb] [Ab]
+[Bb] [Eb]
+[Bb] [Ab]
+[Bb] [Cm] [Bb] [Ab]
+[Bb] [Eb]
+{end_of_outro}

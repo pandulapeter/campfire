@@ -1,0 +1,94 @@
+{title: Bad Day}
+{artist: Daniel Powter}
+{meta: language en}
+{album: Daniel Powter}
+{meta: cover https://coverartarchive.org/release-group/7672bd54-417c-3dda-b16c-0f49265216bb/front-250}
+{year: 2005}
+{key: Eb}
+{tempo: 70}
+{duration: 3:53}
+{tag: Pop}
+
+{start_of_intro}
+[Eb] [Ab] [Bb] [Bb]
+{end_of_intro}
+
+{start_of_verse}
+[Eb] [Ab] [Bb]
+[Eb] [Ab] [Bb]
+[Cm] [Bb] [Ab]
+[Eb] [Fm7]
+[Bb]
+{end_of_verse}
+
+{start_of_verse}
+[Eb] [Ab] [Bb]
+[Eb] [Ab] [Bb]
+[Cm] [Bb] [Ab]
+[Eb] [Fm7]
+[Bb]
+{end_of_verse}
+
+{start_of_chorus}
+[Eb] [Ab]
+[Fm7] [Bb]
+[Eb] [Ab]
+[Fm7] [Bb]
+[Cm] [Bb]
+[Ab] [Eb]
+[Fm7] [Bb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Eb] [Ab] [Bb] [Bb]
+[Eb] [Ab] [Bb] [Bb]
+{end_of_bridge}
+
+{start_of_bridge}
+[Cm] [Bb] [Ab]
+[Eb] [Fm7]
+[Bb]
+{end_of_bridge}
+
+{start_of_chorus}
+[Eb] [Ab]
+[Fm7] [Bb]
+[Eb] [Ab]
+[Fm7] [Bb]
+[Cm] [Bb]
+[Ab] [Eb]
+[Fm7] [Bb]
+[Eb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Bb]
+[Eb]
+[Bb]
+[Eb]
+[F]
+{end_of_bridge}
+
+{start_of_bridge}
+[Eb] [Ab] [Bb]
+[Eb] [Ab] [Bb]
+{end_of_bridge}
+
+{start_of_chorus}
+[Eb] [Ab]
+[Fm7] [Bb]
+[Eb] [Ab]
+[Fm7] [Bb]
+[Cm] [Bb]
+[Ab] [Eb]
+[Fm7] [Bb]
+{end_of_chorus}
+
+{start_of_bridge}
+[Eb] [Ab] [Bb] [Bb]
+[Eb] [Ab] [Bb] [Bb]
+{end_of_bridge}
+
+{start_of_outro}
+[Eb]
+{end_of_outro}

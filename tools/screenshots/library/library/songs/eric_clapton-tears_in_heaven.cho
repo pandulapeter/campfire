@@ -1,0 +1,90 @@
+{title: Tears in Heaven}
+{artist: Eric Clapton}
+{meta: language en}
+{album: Rush}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ec/7b/e1/ec7be14e-e011-1f8a-9a32-59ef378482c6/mzi.uvfjworw.jpg/250x250bb.jpg}
+{year: 1992}
+{key: A}
+{tag: Rock}
+
+{start_of_intro}
+[A] [E] [F#m] [A]
+[D] [E7] [A] [A]
+{end_of_intro}
+
+{start_of_verse}
+[A] [E] [F#m] [A]
+[D] [A] [E]
+[A] [E] [F#m] [A]
+[D] [A] [E]
+{end_of_verse}
+
+{start_of_bridge}
+[F#m] [C#m]
+[Em] [F#m]
+[Bm] [E7]
+[A]
+[E] [F#m] [A]
+[D] [E7] [A] [A]
+{end_of_bridge}
+
+{start_of_verse}
+[A] [E] [F#m] [A]
+[D] [A] [E]
+[A] [E] [F#m] [A]
+[D] [A] [E]
+{end_of_verse}
+
+{start_of_bridge}
+[F#m] [C#m]
+[Em] [F#m]
+[Bm] [A7]
+[A]
+[E] [F#m] [A]
+[D] [E7] [A] [A]
+{end_of_bridge}
+
+{start_of_chorus}
+[C] [G] [Am]
+[D] [G] [D] [Em] [D] [G]
+[C] [G] [Am]
+[D] [G] [D] [E7]
+{end_of_chorus}
+
+{start_of_solo}
+[A] [E] [F#m] [A]
+[D] [A] [E] [E]
+
+[A] [E] [F#m] [A]
+[D] [A] [E] [E]
+{end_of_solo}
+
+{start_of_bridge}
+[F#m] [C#m]
+[Em] [F#m]
+[Bm] [E7]
+[A]
+[E] [F#m] [A]
+[D] [E7] [A] [A]
+{end_of_bridge}
+
+{start_of_verse}
+[A] [E] [F#m] [A]
+[D] [A] [E]
+[A] [E] [F#m] [A]
+[D] [A] [E]
+{end_of_verse}
+
+{start_of_bridge}
+[F#m] [C#m]
+[Em] [F#m]
+[Bm] [E7]
+[A] [E] [F#m] [A]
+{end_of_bridge}
+
+{start_of_outro}
+[Bm] [E7]
+[A]
+[E] [F#m] [A]
+[D] [E7] [A] [A]
+{end_of_outro}

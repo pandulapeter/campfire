@@ -1,0 +1,44 @@
+{title: What a Wonderful World}
+{artist: Louis Armstrong}
+{meta: language en}
+{album: What a Wonderful World}
+{meta: cover https://coverartarchive.org/release-group/234a5bf6-358e-38b4-a412-d9a42a8674ea/front-250}
+{year: 1968}
+{key: F}
+{tempo: 140}
+{time: 6/8}
+{duration: 2:21}
+{tag: Jazz}
+
+{start_of_intro}
+[F] [C] [F] [C]
+{end_of_intro}
+
+{start_of_verse}
+[F] [Am] [Bb] [Am]
+[Gm] [F] [A] [Dm]
+[Db] [Gm] [C7] [F] [F] [Bb] [C7]
+{end_of_verse}
+
+{start_of_verse}
+[F] [Am] [Bb] [Am]
+[Gm] [F] [A] [Dm]
+[Db] [Gm] [C7] [F] [Bb] [Bb] [F]
+{end_of_verse}
+
+{start_of_bridge}
+[C7] [F]
+[C7] [F]
+[Dm] [Am] [Dm] [Am]
+[Dm] [Am] [Gm] [C7]
+{end_of_bridge}
+
+{start_of_verse}
+[F] [Am] [Bb] [Am]
+[Gm] [F] [A] [Dm]
+[Db] [Gm] [C7] [F] [Am] [Dm] [Dm]
+{end_of_verse}
+
+{start_of_outro}
+[Gm] [C7] [F] [Bb] [F]
+{end_of_outro}

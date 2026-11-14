@@ -23,9 +23,9 @@ tool works.
 
 ## What a run needs
 
-- **The library**, in `tools/screenshots/library/` (gitignored, never committed): a Campfire data folder's
-  `library/`, `covers/` and `preferences/preferences.json`, stripped to what the images show. If it is missing, stop
-  and ask. Never write into the user's real data folder. Its setlists were trimmed for the shots (Frey-Tully Nuptials
+- **The library**, committed in `tools/screenshots/library/`, holding only what the images show of each song (its
+  rules are in `tools/screenshots/CLAUDE.md`): a shot that comes to show more of a song's words needs them written
+  back into its file first. Never write into the user's real data folder. Its setlists were trimmed for the shots (Frey-Tully Nuptials
   and Getting started); keep them that way.
 - **Nothing else building in the clone** while a render runs: a jar rebuilt under it fails later shots with a
   `ClassNotFoundException` while the run still reports them written.

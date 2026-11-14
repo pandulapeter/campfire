@@ -1,0 +1,32 @@
+{
+    "title": "Frey-Tully Nuptials",
+    "description": "Soundcheck at 4:30. Venue insisted on locking the main doors during dinner for ‘atmosphere’ (weird, but whatever). Do NOT play the cello intro to that one Lannister tune under any circumstances. If the catering staff starts wearing chainmail, pack up the pedalboards and run.",
+    "date": "2026-10-09",
+    "isCountdownShown": true,
+    "songs": [
+        {
+            "file": "creedence_clearwater_revival-bad_moon_rising.cho"
+        },
+        {
+            "file": "chris_isaak-wicked_game.cho"
+        },
+        {
+            "file": "jace_everett-bad_things.cho"
+        },
+        {
+            "file": "ronan_keating-if_tomorrow_never_comes.cho"
+        },
+        {
+            "file": "ac_dc-dirty_deeds_done_dirt_cheap.cho"
+        },
+        {
+            "file": "daniel_powter-bad_day.cho"
+        },
+        {
+            "file": "elton_john-im_still_standing.cho"
+        },
+        {
+            "file": "ac_dc-you_shook_me_all_night_long.cho"
+        }
+    ]
+}

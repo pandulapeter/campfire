@@ -21,9 +21,9 @@ the README banners are composed from the same tool's renders (`Compositions.kt`)
 
 ## What a run needs
 
-- **The library**, in `tools/screenshots/library/` (gitignored, never committed): a Campfire data folder's
-  `library/`, `covers/`, and `preferences/preferences.json`, stripped to what the images show. If it is missing, stop
-  and ask. Never write into the user's real data folder.
+- **The library**, committed in `tools/screenshots/library/`, holding only what the images show of each song (its
+  rules are in `tools/screenshots/CLAUDE.md`): a shot that comes to show more of a song's words needs them written
+  back into its file first. Never write into the user's real data folder.
 - **Nothing else building in the clone** while a render runs.
 - **Pillow** for the scripts (`python3 -m pip install Pillow` where `import PIL` fails).
 

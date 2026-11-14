@@ -1,0 +1,101 @@
+{
+    "shouldShowArchivedSetlists": true,
+    "fontScale": 1.19,
+    "sortingMode": "by_artist",
+    "setlistSortingMode": "by_date",
+    "uiMode": "light",
+    "themeColor": "campfire",
+    "language": "system_default",
+    "accidentals": "original",
+    "notation": "standard",
+    "chordInstrument": "guitar",
+    "foldedSections": {
+        "eddy_grant-gimme_hope_joanna.cho": [
+            "chorus#1",
+            "solo#1",
+            "chorus#2"
+        ]
+    },
+    "tagMatchMode": "any",
+    "languageMatchMode": "any",
+    "tagSortingMode": "alphabetical",
+    "languageSortingMode": "by_usage",
+    "printSettings": {
+        "paper": "letter",
+        "columns": 2,
+        "showKey": true,
+        "showTempo": true
+    },
+    "metronomeSettings": {
+        "beatLevels": {
+            "7/8": [
+                "accent",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal"
+            ],
+            "4/4": [
+                "accent",
+                "normal",
+                "normal",
+                "normal"
+            ],
+            "16/1": [
+                "accent",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "muted",
+                "normal",
+                "accent",
+                "normal",
+                "normal",
+                "normal",
+                "normal"
+            ],
+            "6/8": [
+                "accent",
+                "normal",
+                "normal",
+                "normal",
+                "normal",
+                "normal"
+            ]
+        },
+        "bpm": 145
+    },
+    "seenWhatsNewVersions": [
+        "4.5.1",
+        "4.6.0",
+        "4.6.1",
+        "4.6.2",
+        "4.7.0"
+    ],
+    "tagColors": {
+        "rock": "red",
+        "pop": "purple",
+        "country": "yellow",
+        "blues": "blue",
+        "disco": "pink",
+        "soul": "green",
+        "hard rock": "pink",
+        "metal": "black",
+        "reggae": "green",
+        "alternative rock": "cyan",
+        "folk rock": "orange",
+        "olive room": "lime",
+        "punk": "indigo",
+        "rock and roll": "green",
+        "soft rock": "yellow",
+        "folk": "lime",
+        "jazz": "purple"
+    }
+}

@@ -1,0 +1,113 @@
+{title: Vino la mine}
+{artist: N&D}
+{meta: language ro}
+{key: A}
+
+{start_of_intro}
+[A] [F#m]
+[D] [F#m] [E]
+
+[A] [F#m]
+[D] [F#m] [E]
+
+[A] [F#m]
+[D] [F#m] [E]
+
+[A] [F#m]
+[D] [F#m] [E]
+{end_of_intro}
+
+{start_of_verse}
+[A]
+[F#m]
+[D]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[F#m]
+[D]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[A] [F#m]
+[D] [F#m] [E] [A]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_chorus}
+[F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_verse}
+[A]
+[F#m]
+[D]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[F#m]
+[D]
+[F#m] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[A] [F#m]
+[D] [F#m] [E] [A]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_chorus}
+[F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_bridge}
+[F#m]
+[D]
+[F#m] [E]
+
+[A] [F#m]
+[D] [F#m] [E]
+{end_of_bridge}
+
+{start_of_chorus}
+[A] [F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_chorus}
+[F#m]
+[D]
+[F] [G] [A]
+{end_of_chorus}
+
+{start_of_outro}
+[A] [F#m]
+[D] [F#m] [E]
+[A] [F#m]
+[D]
+[F#m]
+[E] [A]
+[F#m]
+[D]
+[F#m] [E] [A]
+{end_of_outro}

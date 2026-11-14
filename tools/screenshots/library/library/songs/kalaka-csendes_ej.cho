@@ -1,0 +1,40 @@
+{title: Csendes éj}
+{artist: Kaláka}
+{meta: language hu}
+{key: Bb}
+{tag: Folk}
+
+{start_of_intro}
+[Bb]
+{end_of_intro}
+
+{start_of_verse}
+[Bb] [Bb] [F] [F7] [Bb]
+[Eb] [Bb] [Eb] [Bb]
+[F] [F7] [Gm] [Bb] [F] [Bb]
+{end_of_verse}
+
+{start_of_verse}
+[Bb] [Bb] [F] [F7] [Bb]
+[Eb] [Bb] [Eb] [Bb]
+[F] [F7] [Gm] [Bb] [F] [Bb]
+{end_of_verse}
+
+{start_of_solo}
+[Bb] [Bb] [Bb] [Bb]
+[F] [F7] [Bb] [Bb]
+[Eb] [Eb] [Bb] [Bb]
+[Eb] [Eb] [Bb] [Bb]
+[F] [F7] [Gm] [Gm]
+[Bb] [F] [Bb] [Bb]
+{end_of_solo}
+
+{start_of_verse}
+[Bb] [Bb] [F] [F7] [Bb]
+[Eb] [Bb] [Eb] [Bb]
+[F] [F7] [Gm] [Bb] [F] [Bb]
+{end_of_verse}
+
+{start_of_outro}
+[Bb] [F] [Bb] [Bb]
+{end_of_outro}

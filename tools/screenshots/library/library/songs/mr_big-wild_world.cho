@@ -1,0 +1,80 @@
+{title: Wild World}
+{artist: Mr. Big}
+{meta: language en}
+{album: Bump Ahead}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/b4/6d/ec/b46dec72-4c94-40a1-b59d-e6cf1ba7381e/4897012132470_3000.jpg/250x250bb.jpg}
+{year: 1993}
+{key: F}
+{tempo: 75}
+{duration: 3:15}
+{tag: Rock}
+
+{start_of_intro}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A]
+{end_of_intro}
+
+{start_of_verse}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A] [C7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F] [C] [Bb]
+[C] [Bb] [F]
+[F] [C] [Bb]
+[C] [Bb] [F] [Gm] [A]
+{end_of_chorus}
+
+{start_of_verse}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A] [C7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F] [C] [Bb]
+[C] [Bb] [F]
+[F] [C] [Bb]
+[C] [Bb] [F] [Gm] [A]
+{end_of_chorus}
+
+{start_of_solo}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A]
+{end_of_solo}
+
+{start_of_prechorus}
+[Dm] [G7] [C]
+[Fmaj7] [Bb]
+[Gm] [A] [C7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F] [C] [Bb]
+[C] [Bb] [F]
+[F] [C] [Bb]
+[C] [Bb] [F]
+{end_of_chorus}
+
+{start_of_chorus}
+[F] [C] [Bb]
+[C] [Bb] [F]
+[F] [C] [Bb]
+[C] [Bb] [F]
+{end_of_chorus}

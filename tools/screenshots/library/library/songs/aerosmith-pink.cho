@@ -1,0 +1,75 @@
+{title: Pink}
+{artist: Aerosmith}
+{meta: language en}
+{album: Nine Lives}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/97/02/bf/9702bf59-f378-973b-93bf-29567d5b97c1/22UM1IM35695.rgb.jpg/250x250bb.jpg}
+{year: 1997}
+{key: G}
+{tag: Hard Rock}
+
+{start_of_intro}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[Em] [Em] [A] [A]
+[F] [F] [F] [F]
+{end_of_intro}
+
+{start_of_verse}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+{end_of_verse}
+
+{start_of_verse}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[Em] [A] [F]
+[G]
+{end_of_chorus}
+
+{start_of_verse}
+[F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[Em] [A] [F]
+[G]
+{end_of_chorus}
+
+{start_of_solo}
+[F] [C] [C]
+[D#] [G#] [D#] [D#]
+[C] [A#] [F] [F]
+[D] [D] [D] [D]
+{end_of_solo}
+
+{start_of_verse}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[G] [F] [C] [D]
+[Em] [A] [F]
+[G]
+{end_of_chorus}

@@ -1,0 +1,78 @@
+{title: Hero}
+{artist: Enrique Iglesias}
+{meta: language en}
+{album: Escape}
+{meta: cover https://coverartarchive.org/release-group/43fd822c-5f5c-36fd-a401-ae92aeea1d45/front-250}
+{year: 2001}
+{key: G}
+{tag: Pop}
+
+{start_of_intro}
+[G] [G/Em] [G/C] [G/D]
+{end_of_intro}
+
+{start_of_verse}
+[G] [G/Em]
+[G/C] [G/D]
+[G] [G/Em]
+[G/C] [G/D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[G] [G/Em]
+[G/C] [G/D]
+[G] [G/Em]
+[G/C] [G/D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+{end_of_chorus}
+
+{start_of_verse}
+[G] [G/Em]
+[G/C] [G/D]
+[G] [G/Em]
+[G/C] [G/D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+{end_of_chorus}
+
+{start_of_solo}
+[G] [Em] [C] [D]
+[G] [Em] [C] [D] [G]
+{end_of_solo}
+
+{start_of_verse}
+[G] [G/Em]
+[G/C] [G/D]
+[G] [G/Em]
+[G/C] [G/D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+{end_of_chorus}
+
+{start_of_chorus}
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+[G] [D] [C]
+{end_of_chorus}
+
+{start_of_outro}
+[G] [D] [C]
+[G] [D] [C]
+{end_of_outro}

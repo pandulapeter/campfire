@@ -1,0 +1,74 @@
+{
+    "title": "Kata & Balázs esküvő - 2",
+    "description": "Gyimesi Skanzen",
+    "date": "2026-08-15",
+    "isCountdownShown": true,
+    "songs": [
+        {
+            "file": "smokie-living_next_door_to_alice.cho",
+            "transposition": 4,
+            "tempo": 130
+        },
+        {
+            "file": "lgt-neked_irom_a_dalt.cho",
+            "transposition": 2,
+            "tempo": 130
+        },
+        {
+            "file": "kispal_es_a_borz-csillag_vagy_fecske.cho",
+            "transposition": 4,
+            "tempo": 152
+        },
+        {
+            "file": "kispal_es_a_borz-ha_az_eletben.cho",
+            "tempo": 152
+        },
+        {
+            "file": "elvis_presley-jailhouse_rock.cho",
+            "transposition": 1,
+            "tempo": 165
+        },
+        {
+            "file": "chubby_checker-lets_twist_again.cho",
+            "transposition": 1,
+            "tempo": 165
+        },
+        {
+            "file": "republic-repul_a_balna.cho",
+            "tempo": 150
+        },
+        {
+            "file": "neoton_familia-nyar_van.cho",
+            "tempo": 150
+        },
+        {
+            "file": "abba-gimme_gimme_gimme_a_man_after_midnight.cho"
+        },
+        {
+            "file": "village_people-y_m_c_a.cho",
+            "transposition": 6,
+            "tempo": 126
+        },
+        {
+            "file": "donna_summer-hot_stuff.cho",
+            "transposition": -2,
+            "tempo": 126
+        },
+        {
+            "file": "peterfy_bori_and_love_band-hajolj_bele_a_hajamba.cho",
+            "tempo": 96
+        },
+        {
+            "file": "ruzsa_magdi-hip_hop.cho",
+            "tempo": 100
+        },
+        {
+            "file": "blahalouisiana-sokat_bir.cho",
+            "transposition": 1,
+            "tempo": 154
+        },
+        {
+            "file": "liquido-narcotic.cho"
+        }
+    ]
+}

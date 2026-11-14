@@ -1,0 +1,91 @@
+{title: Still Got the Blues}
+{artist: Gary Moore}
+{meta: language en}
+{album: Still Got the Blues}
+{meta: cover https://coverartarchive.org/release-group/97418934-ae74-3f2c-9a6a-e120737c5549/front-250}
+{year: 1990}
+{key: Am}
+{tag: Blues}
+
+{start_of_intro}
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am] [-]
+{end_of_intro}
+
+{start_of_verse}
+[Dm7] [Dm7/G]
+[Cmaj7] [Fmaj7]
+[Bm7b5] [E]
+[Am] [Am/B] [Am/C] [Am]
+[Dm7] [Dm7/G]
+[Cmaj7] [Fmaj7]
+[Bm7b5]
+[E]
+{end_of_verse}
+
+{start_of_chorus}
+[Am] [Em] [Am] [D9]
+[F9] [E7#9] [Am]
+{end_of_chorus}
+
+{start_of_verse}
+[Dm7] [Dm7/G]
+[Cmaj7] [Fmaj7]
+[Bm7b5] [E]
+[Am] [Am/B] [Am/C] [Am]
+[Dm7] [Dm7/G]
+[Cmaj7] [Fmaj7]
+[Bm7b5]
+[E]
+{end_of_verse}
+
+{start_of_chorus}
+[Am] [Em] [Am] [D9]
+[F9] [E7#9] [Am]
+{end_of_chorus}
+
+{start_of_bridge}
+[Bm7b5] [E] [Am] [Am/B] [Am/C] [Am]
+[Bm7b5] [E] [Fmaj7] [Em7] [Dm7]
+[Am]
+{end_of_bridge}
+
+{start_of_solo}
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am/B] [Am/C]
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [Bm7b5] [E] [E]
+{end_of_solo}
+
+{start_of_chorus}
+[Am] [Em] [Am] [D9]
+[F9] [E7#9] [Am] [E]
+{end_of_chorus}
+
+{start_of_chorus}
+[Am] [Em] [Am] [D9]
+[F9]
+[E7#9]
+{end_of_chorus}
+
+{start_of_outro}
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am/B] [Am/C]
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am]
+
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am/B] [Am/C]
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am]
+
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am/B] [Am/C]
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am]
+
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am/B] [Am/C]
+[Dm7] [Dm7/G] [Cmaj7] [Fmaj7]
+[Bm7b5] [E] [Am] [Am]
+{end_of_outro}

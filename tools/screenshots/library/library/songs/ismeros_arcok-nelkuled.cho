@@ -1,0 +1,62 @@
+{title: Nélküled}
+{artist: Ismerős Arcok}
+{meta: language hu}
+{key: Gm}
+{tag: Rock}
+
+{start_of_intro}
+[Cm] [Cm] [Gm] [Gm]
+[Cm] [Cm] [Gm] [Gm]
+[Dsus4] [D] [Gm] [Eb]
+[Eb] [Cm] [Gm] [Gm]
+[D]
+{end_of_intro}
+
+{start_of_verse}
+[Gm] [Cm] [F]
+[Bb] [Eb] [C] [D] [D]
+[Gm] [Cm] [F]
+[Bb] [Eb] [C] [D] [Cm]
+{end_of_verse}
+
+{start_of_bridge}
+[Cm] [Gm] [Gm]
+[Cm] [Cm] [Gm] [Gm]
+[Dsus4] [D] [Gm] [Eb]
+[Eb] [Cm] [Gm] [Gm]
+[D]
+{end_of_bridge}
+
+{start_of_verse}
+[Gm] [Cm] [F]
+[Bb] [Eb] [C] [D] [D]
+[Gm] [Cm] [F]
+[Bb] [Eb] [C] [D] [Cm]
+{end_of_verse}
+
+{start_of_chorus}
+[Gm]
+[Cm] [Gm]
+[Dsus4] [D] [Gm] [Eb]
+[Eb] [Cm] [Gm] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[Gm] [Cm] [F]
+[Bb] [Eb] [C] [D] [D]
+[Gm] [Cm] [D]
+[Bb] [Eb] [C] [D] [Cm]
+{end_of_verse}
+
+{start_of_chorus}
+[Gm]
+[Cm] [Gm]
+[Dsus4] [D] [Gm] [Eb]
+[Eb] [Cm] [Gm]
+{end_of_chorus}
+
+{start_of_outro}
+[Dsus4] [D] [Gm] [Eb]
+[Eb] [Cm] [Gm]
+[Eb] [Cm] [Gm]
+{end_of_outro}

@@ -1,0 +1,83 @@
+{title: All the Small Things}
+{artist: Blink 182}
+{meta: language en}
+{album: Enema of the State}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/d0/54/b8/d054b82b-981e-6834-6d47-09d00faad533/16UMGIM35659.rgb.jpg/250x250bb.jpg}
+{year: 1999}
+{key: C}
+{tag: Punk}
+
+{start_of_intro}
+[C] [C] [G] [F]
+[C] [C] [G] [F]
+{end_of_intro}
+
+{start_of_verse}
+[C] [G]
+[F] [G]
+[C] [G]
+[F] [G]
+{end_of_verse}
+
+{start_of_verse}
+[C] [G]
+[F] [G]
+[C] [G]
+[F] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [G]
+[F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C]
+[G] [F]
+[C]
+[G] [F]
+{end_of_chorus}
+
+{start_of_bridge}
+[C] [C] [G] [F]
+[C] [C] [G] [F]
+{end_of_bridge}
+
+{start_of_verse}
+[C] [G]
+[F] [G]
+[C] [G] [F]
+[G]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [G]
+[F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C]
+[G] [F]
+[C]
+[G] [F]
+{end_of_chorus}
+
+{start_of_bridge}
+[C] [C] [G] [F]
+[C] [C] [G] [F]
+[C] [C] [G] [F]
+[C] [C] [G] [F]
+{end_of_bridge}
+
+{start_of_outro}
+[C] [G]
+[F] [C]
+[G]
+[F] [C]
+[G]
+[F] [C]
+[G]
+[F]
+[F]
+[C]
+{end_of_outro}

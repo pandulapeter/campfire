@@ -1,0 +1,127 @@
+{title: Everything}
+{artist: Michael Bublé}
+{meta: language en}
+{album: Call Me Irresponsible}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/96/f2/fc/96f2fcfc-f465-977c-e4a1-9be06bba07f6/093624942801.jpg/250x250bb.jpg}
+{year: 2007}
+{key: D}
+{tag: Pop}
+
+{start_of_intro}
+[D] [Bm7] [E7] [Em7]
+[D] [Bm7] [E7] [Em7]
+[D] [Bm7] [E7] [E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_intro}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [A7sus4]
+[D] [Bm7]
+[G] [A7sus4]
+[D] [D7] [G]
+[F#7] [Bm7]
+[D] [E7]
+[Gm6]
+[D]
+{end_of_chorus}
+
+{start_of_bridge}
+[Bm7] [E7] [E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_bridge}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_verse}
+
+{start_of_verse}
+[D] [Bm7]
+[E7]
+[G] [A7sus4] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [A7sus4]
+[D] [Bm7]
+[G] [A7sus4]
+[D] [D7] [G]
+[F#7] [Bm7]
+[D] [E7]
+[Gm6]
+[D]
+{end_of_chorus}
+
+{start_of_solo}
+[Bm7] [E7] [E7]
+[G] [A7sus4] [D] [Dsus4]
+
+[D] [Bm7] [E7] [E7]
+[G] [A7sus4] [D] [Dsus4]
+{end_of_solo}
+
+{start_of_bridge}
+[D] [Bm7] [E7]
+[G] [A7sus4] [D] [Dsus4]
+[D] [Bm7] [E7]
+[G] [A7sus4] [D]
+{end_of_bridge}
+
+{start_of_chorus}
+[A] [B7sus4]
+[E] [C#m7]
+[A] [B7sus4]
+[E] [E7] [A]
+[G#7] [C#m7]
+[E] [F#7]
+[Am6]
+[C#m7] [C#m7/B]
+{end_of_chorus}
+
+{start_of_outro}
+[F#7]
+[Am6]
+[E] [C#m7] [F#7] [A]
+[E] [C#m7] [F#7] [A]
+[E] [C#m7] [F#7]
+[A] [B7sus4] [E] [Esus4]
+[E] [C#m7] [F#7]
+[A] [B7sus4] [E]
+{end_of_outro}

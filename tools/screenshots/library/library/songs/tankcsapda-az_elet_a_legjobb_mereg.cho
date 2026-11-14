@@ -1,0 +1,128 @@
+{title: Az élet a legjobb méreg}
+{artist: Tankcsapda}
+{meta: language hu}
+{album: A legjobb méreg}
+{year: 1992}
+{key: A}
+{tag: Rock}
+
+{start_of_intro}
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[D]
+{end_of_intro}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[A]
+[A]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[A]
+[A] [D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_bridge}
+[A]
+[C] [D] [D]
+[A] [C] [D] [D]
+
+[A]
+[C] [D] [D]
+[A] [C] [D] [D]
+{end_of_bridge}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C]
+[D]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[A]
+[C] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+{end_of_chorus}
+
+{start_of_solo}
+[B] [B] [D] [D]
+[B] [B] [D] [E]
+{end_of_solo}
+
+{start_of_chorus}
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+{end_of_chorus}
+
+{start_of_outro}
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A] [C] [D] [D]
+[A]
+{end_of_outro}

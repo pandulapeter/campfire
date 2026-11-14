@@ -1,0 +1,129 @@
+{title: Ajjajjaj}
+{artist: Quimby}
+{meta: language hu}
+{key: Am}
+{tag: Rock}
+
+{start_of_intro}
+[Am] [Am/E] [Am/G]
+[Am] [Am]
+
+[Am] [Am/E] [Am/G]
+[Am] [Am]
+
+[Am] [Am/E] [Am/G]
+[Am] [Am]
+
+[Am] [Am/E] [Am/G]
+[Am] [Am]
+{end_of_intro}
+
+{start_of_verse}
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Bm7b5]
+[E]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Bm7b5] [E]
+{end_of_verse}
+
+{start_of_chorus}
+[Am] [C]
+[F] [C]
+[Am] [C]
+[F] [C]
+[Am] [C] [F]
+[C] [Am]
+[C] [F]
+[Em] [Dm]
+{end_of_chorus}
+
+{start_of_bridge}
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+{end_of_bridge}
+
+{start_of_verse}
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Am] [C]
+[F] [Em] [Dm]
+[Bm7b5] [E]
+{end_of_verse}
+
+{start_of_chorus}
+[Am] [C]
+[F] [C]
+[Am] [C]
+[F] [C]
+[Am] [C] [F]
+[C] [Am]
+[C] [F]
+[Em] [Dm] [Dm]
+{end_of_chorus}
+
+{start_of_chorus}
+[Am] [C]
+[F] [C]
+[Am] [C]
+[F] [C]
+[Am] [C] [F]
+[C] [Am]
+[C] [F]
+[Em] [Dm] [Dm]
+{end_of_chorus}
+
+{start_of_outro}
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+[C]
+[F]
+[Em] [Dm]
+
+[Am]
+{end_of_outro}

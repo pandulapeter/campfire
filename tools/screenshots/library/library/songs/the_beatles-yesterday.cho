@@ -1,0 +1,59 @@
+{title: Yesterday}
+{artist: The Beatles}
+{meta: language en}
+{album: Help!}
+{meta: cover https://coverartarchive.org/release-group/0d44e1cb-c6e0-3453-8b68-4d2082f05421/front-250}
+{year: 1965}
+{key: F}
+{tag: Pop}
+
+{start_of_intro}
+[F]
+{end_of_intro}
+
+{start_of_verse}
+[F]
+[Em] [A7] [Dm]
+[Bb] [C7] [F]
+[Dm] [G7] [Bb] [F]
+{end_of_verse}
+
+{start_of_verse}
+[F]
+[En] [A7] [Dm]
+[Bb] [C7] [F]
+[Dm] [G7] [Bb] [F]
+{end_of_verse}
+
+{start_of_chorus}
+[Em] [A7] [Dm] [C] [Bb]
+[C] [F]
+[Em] [A7] [Dm] [C] [Bb]
+[C] [F]
+{end_of_chorus}
+
+{start_of_verse}
+[F]
+[Em] [A7] [Dm]
+[Bb] [C7] [F]
+[Dm] [G7] [Bb] [F]
+{end_of_verse}
+
+{start_of_chorus}
+[Em] [A7] [Dm] [C] [Bb]
+[C] [F]
+[Em] [A7] [Dm] [C] [Bb]
+[C] [F]
+{end_of_chorus}
+
+{start_of_verse}
+[F]
+[Em] [A7] [Dm]
+[Bb] [C7] [F]
+[Dm] [G7] [Bb] [F]
+{end_of_verse}
+
+{start_of_outro}
+[Dm] [G7]
+[Bb] [F]
+{end_of_outro}

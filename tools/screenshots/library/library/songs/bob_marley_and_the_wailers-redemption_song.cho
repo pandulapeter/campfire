@@ -1,0 +1,91 @@
+{title: Redemption Song}
+{artist: Bob Marley and the Wailers}
+{meta: language en}
+{album: Uprising}
+{meta: cover https://coverartarchive.org/release-group/6dd29c00-7539-319d-98e0-b2f07e861497/front-250}
+{year: 1980}
+{key: G}
+{tag: Reggae}
+
+{start_of_intro}
+[G] [G] [C] [D]
+[G] [G] [C] [Am] [G]
+
+[G] [G] [C] [D]
+[G] [G] [C] [Am] [G]
+{end_of_intro}
+
+{start_of_verse}
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[C] [D] [G]
+[C] [D] [Em]
+[C] [D] [G]
+[C] [D] [G]
+[C] [D]
+{end_of_chorus}
+
+{start_of_verse}
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [D]
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[C] [D] [G]
+[C] [D] [Em]
+[C] [D] [G]
+[C] [D] [G]
+[C] [D] [G]
+[C] [D]
+{end_of_chorus}
+
+{start_of_solo}
+[Em] [C] [D]
+[Em] [C] [D]
+[Em] [C] [D]
+[Em] [C] [D]
+{end_of_solo}
+
+{start_of_verse}
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [D]
+[G] [Em]
+[C] [C/B] [Am]
+[G] [Em]
+[C] [C/B] [D]
+{end_of_verse}
+
+{start_of_chorus}
+[G]
+[C] [D] [G]
+[C] [D] [Em]
+[C] [D] [G]
+{end_of_chorus}
+
+{start_of_outro}
+[C] [D] [Em]
+[C] [D] [Em]
+[C] [D] [G] [C]
+[D] [G]
+[C] [C/B] [Am]
+[Am] [D7]
+{end_of_outro}

@@ -1,0 +1,44 @@
+{
+    "title": "Friday Night by the Lake",
+    "description": "Acoustic dock setup by 6:30. Camp counselors said generator power cuts at midnight sharp. If you hear rhythmic breathing or weird whispering over the stage monitors, it's just ground hum—do not go inspect the woods alone. Keep the hockey mask off the kick drum head; the locals don't find it funny.",
+    "date": "2026-10-08",
+    "isCountdownShown": true,
+    "songs": [
+        {
+            "file": "johnny_nash-i_can_see_clearly_now.cho"
+        },
+        {
+            "file": "louis_armstrong-what_a_wonderful_world.cho"
+        },
+        {
+            "file": "katrina_and_the_waves-walking_on_sunshine.cho"
+        },
+        {
+            "file": "mr_big-wild_world.cho"
+        },
+        {
+            "file": "johnny_cash-ring_of_fire.cho"
+        },
+        {
+            "file": "creedence_clearwater_revival-proud_mary.cho"
+        },
+        {
+            "file": "roxette-how_do_you_do.cho"
+        },
+        {
+            "file": "queen-crazy_little_thing_called_love.cho"
+        },
+        {
+            "file": "bon_jovi-always.cho"
+        },
+        {
+            "file": "ben_e_king-stand_by_me.cho"
+        },
+        {
+            "file": "bon_jovi-bed_of_roses.cho"
+        },
+        {
+            "file": "billy_joel-uptown_girl.cho"
+        }
+    ]
+}

@@ -1,0 +1,106 @@
+{title: Avant Garden}
+{artist: Aerosmith}
+{meta: language en}
+{album: Just Push Play}
+{meta: cover https://coverartarchive.org/release-group/2fb275a3-1cd9-33b6-95e4-70fe3f092649/front-250}
+{year: 2001}
+{key: C}
+{tag: Hard Rock}
+
+{start_of_intro}
+[C] [C] [C] [C]
+[C] [Gm] [F] [C] [A#]
+[G#] [G#]
+{end_of_intro}
+
+{start_of_verse}
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[D#] [F]
+{end_of_verse}
+
+{start_of_verse}
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[D#] [F]
+{end_of_verse}
+
+{start_of_chorus}
+[C]
+[Am]
+[F]
+[C] [A#]
+[C]
+[Gm]
+[F]
+[C] [A#] [G#]
+{end_of_chorus}
+
+{start_of_verse}
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[A#] [G#] [D#]
+[D#] [F]
+{end_of_verse}
+
+{start_of_chorus}
+[C]
+[Am]
+[F]
+[C] [A#]
+[C]
+[Gm]
+[F]
+[C] [A#] [G#]
+{end_of_chorus}
+
+{start_of_bridge}
+[Fm]
+[C]
+[Fm]
+[C]
+[Am]
+[G#]
+[G]
+{end_of_bridge}
+
+{start_of_solo}
+[C] [A#] [F]
+[C] [A#] [F]
+[Am] [G#]
+[G] [G]
+{end_of_solo}
+
+{start_of_bridge}
+[A#] [G#] [D#]
+[D#] [F] [F]
+{end_of_bridge}
+
+{start_of_chorus}
+[C]
+[Am]
+[F]
+[C] [A#]
+[C]
+[Gm]
+[F]
+[C] [A#] [G#]
+{end_of_chorus}
+
+{start_of_solo}
+[C] [Gm] [F] [C] [A#]
+[C] [Gm] [F] [C] [A#]
+{end_of_solo}
+
+{start_of_outro}
+[C]
+[Am]
+[F]
+[C] [A#]
+[C]
+[Gm]
+[F]
+[C] [A#] [G#]
+{end_of_outro}

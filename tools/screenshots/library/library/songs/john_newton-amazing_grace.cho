@@ -1,0 +1,56 @@
+{title: Amazing Grace}
+{artist: John Newton}
+{meta: cover https://hips.hearstapps.com/hmg-prod/images/sunrise-over-swiftcurrent-creek-royalty-free-image-1595419542.jpg}
+{year: 1779}
+{key: G}
+{capo: 0}
+{tempo: 80}
+{time: 3/4}
+{meta: language en}
+
+{start_of_intro}
+{start_of_grid}
+|: G . . | G7 . . | C . G | Em D . :| x2
+{end_of_grid}
+{end_of_intro}
+
+{start_of_abc}
+X:1
+M:3/4
+L:1/4
+K:G
+D | "G"G2 B/G/ | "G7"B2 A | "C"G2 E | "G"D2 D | "G"G2 B/G/ | "G"B2 A | "D"d3- | d2 |]
+w: A-maz-ing_ grace, how sweet the sound that saved a_ wretch like me.
+{end_of_abc}
+
+{start_of_tab: Picking pattern}
+  G             G7            C
+e|-------3-----|-------1-----|-------0-----|
+B|-----0---0---|-----0---0---|-----1---1---|
+G|---0-------0-|---0-------0-|---0-------0-|
+D|-------------|-------------|-------------|
+A|-------------|-------------|-3-----------|
+E|-3-----------|-3-----------|-------------|
+
+  Em            D             G
+e|-------0-----|-------2-----|-------3-----|
+B|-----0---0---|-----3---3---|-----0---0---|
+G|---0-------0-|---2-------2-|---0-------0-|
+D|-------------|-0-----------|-------------|
+A|-------------|-------------|-------------|
+E|-0-----------|-------------|-3-----------|
+{end_of_tab}
+
+{start_of_verse}
+A[G]mazing [G7]grace, how [C]sweet the [G]sound
+That saved a wretch like [D]me.
+I [G]once was [G7]lost, but [C]now am [G]found,
+Was [Em]blind, but [D]now I [G]see.
+{end_of_verse}
+
+{start_of_verse}
+'Twas [G]grace that [G7]taught my [C]heart to [G]fear,
+And grace my fears re[D]lieved.
+How [G]precious [G7]did that [C]grace ap[G]pear
+The [Em]hour I [D]first be[G]lieved.
+{end_of_verse}

@@ -1,0 +1,44 @@
+{title: Toxic}
+{artist: Britney Spears}
+{meta: language en}
+{album: In the Zone}
+{meta: cover https://coverartarchive.org/release-group/add6cf16-f4c1-3d50-9b28-633b35ca8189/front-250}
+{year: 2003}
+{key: Cm}
+{tag: Pop}
+
+{start_of_intro}
+{end_of_intro}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_solo}
+{end_of_solo}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_outro}
+{end_of_outro}

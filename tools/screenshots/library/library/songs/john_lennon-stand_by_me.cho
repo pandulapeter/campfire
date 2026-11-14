@@ -1,0 +1,87 @@
+{title: Stand by Me}
+{artist: John Lennon}
+{meta: language en}
+{album: Rock 'n' Roll}
+{meta: cover https://coverartarchive.org/release-group/316bd588-952e-34b0-aeff-b8fd43ef9cf8/front-250}
+{year: 1975}
+{key: A}
+{tag: Rock}
+
+{start_of_intro}
+[A] [A] [F#m] [F#m]
+[D] [E] [A] [A]
+{end_of_intro}
+
+{start_of_verse}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_verse}
+
+{start_of_chorus}
+[A]
+[F#m]
+[D] [E] [A]
+{end_of_chorus}
+
+{start_of_verse}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_verse}
+
+{start_of_verse}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_verse}
+
+{start_of_chorus}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_chorus}
+
+{start_of_solo}
+[A] [A] [F#m] [F#m]
+[D] [E] [A] [A]
+
+[A] [A] [F#m] [F#m]
+[D] [E] [A] [A]
+{end_of_solo}
+
+{start_of_chorus}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_chorus}
+
+{start_of_chorus}
+[A]
+[F#m]
+[D] [E]
+[A]
+{end_of_chorus}
+
+{start_of_bridge}
+[A] [A] [F#m] [F#m]
+[D] [E] [A] [A]
+{end_of_bridge}
+
+{start_of_chorus}
+[A]
+[F#m]
+[D] [E] [A]
+{end_of_chorus}

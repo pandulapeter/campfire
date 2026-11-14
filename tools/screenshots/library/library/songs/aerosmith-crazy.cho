@@ -1,0 +1,88 @@
+{title: Crazy}
+{artist: Aerosmith}
+{meta: language en}
+{album: Get a Grip}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/8b/04/87/8b048775-ed10-439d-18a6-5ecb21effcf8/06UMGIM14760.rgb.jpg/250x250bb.jpg}
+{year: 1993}
+{key: A}
+{tag: Hard Rock}
+
+{start_of_intro}
+[A] [F#m]
+[D]
+[Dm]
+[A] [F#m]
+[G] [Dm]
+{end_of_intro}
+
+{start_of_verse}
+[A] [D]
+[F#m] [D]
+[A] [D]
+[F#m] [D]
+{end_of_verse}
+
+{start_of_prechorus}
+[E] [F#m] [G] [D]
+[E] [F#m] [G] [D] [E]
+{end_of_prechorus}
+
+{start_of_chorus}
+[A] [F#m] [D] [Dm]
+[A] [F#m] [Dm] [E]
+[A] [F#m] [D] [Dm]
+[Bm] [E] [C#m] [F#m] [E] [D] [Dm]
+{end_of_chorus}
+
+{start_of_verse}
+[A] [D]
+[F#m] [D]
+[A] [D] [F#m]
+[D]
+{end_of_verse}
+
+{start_of_prechorus}
+[E] [F#m] [G] [D]
+[E] [F#m] [G] [D] [E]
+{end_of_prechorus}
+
+{start_of_chorus}
+[A] [F#m] [D] [Dm]
+[A] [F#m] [Dm] [E]
+[A] [F#m] [D] [Dm]
+[Bm] [E] [C#m] [F#m] [E] [D] [Dm]
+{end_of_chorus}
+
+{start_of_bridge}
+[A] [F#m] [D] [E]
+{end_of_bridge}
+
+{start_of_solo}
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+{end_of_solo}
+
+{start_of_bridge}
+[F#m] [E] [D] [Dm]
+[F#m] [E] [D]
+{end_of_bridge}
+
+{start_of_chorus}
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+{end_of_chorus}
+
+{start_of_outro}
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+
+[A] [F#m] [D] [Dm]
+[A] [F#m] [D] [E]
+
+[A]
+{end_of_outro}

@@ -1,0 +1,114 @@
+{title: Gyűrd össze a lepedőt}
+{artist: Tankcsapda}
+{meta: language hu}
+{album: A legjobb méreg}
+{year: 1992}
+{key: A}
+{tag: Rock}
+
+{start_of_intro}
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [A5] [A5] [A5]
+
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [D5]
+{end_of_intro}
+
+{start_of_verse}
+[A5] [G5] [D5]
+[A5] [D5] [G5]
+[A5] [G5] [D5]
+[A5] [D5] [G5]
+{end_of_verse}
+
+{start_of_prechorus}
+[F] [G]
+[F] [G]
+[F] [G]
+[F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G5] [A5] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5] [D5]
+{end_of_chorus}
+
+{start_of_verse}
+[A5] [G5] [D5]
+[A5] [D5] [G5]
+[A5] [G5] [D5]
+[A5] [D5] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[F] [G]
+[F] [G]
+[F] [G]
+[F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G5] [A5] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5] [D5]
+{end_of_chorus}
+
+{start_of_solo}
+[Em] [Em] [C5] [C5]
+[Em] [Em] [C5] [C5]
+[Em] [Em] [C5] [C5]
+[Em] [Em] [D5] [C5]
+{end_of_solo}
+
+{start_of_bridge}
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+[A5] [C5/A] [D5/A] [G5/A]
+{end_of_bridge}
+
+{start_of_solo}
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [G5]
+[A5] [C5] [D5] [G5]
+{end_of_solo}
+
+{start_of_prechorus}
+[F] [G]
+[F] [G]
+[F] [G]
+[F]
+{end_of_prechorus}
+
+{start_of_chorus}
+[G5] [A5] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5]
+[D5] [G5] [A] [C5] [D5]
+{end_of_chorus}
+
+{start_of_outro}
+[A5]
+{end_of_outro}

@@ -1,0 +1,69 @@
+{title: Brown Eyed Girl}
+{artist: Van Morrison}
+{meta: language en}
+{album: Blowin' Your Mind!}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/49/54/07/4954073b-9f8c-0f62-0d38-35845b530f08/886445460452_Cover.jpg/250x250bb.jpg}
+{year: 1967}
+{key: G}
+{tag: Rock}
+
+{start_of_intro}
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+{end_of_intro}
+
+{start_of_verse}
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D] [C]
+[D] [G] [Em]
+[C] [D] [G] [D7]
+{end_of_verse}
+
+{start_of_verse}
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D] [C]
+[D] [G] [Em]
+[C] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[D7] [G]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C] [G] [D]
+[G] [C] [G] [D] [G]
+{end_of_chorus}
+
+{start_of_solo}
+[G] [G]
+[G] [C] [G] [D]
+{end_of_solo}
+
+{start_of_verse}
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G] [C] [G] [D] [C]
+[D] [G] [Em]
+[C] [D] [G]
+{end_of_verse}
+
+{start_of_prechorus}
+[D7] [G]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C] [G] [D]
+[G] [C] [G] [D]
+{end_of_chorus}
+
+{start_of_outro}
+[G] [C] [G] [D]
+[G] [C] [G] [D]
+[G]
+{end_of_outro}

@@ -1,0 +1,104 @@
+{title: Have a Nice Day}
+{artist: Bon Jovi}
+{meta: language en}
+{album: Have a Nice Day}
+{meta: cover https://coverartarchive.org/release-group/e2838c6e-a8b4-3a8e-9877-8d32faf33a9f/front-250}
+{year: 2005}
+{key: C#m}
+{tag: Rock}
+
+{start_of_intro}
+[C#m] [E] [Aadd9] [Esus2] [B] [B/F#]
+[C#m] [E] [Aadd9] [Esus2] [B] [B/F#]
+[C#m] [E] [Aadd9] [Esus2] [B] [B/F#]
+{end_of_intro}
+
+{start_of_verse}
+[C#m] [-]
+[C#m] [E] [A] [B] [B/F#]
+[C#m] [-]
+[C#m] [E] [A] [B] [B/F#]
+{end_of_verse}
+
+{start_of_prechorus}
+[C#m]
+[E]
+[F#m]
+[Aadd9]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9]
+[E] [B]
+[F#m]
+[Aadd9] [-]
+[C#m] [E] [Aadd9] [Esus2]
+[B] [B/F#] [C#m] [E]
+[Aadd9] [Esus2] [B] [B/F#]
+{end_of_chorus}
+
+{start_of_verse}
+[C#m] [-]
+[C#m] [E] [A] [B] [B/F#]
+[C#m] [-]
+[C#m] [E] [A] [B] [B/F#]
+{end_of_verse}
+
+{start_of_prechorus}
+[C#m]
+[E]
+[F#m]
+[Aadd9]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9]
+[E] [B]
+[F#m]
+[Aadd9] [-]
+[C#m] [E] [Aadd9] [Esus2]
+[B] [B/F#] [C#m] [E]
+[Aadd9] [Esus2] [B] [B/F#]
+{end_of_chorus}
+
+{start_of_solo}
+[C#m] [E] [Aadd9] [B]
+[C#m] [E] [Aadd9] [B]
+[F#m] [F#m] [Aadd9]
+{end_of_solo}
+
+{start_of_bridge}
+[C#m] [E] [Aadd9] [Esus2] [B] [B/F#]
+[C#m] [E] [Aadd9] [Esus2] [B] [B/F#]
+{end_of_bridge}
+
+{start_of_chorus}
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9] [E]
+[B]
+[C#m] [Aadd9]
+[E] [B]
+[F#m]
+[Aadd9] [-]
+[C#m] [E] [Aadd9] [Esus2]
+[B] [B/F#] [C#m] [E]
+[Aadd9] [Esus2] [B]
+{end_of_chorus}
+
+{start_of_outro}
+[B/F#] [C#m] [E] [Aadd9] [Esus2] [B]
+[B/F#] [C#m] [E] [Aadd9] [Esus2] [B]
+[B/F#] [C#m] [E] [Aadd9]
+[Esus2]
+[B] [B/F#] [C#m] [E] [Aadd9] [Esus2]
+[B] [-]
+{end_of_outro}

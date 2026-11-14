@@ -1,0 +1,120 @@
+{title: Solid Gold}
+{artist: The Darkness}
+{meta: language en}
+{album: Pinewood Smile}
+{meta: cover https://coverartarchive.org/release-group/ec06e054-76e0-4306-99ae-ebb05b38a92b/front-250}
+{year: 2017}
+{key: E}
+{tag: Hard Rock}
+
+{start_of_intro}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+{end_of_intro}
+
+{start_of_verse}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[E] [D/C#] [D] [D/C#] [A] [E]
+{end_of_verse}
+
+{start_of_verse}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[E-] [A] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [A] [D] [E] [G]
+[C] [A] [B] [D]
+{end_of_prechorus}
+
+{start_of_chorus}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+{end_of_verse}
+
+{start_of_verse}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[E-] [A] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[C] [A] [D] [E] [G]
+[C] [A] [B] [D]
+{end_of_prechorus}
+
+{start_of_chorus}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[B] [C] [D]
+{end_of_chorus}
+
+{start_of_bridge}
+[D] [A] [D] [A] [D] [A] [A] [E]
+[D] [A] [D] [A] [D] [A] [D] [B] [D]
+[A] [A] [E]
+[D] [A] [D] [A] [D] [A] [D] [B]
+[D]
+{end_of_bridge}
+
+{start_of_solo}
+[E] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[C] [A]
+[D] [E] [G]
+
+[C] [A]
+[B] [D]
+{end_of_solo}
+
+{start_of_chorus}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+{end_of_chorus}
+
+{start_of_chorus}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+{end_of_chorus}
+
+{start_of_outro}
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E] [D] [A] [E]
+[D] [D/C#] [D] [D/C#] [A] [E]
+
+[E]
+{end_of_outro}

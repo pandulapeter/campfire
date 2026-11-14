@@ -1,0 +1,93 @@
+{title: I Love Rock 'n' Roll}
+{artist: Joan Jett & the Blackhearts}
+{meta: language en}
+{album: I Love Rock 'n Roll}
+{meta: cover https://coverartarchive.org/release-group/b1c69ba6-756e-4190-adf2-d1d4cb2c8867/front-250}
+{year: 1981}
+{key: E}
+{tag: Rock}
+
+{start_of_intro}
+[E] [E] [G]
+[A] [B] [G]
+
+[E] [E] [G]
+[A] [B] [G] [E]
+
+[E]
+{end_of_intro}
+
+{start_of_verse}
+[E] [E]
+[E] [B]
+[A] [B] [E] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[B]
+{end_of_prechorus}
+
+{start_of_chorus}
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G] [E]
+[E]
+{end_of_chorus}
+
+{start_of_verse}
+[E] [E]
+[E] [B]
+[A] [B] [E] [A]
+{end_of_verse}
+
+{start_of_prechorus}
+[G]
+{end_of_prechorus}
+
+{start_of_chorus}
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G] [E]
+[E]
+{end_of_chorus}
+
+{start_of_solo}
+[E]
+[E]
+[E]
+[B]
+{end_of_solo}
+
+{start_of_bridge}
+[A] [B] [E] [A]
+{end_of_bridge}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_outro}
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G]
+
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G]
+
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G]
+
+[E] [E] [G]
+[A] [B]
+[E] [E] [G]
+[A] [B] [G] [E]
+{end_of_outro}

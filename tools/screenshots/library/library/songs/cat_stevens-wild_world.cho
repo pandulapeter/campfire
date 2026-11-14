@@ -1,0 +1,78 @@
+{title: Wild World}
+{artist: Cat Stevens}
+{meta: language en}
+{album: Tea for the Tillerman}
+{meta: cover https://coverartarchive.org/release-group/0853e292-94df-47fd-84cd-7b73613d1177/front-250}
+{year: 1970}
+{key: F}
+{tag: Folk}
+
+{start_of_intro}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E]
+{end_of_intro}
+
+{start_of_verse}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E] [G7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C] [G] [F]
+[G] [F] [C]
+[C] [G] [F]
+[G] [F] [C] [Dm] [E]
+{end_of_chorus}
+
+{start_of_verse}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E]
+{end_of_verse}
+
+{start_of_prechorus}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E] [G7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C] [G] [F]
+[G] [F] [C]
+[C] [G] [F]
+[G] [F] [C] [Dm] [E]
+{end_of_chorus}
+
+{start_of_solo}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E]
+{end_of_solo}
+
+{start_of_prechorus}
+[Am] [D7] [G]
+[Cmaj7] [F]
+[Dm] [E] [G7]
+{end_of_prechorus}
+
+{start_of_chorus}
+[C] [G] [F]
+[G] [F] [C]
+[C] [G] [F-]
+[G] [F] [C] [Dm] [E]
+{end_of_chorus}
+
+{start_of_chorus}
+[C] [G] [F]
+[G] [F] [C]
+[C] [G] [F-]
+[G] [F] [C]
+{end_of_chorus}

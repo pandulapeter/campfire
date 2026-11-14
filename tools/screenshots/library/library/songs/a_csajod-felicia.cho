@@ -1,0 +1,76 @@
+{title: Felicia}
+{artist: A Csajod}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/71/bf/cd/71bfcd27-18e2-e721-bfac-937ab61939d0/0024606482695_cover.jpg/250x250bb.jpg}
+{key: A}
+{tag: Pop}
+{meta: language hu}
+
+{start_of_verse}
+[A] [C#]
+[F#m] [E] [B]
+[D] [Dmaj7] [B]
+{end_of_verse}
+
+{start_of_verse}
+[A] [C#]
+[F#m] [E] [B]
+[D] [Dmaj7] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[C#] [F#] [E] [F#]
+[B] [E] [D] [C#m] [Bm]
+{end_of_chorus}
+
+{start_of_bridge}
+[A]
+{end_of_bridge}
+
+{start_of_verse}
+[A] [C#]
+[F#m] [E] [B]
+[D] [Dmaj7] [B]
+{end_of_verse}
+
+{start_of_verse}
+[A] [C#]
+[F#m] [E] [B]
+[D] [Dmaj7] [B]
+{end_of_verse}
+
+{start_of_chorus}
+[C#] [F#] [E] [F#]
+[B] [E] [D] [C#m] [Bm]
+{end_of_chorus}
+
+{start_of_bridge}
+[G] [Bm]
+[C] [D] [A]
+{end_of_bridge}
+
+{start_of_solo}
+[A] [C#] [C#]
+[F#m] [E] [B] [B]
+[D] [D] [Dmaj7] [Dmaj7]
+[B] [B] [B] [B]
+
+[A] [A] [C#] [C#]
+[F#m] [E] [B] [B]
+[D] [D] [Dmaj7] [Dmaj7]
+[B] [B] [B] [-]
+{end_of_solo}
+
+{start_of_chorus}
+[C#] [F#] [E] [F#]
+[B] [E] [F#m] [G#m] [A]
+{end_of_chorus}
+
+{start_of_chorus}
+[C#] [F#-] [E] [F#]
+[B] [E] [D] [C#m] [Bm]
+{end_of_chorus}
+
+{start_of_outro}
+[E] [D] [C#m] [Bm]
+[A]
+{end_of_outro}

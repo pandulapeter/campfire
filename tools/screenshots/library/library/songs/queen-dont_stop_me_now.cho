@@ -1,0 +1,92 @@
+{title: Don't Stop Me Now}
+{artist: Queen}
+{meta: language en}
+{album: Jazz}
+{meta: cover https://coverartarchive.org/release-group/c192ea46-7377-34f0-b332-dd9810edd560/front-250}
+{year: 1978}
+{key: F}
+{tempo: 157}
+{duration: 3:34}
+{tag: Rock}
+{meta: link https://www.youtube.com/watch?v=HgzGwKwLmgM Original}
+
+{start_of_intro}
+[F] [Am]
+[Dm] [Gm] [C]
+[F] [F7] [Bb]
+[Gm7] [D7]
+[Gm] [F] [C] [Gm]
+[Gm] [F] [C]
+[Gm] [C7]
+{end_of_intro}
+
+{start_of_verse}
+[F] [Am]
+[Dm] [Gm] [C]
+[F] [Am] [Dm]
+[Gm] [C] [F]
+{end_of_verse}
+
+{start_of_prechorus}
+[F7] [Bb]
+[Gm7]
+[D7] [Gm]
+[D7] [Gm]
+[Gm] [Am] [Bb] [B] [C-]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F] [Gm] [Am] [Dm]
+[Gm7] [C]
+[F] [Gm] [Am] [Dm]
+[Gm7] [D7]
+[Gm] [F] [C] [Gm]
+[Gm] [F] [C] [Gm]
+[C] [Bb]
+{end_of_chorus}
+
+{start_of_verse}
+[F] [Am]
+[Dm] [Gm] [C]
+[F] [Am] [Dm]
+[Gm] [C] [F]
+{end_of_verse}
+
+{start_of_prechorus}
+[F7] [Bb]
+[Gm7]
+[D7] [Gm]
+[D7] [Gm]
+[Gm] [Am] [Bb] [B] [C-]
+{end_of_prechorus}
+
+{start_of_bridge}
+{end_of_bridge}
+
+{start_of_solo}
+[F] [Am] [Dm] [Gm] [C]
+[F] [Am] [Dm] [Gm] [C]
+{end_of_solo}
+
+{start_of_prechorus}
+[F] [F7] [Bb]
+[Gm7]
+[D7] [Gm]
+[D7] [Gm]
+[Gm] [Am] [Bb] [B] [C-]
+{end_of_prechorus}
+
+{start_of_chorus}
+[F] [Gm] [Am] [Dm]
+[Gm7] [C]
+[F] [Gm] [Am] [Dm]
+[Gm7] [D7]
+[Gm] [F] [C] [Gm]
+[Gm] [F] [C] [Gm]
+[C] [Bb]
+{end_of_chorus}
+
+{start_of_outro}
+[F] [Am] [Dm] [Gm] [C]
+[F] [F7] [Bb]
+{end_of_outro}

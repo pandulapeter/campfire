@@ -1,0 +1,93 @@
+{title: Hotel California}
+{artist: Eagles}
+{meta: language en}
+{album: Hotel California}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/88/16/2c/88162c3d-46db-8321-61f3-3a47404cfe76/075596050920.jpg/250x250bb.jpg}
+{year: 1976}
+{key: Bm}
+{tag: Rock}
+
+{start_of_intro}
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+{end_of_intro}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [D]
+[F#7]
+[Bm]
+[G] [D]
+[Em]
+[F#]
+{end_of_chorus}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_chorus}
+[G] [D]
+[F#7]
+[Bm]
+[G] [D]
+[Em]
+[F#]
+{end_of_chorus}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_verse}
+[Bm] [F#7]
+[A] [E]
+[G] [D]
+[Em] [F#]
+{end_of_verse}
+
+{start_of_outro}
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+
+[Bm] [F#7] [A] [E]
+[G] [D] [Em] [F#]
+{end_of_outro}

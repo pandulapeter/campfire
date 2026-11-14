@@ -1,0 +1,101 @@
+{title: Bed of Roses}
+{artist: Bon Jovi}
+{meta: language en}
+{album: Keep the Faith}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/55/2b/c8/552bc84d-14d6-23b0-f4ec-dc2b8fd7bd53/14UMGIM44516.rgb.jpg/250x250bb.jpg}
+{year: 1992}
+{key: F}
+{tempo: 80}
+{duration: 6:33}
+{tag: Rock}
+
+{start_of_intro}
+[Bb] [F]
+[Bb] [F]
+[Bb] [F]
+[Bb] [F]
+{end_of_intro}
+
+{start_of_verse}
+[Bb] [F]
+[Bb] [F]
+[Am] [Bb]
+[F] [Bb]
+[Bb] [C] [F]
+{end_of_verse}
+
+{start_of_verse}
+[Bb] [F]
+[Bb] [F]
+[Am] [Bb]
+[F]
+[Bb]
+[Bb] [C] [F] [C]
+{end_of_verse}
+
+{start_of_chorus}
+[Dm] [C] [Bb] [F]
+[Dm] [C] [Bb] [F]
+[Bb] [F] [Bb] [F]
+[Dm] [C] [Bb] [F]
+{end_of_chorus}
+
+{start_of_verse}
+[Bb] [F]
+[Bb] [F]
+[Am] [Bb]
+[F]
+[Bb]
+[Bb] [C] [F] [C]
+{end_of_verse}
+
+{start_of_chorus}
+[Dm] [C] [Bb] [F]
+[Dm] [C] [Bb] [F]
+[Bb] [F] [Bb] [F]
+[Dm] [C] [Bb] [F] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[Bb] [C]
+[F]
+[Bb]
+[Bb] [C] [F] [C]
+{end_of_bridge}
+
+{start_of_solo}
+[Dm] [C] [Bb]
+[F] [F]
+
+[Dm] [C] [Bb]
+[F] [F]
+
+[Dm] [C] [Bb]
+[F] [F]
+
+[Dm] [C] [Bb]
+[Bb] [F]
+[F]
+{end_of_solo}
+
+{start_of_verse}
+[Bb] [F]
+[Bb] [F]
+[Bb] [F]
+[Dm] [C] [Bb] [F] [C]
+{end_of_verse}
+
+{start_of_chorus}
+[Dm] [C] [Bb] [F]
+[Dm] [C] [Bb] [F]
+[Bb] [F] [Bb] [F]
+[Dm] [C] [Bb] [F] [C]
+{end_of_chorus}
+
+{start_of_chorus}
+[Dm] [C] [Bb] [F]
+[Dm] [C] [Bb] [F]
+[Bb] [F] [Bb] [F]
+[Dm] [C] [Bb]
+[F]
+{end_of_chorus}

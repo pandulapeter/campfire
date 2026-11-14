@@ -1,0 +1,94 @@
+{title: One}
+{artist: U2}
+{meta: language en}
+{album: Achtung Baby}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/fe/5e/4f/fe5e4f79-c74f-c39e-39dc-4c8a952b9665/17UMGIM98829.rgb.jpg/250x250bb.jpg}
+{year: 1991}
+{key: Am}
+{tag: Rock}
+
+{start_of_intro}
+[Am] [Dsus2] [Fmaj7] [G]
+{end_of_intro}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[Am] [Dsus2] [Fmaj7] [G]
+{end_of_bridge}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[Am] [Dsus2] [Fmaj7] [G]
+{end_of_bridge}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Am] [Dsus2]
+[Fmaj7] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+{end_of_chorus}
+
+{start_of_bridge}
+[C] [Am]
+[C] [Am]
+[C] [G]
+[G] [Fmaj7]
+[Fmaj7] [C]
+{end_of_bridge}
+
+{start_of_outro}
+[Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am]
+[Fmaj7] [C]
+[C] [Am] [Fmaj7] [C]
+[C] [Am] [Fmaj7] [C]
+[C] [Am] [Fmaj7] [C]
+[C] [Am] [Fmaj7] [C]
+{end_of_outro}

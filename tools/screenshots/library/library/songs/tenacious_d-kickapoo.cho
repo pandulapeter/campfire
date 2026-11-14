@@ -1,0 +1,124 @@
+{title: Kickapoo}
+{artist: Tenacious D}
+{meta: language en}
+{album: The Pick of Destiny}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music/88/8e/ef/mzi.dwdxsphi.jpg/250x250bb.jpg}
+{year: 2006}
+{key: Dm}
+{tag: Rock}
+
+{start_of_intro}
+[Dm] [Dm] [Dm] [Dm]
+[Am] [Am] [Am] [Am]
+[F] [F] [C] [G]
+{end_of_intro}
+
+{start_of_verse}
+[Dm]
+[Am]
+[F] [C] [G]
+[Dm]
+[Am]
+[F] [C] [G] [G]
+{end_of_verse}
+
+{start_of_verse}
+[A] [C]
+[G] [Bb]
+[A] [C]
+[G] [Bb] [A]
+{end_of_verse}
+
+{start_of_verse}
+[C] [G] [A] [D] [A] [D] [A]
+[C] [G] [A] [D] [A] [D] [A]
+[C] [G] [A] [D] [A] [D] [A]
+[C] [G] [A] [D] [A] [D] [A]
+{end_of_verse}
+
+{start_of_bridge}
+[G5] [Bb5] [F5] [Ab5]
+{end_of_bridge}
+
+{start_of_verse}
+[G5] [Bb5]
+[F5] [Ab5]
+[G5] [Bb5]
+[F5] [Ab5]
+[G5] [Bb5]
+[F5] [Ab5] [G5]
+{end_of_verse}
+
+{start_of_verse}
+[Bb] [F] [G5] [C5] [G5] [C5] [G5]
+[Bb] [F] [G5] [C5] [G5] [C5] [G5]
+[Bb] [F] [G5] [C5] [G5] [C5] [G5]
+[Bb] [F] [G5] [C5] [G5] [C5] [G5]
+{end_of_verse}
+
+{start_of_verse}
+[G] [Bb]
+[F] [Ab]
+[G] [Bb]
+[F] [Ab]
+[G] [Bb]
+[F] [Ab]
+{end_of_verse}
+
+{start_of_bridge}
+[G5] [Bb5] [F5] [Ab5]
+{end_of_bridge}
+
+{start_of_verse}
+[C5] [-] [C5] [-]
+[C5] [-] [Bb5]
+[C5] [-] [C5] [-]
+[C5] [-] [Bb5] [C5]
+{end_of_verse}
+
+{start_of_verse}
+[C5] [F5] [Ab5]
+[C5] [F5] [Ab5]
+[C5] [F5] [Ab5]
+[C5] [F5] [Ab5]
+{end_of_verse}
+
+{start_of_bridge}
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+{end_of_bridge}
+
+{start_of_outro}
+[G5]
+[D5]
+[Bb5] [C5]
+
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[G5] [Eb5] [D5]
+[C5] [D5] [Eb5] [F5]
+
+[G5]
+{end_of_outro}

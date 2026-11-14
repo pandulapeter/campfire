@@ -1,0 +1,45 @@
+{title: Uptown Funk}
+{artist: Bruno Mars}
+{meta: language en}
+{album: Uptown Special}
+{meta: cover https://is1-ssl.mzstatic.com/image/thumb/Music5/v4/43/03/57/430357e0-e142-8d4d-ca56-87f4bd41e017/886444976145.jpg/250x250bb.jpg}
+{year: 2015}
+{key: D}
+{tag: Pop}
+
+{start_of_intro}
+{end_of_intro}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_bridge}
+{end_of_bridge}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_verse}
+{end_of_verse}
+
+{start_of_bridge}
+{end_of_bridge}
+
+{start_of_prechorus}
+{end_of_prechorus}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_bridge}
+{end_of_bridge}
+
+{start_of_chorus}
+{end_of_chorus}
+
+{start_of_outro}
+
+{end_of_outro}

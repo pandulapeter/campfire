@@ -18,8 +18,13 @@ as each platform's listing shows it, at its device's own pixels, then framed. Th
   `--args="--out <folder> --only <names>"`.
 - **A run is split across processes** (`ParallelRun.kt`, each about 1.6 GB), since one process holds one app start at
   a time. A render is mostly waiting for the app to settle, so four take little longer than one.
-- **The library is a copy, never committed**: `library/` (gitignored) holds a data folder's `library/`, `covers/`, and
-  `preferences/preferences.json`. Every render copies it into its own temporary `user.home`, with the shot's theme and
+- **The library** (`library/`) is a data folder's `library/`, `covers/`, and `preferences/preferences.json`, committed
+  and holding only what the images show of it. A song whose words no image shows keeps its directives and chords (a
+  row without chords would read "Lyrics only"), and stays a file, since the song count moves the list's scrollbar. A
+  public domain song keeps its words. A song under copyright whose first page an image shows keeps the words of the
+  sections that page holds, the rest turned into filler of the same length, chords and line breaks kept, since the
+  page count, the Chords and the Scales sections are worked out from the whole song. Its covers are only the songs
+  whose rows show. Every render copies it into its own temporary `user.home`, with the shot's theme and
   language written in, the current version marked as introduced, and the song layout and chord names chosen (no
   question dialogs). Nothing reaches the copy or the user's library.
 - **One app start per image** (`withCampfireApp`, which the UI tests share): home, `PlatformImpersonation`, and Koin are

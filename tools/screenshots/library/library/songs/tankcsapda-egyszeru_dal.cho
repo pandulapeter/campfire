@@ -1,0 +1,80 @@
+{title: Egyszerű dal}
+{artist: Tankcsapda}
+{meta: language hu}
+{album: Az ember tervez}
+{year: 1995}
+{key: Em}
+{tag: Rock}
+
+{start_of_intro}
+[Em] [G] [D] [C]
+[Em] [G] [D] [C]
+[Em] [G] [D] [C]
+[Em] [G] [D] [C]
+{end_of_intro}
+
+{start_of_verse}
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [D]
+[Em] [G] [D] [G]
+[C] [D]
+[Em] [D] [C]
+{end_of_chorus}
+
+{start_of_verse}
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+{end_of_verse}
+
+{start_of_verse}
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [D]
+[Em] [G] [D] [G]
+[C] [D]
+[Em] [D] [C]
+{end_of_chorus}
+
+{start_of_solo}
+[Em] [G] [D] [C]
+[Em] [G] [D] [C]
+{end_of_solo}
+
+{start_of_verse}
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+[Em] [G] [D] [G]
+{end_of_verse}
+
+{start_of_chorus}
+[C] [D]
+[Em] [G] [D] [G]
+[C] [D]
+[Em] [D] [C]
+{end_of_chorus}
+
+{start_of_outro}
+[C5] [B5] [G5] [F#5]
+[Em]
+{end_of_outro}
