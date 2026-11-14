@@ -30,10 +30,10 @@ Campfire e caietul tău de cântece: versuri și acorduri de citit cu mâinile p
 
 Acordurile stau deasupra silabelor lor, iar cântecul ocupă câte coloane încap pe ecran, ca să întorci cât mai puține pagini.
 
-Campfire nu vine cu cântece, ci e o casă pentru ale tale. Scrie-le în editor, lipește o foaie cu acorduri de pe un site sau adu-le pe cele pe care le ai, chiar și din backupul altei aplicații.
+Campfire nu vine cu cântece, ci e o casă pentru ale tale.
 
 Citire
-• Întorci o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth și ajungi la orice rând doar cu Sus și Jos
+• Întorci o pagină sau o coloană cu un clic, cu tastele săgeți sau cu o pedală Bluetooth și ajungi la orice rând cu Sus și Jos
 • Sau o coloană care se derulează singură, în ritmul fiecărui cântec
 • Melodii ABC ca partitură, și în PDF
 • Mărimea textului reglabilă, secțiuni pliabile, coperte și linkuri spre înregistrări
@@ -82,10 +82,10 @@ Pe gustul tău
 • Temă deschisă sau întunecată, glisor sepia și zece scheme de culori
 • Pictograma din Dock preia culoarea aleasă
 • Dezactivezi orice funcție pe care n-o folosești
-• Engleză, maghiară, română, germană, spaniolă, franceză, italiană, ebraică și portugheză, de ales din aplicație
+• Engleză, maghiară, română, germană, spaniolă, franceză, italiană, ebraică, portugheză și poloneză, de ales din aplicație
 
 Cântecele tale sunt ale tale
-Biblioteca ta e un folder cu fișiere text ChordPro obișnuite, pe dispozitiv. Campfire merge offline, fără cont, și nu colectează date: fără statistici, urmărire sau reclame. Iese pe internet doar la cererea ta: ca să sincronizeze și să partajeze prin Dropboxul tău, fără server la mijloc, să deschidă un link partajat și să descarce coperte și detalii despre cântece. Poți exporta totul oricând.
+Biblioteca ta e un folder cu fișiere text ChordPro pe dispozitiv. Campfire merge offline, fără cont, și nu colectează date: fără statistici, urmărire sau reclame. Iese pe internet doar la cererea ta, fără vreun server Campfire la mijloc. Poți exporta totul oricând.
 
 Campfire e open source, sub Mozilla Public License 2.0.
 ```

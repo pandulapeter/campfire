@@ -31,10 +31,10 @@ Campfire es un cancionero para las canciones que tocas: tus letras y acordes, li
 
 Cada acorde va sobre su sílaba, y la canción ocupa tantas columnas como quepan en pantalla, para pasar las menos páginas posibles.
 
-Campfire no trae canciones: es un hogar para las tuyas. Escríbelas en el editor, pega una hoja de acordes de una web o trae las que ya tienes, incluso la copia de seguridad de otra app de cancioneros.
+Campfire no trae canciones: es un hogar para las tuyas.
 
 Lectura
-• Pasa página o columna con un clic, las flechas o un pedal Bluetooth, y llega a cada línea solo con Arriba y Abajo
+• Pasa página o columna con un clic, las flechas o un pedal Bluetooth, y llega a cada línea con Arriba y Abajo
 • O una columna que avanza sola a la velocidad de cada canción
 • Melodías ABC como partitura, también en PDF
 • Tamaño de texto ajustable, secciones plegables, portadas y enlaces a grabaciones
@@ -83,10 +83,10 @@ A tu manera
 • Temas claro y oscuro, un control de sepia y diez paletas de colores
 • El icono del Dock sigue el color que elijas
 • Desactiva cualquier función que no uses
-• En inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo y portugués, a elegir en la app
+• Inglés, húngaro, rumano, alemán, español, francés, italiano, hebreo, portugués y polaco, a elegir en la app
 
 Tus canciones son tuyas
-Tu biblioteca es una carpeta de archivos de texto ChordPro en tu dispositivo. Campfire funciona sin conexión, no necesita cuenta y no recopila datos: sin analíticas, sin rastreo y sin anuncios. Solo se conecta para lo que le pides: sincronizar y compartir con tu propio Dropbox, sin servidores intermedios, abrir un enlace compartido y descargar portadas y datos de canciones. Puedes exportarlo todo cuando quieras.
+Tu biblioteca es una carpeta de archivos de texto ChordPro en tu dispositivo. Campfire funciona sin conexión, no necesita cuenta y no recopila datos: sin analíticas, sin rastreo y sin anuncios. Solo se conecta para lo que le pides, sin servidores de Campfire de por medio. Puedes exportarlo todo cuando quieras.
 
 Campfire es de código abierto (Mozilla Public License 2.0).
 ```

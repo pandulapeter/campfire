@@ -34,7 +34,7 @@ Campfire est le chansonnier des morceaux que tu joues : paroles et accords mis e
 
 Les accords se posent sur leurs syllabes, et une chanson remplit autant de colonnes que l'écran le permet : moins de pages à tourner.
 
-Campfire n'a pas de chansons à lui : il accueille les tiennes. Écris-les dans l'éditeur, colle une grille copiée sur un site, ou apporte celles que tu as, même la sauvegarde d'une autre app de chansonnier.
+Campfire n'a pas de chansons à lui : il accueille les tiennes.
 
 Lecture
 • Tourne une page ou une colonne d'un toucher, d'une touche ou d'une pédale Bluetooth, et atteins chaque ligne avec Haut et Bas
@@ -78,15 +78,15 @@ Import, export, partage et synchro
 • Importe ChordPro, texte, PDF, Word, ABC, archives zip et sauvegardes d'autres apps de chansonnier
 • Export PDF prêt à imprimer, à ton format de papier et tes colonnes
 • Partage une chanson ou une setlist par lien ou code QR, ouvert par tous dans Campfire et tenu à jour
-• Synchro facultative via ton propre Dropbox, automatique à chaque modification
+• Synchro facultative via ton Dropbox, automatique à chaque modification
 
 À ton image
 • Thèmes clair et sombre, curseur sépia et dix palettes de couleurs, ou les couleurs de ton fond d'écran
 • Désactive ce dont tu ne te sers jamais
-• Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu et portugais, au choix dans l'app
+• Anglais, hongrois, roumain, allemand, espagnol, français, italien, hébreu, portugais et polonais, au choix dans l'app
 
 Tes chansons t'appartiennent
-Ta bibliothèque : un dossier de simples fichiers ChordPro sur ton appareil. Campfire marche hors ligne, sans compte, et ne collecte aucune donnée : ni statistiques, ni pistage, ni pub. Il ne va en ligne qu'à ta demande : synchroniser et partager via ton propre Dropbox, sans serveur intermédiaire, ouvrir un lien partagé, récupérer pochettes et infos des chansons. Tout s'exporte à tout moment.
+Ta bibliothèque : un dossier de fichiers ChordPro sur ton appareil. Campfire marche hors ligne, sans compte, et ne collecte aucune donnée : ni statistiques, ni pistage, ni pub. Il ne va en ligne qu'à ta demande, sans serveur Campfire intermédiaire. Tout s'exporte à tout moment.
 
 Aussi sur iPhone, iPad, Mac, Windows, Linux et le web : https://campfire-songbook.com
 

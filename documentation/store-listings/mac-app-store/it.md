@@ -31,10 +31,10 @@ Campfire è un canzoniere per le canzoni che suoni: testi e accordi da leggere c
 
 Gli accordi stanno sopra le sillabe giuste e la canzone riempie tutte le colonne dello schermo: giri meno pagine possibile.
 
-Campfire non ha canzoni sue: è la casa delle tue. Scrivile nell'editor, incollale da un sito web o porta quelle che hai già, anche dal backup di un'altra app di canzonieri.
+Campfire non ha canzoni sue: è la casa delle tue.
 
 Lettura
-• Gira pagina o colonna con un clic, le frecce o un pedale voltapagina Bluetooth, e raggiungi ogni riga solo con Su e Giù
+• Gira pagina o colonna con un clic, le frecce o un pedale voltapagina Bluetooth, e raggiungi ogni riga con Su e Giù
 • Oppure una colonna che scorre da sola al ritmo di ogni canzone
 • Melodie ABC come spartito, anche in PDF
 • Testo ridimensionabile, sezioni richiudibili, copertine e link alle registrazioni
@@ -83,10 +83,10 @@ Rendila tua
 • Temi chiaro e scuro, un cursore Seppia e dieci combinazioni di colori
 • L'icona nel Dock segue il colore che scegli
 • Disattiva le funzionalità che non usi
-• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico e portoghese, selezionabili nell'app
+• Inglese, ungherese, rumeno, tedesco, spagnolo, francese, italiano, ebraico, portoghese e polacco, a scelta nell'app
 
 Le tue canzoni sono tue
-La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta: per sincronizzare e condividere col tuo Dropbox, senza server in mezzo, aprire un link condiviso e scaricare copertine e dati delle canzoni. Puoi esportare tutto quando vuoi.
+La tua libreria è una cartella di file di testo ChordPro sul tuo dispositivo. Campfire funziona offline, senza account, e non raccoglie dati: niente statistiche, tracciamento o pubblicità. Va online solo su tua richiesta, senza server di Campfire in mezzo. Puoi esportare tutto quando vuoi.
 
 Campfire è open source con licenza Mozilla Public License 2.0.
 ```

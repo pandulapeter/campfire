@@ -34,7 +34,7 @@ A Campfire daloskönyv a te dalaidhoz: dalszöveg és akkordok, hangszerrel a k�
 
 Az akkordok a saját szótagjuk fölött állnak, a dal pedig annyi hasábba rendeződik, amennyi kifér, így a lehető legkevesebbet lapozol.
 
-A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a szerkesztőben, illessz be egy weboldalról másolt akkordlapot, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
+A Campfire nem hoz saját dalokat: a tieidnek ad otthont.
 
 Olvasás
 • Lapozz oldalt vagy hasábot koppintással, billentyűvel vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le gombbal
@@ -54,7 +54,7 @@ Akkordok és skálák
 Hangoló
 • Gitár, basszusgitár, ukulele, hegedű, mandolin vagy bendzsó hangolása húronként, sokféle hangolásban, kromatikusan bármely hangszeré
 • Referenciahangok fül utáni hangoláshoz, akár a következő dal fölött
-• Csak addig figyel, amíg a képernyőn van, és semmit sem tárol abból, amit hall
+• Csak a képernyőn figyel, és semmit sem tárol abból, amit hall
 
 Metronóm
 • Minden dalnak saját tempója, ütemmutatója és hangsúlyai vannak, tempóváltásokkal együtt
@@ -83,10 +83,10 @@ Import, export, megosztás, szinkronizálás
 Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma, vagy a háttérképed színei
 • Kapcsold ki, amit sosem használsz
-• Angol, magyar, román, német, spanyol, francia, olasz, héber és portugál nyelv, az appban váltható
+• Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál és lengyel nyelv, az appban váltható
 
 A dalaid a tieid
-A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek és daladatok letöltéséhez. Bármikor mindent exportálhatsz.
+A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred, és nincs közben Campfire-szerver. Bármikor mindent exportálhatsz.
 
 Elérhető iPhone-on, iPaden, Macen, Windowson, Linuxon és a weben is: https://campfire-songbook.com
 

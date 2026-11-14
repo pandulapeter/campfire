@@ -30,7 +30,7 @@ A Campfire daloskönyv a te dalaidhoz: dalszöveg és akkordok, hangszerrel a k�
 
 Az akkordok a saját szótagjuk fölött állnak, a dal pedig annyi hasábba rendeződik, amennyi kifér, így a lehető legkevesebbet lapozol.
 
-A Campfire nem hoz saját dalokat: a tieidnek ad otthont. Írd meg őket a szerkesztőben, illessz be egy weboldalról másolt akkordlapot, vagy hozd a meglévőket, akár egy másik daloskönyv-app mentéséből.
+A Campfire nem hoz saját dalokat: a tieidnek ad otthont.
 
 Olvasás
 • Lapozz oldalt vagy hasábot kattintással, nyilakkal vagy Bluetooth-pedállal; minden sor elérhető csak a fel és le nyíllal
@@ -82,10 +82,10 @@ Szabd magadra
 • Világos és sötét téma, szépia csúszka és tíz színséma
 • A Dock-ikon a választott színt követi
 • Kapcsold ki, amit sosem használsz
-• Angol, magyar, román, német, spanyol, francia, olasz, héber és portugál nyelv, az appban váltható
+• Angol, magyar, román, német, spanyol, francia, olasz, héber, portugál és lengyel nyelv, az appban váltható
 
 A dalaid a tieid
-A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred: szinkronizáláshoz és megosztáshoz a saját Dropboxodon át, köztes szerver nélkül, megosztott link megnyitásához, borítóképek és daladatok letöltéséhez. Bármikor mindent exportálhatsz.
+A könyvtárad közönséges ChordPro-szövegfájlok mappája az eszközödön. A Campfire offline működik, fiók nélkül, és nem gyűjt adatokat: nincs analitika, követés és hirdetés. Csak akkor megy online, ha kéred, és nincs közben Campfire-szerver. Bármikor mindent exportálhatsz.
 
 A Campfire nyílt forráskódú, a Mozilla Public License 2.0 alatt.
 ```

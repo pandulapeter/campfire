@@ -43,7 +43,7 @@ Campfire ist ein Songbook für die Songs, die du spielst: Texte und Akkorde zum 
 
 Akkorde stehen genau über ihren Silben, und ein Song füllt so viele Spalten, wie Platz ist, damit du möglichst selten umblätterst.
 
-Campfire bringt keine eigenen Songs mit, es ist ein Zuhause für deine. Schreib sie im Editor, füge ein Akkordblatt von einer Website ein oder bring mit, was du schon hast, sogar das Backup einer anderen Songbook-App.
+Campfire bringt keine eigenen Songs mit, es ist ein Zuhause für deine.
 
 Lesen
 • Seite oder Spalte weiter per Tippen, Taste oder Bluetooth-Pedal, jede Zeile allein mit Hoch und Runter erreichbar
@@ -94,10 +94,10 @@ Ganz nach deinem Geschmack
 • Helles und dunkles Design, Sepia-Regler und zehn Farbschemata
 • Das App-Symbol folgt der Farbe, die du wählst
 • Schalte ab, was du nie nutzt
-• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch und Portugiesisch, in der App umschaltbar
+• Englisch, Ungarisch, Rumänisch, Deutsch, Spanisch, Französisch, Italienisch, Hebräisch, Portugiesisch und Polnisch, in der App umschaltbar
 
 Deine Songs gehören dir
-Deine Bibliothek ist ein Ordner normaler ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur, wenn du es willst: für Sync und Teilen über deine eigene Dropbox (ohne Server dazwischen), geteilte Links sowie Cover und Songangaben. Du kannst jederzeit alles exportieren.
+Deine Bibliothek ist ein Ordner normaler ChordPro-Textdateien auf deinem Gerät. Campfire funktioniert offline, braucht kein Konto und sammelt keine Daten: keine Analysen, kein Tracking, keine Werbung. Online geht es nur, wenn du es willst, ohne Campfire-Server dazwischen. Du kannst jederzeit alles exportieren.
 
 Campfire ist Open Source unter der Mozilla Public License 2.0.
 ```

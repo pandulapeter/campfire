@@ -34,7 +34,7 @@ O Campfire é um cancioneiro para as músicas que você toca: letras e cifras pa
 
 Cada acorde fica sobre a sua sílaba, e a música ocupa todas as colunas que cabem na tela: você vira o mínimo de páginas.
 
-O Campfire não traz músicas: é a casa das suas. Escreva no editor, cole uma cifra de um site ou traga as que você já tem, até o backup de outro app de cancioneiro.
+O Campfire não traz músicas: é a casa das suas.
 
 Leitura
 • Vire página ou coluna com um toque, uma tecla ou um pedal Bluetooth, e chegue a cada linha só com Cima e Baixo
@@ -83,10 +83,10 @@ Importar, exportar, compartilhar e sincronizar
 Do seu jeito
 • Temas claro e escuro, um controle de sépia e dez esquemas de cores, ou as cores do seu papel de parede
 • Desative qualquer recurso que você não usa
-• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico e português, alternáveis dentro do app
+• Inglês, húngaro, romeno, alemão, espanhol, francês, italiano, hebraico, português e polonês, alternáveis dentro do app
 
 Suas músicas são suas
-Sua biblioteca é uma pasta de arquivos de texto ChordPro no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Só se conecta para o que você pede: sincronizar e compartilhar pelo seu Dropbox, sem servidor no meio, abrir um link compartilhado e baixar capas e detalhes das músicas. Você pode exportar tudo quando quiser.
+Sua biblioteca é uma pasta de arquivos de texto ChordPro no seu dispositivo. O Campfire funciona offline, não precisa de conta e não coleta dados: sem análises, sem rastreamento e sem anúncios. Só se conecta para o que você pede, sem servidor do Campfire no meio. Você pode exportar tudo quando quiser.
 
 Também no iPhone, iPad, Mac, Windows, Linux e na web: https://campfire-songbook.com
 

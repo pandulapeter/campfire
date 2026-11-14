@@ -30,6 +30,7 @@
 		<string>it</string>
 		<string>he</string>
 		<string>pt</string>
+		<string>pl</string>
 	</array>
 	<!-- The App Group whose container holds the share extension's inbox (IosShareInbox.kt). -->
 	<key>CampfireAppGroup</key>

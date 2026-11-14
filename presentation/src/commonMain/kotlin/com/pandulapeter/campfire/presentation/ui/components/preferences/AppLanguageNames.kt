@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hebrew
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_italian
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_polish
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_portuguese
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_romanian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_spanish
@@ -41,4 +42,5 @@ internal val AppLanguage.nameResource
         AppLanguage.ITALIAN -> Res.string.settings_user_interface_language_italian
         AppLanguage.HEBREW -> Res.string.settings_user_interface_language_hebrew
         AppLanguage.PORTUGUESE -> Res.string.settings_user_interface_language_portuguese
+        AppLanguage.POLISH -> Res.string.settings_user_interface_language_polish
     }

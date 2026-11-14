@@ -27,6 +27,7 @@
 		<string>it</string>
 		<string>he</string>
 		<string>pt</string>
+		<string>pl</string>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>

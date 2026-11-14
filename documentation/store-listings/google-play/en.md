@@ -32,7 +32,7 @@ Campfire is a songbook for the songs you play: your lyrics and chords, laid out 
 
 Chords sit right above the syllables they belong to, and a song flows into as many columns as the screen has room for, so you turn as few pages as possible.
 
-Campfire doesn't come with songs of its own. It is a home for yours. Write them in the built-in editor, paste a chord sheet copied from a website, or bring the ones you already have, even another songbook app's backup.
+Campfire doesn't come with songs of its own. It is a home for yours.
 
 Reading
 • Turn a page or a column with a tap, a key, or a Bluetooth page-turner pedal, and reach every line with Up and Down alone
@@ -81,10 +81,10 @@ Import, export, share, and sync
 Make it yours
 • Light and dark themes, a sepia slider, and ten color schemes, or your wallpaper's colors
 • Switch off any feature you never use
-• English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, and Portuguese, switchable inside the app
+• English, Hungarian, Romanian, German, Spanish, French, Italian, Hebrew, Portuguese, and Polish, switchable inside the app
 
 Your songs are yours
-Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it: to sync and share through your own Dropbox, with no server in between, to open a shared link, and to fetch cover images and song details. You can export everything at any time.
+Your library is a folder of ordinary ChordPro text files on your device. Campfire works offline, needs no account, and collects no data: no analytics, no tracking, and no ads. It goes online only for what you ask of it, with no Campfire server in between. You can export everything at any time.
 
 Also on iPhone, iPad, Mac, Windows, Linux, and the web: https://campfire-songbook.com
 

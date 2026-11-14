@@ -19,10 +19,10 @@ from store_listings import app_languages, changes, check, language, match_locale
 # documentation lists them: Play (and its Hebrew iw-IL), App Store Connect, and Partner Center, which writes them in
 # lowercase.
 STORE_LOCALES = {
-    "google-play": ["en-US", "en-GB", "de-DE", "es-ES", "es-419", "es-US", "fr-FR", "fr-CA", "hu-HU", "it-IT", "pt-BR", "pt-PT", "ro", "iw-IL"],
-    "app-store": ["en-US", "en-GB", "de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "hu", "it", "pt-BR", "pt-PT", "ro", "he"],
+    "google-play": ["en-US", "en-GB", "de-DE", "es-ES", "es-419", "es-US", "fr-FR", "fr-CA", "hu-HU", "it-IT", "pl-PL", "pt-BR", "pt-PT", "ro", "iw-IL"],
+    "app-store": ["en-US", "en-GB", "de-DE", "es-ES", "es-MX", "fr-FR", "fr-CA", "hu", "it", "pl", "pt-BR", "pt-PT", "ro", "he"],
     "microsoft-store": ["en", "en-us", "en-gb", "de", "de-de", "es", "es-es", "es-mx", "fr", "fr-fr", "fr-ca", "hu",
-                        "hu-hu", "it", "it-it", "pt", "pt-br", "pt-pt", "ro", "ro-ro", "he", "he-il"],
+                        "hu-hu", "it", "it-it", "pl", "pl-pl", "pt", "pt-br", "pt-pt", "ro", "ro-ro", "he", "he-il"],
 }
 
 
