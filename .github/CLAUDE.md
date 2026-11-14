@@ -75,8 +75,9 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 
 - **`<!-- screenshots: true -->`** in the description: the one switch whose default is the weaker action (false),
   since the render costs an hour of macOS runners and replaces what every store shows. Read as strictly as the others.
-- **`screenshots.yml`** renders from the tag, beside the tests, on macOS (the iOS and Mac chrome is SF Pro): three
-  shards of two processes, each with a timeout; then one job frames the store images, composes the banners and the link
+- **`screenshots.yml`** renders from the tag, beside the tests: the iOS and Mac devices on three macOS runners (their
+  chrome is SF Pro, which only macOS has), the Android and Windows ones on Linux runners (`--platforms`), each job with a
+  timeout and the build's daemons stopped before it renders (a macOS runner has 7 GB); then one macOS job frames the store images, composes the banners and the link
   preview, lays out the website's tree (`website_screenshots.py --website` into an empty folder), checks every store
   image against its store's rules (`store_images.py --check`: count, sizes, alpha, file size, every language, and every
   framed file named by `SETS` or `MANUAL`), draws contact sheets (`contact_sheets.py`, Pillow), and uploads one

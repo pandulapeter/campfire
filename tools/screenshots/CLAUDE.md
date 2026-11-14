@@ -16,7 +16,8 @@ publishes them on CI (`.github/workflows/screenshots.yml`, `.github/CLAUDE.md`);
 `website-screenshots` skills drive it locally, to look at a change. Its test source set holds the app's UI tests.
 
 - `./gradlew :tools:screenshots:run` writes `renders/<row label>/<NN-id>.png` (gitignored, replaced every run);
-  `--args="--out <folder> --only <names>"`; `--shard <index>/<count>` renders a part, as the release's jobs do.
+  `--args="--out <folder> --only <names>"`; `--platforms <names>` and `--shard <index>/<count>` render a part, as the
+  release's jobs do (the iOS and Mac devices need a Mac, for SF Pro in their chrome).
 - **Every framed file is named by `.github/scripts/store_images.py`** (`SETS`, what a store's API takes; `MANUAL`, what
   stays by hand): a new device or image fails the release's check until it is named there, with its store's rules.
 - **A run is split across processes** (`ParallelRun.kt`, each about 1.6 GB), since one process holds one app start at

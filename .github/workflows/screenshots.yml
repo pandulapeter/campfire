@@ -21,9 +21,11 @@
 # (its screenshots_run input); it publishes nothing either way. It needs no secret: rendering reaches nothing outside
 # (tools/screenshots' Fakes.kt), and nothing it builds ships.
 #
-# macOS runners, since the iOS and Mac system chrome is set in SF Pro, which only macOS has. The render is split into
-# SHARDS jobs of two processes each (about 1.6 GB apiece fits a hosted runner), at most three, since an account runs
-# five macOS jobs at once and the tests' iOS job runs beside them during a release.
+# The iOS and Mac devices are rendered on macOS runners, since their system chrome is set in SF Pro, which only macOS
+# has: three jobs of two processes each (a hosted macOS runner has 3 CPUs and 7 GB, and a render about 1.6 GB), no more,
+# since an account runs five macOS jobs at once and the tests' iOS job runs beside them during a release. The Android
+# and Windows devices, whose chrome fonts the build downloads, are rendered on Linux runners (4 CPUs, 16 GB), of which
+# many run at once. The framing runs on macOS too, as every image used to be made there.
 
 name: 'Screenshots'
 
@@ -50,13 +52,21 @@ defaults:
 
 jobs:
   render:
-    name: Render (${{ matrix.shard }}/3)
-    runs-on: macos-latest
+    name: Render ${{ matrix.name }} (${{ matrix.shard }}/${{ matrix.shards }})
+    runs-on: ${{ matrix.runner }}
     # A render that hangs would otherwise hold every store job of the release for GitHub's six hours.
     timeout-minutes: 120
     strategy:
+      # One failed part fails the run anyway; the others would only spend runners on images nothing frames.
+      fail-fast: true
       matrix:
-        shard: [0, 1, 2]
+        include:
+          - { name: Apple, runner: macos-latest, platforms: 'IOS,MACOS', shard: 0, shards: 3, parallel: 2 }
+          - { name: Apple, runner: macos-latest, platforms: 'IOS,MACOS', shard: 1, shards: 3, parallel: 2 }
+          - { name: Apple, runner: macos-latest, platforms: 'IOS,MACOS', shard: 2, shards: 3, parallel: 2 }
+          - { name: Android and Windows, runner: ubuntu-latest, platforms: 'ANDROID,WINDOWS', shard: 0, shards: 3, parallel: 3 }
+          - { name: Android and Windows, runner: ubuntu-latest, platforms: 'ANDROID,WINDOWS', shard: 1, shards: 3, parallel: 3 }
+          - { name: Android and Windows, runner: ubuntu-latest, platforms: 'ANDROID,WINDOWS', shard: 2, shards: 3, parallel: 3 }
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -71,12 +81,12 @@ jobs:
       # stopped, and the run is started by a Gradle of its own with a small heap, which compiles nothing.
       - name: Render
         env:
-          SHARD: ${{ matrix.shard }}
+          ARGUMENTS: --platforms ${{ matrix.platforms }} --shard ${{ matrix.shard }}/${{ matrix.shards }} --parallel ${{ matrix.parallel }}
         run: |
           ./gradlew --stop
           pkill -f KotlinCompileDaemon || true
           ./gradlew --no-daemon -Dorg.gradle.jvmargs=-Xmx768m -Pkotlin.compiler.execution.strategy=in-process \
-            :tools:screenshots:run --args="--shard $SHARD/3 --parallel 2 --out $GITHUB_WORKSPACE/renders" 2>&1 \
+            :tools:screenshots:run --args="$ARGUMENTS --out $GITHUB_WORKSPACE/renders" 2>&1 \
             | tee "$RUNNER_TEMP/render.log"
           # A broken class fails a shot that the run may still count as written.
           if grep -n 'Exception' "$RUNNER_TEMP/render.log"; then
@@ -86,7 +96,7 @@ jobs:
       - name: Keep the renders
         uses: actions/upload-artifact@v7
         with:
-          name: renders-${{ matrix.shard }}
+          name: renders-${{ matrix.runner }}-${{ matrix.shard }}
           path: renders
           retention-days: 1
 
