@@ -214,7 +214,7 @@ def matched_locales(submission):
 
 def run_screenshots(folder):
     """
-    {language: {the file's path inside the zip: the image}} of the run's screenshots, in the listing's order, or None
+    {language: {the file's name in the zip: the image}} of the run's screenshots, in the listing's order, or None
     without a folder. A language the run has no screenshots of maps to an empty dict.
     """
     if folder is None:
@@ -222,7 +222,7 @@ def run_screenshots(folder):
     if not os.path.isdir(folder):
         fail(f"There are no screenshots at {folder}.")
     return {
-        code: {f"screenshots/{code}/{path.name}": str(path)
+        code: {f"screenshot-{code}-{path.name}": str(path)
                for path in store_images.images(folder, "microsoft-store", code).get("Screenshot", [])}
         for code in store_listings.app_languages()
     }
@@ -266,7 +266,7 @@ def replace_screenshots(submission, locales, screenshots):
     """
     Marks every listing's screenshots for deletion and adds the run's of its language in their place, leaving the other
     images as they came. A screenshot still waiting for its upload is one an earlier attempt at this draft added and
-    never got in, so it is dropped rather than added twice. Returns {path inside the zip: image} of every file named.
+    never got in, so it is dropped rather than added twice. Returns {name in the zip: image} of every file named.
     """
     files = {}
     for locale, code in locales.items():
@@ -311,8 +311,8 @@ def write_listings(submission, locales, listings):
 
 def upload(upload_url, package, images):
     """
-    Puts the package into a zip at the top level and every image ({path inside the zip: file}) at its path, the way the
-    submission names them, and uploads it block by block.
+    Puts the package and every image ({name in the zip: file}) into a zip at its top level, under the names
+    the submission gives them, and uploads it block by block.
     """
     with tempfile.TemporaryDirectory() as directory:
         archive = os.path.join(directory, "submission.zip")

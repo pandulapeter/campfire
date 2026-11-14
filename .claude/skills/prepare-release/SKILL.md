@@ -387,10 +387,12 @@ all of them are always written:
   unless the user asked otherwise, so they can see them and flip one before publishing; anything but
   `true` or `false` stops the release. Mention them when reporting back.
 - **`screenshots`** renders every store image, the website's screenshots, and the README banners from the tag and
-  publishes them (`.github/CLAUDE.md`). Write **`true`** when a release changes what any shot shows (a screen, a
-  string on one, the library in `tools/screenshots/library/`, `Shot.kt`, `Website.kt`, `Banners.kt`,
-  `Compositions.kt`, or the `screenshot-texts`), else **`false`**, and say which and why when reporting back. A
-  language added since the last release turns it on anyway, and stops the release if it says `false`.
+  publishes them (`.github/CLAUDE.md`). Write **`true`** when a language was added since the last release (a
+  `values-*` folder the previous tag lacks: `git ls-tree -d --name-only <previous tag>:presentation/src/commonMain/composeResources`)
+  — **`false` then stops the release before any build** — or when the release changes what any shot shows (a screen,
+  a string on one, the library in `tools/screenshots/library/`, `Shot.kt`, `Website.kt`, `Banners.kt`,
+  `Compositions.kt`, or the `screenshot-texts`); else **`false`**. Say which and why when reporting back. With a new
+  language, every store's `listings` must stay `true` too, or the release stops.
 - **Nothing misspelt is taken as absent** (see `.github/CLAUDE.md`): a misspelt store name or comment stops
   the release, so write the four store names exactly as above.
 

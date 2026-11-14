@@ -142,13 +142,13 @@ class RunTest(unittest.TestCase):
             self.assertEqual([
                 {"id": "1", "fileName": "old.png", "fileStatus": "PendingDelete", "imageType": "Screenshot"},
                 {"id": "2", "fileName": "poster.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
-                {"fileName": f"screenshots/{code}/windows-1.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                {"fileName": f"screenshot-{code}-windows-1.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
                  "description": ""},
-                {"fileName": f"screenshots/{code}/windows-2.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                {"fileName": f"screenshot-{code}-windows-2.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
                  "description": ""},
             ], puts[0]["listings"][locale]["baseListing"]["images"])
-        self.assertEqual(["screenshots/en/windows-1.png", "screenshots/en/windows-2.png",
-                          "screenshots/de/windows-1.png", "screenshots/de/windows-2.png"], self.uploaded_images)
+        self.assertEqual(["screenshot-en-windows-1.png", "screenshot-en-windows-2.png",
+                          "screenshot-de-windows-1.png", "screenshot-de-windows-2.png"], self.uploaded_images)
 
     def test_a_reused_draft_gets_the_screenshots_once(self):
         first, _, _ = self.run_main(with_images(submission("en-us", "de-de")), screenshots=["en", "de"])
@@ -171,22 +171,22 @@ class RunTest(unittest.TestCase):
     def test_a_missing_language_with_screenshots_gets_a_listing_copied_from_english(self):
         puts, uploaded, _ = self.run_main(with_images(submission("en-us")), screenshots=["en", "de"])
         self.assertTrue(uploaded)
-        listing = puts[0]["listings"]["de-de"]
+        listing = puts[0]["listings"]["de"]
         self.assertEqual({}, listing["platformOverrides"])
         base = listing["baseListing"]
         for field, text in LISTINGS["de"].items():
             self.assertEqual(text, base[field])
         self.assertEqual("Campfire", base["title"])
         self.assertEqual("- Neu", base["releaseNotes"])
-        self.assertEqual(["screenshots/de/windows-1.png", "screenshots/de/windows-2.png"],
+        self.assertEqual(["screenshot-de-windows-1.png", "screenshot-de-windows-2.png"],
                          [image["fileName"] for image in base["images"]])
         self.assertEqual({"PendingUpload"}, {image["fileStatus"] for image in base["images"]})
-        self.assertIn("screenshots/de/windows-1.png", self.uploaded_images)
+        self.assertIn("screenshot-de-windows-1.png", self.uploaded_images)
 
     def test_prepare_creates_a_missing_languages_text_without_images(self):
         puts, uploaded, _ = self.run_main(submission("en-us"), prepare=True)
         self.assertFalse(uploaded)
-        base = puts[0]["listings"]["de-de"]["baseListing"]
+        base = puts[0]["listings"]["de"]["baseListing"]
         self.assertEqual("Lang", base["description"])
         self.assertEqual([], base["images"])
 
@@ -203,10 +203,10 @@ class UploadTest(unittest.TestCase):
             with mock.patch.object(microsoft_store_submission, "blob_request", lambda url, data: sent.append(data)), \
                     mock.patch("builtins.print"):
                 microsoft_store_submission.upload("https://upload.example/?sig=1", package,
-                                                  {"screenshots/en/windows-1.png": image})
+                                                  {"screenshot-en-windows-1.png": image})
         with zipfile.ZipFile(io.BytesIO(b"".join(sent[:-1]))) as archive:
             self.assertEqual(b"msix", archive.read("campfire.msix"))
-            self.assertEqual(b"png", archive.read("screenshots/en/windows-1.png"))
+            self.assertEqual(b"png", archive.read("screenshot-en-windows-1.png"))
 
 
 class FlagsTest(unittest.TestCase):

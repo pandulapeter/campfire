@@ -93,8 +93,8 @@ TERMS = {"Search terms"}
 ALIASES = {"iw": "he"}
 
 # The locale a store's listing of each language is created in, where the store has none of that language yet: the
-# store's main locale of it, as its console offers it (Play and Partner Center name a country for most, App Store
-# Connect for some). A regional copy beside it (fr-CA) is still added in a console, then filled in by every release.
+# store's main locale of it, as its console offers it (Play names a country for most, App Store Connect for some,
+# Partner Center none). A regional copy beside it (fr-CA) is still added in a console, then filled in by every release.
 LOCALES = {
     "google-play": {
         "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "iw-IL", "hu": "hu-HU", "it": "it-IT", "pl": "pl-PL", "cs": "cs-CZ", "pt": "pt-BR", "ro": "ro",
@@ -102,8 +102,9 @@ LOCALES = {
     "app-store": {
         "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "he", "hu": "hu", "it": "it", "pl": "pl", "cs": "cs", "pt": "pt-BR", "ro": "ro",
     },
+    # Partner Center keys a listing by the language the package declares (app/desktop/AppxManifest.xml), which is bare.
     "microsoft-store": {
-        "de": "de-de", "en": "en-us", "es": "es-es", "fr": "fr-fr", "he": "he-il", "hu": "hu-hu", "it": "it-it", "pl": "pl-pl", "cs": "cs-cz", "pt": "pt-br", "ro": "ro-ro",
+        "de": "de", "en": "en", "es": "es", "fr": "fr", "he": "he", "hu": "hu", "it": "it", "pl": "pl", "cs": "cs", "pt": "pt", "ro": "ro",
     },
 }
 LOCALES["mac-app-store"] = LOCALES["app-store"]
