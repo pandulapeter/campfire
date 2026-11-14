@@ -26,6 +26,12 @@ STORE_LOCALES = {
 }
 
 
+def screenshot_texts(folder, languages):
+    (folder / "screenshot-texts").mkdir(parents=True, exist_ok=True)
+    for code in languages:
+        (folder / "screenshot-texts" / f"{code}.md").write_text("", encoding="utf-8")
+
+
 def block(text):
     return f"```\n{text}\n```\n"
 
@@ -88,6 +94,7 @@ class CheckTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name:
             folder, resources = Path(name), Path(name) / "resources"
             (resources / "values").mkdir(parents=True)
+            screenshot_texts(folder, ["en"])
             for store in store_listings.STORES:
                 (folder / store).mkdir()
                 fields = "".join(f"## {field}\n" + block("text") for field in store_listings.FIELDS[store])
@@ -102,6 +109,7 @@ class CheckTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name:
             folder, resources = Path(name), Path(name) / "resources"
             (resources / "values").mkdir(parents=True)
+            screenshot_texts(folder, ["en"])
             for store in store_listings.STORES:
                 (folder / store).mkdir()
                 for code in ["en", "de"]:
@@ -109,6 +117,36 @@ class CheckTest(unittest.TestCase):
                     (folder / store / f"{code}.md").write_text(fields, encoding="utf-8")
             errors = check(folder, resources)
         self.assertEqual(["google-play: has de, en, and the app has en"], errors[:1])
+
+
+    def test_screenshot_texts_missing_a_language_fail(self):
+        with tempfile.TemporaryDirectory() as name:
+            folder, resources = Path(name), Path(name) / "resources"
+            for path in ["values", "values-de"]:
+                (resources / path).mkdir(parents=True)
+            screenshot_texts(folder, ["en"])
+            errors = check(folder, resources)
+        self.assertIn("screenshot-texts: has en, and the app has de, en", errors)
+
+    def test_a_language_without_a_store_locale_fails(self):
+        with tempfile.TemporaryDirectory() as name:
+            folder, resources = Path(name), Path(name) / "resources"
+            for path in ["values", "values-pt"]:
+                (resources / path).mkdir(parents=True)
+            errors = check(folder, resources)
+        self.assertIn("google-play: store_listings.py's LOCALES names no locale for pt", errors)
+        self.assertIn("microsoft-store: store_listings.py's LOCALES names no locale for pt", errors)
+
+
+class NewListingLocalesTest(unittest.TestCase):
+
+    def test_every_store_locale_a_listing_is_created_in_is_read_as_its_language(self):
+        for store in store_listings.STORES:
+            locales = store_listings.new_listing_locales(store, app_languages())
+            self.assertEqual(sorted(app_languages()), sorted(locales.values()), store)
+            matched, missing, unknown = match_locales(list(locales), app_languages())
+            self.assertEqual(([], []), (missing, unknown), store)
+        self.assertEqual({"iw-IL": "he"}, store_listings.new_listing_locales("google-play", ["he"]))
 
 
 class ChangesTest(unittest.TestCase):

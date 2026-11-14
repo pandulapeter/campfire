@@ -48,6 +48,14 @@ jobs:
         uses: ./.github/actions/setup-jdk
       # Before Gradle, whose failure would skip every later step. The parser of a release's description is what
       # publish-all.yml stops a release with, before a build starts.
+      # The contact sheets of the release's screenshots are drawn with Pillow; the store scripts need only the standard
+      # library.
+      - name: Set up Python and Pillow
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Install Pillow
+        run: python3 -m pip install Pillow
       - name: Run the Python scripts' tests
         run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       # Every source file, script, workflow, XML resource and CLAUDE.md carries the MPL-2.0 header.

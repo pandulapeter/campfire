@@ -19,7 +19,9 @@ The renders of the app's other languages, in a folder per language (`hu/<name>.p
 same as the English one (nothing in it is translated) is left out, and an earlier copy of it removed, so those pages
 show the English file, which the visitor's browser may already have.
 The repository is the one passed with --website, or else a sibling of this one named as the owner's checkout
-is (CampfireWebsite) or as a plain clone is (campfire-website); where none is there, it stops and says so. A file the site no longer links stays where it is: remove it there.
+is (CampfireWebsite) or as a plain clone is (campfire-website); where none is there, it stops and says so. A --website
+folder that is empty or not there yet gets the website's tree of these images alone, which is how the release's
+screenshots.yml lays them out for its website-screenshots job to copy into a checkout. A file the site no longer links stays where it is: remove it there.
 
 Usage: python3 -I website_screenshots.py <render folder>/Website [--link-preview <png>] [--website <repo>]
 """
@@ -50,7 +52,9 @@ def website_assets(website):
     """The website repository's assets folder: the one asked for, which has to exist, or the first sibling found."""
     if website is not None:
         assets = website / "assets"
-        if not assets.is_dir():
+        if not website.exists() or not any(website.iterdir()):
+            assets.mkdir(parents=True)
+        elif not assets.is_dir():
             sys.exit(f"{website} is not the website's repository: it has no assets folder.")
         return assets
     projects = pathlib.Path(__file__).resolve().parents[5]

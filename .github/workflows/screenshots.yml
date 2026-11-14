@@ -1,0 +1,140 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Renders every store image, the website's screenshots and link preview, and the README banners from the checked-out
+# code (tools/screenshots, from the library it commits), frames them, checks every store image against its store's
+# rules (.github/scripts/store_images.py), and uploads them as one artifact, `screenshots`, kept 14 days:
+#
+#   store/            the store images as `--frame store` writes them: <store>/<language>/<device>-<n>.png
+#   website/          the website repository's own tree: assets/screenshots/**, assets/og-image.jpg
+#   readme/           documentation/screenshots/01-06.webp
+#   contact-sheets/   a sheet per store row and one of the website, to look at what a run publishes
+#
+# Called by publish-all.yml when a release's description says <!-- screenshots: true --> (or the app gained a
+# language), from the release's tag; the store workflows and the website and README jobs publish the artifact.
+# Dispatched by hand to look at what a release would publish, or to make the images a store dispatched by hand takes
+# (its screenshots_run input); it publishes nothing either way. It needs no secret: rendering reaches nothing outside
+# (tools/screenshots' Fakes.kt), and nothing it builds ships.
+#
+# macOS runners, since the iOS and Mac system chrome is set in SF Pro, which only macOS has. The render is split into
+# SHARDS jobs of two processes each (about 1.6 GB apiece fits a hosted runner), at most three, since an account runs
+# five macOS jobs at once and the tests' iOS job runs beside them during a release.
+
+name: 'Screenshots'
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag or branch to render (leave empty for this branch)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    name: Render (${{ matrix.shard }}/3)
+    runs-on: macos-latest
+    # A render that hangs would otherwise hold every store job of the release for GitHub's six hours.
+    timeout-minutes: 120
+    strategy:
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag || inputs.ref || github.ref }}
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Render
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          ./gradlew :tools:screenshots:run --args="--shard $SHARD/3 --parallel 2 --out $GITHUB_WORKSPACE/renders" 2>&1 \
+            | tee "$RUNNER_TEMP/render.log"
+          # A broken class fails a shot that the run may still count as written.
+          if grep -n 'Exception' "$RUNNER_TEMP/render.log"; then
+            echo "::error::The render printed an exception; its images are not to be trusted." >&2
+            exit 1
+          fi
+      - name: Keep the renders
+        uses: actions/upload-artifact@v7
+        with:
+          name: renders-${{ matrix.shard }}
+          path: renders
+          retention-days: 1
+
+  frame:
+    name: Frame, check, and upload
+    needs: render
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag || inputs.ref || github.ref }}
+      # As in every publish workflow: the tag decides what is rendered, the scripts come from the workflow's commit.
+      - name: Take the scripts and the actions from the workflow's commit
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          git fetch --depth 1 origin "$WORKFLOW_SHA"
+          git checkout FETCH_HEAD -- .github/scripts .github/actions
+      - name: Set up JDK 21 and Gradle
+        uses: ./.github/actions/setup-jdk
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Install Pillow
+        run: python3 -m pip install Pillow
+      - name: Download the renders
+        uses: actions/download-artifact@v8
+        with:
+          pattern: renders-*
+          merge-multiple: true
+          path: renders
+      - name: Frame the store images
+        run: ./gradlew :tools:screenshots:run --args="--frame store --renders $GITHUB_WORKSPACE/renders --out $GITHUB_WORKSPACE/screenshots/store"
+      # The banners go into documentation/screenshots of the checkout, the link preview beside the renders.
+      - name: Compose the README banners and the link preview
+        run: |
+          ./gradlew :tools:screenshots:run --args="--frame readme --renders $GITHUB_WORKSPACE/renders"
+          mkdir -p screenshots/readme
+          cp documentation/screenshots/*.webp screenshots/readme/
+      - name: Scale the website's screenshots
+        run: |
+          python3 -I .claude/skills/website-screenshots/scripts/website_screenshots.py renders/Website \
+            --link-preview renders/link-preview.png --website screenshots/website
+      # Before the upload, so that a store never gets an image it would refuse, nor half of them.
+      - name: Check every store image against its store's rules
+        run: |
+          {
+            echo "## Screenshots"
+            echo
+            python3 .github/scripts/store_images.py --check screenshots/store
+            echo
+            echo "Website: $(find screenshots/website -type f | wc -l | tr -d ' ') files; README: $(ls screenshots/readme | wc -l | tr -d ' ') banners."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Draw the contact sheets
+        run: python3 .github/scripts/contact_sheets.py screenshots/store screenshots/website screenshots/contact-sheets
+      - name: Upload the screenshots
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: screenshots
+          retention-days: 14

@@ -17,12 +17,13 @@ calls each heading is FIELDS; a heading written by hand in the console instead i
 the app's language (`fr`), never by a store's code for it: each store script asks the store which locales the listing
 has and writes a language's text into every one whose language part is that language (match_locales), so Play's
 `fr-FR` and `fr-CA` both get `fr`, and a regional copy added in a console is filled on the next release with no change
-here. A language's first listing is added by hand in every console, with its screenshots; a store script fails before
-uploading anything where one is missing, rather than publish a listing without them.
+here. A language the store has no locale for yet gets one (new_listing_locales), its listing created by the store
+script from the same file, in the store's code from LOCALES.
 
-With --check (run by tests.yml): every store folder holds exactly the app's languages, every heading of every file is
-a field this knows, and every field a store writes is in `en.md` and, unless it is English only, in every language's
-file. Prints one line per failure and exits 1, or prints nothing and exits 0.
+With --check (run by tests.yml): every store folder and the screenshots' texts hold exactly the app's languages, LOCALES
+names a locale for every one of them in every store, every heading of every file is a field this knows, and every field
+a store writes is in `en.md` and, unless it is English only, in every language's file. Prints one line per failure and
+exits 1, or prints nothing and exits 0.
 """
 
 import json
@@ -90,6 +91,23 @@ TERMS = {"Search terms"}
 
 # A store's code for a language that is not the language's ISO 639-1 code: Play still says iw for Hebrew.
 ALIASES = {"iw": "he"}
+
+# The locale a store's listing of each language is created in, where the store has none of that language yet: the
+# store's main locale of it, as its console offers it (Play and Partner Center name a country for most, App Store
+# Connect for some). A regional copy beside it (fr-CA) is still added in a console, then filled in by every release.
+LOCALES = {
+    "google-play": {
+        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "iw-IL", "hu": "hu-HU", "it": "it-IT", "ro": "ro",
+    },
+    "app-store": {
+        "de": "de-DE", "en": "en-US", "es": "es-ES", "fr": "fr-FR", "he": "he", "hu": "hu", "it": "it", "ro": "ro",
+    },
+    "microsoft-store": {
+        "de": "de-de", "en": "en-us", "es": "es-es", "fr": "fr-fr", "he": "he-il", "hu": "hu-hu", "it": "it-it", "ro": "ro-ro",
+    },
+}
+LOCALES["mac-app-store"] = LOCALES["app-store"]
+SCREENSHOT_TEXTS = "screenshot-texts"
 
 
 def sections(text):
@@ -163,9 +181,9 @@ def match_locales(locales, languages):
     return matched, missing, unknown
 
 
-def missing_listing_message(store_name, missing):
-    return (f"{store_name} has no listing in {', '.join(missing)}. A language's first listing is added by hand, once, with "
-            "its screenshots; add it there and run this again, or release with listings off for this store.")
+def new_listing_locales(store, missing):
+    """{the store's locale: language} to create a listing in, for each of the app's languages the store has none of."""
+    return {LOCALES[store][code]: code for code in missing}
 
 
 def size(text):
@@ -190,10 +208,19 @@ def notes_by_language(english):
 def check(folder=LISTINGS, resources=RESOURCES):
     errors = []
     languages = app_languages(resources)
+    texts = sorted(path.stem for path in (folder / SCREENSHOT_TEXTS).glob("*.md"))
+    if texts != languages:
+        errors.append(f"{SCREENSHOT_TEXTS}: has {', '.join(texts)}, and the app has {', '.join(languages)}")
     for store in STORES:
         files = {path.stem: path for path in (folder / store).glob("*.md")}
         if sorted(files) != languages:
             errors.append(f"{store}: has {', '.join(sorted(files))}, and the app has {', '.join(languages)}")
+        unnamed = [code for code in languages if code not in LOCALES[store]]
+        if unnamed:
+            errors.append(f"{store}: store_listings.py's LOCALES names no locale for {', '.join(unnamed)}")
+        for locale, code in ((locale, code) for code, locale in LOCALES[store].items()):
+            if language(locale) != code:
+                errors.append(f"{store}: LOCALES' {locale} is read as {language(locale)}, not {code}")
         known = set(FIELDS[store]) | MANUAL[store]
         for code, path in sorted(files.items()):
             fields = parse(path.read_text(encoding="utf-8"))
