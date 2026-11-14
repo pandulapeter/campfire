@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -92,11 +93,20 @@ internal suspend fun render(
         },
     )
     var time = 0L
+    // Drawing a frame of a device's whole screen is most of what a render costs, so a long wait draws one every
+    // SETTLE_STEP_MILLIS rather than every frame: animations follow the scene's clock, not how many frames it drew, so
+    // they end where they would have, and the real pause, which the app's own coroutines need to land, is as long. A
+    // short wait times something, a metronome beat's pulse caught a few frames in, which starts on the first frame drawn
+    // after it, so it keeps every frame.
     suspend fun settle(milliseconds: Long) {
-        repeat((milliseconds / FRAME_MILLIS).toInt().coerceAtLeast(1)) {
-            time += FRAME_MILLIS * 1_000_000
+        val stepSize = if (milliseconds < LONG_WAIT_MILLIS) FRAME_MILLIS else SETTLE_STEP_MILLIS
+        var left = milliseconds.coerceAtLeast(FRAME_MILLIS)
+        while (left > 0) {
+            val step = minOf(left, stepSize)
+            time += step * 1_000_000
             screen.render(time)
-            delay(FRAME_MILLIS)
+            delay(step)
+            left -= step
         }
     }
     var frameCount = 0
@@ -129,7 +139,9 @@ internal suspend fun render(
         settle(SETTLE_MILLIS)
         // Covers arrive on their own time, a few at once, so the shot waits until the screen stops changing rather
         // than for a fixed while that a slower start would outlast.
-        fun frameHash() = screen.render(time).encodeToData(EncodedImageFormat.PNG)?.bytes?.contentHashCode()
+        fun frameHash() = screen.render(time).toComposeImageBitmap().let { frame ->
+            IntArray(frame.width * frame.height).also { frame.readPixels(it) }.contentHashCode()
+        }
         var previous = frameHash()
         var checks = 0
         while (checks++ < STABLE_CHECKS) {
@@ -208,6 +220,8 @@ private val ImpersonatedPlatform.canShare
     }
 
 private const val SETTLE_MILLIS = 1_500L
+private const val SETTLE_STEP_MILLIS = 100L
+private const val LONG_WAIT_MILLIS = 500L
 private const val STABLE_INTERVAL_MILLIS = 750L
 private const val STABLE_CHECKS = 20
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
