@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.screenshots
 
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
-import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.skia.Image
@@ -24,9 +23,9 @@ import kotlin.system.exitProcess
  *
  * `./gradlew :tools:screenshots:run` writes them to `tools/screenshots/renders` (gitignored), replacing what an earlier
  * run left there; `--args="--out <folder>"` writes them elsewhere, and `--only <names>` (comma separated, each a device's enum name, a
- * shot's id, or `listing`, `store-banners`, `website`, `readme-banners` or `promo`) renders part of them, and `--platforms <names>`
- * (comma separated, each an [ImpersonatedPlatform]'s name) only the devices of those platforms, since the iOS and Mac
- * chrome needs a Mac's own fonts and the rest can be rendered anywhere. `--shard <index>/<count>` renders every
+ * shot's id, or `listing`, `store-banners`, `website`, `readme-banners` or `promo`) renders part of them, and `--apple-chrome true` only
+ * the devices whose system chrome is set in Apple's own fonts ([Device.hasAppleChrome]), which only a Mac has, and
+ * `--apple-chrome false` the rest, which can be rendered anywhere. `--shard <index>/<count>` renders every
  * count-th image from the index-th (to split a run across machines), and `--parallel <processes>` splits what is left
  * across that many processes of the tool ([renderInParallel]), by default half the processors and at most four, as each
  * takes about 1.6 GB. `--frame store` renders nothing: it frames the renders (from `--renders <folder>`, by default the
@@ -59,11 +58,7 @@ fun main(args: Array<String>) {
     }
     val output = options["--out"]?.let(::File) ?: File(requireProperty("campfire.screenshots.renders")).apply { deleteRecursively() }
     val only = options["--only"]?.split(',')?.map(String::trim)?.toSet()
-    val platforms = options["--platforms"]?.split(',')?.map(String::trim)?.toSet()
-    platforms?.let { names ->
-        val unknown = names - ImpersonatedPlatform.entries.map { it.name }.toSet()
-        require(unknown.isEmpty()) { "--platforms takes ${ImpersonatedPlatform.entries.joinToString()}, not ${unknown.joinToString()}." }
-    }
+    val appleChrome = options["--apple-chrome"]?.let { requireNotNull(it.toBooleanStrictOrNull()) { "--apple-chrome takes true or false, not $it." } }
     val shard = options["--shard"]?.let(Shard::parse) ?: Shard(index = 0, count = 1)
     val processes = options["--parallel"]?.toInt() ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, MAX_DEFAULT_PROCESSES)
     val library = File(requireProperty("campfire.screenshots.library"))
@@ -106,7 +101,7 @@ fun main(args: Array<String>) {
     val byNameOnly = setOf("promo")
     val renders = (listing + bannerJobs + websiteJobs + promoJobs)
         .filter { if (only == null) it.set !in byNameOnly else it.set in only || (it.set !in byNameOnly && (it.device.name in only || it.shot.id in only)) }
-        .filter { platforms == null || it.device.platform.name in platforms }
+        .filter { appleChrome == null || it.device.hasAppleChrome == appleChrome }
         .filterIndexed { index, _ -> index % shard.count == shard.index }
     if (processes > 1 && renders.size > 1) {
         exitProcess(renderInParallel(options = options, output = output, shard = shard, processes = processes.coerceAtMost(renders.size)))

@@ -139,6 +139,9 @@ internal enum class Device(
 
     val isPhone get() = this == ANDROID_PHONE || this == IPHONE
 
+    /** Whether the system chrome drawn around the app is set in Apple's own fonts ([Fonts]), which only a Mac has. */
+    val hasAppleChrome get() = chrome != SystemChrome.None && (platform == ImpersonatedPlatform.IOS || platform == ImpersonatedPlatform.MACOS)
+
     val width: Dp get() = (widthPx / density).dp
 
     val height: Dp get() = (heightPx / density).dp
