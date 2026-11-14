@@ -97,5 +97,7 @@
         "soft rock": "yellow",
         "folk": "lime",
         "jazz": "purple"
-    }
+    },
+    "isRandomPicksEnabled": false,
+    "isRandomPicksQuestionAnswered": true
 }
