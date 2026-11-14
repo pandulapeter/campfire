@@ -307,8 +307,8 @@ internal val shots = listOf(
     // title at the song's 80 BPM in 3/4, and the tuner sheet over it, the A string heard a little flat. The click is not
     // playing, since opening the tuner sheet stops it. The sheet covers most of the screen, so what is left of the song
     // shows what the other shots do not: the Chords and Scales sections are folded, and a phone, whose first page would
-    // be nothing but the song's controls above the sheet, reads the song as one scrolling column moved on to its intro,
-    // a chord grid, with the sheet music after it.
+    // be nothing but the song's controls above the sheet, reads the song as one scrolling column moved on so that its
+    // intro, a chord grid, and the start of its sheet music show above the sheet.
     Shot(
         id = "03-metronome-tuner",
         uiMode = UserPreferences.UiMode.LIGHT,
@@ -337,7 +337,7 @@ internal val shots = listOf(
         },
         drive = {
             openSong(AMAZING_GRACE)
-            if (device.isPhone) scrollTo(string("song_editor_section_intro"), INTRO_Y)
+            if (device.isPhone) scrollTo(string("song_details_section_abc"), SHEET_MUSIC_Y)
             viewModel.dialogHost.showDialog(DialogType.Tuner)
             settle()
             (KoinPlatform.getKoin().get<Tuner>() as ScriptedTuner).hear(reading(note = 45, cents = -12f))
@@ -451,8 +451,8 @@ private const val EDITOR_PREVIEW_DETAILS_Y = 0.02f
 /** Where the editor's preview scrolls [SONG_COMMENT] to, as a fraction of the screen's height: under the Shortcuts. */
 private const val EDITOR_PREVIEW_COMMENT_Y = 0.27f
 
-/** Where a phone's tuner shot scrolls the Intro heading to, as a fraction of the screen's height: just under the metronome panel. */
-private const val INTRO_Y = 0.2f
+/** Where a phone's tuner shot scrolls the Sheet music heading to, as a fraction of the screen's height: the intro above it. */
+private const val SHEET_MUSIC_Y = 0.34f
 
 internal const val FRAME_MILLIS = 16L
 private const val SCROLL_FRAMES = 24
