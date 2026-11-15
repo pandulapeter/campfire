@@ -143,6 +143,11 @@ def read(body, languages=None, previous_languages=None):
     for store, switch, value in SWITCH.findall(body):
         if store not in STORES:
             errors.append(f"The release names a store I do not know: \"{store} {switch}: {value}\". It knows {', '.join(STORES)}.")
+        elif store == "microsoft-store" and switch == "submit":
+            # Partner Center applies nothing in a draft made through the API before the API commits it, and a draft
+            # finished in Partner Center by hand is one Microsoft says the API may never commit again.
+            errors.append(f"The release says \"microsoft-store submit: {value}\"; the Microsoft Store is always "
+                          "submitted, since Partner Center applies a draft only when the run commits it. Take it out.")
         elif value.lower() not in {"true", "false"}:
             errors.append(f"The release says \"{store} {switch}: {value}\"; it takes true or false.")
         elif (store, switch) not in seen:
@@ -197,7 +202,8 @@ def read(body, languages=None, previous_languages=None):
     }
     for switch in SWITCHES:
         for store in STORES:
-            outputs[f"{store.replace('-', '_')}_{switch}"] = switches[switch][store]
+            if not (store == "microsoft-store" and switch == "submit"):
+                outputs[f"{store.replace('-', '_')}_{switch}"] = switches[switch][store]
     return {"outputs": outputs, "warnings": warnings, "notices": notices}
 
 

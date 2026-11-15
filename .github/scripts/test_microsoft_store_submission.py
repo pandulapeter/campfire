@@ -61,7 +61,7 @@ def write_screenshots(folder, *languages):
 
 class RunTest(unittest.TestCase):
 
-    def run_main(self, draft, *, prepare=False, listings=True, screenshots=None):
+    def run_main(self, draft, *, listings=True, screenshots=None):
         calls = []
 
         def request(method, url, body=None):
@@ -91,7 +91,7 @@ class RunTest(unittest.TestCase):
                     mock.patch.dict(os.environ, {"RELEASE_NOTES_BY_LANGUAGE": '{"de": "- Neu"}'}), \
                     mock.patch("builtins.print"):
                 try:
-                    microsoft_store_submission.main("Campfire", "2.0.0.0", package, notes, prepare, listings,
+                    microsoft_store_submission.main("Campfire", "2.0.0.0", package, notes, listings,
                                                     folder_of_screenshots)
                 except SystemExit:
                     pass
@@ -129,11 +129,6 @@ class RunTest(unittest.TestCase):
         self.assertEqual("- New", base["releaseNotes"])
         self.assertEqual("old", base["description"])
 
-    def test_prepare_writes_the_listings_and_uploads_nothing(self):
-        puts, uploaded, _ = self.run_main(submission("en-us", "de-de"), prepare=True)
-        self.assertFalse(uploaded)
-        self.assertEqual("Lang", puts[0]["listings"]["de-de"]["baseListing"]["description"])
-        self.assertEqual(["old.msix"], [package["fileName"] for package in puts[0]["applicationPackages"]])
 
 
     def test_screenshots_replace_the_listings_and_leave_the_other_images(self):
@@ -157,11 +152,6 @@ class RunTest(unittest.TestCase):
         again, _, _ = self.run_main(draft, screenshots=["en", "de"])
         self.assertEqual(first[0]["listings"], again[0]["listings"])
 
-    def test_prepare_leaves_the_images_alone(self):
-        puts, uploaded, _ = self.run_main(with_images(submission("en-us", "de-de")), prepare=True, screenshots=["en", "de"])
-        self.assertFalse(uploaded)
-        self.assertEqual(with_images(submission("de-de"))["listings"]["de-de"]["baseListing"]["images"],
-                         puts[0]["listings"]["de-de"]["baseListing"]["images"])
 
     def test_a_missing_language_without_screenshots_fails_before_anything_is_sent(self):
         puts, uploaded, _ = self.run_main(submission("en-us"), screenshots=["en"])
@@ -183,12 +173,6 @@ class RunTest(unittest.TestCase):
         self.assertEqual({"PendingUpload"}, {image["fileStatus"] for image in base["images"]})
         self.assertIn("screenshot-de-windows-1.png", self.uploaded_images)
 
-    def test_prepare_creates_a_missing_languages_text_without_images(self):
-        puts, uploaded, _ = self.run_main(submission("en-us"), prepare=True)
-        self.assertFalse(uploaded)
-        base = puts[0]["listings"]["de"]["baseListing"]
-        self.assertEqual("Lang", base["description"])
-        self.assertEqual([], base["images"])
 
 
 class UploadTest(unittest.TestCase):
@@ -212,12 +196,12 @@ class UploadTest(unittest.TestCase):
 class FlagsTest(unittest.TestCase):
 
     def test_flags(self):
-        self.assertEqual((True, False, "store"), microsoft_store_submission.parse_flags(
-            ["--no-listings", "--screenshots", "store", "--prepare"]))
-        self.assertEqual((False, True, None), microsoft_store_submission.parse_flags([]))
+        self.assertEqual((False, "store"), microsoft_store_submission.parse_flags(["--no-listings", "--screenshots", "store"]))
+        self.assertEqual((True, None), microsoft_store_submission.parse_flags([]))
         self.assertIsNone(microsoft_store_submission.parse_flags(["--screenshots"]))
-        self.assertIsNone(microsoft_store_submission.parse_flags(["--screenshots", "--prepare"]))
-        self.assertIsNone(microsoft_store_submission.parse_flags(["--prepare", "--prepare"]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--screenshots", "--no-listings"]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--no-listings", "--no-listings"]))
+        self.assertIsNone(microsoft_store_submission.parse_flags(["--prepare"]))
 
 
 if __name__ == "__main__":

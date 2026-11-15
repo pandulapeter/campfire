@@ -25,7 +25,6 @@
 #   <!-- play-store submit: true -->
 #   <!-- app-store submit: true -->
 #   <!-- mac-app-store submit: true -->
-#   <!-- microsoft-store submit: true -->
 #   <!-- play-store listings: true -->
 #   <!-- app-store listings: true -->
 #   <!-- mac-app-store listings: true -->
@@ -38,9 +37,9 @@
 # Microsoft Store as the "What's new in this version" of the submission the Windows job makes. A language without a
 # block gets the English. The priority is Play's alone (see the Updates section of CLAUDE.md for what the number
 # decides). A store's "submit: false" is its workflow's submit input turned off: the release is uploaded and left there
-# as a draft - a draft Play release, a version prepared in App Store Connect, an uncommitted Partner Center submission
-# (which still holds the last release's package, for the run's .msix artifact to be uploaded into by hand) - for
-# whatever it needs by hand, and is sent from there. Every store's listing text is written from
+# as a draft - a draft Play release, a version prepared in App Store Connect - for whatever it needs by hand, and is
+# sent from there. The Microsoft Store has no such switch and is always submitted, since Partner Center applies a draft
+# made through the API only when the API commits it. Every store's listing text is written from
 # documentation/store-listings/<store>/<language>.md by its workflow (.github/scripts/store_listings.py); a store's
 # "listings: false" leaves that store's listing text as it is in its console and writes only the notes. All of them
 # are optional. Without the English notes the visible description stands in for them, with its markdown and HTML (the
@@ -84,7 +83,6 @@ jobs:
       play_store_submit: ${{ steps.notes.outputs.play_store_submit }}
       app_store_submit: ${{ steps.notes.outputs.app_store_submit }}
       mac_app_store_submit: ${{ steps.notes.outputs.mac_app_store_submit }}
-      microsoft_store_submit: ${{ steps.notes.outputs.microsoft_store_submit }}
       release_notes_by_language: ${{ steps.notes.outputs.release_notes_by_language }}
       play_store_listings: ${{ steps.notes.outputs.play_store_listings }}
       app_store_listings: ${{ steps.notes.outputs.app_store_listings }}
@@ -348,7 +346,6 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
-      submit: ${{ needs.prepare.outputs.microsoft_store_submit == 'true' }}
       release_notes_by_language: ${{ needs.prepare.outputs.release_notes_by_language }}
       listings: ${{ needs.prepare.outputs.microsoft_store_listings == 'true' }}
       screenshots: ${{ needs.screenshots.result == 'success' }}

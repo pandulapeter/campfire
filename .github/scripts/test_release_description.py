@@ -22,7 +22,7 @@ class ReadTest(unittest.TestCase):
         outputs = read("Fixes **the** [editor](https://example.com) and `sync`.")["outputs"]
         self.assertEqual(outputs["release_notes"], "Fixes the editor and sync.")
         self.assertEqual(outputs["update_priority"], "0")
-        for store in ["play_store", "app_store", "mac_app_store", "microsoft_store"]:
+        for store in ["play_store", "app_store", "mac_app_store"]:
             self.assertEqual(outputs[f"{store}_submit"], "true")
 
     def test_no_notes_anywhere_give_the_default_line(self):
@@ -61,7 +61,7 @@ class ReadTest(unittest.TestCase):
     def test_listings_values(self):
         outputs = read("<!-- microsoft-store listings: false -->")["outputs"]
         self.assertEqual(outputs["microsoft_store_listings"], "false")
-        self.assertEqual(outputs["microsoft_store_submit"], "true")
+        self.assertNotIn("microsoft_store_submit", outputs)
         self.assertEqual(outputs["play_store_listings"], "true")
         for body in ["<!-- app-store listings: no -->", "<!-- app-store listing: false -->", "<!-- appstore listings: false -->"]:
             with self.assertRaises(ReleaseDescriptionError):
@@ -105,11 +105,16 @@ class ReadTest(unittest.TestCase):
         with self.assertRaises(ReleaseDescriptionError):
             read("<!-- app-store update-priority: 4 -->")
 
-    def test_partner_center_limit_whatever_the_submit_value(self):
+    def test_partner_center_limit(self):
+        with self.assertRaises(ReleaseDescriptionError) as context:
+            read(notes_of(1501))
+        self.assertTrue(any("Partner Center takes" in message for message in context.exception.messages))
+
+    def test_the_microsoft_store_has_no_submit_switch(self):
         for value in ["true", "false"]:
             with self.assertRaises(ReleaseDescriptionError) as context:
-                read(notes_of(1501) + f"<!-- microsoft-store submit: {value} -->")
-            self.assertTrue(any("Partner Center" in message for message in context.exception.messages))
+                read(f"<!-- microsoft-store submit: {value} -->")
+            self.assertTrue(any("always submitted" in message for message in context.exception.messages))
 
     def test_app_store_connect_limit_for_either_apple_store(self):
         for store in ["app-store", "mac-app-store"]:
@@ -180,7 +185,6 @@ class ReadTest(unittest.TestCase):
             "<!-- play-store submit: true -->\n"
             "<!-- app-store submit: true -->\n"
             "<!-- mac-app-store submit: true -->\n"
-            "<!-- microsoft-store submit: true -->\n"
         )
         outputs = read(body)["outputs"]
         self.assertEqual(outputs["release_notes"], "- bullet one\n- bullet two")

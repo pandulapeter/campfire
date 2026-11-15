@@ -41,11 +41,11 @@ The workflows that test and publish Campfire. The `campfire.*` properties and `l
 `publish-all.yml` reads hidden comments in the release description (format in its header): the `whats-new` notes (one
 block per app language, named by the language alone: a country in the tag stops the release, since each store's
 locales are filled in from the language), Play's `update-priority`, a `submit` and a `listings` switch per store
-(`submit: false` leaves a draft, `listings: false` writes only the notes), and `screenshots` (below).
+(`submit: false` leaves a draft, except on the Microsoft Store, which is always submitted; `listings: false` writes only the notes), and `screenshots` (below).
 
 - Anything unreadable is not taken as absent, since every default is the stronger action: an unknown store, a switch
   other than `true`/`false`, a priority outside 0–5, a `whats-new` block in a language the app lacks, or notes over
-  App Store Connect's 4 000 or Partner Center's 1 500 characters (whatever `submit` says) stop the release before any
+  App Store Connect's 4 000 or Partner Center's 1 500 characters stop the release before any
   build. Over Play's 500 is a warning (Play gets the lines that fit).
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown and HTML (the store badges), then "Bug fixes and
@@ -92,8 +92,7 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   keeps its images.
 - **By store**: Play replaces phone, 7" and 10" screenshots and the feature graphic in the release's edit. App Store
   Connect replaces the 6.9" iPhone, 13" iPad, and Mac sets of each localization and submits only once every image is
-  `COMPLETE`. Partner Center replaces the desktop screenshots in the submission it commits; with `submit` off they wait,
-  since it takes an uploaded file only on the API's commit.
+  `COMPLETE`. Partner Center replaces the desktop screenshots in the submission it commits.
 - **Still by hand** (`store_images.py`'s `MANUAL`): Play's Chromebook screenshots and icon, the iPhone Duo set (no
   display type yet), Apple's product page header and search results image, and Microsoft's poster and box art.
 - **The website and the README**: `website-screenshots` rsyncs the artifact over the website's `assets/screenshots/`
@@ -128,9 +127,10 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 - **A draft the script made whose commit failed** is reused: only package, "What's new", and listing text replaced.
 - **A draft started in Partner Center stops the run**, untouched: the API cannot change a submission it did not create.
   Finish it there with the run's `.msix` artifact, or delete it.
-- **`submit` off** writes the run's own draft without the package or new screenshots (Partner Center only takes an
-  API-uploaded file when the API commits); finish it in Partner Center with the run's artifact, or let a later run take
-  it up.
+- **Always submitted, no `submit` switch** (a `microsoft-store submit` comment stops the release): Partner Center
+  applies nothing in an API-made draft (text, package, or images) until the API commits it, and Microsoft warns that
+  one changed in Partner Center may never be committed by the API again. An uncommitted draft the script made is taken
+  up by the next run.
 - A committed submission with this version is left alone (reruns succeed); one with another version stops the run.
 - Auth: Microsoft Entra application with the Manager role and **no secret** — a federated credential trusts GitHub's
   OIDC token for `repo:pandulapeter/campfire:environment:microsoft-store`, hence the `microsoft-store` environment and

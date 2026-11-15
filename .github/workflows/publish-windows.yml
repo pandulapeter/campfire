@@ -9,12 +9,9 @@
 # Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and submits it for certification with the
 # release's notes as its "What's new in this version", to be published as soon as it passes
 # (.github/scripts/microsoft_store_submission.py). The package is kept as an artifact of the run as well, for an upload
-# made by hand. A green run means submitted, not certified - certification answers by email. With "submit" off - the box
-# of a hand dispatch, or a release whose description says <!-- microsoft-store submit: false --> - it leaves the
-# submission as a draft in Partner Center with the notes written but the last release's package still in it, for the
-# package to be replaced with the run's campfire-msix artifact and the submission sent from there: Partner Center only
-# takes in a file the API uploaded when the API commits the submission, so an upload would never reach a draft sent from
-# Partner Center. For the same reason the release's screenshots go in only with a submission the run commits.
+# made by hand. A green run means submitted, not certified - certification answers by email. It always submits: Partner
+# Center applies nothing written into a draft through the API - text, package, or images - before the API commits it,
+# and a submission the API made and Partner Center then changed may never be committed again.
 # The listing text of documentation/store-listings/microsoft-store is written into every language's listing of the
 # submission, with each language's notes; with "listings" off - the box, or <!-- microsoft-store listings: false --> -
 # only the notes are written.
@@ -45,9 +42,6 @@ on:
       release_notes:
         type: string
         required: false
-      submit:
-        type: boolean
-        default: true
       release_notes_by_language:
         type: string
         required: false
@@ -67,10 +61,6 @@ on:
         description: '"What''s new in this version" for the submission, use \n for line breaks (leave empty to take the release''s notes in every language)'
         type: string
         required: false
-      submit:
-        description: 'Submit for certification (off: leave a draft in Partner Center, to upload the run''s .msix artifact into by hand)'
-        type: boolean
-        default: true
       listings:
         description: 'Write the listing text of documentation/store-listings in every language (off: write only the release notes)'
         type: boolean
@@ -231,14 +221,11 @@ jobs:
           MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
           RELEASE_NOTES: ${{ steps.notes.outputs.release_notes || inputs.release_notes }}
           TYPED_NOTES: ${{ github.event_name == 'workflow_dispatch' && inputs.release_notes != '' }}
-          SUBMIT: ${{ inputs.submit }}
           RELEASE_NOTES_BY_LANGUAGE: ${{ steps.notes.outputs.release_notes_by_language || inputs.release_notes_by_language }}
           LISTINGS: ${{ inputs.listings }}
           SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
         run: |
-          # Without the submission the run writes the notes and leaves the package (and new screenshots) for a run that submits.
           FLAGS=()
-          [ "$SUBMIT" = true ] || FLAGS+=(--prepare)
           [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
           [ -z "$SCREENSHOTS" ] || FLAGS+=(--screenshots "$SCREENSHOTS")
           # A single-line text box has no other way to ask for a line break; the notes read from the release are

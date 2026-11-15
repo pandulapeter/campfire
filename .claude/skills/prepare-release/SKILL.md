@@ -341,7 +341,6 @@ all of them are always written:
 <!-- play-store submit: true -->
 <!-- app-store submit: true -->
 <!-- mac-app-store submit: true -->
-<!-- microsoft-store submit: true -->
 <!-- play-store listings: true -->
 <!-- app-store listings: true -->
 <!-- mac-app-store listings: true -->
@@ -380,10 +379,9 @@ all of them are always written:
   it and change it before publishing; what each number does is in `:presentation`'s `ui/update/CLAUDE.md`.
   Never pick a number above 0 on your own; mention the line when reporting back, so a release that fixes
   something serious can be raised before it is published.
-- **`<store> submit`** says, per store, whether the release is sent for review / certification (`true`) or
-  only uploaded and left as a draft there (`false`), to be looked over and sent from the store's console (the
-  Microsoft Store's draft keeps the
-  last release's package, which is replaced there with the Windows run's `.msix` artifact). Always write all four, **`true`**
+- **`<store> submit`** says, per store, whether the release is sent for review (`true`) or only uploaded and left
+  as a draft there (`false`), to be looked over and sent from the store's console. The Microsoft Store has no such
+  switch: it is always submitted, and a `microsoft-store submit` line stops the release. Always write all three, **`true`**
   unless the user asked otherwise, so they can see them and flip one before publishing; anything but
   `true` or `false` stops the release. Mention them when reporting back.
 - **`screenshots`** renders every store image, the website's screenshots, and the README banners from the tag and
