@@ -50,8 +50,8 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 - Text is carried as is, backslashes included; only the hand-dispatched form's `\n` is expanded.
 - Fallbacks: the visible description without markdown and HTML (the store badges), then "Bug fixes and
   improvements.", or (hand dispatch with nothing given) the commit log since the previous tag. A language without a
-  block, and every language of notes typed into a hand dispatch, gets the English notes. iOS and macOS dispatched
-  with no notes read the release's description instead, every language's.
+  block, and every language of notes typed into a hand dispatch, gets the English notes. iOS, macOS, and Windows
+  dispatched with no notes read the release's description instead, every language's.
 - Play's `update_priority` decides whether the old version announces the new one: `:presentation`'s `ui/update/CLAUDE.md`.
 
 ### Store listings are written by the release
