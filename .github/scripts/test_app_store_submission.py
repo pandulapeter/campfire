@@ -49,7 +49,7 @@ class WriteListingTest(unittest.TestCase):
 
     def run_listing(self, platform="IOS", locales=("en-US", "de-DE", "de-AT"), info_locales=None,
                     info_state="PREPARE_FOR_SUBMISSION", has_earlier=True, write_listings=True, refuse=None,
-                    privacy_pages=()):
+                    pages=()):
         calls = []
         info_locales = locales if info_locales is None else info_locales
 
@@ -79,7 +79,7 @@ class WriteListingTest(unittest.TestCase):
 
         notes = {"de": "- Neu", "en": "- New"}
         with mock.patch.object(app_store_submission, "request", request), \
-                mock.patch.object(app_store_submission, "page_exists", lambda url: url in privacy_pages), \
+                mock.patch.object(app_store_submission, "page_exists", lambda url: url in pages), \
                 mock.patch.object(store_listings, "app_languages", return_value=["de", "en"]), \
                 mock.patch.object(store_listings, "read", read), \
                 mock.patch("builtins.print"):
@@ -116,7 +116,7 @@ class WriteListingTest(unittest.TestCase):
 
     def test_a_missing_language_gets_both_localizations(self):
         patches, calls, failed, posts = self.run_listing(
-            locales=("en-US",), privacy_pages=("https://campfire-songbook.com/de/privacy/",),
+            locales=("en-US",), pages=("https://campfire-songbook.com/de/privacy/",),
         )
         self.assertFalse(failed)
         [version_localization] = posts["/appStoreVersionLocalizations"]
@@ -134,6 +134,14 @@ class WriteListingTest(unittest.TestCase):
         # Created, then only the existing ones written.
         self.assertNotIn("/appStoreVersionLocalizations/v-de-DE", patches)
         self.assertIn("/appStoreVersionLocalizations/v-en-US", patches)
+
+    def test_the_links_name_the_languages_own_pages_where_the_website_has_them(self):
+        patches, _, _, _ = self.run_listing(pages=("https://s/de/", "https://m/de/"))
+        for locale in ["de-DE", "de-AT"]:
+            attributes = patches[f"/appStoreVersionLocalizations/v-{locale}"]
+            self.assertEqual(("https://s/de/", "https://m/de/"), (attributes["supportUrl"], attributes["marketingUrl"]))
+        english = patches["/appStoreVersionLocalizations/v-en-US"]
+        self.assertEqual(("https://s/", "https://m/"), (english["supportUrl"], english["marketingUrl"]))
 
     def test_a_first_version_creates_a_language_without_whats_new(self):
         _, _, _, posts = self.run_listing(locales=("en-US",), has_earlier=False)

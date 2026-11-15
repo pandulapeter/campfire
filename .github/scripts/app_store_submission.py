@@ -62,6 +62,7 @@ import http.client
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -215,6 +216,18 @@ def write_localizations(path, kind, localizations, attributes_of):
         }})
 
 
+def localized_page(url, code):
+    """
+    The website's page `url` names, in the app's language `code` where the website has it (its path under /<code>/, as
+    PRIVACY_POLICY_URL's is), else `url` itself: the listing files name the English pages only.
+    """
+    if code == "en":
+        return url
+    parts = urllib.parse.urlsplit(url)
+    own = urllib.parse.urlunsplit(parts._replace(path=f"/{code}{parts.path}"))
+    return own if page_exists(own) else url
+
+
 def page_exists(url):
     """Whether the page answers 200; anything else, a failed connection included, is a page to do without."""
     try:
@@ -325,9 +338,16 @@ def write_listing(app_id, platform, version, notes, has_earlier, write_listings)
     # The links are written into every localization, since one App Store Connect added by itself has none.
     urls = {field: text for field, text in ios_listings["en"].items() if field in URL_FIELDS} if write_listings else {}
 
+    pages = {}
+
     # The first version of a platform has nothing to say "new" about, and App Store Connect refuses the field there.
     def attributes_of(code):
         attributes = {**urls, **fields(code, LOCALIZATION_FIELDS)} if write_listings else {}
+        for field in URL_FIELDS & attributes.keys():
+            key = (attributes[field], code)
+            if key not in pages:
+                pages[key] = localized_page(attributes[field], code)
+            attributes[field] = pages[key]
         if has_earlier:
             attributes["whatsNew"] = notes(code)
         return attributes

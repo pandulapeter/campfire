@@ -71,7 +71,8 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   absent and stops the release where it says `screenshots: false` or a store's `listings: false`.
 - **Never touched**: the Mac's App Sandbox Information (not in the API). The Microsoft title is written from each
   language's file, so a language's name is reserved in Partner Center before its listing is first written.
-  Apple's copyright, URLs, and review notes come from `en.md`.
+  Apple's copyright, URLs, and review notes come from `en.md`; each language's support and
+  marketing URL is the website's page in that language (`/<code>/` before the path) where it answers, else English.
 
 ### Screenshots are rendered and published by the release
 
@@ -145,7 +146,7 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 - macOS: `packageReleasePkg` on Apple silicon (asking for the `.pkg` is what signs and sandboxes it). A store-signed
   build only starts under TestFlight, so the start check runs on an ad-hoc-signed copy with the same entitlements minus
   the two naming the App ID. The `build_number` input re-uploads a release under a new number; `upload` off builds
-  nothing and only writes the listing of the build already uploaded under that number.
+  nothing and only writes the listing of the build already uploaded under that number (iOS too).
 - iOS: archived with the App Store profiles of the app and the share extension (`app_store_signing.py profile`, never
   one Xcode made, which manual signing refuses), uploaded to TestFlight. Xcode starts Gradle without properties, so the
   sync key goes into `local.properties`, which the version build phase also reads (last value wins) — how the

@@ -31,6 +31,8 @@
 #
 # Called by publish-all.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
 # accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
+# With "upload" off, a hand dispatch builds nothing and only writes the version's listing for the build App Store
+# Connect already has under that number, such as one whose release stopped before its submission.
 
 name: 'Publish iOS'
 
@@ -69,6 +71,10 @@ on:
         description: '"What''s New" for the submission, use \n for line breaks (leave empty to take the release''s notes in every language)'
         type: string
         required: false
+      upload:
+        description: 'Build and upload (off: write the listing of the build already uploaded under the build number)'
+        type: boolean
+        default: true
       submit:
         description: 'Submit for review (off: leave the version prepared in App Store Connect, to finish there)'
         type: boolean
@@ -148,10 +154,12 @@ jobs:
             exit 1
           fi
       - name: Set up JDK 21 and Gradle
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         uses: ./.github/actions/setup-jdk
       # The release framework is linked inside the Gradle daemon, which runs out of the 4 GB gradle.properties gives
       # it; the user's gradle.properties overrides the project's, so a developer's machine keeps its own setting.
       - name: Give the Gradle daemon more memory
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           mkdir -p ~/.gradle
           echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
@@ -225,6 +233,7 @@ jobs:
       # Signed by hand, with no API key and so no way for Xcode to make a certificate or a profile of its own. A setting
       # given here holds for every target, so each one picks its profile by the C identifier of its bundle ID.
       - name: Archive the app
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           xcodebuild archive \
             -project "$XCODE_PROJECT" \
@@ -242,6 +251,7 @@ jobs:
       # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one. The share
       # extension has a phase of its own, and App Store Connect refuses an extension whose version differs from its app's.
       - name: Check the archived version
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           APP="$RUNNER_TEMP/Campfire.xcarchive/Products/Applications/Campfire.app"
           for PLIST in "$APP/Info.plist" "$APP/PlugIns/ShareExtension.appex/Info.plist"; do
@@ -254,6 +264,7 @@ jobs:
             fi
           done
       - name: Export the .ipa
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           TEAM_ID=$(sed -n 's/^TEAM_ID *= *//p' app/ios/iosApp/Configuration/Config.xcconfig)
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
@@ -290,6 +301,7 @@ jobs:
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
       - name: Upload to App Store Connect
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
