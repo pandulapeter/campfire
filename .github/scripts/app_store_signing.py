@@ -33,8 +33,12 @@ team has as many as Apple allows and every build is refused.
 Never use this for a Developer ID certificate: an app signed outside the store is checked against it on every Mac that
 opens it. It only needs the Python standard library and the system's openssl.
 
+    app_store_signing.py access
     app_store_signing.py certificate <certificateType> <keychain>
     app_store_signing.py profile <profileType> <bundle identifier> <certificateType> <output file>
+
+`access` asks for the certificates once and nothing else, so that a release stops before any build where the API
+refuses the key, such as when Apple has a new agreement waiting to be accepted (403). It needs no signing key.
 
 Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNING_KEY_PATH, the signing key as PEM.
 """
@@ -267,7 +271,10 @@ def save_profile(profile_type, bundle_identifier, certificate_type, output):
 
 if __name__ == "__main__":
     command, arguments = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else (None, [])
-    if command == "certificate" and len(arguments) == 2:
+    if command == "access" and not arguments:
+        request("GET", "/certificates?limit=1")
+        print("App Store Connect answers the API key.")
+    elif command == "certificate" and len(arguments) == 2:
         import_certificate(*arguments)
     elif command == "profile" and len(arguments) == 4:
         save_profile(*arguments)

@@ -149,6 +149,23 @@ jobs:
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: python3 .github/scripts/require_secrets.py --why "A release built without it would have no sync provider at all." DROPBOX_APP_KEY
+      # App Store Connect refuses every API call while a new agreement waits to be accepted in the developer account,
+      # which the iOS and macOS jobs would otherwise find out only after the tests and the screenshots. Asked with the
+      # call that code signing makes first.
+      - name: Check App Store Connect access
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          python3 .github/scripts/require_secrets.py --why "The iOS and macOS releases are uploaded with it." \
+            APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_PRIVATE_KEY
+          export ASC_KEY_ID="$APP_STORE_CONNECT_KEY_ID" ASC_ISSUER_ID="$APP_STORE_CONNECT_ISSUER_ID"
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc-key.p8"
+          printf '%s\n' "$APP_STORE_CONNECT_PRIVATE_KEY" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+          trap 'rm -f "$ASC_KEY_PATH"' EXIT
+          python3 .github/scripts/app_store_signing.py access
       # The parser is a script of its own so that it is tested; it stops the release on a comment it cannot read,
       # and on notes a store would refuse, before any build starts.
       - name: Read the release notes
