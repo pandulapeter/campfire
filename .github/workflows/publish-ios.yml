@@ -66,7 +66,7 @@ on:
         type: string
         required: false
       release_notes:
-        description: '"What''s New" for the submission, use \n for line breaks'
+        description: '"What''s New" for the submission, use \n for line breaks (leave empty to take the release''s notes in every language)'
         type: string
         required: false
       submit:
@@ -308,6 +308,17 @@ jobs:
         with:
           run_id: ${{ inputs.screenshots_run }}
           path: ${{ runner.temp }}/screenshots
+      # A hand dispatch given no notes takes the release's own, every language's, read from its description as
+      # publish-all.yml reads them.
+      - name: Read the release notes
+        id: notes
+        if: github.event_name == 'workflow_dispatch' && inputs.release_notes == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          RELEASE_BODY=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)
+          RELEASE_BODY="$RELEASE_BODY" python3 .github/scripts/release_description.py
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
       # notes as its "What's New" - in the draft version already prepared in App Store Connect where there is one, whose
       # release option is kept, and whose screenshots are kept unless the run has new ones
@@ -316,9 +327,10 @@ jobs:
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          RELEASE_NOTES: ${{ inputs.release_notes }}
+          RELEASE_NOTES: ${{ steps.notes.outputs.release_notes || inputs.release_notes }}
+          TYPED_NOTES: ${{ github.event_name == 'workflow_dispatch' && inputs.release_notes != '' }}
           SUBMIT: ${{ inputs.submit }}
-          RELEASE_NOTES_BY_LANGUAGE: ${{ inputs.release_notes_by_language }}
+          RELEASE_NOTES_BY_LANGUAGE: ${{ steps.notes.outputs.release_notes_by_language || inputs.release_notes_by_language }}
           LISTINGS: ${{ inputs.listings }}
           SCREENSHOTS: ${{ (inputs.screenshots || inputs.screenshots_run != '') && format('{0}/screenshots/store', runner.temp) || '' }}
         run: |
@@ -327,9 +339,9 @@ jobs:
           [ "$SUBMIT" = true ] || FLAGS+=(--prepare)
           [ "$LISTINGS" = true ] || FLAGS+=(--no-listings)
           [ -z "$SCREENSHOTS" ] || FLAGS+=(--screenshots "$SCREENSHOTS")
-          # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are
+          # A single-line text box has no other way to ask for a line break; the notes read from the release are
           # carried through as they are, backslashes included.
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+          if [ "$TYPED_NOTES" = true ]; then
             printf '%b\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
           else
             printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
