@@ -33,7 +33,9 @@
 # Review approves it is refused. That takes an API key with the Admin role.
 #
 # Called by publish-all.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
-# accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
+# accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was. With
+# "upload" off, a hand dispatch builds nothing and only writes the version's listing for the build App Store Connect
+# already has under that number, such as one whose release stopped before its submission.
 
 name: 'Publish macOS'
 
@@ -72,6 +74,10 @@ on:
         description: '"What''s New" for the submission, use \n for line breaks (leave empty to take the release''s notes in every language)'
         type: string
         required: false
+      upload:
+        description: 'Build and upload (off: write the listing of the build already uploaded under the build number)'
+        type: boolean
+        default: true
       submit:
         description: 'Submit for review (off: leave the version prepared in App Store Connect, to finish there)'
         type: boolean
@@ -144,6 +150,7 @@ jobs:
             exit 1
           fi
       - name: Set up JDK 21 and Gradle
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         uses: ./.github/actions/setup-jdk
       - name: Set up code signing
         env:
@@ -213,12 +220,14 @@ jobs:
           echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           echo "Building $VERSION_NAME ($BUILD_NUMBER), signed as $MAC_SIGNING_IDENTITY"
       - name: Build the package
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           ./gradlew :app:desktop:packageReleasePkg
           ./gradlew --stop
       # A version that did not reach the Info.plist would be uploaded under whatever the plugin defaults to, which App
       # Store Connect takes for an old build.
       - name: Check the packaged version
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           PLIST="app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/Info.plist"
           PACKAGED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
@@ -233,6 +242,7 @@ jobs:
       # entitlements, less the two that tie it to the App ID, which only a provisioning profile may grant, and started
       # in a fresh sandbox container (.github/scripts/start_release_build.sh, which says what it checks).
       - name: Start the release build once
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         run: |
           COPY="$RUNNER_TEMP/Campfire.app"
           cp -R app/desktop/build/compose/binaries/main-release/app/Campfire.app "$COPY"
@@ -256,6 +266,7 @@ jobs:
             --log "$RUNNER_TEMP/campfire.log" \
             --started "The release build started in the sandbox"
       - name: Upload to App Store Connect
+        if: github.event_name != 'workflow_dispatch' || inputs.upload
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

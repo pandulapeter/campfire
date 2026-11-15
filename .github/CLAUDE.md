@@ -140,7 +140,8 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
 
 - macOS: `packageReleasePkg` on Apple silicon (asking for the `.pkg` is what signs and sandboxes it). A store-signed
   build only starts under TestFlight, so the start check runs on an ad-hoc-signed copy with the same entitlements minus
-  the two naming the App ID. The `build_number` input re-uploads a release under a new number.
+  the two naming the App ID. The `build_number` input re-uploads a release under a new number; `upload` off builds
+  nothing and only writes the listing of the build already uploaded under that number.
 - iOS: archived with the App Store profiles of the app and the share extension (`app_store_signing.py profile`, never
   one Xcode made, which manual signing refuses), uploaded to TestFlight. Xcode starts Gradle without properties, so the
   sync key goes into `local.properties`, which the version build phase also reads (last value wins) — how the
