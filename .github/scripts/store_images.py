@@ -51,6 +51,8 @@ SETS = {
     },
     "microsoft-store": {
         "windows": "Screenshot",
+        "poster-art": "StoreLogo9x16",
+        "box-art": "StoreLogoSquare",
     },
 }
 # Framed, and uploaded by hand, since no API takes them.
@@ -65,10 +67,7 @@ MANUAL = {
         "search-results": "the search results image is not in App Store Connect's API",
     },
     "mac-app-store": {},
-    "microsoft-store": {
-        "poster-art": "set once, in Partner Center",
-        "box-art": "set once, in Partner Center",
-    },
+    "microsoft-store": {},
 }
 
 NAME = re.compile(r"(?P<name>[a-z]+(?:-[a-z]+)*)(?:-(?P<number>\d+))?\.png")
@@ -89,7 +88,8 @@ class Rules:
 
 # Play: https://support.google.com/googleplay/android-developer/answer/9866151 (sides 320-3840, the long one at most
 # twice the short, 8 MB, at least two phone screenshots); App Store Connect: the screenshot specifications of each display
-# type (exact sizes, ten at most, no alpha); Partner Center: 1366 x 768 or larger, at most 3840 x 2160, 50 MB, ten.
+# type (exact sizes, ten at most, no alpha); Partner Center: 1366 x 768 or larger, at most 3840 x 2160, 50 MB, ten, and
+# one poster (9:16) and one box art (1:1) at either of their two sizes.
 PLAY_SCREENSHOT = {"short_side": (320, 3840), "long_side": (320, 3840), "max_ratio": 2.0, "max_bytes": 8 * MEGABYTE}
 RULES = {
     "phoneScreenshots": Rules(minimum=2, maximum=8, **PLAY_SCREENSHOT),
@@ -100,6 +100,8 @@ RULES = {
     "APP_IPAD_PRO_3GEN_129": Rules(minimum=1, maximum=10, sizes=frozenset({(2064, 2752), (2752, 2064), (2048, 2732), (2732, 2048)})),
     "APP_DESKTOP": Rules(minimum=1, maximum=10, sizes=frozenset({(1280, 800), (1440, 900), (2560, 1600), (2880, 1800)})),
     "Screenshot": Rules(minimum=1, maximum=10, short_side=(768, 2160), long_side=(1366, 3840), max_bytes=50 * MEGABYTE),
+    "StoreLogo9x16": Rules(minimum=1, maximum=1, sizes=frozenset({(720, 1080), (1440, 2160)}), max_bytes=50 * MEGABYTE),
+    "StoreLogoSquare": Rules(minimum=1, maximum=1, sizes=frozenset({(1080, 1080), (2160, 2160)}), max_bytes=50 * MEGABYTE),
 }
 
 

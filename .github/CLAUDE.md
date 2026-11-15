@@ -69,7 +69,8 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   a run without the rendered images stops before changing anything; Play and App Store Connect create it anyway.
   `prepare` compares the app's languages with the previous release's tag: a new one turns `screenshots` on where it is
   absent and stops the release where it says `screenshots: false` or a store's `listings: false`.
-- **Never touched**: the Microsoft title and "Developed by", and the Mac's App Sandbox Information (not in the API).
+- **Never touched**: the Mac's App Sandbox Information (not in the API). The Microsoft title is written from each
+  language's file, so a language's name is reserved in Partner Center before its listing is first written.
   Apple's copyright, URLs, and review notes come from `en.md`.
 
 ### Screenshots are rendered and published by the release
@@ -92,9 +93,12 @@ locales are filled in from the language), Play's `update-priority`, a `submit` a
   keeps its images.
 - **By store**: Play replaces phone, 7" and 10" screenshots and the feature graphic in the release's edit. App Store
   Connect replaces the 6.9" iPhone, 13" iPad, and Mac sets of each localization and submits only once every image is
-  `COMPLETE`. Partner Center replaces the desktop screenshots in the submission it commits.
+  `COMPLETE`. Partner Center replaces the desktop screenshots, the poster, and the box art in the submission it
+  commits.
 - **Still by hand** (`store_images.py`'s `MANUAL`): Play's Chromebook screenshots and icon, the iPhone Duo set (no
-  display type yet), Apple's product page header and search results image, and Microsoft's poster and box art.
+  display type yet), and Apple's product page header and search results image. Microsoft's poster and box art are
+  rendered into every language's folder, since Partner Center keeps images per listing, and replaced with the
+  screenshots.
 - **The website and the README**: `website-screenshots` rsyncs the artifact over the website's `assets/screenshots/`
   (`--delete`; a language without pages there yet is skipped with a warning), replaces `og-image.jpg`, runs its
   `stamp.py`, fails on an image no page shows, and commits; it shares `publish-web.yml`'s `campfire-website` concurrency

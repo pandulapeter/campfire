@@ -67,23 +67,26 @@ FIELDS = {
         "App Review Information: Notes": "notes",
     },
     "microsoft-store": {
+        "Title": "title",
         "Short description": "shortDescription",
         "Description": "description",
         "Product features": "features",
         "Search terms": "keywords",
         "Copyright and trademark info": "copyrightAndTrademarkInfo",
+        "Developed by": "devStudio",
     },
 }
-# Headings pasted by hand: the Mac's sandbox information is not in App Store Connect's public API, the Microsoft title
-# is the name reserved for the product, and "Developed by" is set once.
+# Headings pasted by hand: the Mac's sandbox information is not in App Store Connect's public API. The Microsoft title
+# has to be a name reserved for the product in Partner Center, so a language's name is reserved there before its
+# listing is first written.
 MANUAL = {
     "google-play": set(),
     "app-store": set(),
     "mac-app-store": {"App Sandbox Information"},
-    "microsoft-store": {"Title", "Developed by"},
+    "microsoft-store": set(),
 }
 # Read from en.md and written into every locale.
-ENGLISH_ONLY = {"Support URL", "Marketing URL", "Copyright", "App Review Information: Notes"}
+ENGLISH_ONLY = {"Support URL", "Marketing URL", "Copyright", "App Review Information: Notes", "Developed by"}
 # A field of several blocks, one per item.
 ITEMS = {"Product features"}
 # A field of one block of comma-separated items.

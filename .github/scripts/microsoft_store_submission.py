@@ -26,14 +26,14 @@ The notes are each language's from RELEASE_NOTES_BY_LANGUAGE (release_descriptio
 language it does not name, and every listing is written by its language (fr-fr and fr-ca alike).
 
 With --screenshots, the folder is the framing's store folder (store/ of the screenshots artifact, store_images.py):
-every listing of an app language marks the screenshots it has for deletion and gets the run's in their place, in the
-listing's order, their files going into the zip beside the package. The images replace rather than merge, so a shot
-taken out of the listing disappears from the Store too; the poster and the box art are set by hand and left as they
-are. Without it every image is sent back as it came.
+every listing of an app language marks the screenshots, the poster, and the box art it has for deletion and gets the
+run's in their place, the screenshots in the listing's order, their files going into the zip beside the package. The
+images replace rather than merge, so a shot taken out of the listing disappears from the Store too; every other image
+(the promotional art, the trailers) is sent back as it came. Without it every image is sent back as it came.
 
 An app language with no listing in Partner Center gets one, at the locale store_listings.py's LOCALES names: a copy of
-the English listing, which carries what stays by hand (the title and "Developed by"), with the language's own text,
-notes, and screenshots. Partner Center lists a language only for a package that declares it, and the app's .msix
+the English listing with the language's own text (its title one Partner Center has reserved for the product), notes,
+and images. Partner Center lists a language only for a package that declares it, and the app's .msix
 declares every language of the app, so the package this run uploads is what makes room for it. Partner Center takes
 no listing without screenshots, so a missing language without the run's images stops the run before anything is
 written (a submission the run copied from the last published one stays behind as a draft, which the next run takes
@@ -208,18 +208,19 @@ def matched_locales(submission):
     return matched, missing
 
 
-def run_screenshots(folder):
+def run_images(folder):
     """
-    {language: {the file's name in the zip: the image}} of the run's screenshots, in the listing's order, or None
-    without a folder. A language the run has no screenshots of maps to an empty dict.
+    {language: {Partner Center's image type: {the file's name in the zip: the image}}} of the run's images (the
+    screenshots in the listing's order, the poster, and the box art), or None without a folder. A language the run has no
+    images of maps to an empty dict.
     """
     if folder is None:
         return None
     if not os.path.isdir(folder):
         fail(f"There are no screenshots at {folder}.")
     return {
-        code: {f"screenshot-{code}-{path.name}": str(path)
-               for path in store_images.images(folder, "microsoft-store", code).get("Screenshot", [])}
+        code: {kind: {f"{code}-{path.name}": str(path) for path in paths}
+               for kind, paths in store_images.images(folder, "microsoft-store", code).items()}
         for code in store_listings.app_languages()
     }
 
@@ -229,7 +230,7 @@ def check_new_languages(missing, screenshots):
     Stops the run before anything is written where an app language has no listing and the run cannot create one whole:
     Partner Center takes no listing without screenshots.
     """
-    without = [code for code in missing if not (screenshots or {}).get(code)]
+    without = [code for code in missing if not (screenshots or {}).get(code, {}).get("Screenshot")]
     if without:
         fail(f"Partner Center has no listing in {', '.join(without)}, and it creates none without screenshots, which this "
              "run was not given. Dispatch the workflow again with screenshots_run: the ID of a run of screenshots.yml on "
@@ -238,9 +239,9 @@ def check_new_languages(missing, screenshots):
 
 def add_listings(submission, locales, new_locales, listings, notes):
     """
-    Creates a listing for each of the app's languages Partner Center has none of: a copy of the English one, which
-    carries what stays by hand (the reserved title and "Developed by"), with the language's own text and notes. Its
-    images are left empty for the run's screenshots, since the English ones would show the wrong language.
+    Creates a listing for each of the app's languages Partner Center has none of: a copy of the English one with the
+    language's own text and notes. Its images are left empty for the run's, since the English ones would show the wrong
+    language.
     """
     english = sorted((locale for locale, code in locales.items() if code == "en"), key=lambda locale: locale != "en-us")
     if not english:
@@ -254,30 +255,34 @@ def add_listings(submission, locales, new_locales, listings, notes):
         print(f"Created the {locale} listing from the {english[0]} one.")
 
 
-def replace_screenshots(submission, locales, screenshots):
+def replace_images(submission, locales, images):
     """
-    Marks every listing's screenshots for deletion and adds the run's of its language in their place, leaving the other
-    images as they came. A screenshot still waiting for its upload is one an earlier attempt at this draft added and
-    never got in, so it is dropped rather than added twice. Returns {name in the zip: image} of every file named.
+    Marks every listing's images of each type the run has for deletion and adds the run's of its language in their place,
+    leaving the types it has none of as they came. An image still waiting for its upload is one an earlier attempt at
+    this draft added and never got in, so it is dropped rather than added twice. Returns {name in the zip: image} of
+    every file named.
     """
     files = {}
     for locale, code in locales.items():
-        added = screenshots.get(code, {})
-        if not added:
+        added = images.get(code, {})
+        if "Screenshot" not in added:
             print(f"::warning::The run has no {code} screenshots, so the {locale} listing keeps the ones it has.")
+        if not added:
             continue
         base = submission["listings"][locale].setdefault("baseListing", {})
-        images = [image for image in base.get("images", [])
-                  if not (image.get("imageType") == "Screenshot" and image.get("fileStatus") == "PendingUpload")]
-        for image in images:
-            if image.get("imageType") == "Screenshot":
+        kept = [image for image in base.get("images", [])
+                if not (image.get("imageType") in added and image.get("fileStatus") == "PendingUpload")]
+        for image in kept:
+            if image.get("imageType") in added:
                 image["fileStatus"] = "PendingDelete"
-        base["images"] = images + [
-            {"fileName": name, "fileStatus": "PendingUpload", "imageType": "Screenshot", "description": ""}
-            for name in added
+        base["images"] = kept + [
+            {"fileName": name, "fileStatus": "PendingUpload", "imageType": kind, "description": ""}
+            for kind, named in added.items() for name in named
         ]
-        files.update(added)
-        print(f"Replaced the {locale} screenshots with the run's {len(added)}.")
+        for named in added.values():
+            files.update(named)
+        print(f"Replaced the {locale} images with the run's: "
+              f"{', '.join(f'{len(named)} {kind}' for kind, named in added.items())}.")
     return files
 
 
@@ -375,7 +380,7 @@ def main(identity_name, version, package, notes_file, write_listing_text, screen
         if not notes(code):
             fail("An update needs release notes for its \"What's new in this version\", and there are none.")
     listings = store_listings.read("microsoft-store")
-    screenshots = run_screenshots(screenshots_folder)
+    screenshots = run_images(screenshots_folder)
     if not os.path.isfile(package):
         fail(f"There is no package at {package}.")
     app = find_app(identity_name)
@@ -423,7 +428,7 @@ def main(identity_name, version, package, notes_file, write_listing_text, screen
         print("The listings are not written, so their images are left as they are too.")
     images = {}
     if screenshots is not None and write_listing_text:
-        images = replace_screenshots(submission, {**locales, **new_locales}, screenshots)
+        images = replace_images(submission, {**locales, **new_locales}, screenshots)
     replace_package(submission, os.path.basename(package))
     request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
     upload(upload_url, package, images)

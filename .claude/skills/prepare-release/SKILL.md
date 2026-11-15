@@ -175,8 +175,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    promotional text change only with a version submitted for review. What the files say is what ships: the release
    overwrites every listing's text in the consoles, so an edit made in a console is lost unless it is in the files
    too. The images are the release's too, when its description says `screenshots: true` (below); the ones
-   `.github/scripts/store_images.py` lists as `MANUAL` and the fields `store_listings.py` lists as `MANUAL` (the
-   Microsoft title and "Developed by", the Mac's App Sandbox Information) stay by hand. Run
+   `.github/scripts/store_images.py` lists as `MANUAL` and the fields `store_listings.py` lists as `MANUAL` (the Mac's
+   App Sandbox Information) stay by hand. A new language's Microsoft title is reserved in Partner Center before the
+   release that first writes its listing. Run
    `.github/scripts/store_listings.py --check` too.
 
 10. **Always regenerate Android baseline profiles, started at the end of step 8**, never before the changelog is

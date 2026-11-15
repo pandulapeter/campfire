@@ -44,8 +44,9 @@ def framed(folder, languages=("en",)):
         write_png(folder / f"google-play/{code}/feature-graphic.png", 1024, 500)
         write_png(folder / f"app-store/{code}/header.png", 4320, 1080)
         write_png(folder / f"app-store/{code}/search-results.png", 1320, 2868)
+        write_png(folder / f"microsoft-store/{code}/poster-art.png", 1440, 2160)
+        write_png(folder / f"microsoft-store/{code}/box-art.png", 2160, 2160)
     write_png(folder / "google-play/icon.png", 512, 512, color_type=6)
-    write_png(folder / "microsoft-store/poster-art.png", 720, 1080)
 
 
 class StoreImagesTest(unittest.TestCase):
@@ -121,8 +122,7 @@ class StoreImagesTest(unittest.TestCase):
         lines = [line for line in manual_summary(self.folder).splitlines() if line.startswith("- ")]
         self.assertIn("- `google-play/<language>/chromebook-<n>.png`: Play's API has no image type for Chromebook screenshots.", lines)
         self.assertIn("- `app-store/<language>/header.png`: the product page's header is not in App Store Connect's API.", lines)
-        self.assertIn("- `microsoft-store/poster-art.png`: set once, in Partner Center.", lines)
-        self.assertEqual(6, len(lines))
+        self.assertEqual(5, len(lines))
 
     def test_a_file_that_is_not_a_png_fails(self):
         framed(self.folder)

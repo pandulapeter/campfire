@@ -99,20 +99,21 @@ internal val compositions = listOf(
         ),
         outputs = listOf(Output("app-store/{language}/search-results.png")),
     ),
-    // Microsoft's poster and box art: the mark alone.
+    // Microsoft's poster and box art: the mark alone, and the same in every language, but Partner Center keeps the images
+    // per listing, so each listing is handed its own copy.
     Composition(
         widthPx = 1440,
         heightPx = 2160,
         background = Background.LINEAR,
         elements = listOf(Logo(x = 358, y = 691, width = 724, height = 779)),
-        outputs = listOf(Output("microsoft-store/poster-art.png")),
+        outputs = listOf(Output("microsoft-store/{language}/poster-art.png")),
     ),
     Composition(
         widthPx = 2160,
         heightPx = 2160,
         background = Background.LINEAR,
         elements = listOf(Logo(x = 578, y = 578, width = 1003, height = 1003)),
-        outputs = listOf(Output("microsoft-store/box-art.png")),
+        outputs = listOf(Output("microsoft-store/{language}/box-art.png")),
     ),
     // The website's link preview, which the website-screenshots skill turns into its og-image.jpg.
     Composition(

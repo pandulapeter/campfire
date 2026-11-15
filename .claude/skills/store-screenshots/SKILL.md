@@ -45,7 +45,7 @@ PNG with no alpha channel (Apple refuses screenshots that have one, Play a featu
 | Store listings (9 devices × 8 shots × every language) | `Shot.kt`, the texts in `documentation/store-listings/screenshot-texts/<language>.md`, `ListingChipStyles.kt` | `<store>/<language>/<device>-<n>.png` |
 | Play Store feature graphic (every language) and icon | `Compositions.kt` | `google-play/<language>/feature-graphic.png`, `google-play/icon.png` |
 | Apple's product page header and search results image (every language; the caption is `search-results` in the texts) | `Compositions.kt` | `app-store/<language>/header.png`, `app-store/<language>/search-results.png` |
-| Microsoft's poster and box art | `Compositions.kt` | `microsoft-store/poster-art.png`, `microsoft-store/box-art.png` |
+| Microsoft's poster and box art (the same in every language) | `Compositions.kt` | `microsoft-store/<language>/poster-art.png`, `microsoft-store/<language>/box-art.png` |
 
 The README's banners and the website's link preview show the same shots: say so when a shot changed, since they are
 the `website-screenshots` skill's to remake. Raw renders go to the gitignored `tools/screenshots/renders/`, replaced on

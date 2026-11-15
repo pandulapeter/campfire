@@ -40,17 +40,18 @@ def submission(*locales):
 
 
 def with_images(draft):
-    """The draft with a screenshot of each listing already in the Store and a poster art beside it."""
+    """The draft with a screenshot and a box art of each listing already in the Store and a promotional art beside them."""
     for listing in draft["listings"].values():
         listing["baseListing"]["images"] = [
             {"id": "1", "fileName": "old.png", "fileStatus": "Uploaded", "imageType": "Screenshot"},
-            {"id": "2", "fileName": "poster.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
+            {"id": "2", "fileName": "promotion.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
+            {"id": "3", "fileName": "old-box.png", "fileStatus": "Uploaded", "imageType": "StoreLogoSquare"},
         ]
     return draft
 
 
 def write_screenshots(folder, *languages):
-    """Two framed Windows screenshots per language and a box art that stays by hand, as the framing writes them."""
+    """Two framed Windows screenshots and a box art per language, as the framing writes them."""
     for code in languages:
         directory = os.path.join(folder, "microsoft-store", code)
         os.makedirs(directory)
@@ -129,29 +130,29 @@ class RunTest(unittest.TestCase):
         self.assertEqual("- New", base["releaseNotes"])
         self.assertEqual("old", base["description"])
 
-
-
-    def test_screenshots_replace_the_listings_and_leave_the_other_images(self):
+    def test_the_runs_images_replace_the_listings_and_leave_the_other_images(self):
         puts, _, _ = self.run_main(with_images(submission("en-us", "de-de", "de-at")), screenshots=["en", "de"])
         for locale, code in [("en-us", "en"), ("de-de", "de"), ("de-at", "de")]:
             self.assertEqual([
                 {"id": "1", "fileName": "old.png", "fileStatus": "PendingDelete", "imageType": "Screenshot"},
-                {"id": "2", "fileName": "poster.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
-                {"fileName": f"screenshot-{code}-windows-1.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                {"id": "2", "fileName": "promotion.png", "fileStatus": "Uploaded", "imageType": "PromotionalArtwork"},
+                {"id": "3", "fileName": "old-box.png", "fileStatus": "PendingDelete", "imageType": "StoreLogoSquare"},
+                {"fileName": f"{code}-windows-1.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
                  "description": ""},
-                {"fileName": f"screenshot-{code}-windows-2.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                {"fileName": f"{code}-windows-2.png", "fileStatus": "PendingUpload", "imageType": "Screenshot",
+                 "description": ""},
+                {"fileName": f"{code}-box-art.png", "fileStatus": "PendingUpload", "imageType": "StoreLogoSquare",
                  "description": ""},
             ], puts[0]["listings"][locale]["baseListing"]["images"])
-        self.assertEqual(["screenshot-en-windows-1.png", "screenshot-en-windows-2.png",
-                          "screenshot-de-windows-1.png", "screenshot-de-windows-2.png"], self.uploaded_images)
+        self.assertEqual(["en-windows-1.png", "en-windows-2.png", "en-box-art.png",
+                          "de-windows-1.png", "de-windows-2.png", "de-box-art.png"], self.uploaded_images)
 
-    def test_a_reused_draft_gets_the_screenshots_once(self):
+    def test_a_reused_draft_gets_the_images_once(self):
         first, _, _ = self.run_main(with_images(submission("en-us", "de-de")), screenshots=["en", "de"])
         draft = first[0]
         draft.update({"status": "CommitFailed", "fileUploadUrl": "https://upload.example/?sig=2"})
         again, _, _ = self.run_main(draft, screenshots=["en", "de"])
         self.assertEqual(first[0]["listings"], again[0]["listings"])
-
 
     def test_a_missing_language_without_screenshots_fails_before_anything_is_sent(self):
         puts, uploaded, _ = self.run_main(submission("en-us"), screenshots=["en"])
@@ -168,11 +169,10 @@ class RunTest(unittest.TestCase):
             self.assertEqual(text, base[field])
         self.assertEqual("Campfire", base["title"])
         self.assertEqual("- Neu", base["releaseNotes"])
-        self.assertEqual(["screenshot-de-windows-1.png", "screenshot-de-windows-2.png"],
+        self.assertEqual(["de-windows-1.png", "de-windows-2.png", "de-box-art.png"],
                          [image["fileName"] for image in base["images"]])
         self.assertEqual({"PendingUpload"}, {image["fileStatus"] for image in base["images"]})
-        self.assertIn("screenshot-de-windows-1.png", self.uploaded_images)
-
+        self.assertIn("de-windows-1.png", self.uploaded_images)
 
 
 class UploadTest(unittest.TestCase):
@@ -187,10 +187,10 @@ class UploadTest(unittest.TestCase):
             with mock.patch.object(microsoft_store_submission, "blob_request", lambda url, data: sent.append(data)), \
                     mock.patch("builtins.print"):
                 microsoft_store_submission.upload("https://upload.example/?sig=1", package,
-                                                  {"screenshot-en-windows-1.png": image})
+                                                  {"en-windows-1.png": image})
         with zipfile.ZipFile(io.BytesIO(b"".join(sent[:-1]))) as archive:
             self.assertEqual(b"msix", archive.read("campfire.msix"))
-            self.assertEqual(b"png", archive.read("screenshot-en-windows-1.png"))
+            self.assertEqual(b"png", archive.read("en-windows-1.png"))
 
 
 class FlagsTest(unittest.TestCase):

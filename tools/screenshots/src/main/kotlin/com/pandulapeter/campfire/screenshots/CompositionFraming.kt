@@ -26,7 +26,8 @@ import kotlin.math.roundToInt
 /**
  * Draws the stores' [Composition]s, or where not [isForStores] the README's and the website's, from the banners' renders
  * in [renders] and writes their files: the README's banners into [readme], the others into [output]. One whose banner
- * is for the stores is drawn in every language whose texts are in [texts], from that language's renders. Returns how
+ * is for the stores is drawn in every language whose texts are in [texts], from that language's renders, and so is one
+ * whose output path names `{language}` without a banner (a store that keeps the same image per listing). Returns how
  * many images were missing a render.
  */
 internal suspend fun frameCompositions(renders: File, texts: File, output: File, readme: File, isForStores: Boolean): Int {
@@ -34,7 +35,8 @@ internal suspend fun frameCompositions(renders: File, texts: File, output: File,
     var missing = 0
     compositions.filter { it.isForStores == isForStores }.forEach { composition ->
         val banner = composition.banner?.let(::banner)
-        val languages = if (banner?.isForStores == true) byLanguage.keys.toList() else listOf(ENGLISH)
+        val isPerLanguage = banner?.isForStores == true || composition.outputs.any { "{language}" in it.path }
+        val languages = if (isPerLanguage) byLanguage.keys.toList() else listOf(ENGLISH)
         languages.forEach { language ->
             val folder = if (banner?.isForStores == true) "${banner.folder}/$language" else banner?.folder
             val slots = composition.elements.filterIsInstance<Composition.Screen>().map { it.slot }
