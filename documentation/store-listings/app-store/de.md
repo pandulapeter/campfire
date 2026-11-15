@@ -33,7 +33,7 @@ Songtexte, Akkorde, Setlists
 ## Promotional text (170 characters max)
 
 ```
-Neu in 5.3.0: Songs spaltenweise umblättern, Noten in der Stimme deines Instruments, neu gestaltete Vorlieben, farbige Akkorde und Texte sowie Tastenkürzel.
+Neu in 5.4.0: Akkordraster als Takte gezeichnet, die App auf Portugiesisch, Polnisch und Tschechisch und mehr Akkorde, Raster und Tabs aus von Websites eingefügten Songs.
 ```
 
 ## Description (4,000 characters max)

@@ -32,7 +32,7 @@ Teksty, chwyty i setlisty
 ## Promotional text (170 characters max)
 
 ```
-Nowość w 5.3.0: przewracanie piosenki kolumna po kolumnie, nuty w głosie twojego instrumentu, nowe Preferencje, kolorowe akordy i tekst oraz skróty klawiszowe.
+Nowość w 5.4.0: siatki akordów rysowane jako takty, aplikacja po portugalsku, polsku i czesku oraz więcej akordów, siatek i tabulatur z piosenek wklejonych ze stron.
 ```
 
 ## Description (4,000 characters max)

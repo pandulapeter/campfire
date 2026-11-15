@@ -30,7 +30,7 @@ Chords, lyrics, and setlists
 ## Promotional text (170 characters max)
 
 ```
-New in 5.3.0: turn a song a column at a time, sheet music in your instrument's part, redesigned Preferences, colored chords and lyrics, and keyboard shortcuts.
+New in 5.4.0: chord grids drawn as bars, the app in Portuguese, Polish, and Czech, and more chords, grids, and tabs kept from songs pasted from websites.
 ```
 
 ## Description (4,000 characters max)
@@ -135,12 +135,7 @@ Network use is limited to features the user starts: optional sync with the user'
 The "audio" background mode keeps the metronome clicking while the screen is locked; it plays only after the user starts it, and stops when they leave the screen it was started on.
 
 New since the last approved version, and where to find it:
-- Turn by column: Settings → Song → Turn by → Column (shown while Layout is Pages; the same page opens from Preferences in a song's three-dot menu). With several columns on screen, an iPad in landscape for instance, a swipe or a tap on either half of the song then moves it one column at a time.
-- Sheet music: the demo song Home on the Range draws its tune as sheet music. A score with several voices shows one part, picked by the instrument, with a Parts picker beside its Sheet music heading; guitar and bass tablature in a tune follows the instrument's tuning and capo.
-- Preferences: Settings has General, Song, Chords, and Metronome tabs, and the same pages open as a sheet from Preferences in a song's three-dot menu and from the Preferences button on the Chords and Scales tabs.
-- Chord and text colors: in the song editor (Edit in a song's three-dot menu), the toolbar's Chord color and Text color menus color the selected chords or lyrics.
-- Tooltips: holding a pointer over a button drawn as an icon alone names it; Settings → General → Tooltips turns them off.
-- Keyboard shortcuts: with a keyboard attached to an iPad, Command + slash opens a list of every shortcut (also Settings → About → Keyboard shortcuts), and holding Command shows them in the system's overlay.
-- Metronome: the Metronome tab's Tempo change setting can switch to a new song's tempo on the Next beat instead of the Next bar.
-- Import: chord sheets pasted from websites that spell each chord's name out in the lyrics, like (C sharp minor), are imported with the chords above the words.
+- Chord grids: the demo song House of the Rising Sun opens with a grid, now drawn as rows of bars with each chord as wide as its beats; the PDF made from Share or export in the song's three-dot menu draws it the same way.
+- Languages: Portuguese, Polish, and Czech, chosen under Settings → General → Language.
+- Pasting from websites: a chord sheet copied from a web page and pasted with Paste from clipboard (the New button's menu on the Songs screen) keeps chords the page draws with styling, takes rows of bars as a grid, and recognizes tabs whose strings are named without a bar line.
 ```

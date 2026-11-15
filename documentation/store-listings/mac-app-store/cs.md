@@ -21,7 +21,7 @@ Paste into App Store Connect's cs localization of the macOS version. The name an
 ## Promotional text (170 characters max)
 
 ```
-Novinka ve verzi 5.3.0: listování písní po sloupcích, noty v partu tvého nástroje, přepracované Předvolby, barevné akordy a text a klávesové zkratky.
+Novinka ve verzi 5.4.0: mřížky akordů kreslené jako takty, aplikace v portugalštině, polštině a češtině a víc akordů, mřížek a tabulatur z písní vložených z webu.
 ```
 
 ## Description (4,000 characters max)

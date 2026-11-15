@@ -21,7 +21,7 @@ Paste into App Store Connect's pt-BR localization of the macOS version. The name
 ## Promotional text (170 characters max)
 
 ```
-Novo na 5.3.0: vire a música coluna por coluna, partitura na parte do seu instrumento, Preferências redesenhadas, acordes e letras coloridos e atalhos de teclado.
+Novo na 5.4.0: grades de acordes desenhadas como compassos, o app em português, polonês e tcheco e mais acordes, grades e tablaturas em músicas coladas de sites.
 ```
 
 ## Description (4,000 characters max)

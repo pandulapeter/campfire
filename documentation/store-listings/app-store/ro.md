@@ -32,7 +32,7 @@ Versuri, acorduri și liste
 ## Promotional text (170 characters max)
 
 ```
-Nou în 5.3.0: cântecul întors pe coloane, partituri cu partida instrumentului tău, Preferințe refăcute, acorduri și versuri colorate și comenzi rapide de la tastatură.
+Nou în 5.4.0: grile de acorduri desenate ca măsuri, aplicația în portugheză, poloneză și cehă și mai multe acorduri, grile și tabulaturi din cântecele lipite de pe web.
 ```
 
 ## Description (4,000 characters max)

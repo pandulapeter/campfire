@@ -32,7 +32,7 @@ Chansonnier et setlists
 ## Promotional text (170 characters max)
 
 ```
-Nouveau en 5.3.0 : lecture colonne par colonne, partition dans la partie de ton instrument, Préférences repensées, accords et paroles en couleur et raccourcis clavier.
+Nouveau en 5.4.0 : grilles d'accords dessinées en mesures, l'app en portugais, polonais et tchèque, et plus d'accords, grilles et tablatures gardés depuis le web.
 ```
 
 ## Description (4,000 characters max)

@@ -32,7 +32,7 @@ Akkordok, dalszövegek, listák
 ## Promotional text (170 characters max)
 
 ```
-Újdonságok az 5.3.0-s verzióban: hasábonkénti lapozás, kotta a hangszered szólamában, megújult Preferenciák, színes akkordok és dalszöveg, valamint billentyűparancsok.
+Újdonságok az 5.4.0-ban: ütemekként rajzolt akkordrácsok, portugál, lengyel és cseh nyelv, és több akkord, rács és tab marad meg a weboldalról beillesztett dalban.
 ```
 
 ## Description (4,000 characters max)

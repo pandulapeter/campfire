@@ -32,7 +32,7 @@ Testi, accordi e scalette
 ## Promotional text (170 characters max)
 
 ```
-Novità della 5.3.0: gira una canzone per colonne, spartiti con la parte del tuo strumento, Preferenze ridisegnate, accordi e testi colorati e scorciatoie da tastiera.
+Novità della 5.4.0: griglie di accordi disegnate come battute, l'app in portoghese, polacco e ceco e più accordi, griglie e intavolature dalle canzoni incollate dal web.
 ```
 
 ## Description (4,000 characters max)

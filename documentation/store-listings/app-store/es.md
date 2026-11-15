@@ -33,7 +33,7 @@ Letras, acordes y repertorios
 ## Promotional text (170 characters max)
 
 ```
-Novedad en 5.3.0: pasa una canción columna a columna, partituras en la parte de tu instrumento, Preferencias rediseñadas, acordes y letras en color y atajos de teclado.
+Novedad en 5.4.0: cuadrículas de acordes dibujadas como compases, la app en portugués, polaco y checo y más acordes, cuadrículas y tablaturas al pegar desde la web.
 ```
 
 ## Description (4,000 characters max)

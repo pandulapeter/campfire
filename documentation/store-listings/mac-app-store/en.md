@@ -18,7 +18,7 @@ sheet, or the wallpaper's colors.
 ## Promotional text (170 characters max)
 
 ```
-New in 5.3.0: turn a song a column at a time, sheet music in your instrument's part, redesigned Preferences, colored chords and lyrics, and keyboard shortcuts.
+New in 5.4.0: chord grids drawn as bars, the app in Portuguese, Polish, and Czech, and more chords, grids, and tabs kept from songs pasted from websites.
 ```
 
 ## Description (4,000 characters max)
@@ -106,14 +106,9 @@ The microphone is used only by the Tuner tab (and the tuner sheet opened from a 
 Network use is limited to features the user starts: optional sync with the user's own Dropbox account (Settings → Sync, not needed to review anything else); sharing a song or setlist as a public link in that same Dropbox; opening a shared link, which downloads it from dl.dropboxusercontent.com with no account; cover art for songs, an image downloaded from the address a song names and a search of MusicBrainz and the iTunes Search API, opened by clicking the cover in the "About the song" sheet; and the song details lookup, which searches the same two services. Everything else works offline.
 
 New since the last approved version, and where to find it:
-- Turn by column: Settings → Song → Turn by → Column (shown while Layout is Pages; the same page opens from Preferences in a song's three-dot menu). With several columns on screen, in a wide window for instance, the arrow keys or a click on either half of the song then move it one column at a time.
-- Sheet music: the demo song Home on the Range draws its tune as sheet music. A score with several voices shows one part, picked by the instrument, with a Parts picker beside its Sheet music heading; guitar and bass tablature in a tune follows the instrument's tuning and capo.
-- Preferences: Settings has General, Song, Chords, and Metronome tabs, and the same pages open as a sheet from Preferences in a song's three-dot menu and from the Preferences button on the Chords and Scales tabs.
-- Chord and text colors: in the song editor (Edit in a song's three-dot menu), the toolbar's Chord color and Text color menus color the selected chords or lyrics.
-- Tooltips: holding the pointer over a button drawn as an icon alone names it, with its keyboard shortcut; Settings → General → Tooltips turns them off.
-- Keyboard shortcuts: Command + slash opens a list of every shortcut, also under Settings → About → Keyboard shortcuts.
-- Metronome: the Metronome tab's Tempo change setting can switch to a new song's tempo on the Next beat instead of the Next bar.
-- Import: chord sheets pasted from websites that spell each chord's name out in the lyrics, like (C sharp minor), are imported with the chords above the words.
+- Chord grids: the demo song House of the Rising Sun opens with a grid, now drawn as rows of bars with each chord as wide as its beats; the PDF made from Share or export in the song's three-dot menu draws it the same way.
+- Languages: Portuguese, Polish, and Czech, chosen under Settings → General → Language.
+- Pasting from websites: a chord sheet copied from a web page and pasted with Paste from clipboard (the New button's menu on the Songs screen) keeps chords the page draws with styling, takes rows of bars as a grid, and recognizes tabs whose strings are named without a bar line.
 ```
 
 ## App Sandbox Information
