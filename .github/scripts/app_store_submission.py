@@ -225,13 +225,21 @@ def page_exists(url):
 
 
 def create_version_localizations(version, store, missing, attributes_of):
+    """
+    A localization may already be there by the time it is created: App Store Connect adds one to the editable versions
+    of every platform when the app info gains that language, which the other platform's job may be doing at the same
+    moment. Such a one is written with the others once they are read again.
+    """
     for locale, code in store_listings.new_listing_locales(store, missing).items():
-        request("POST", "/appStoreVersionLocalizations", {"data": {
+        created = request("POST", "/appStoreVersionLocalizations", {"data": {
             "type": "appStoreVersionLocalizations",
             "attributes": {"locale": locale, **attributes_of(code)},
             "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version["id"]}}},
-        }})
-        print(f"Created the version's {locale} localization, for the app's {code}.")
+        }}, conflict_ok=True)
+        if created is None:
+            print(f"The version's {locale} localization, for the app's {code}, was already there.")
+        else:
+            print(f"Created the version's {locale} localization, for the app's {code}.")
 
 
 def create_app_info_localizations(info, localizations, missing, listings):
@@ -303,25 +311,32 @@ def write_listing(app_id, platform, version, notes, has_earlier, write_listings)
     def fields(code, names):
         return {field: text for field, text in listings[code].items() if field in names}
 
-    localizations, missing = localized(
-        request("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"], "version",
-    )
+    def version_localizations():
+        return localized(
+            request("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"], "version",
+        )
+
+    localizations, missing = version_localizations()
     info, (info_localizations, info_missing) = app_info_localizations(app_id) if write_listings else (None, ([], []))
     if write_listings and info is None and (platform == "IOS" or missing):
         print("::warning::No app info can be changed now (a version is in review or live), so the name and the "
               "subtitle are left for the next version.")
 
+    # The links are written into every localization, since one App Store Connect added by itself has none.
+    urls = {field: text for field, text in ios_listings["en"].items() if field in URL_FIELDS} if write_listings else {}
+
     # The first version of a platform has nothing to say "new" about, and App Store Connect refuses the field there.
     def attributes_of(code):
-        attributes = fields(code, LOCALIZATION_FIELDS) if write_listings else {}
+        attributes = {**urls, **fields(code, LOCALIZATION_FIELDS)} if write_listings else {}
         if has_earlier:
             attributes["whatsNew"] = notes(code)
         return attributes
 
     if write_listings:
         create_app_info_localizations(info, info_localizations, info_missing, ios_listings)
-        urls = {field: text for field, text in ios_listings["en"].items() if field in URL_FIELDS}
-        create_version_localizations(version, store, missing, lambda code: {**urls, **attributes_of(code)})
+        create_version_localizations(version, store, missing, attributes_of)
+        if info_missing or missing:
+            localizations, _ = version_localizations()
     write_localizations("appStoreVersionLocalizations", "appStoreVersionLocalizations", localizations, attributes_of)
     if not write_listings:
         return
