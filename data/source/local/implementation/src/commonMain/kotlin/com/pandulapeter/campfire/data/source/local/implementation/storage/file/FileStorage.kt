@@ -20,7 +20,21 @@ import kotlinx.coroutines.coroutineScope
 enum class StorageDirectory {
     SONGS,
     SETLISTS,
+
+    /**
+     * The pictures songs show, named by their content (`LibraryFiles.isLibraryImageName`) and kept while a song names
+     * one. Part of the library: exported, synced, and in the iOS backup, but not in Android's, whose 25 MB quota photos
+     * would use up and cost the user the backup of their songs.
+     */
+    FILES,
     PREFERENCES,
+
+    /**
+     * The pictures the editor's open draft names that no saved song holds yet: the library only ever holds what a saved
+     * song names, so a picture picked in the editor waits here until Save moves it, and goes with the draft otherwise.
+     * Out of every backup and sync, like the draft itself.
+     */
+    DRAFT_IMAGES,
 
     /**
      * The copies of the cover images the songs name. Outside the library, so that nothing that can be downloaded again
@@ -208,6 +222,8 @@ internal val StorageDirectory.pathSegments: List<String>
     get() = when (this) {
         StorageDirectory.SONGS -> listOf(LIBRARY_DIRECTORY, "songs")
         StorageDirectory.SETLISTS -> listOf(LIBRARY_DIRECTORY, "setlists")
+        StorageDirectory.FILES -> listOf(LIBRARY_DIRECTORY, "files")
+        StorageDirectory.DRAFT_IMAGES -> listOf("editor-draft-images")
         StorageDirectory.PREFERENCES -> listOf("preferences")
         StorageDirectory.COVERS -> listOf("covers")
         StorageDirectory.EXPORTS -> listOf("exports")
@@ -219,5 +235,5 @@ internal fun isValidFileName(name: String) =
 
 internal fun requireValidFileName(name: String) = require(isValidFileName(name)) { "Invalid file name: \"$name\"." }
 
-/** Songs and setlists sit next to each other so that they can be exported as a single archive. */
+/** Songs, setlists, and their pictures sit next to each other so that they can be exported as a single archive. */
 private const val LIBRARY_DIRECTORY = "library"

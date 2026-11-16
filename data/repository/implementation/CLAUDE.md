@@ -79,6 +79,17 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
 - `loadSongCredits` turns a failure into `SongCreditsState.Failed` (logged by class name only, like every catalogue
   failure) and null into `Unavailable`.
 
+## The library's pictures
+
+- `ImageRepositoryImpl` prunes like the covers (after a finished read, skipped when the named set is unchanged and no
+  picture was written or let go since), but only under `withImagesKept`'s lock, from `loadSongsIfNeeded` (never the
+  state that asked), and never while a song file of the folder is missing from the list (unreadable or too large: it may
+  name the picture). The editor's held names (or, until it reports, its saved draft's) are kept too.
+- An import, a Save, and the placeholder's Add store pictures and write their songs inside one `withImagesKept`, so a
+  prune never runs between the two. A picture sync wrote before its song may still be pruned: sync brings it back.
+- The draft shelf is tidied on launch (keeping what the saved draft and the editor name, and what this process wrote)
+  and emptied by `clearDraftImages`; nothing else deletes from it.
+
 ## The cover copies
 
 - `CoverArtRepositoryImpl` watches `SongRepository.songs` and, after each finished read (`Idle` only, never scan

@@ -95,8 +95,9 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
 ## Backup
 
 `data_extraction_rules.xml` (API 31+) and `full_backup_content.xml` (API 28–30) **must say the same thing**: an
-allow-list of `library/` and `preferences/preferences.json`. No `<exclude>`s (lint rejects one outside an included
-path). The 25 MB quota is all or nothing.
+allow-list of `library/songs/`, `library/setlists/`, and `preferences/preferences.json`. No `<exclude>`s (lint rejects
+one outside an included path). The 25 MB quota is all or nothing, which is why the songs' pictures (`library/files/`)
+stay out: a restored library shows their placeholders until sync or an import brings them back.
 
 ## Build and resources
 

@@ -15,7 +15,10 @@
 <full-backup-content>
     <include
         domain="file"
-        path="library/" />
+        path="library/songs/" />
+    <include
+        domain="file"
+        path="library/setlists/" />
     <include
         domain="file"
         path="preferences/preferences.json" />

@@ -77,5 +77,6 @@ internal class LibraryFileLocalSourceImpl(
         get() = when (this) {
             LibraryFileKind.SONG -> StorageDirectory.SONGS
             LibraryFileKind.SETLIST -> StorageDirectory.SETLISTS
+            LibraryFileKind.FILE -> StorageDirectory.FILES
         }
 }

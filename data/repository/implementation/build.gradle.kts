@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":data:repository:api"))
+            implementation(project(":data:formats"))
             implementation(project(":data:source:local:api"))
             implementation(project(":data:source:remote:api"))
             implementation(libs.kotlin.coroutines)

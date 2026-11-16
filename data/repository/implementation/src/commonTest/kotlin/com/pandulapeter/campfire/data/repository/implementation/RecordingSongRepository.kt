@@ -27,6 +27,8 @@ internal class RecordingSongRepository(
     override val songs: MutableStateFlow<DataState<List<Song>>> = MutableStateFlow(DataState.Idle(emptyList())),
     private val onLoadIfNeeded: suspend () -> Unit = {},
     private val onRefresh: suspend (Set<String>) -> Unit = {},
+    /** The song files of the folder, read or not; null where a test never asks. */
+    private val songFileNames: (() -> Set<String>)? = null,
 ) : SongRepository {
 
     var rescanCount = 0
@@ -37,7 +39,7 @@ internal class RecordingSongRepository(
         return songs.value.data
     }
 
-    override suspend fun loadSongFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
+    override suspend fun loadSongFileSizes(): Map<String, Long> = songFileNames?.invoke()?.associateWith { 0L } ?: throw UnsupportedOperationException()
 
     override suspend fun rescan() {
         rescanCount++

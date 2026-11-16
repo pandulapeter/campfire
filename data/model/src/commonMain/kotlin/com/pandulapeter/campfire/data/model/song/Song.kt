@@ -93,6 +93,12 @@ data class Song(
      * so that the app can start the notation engine before any song with a tune is opened.
      */
     val hasSheetMusic: Boolean = false,
+    /**
+     * Every picture the file's `{image}` directives name, generously (commented-out lines, definitions, and other
+     * instruments' directives included): the library keeps a picture while any song names it, so a name missing here
+     * would cost the user the picture.
+     */
+    val imageNames: Set<String> = emptySet(),
 ) {
 
     /** [key] read as the key the file's chords are written in, which is what every list names the sounding key from. */

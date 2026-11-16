@@ -20,7 +20,9 @@
   first run on the new device compares the two sides by content, which costs a listing and duplicates nothing.
   shared-links.json and shared-links-journal.json describe the same account's folder, and go with the index.
   editor-draft.json is a copy of unsaved text, which belongs to this device's session rather than to the library.
-  The covers/ copies are downloaded again from the address each song names. There are no <exclude> rules for them
+  The covers/ copies are downloaded again from the address each song names. The songs' pictures (library/files/) stay
+  behind too: the backup stops altogether past 25 MB, which a few photos would cost the user's songs, and a restored
+  library shows each missing picture's placeholder until sync or an import brings it back. There are no <exclude> rules for them
   because lint (FullBackupContent, fatal, so it fails a release build) rejects an exclude that is not inside an
   included path.
 
@@ -31,7 +33,10 @@
     <cloud-backup>
         <include
             domain="file"
-            path="library/" />
+            path="library/songs/" />
+        <include
+            domain="file"
+            path="library/setlists/" />
         <include
             domain="file"
             path="preferences/preferences.json" />
@@ -39,7 +44,10 @@
     <device-transfer>
         <include
             domain="file"
-            path="library/" />
+            path="library/songs/" />
+        <include
+            domain="file"
+            path="library/setlists/" />
         <include
             domain="file"
             path="preferences/preferences.json" />

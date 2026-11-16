@@ -20,6 +20,8 @@
 - `normalizedName` **must stay idempotent**: an exported name is normalized again on its way back in. NFC first (it
   composes non-Latin marks). Letters outside the BMP are kept as surrogate pairs, never cut; symbols, emoji, and planes
   14–16 become separators, as does a Latin letter `Accents.kt`'s `withoutAccent` table lacks, so extend the table.
+- `isLibraryImageName` is the one rule for the pictures of `library/files` (`LibraryFileKind.FILE`): 16 to 64 lowercase
+  hex digits of the content's SHA-256 and a format's extension, never normalized; anything else there is left alone.
 - `songBaseName` is the one song naming rule (artist, dash, title; the title alone without an artist).
 - `identityKey` / `isSameLibraryName` are the one rule for whether two names are one file (NFC, then
   `uppercaseChar().lowercaseChar()` per code point, matching the JVM's `equals(ignoreCase = true)`,

@@ -29,6 +29,13 @@ object ImportLimits {
      */
     const val MAX_TEXT_FILE_SIZE = 8L shl 20
 
+    /**
+     * One picture a song shows, however it arrives (picked, dropped, shared, in an archive, or by sync): the size sync
+     * moves a file up to, so a picture the library holds can always reach the other devices. Nothing is re-encoded, so
+     * a larger photo is refused with a message naming it as 8 MB in every language.
+     */
+    const val MAX_IMAGE_FILE_SIZE = MAX_TEXT_FILE_SIZE
+
     /** Documents may carry embedded fonts and images much larger than their extracted text. */
     const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
 

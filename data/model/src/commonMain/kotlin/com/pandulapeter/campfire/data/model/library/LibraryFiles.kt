@@ -123,6 +123,36 @@ object LibraryFiles {
     fun isBinaryFileName(name: String) = BINARY_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
 
     /**
+     * The extensions of the pictures a song can show, one per format, which is the extension Campfire names a picture
+     * with: the one its bytes say, never the one it arrived with.
+     */
+    val IMAGE_EXTENSIONS = listOf(".png", ".jpg", ".gif", ".webp")
+
+    /** The fewest and the most hex digits of its SHA-256 a library picture is named by, see [isLibraryImageName]. */
+    const val MIN_IMAGE_NAME_DIGITS = 16
+    const val MAX_IMAGE_NAME_DIGITS = 64
+
+    /**
+     * Whether [name] is a picture of the library: lowercase hex digits of its content's SHA-256 (at least
+     * [MIN_IMAGE_NAME_DIGITS], more where another picture already took the shorter name) and one of the
+     * [IMAGE_EXTENSIONS]. Nothing else in the files folder is the library's: a name of this shape cannot collide
+     * across case or Unicode form, is never normalized, and says what the file holds, so no rule that keeps two
+     * spellings of a song apart is needed for it, and a file somebody put into the folder by hand is left alone.
+     */
+    fun isLibraryImageName(name: String): Boolean {
+        val extension = IMAGE_EXTENSIONS.firstOrNull { name.endsWith(it) } ?: return false
+        val digits = name.length - extension.length
+        return digits in MIN_IMAGE_NAME_DIGITS..MAX_IMAGE_NAME_DIGITS && (0 until digits).all { name[it] in '0'..'9' || name[it] in 'a'..'f' }
+    }
+
+    /**
+     * Whether a picture called [name] holds content whose SHA-256 is [contentHashHex] (lowercase hex): what tells a
+     * picture that is what its name says from one damaged or put there by hand, which nothing copies anywhere.
+     */
+    fun isImageNamedFor(name: String, contentHashHex: String) =
+        isLibraryImageName(name) && contentHashHex.startsWith(name.substringBeforeLast('.'))
+
+    /**
      * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an
      * AppleDouble `._name.cho` next to every file it copies to a volume that cannot hold extended attributes, under
      * the extension of the file it belongs to, and a `.DS_Store` in every folder it has shown. Every system marks
