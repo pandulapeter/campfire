@@ -18,7 +18,11 @@ sealed interface ImageIntake {
     data class Refused(val reason: ImageRefusal) : ImageIntake
 }
 
-/** Why a picture was not kept. Nothing is converted or shrunk, since that would take an encoder on every platform. */
+/**
+ * Why a picture was not kept. The library never converts or shrinks one; a picture the user adds themselves that is
+ * refused as too large or as a HEIC or AVIF photo is re-encoded by `:presentation` first, and this is its own reason where
+ * that fails.
+ */
 enum class ImageRefusal {
 
     /** Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, the most sync moves. */

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.songText
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageResult
@@ -18,6 +19,7 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUse
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +31,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * @param changeBeforeEveryWrite Stands in for another writer that gets to the file between every read and write.
  *
  * Pictures are stored by [SaveSongImageUseCase] under [STORED_IMAGE_NAME], an empty file refused as no picture, and the
- * texts handed on for their pictures' sizes are kept in [textsReadForImages].
+ * texts handed on for their pictures' sizes are kept in [textsReadForImages]. A picture of more than [MAX_IMAGE_BYTES] is
+ * too large, and made to fit by [reencode], whose copy is the [STORED_IMAGE_NAME] picture's bytes.
  */
 internal class FakeSongFiles(
     initial: Map<String, String> = emptyMap(),
@@ -58,6 +61,9 @@ internal class FakeSongFiles(
 
     val textsReadForImages = mutableListOf<String>()
 
+    /** The platform's re-encoder, which shrinks a picture to its first byte unless a test says it fails. */
+    var reencode: (ByteArray) -> ByteArray? = { bytes -> byteArrayOf(bytes.first()) }
+
     override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = when {
         bytes.isEmpty() -> SaveSongImageResult.Refused(ImageRefusal.NOT_AN_IMAGE)
         else -> {
@@ -76,12 +82,25 @@ internal class FakeSongFiles(
         getSongContentInvalidations = this,
         inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
         readImageSizes = { textsReadForImages += it },
-        saveSongImage = this,
+        imageAdding = SongImageAdding(
+            fitter = PictureFitter(
+                examine = { bytes ->
+                    when {
+                        bytes.isEmpty() -> ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+                        bytes.size > MAX_IMAGE_BYTES -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)
+                        else -> ImageIntake.Accepted(STORED_IMAGE_NAME)
+                    }
+                },
+                reencode = { bytes, _, _ -> reencode(bytes) },
+            ),
+            saveSongImage = this,
+        ),
         addOnBackStackChanged = {},
         currentSongFileName = { null },
     )
 
     companion object {
         const val STORED_IMAGE_NAME = "3f9a0c1d2e4b5a69.jpg"
+        const val MAX_IMAGE_BYTES = 3
     }
 }

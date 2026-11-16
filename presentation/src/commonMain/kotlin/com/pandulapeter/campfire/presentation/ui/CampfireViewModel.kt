@@ -396,7 +396,7 @@ class CampfireViewModel(
             dispatcher = Dispatchers.Default,
         ),
         readImageSizes = songImages::loadSizesOf,
-        saveSongImage = songTextUseCases.saveSongImage,
+        imageAdding = songTextUseCases.imageAdding(),
         addOnBackStackChanged = navigator::addOnBackStackChanged,
         currentSongFileName = navigator::currentSongFileName,
     )

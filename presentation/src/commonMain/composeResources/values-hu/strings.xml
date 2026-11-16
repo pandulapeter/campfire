@@ -1177,6 +1177,9 @@
     <string name="song_image_refused_too_large">Ez a kép nagyobb 8 MB-nál, ami a legtöbb, amit egy dal tartalmazhat.</string>
     <string name="song_image_refused_too_many_pixels">Ez a kép több mint 25 megapixeles, nagyobb annál, amit egy dal meg tud jeleníteni.</string>
     <string name="song_image_refused_not_image">Ez a fájl nem kép.</string>
+    <string name="song_image_refused_too_large_to_read">Ez a kép nagyobb 40 MB-nál, többet a Campfire nem tud beolvasni.</string>
+    <string name="song_image_shrunk">Ez a kép túl nagy volt egy dalhoz, ezért egy kisebb másolata került bele.</string>
+    <string name="song_image_converted">Ez a fajta kép nem jeleníthető meg minden eszközön, ezért egy mindenhol megjeleníthető másolata került bele.</string>
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Ez a Campfire build szinkronizálási azonosítók nélkül készült, így nincs mihez csatlakozni.</string>

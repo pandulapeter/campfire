@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.state.editor
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.image.ImageIntake
-import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
@@ -19,6 +18,8 @@ import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.imageNamesOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -45,6 +46,7 @@ import kotlinx.coroutines.withContext
  * whole ([generation]): a picture kept for an editor that is gone would be inserted into the next one, or deleted
  * under the editor it was meant for.
  *
+ * @param pictureFitter What a picture is made to fit with before it is kept.
  * @param computation Where the names a text holds are read, away from the main thread: a long song is read on every
  *   pause in the typing.
  */
@@ -52,6 +54,7 @@ internal class EditorImages(
     private val scope: CoroutineScope,
     private val messageSink: MessageSink,
     private val addDraftImage: AddDraftImageUseCase,
+    private val pictureFitter: PictureFitter,
     private val holdEditorImages: HoldEditorImagesUseCase,
     private val clearDraftImages: ClearDraftImagesUseCase,
     private val computation: CoroutineDispatcher,
@@ -99,7 +102,8 @@ internal class EditorImages(
 
     /**
      * Keeps [files] as draft pictures, answering the names they are kept under in their order, a picture brought twice
-     * once. The first refusal is said in a snackbar; the rest would only repeat it.
+     * once. One too large or of a format some device cannot show is kept as a copy that fits ([pictureFitter]). One
+     * snackbar says what happened: the first refusal, else the first copy made; the rest would only repeat it.
      *
      * @param isWanted Asked under [mutex] before anything is kept: false where the editor the files were for has closed
      *   meanwhile, and nothing is kept.
@@ -107,24 +111,37 @@ internal class EditorImages(
     suspend fun keep(files: List<ImportedFile>, isWanted: () -> Boolean = { true }): List<String> = mutex.withLock {
         if (!isWanted()) return@withLock emptyList()
         val names = mutableListOf<String>()
-        var refusal: ImageRefusal? = null
+        var refusal: Message? = null
+        var notice: Message? = null
         files.forEach { file ->
-            when (val intake = intakeOf(file)) {
-                is ImageIntake.Accepted -> if (intake.name !in names) names += intake.name
-                is ImageIntake.Refused -> if (refusal == null) refusal = intake.reason
-                null -> return@withLock emptyList<String>().also { messageSink.sendMessage(Message.OperationFailed) }
+            val outcome = outcomeOf(file) ?: return@withLock emptyList<String>().also { messageSink.sendMessage(Message.OperationFailed) }
+            when (val name = outcome.name) {
+                null -> if (refusal == null) refusal = outcome.message
+                else -> {
+                    if (name !in names) names += name
+                    if (notice == null) notice = outcome.message
+                }
             }
         }
-        refusal?.let { messageSink.sendMessage(Message.ImageNotAdded(it)) }
+        (refusal ?: notice)?.let { messageSink.sendMessage(it) }
         names
     }
 
-    /** What [addDraftImage] made of [file], or null where it could not be written. */
-    private suspend fun intakeOf(file: ImportedFile): ImageIntake? = if (file.isTooLarge) {
-        ImageIntake.Refused(ImageRefusal.TOO_LARGE)
+    /** What became of one picture: the [name] it is kept under (null where refused), and the snackbar it asks for. */
+    private class Outcome(val name: String?, val message: Message?)
+
+    /** What [file] came to, fitted and then handed to [addDraftImage], or null where it could not be written. */
+    private suspend fun outcomeOf(file: ImportedFile): Outcome? = if (file.isTooLarge) {
+        Outcome(name = null, message = Message.ImageTooLargeToRead)
     } else {
         try {
-            addDraftImage(file.bytes)
+            when (val fit = pictureFitter.fit(file.bytes)) {
+                is PictureFit.Refused -> Outcome(name = null, message = Message.ImageNotAdded(fit.reason))
+                is PictureFit.Usable -> when (val intake = addDraftImage(fit.bytes)) {
+                    is ImageIntake.Accepted -> Outcome(name = intake.name, message = fit.notice)
+                    is ImageIntake.Refused -> Outcome(name = null, message = Message.ImageNotAdded(intake.reason))
+                }
+            }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {

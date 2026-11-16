@@ -81,7 +81,10 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_format
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_not_image
+import com.pandulapeter.campfire.presentation.resources.song_image_converted
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_large
+import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_large_to_read
+import com.pandulapeter.campfire.presentation.resources.song_image_shrunk
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_many_pixels
 import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
 import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
@@ -206,6 +209,9 @@ private fun messageText(current: Message?): String? =
                 ImageRefusal.NOT_AN_IMAGE -> Res.string.song_image_refused_not_image
             }
         )
+        Message.ImageTooLargeToRead -> stringResource(Res.string.song_image_refused_too_large_to_read)
+        Message.ImageShrunk -> stringResource(Res.string.song_image_shrunk)
+        Message.ImageConverted -> stringResource(Res.string.song_image_converted)
         is Message.SongsUpdated -> pluralTextResource(Res.plurals.songs_selection_updated, current.count, current.count.toString())
         is Message.SongsNotUpdated -> pluralTextResource(Res.plurals.songs_selection_failed, current.count, current.count.toString())
         Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)

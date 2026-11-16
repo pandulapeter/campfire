@@ -167,9 +167,10 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   taps only nudge it: `ui/screens/songDetails/autoScroll`, `ui/songView/grid`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
-- Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB, never
-  re-encoded), kept while a song names one; a missing one draws a placeholder that can add it; the editor's Image
-  button and a picture opened alone keep it as a draft picture until Save: `ui/songView`, `ui/screens/songEditor`,
+- Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB; one the
+  user adds that is too large or HEIC is re-encoded on the device, one within the limits never), kept while a song
+  names one; a missing one draws a placeholder that can add it; the editor's Image button and a picture opened alone
+  keep it as a draft picture until Save: `ui/songView`, `ui/screens/songEditor`, `ui/pictures`,
   `data/repository/implementation`, `chordpro`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,

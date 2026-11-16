@@ -1178,6 +1178,9 @@
     <string name="song_image_refused_too_large">This picture is larger than 8 MB, the most a song can hold.</string>
     <string name="song_image_refused_too_many_pixels">This picture has more than 25 megapixels, more than a song can show.</string>
     <string name="song_image_refused_not_image">This file is not a picture.</string>
+    <string name="song_image_refused_too_large_to_read">This picture is larger than 40 MB, more than Campfire can read.</string>
+    <string name="song_image_shrunk">This picture was too large for a song, so a smaller copy was added.</string>
+    <string name="song_image_converted">This kind of picture cannot be shown on every device, so a copy that can was added.</string>
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">This build of Campfire was made without sync credentials, so there is nothing to connect to.</string>

@@ -1212,6 +1212,9 @@
     <string name="song_image_refused_too_large">Ten obraz jest większy niż 8 MB, czyli najwięcej, ile może zawierać piosenka.</string>
     <string name="song_image_refused_too_many_pixels">Ten obraz ma ponad 25 megapikseli, więcej, niż piosenka może pokazać.</string>
     <string name="song_image_refused_not_image">Ten plik nie jest obrazem.</string>
+    <string name="song_image_refused_too_large_to_read">Ten obraz jest większy niż 40 MB, więcej, niż Campfire może odczytać.</string>
+    <string name="song_image_shrunk">Ten obraz był za duży dla piosenki, więc dodano jego mniejszą kopię.</string>
+    <string name="song_image_converted">Tego rodzaju obrazu nie da się wyświetlić na każdym urządzeniu, więc dodano jego kopię, którą da się wyświetlić wszędzie.</string>
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Ta wersja Campfire została zbudowana bez danych dostępowych do synchronizacji, więc nie ma się z czym połączyć.</string>

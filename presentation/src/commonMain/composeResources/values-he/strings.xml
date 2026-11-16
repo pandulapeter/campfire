@@ -1219,6 +1219,9 @@
     <string name="song_image_refused_too_large">התמונה הזאת גדולה מ־8 MB, המרב ששיר יכול להכיל.</string>
     <string name="song_image_refused_too_many_pixels">בתמונה הזאת יותר מ־25 מגה־פיקסל, יותר ממה ששיר יכול להציג.</string>
     <string name="song_image_refused_not_image">הקובץ הזה אינו תמונה.</string>
+    <string name="song_image_refused_too_large_to_read">התמונה הזאת גדולה מ־40 MB, יותר ממה ש־Campfire יכול לקרוא.</string>
+    <string name="song_image_shrunk">התמונה הזאת הייתה גדולה מדי לשיר, ולכן נוסף עותק קטן יותר שלה.</string>
+    <string name="song_image_converted">לא ניתן להציג סוג תמונה זה בכל מכשיר, ולכן נוסף עותק שלה שניתן להציג בכל מקום.</string>
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">גרסה זו של Campfire נבנתה בלי פרטי גישה לסנכרון, כך שאין למה להתחבר.</string>

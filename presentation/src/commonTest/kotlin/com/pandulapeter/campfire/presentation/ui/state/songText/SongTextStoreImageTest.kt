@@ -52,9 +52,31 @@ class SongTextStoreImageTest {
         runCurrent()
         assertEquals(emptyList(), files.writes)
         assertEquals(
-            listOf<Message>(Message.ImageNotAdded(ImageRefusal.NOT_AN_IMAGE), Message.ImageNotAdded(ImageRefusal.TOO_LARGE)),
+            listOf<Message>(Message.ImageNotAdded(ImageRefusal.NOT_AN_IMAGE), Message.ImageTooLargeToRead),
             sink.messageQueue.value.map { it.value },
         )
+    }
+
+    @Test
+    fun `a picture too large for a song is stored as a smaller copy, which a snackbar says`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to TEXT))
+        val sink = MessageSink(backgroundScope)
+        val store = files.songTextStore(backgroundScope, sink)
+        store.addMissingImage(FILE, missingName = "photo.jpg") { listOf(ImportedFile("photo.jpg", LARGE_PHOTO)) }
+        runCurrent()
+        assertEquals("{title: A}\n{image: src=${FakeSongFiles.STORED_IMAGE_NAME}}\n", files.files[FILE])
+        assertEquals(listOf<Message>(Message.ImageShrunk), sink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a picture too large for a song that cannot be shrunk is refused as too large, and nothing is written`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to TEXT)).apply { reencode = { null } }
+        val sink = MessageSink(backgroundScope)
+        val store = files.songTextStore(backgroundScope, sink)
+        store.addMissingImage(FILE, missingName = "photo.jpg") { listOf(ImportedFile("photo.jpg", LARGE_PHOTO)) }
+        runCurrent()
+        assertEquals(emptyList(), files.writes)
+        assertEquals(listOf<Message>(Message.ImageNotAdded(ImageRefusal.TOO_LARGE)), sink.messageQueue.value.map { it.value })
     }
 
     @Test
@@ -71,5 +93,8 @@ class SongTextStoreImageTest {
     private companion object {
         const val FILE = "song.cho"
         const val TEXT = "{title: A}\n{image: src=photo.jpg}\n"
+
+        /** Over [FakeSongFiles.MAX_IMAGE_BYTES], with a JPEG's signature. */
+        val LARGE_PHOTO = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 5)
     }
 }

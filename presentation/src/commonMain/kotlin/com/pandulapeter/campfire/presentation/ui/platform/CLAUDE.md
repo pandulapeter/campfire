@@ -25,6 +25,18 @@ The `expect` declarations and the interfaces the platform shells provide.
   popped in mid transition). On the web it is `navigator.storage.persist()`, which stops eviction of the only copy of
   the library; ask exactly once, since some browsers prompt the user.
 
+## Re-encoding a picture (`reencodePicture`)
+
+What `ui/pictures`' `PictureFitter` shrinks or converts with: decoded once, bounded by the target size (the 25 MP cap
+exists because Skia decodes whole), upright, sRGB where easy, no metadata (a photo's location is dropped), each attempt
+encoded from the decoded pixels; null, never a throw, on any failure. Android: `ImageDecoder` with `setTargetSize` from
+the header callback, software allocator; its header size and target share one space, and a bitmap that comes out turned
+has the attempts' sides swapped. iOS: ImageIO's thumbnail (`ThumbnailMaxPixelSize`, `WithTransform`), drawn per attempt
+into an sRGB bitmap, written by `CGImageDestination`. Desktop: `javax.imageio` with source subsampling, the EXIF
+orientation read by Skia's codec from the header and applied by hand, halving with bilinear filtering; what ImageIO
+cannot read (WebP, CMYK JPEG) is Skia's whole decode up to 64 MP; HEIC fails (tested for real, `PictureReencoderTest`).
+Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safari.
+
 ## Background work
 
 - `SyncNotifier` tells Android / iOS a run is going so the process is not stopped or suspended. `CampfireApp` resolves

@@ -116,6 +116,15 @@ sealed interface Message {
     /** A picture picked for a song that names it but lacks it, which the library does not keep, for [reason]. */
     data class ImageNotAdded(val reason: ImageRefusal) : Message
 
+    /** A picture the user added that was over `ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE`, so it was not even read. */
+    data object ImageTooLargeToRead : Message
+
+    /** A picture the user added was too large for a song, and a smaller copy of it was kept instead. */
+    data object ImageShrunk : Message
+
+    /** A picture the user added was of a format some platform cannot show, and a copy in one every platform can was kept. */
+    data object ImageConverted : Message
+
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message
 

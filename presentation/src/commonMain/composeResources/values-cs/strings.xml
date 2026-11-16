@@ -1217,6 +1217,9 @@
     <string name="song_image_refused_too_large">Tento obrázek je větší než 8 MB, což je nejvíc, co může píseň obsahovat.</string>
     <string name="song_image_refused_too_many_pixels">Tento obrázek má přes 25 megapixelů, víc, než může píseň zobrazit.</string>
     <string name="song_image_refused_not_image">Tento soubor není obrázek.</string>
+    <string name="song_image_refused_too_large_to_read">Tento obrázek je větší než 40 MB, víc, než Campfire dokáže načíst.</string>
+    <string name="song_image_shrunk">Tento obrázek byl pro píseň příliš velký, a tak byla přidána jeho menší kopie.</string>
+    <string name="song_image_converted">Tento druh obrázku nejde zobrazit na každém zařízení, a tak byla přidána jeho kopie, kterou jde zobrazit všude.</string>
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Tato verze Campfire vznikla bez přístupových údajů pro synchronizaci, takže není k čemu se připojit.</string>

@@ -35,3 +35,10 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   since read only mode changes nothing a song's measurements are kept by. Add stores the picked file and points the
   song's directives at it in one step (`SaveSongImageUseCase`, under `SongTextStore`'s write lock); a refused file is a
   snackbar saying why.
+- **A picture the user adds** (the editor's Image button, one opened, shared, or dropped alone, Add image) goes through
+  `PictureFitter` first, never one an archive or sync brings: kept as it is where the library takes it (never
+  re-encoded); refused as too large (bytes or pixels, the read going up to 40 MB) or as HEIC or AVIF (never SVG, never no
+  picture), it is re-encoded on the device (`reencodePicture`, `ui/platform`) and the copy taken by the ordinary intake,
+  named by its own content. PNG first for a PNG, GIF, or WebP, else JPEG at 0.85, then smaller JPEGs, a bounded list
+  (`pictureAttemptsFor`), at most 4,096 px a side and 12 MP (`reencodedSizeOf`). A snackbar says a copy was made; among
+  several pictures, a refusal is said instead. A copy that does not fit keeps the original refusal.

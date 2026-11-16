@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
+import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveWithDraftImagesUseCase
@@ -43,7 +44,9 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongImageAdding
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
@@ -107,11 +110,10 @@ class EditorSessionTest {
                 }
             },
             addDraftImage = object : AddDraftImageUseCase {
-                override suspend fun invoke(bytes: ByteArray): ImageIntake = when {
-                    bytes.isEmpty() -> ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
-                    bytes.first() == HEIC -> ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
-                    else -> ImageIntake.Accepted("draft-${bytes.first()}.png").also { draftImages += it.name }
-                }
+                override suspend fun invoke(bytes: ByteArray): ImageIntake = intakeOf(bytes).also { if (it is ImageIntake.Accepted) draftImages += it.name }
+            },
+            examineImage = object : ExamineImageUseCase {
+                override suspend fun invoke(bytes: ByteArray) = intakeOf(bytes)
             },
             holdEditorImages = object : HoldEditorImagesUseCase {
                 override fun invoke(names: Set<String>) {
@@ -129,6 +131,9 @@ class EditorSessionTest {
                 }
             },
         )
+
+        /** Shrinks a picture to its last byte alone, as the platform's re-encoder would to a smaller copy. */
+        private val pictureFitter = PictureFitter(examine = useCases.examineImage::invoke, reencode = { bytes, _, _ -> byteArrayOf(bytes.last()) })
 
         val session: EditorSession
         val songTextStore = SongTextStore(
@@ -149,9 +154,12 @@ class EditorSessionTest {
             },
             inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
             readImageSizes = {},
-            saveSongImage = object : SaveSongImageUseCase {
-                override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = throw NotImplementedError()
-            },
+            imageAdding = SongImageAdding(
+                fitter = pictureFitter,
+                saveSongImage = object : SaveSongImageUseCase {
+                    override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = throw NotImplementedError()
+                },
+            ),
             addOnBackStackChanged = {},
             currentSongFileName = { null },
         )
@@ -172,6 +180,7 @@ class EditorSessionTest {
                     scope = scope,
                     messageSink = messageSink,
                     addDraftImage = useCases.addDraftImage,
+                    pictureFitter = pictureFitter,
                     holdEditorImages = useCases.holdEditorImages,
                     clearDraftImages = useCases.clearDraftImages,
                     computation = Dispatchers.Unconfined,
@@ -463,9 +472,37 @@ class EditorSessionTest {
         runCurrent()
         assertTrue(insertions.isEmpty())
         assertEquals(
-            listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT), Message.ImageNotAdded(ImageRefusal.TOO_LARGE)),
+            listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT), Message.ImageTooLargeToRead),
             fixture.messages,
         )
+    }
+
+    @Test
+    fun `a picture too large for a song is kept as a smaller copy, which a snackbar says`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorImageInsertion>()
+        backgroundScope.launch { fixture.session.images.insertions.collect { insertions += it } }
+        fixture.session.images.pickImages("a.cho") { listOf(ImportedFile(name = "photo.jpg", bytes = LARGE_PHOTO)) }
+        runCurrent()
+        assertEquals(listOf(listOf("draft-5.png")), insertions.map { it.names })
+        assertEquals(listOf<Message>(Message.ImageShrunk), fixture.messages)
+    }
+
+    @Test
+    fun `a refusal is said rather than a smaller copy among pictures picked together`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorImageInsertion>()
+        backgroundScope.launch { fixture.session.images.insertions.collect { insertions += it } }
+        fixture.session.images.pickImages("a.cho") {
+            listOf(ImportedFile(name = "photo.jpg", bytes = LARGE_PHOTO), ImportedFile(name = "photo.heic", bytes = byteArrayOf(HEIC)))
+        }
+        runCurrent()
+        assertEquals(listOf(listOf("draft-5.png")), insertions.map { it.names })
+        assertEquals(listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT)), fixture.messages)
     }
 
     @Test
@@ -560,7 +597,18 @@ class EditorSessionTest {
         languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
     )
 
+    /** Refused as [addDraftImage] refuses: nothing, an unsupported format ([HEIC] first), over three bytes, else kept. */
+    private fun intakeOf(bytes: ByteArray): ImageIntake = when {
+        bytes.isEmpty() -> ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+        bytes.first() == HEIC -> ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
+        bytes.size > 3 -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)
+        else -> ImageIntake.Accepted("draft-${bytes.first()}.png")
+    }
+
     private companion object {
         const val HEIC: Byte = 99
+
+        /** Too large, with a JPEG's signature, and shrunk to its last byte. */
+        val LARGE_PHOTO = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 5)
     }
 }
