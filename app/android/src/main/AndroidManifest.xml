@@ -510,6 +510,24 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!--
+          Asks Google Play services for its backport of the system photo picker, so that Android 9 and 10, which have
+          none of their own, offer Photos beside Files too (AndroidFilePicker.pickPhotos in :presentation). Never
+          enabled: the declaration is only read by Play services, which installs the picker module.
+        -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            android:enabled="false"
+            android:exported="false"
+            tools:ignore="MissingClass">
+            <intent-filter>
+                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+            </intent-filter>
+            <meta-data
+                android:name="photopicker_activity:0:required"
+                android:value="" />
+        </service>
+
     </application>
 
 </manifest>

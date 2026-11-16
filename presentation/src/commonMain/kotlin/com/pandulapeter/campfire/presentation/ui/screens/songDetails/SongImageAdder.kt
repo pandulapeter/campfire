@@ -11,20 +11,24 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.pandulapeter.campfire.presentation.ui.pictures.MissingImageAdder
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.pickPictures
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 
 /**
- * What a page's missing pictures' Add image does (`LocalSongImageAdder`): picks a file and stores it under the song
+ * What a page's missing pictures' Add image does (`LocalSongImageAdder`): picks one picture and stores it under the song
  * [fileName] ([SongTextStore.addMissingImage]). Null where the song may not be written ([isWritable] false: read only
  * mode, or a preview's file that is not written yet), which hides the button.
  */
 @Composable
-internal fun rememberSongImageAdder(songTextStore: SongTextStore, fileName: String, isWritable: Boolean): ((name: String) -> Unit)? {
+internal fun rememberSongImageAdder(songTextStore: SongTextStore, fileName: String, isWritable: Boolean): MissingImageAdder? {
     val filePicker = LocalFilePicker.current
     return if (isWritable) {
         remember(songTextStore, fileName, filePicker) {
-            { name: String -> songTextStore.addMissingImage(fileName = fileName, missingName = name, pickFiles = filePicker::pickImages) }
+            MissingImageAdder(canPickPhotos = filePicker.canPickPhotos) { name, source ->
+                songTextStore.addMissingImage(fileName = fileName, missingName = name, pickFiles = { filePicker.pickPictures(source, isMultiple = false) })
+            }
         }
     } else {
         null

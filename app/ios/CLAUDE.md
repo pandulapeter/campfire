@@ -32,6 +32,11 @@ extension (`iosApp/ShareExtension/`, Swift only).
   its own file in `Caches/exports` (a mail attaches it mapped); bytes are written to the temporary directory first.
   Either is deleted by the picker (the share in the activity controller's completion handler); **the temporary
   directory is never swept**, since a share target may still be reading.
+- `IosPhotoPicker.kt`: PHPicker, out of process, so no photo library permission or usage description. Asked for the
+  compatible representation (HEIC arrives as JPEG where Photos can make one), the shown types read first; each photo's
+  temporary file is read inside its completion handler (deleted after), one photo at a time, in the order picked. A
+  photo that fails to load (iCloud only, offline) is left out and logged. Photos does not dismiss itself; a swipe is
+  the presentation controller's.
 - `IosFileImport.kt`'s `openUrl(url)`: a sync redirect never arrives here (`ASWebAuthenticationSession` answers it) but
   is ignored anyway, so it isn't reported as a failed import. URLs are read in order, one at a time, off the main
   thread; an unreadable file is passed on empty (reported as skipped).

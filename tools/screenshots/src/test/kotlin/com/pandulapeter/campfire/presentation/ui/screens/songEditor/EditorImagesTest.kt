@@ -29,6 +29,8 @@ import androidx.compose.ui.test.performSemanticsAction
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
+import com.pandulapeter.campfire.presentation.resources.picture_source_files
+import com.pandulapeter.campfire.presentation.resources.picture_source_photos
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_image
@@ -40,6 +42,7 @@ import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.demoSongText
 import com.pandulapeter.campfire.screenshots.openEditor
 import com.pandulapeter.campfire.screenshots.runAppTest
+import org.jetbrains.compose.resources.StringResource
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -60,8 +63,14 @@ internal class EditorImagesTest {
 
     private val picture = png()
 
-    /** The name the library keeps [picture] under: 16 hex digits of its SHA-256 and its extension. */
-    private val pictureName = MessageDigest.getInstance("SHA-256").digest(picture).joinToString("") { "%02x".format(it) }.take(16) + ".png"
+    private val photo = png(blue = 200)
+
+    private val photoName = libraryName(photo)
+
+    private val pictureName = libraryName(picture)
+
+    /** The name the library keeps [bytes] under: 16 hex digits of its SHA-256 and its extension. */
+    private fun libraryName(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }.take(16) + ".png"
 
     @Test
     fun `a picture inserted from the toolbar waits outside the library until Save moves it in`() = runAppTest(
@@ -112,6 +121,22 @@ internal class EditorImagesTest {
     }
 
     @Test
+    fun `where there is a photo library Ctrl+Shift+I unfolds the Shortcuts and asks whether to pick from Photos or Files`() = runAppTest(
+        window = TestWindow.PHONE,
+        platform = ImpersonatedPlatform.WINDOWS,
+        pickedFiles = listOf(ImportedFile("holiday.png", picture)),
+        pickedPhotos = listOf(ImportedFile("IMG_0001.png", photo)),
+    ) {
+        openEditor()
+        onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { withKeyDown(Key.ShiftLeft) { pressKey(Key.I) } } }
+        pickFrom(Res.string.picture_source_photos)
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { "{image: src=$photoName}" in fieldText() }
+        onNode(hasText(string(Res.string.song_editor_insert_image)) and hasClickAction()).performSemanticsAction(SemanticsActions.OnClick)
+        pickFrom(Res.string.picture_source_files)
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { "{image: src=$pictureName}" in fieldText() }
+    }
+
+    @Test
     fun `a picture opened on its own becomes a new song in the editor, written only by Save`() = runAppTest(
         window = TestWindow.DESKTOP,
         platform = ImpersonatedPlatform.WINDOWS,
@@ -127,6 +152,13 @@ internal class EditorImagesTest {
         waitForLibrary { songFileNames().size > songsBefore.size && libraryImage().exists() }
         val song = File(songsFolder, (songFileNames() - songsBefore).single()).readText()
         assertTrue("{image: src=$pictureName}" in song, "The saved song does not show the picture: $song")
+    }
+
+    /** Selects the entry of the Image button's menu called [source], once the menu is up. */
+    private fun AppTestScope.pickFrom(source: StringResource) {
+        val entry = hasText(string(source)) and hasClickAction()
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { onAllNodes(entry).fetchSemanticsNodes().isNotEmpty() }
+        onNode(entry).performSemanticsAction(SemanticsActions.OnClick)
     }
 
     /** Presses the toolbar's Image button, whose picker hands over the test's picture, and waits for its line. */
@@ -146,9 +178,9 @@ internal class EditorImagesTest {
     private fun AppTestScope.libraryImage() = File(library, "files/$pictureName")
 
     /** A small PNG of a few colours, as a photo of a chart would be. */
-    private fun png() = ByteArrayOutputStream().also { output ->
+    private fun png(blue: Int = 90) = ByteArrayOutputStream().also { output ->
         val image = BufferedImage(120, 80, BufferedImage.TYPE_INT_RGB)
-        for (y in 0 until 80) for (x in 0 until 120) image.setRGB(x, y, Color(x * 2, y * 3, 90).rgb)
+        for (y in 0 until 80) for (x in 0 until 120) image.setRGB(x, y, Color(x * 2, y * 3, blue).rgb)
         ImageIO.write(image, "png", output)
     }.toByteArray()
 

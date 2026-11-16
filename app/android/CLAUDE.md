@@ -44,7 +44,9 @@
     no file name (Downloads' `msf:` ids, attachments); unrelated files offered this way are reported as skipped.
 - **Pictures**: `image/png` and `image/jpeg` in their own Open with filter and in Share (a photo alone is a new song);
   Android makes no app a type's default unless the user picks it. A name without a picture's extension gets the one its
-  MIME type says (`withPictureExtension`), since the import knows a lone picture by its name.
+  MIME type says (`pictureFileName`), since the import knows a lone picture by its name.
+- **Photo picker backport**: a disabled `ModuleDependencies` service asks Play services for its photo picker on Android
+  9 and 10, which have none (`ui/platform/CLAUDE.md`).
 - **Share**: a stream wins over text in the same intent (the text is a caption).
 - **Shared links**: an `autoVerify` App Link for `https://campfire-songbook.com/s/` (never `/app/`, the web app) and
   `campfire://s/`. `handle` checks the OAuth redirect first; a link `ShareLinks.parse` reads goes to

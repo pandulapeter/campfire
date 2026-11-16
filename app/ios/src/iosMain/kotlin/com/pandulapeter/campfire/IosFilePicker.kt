@@ -58,6 +58,8 @@ import platform.UIKit.UIViewController
 import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeData
 import platform.UniformTypeIdentifiers.UTTypeGIF
+import platform.UniformTypeIdentifiers.UTTypeHEIC
+import platform.UniformTypeIdentifiers.UTTypeHEIF
 import platform.UniformTypeIdentifiers.UTTypeJPEG
 import platform.UniformTypeIdentifiers.UTTypePNG
 import platform.UniformTypeIdentifiers.UTTypeWebP
@@ -76,20 +78,41 @@ internal class IosFilePicker(
     private val viewController: () -> UIViewController,
 ) : FilePicker {
 
-    // UIKit keeps only a weak reference to a delegate, so the one that is in flight is held here.
+    // UIKit keeps only a weak reference to a delegate, so the one that is in flight is held here, with the way to answer
+    // its caller should its picker go away without a word.
     private var delegate: NSObject? = null
+    private var finishPendingPicker: (() -> Unit)? = null
 
     // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs out in the
     // picker. What is not a song is skipped by the import and reported afterwards.
     override suspend fun pickFiles() = pick(listOf(UTTypeData, UTTypeZIP))
 
-    override suspend fun pickImages() = pick(listOf(UTTypePNG, UTTypeJPEG, UTTypeGIF, UTTypeWebP))
+    // HEIC and HEIF too, what the camera saves, which the editor converts.
+    override suspend fun pickImages() = pick(listOf(UTTypePNG, UTTypeJPEG, UTTypeGIF, UTTypeWebP, UTTypeHEIC, UTTypeHEIF))
+
+    override val canPickPhotos = true
+
+    override suspend fun pickPhotos(isMultiple: Boolean): List<ImportedFile> {
+        val results = withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                val controller = photoPickerController(isMultiple)
+                val pickerDelegate = PhotoPickerDelegate { results ->
+                    delegate = null
+                    finishPendingPicker = null
+                    continuation.resume(results)
+                }
+                controller.delegate = pickerDelegate
+                present(controller, pickerDelegate, pickerDelegate::finishWithNothing)
+            }
+        }
+        return withContext(Dispatchers.IO) { results.readPhotos() }
+    }
 
     private suspend fun pick(contentTypes: List<UTType>): List<ImportedFile> {
         val urls = suspendCancellableCoroutine<List<NSURL>> { continuation ->
             val controller = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes, asCopy = true)
             controller.allowsMultipleSelection = true
-            present(controller) { urls -> continuation.resume(urls) }
+            presentDocumentPicker(controller) { urls -> continuation.resume(urls) }
         }
         return withContext(Dispatchers.IO) {
             val budget = ImportBudget()
@@ -110,7 +133,7 @@ internal class IosFilePicker(
         return try {
             withContext(Dispatchers.Main) {
                 suspendCancellableCoroutine { continuation ->
-                    present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+                    presentDocumentPicker(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
                 }
             }
         } finally {
@@ -191,23 +214,33 @@ internal class IosFilePicker(
     // Held here for the same reason as the picker's delegate, apart from it, since a mail and a picker are never both up.
     private var mailDelegate: NSObject? = null
 
-    private fun present(controller: UIDocumentPickerViewController, onFinished: (List<NSURL>) -> Unit) {
+    private fun presentDocumentPicker(controller: UIDocumentPickerViewController, onFinished: (List<NSURL>) -> Unit) {
+        val pickerDelegate = DocumentPickerDelegate { urls ->
+            delegate = null
+            finishPendingPicker = null
+            onFinished(urls)
+        }
+        controller.delegate = pickerDelegate
+        present(controller, pickerDelegate, pickerDelegate::finishWithNothing)
+    }
+
+    /**
+     * Presents a picker whose own callbacks already go to [pickerDelegate], which answers its caller, with nothing where
+     * [finishWithNothing] is called (at most once, whatever else reports the picker gone).
+     */
+    private fun <T> present(controller: UIViewController, pickerDelegate: T, finishWithNothing: () -> Unit) where T : NSObject, T : UIAdaptivePresentationControllerDelegateProtocol {
         val host = viewController()
         // UIKit refuses a second presentation with nothing but a log line, and the answer it would have given never
         // comes: the caller is told nothing was picked instead of waiting for good.
         if (host.presentedViewController != null) {
-            onFinished(emptyList())
+            finishWithNothing()
             return
         }
         // Nothing is on screen, so a delegate still held is one whose picker went away without telling it: its caller
         // is answered now rather than never.
-        (delegate as? DocumentPickerDelegate)?.finish(emptyList())
-        val pickerDelegate = DocumentPickerDelegate { urls ->
-            delegate = null
-            onFinished(urls)
-        }
+        finishPendingPicker?.invoke()
         delegate = pickerDelegate
-        controller.delegate = pickerDelegate
+        finishPendingPicker = finishWithNothing
         // A sheet swiped away tells neither of the picker's own callbacks, only its presentation controller.
         controller.presentationController?.delegate = pickerDelegate
         host.presentViewController(controller, animated = true, completion = null)
@@ -230,7 +263,7 @@ internal class IosFilePicker(
  * thread can deadlock against a file presenter that answers on it.
  */
 @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
-internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
+internal fun NSURL.readImportedFile(budget: ImportBudget, name: String = lastPathComponent.orEmpty()): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
         var file: ImportedFile? = null
@@ -246,7 +279,7 @@ internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
                 // is only the app's for as long as the block runs.
                 val url = coordinated ?: this@readImportedFile
                 val size = url.path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
-                file = budget.read(name = lastPathComponent.orEmpty(), size = size?.longLongValue) { limit ->
+                file = budget.read(name = name, size = size?.longLongValue) { limit ->
                     // Mapped rather than loaded, so that a file whose attributes said nothing still gives its
                     // length away before any of it is copied into the heap. Longer than the limit, it only has to
                     // say so, which the budget takes one byte past the limit to mean.
@@ -313,18 +346,21 @@ private class DocumentPickerDelegate(
 
     private var isFinished = false
 
-    fun finish(urls: List<NSURL>) {
+    private fun finish(urls: List<NSURL>) {
         if (isFinished) return
         isFinished = true
         onFinished(urls)
     }
 
+    /** Answers the caller with nothing picked, unless it was answered already. */
+    fun finishWithNothing() = finish(emptyList())
+
     override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) =
         finish(didPickDocumentsAtURLs.filterIsInstance<NSURL>())
 
-    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = finish(emptyList())
+    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = finishWithNothing()
 
-    override fun presentationControllerDidDismiss(presentationController: UIPresentationController) = finish(emptyList())
+    override fun presentationControllerDidDismiss(presentationController: UIPresentationController) = finishWithNothing()
 }
 
 /**

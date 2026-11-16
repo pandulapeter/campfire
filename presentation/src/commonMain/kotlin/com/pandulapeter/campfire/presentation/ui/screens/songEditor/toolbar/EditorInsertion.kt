@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.DrawableResource
 
 /**
@@ -31,9 +30,8 @@ import org.jetbrains.compose.resources.DrawableResource
  *   formatting buttons', whose icons every text editor shares and which would otherwise take a word each.
  * @param chordShapeInstrument The instrument a Chord shape menu entry writes a `{define}` for (see `insertChordShape`),
  *   in place of the two halves; null for every other entry.
- * @param action What a button that writes nothing at once does instead (the Image button picks pictures, which arrive
- *   at the caret later); null for every other button.
- * @param shortcut The keys that press an [action]'s button, which its tooltip names.
+ * @param imagePick What the Image button, which writes nothing at once, does instead: picks pictures, which arrive at the
+ *   caret later (`EditorImageButton`). Null for every other button.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -47,8 +45,7 @@ internal data class EditorInsertion(
     val formatting: Formatting.Style? = null,
     val icon: DrawableResource? = null,
     val chordShapeInstrument: ChordInstrument? = null,
-    val action: (() -> Unit)? = null,
-    val shortcut: KeyShortcut? = null,
+    val imagePick: EditorImagePick? = null,
 ) {
 
     companion object {
@@ -72,14 +69,13 @@ internal data class EditorInsertion(
             chordShapeInstrument = instrument,
         )
 
-        /** A button that writes nothing itself, but does [action], also on [shortcut]. */
-        fun action(label: String, action: () -> Unit, shortcut: KeyShortcut) = EditorInsertion(
+        /** The Image button, which writes nothing itself but picks pictures with [imagePick], also on Ctrl / Cmd + Shift + I. */
+        fun image(label: String, imagePick: EditorImagePick) = EditorInsertion(
             label = label,
             prefix = "",
             suffix = "",
             isOwnLine = true,
-            action = action,
-            shortcut = shortcut,
+            imagePick = imagePick,
         )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */

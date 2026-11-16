@@ -18,12 +18,12 @@ import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
-import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
@@ -62,6 +62,10 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     // "* / *" rather than a list of types: .cho has no registered MIME type, and anything narrower would grey the
     // songs out in the system picker. What is not a song is skipped by the import and reported afterwards.
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onFilesPicked)
+    // The pictures' own launchers, apart from the songs', so that an orphaned result can be told from a song import.
+    val openImages = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onPicturesPicked)
+    val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia(), picker::onPhotoPicked)
+    val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(), picker::onPicturesPicked)
     // The contract bakes the type in, so there is one launcher per type the app can hand out. A song leaves as the .cho
     // file it is, and .cho maps to no MIME type, so a storage provider asked for text/plain appends .txt to the name (it
     // keeps a name's extension only where the extension maps to the type asked for). The generic binary type is the
@@ -77,9 +81,12 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     )
     // Declared after the launchers, so that it is disposed before they unregister: a launcher is never left in the
     // singleton once it can no longer launch, and a finished Activity is not kept reachable through it.
-    DisposableEffect(picker, open, createText, createArchive) {
+    DisposableEffect(picker, open, openImages, pickPhoto, pickPhotos, createText, createArchive) {
         val launchers = AndroidFilePicker.Launchers(
             open = open,
+            openImages = openImages,
+            pickPhoto = pickPhoto,
+            pickPhotos = pickPhotos,
             createText = createText,
             createArchive = createArchive,
         )
@@ -100,9 +107,12 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
  * composition holds them, and taken at the moment of launching rather than when a pick or an export began.
  *
  * A process that dies under the system picker takes this object with it, and the result then arrives at one that
- * nobody is suspended on. That is what an orphaned result is, and neither kind is dropped: picked files are read
- * and offered through [orphanedFiles], and the location of an export is filled from the copy [saveFile] left in
- * the cache directory before it opened the picker, the outcome going to [orphanedExportResults].
+ * nobody is suspended on. That is what an orphaned result is: picked files are read and offered through
+ * [orphanedFiles], and the location of an export is filled from the copy [saveFile] left in the cache directory before
+ * it opened the picker, the outcome going to [orphanedExportResults]. Orphaned pictures are the one result let go: they
+ * were picked for a place in a song (the editor's caret, a missing picture's name) that died with the process, and an
+ * import of them would be a new song nobody asked for, opened over the editor the user comes back to. The editor and the
+ * song come back as they were, so the pictures are simply picked again.
  */
 @Single
 internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
@@ -110,6 +120,9 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     /** The launchers of the composition that is on screen; null between one Activity and the next. */
     class Launchers(
         val open: ActivityResultLauncher<Array<String>>,
+        val openImages: ActivityResultLauncher<Array<String>>,
+        val pickPhoto: ActivityResultLauncher<PickVisualMediaRequest>,
+        val pickPhotos: ActivityResultLauncher<PickVisualMediaRequest>,
         val createText: ActivityResultLauncher<String>,
         val createArchive: ActivityResultLauncher<String>,
     )
@@ -135,20 +148,37 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private val pendingExport get() = java.io.File(java.io.File(context.cacheDir, PENDING_EXPORT_DIRECTORY), PENDING_EXPORT_NAME)
 
-    override suspend fun pickFiles() = pick(arrayOf(ANY_MIME_TYPE))
+    override suspend fun pickFiles() = pick { it.open.launch(arrayOf(ANY_MIME_TYPE)) }
 
-    override suspend fun pickImages() = pick(PICTURE_MIME_TYPES.toTypedArray())
+    /** The documents UI, offering the formats the photo library may hand over too, which the editor converts. */
+    override suspend fun pickImages() = pick { it.openImages.launch((PICTURE_MIME_TYPES + CONVERTED_PICTURE_MIME_TYPES).toTypedArray()) }
 
-    private suspend fun pick(mimeTypes: Array<String>): List<ImportedFile> {
+    /**
+     * The system photo picker (Android 11+ through an SDK extension, older ones through Google Play services' backport),
+     * which needs no permission: the pictures picked are the app's to read until the process ends, whatever Activity
+     * is on screen by then, and they are read as soon as they arrive.
+     */
+    override suspend fun pickPhotos(isMultiple: Boolean): List<ImportedFile> {
+        val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        return pick { if (isMultiple) it.pickPhotos.launch(request) else it.pickPhoto.launch(request) }
+    }
+
+    /**
+     * Only where the photo picker is the system's own: where it is not, the contract falls back to the documents UI
+     * asked for any image, which is what Files opens already.
+     */
+    override val canPickPhotos get() = ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)
+
+    private suspend fun pick(launch: (Launchers) -> Unit): List<ImportedFile> {
         // The view model runs one pick at a time, so a continuation still waiting here is one whose answer is never
         // coming; it is let go as a last resort rather than left hanging.
         pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
         // Between two Activities there is no launcher until the next one has composed, so it is waited for.
-        val launcher = launchers.filterNotNull().first().open
+        val currentLaunchers = launchers.filterNotNull().first()
         val uris = suspendCancellableCoroutine { continuation ->
             pickContinuation = continuation
             continuation.invokeOnCancellation { pickContinuation = null }
-            launcher.launch(mimeTypes)
+            launch(currentLaunchers)
         }
         return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
     }
@@ -248,6 +278,17 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         }
     }
 
+    fun onPhotoPicked(uri: Uri?) = onPicturesPicked(listOfNotNull(uri))
+
+    fun onPicturesPicked(uris: List<Uri>) {
+        val continuation = pickContinuation?.takeIf { it.isActive }
+        pickContinuation = null
+        when {
+            continuation != null -> continuation.resume(uris)
+            uris.isNotEmpty() -> println("Let go of ${uris.size} picture(s) picked for a process that did not live to read them.")
+        }
+    }
+
     fun onSaveLocationPicked(uri: Uri?) {
         val continuation = saveContinuation?.takeIf { it.isActive }
         saveContinuation = null
@@ -327,6 +368,9 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private companion object {
         const val ANY_MIME_TYPE = "*/*"
+
+        /** What a phone's camera saves, which the song's pictures cannot be, but the editor converts. */
+        val CONVERTED_PICTURE_MIME_TYPES = listOf("image/heic", "image/heif", "image/avif")
         const val SHARED_DIRECTORY = "shared"
         const val PENDING_EXPORT_DIRECTORY = "pending_export"
         const val PENDING_EXPORT_NAME = "export"
@@ -348,7 +392,7 @@ fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
         } catch (exception: Exception) {
             uri.fallbackName to null
         }
-        val name = displayName.withPictureExtension(runCatching { context.contentResolver.getType(uri) }.getOrNull())
+        val name = pictureFileName(displayName, runCatching { context.contentResolver.getType(uri) }.getOrNull())
         try {
             budget.read(name = name, size = size) { limit ->
                 // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
@@ -368,21 +412,6 @@ private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.con
         if (cursor.moveToFirst()) (cursor.getString(0) ?: fallbackName) to (if (cursor.isNull(1)) null else cursor.getLong(1)) else null
     }
     ?: (fallbackName to null)
-
-/**
- * [this] name with the extension of the picture [mimeType] says it is, where it has none of a picture's: a gallery may
- * share a photo under a bare number, and the import knows a picture alone by its name.
- */
-private fun String.withPictureExtension(mimeType: String?): String {
-    val extension = when (mimeType) {
-        "image/png" -> ".png"
-        "image/jpeg" -> ".jpg"
-        "image/gif" -> ".gif"
-        "image/webp" -> ".webp"
-        else -> return this
-    }
-    return if (LibraryFiles.isImageFileName(this)) this else this + extension
-}
 
 private const val SONG_EXPORT_MIME_TYPE = "application/octet-stream"
 

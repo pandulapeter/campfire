@@ -21,6 +21,7 @@ import androidx.compose.ui.input.key.Key
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
+import com.pandulapeter.campfire.presentation.resources.picture_source_photos
 import com.pandulapeter.campfire.presentation.resources.song_image
 import com.pandulapeter.campfire.presentation.resources.song_image_add
 import com.pandulapeter.campfire.presentation.resources.song_image_not_found
@@ -117,6 +118,24 @@ internal class SongImagesTest {
             waitForLibrary { songFile.readText().contains(picked.name) }
             assertTrue(library.resolve("files/${picked.name}").readBytes().contentEquals(picked.bytes), "The picked file was not stored by its content.")
             waitUntil(timeoutMillis = SHOW_TIMEOUT_MILLIS) { onAllNodes(hasContentDescription(string(Res.string.song_image)), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        }
+    }
+
+    @Test
+    fun `where there is a photo library Add image asks whether to pick from Photos or Files and stores the photo picked`() {
+        val photo = png(width = 300, height = 400)
+        runAppTest(
+            window = TestWindow.PHONE,
+            libraryFiles = library(song("A Missing Photo", "{image: src=photo.jpg}")),
+            pickedFiles = listOf(ImportedFile("holiday.png", png(width = 400, height = 300).bytes)),
+            pickedPhotos = listOf(ImportedFile("IMG_0001.png", photo.bytes)),
+        ) {
+            openSong("A Missing Photo")
+            tap(hasText(string(Res.string.song_image_add)) and hasClickAction())
+            tap(hasText(string(Res.string.picture_source_photos)) and hasClickAction())
+            val songFile = songsFolder.resolve(fileName("A Missing Photo"))
+            waitForLibrary { songFile.readText().contains(photo.name) }
+            assertTrue(library.resolve("files/${photo.name}").readBytes().contentEquals(photo.bytes), "The picked photo was not stored by its content.")
         }
     }
 

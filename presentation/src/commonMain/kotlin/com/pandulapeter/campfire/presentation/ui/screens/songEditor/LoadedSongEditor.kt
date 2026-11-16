@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.rememberEditorChordShapes
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.rememberTabStaff
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorImagePick
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.sheetMusicHeader
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.EditorSearchMode
@@ -102,7 +103,7 @@ internal fun LoadedSongEditor(
     windowSize: WindowSize,
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
-    onPickImage: (() -> Unit)?,
+    imagePick: EditorImagePick?,
     onBack: () -> Unit,
 ) {
     // Keyed on the file name so that opening another song starts a new field with its own undo history, and saved
@@ -247,7 +248,7 @@ internal fun LoadedSongEditor(
                 isFieldShown = panes != EditorPanes.PREVIEW,
                 onSave = onSaveRequested,
                 onOpenSearch = onOpenSearch,
-                onPickImage = onPickImage,
+                onPickImage = imagePick?.let { pick -> { pick.onShortcut(revealButton = { isToolbarExpanded = true }) } },
             ),
     ) {
         CampfireTopAppBar(
@@ -327,7 +328,7 @@ internal fun LoadedSongEditor(
                         sheetMusicHeader = remember(summary.metadata.key, summary.metadata.time) {
                             sheetMusicHeader(summary.metadata.key?.takeIf(ChordProTransposer::isKey), summary.metadata.time)
                         },
-                        onPickImage = onPickImage,
+                        imagePick = imagePick,
                         onValueToType = typingRequest::request,
                     )
                 }

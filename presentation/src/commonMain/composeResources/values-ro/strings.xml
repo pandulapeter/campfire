@@ -971,6 +971,8 @@
     <string name="song_editor_section_grid">Grilă</string>
     <string name="song_editor_section_abc">Partitură</string>
     <string name="song_editor_insert_image">Imagine</string>
+    <string name="picture_source_photos">Fotografii</string>
+    <string name="picture_source_files">Fișiere</string>
     <string name="song_editor_insert_chorus_recall">Repetă refrenul</string>
     <string name="song_editor_insert_comment">Comentariu</string>
     <string name="song_editor_insert_comment_italic">Comentariu cursiv</string>

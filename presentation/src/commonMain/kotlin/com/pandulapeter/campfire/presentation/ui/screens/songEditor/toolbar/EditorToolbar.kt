@@ -89,7 +89,6 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInstruments
 import com.pandulapeter.campfire.presentation.ui.instrument.chordInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
-import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.keyShortcut
 import com.pandulapeter.campfire.presentation.ui.tabs.sheetMusicInstruments
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
@@ -118,9 +117,8 @@ import org.jetbrains.compose.resources.painterResource
  *   menu, or for none, its strings named.
  * @param sheetMusicHeader The lines the Sheet music button writes above the caret where nothing is selected
  *   (`sheetMusicHeader`).
- * @param onPickImage What the Image button does: picks pictures, whose directives arrive at the caret once they are kept
- *   as draft pictures (`EditorImages.pickImages`). Null where the song may not take one (read only mode), which leaves the
- *   button out.
+ * @param imagePick What the Image button does. Null where the song may not take a picture (read only mode), which leaves
+ *   the button out.
  * @param onValueToType Called after a write that left a value to type ([leavesValueToType]), so that the keyboard comes
  *   up for it even where the user had put it away. Never for the formatting buttons: markup is toggled around what is
  *   there, and with nothing selected its empty pair waits for words as much as a section does.
@@ -133,11 +131,10 @@ internal fun EditorToolbar(
     chordShapes: EditorChordShapes,
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
     sheetMusicHeader: List<String>,
-    onPickImage: (() -> Unit)?,
+    imagePick: EditorImagePick?,
     onValueToType: () -> Unit,
 ) {
     val onInsert = onInsert@{ insertion: EditorInsertion ->
-        insertion.action?.let { action -> return@onInsert action() }
         val textBefore = textFieldState.text.toString()
         val selectionBefore = textFieldState.selection
         val instrument = insertion.chordShapeInstrument
@@ -151,7 +148,7 @@ internal fun EditorToolbar(
         verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
     ) {
         EditorToolbarRow(
-            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader, onPickImage),
+            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader, imagePick),
             contentPadding = contentPadding,
             onInsert = onInsert,
         )
@@ -188,11 +185,14 @@ private fun EditorToolbarRow(
         groups.forEachIndexed { index, group ->
             if (index > 0) EditorToolbarDivider()
             group.forEach { insertion ->
-                if (insertion.choices.isEmpty()) {
+                val imagePick = insertion.imagePick
+                if (imagePick != null) {
+                    EditorImageButton(label = insertion.label, imagePick = imagePick)
+                } else if (insertion.choices.isEmpty()) {
                     EditorToolbarButton(
                         label = insertion.label,
                         icon = insertion.icon?.let { painterResource(it) },
-                        shortcut = insertion.shortcut ?: insertion.formatting?.keyShortcut,
+                        shortcut = insertion.formatting?.keyShortcut,
                         onClick = { onInsert(insertion) },
                     )
                 } else {
@@ -352,13 +352,13 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
  * environment around it. Sheet music likewise asks whom the tune is for, any instrument or one of
  * [sheetMusicInstruments], the readers of notation among them, starts an empty block with the header a tune needs to be
- * drawn (`sheetMusicHeader`), and only wraps a selection. A picture ([onPickImage]) is a line of its own too, after them.
+ * drawn (`sheetMusicHeader`), and only wraps a selection. A picture ([imagePick]) is a line of its own too, after them.
  */
 @Composable
 private fun lineKindInsertions(
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
     sheetMusicHeader: List<String>,
-    onPickImage: (() -> Unit)?,
+    imagePick: EditorImagePick?,
 ): List<List<EditorInsertion>> = listOf(
     listOfNotNull(
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
@@ -372,7 +372,7 @@ private fun lineKindInsertions(
             choices = listOf(EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, header = sheetMusicHeader)) +
                 sheetMusicInstruments.map { instrument -> EditorInsertion.sheetMusic(instrumentLabel(instrument), selector = instrument.id, header = sheetMusicHeader) },
         ),
-        onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it, shortcut = KeyShortcut.INSERT_IMAGE) },
+        imagePick?.let { EditorInsertion.image(stringResource(Res.string.song_editor_insert_image), imagePick = it) },
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(

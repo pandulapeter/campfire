@@ -39,6 +39,21 @@ interface FilePicker {
     suspend fun pickImages(): List<ImportedFile> = pickFiles()
 
     /**
+     * Opens the system's photo library for one picture, or for several where [isMultiple], in the order they were
+     * picked, each named with a picture's extension (`pictureFileName`) since the library's photos often have no name of
+     * their own. Only asked where [canPickPhotos]; elsewhere it is [pickImages]. A photo that cannot be had (one kept only
+     * in the cloud, with no connection) is left out rather than handed over empty: the user can see which one is missing,
+     * and the pictures are no import to report on.
+     */
+    suspend fun pickPhotos(isMultiple: Boolean): List<ImportedFile> = pickImages()
+
+    /**
+     * Whether there is a photo library apart from the files [pickImages] opens (Android's photo picker, iOS's Photos),
+     * which is when the buttons that add a picture ask which of the two to pick from.
+     */
+    val canPickPhotos: Boolean get() = false
+
+    /**
      * Offers the file to be saved: a "save as" dialog, a share sheet or a download. False when the user dismissed it
      * and nothing was saved, and when the platform could not show anything at all. A file that was meant to be saved
      * and could not be written is an exception, not a false: that is the one the caller tells the user about.

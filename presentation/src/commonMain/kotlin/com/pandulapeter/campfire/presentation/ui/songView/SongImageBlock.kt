@@ -75,8 +75,8 @@ internal fun SongImageBlock(
     section: RenderSection.Image,
 ) = when (val size = section.size) {
     is SongImageSize.Known -> KnownImage(modifier = modifier, image = section.image, size = size)
-    SongImageSize.Missing -> MissingImage(modifier = modifier, name = section.image.src, onAdd = LocalSongImageAdder.current?.let { add -> { add(section.image.src) } })
-    null -> MissingImage(modifier = modifier, name = section.image.src, onAdd = null, isShown = false)
+    SongImageSize.Missing -> MissingImage(modifier = modifier, name = section.image.src, adder = LocalSongImageAdder.current)
+    null -> MissingImage(modifier = modifier, name = section.image.src, adder = null, isShown = false)
 }
 
 @Composable

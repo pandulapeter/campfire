@@ -13,9 +13,9 @@ The whole UI plus the thin per-platform shells. Depends on `:domain:api` and `:l
 local sources.
 
 - **Shells** (the `ui` package of each platform source set) only do what common Compose cannot; anything non-trivial
-  belongs in `commonMain` (`expect`/`actual`, `ui/platform/`). Each provides `LocalFilePicker`, a `Flow` of files the OS
-  handed over ("open with", share), and drops; Android's also shared texts, iOS's the share extension's
-  `InboxShare`s.
+  belongs in `commonMain` (`expect`/`actual`, `ui/platform/`). Each provides `LocalFilePicker` (on Android and iOS
+  with the photo library too), a `Flow` of files the OS handed over ("open with", share), and drops; Android's also
+  shared texts, iOS's the share extension's `InboxShare`s.
 
 ## Package layers
 

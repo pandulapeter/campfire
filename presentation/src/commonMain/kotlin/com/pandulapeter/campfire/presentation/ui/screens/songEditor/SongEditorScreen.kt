@@ -41,7 +41,10 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.components.menu.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.pickPictures
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorImagePick
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import org.jetbrains.compose.resources.painterResource
@@ -108,8 +111,15 @@ internal fun SongEditorScreen(
     // Read only mode takes in no picture, as it changes nothing else: an editor is open in it only on a shared text.
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
-    val onPickImage = remember(isPerformanceModeEnabled, destination.fileName, filePicker) {
-        if (isPerformanceModeEnabled) null else ({ viewModel.editorSession.images.pickImages(destination.fileName, filePicker::pickImages) })
+    val imageMenuState = rememberOverflowMenuState()
+    val imagePick = remember(isPerformanceModeEnabled, destination.fileName, filePicker) {
+        if (isPerformanceModeEnabled) {
+            null
+        } else {
+            EditorImagePick(canPickPhotos = filePicker.canPickPhotos, menuState = imageMenuState) { source ->
+                viewModel.editorSession.images.pickImages(destination.fileName) { filePicker.pickPictures(source, isMultiple = true) }
+            }
+        }
     }
     AnimatedContent(
         modifier = modifier.fillMaxSize(),
@@ -138,7 +148,7 @@ internal fun SongEditorScreen(
                 windowSize = windowSize,
                 contentPadding = contentPadding,
                 urlOpener = urlOpener,
-                onPickImage = onPickImage,
+                imagePick = imagePick,
                 onBack = onBack,
             )
         }

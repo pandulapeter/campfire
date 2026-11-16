@@ -36,11 +36,14 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_image
 import com.pandulapeter.campfire.presentation.resources.song_image_add
 import com.pandulapeter.campfire.presentation.resources.song_image_not_found
+import com.pandulapeter.campfire.presentation.ui.components.menu.PictureSourceMenu
+import com.pandulapeter.campfire.presentation.ui.platform.PictureSource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What stands where a song names a picture the library lacks: a box saying so, with Add image where [onAdd] is given.
- * Its room never depends on [onAdd]: the button keeps its room where it is hidden (read only mode, a preview) and fades,
+ * What stands where a song names a picture the library lacks: a box saying so, with Add image where [adder] is given,
+ * which first asks where from in a [PictureSourceMenu] where the platform has a photo library apart from its files.
+ * Its room never depends on [adder]: the button keeps its room where it is hidden (read only mode, a preview) and fades,
  * since a song is measured by what it holds and read only mode changes nothing it holds. Where [isShown] is false it only
  * takes its room, empty: a picture whose size is still being read.
  */
@@ -48,7 +51,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun MissingImage(
     modifier: Modifier = Modifier,
     name: String,
-    onAdd: (() -> Unit)?,
+    adder: MissingImageAdder?,
     isShown: Boolean = true,
 ) = Column(
     modifier = modifier
@@ -72,14 +75,21 @@ internal fun MissingImage(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
     )
-    val buttonAlpha by animateFloatAsState(if (onAdd != null && isShown) 1f else 0f)
-    FilledTonalButton(
-        modifier = Modifier
-            .alpha(buttonAlpha)
-            .then(if (onAdd == null) Modifier.semantics { hideFromAccessibility() } else Modifier),
-        onClick = { onAdd?.invoke() },
-        enabled = onAdd != null && isShown,
-    ) {
-        Text(stringResource(Res.string.song_image_add))
+    val buttonAlpha by animateFloatAsState(if (adder != null && isShown) 1f else 0f)
+    val addButton = @Composable { onClick: () -> Unit ->
+        FilledTonalButton(
+            modifier = Modifier
+                .alpha(buttonAlpha)
+                .then(if (adder == null) Modifier.semantics { hideFromAccessibility() } else Modifier),
+            onClick = onClick,
+            enabled = adder != null && isShown,
+        ) {
+            Text(stringResource(Res.string.song_image_add))
+        }
+    }
+    if (adder?.canPickPhotos == true) {
+        PictureSourceMenu(button = addButton, onPick = { source -> adder.add(name, source) })
+    } else {
+        addButton { adder?.add(name, PictureSource.FILES) }
     }
 }

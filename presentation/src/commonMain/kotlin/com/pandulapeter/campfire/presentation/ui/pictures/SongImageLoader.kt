@@ -89,10 +89,10 @@ internal fun rememberSongImageSizes(text: String): Map<String, SongImageSize> {
 internal val LocalSongImageLoader = staticCompositionLocalOf<SongImageLoader> { NoSongImages }
 
 /**
- * Picks a file for the missing picture a song names by the name it is handed, and stores it under that song: only where
- * the song may be written (never in read only mode or a preview), null elsewhere, which hides the placeholder's button.
+ * Picks a picture for a missing one a song names and stores it under that song: only where the song may be written
+ * (never in read only mode or a preview), null elsewhere, which hides the placeholder's button.
  */
-internal val LocalSongImageAdder = compositionLocalOf<((name: String) -> Unit)?> { null }
+internal val LocalSongImageAdder = compositionLocalOf<MissingImageAdder?> { null }
 
 private object NoSongImages : SongImageLoader {
     private val _sizes = MutableStateFlow(emptyMap<String, SongImageSize>())

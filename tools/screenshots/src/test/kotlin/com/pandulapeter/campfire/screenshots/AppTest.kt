@@ -102,7 +102,7 @@ internal data class TestAppearance(
  * over a library that holds the demo songs, the [songs] of the test resources' `songs` folder, and the [setlists] of its
  * `setlists` folder, with the launch
  * screen gone and the song details screen's text at [fontScale], its songs laid out as [songLayout] and turned by [pageTurn]. The file picker hands over [pickedFiles] whenever the
- * app asks for files.
+ * app asks for files, and [pickedPhotos] whenever it asks the photo library, which it has only where they are given.
  *
  * Only the network is kept out: sync is `Fakes.kt`'s, the cover search finds nothing (`OfflineCoverArtRepository`),
  * covers are switched off unless [isCoverArtEnabled], and nothing else reaches outside unless a test opens a song
@@ -130,6 +130,7 @@ internal fun runAppTest(
     songLayout: SongLayout = SongLayout.PAGES,
     pageTurn: PageTurn = PageTurn.PAGE,
     pickedFiles: List<ImportedFile> = emptyList(),
+    pickedPhotos: List<ImportedFile>? = null,
     appearance: TestAppearance = TestAppearance(),
     isCoverArtEnabled: Boolean = false,
     isFirstRun: Boolean = false,
@@ -156,6 +157,7 @@ internal fun runAppTest(
             window = window,
             platform = platform,
             pickedFiles = pickedFiles,
+            pickedPhotos = pickedPhotos,
             appearance = appearance,
             fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
             writeData = { dataDirectory ->
@@ -175,6 +177,7 @@ private fun runApp(
     window: TestWindow,
     platform: ImpersonatedPlatform,
     pickedFiles: List<ImportedFile>,
+    pickedPhotos: List<ImportedFile>?,
     appearance: TestAppearance,
     fakes: List<Module>,
     writeData: (File) -> Unit,
@@ -208,7 +211,7 @@ private fun runApp(
                 onDispose { dispatcher?.removeInput(backInput) }
             }
             host.Content(
-                filePicker = TestFilePicker(pickedFiles),
+                filePicker = TestFilePicker(pickedFiles, pickedPhotos),
                 isPrepared = true,
                 keyboardHeight = keyboardHeight.value,
                 onViewModel = { viewModel = it },
@@ -363,11 +366,15 @@ private fun writeLibrary(
     File(dataDirectory, "preferences/preferences.json").writeText(preferences.toString())
 }
 
-/** A file picker that picks [files] every time it is asked, and never saves or shares. */
-private class TestFilePicker(private val files: List<ImportedFile>) : FilePicker {
+/** A file picker that picks [files] every time it is asked, and [photos] from a photo library where they are given; it never saves or shares. */
+private class TestFilePicker(private val files: List<ImportedFile>, private val photos: List<ImportedFile>?) : FilePicker {
     override val canShare = false
 
+    override val canPickPhotos = photos != null
+
     override suspend fun pickFiles() = files
+
+    override suspend fun pickPhotos(isMultiple: Boolean) = checkNotNull(photos).let { if (isMultiple) it else it.take(1) }
 
     override suspend fun saveFile(file: ExportedFile) = false
 

@@ -31,8 +31,9 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   which reads the type from the bytes, so nothing here turns a picture. The viewer (`ImageViewer`, a `Dialog`) decodes at twice the window, which is as far
   as zooming in stays sharp; zoom and pan are `ImageZoom` (tested).
 - **A missing picture** (no file, or one some platform cannot show) is `MissingImage`: the sentence, and Add image
-  where `LocalSongImageAdder` is given (never in read only mode or a preview). The button keeps its room where hidden,
-  since read only mode changes nothing a song's measurements are kept by. Add stores the picked file and points the
+  where `LocalSongImageAdder` is given (never in read only mode or a preview), asking Photos or Files in a popup where
+  there is a photo library, taking one picture. The button keeps its room where hidden, since read only mode changes
+  nothing a song's measurements are kept by. Add stores the picked file and points the
   song's directives at it in one step (`SaveSongImageUseCase`, under `SongTextStore`'s write lock); a refused file is a
   snackbar saying why.
 - **A picture the user adds** (the editor's Image button, one opened, shared, or dropped alone, Add image) goes through

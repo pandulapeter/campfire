@@ -929,6 +929,8 @@
     <string name="song_editor_section_grid">Rács</string>
     <string name="song_editor_section_abc">Kotta</string>
     <string name="song_editor_insert_image">Kép</string>
+    <string name="picture_source_photos">Fotók</string>
+    <string name="picture_source_files">Fájlok</string>
     <string name="song_editor_insert_chorus_recall">Refrén ismétlése</string>
     <string name="song_editor_insert_comment">Megjegyzés</string>
     <string name="song_editor_insert_comment_italic">Dőlt megjegyzés</string>

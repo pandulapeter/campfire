@@ -77,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageAdder
+import com.pandulapeter.campfire.presentation.ui.pictures.MissingImageAdder
 import com.pandulapeter.campfire.presentation.ui.pictures.rememberSongImageSizes
 import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
@@ -137,7 +138,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param turnsByColumn Whether a song in pages is turned a column at a time (`PageTurn.COLUMN`): set as a strip that
  *   scrolls sideways wherever it is stepped through, see [songPageScroll], and stepped by a row of buttons along the
  *   bottom ([StepControls]) rather than a column of them at the end edge, whose room it leaves under it instead.
- * @param onAddImage Picks and stores the picture the song names by the name it is handed, see [LocalSongImageAdder].
+ * @param onAddImage Picks and stores a picture the song names but the library lacks, see [LocalSongImageAdder].
  */
 @Composable
 internal fun SongDetailsPage(
@@ -182,7 +183,7 @@ internal fun SongDetailsPage(
     showsDegrees: Boolean,
     isContinuous: Boolean,
     turnsByColumn: Boolean,
-    onAddImage: ((name: String) -> Unit)?,
+    onAddImage: MissingImageAdder?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
