@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -39,6 +40,11 @@ import kotlin.js.Promise
  * Sharing is the Web Share API where the browser has it (the phones' browsers, Safari, Chrome and Edge on Windows and
  * ChromeOS; not Firefox on a computer), each kind of file asked about separately, since every browser keeps its own list
  * of the kinds it lets out.
+ *
+ * An archive or a PDF is handed over as the `File` its export was written into in the origin private file system,
+ * which the browser reads from disk, never copied into the page's memory. It is left there, since a download or a
+ * share may still be reading it after the call returns: the next export of the name replaces it, and the next launch
+ * empties the folder.
  */
 internal object WebFilePicker : FilePicker {
 
@@ -50,7 +56,7 @@ internal object WebFilePicker : FilePicker {
      * user kept it, so this is optimistic by necessity.
      */
     override suspend fun saveFile(file: ExportedFile): Boolean {
-        downloadFile(name = file.name, mimeType = file.mimeType, bytes = file.bytes.toInt8Array())
+        downloadFile(name = file.name, mimeType = file.mimeType, blob = file.blob())
         return true
     }
 
@@ -65,7 +71,7 @@ internal object WebFilePicker : FilePicker {
      */
     override suspend fun shareFile(file: ExportedFile): Boolean {
         if (!canShareFile(fileName = file.name, mimeType = file.mimeType)) return saveFile(file)
-        return when (shareFileData(name = file.name, mimeType = file.mimeType, bytes = file.bytes.toInt8Array()).await<JsString>().toString()) {
+        return when (shareFileData(name = file.name, mimeType = file.mimeType, blob = file.blob()).await<JsString>().toString()) {
             SHARED -> true
             DISMISSED -> false
             else -> saveFile(file)
@@ -82,6 +88,23 @@ internal object WebFilePicker : FilePicker {
         else -> throw IllegalStateException("The browser refused to share the link (${result.removePrefix(REFUSED_PREFIX)}).")
     }
 }
+
+/** The export as a `Blob`: its bytes, or its file in the origin private file system, by the path from its root. */
+private suspend fun ExportedFile.blob(): JsAny = when (val content = content) {
+    is ExportedContent.Bytes -> bytesBlob(content.bytes.toInt8Array(), mimeType)
+    is ExportedContent.TemporaryFile -> opfsFile(content.path).await()
+}
+
+private fun bytesBlob(bytes: Int8Array, mimeType: String): JsAny = js("new Blob([bytes], { type: mimeType })")
+
+private fun opfsFile(path: String): Promise<JsAny> = js(
+    """(async function () {
+        var segments = path.split('/');
+        var directory = await navigator.storage.getDirectory();
+        for (var i = 0; i < segments.length - 1; i++) directory = await directory.getDirectoryHandle(segments[i]);
+        return (await directory.getFileHandle(segments[segments.length - 1])).getFile();
+    })()"""
+)
 
 private const val SHARED = "shared"
 private const val DISMISSED = "dismissed"
@@ -101,8 +124,8 @@ private fun canShareFiles(name: String, mimeType: String): Boolean = js(
 )
 
 /** Resolves with `shared`, with `dismissed` where the user closed the sheet (an `AbortError`), or with `refused`. */
-private fun shareFileData(name: String, mimeType: String, bytes: Int8Array): Promise<JsString> = js(
-    """navigator.share({ files: [new File([bytes], name, { type: mimeType })] }).then(
+private fun shareFileData(name: String, mimeType: String, blob: JsAny): Promise<JsString> = js(
+    """navigator.share({ files: [new File([blob], name, { type: mimeType })] }).then(
         function () { return 'shared'; },
         function (error) { return error && error.name === 'AbortError' ? 'dismissed' : 'refused'; }
     )"""
@@ -176,9 +199,9 @@ private fun fileBytes(file: JsAny): Promise<Int8Array?> = js(
     )"""
 )
 
-private fun downloadFile(name: String, mimeType: String, bytes: Int8Array): Unit = js(
+private fun downloadFile(name: String, mimeType: String, blob: JsAny): Unit = js(
     """(function () {
-        var url = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+        var url = URL.createObjectURL(new File([blob], name, { type: mimeType }));
         var link = document.createElement('a');
         link.href = url;
         link.download = name;

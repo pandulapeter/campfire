@@ -9,14 +9,18 @@
  */
 package com.pandulapeter.campfire.domain.implementation.sharing
 
+import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
 import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.data.model.share.SharingFailure
+import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.sharing.CreateShareLinkUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Factory
 
@@ -25,6 +29,8 @@ internal class CreateShareLinkUseCaseImpl(
     private val sharedLinksRepository: SharedLinksRepository,
     private val exportSetlist: ExportSetlistUseCase,
     private val exportSongs: ExportSongsUseCase,
+    private val exportFileRepository: ExportFileRepository,
+    private val logger: Logger,
 ) : CreateShareLinkUseCase {
 
     override suspend operator fun invoke(
@@ -45,8 +51,19 @@ internal class CreateShareLinkUseCaseImpl(
             SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, isDated = false)
             SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false) { _, text -> text }
         } ?: return CreateShareResult.Missing
-        // Anyone opening the link takes the copy in as an import, which refuses anything larger.
-        if (copy.isTooLargeToImport) return CreateShareResult.TooLarge
-        return sharedLinksRepository.share(kind = kind, fileName = fileName, title = title, copy = copy.bytes)
+        // Read back whole for the upload, which is one request: the import's limit below keeps it small.
+        val bytes = try {
+            // Anyone opening the link takes the copy in as an import, which refuses anything larger.
+            if (copy.isTooLargeToImport) return CreateShareResult.TooLarge
+            exportFileRepository.read(copy)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            logger.log("Could not read the shared copy of $fileName: ${exception.message}")
+            null
+        } finally {
+            exportFileRepository.discard(copy)
+        } ?: return CreateShareResult.Failed(SharingFailure.UNKNOWN)
+        return sharedLinksRepository.share(kind = kind, fileName = fileName, title = title, copy = bytes)
     }
 }

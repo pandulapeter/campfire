@@ -23,6 +23,8 @@ The web shell (page-side quirks: `app/web/CLAUDE.md`).
 - Drops: a folder is read to the bottom like the desktop's, unknown names peeked at (`fileHead`) and read only as an
   archive or a text; an unreadable file arrives empty and is reported as skipped. A drop with no file is text, a pasted
   song where `isNewSongDropAvailable` (read only mode too), ignored elsewhere.
+- An archive or PDF is downloaded or shared as its OPFS `File` (read from disk, never copied into the heap) and left
+  there, since the download may still be reading it: the next export of the name replaces it, a launch empties the folder.
 - A link the browser refuses to share (anything but the user closing the sheet) throws from `shareText`, so the screen
   says the share failed; a refused file is downloaded instead.
 - Shared links come from the list `index.html` keeps of the address's fragment and of what other tabs hand over, one

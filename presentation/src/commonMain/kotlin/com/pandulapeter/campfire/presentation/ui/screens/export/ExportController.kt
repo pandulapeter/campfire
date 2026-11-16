@@ -12,14 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 import com.pandulapeter.campfire.presentation.mapper.toPreferFlats
 import com.pandulapeter.campfire.presentation.ui.notation.NotationChordSpelling
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.domain.api.library.ScreenData
-import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
@@ -93,9 +91,7 @@ internal class ExportController(
     private val effectiveCapoOf: (songFileName: String, setlistFileName: String?) -> EffectiveCapo,
     private val songRenderer: SongRenderer,
     private val getSongContent: GetSongContentUseCase,
-    private val exportSongs: ExportSongsUseCase,
-    private val exportSetlist: ExportSetlistUseCase,
-    private val exportLibrary: ExportLibraryUseCase,
+    private val useCases: ExportUseCases,
     private val updateUserPreferences: UpdateUserPreferencesUseCase,
     pendingWrites: PendingWrites,
 ) {
@@ -107,6 +103,8 @@ internal class ExportController(
      * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
      */
     val printSettingsPreference = pendingWrites.preference<PrintSettings> { copy(printSettings = it) }
+
+    private val saver = ExportSaver(messageSink = messageSink, discardExportedFile = useCases.discardExportedFile)
 
     val pendingPrintSettings = printSettingsPreference.pending
 
@@ -292,7 +290,7 @@ internal class ExportController(
         dialog: DialogType.Export,
         pageCount: Int,
         isShare: Boolean,
-        create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
+        create: suspend (sink: ExportSink, onPage: (done: Int) -> Unit) -> Unit,
     ) {
         // A Save kept until the pages were laid out can arrive after the screen was closed, and its picker would come up
         // over whatever is on screen by then. Equality rather than identity: the same export closed and opened again
@@ -302,7 +300,7 @@ internal class ExportController(
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {
                 // A share leaves the screen open, since a second share or a save may follow; save() only calls onSaved for a save.
-                save(
+                saver.save(
                     filePicker = filePicker,
                     savedMessage = Message.PdfSaved,
                     isShare = isShare,
@@ -310,8 +308,18 @@ internal class ExportController(
                     // Activity recreated under the picker): dismissSheet does nothing once another dialog took its place.
                     onSaved = { dialogHost.dismissSheet(dialog) },
                 ) {
-                    val bytes = try {
-                        withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
+                    val content = try {
+                        withContext(Dispatchers.Default) {
+                            // Written into a file page by page, never held whole.
+                            val writer = useCases.createExportFile(fileName)
+                            try {
+                                create(writer) { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) }
+                                writer.finish()
+                            } catch (throwable: Throwable) {
+                                writer.abandon()
+                                throw throwable
+                            }
+                        }
                     } catch (exception: CancellationException) {
                         throw exception
                     } catch (throwable: Throwable) {
@@ -322,7 +330,7 @@ internal class ExportController(
                         // file all the same once it answered.
                         _pdfExportProgress.value = null
                     }
-                    bytes?.let { ExportedFile(fileName, ExportedFile.PDF_MIME_TYPE, it) }
+                    content?.let { ExportedFile(name = fileName, mimeType = ExportedFile.PDF_MIME_TYPE, content = it) }
                 }
             } finally {
                 _pdfExportProgress.value = null
@@ -345,7 +353,7 @@ internal class ExportController(
         if (dialogHost.visibleDialog.value != dialog) return
         val setlist = dialog.setlist
         launchFileTransfer {
-            save(
+            saver.save(
                 filePicker = filePicker,
                 savedMessage = when {
                     setlist != null -> Message.SetlistExported
@@ -359,9 +367,9 @@ internal class ExportController(
                 onSaved = { dialogHost.dismissSheet(dialog) },
             ) {
                 when {
-                    setlist != null -> exportSetlist(setlistFileName = setlist.fileName, isDated = true)
-                    dialog.songs.isNotEmpty() -> exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isDated = true, rewrite = rewrite)
-                    else -> exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true, rewrite = rewrite)
+                    setlist != null -> useCases.exportSetlist(setlistFileName = setlist.fileName, isDated = true)
+                    dialog.songs.isNotEmpty() -> useCases.exportSongs(fileNames = dialog.songs.map { it.fileName }, isArchive = true, isDated = true, rewrite = rewrite)
+                    else -> useCases.exportSongs(fileNames = listOf(requireNotNull(dialog.song).fileName), isArchive = false, isDated = true, rewrite = rewrite)
                 }
             }
         }
@@ -374,7 +382,7 @@ internal class ExportController(
     fun exportQrCode(filePicker: FilePicker, dialog: DialogType.Export, fileName: String, png: suspend () -> ByteArray) {
         if (dialogHost.visibleDialog.value != dialog) return
         launchFileTransfer {
-            save(filePicker = filePicker, savedMessage = Message.QrCodeSaved) {
+            saver.save(filePicker = filePicker, savedMessage = Message.QrCodeSaved) {
                 ExportedFile(fileName, ExportedFile.PNG_MIME_TYPE, withContext(Dispatchers.Default) { png() })
             }
         }
@@ -402,14 +410,14 @@ internal class ExportController(
 
     fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
         var skippedFileNames = emptyList<String>()
-        save(
+        saver.save(
             filePicker = filePicker,
             savedMessage = Message.LibraryExported,
             // After the save rather than instead of it: the archive is a real copy of everything that could be read,
             // and what it is missing is the one thing the user could not otherwise find out.
             warnings = { listOfNotNull(skippedFileNames.takeIf { it.isNotEmpty() }?.let(Message::ExportSkippedFiles)) },
         ) {
-            exportLibrary.invoke()?.also { skippedFileNames = it.skippedFileNames }?.file
+            useCases.exportLibrary.invoke()?.also { skippedFileNames = it.skippedFileNames }?.file
         }
     }
 
@@ -434,7 +442,7 @@ internal class ExportController(
             println("Could not email the log: ${exception.message}")
             false
         }
-        if (!isEmailed) save(filePicker = filePicker, savedMessage = Message.ProcessLogSaved, isShare = filePicker.canShareProcessLog) { file }
+        if (!isEmailed) saver.save(filePicker = filePicker, savedMessage = Message.ProcessLogSaved, isShare = filePicker.canShareProcessLog) { file }
     }
 
     /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
@@ -447,51 +455,13 @@ internal class ExportController(
         messageSink.sendMessage(Message.LinkNotOpened(url))
     }
 
-    /**
-     * Nothing to export and a picker that threw are the same thing to the user: the file did not come out.
-     *
-     * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
-     * hand, but the user is told so the day it is made rather than the day it is needed. [onSaved] runs once the file
-     * has been saved, and not for one the user dismissed the dialog of.
-     *
-     * A saved file is confirmed with [savedMessage], unless something about it is worth saying instead ([warnings],
-     * read once the file has been made): each of those already says the file was saved, and a confirmation queued
-     * after them would only hold up the one line that matters. A share is not confirmed at all, since the platform's
-     * own sheet is what the user sees it go out through, and it cannot tell a share that happened from one dismissed.
-     *
-     * A file [isWanted] no longer asks for once it is made is dropped without a word: whoever asked for it has gone.
-     */
-    private suspend fun save(
-        filePicker: FilePicker,
-        savedMessage: Message,
-        isShare: Boolean = false,
-        isWanted: () -> Boolean = { true },
-        warnings: () -> List<Message> = { emptyList() },
-        onSaved: () -> Unit = {},
-        export: suspend () -> ExportedFile?,
-    ) = try {
-        val file = export()
-        println("Export: ${file?.let { "${it.mimeType}, ${it.bytes.size} bytes, ${if (isShare) "shared" else "saved"}" } ?: "nothing to export"}")
-        when {
-            !isWanted() -> Unit
-            file == null -> messageSink.sendMessage(Message.ExportFailed)
-            isShare -> filePicker.shareFile(file)
-            filePicker.saveFile(file) -> {
-                val messages = listOfNotNull(Message.ExportTooLargeToImport.takeIf { file.isTooLargeToImport }) + warnings()
-                messages.ifEmpty { listOf(savedMessage) }.forEach(messageSink::sendMessage)
-                onSaved()
-            }
-        }
-        Unit
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("Could not export: ${exception.message}")
-        messageSink.sendMessage(Message.ExportFailed)
-    }
-
     /** Writes the export options at once, for the export screen going. */
     fun flushPrintSettings() {
         scope.launch { printSettingsPreference.flush(updateUserPreferences::invoke) }
+    }
+
+    init {
+        // What an earlier process left in the exports folder: a crash under an export, a share another app has read.
+        scope.launch { useCases.clearExportFiles() }
     }
 }

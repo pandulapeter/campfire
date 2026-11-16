@@ -98,7 +98,7 @@ class PdfRoundTripTest {
         val title = song.metadata.title.orEmpty()
         val entry = PrintSong("song.cho", title, song.metadata.artist, song = printed)
         val document = layoutPrintDocument(PrintSource(title, songs = listOf(entry)), settings, labels, renderer::width, measureLyric = renderer::lyricLayout)
-        val extracted = PdfTextExtractor.extract(renderer.pdf(document, title))
+        val extracted = PdfTextExtractor.extract(renderer.pdfBytes(document, title))
         return ChordProParser.parse(ChordSheetConverter.convert(extracted).single())
     }
 

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.language.isStrongRtl
 import com.pandulapeter.campfire.chordpro.language.WritingDirection
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
+import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.presentation.ui.chords.drawChordDiagram
 import com.pandulapeter.campfire.presentation.ui.notation.NotationPainter
 import com.pandulapeter.campfire.presentation.ui.notation.NotationSystemPaint
@@ -240,12 +241,13 @@ internal class PrintRenderer(
     }
 
     /**
-     * The PDF file of [document], each page drawn as an image with matching invisible, selectable text.
+     * The PDF file of [document], each page drawn as an image with matching invisible, selectable text, written into
+     * [sink] page by page.
      *
      * @param onPage Called with the number of pages done after each page is added to the file.
      */
-    suspend fun pdf(document: PrintDocument, title: String, onPage: (done: Int) -> Unit = {}): ByteArray {
-        val writer = PrintPdfWriter(document.width, document.height, title)
+    suspend fun pdf(document: PrintDocument, title: String, sink: ExportSink, onPage: (done: Int) -> Unit = {}) {
+        val writer = PrintPdfWriter(document.width, document.height, title, sink)
         val scale = 3f // 216 dpi: text remains sharp at its physical print size.
         val width = ceil(document.width * scale).toInt()
         val height = ceil(document.height * scale).toInt()
@@ -273,7 +275,7 @@ internal class PrintRenderer(
             onPage(index + 1)
             yield()
         }
-        return writer.finish()
+        writer.finish()
     }
 }
 

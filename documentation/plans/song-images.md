@@ -95,9 +95,9 @@ import.
 
 ### 0. Prerequisite: the streaming zip writer
 
-[streaming-zip-writer.md](streaming-zip-writer.md). Exports and shared copies build their zip in memory today, which is fine for text and is not
-for a library with a hundred photos, the web build above all. Images in archives (steps 6 and 7) wait for it; steps
-1–5 do not.
+Done: exports are written into a file entry by entry (`ExportFileLocalSource`, `ZipWriter` over a sink) and handed to
+each platform as that file. `SharedCopySync` still packs a shared copy in memory, which the 24 MiB import limit
+bounds; a copy with photos that should exceed it needs that limit raised first.
 
 ### 1. The directive (`:libs:chordpro`, pure)
 

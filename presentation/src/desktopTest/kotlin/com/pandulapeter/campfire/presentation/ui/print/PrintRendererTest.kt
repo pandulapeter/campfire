@@ -77,7 +77,7 @@ internal class PrintRendererTest {
         assertEquals(expectedBold.height, bold.height, "Bold glyph's height")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
-            File(directory, "unicode.pdf").writeBytes(renderer.pdf(PrintDocument(300f, 120f, listOf(page)), "Unicode"))
+            File(directory, "unicode.pdf").writeBytes(renderer.pdfBytes(PrintDocument(300f, 120f, listOf(page)), "Unicode"))
         }
         Unit
     }
@@ -110,7 +110,7 @@ internal class PrintRendererTest {
         val chord = document.pages.single().texts.first { it.text == "Am" }
         assertEquals(lyric.x, chord.x)
         assertTrue(chord.y < lyric.y)
-        val bytes = renderer.pdf(document, "Árvíztűrő dal")
+        val bytes = renderer.pdfBytes(document, "Árvíztűrő dal")
         assertTrue(bytes.decodeToString().contains("/ToUnicode"))
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
@@ -132,7 +132,7 @@ internal class PrintRendererTest {
         assertTrue(page.texts.first { it.text.startsWith("Line 30") }.x > document.width / 2)
         val lines = renderer.selectableText(page).joinToString("") { it.text }
         assertTrue(lines.indexOf("Line 01") < lines.indexOf("Line 30"))
-        val bytes = renderer.pdf(document, "Column song")
+        val bytes = renderer.pdfBytes(document, "Column song")
         val content = contentStreams(bytes).single().let(::inflate).decodeToString()
         assertEquals(63, Regex("] TJ").findAll(content).count(), "Each chord row and lyric row must be one text object, not isolated letters.")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
@@ -156,7 +156,7 @@ internal class PrintRendererTest {
                     bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
             val page = document.pages.single()
             assertEquals(columns, page.texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, name)
-            val bytes = renderer.pdf(document, "Column song")
+            val bytes = renderer.pdfBytes(document, "Column song")
             System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
                 File(directory).mkdirs()
                 File(directory, "$name.pdf").writeBytes(bytes)
@@ -173,7 +173,7 @@ internal class PrintRendererTest {
             PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
                 bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.size > 1)
-        val bytes = renderer.pdf(document, "Dense")
+        val bytes = renderer.pdfBytes(document, "Dense")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
             File(directory, "campfire-columns-dense.pdf").writeBytes(bytes)
@@ -215,7 +215,7 @@ internal class PrintRendererTest {
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", PrintSource.Kind.SETLIST, listOf(first, second)),
             PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.size >= 4)
-        val bytes = renderer.pdf(document, "Campfire concert")
+        val bytes = renderer.pdfBytes(document, "Campfire concert")
         val contents = bytes.decodeToString()
         assertEquals(document.pages.size, Regex("/Subtype /Image").findAll(contents).count())
         assertTrue(contents.contains("/Count ${document.pages.size}"))
@@ -260,7 +260,7 @@ internal class PrintRendererTest {
         val document = layoutPrintDocument(PrintSource("Cut sections", songs = listOf(PrintSong("cut.cho", "Cut sections", null, song = parsed))),
             PrintSettings(columns = 2), PrintLabels("Key", "Transposition", "Capo", "Tempo", "$TEMPO_VALUE BPM", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro", abc = "ABC notation", lilyPond = "LilyPond", svg = "SVG")), renderer::width)
         assertTrue(document.pages.isNotEmpty())
-        val bytes = renderer.pdf(document, "Cut sections")
+        val bytes = renderer.pdfBytes(document, "Cut sections")
         // Opt-in output for manual visual QA. Ordinary test runs leave no files behind.
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
@@ -296,14 +296,14 @@ internal class PrintRendererTest {
         val world = renderer.lyricLayout(mixed.text, mixed.style, mixed.formatting, listOf(mixed.text.indexOf("world"))).anchors.single()
         assertTrue(!world.isRightToLeft)
         assertEquals(mixed.x + world.x, texts.single { it.text == "E7" }.x, 0.01f)
-        val bytes = renderer.pdf(document, "שיר ערש")
+        val bytes = renderer.pdfBytes(document, "שיר ערש")
         val columns = layoutPrintDocument(PrintSource("שורות", songs = listOf(PrintSong("hebrew-columns.cho", "שורות", null, song = ChordProParser.parse(
             "{title: שורות}\n{start_of_verse: Verse 1}\n" + (1..30).joinToString("\n") { "[Am]שורה ${it.toString().padStart(2, '0')} שרים [F]ביחד." } + "\n{end_of_verse}",
         )))), PrintSettings(columns = 2), labels, renderer::width, measureLyric = renderer::lyricLayout)
         val page = columns.pages.single()
         assertTrue(page.texts.first { it.text.startsWith("שורה 01") }.x > columns.width / 2)
         assertTrue(page.texts.first { it.text.startsWith("שורה 30") }.x < columns.width / 2)
-        val columnBytes = renderer.pdf(columns, "שורות")
+        val columnBytes = renderer.pdfBytes(columns, "שורות")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
             File(directory, "campfire-hebrew.pdf").writeBytes(bytes)
@@ -323,7 +323,7 @@ internal class PrintRendererTest {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20f))))
         val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20f))))
-        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
+        val bytes = renderer.pdfBytes(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
         val width = 300
         val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
         assertEquals(3, pages.size)
@@ -341,7 +341,7 @@ internal class PrintRendererTest {
         fun page(system: Int) = PrintPage(texts = emptyList(), notations = listOf(PrintNotation(drawing, system, x = 5f, y = 5f, scale = 0.25f)))
         val first = page(0)
         val second = page(1)
-        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(first, second, first)), "Systems")
+        val bytes = renderer.pdfBytes(PrintDocument(width = 100f, height = 100f, pages = listOf(first, second, first)), "Systems")
         val width = 300
         val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
         fun inked(page: IntArray, rows: IntRange) = rows.any { row -> (0 until width).any { page[row * width + it] != 15 } }
@@ -450,7 +450,7 @@ internal class PrintRendererTest {
         }
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
-            File(directory, "chord-diagrams.pdf").writeBytes(renderer.pdf(PrintDocument(595.276f, 841.89f, pages), "Chord diagrams"))
+            File(directory, "chord-diagrams.pdf").writeBytes(renderer.pdfBytes(PrintDocument(595.276f, 841.89f, pages), "Chord diagrams"))
         }
         Unit
     }

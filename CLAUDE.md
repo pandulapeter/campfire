@@ -31,7 +31,7 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
   and `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
-  draft, the iOS share inbox, or `covers/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
+  draft, the iOS share inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
   `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with no preferences document
   forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
@@ -84,6 +84,7 @@ preferences/shared-links.json          the account's shared links as last read (
 preferences/shared-links-journal.json  renames and deletions of shared items not yet applied to that list
 preferences/editor-draft.json          the editor's unsaved text, survives process death
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
+exports/<name>                         an archive or PDF written before it is saved or shared, emptied on launch (iOS: Caches)
 instance.lock / instance.endpoint      desktop only: single-instance guard
 campfire.log / campfire.log.1          desktop only, here (the other platforms keep it elsewhere, ui/platform)
 ```

@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import org.koin.core.annotation.Single
@@ -24,4 +26,7 @@ internal class ArchiveRepositoryImpl(
     override suspend fun songsIn(file: ImportedFile) = archiveLocalSource.songsIn(file)
 
     override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean) = archiveLocalSource.pack(files = files, isDated = isDated)
+
+    override suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink) =
+        archiveLocalSource.pack(entries = entries, isDated = isDated, sink = sink)
 }

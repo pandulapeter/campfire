@@ -13,14 +13,14 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Asking regular users to spread the word**: once, on the way back from a song, someone with 5 songs of their own
+  who has opened songs 10 times on 3 different days gets a personal note asking them to share Campfire with a musician
+  friend and, on Android and Windows, to rate it. Plan: [spread-the-word.md](plans/spread-the-word.md)
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
 ## Short-term
 
-- **A streaming zip writer** on all platforms: exports (archives and PDFs) written to a file instead of held in memory,
-  needed before songs' images go into exports and shared links. Plan:
-  [streaming-zip-writer.md](plans/streaming-zip-writer.md)
 - **Images in songs**: ChordPro's `{image}` directive, pictures kept in the library and named by their content, synced,
   exported, shared, and printed with the song; a lone image file imports as a song (a chart that only exists on
   paper or as a PDF, still in the setlist). Plan: [song-images.md](plans/song-images.md)

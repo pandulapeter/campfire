@@ -13,6 +13,12 @@ import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.ExportFileWriter
+import com.pandulapeter.campfire.data.model.library.ExportSink
+import com.pandulapeter.campfire.data.model.library.ExportedContent
+import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
@@ -27,6 +33,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
+import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
@@ -181,5 +188,50 @@ internal class FakeArchiveRepository(
     override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray {
         packed = files
         return ByteArray(0)
+    }
+
+    /** Reads every entry in turn into [packed], and writes one byte per entry, so the archive has a size. */
+    override suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink): PackedArchive {
+        packed = buildMap { entries.forEach { read -> read()?.let { put(it.name, it.bytes) } } }
+        packed.keys.forEach { _ -> sink.write(byteArrayOf(0), 0, 1) }
+        return PackedArchive(entryCount = packed.size, unpackedSize = packed.values.sumOf { it.size.toLong() })
+    }
+}
+
+/** Keeps the files in memory, by name: what was finished in [files], what was removed in [discarded]. */
+internal class FakeExportFileRepository : ExportFileRepository {
+
+    val files = mutableMapOf<String, ByteArray>()
+    val discarded = mutableListOf<String>()
+
+    override suspend fun clear() = files.clear()
+
+    override suspend fun create(name: String): ExportFileWriter = object : ExportFileWriter {
+        private var bytes = ByteArray(0)
+
+        override val position get() = bytes.size.toLong()
+
+        override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
+            this.bytes += bytes.copyOfRange(offset, offset + length)
+        }
+
+        override suspend fun finish(): ExportedContent.TemporaryFile {
+            files[name] = bytes
+            return ExportedContent.TemporaryFile(path = "/exports/$name", size = position)
+        }
+
+        override suspend fun abandon() {
+            discarded += name
+        }
+    }
+
+    override suspend fun read(file: ExportedFile) = when (val content = file.content) {
+        is ExportedContent.Bytes -> content.bytes
+        is ExportedContent.TemporaryFile -> files[file.name]
+    }
+
+    override suspend fun discard(file: ExportedFile) {
+        files -= file.name
+        discarded += file.name
     }
 }

@@ -104,3 +104,5 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
 - A run holding any RTL cluster is wrapped in a `/Span` with `ActualText`, since readers ordering by position would read
   it backwards; the importer honours it.
 - No font programs are embedded, so visible glyphs match the preview.
+- Written into the export's file (`ExportSink`) as each page is finished, every offset counted from what was flushed:
+  the writer holds one page, never the document.

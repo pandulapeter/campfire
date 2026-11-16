@@ -81,7 +81,7 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   than what it unpacks to, so whether an import would take an export is judged by its entries' sizes
   (`ExportedFile.unpackedSize`). Over 65,534 entries or 4 GiB are refused rather than written as ZIP64.
 - **The writer streams into a `ZipSink`** (a file for an export, a buffer for the in-memory `write`, which is the same
-  bytes): each `ZipEntrySource` is read, deflated, and written before the next is read, its header after its CRC and
+  bytes): each entry is read (name and bytes, or null to leave it out), deflated, and written before the next is read, its header after its CRC and
   sizes are known (no data descriptors), so it holds one entry and the central directory's offsets, never the archive.
 - **Declared sizes are only a first guess.** Entries are judged by name and declared size before inflating
   (`EntryPolicy`), or under an uninformative name by a 512-byte peek (`Sniff`); a declined peek costs no budget. The

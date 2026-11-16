@@ -257,8 +257,8 @@ internal fun ExportScreen(
                     dialog = dialog,
                     pageCount = snapshot.pages.size,
                     isShare = request == ExportRequest.SHARE,
-                ) { onPage ->
-                    newRenderer().pdf(snapshot, state.source!!.title, onPage = onPage)
+                ) { sink, onPage ->
+                    newRenderer().pdf(snapshot, state.source!!.title, sink = sink, onPage = onPage)
                 }
             }
         }

@@ -60,9 +60,6 @@ import com.pandulapeter.campfire.domain.api.sharing.StopSharingEverythingUseCase
 import com.pandulapeter.campfire.domain.api.sharing.StopSharingUseCase
 import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
-import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.sync.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
@@ -126,6 +123,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.ChordLibraryState
 import com.pandulapeter.campfire.presentation.ui.scales.ScaleLibraryState
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportController
 import com.pandulapeter.campfire.presentation.ui.screens.export.onBeforeDialogChange
+import com.pandulapeter.campfire.presentation.ui.screens.export.ExportUseCases
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import com.pandulapeter.campfire.presentation.ui.navigation.OnboardingStep
 import com.pandulapeter.campfire.presentation.ui.navigation.onboardingSteps
@@ -195,9 +193,7 @@ class CampfireViewModel(
     downloadImportFile: DownloadImportFileUseCase,
     private val prepareImport: PrepareImportUseCase,
     private val applyImport: ApplyImportUseCase,
-    private val exportSongs: ExportSongsUseCase,
-    private val exportSetlist: ExportSetlistUseCase,
-    private val exportLibrary: ExportLibraryUseCase,
+    private val exportUseCases: ExportUseCases,
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val editSetlist: EditSetlistUseCase,
@@ -625,9 +621,7 @@ class CampfireViewModel(
         effectiveCapoOf = { songFileName, setlistFileName -> overrides.effectiveCapoOf(songFileName, setlistFileName) },
         songRenderer = songRenderer,
         getSongContent = getSongContent,
-        exportSongs = exportSongs,
-        exportSetlist = exportSetlist,
-        exportLibrary = exportLibrary,
+        useCases = exportUseCases,
         updateUserPreferences = updateUserPreferences,
         pendingWrites = pendingWrites,
     )

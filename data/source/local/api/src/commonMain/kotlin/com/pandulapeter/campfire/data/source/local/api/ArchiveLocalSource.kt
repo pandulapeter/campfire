@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.ExportSink
+import com.pandulapeter.campfire.data.model.library.PackedArchive
 
 interface ArchiveLocalSource {
 
@@ -49,4 +52,12 @@ interface ArchiveLocalSource {
      * date in it would have each device replace the others' copy on every run.
      */
     suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray
+
+    /**
+     * [pack], streamed into [sink] one entry at a time, each read only when it is its turn and let go of before the
+     * next, so that the archive is never in memory whole. An entry read as nothing is left out; the answer says how
+     * many were written. Throws what [sink] throws, and a `ZipException` past what a zip without ZIP64 holds, leaving
+     * [sink] to be abandoned by its owner.
+     */
+    suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink): PackedArchive
 }

@@ -26,9 +26,10 @@ internal class PrintPdfWriterTest {
     }
 
     @Test fun `PDF cross reference offsets resolve to every object with two pages`() = runTest {
-        val writer = PrintPdfWriter(595.276f, 841.89f, "Szőke (live)")
+        val sink = MemoryExportSink()
+        val writer = PrintPdfWriter(595.276f, 841.89f, "Szőke (live)", sink)
         repeat(2) { writer.addPage(8, 8, ByteArray(32) { if (it % 4 == 0) 0x0F else -1 }) }
-        val bytes = writer.finish()
+        val bytes = writer.finishedBytes(sink)
         val text = bytes.decodeToString()
         assertTrue(text.startsWith("%PDF-1.4"))
         assertTrue(text.contains("/Count 2"))
@@ -48,10 +49,11 @@ internal class PrintPdfWriterTest {
 
     @Test fun `a reused scratch buffer writes identical pages identically`() = runTest {
         val page = ByteArray(32 * 64) { if (it % 7 == 0) 0 else -1 }
-        val writer = PrintPdfWriter(100f, 100f, "Pages")
+        val sink = MemoryExportSink()
+        val writer = PrintPdfWriter(100f, 100f, "Pages", sink)
         writer.addPage(32, 16, ByteArray(256) { it.toByte() })
         repeat(2) { writer.addPage(64, 64, page) }
-        val bytes = writer.finish()
+        val bytes = writer.finishedBytes(sink)
         // One character per byte, so that a match's position is the stream's offset in the file.
         val text = CharArray(bytes.size) { (bytes[it].toInt() and 255).toChar() }.concatToString()
         val streams = Regex("""/Width (\d+) [^>]*/Length (\d+) >>\nstream\n""").findAll(text).map { match ->
@@ -64,14 +66,15 @@ internal class PrintPdfWriterTest {
     }
 
     @Test fun `invisible fonts carry Unicode clusters and printed styles across pages`() = runTest {
-        val writer = PrintPdfWriter(100f, 100f, "Unicode")
+        val sink = MemoryExportSink()
+        val writer = PrintPdfWriter(100f, 100f, "Unicode", sink)
         val glyphs = listOf(
             PrintPdfText("Ő", 10f, 20f, 8f, 12f, PrintStyle(12f, bold = true)),
             PrintPdfText("\uD83D\uDE42", 18f, 20f, 12f, 12f, PrintStyle(12f)),
             PrintPdfText("e\u0301", 30f, 20f, 6f, 12f, PrintStyle(12f, monospace = true)),
         )
         repeat(2) { writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs) }
-        val text = writer.finish().decodeToString()
+        val text = writer.finishedBytes(sink).decodeToString()
         assertEquals(3, Regex("/Subtype /Type3").findAll(text).count())
         assertTrue(text.contains("<01> <0150>"))
         assertTrue(text.contains("<01> <d83dde42>"))
@@ -82,12 +85,13 @@ internal class PrintPdfWriterTest {
     }
 
     @Test fun `a font splits after 255 distinct characters without truncating its Unicode map`() = runTest {
-        val writer = PrintPdfWriter(1000f, 100f, "Many characters")
+        val sink = MemoryExportSink()
+        val writer = PrintPdfWriter(1000f, 100f, "Many characters", sink)
         val glyphs = (0x400..0x500).mapIndexed { index, code ->
             PrintPdfText(code.toChar().toString(), index * 2f, 10f, 2f, 12f, PrintStyle(12f))
         }
         writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)
-        val text = writer.finish().decodeToString()
+        val text = writer.finishedBytes(sink).decodeToString()
         assertEquals(2, Regex("/Subtype /Type3").findAll(text).count())
         assertTrue(text.contains("/LastChar 255"))
         assertTrue(text.contains("/LastChar 2"))
@@ -119,9 +123,10 @@ internal class PrintPdfWriterTest {
 
     @Test fun `a right to left run carries its logical text and Latin pages are unchanged`() = runTest {
         suspend fun content(glyphs: List<PrintPdfText>): ByteArray {
-            val writer = PrintPdfWriter(100f, 100f, "Text")
+            val sink = MemoryExportSink()
+            val writer = PrintPdfWriter(100f, 100f, "Text", sink)
             writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)
-            val bytes = writer.finish()
+            val bytes = writer.finishedBytes(sink)
             val text = CharArray(bytes.size) { (bytes[it].toInt() and 255).toChar() }.concatToString()
             val match = Regex("""<< /Filter /FlateDecode /Length (\d+) >>\nstream\n""").find(text)!!
             val start = match.range.last + 1

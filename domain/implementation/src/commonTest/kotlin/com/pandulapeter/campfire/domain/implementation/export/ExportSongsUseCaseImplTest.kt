@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.song.SongContent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -64,7 +66,7 @@ class ExportSongsUseCaseImplTest {
     fun `each song goes out as the rewrite answers it, whether alone or zipped`() = runTest {
         val rewrite = { fileName: String, text: String -> if (fileName == "a.cho") "$text{capo: 2}\n" else text }
         val single = useCase(mapOf("a" to "a.cho"), "a.cho" to "{title: A}\n").invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = rewrite)
-        assertEquals("{title: A}\n{capo: 2}\n", assertNotNull(single).bytes.decodeToString())
+        assertEquals("{title: A}\n{capo: 2}\n", (assertNotNull(single).content as ExportedContent.Bytes).bytes.decodeToString())
 
         useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: B}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = true, rewrite = rewrite)
         assertEquals("{title: A}\n{capo: 2}\n", archive.packed.getValue("a.cho").decodeToString())
@@ -82,5 +84,6 @@ class ExportSongsUseCaseImplTest {
             override suspend fun loadSongContent(fileName: String, useCache: Boolean) = files.toMap()[fileName]?.let { SongContent(fileName = fileName, text = it) }
         },
         archiveRepository = archive,
+        exportFileRepository = FakeExportFileRepository(),
     )
 }

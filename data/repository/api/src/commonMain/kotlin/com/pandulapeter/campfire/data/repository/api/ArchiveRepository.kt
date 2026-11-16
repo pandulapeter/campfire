@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.ExportSink
+import com.pandulapeter.campfire.data.model.library.PackedArchive
 
 /**
  * Zip handling, which has no state to cache: this exists so that the use cases can reach it without the domain layer
@@ -25,4 +28,7 @@ interface ArchiveRepository {
 
     /** See `ArchiveLocalSource.pack`. */
     suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray
+
+    /** See `ArchiveLocalSource.pack`, the one streaming into a sink. */
+    suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink): PackedArchive
 }

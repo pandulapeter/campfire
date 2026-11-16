@@ -26,7 +26,8 @@
 - **File picker**: a singleton the launchers of every composition attach to, so a result survives Activity recreation
   under the picker. Launchers are taken at launch time, not when the pick began (a recreated Activity has unregistered
   the old ones). A result after *process* recreation is still acted on: picks join `filesToImport`, exports are filled
-  from `cacheDir/pending_export`. A song is exported as `application/octet-stream`: storage providers append `.txt` to a
+  from `cacheDir/pending_export`, which is the export's own file moved there (a rename, no copy), as a share's is moved
+  into `cacheDir/shared`. A song is exported as `application/octet-stream`: storage providers append `.txt` to a
   `.cho` saved as text.
 - **Drops** (from another app in split screen, a desktop window, or the taskbar): URIs are read under
   `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items are a pasted

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
@@ -186,6 +187,7 @@ class ExportLibraryUseCaseImplTest {
             override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else setlistDocument
         },
         archiveRepository = archive,
+        exportFileRepository = FakeExportFileRepository(),
     )
 
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */

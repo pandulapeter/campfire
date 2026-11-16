@@ -10,7 +10,10 @@
 package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
+import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -28,6 +31,7 @@ internal class ExportLibraryUseCaseImpl(
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,
     private val archiveRepository: ArchiveRepository,
+    private val exportFileRepository: ExportFileRepository,
 ) : ExportLibraryUseCase {
 
     /**
@@ -42,9 +46,10 @@ internal class ExportLibraryUseCaseImpl(
      * them: a setlist hand-edited into JSON that no longer decodes is skipped by the scan and left on disk as the
      * user's to fix, and a backup is exactly where it should be kept.
      *
-     * The songs are read [READ_BATCH_SIZE] at a time rather than one after another, and all of it runs on
-     * [Dispatchers.Default] rather than on the caller's main thread. The archive and the list of skipped files keep the
-     * sorted order all the same, since the batches are put together in the order they were asked for.
+     * The archive is written into a file as it is read, never held whole: the songs are read [READ_BATCH_SIZE] at a time
+     * rather than one after another, each batch when the archive reaches it and let go of as its songs are written, and
+     * all of it runs on [Dispatchers.Default] rather than on the caller's main thread. The archive and the list of
+     * skipped files keep the sorted order all the same.
      */
     override suspend operator fun invoke(): ExportLibraryUseCase.Result? = withContext(Dispatchers.Default) {
         // A scan that failed is not an empty library. Exporting what it managed to read would hand the user an archive
@@ -53,41 +58,56 @@ internal class ExportLibraryUseCaseImpl(
         setlistRepository.loadSetlistsIfNeeded() ?: return@withContext null
         val songFileSizes = songRepository.loadSongFileSizes()
         val setlistFileSizes = setlistRepository.loadSetlistFileSizes()
-        val contents = songFileSizes.keys.sorted().chunked(READ_BATCH_SIZE).flatMap { batch ->
-            coroutineScope {
-                batch.map { fileName ->
-                    async {
-                        // Not opened at all when it is larger than a song can be, which the scan skips for the same reason.
-                        fileName to if (songFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
-                            null
-                        } else {
-                            // Past the cache: an export has to hold what is on disk, and keeping the whole library in
-                            // memory afterwards would be no use.
-                            songContentRepository.loadSongContent(fileName, useCache = false)
-                        }
-                    }
-                }.awaitAll()
+        if (songFileSizes.isEmpty() && setlistFileSizes.isEmpty()) return@withContext null
+        val skipped = mutableListOf<String>()
+        val songNames = songFileSizes.keys.sorted()
+        val batch = mutableMapOf<String, SongContent?>()
+        val songs = songNames.mapIndexed { index, fileName ->
+            suspend {
+                if (index % READ_BATCH_SIZE == 0) {
+                    batch.clear()
+                    batch.putAll(readSongs(songNames.subList(index, minOf(index + READ_BATCH_SIZE, songNames.size)), songFileSizes))
+                }
+                val content = batch.remove(fileName)
+                if (content == null) skipped += fileName
+                content?.let { ArchiveEntry(name = "$SONGS_DIRECTORY/$fileName", bytes = it.text.encodeToByteArray()) }
             }
         }
-        val skipped = mutableListOf<String>()
-        val files = buildMap {
-            contents.forEach { (fileName, content) ->
-                if (content == null) skipped += fileName else put("$SONGS_DIRECTORY/$fileName", content.text.encodeToByteArray())
-            }
-            setlistFileSizes.keys.sorted().forEach { fileName ->
+        val setlists = setlistFileSizes.keys.sorted().map { fileName ->
+            suspend {
                 val document = if (setlistFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
                     null
                 } else {
                     setlistRepository.loadSetlistDocument(fileName)
                 }
-                if (document == null) skipped += fileName else put("$SETLISTS_DIRECTORY/$fileName", document.encodeToByteArray())
+                if (document == null) skipped += fileName
+                document?.let { ArchiveEntry(name = "$SETLISTS_DIRECTORY/$fileName", bytes = it.encodeToByteArray()) }
             }
         }
-        if (files.isEmpty()) return@withContext null
-        ExportLibraryUseCase.Result(
-            file = archiveRepository.exportedArchive(name = ARCHIVE_NAME, files = files, isDated = true),
-            skippedFileNames = skipped,
-        )
+        val file = exportedArchive(
+            archiveRepository = archiveRepository,
+            exportFileRepository = exportFileRepository,
+            name = ARCHIVE_NAME,
+            entries = songs + setlists,
+            isDated = true,
+        ) ?: return@withContext null
+        ExportLibraryUseCase.Result(file = file, skippedFileNames = skipped)
+    }
+
+    /** [fileNames] read in parallel, each answered with null where it is larger than a song can be or could not be read. */
+    private suspend fun readSongs(fileNames: List<String>, sizes: Map<String, Long>) = coroutineScope {
+        fileNames.map { fileName ->
+            async {
+                // Not opened at all when it is larger than a song can be, which the scan skips for the same reason.
+                fileName to if (sizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                    null
+                } else {
+                    // Past the cache: an export has to hold what is on disk, and keeping the whole library in memory
+                    // afterwards would be no use.
+                    songContentRepository.loadSongContent(fileName, useCache = false)
+                }
+            }
+        }.awaitAll().toMap()
     }
 
     private companion object {

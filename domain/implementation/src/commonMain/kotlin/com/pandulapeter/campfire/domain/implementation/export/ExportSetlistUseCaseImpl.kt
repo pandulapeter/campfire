@@ -9,9 +9,11 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
+import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
@@ -23,6 +25,7 @@ internal class ExportSetlistUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,
+    private val exportFileRepository: ExportFileRepository,
 ) : ExportSetlistUseCase {
 
     /**
@@ -35,18 +38,22 @@ internal class ExportSetlistUseCaseImpl(
         val document = setlistRepository.loadSetlistDocument(setlistFileName) ?: return null
         // The entries keep their library names, accents and all: the setlist document points at its songs by file
         // name, and an import follows those names to wherever the songs land.
-        val files = buildMap {
-            put(setlistFileName, document.encodeToByteArray())
-            setlist.entries.forEach { entry ->
+        // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
+        val written = mutableSetOf(setlistFileName)
+        val songs = setlist.entries.map { entry ->
+            suspend {
                 songContentRepository.loadSongContent(entry.songFileName, useCache = false)
-                    ?.let { put(it.fileName, it.text.encodeToByteArray()) }
+                    ?.takeIf { written.add(it.fileName) }
+                    ?.let { ArchiveEntry(name = it.fileName, bytes = it.text.encodeToByteArray()) }
             }
         }
-        return archiveRepository.exportedArchive(
+        return exportedArchive(
+            archiveRepository = archiveRepository,
+            exportFileRepository = exportFileRepository,
             // Named after its title, the one thing about a setlist the user named: the file name only follows it, and
             // is numbered where two setlists share one.
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
-            files = files,
+            entries = listOf<suspend () -> ArchiveEntry?>({ ArchiveEntry(name = setlistFileName, bytes = document.encodeToByteArray()) }) + songs,
             isDated = isDated,
         )
     }

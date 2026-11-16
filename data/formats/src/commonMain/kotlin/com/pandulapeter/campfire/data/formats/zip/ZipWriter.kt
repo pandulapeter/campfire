@@ -23,23 +23,23 @@ object ZipWriter {
     /** The archive of [entries] in memory, for the tests and the small cases. Yields as the streaming [write] does. */
     suspend fun write(entries: List<ZipEntry>, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ByteArray {
         val sink = BufferZipSink(entries.sumOf { it.bytes.size + it.name.length * 2 + 128 })
-        write(entries = entries.map { entry -> ZipEntrySource(entry.name) { entry.bytes } }, sink = sink, modifiedAt = modifiedAt)
+        write(entries = entries.map { entry -> { entry } }, sink = sink, modifiedAt = modifiedAt)
         return sink.build()
     }
 
     /**
-     * Writes the archive of [entries] to [sink] as it goes: each entry is read, deflated, and written whole before the
-     * next is read, its CRC and sizes known before its header, so no data descriptor is needed and what stays in memory
-     * is one entry and, for the central directory, each entry's offset, CRC, and sizes. An archive past 4 GiB is refused
-     * rather than written as ZIP64, part of it already in [sink]. Yields (and so checks for cancellation) between entries
-     * and every 256 KB of deflating.
+     * Writes the archive of [entries] to [sink] as it goes: each entry is read (called once, when it is its turn),
+     * deflated, and written whole before the next is read, its CRC and sizes known before its header, so no data
+     * descriptor is needed and what stays in memory is one entry and, for the central directory, each entry's offset,
+     * CRC, and sizes. An archive past 4 GiB is refused rather than written as ZIP64, part of it already in [sink]. Yields
+     * (and so checks for cancellation) between entries and every 256 KB of deflating.
      *
-     * @return What the entries add up to unpacked, which an import judges the archive by.
+     * An entry read as null is left out, nothing of it written: a file that turned out to be missing or unreadable. Its
+     * name comes with its bytes, since a file read by one name may be stored under another spelling of it.
      */
-    suspend fun write(entries: List<ZipEntrySource>, sink: ZipSink, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): Long {
+    suspend fun write(entries: List<suspend () -> ZipEntry?>, sink: ZipSink, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ZipSummary {
         if (entries.size >= ZIP64_MARKER) throw ZipException("An archive cannot hold ${entries.size} entries, the most is ${ZIP64_MARKER - 1}.")
-        val names = entries.map { it.name.encodeToByteArray() }
-        names.forEachIndexed { index, name -> if (name.size > MAX_NAME_SIZE) throw ZipException("The name of entry \"${entries[index].name.take(64)}…\" is too long for an archive.") }
+        val names = ArrayList<ByteArray>(entries.size)
         val offsets = LongArray(entries.size)
         val checksums = LongArray(entries.size)
         val methods = IntArray(entries.size)
@@ -48,9 +48,15 @@ object ZipWriter {
         val deflater = Deflater()
         val deflated = ByteArrayBuilder()
         val header = ByteArrayBuilder()
-        entries.forEachIndexed { index, entry ->
+        var count = 0
+        entries.forEach { read ->
             yield()
-            val bytes = entry.read()
+            val entry = read() ?: return@forEach
+            val bytes = entry.bytes
+            val name = entry.name.encodeToByteArray()
+            if (name.size > MAX_NAME_SIZE) throw ZipException("The name of entry \"${entry.name.take(64)}…\" is too long for an archive.")
+            val index = count++
+            names += name
             checksums[index] = Crc32.of(bytes)
             deflated.clear()
             deflater.deflate(bytes, deflated::u8)
@@ -77,7 +83,7 @@ object ZipWriter {
         }
         val centralDirectoryOffset = sink.position.checkedOffset()
         header.clear()
-        entries.indices.forEach { index ->
+        repeat(count) { index ->
             header.u32(CENTRAL_DIRECTORY_SIGNATURE)
             header.u16(VERSION) // Version made by.
             header.u16(VERSION) // Version needed to extract.
@@ -102,13 +108,13 @@ object ZipWriter {
         header.u32(END_OF_CENTRAL_DIRECTORY_SIGNATURE)
         header.u16(0) // Disk number.
         header.u16(0) // Disk where the central directory starts.
-        header.u16(entries.size)
-        header.u16(entries.size)
+        header.u16(count)
+        header.u16(count)
         header.u32(centralDirectorySize)
         header.u32(centralDirectoryOffset)
         header.u16(0) // Comment length.
         header.writeTo(sink)
-        return sizes.sum()
+        return ZipSummary(entryCount = count, unpackedSize = sizes.sum())
     }
 
     private fun Long.checkedOffset() = also { if (it > MAX_OFFSET) throw ZipException("An archive cannot be larger than 4 GiB.") }

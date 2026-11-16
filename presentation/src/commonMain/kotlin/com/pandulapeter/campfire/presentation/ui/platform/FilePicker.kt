@@ -19,6 +19,11 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
  *
  * Both functions suspend until the user is done with the dialog, and are called from the view model's scope so that
  * the screen they were started from is free to go away in the meantime.
+ *
+ * An [ExportedFile] handed to [saveFile], [shareFile], or [emailFile] is the picker's from then on, whatever it answers:
+ * one held in a temporary file is moved to where it goes, or removed once nothing reads it any more (which for a share
+ * may be after the call returns), or left to the exports folder's emptying on the next launch. It is never read into
+ * memory whole.
  */
 interface FilePicker {
 

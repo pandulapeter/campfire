@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.data.formats.zip.DeflateOutput
 import com.pandulapeter.campfire.data.formats.zip.Deflater
+import com.pandulapeter.campfire.data.model.library.ExportSink
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
 
@@ -20,13 +21,22 @@ import kotlin.math.roundToInt
  * at that resolution, and they halve what Flate has to compress. No platform printing service, external process,
  * network request or third-party PDF library is needed. Invisible Type 3 text uses the renderer's selection rectangles
  * and explicit Unicode maps: it never substitutes a visible font or changes the image.
+ *
+ * The file is written into [sink] page by page: what a page added is handed over once the page is complete, so the
+ * writer holds one page's objects at a time, never the document.
  */
 internal class PrintPdfWriter(
     private val width: Float,
     private val height: Float,
     private val title: String,
+    private val sink: ExportSink,
 ) {
     private val output = PrintBytes()
+
+    /** What [output] has already handed to [sink], which every offset in the file counts from. */
+    private var flushed = 0L
+
+    private val position get() = flushed + output.size
 
     /**
      * A page's image and content stream are encoded here first, because /Length precedes the data, and appended to the
@@ -34,7 +44,7 @@ internal class PrintPdfWriter(
      */
     private val scratch = PrintBytes()
     private val deflater = Deflater()
-    private val offsets = mutableListOf(0, 0, 0)
+    private val offsets = mutableListOf(0L, 0L, 0L)
     private val pageIds = mutableListOf<Int>()
     private data class FontStyle(val bold: Boolean, val italic: Boolean, val monospace: Boolean)
     private data class TextCharacter(val text: String, val width: Int)
@@ -50,7 +60,7 @@ internal class PrintPdfWriter(
         return characterFonts.getOrPut(style to character) {
             val font = fonts.lastOrNull { it.style == style && it.codes.size < 255 } ?: run {
                 val id = offsets.size
-                offsets += 0 // Font dictionaries are written at finish, once all pages have supplied their characters.
+                offsets += 0L // Font dictionaries are written at finish, once all pages have supplied their characters.
                 TextFont(id, "F${fonts.size}", style).also { fonts += it }
             }
             font.codes[character] = font.codes.size + 1
@@ -66,7 +76,7 @@ internal class PrintPdfWriter(
     }
 
     private fun beginObject(id: Int = offsets.size): Int {
-        if (id == offsets.size) offsets += output.size else offsets[id] = output.size
+        if (id == offsets.size) offsets += position else offsets[id] = position
         output.text("$id 0 obj\n")
         return id
     }
@@ -165,6 +175,13 @@ internal class PrintPdfWriter(
                 "/Resources << /XObject << /Im0 $image 0 R >> " +
                 "/Font << ${pageFonts.joinToString(" ") { "/${it.name} ${it.id} 0 R" }} >> >> /Contents $content 0 R >>",
         )
+        flush()
+    }
+
+    private suspend fun flush() {
+        output.writeTo(sink)
+        flushed += output.size
+        output.reset()
     }
 
     private fun writeTextFonts() {
@@ -206,8 +223,8 @@ internal class PrintPdfWriter(
         }
     }
 
-    /** Writes the page tree, the catalog, the title and the cross-reference table after the pages, and hands out the file. */
-    fun finish(): ByteArray {
+    /** Writes the page tree, the catalog, the title and the cross-reference table after the pages, completing the file. */
+    suspend fun finish() {
         require(pageIds.isNotEmpty())
         writeTextFonts()
         objectText("<< /Type /Pages /Count ${pageIds.size} /Kids [${pageIds.joinToString(" ") { "$it 0 R" }}] >>", id = 2)
@@ -215,11 +232,11 @@ internal class PrintPdfWriter(
         // A UTF-16BE hex string needs no escaping and holds any script, so viewers and print dialogs show the real title.
         val titleHex = printUtf16Hex(title)
         val info = objectText("<< /Title <FEFF$titleHex> /Producer (Campfire) >>")
-        val xref = output.size
+        val xref = position
         output.text("xref\n0 ${offsets.size}\n0000000000 65535 f \n")
         offsets.drop(1).forEach { output.text("${it.toString().padStart(10, '0')} 00000 n \n") }
         output.text("trailer\n<< /Size ${offsets.size} /Root 1 0 R /Info $info 0 R >>\nstartxref\n$xref\n%%EOF\n")
-        return output.result()
+        flush()
     }
 }
 
@@ -274,6 +291,9 @@ internal class PrintBytes : DeflateOutput {
 
     /** A copy of the bytes written, the size of the content rather than of the buffer. */
     fun result() = buffer.copyOf(size)
+
+    /** Hands what is written to [sink], without the copy [result] would make. */
+    suspend fun writeTo(sink: ExportSink) = sink.write(buffer, 0, size)
 
     private fun reserve(count: Int) {
         val required = size.toLong() + count

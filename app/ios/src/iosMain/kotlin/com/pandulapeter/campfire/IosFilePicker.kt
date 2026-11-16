@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire
 
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -40,6 +41,7 @@ import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.create
+import platform.Foundation.dataWithContentsOfFile
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
 import platform.MessageUI.MFMailComposeResult
@@ -94,8 +96,8 @@ internal class IosFilePicker(
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
-        // The picker exports a file that already exists, so the bytes go to a temporary one first.
-        val url = file.writeToTemporaryFile() ?: return false
+        // The picker exports a file that already exists, so bytes go to a temporary one first.
+        val url = file.toTemporaryFile() ?: return false
         return try {
             withContext(Dispatchers.Main) {
                 suspendCancellableCoroutine { continuation ->
@@ -113,7 +115,7 @@ internal class IosFilePicker(
     override val canShare = true
 
     override suspend fun shareFile(file: ExportedFile): Boolean {
-        val url = file.writeToTemporaryFile() ?: return false
+        val url = file.toTemporaryFile() ?: return false
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
                 val host = viewController()
@@ -154,14 +156,23 @@ internal class IosFilePicker(
      * Mail's own compose sheet, which only exists where Mail has an account; everywhere else the caller shares the file.
      * Answered as the sheet is shown, as a share is, and the sheet takes itself down through [MailComposeDelegate].
      */
+    @OptIn(ExperimentalForeignApi::class)
     override suspend fun emailFile(file: ExportedFile, to: String, subject: String): Boolean = withContext(Dispatchers.Main) {
         val host = viewController()
         if (!MFMailComposeViewController.canSendMail() || host.presentedViewController != null) return@withContext false
         val controller = MFMailComposeViewController()
         controller.setToRecipients(listOf(to))
         controller.setSubject(subject)
-        controller.addAttachmentData(file.bytes.toNSData(), mimeType = file.mimeType, fileName = file.name)
-        val composeDelegate = MailComposeDelegate { mailDelegate = null }
+        val attachment = when (val content = file.content) {
+            is ExportedContent.Bytes -> content.bytes.toNSData()
+            // Mapped rather than read into memory; the mapping outlives the file's removal once the sheet is done.
+            is ExportedContent.TemporaryFile -> NSData.dataWithContentsOfFile(content.path, options = NSDataReadingMappedIfSafe, error = null)
+        } ?: return@withContext false
+        controller.addAttachmentData(attachment, mimeType = file.mimeType, fileName = file.name)
+        val composeDelegate = MailComposeDelegate {
+            mailDelegate = null
+            (file.content as? ExportedContent.TemporaryFile)?.let { NSURL.fileURLWithPath(it.path).deleteTemporaryFile() }
+        }
         mailDelegate = composeDelegate
         controller.mailComposeDelegate = composeDelegate
         host.presentViewController(controller, animated = true, completion = null)
@@ -250,15 +261,19 @@ internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
 }
 
 /**
- * The bytes on disk, which is what both the picker and the share sheet take: neither takes bytes. Null where the
- * write failed, which the caller reports as an export that did not come out.
+ * The export as a file, which is what both the picker and the share sheet take: neither takes bytes. An archive or a
+ * PDF already is one, in the exports folder under its own name, which the sheet shows; bytes are written to the
+ * temporary directory first. Either is the caller's to delete once the sheet is done with it. Null where the write
+ * failed, which the caller reports as an export that did not come out.
  *
- * On [Dispatchers.IO] because a whole-library archive is megabytes and both callers are called on the main
- * dispatcher, where copying and writing it would freeze the app until it was done.
+ * On [Dispatchers.IO] because the callers are called on the main dispatcher, where writing would freeze the app.
  */
-private suspend fun ExportedFile.writeToTemporaryFile(): NSURL? = withContext(Dispatchers.IO) {
-    val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + name)
-    if (bytes.toNSData().writeToURL(url, atomically = true)) url else null
+private suspend fun ExportedFile.toTemporaryFile(): NSURL? = when (val content = content) {
+    is ExportedContent.TemporaryFile -> NSURL.fileURLWithPath(content.path)
+    is ExportedContent.Bytes -> withContext(Dispatchers.IO) {
+        val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + name)
+        if (content.bytes.toNSData().writeToURL(url, atomically = true)) url else null
+    }
 }
 
 /** Best effort: a file that is already gone, or that the picker moved out, is the outcome this wanted anyway. */

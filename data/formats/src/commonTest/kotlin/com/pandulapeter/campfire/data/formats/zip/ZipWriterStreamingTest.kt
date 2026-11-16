@@ -30,7 +30,7 @@ internal class ZipWriterStreamingTest {
     fun `an archive streamed into a sink is byte for byte the one written in memory`() = runTest {
         val sink = ChunkSink()
 
-        ZipWriter.write(entries = entries.map { entry -> ZipEntrySource(entry.name) { entry.bytes } }, sink = sink)
+        ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = sink)
 
         assertContentEquals(ZipWriter.write(entries), sink.bytes())
     }
@@ -43,11 +43,11 @@ internal class ZipWriterStreamingTest {
 
         ZipWriter.write(
             entries = entries.map { entry ->
-                ZipEntrySource(entry.name) {
+                {
                     if (entry.name in reads) fail("\"${entry.name}\" was read twice.")
                     reads += entry.name
                     positionsAtRead += sink.position
-                    entry.bytes
+                    entry
                 }
             },
             sink = sink,
@@ -58,17 +58,31 @@ internal class ZipWriterStreamingTest {
     }
 
     @Test
-    fun `the streaming writer tells what its entries add up to unpacked`() = runTest {
-        val unpackedSize = ZipWriter.write(entries = entries.map { entry -> ZipEntrySource(entry.name) { entry.bytes } }, sink = ChunkSink())
+    fun `the streaming writer tells how many entries it wrote and what they add up to unpacked`() = runTest {
+        val summary = ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = ChunkSink())
 
-        assertEquals(entries.sumOf { it.bytes.size.toLong() }, unpackedSize)
+        assertEquals(ZipSummary(entryCount = entries.size, unpackedSize = entries.sumOf { it.bytes.size.toLong() }), summary)
+    }
+
+    @Test
+    fun `an entry read as nothing is left out`() = runTest {
+        val sink = ChunkSink()
+
+        val summary = ZipWriter.write(
+            entries = entries.map { entry -> { entry.takeUnless { it.name == "covers/cover.jpg" } } },
+            sink = sink,
+        )
+
+        val kept = entries.filter { it.name != "covers/cover.jpg" }
+        assertEquals(kept.size, summary.entryCount)
+        assertContentEquals(ZipWriter.write(kept), sink.bytes())
     }
 
     @Test
     fun `a streamed archive reads back`() = runTest {
         val sink = ChunkSink()
 
-        ZipWriter.write(entries = entries.map { entry -> ZipEntrySource(entry.name) { entry.bytes } }, sink = sink)
+        ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = sink)
 
         val read = ZipReader.read(sink.bytes()).entries
         assertEquals(entries.map { it.name }, read.map { it.name })

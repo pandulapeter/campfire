@@ -28,9 +28,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
 ## Files in and out
 
 - `IosFilePicker.kt`: a presentation UIKit refuses (something already presented, a dismissing sheet included) counts as
-  nothing picked/shared, not done. Picked files are copies, deleted after reading. Export/share temp files are deleted
-  by their maker (the share in the activity controller's completion handler); **the temporary directory is never
-  swept**, since a share target may still be reading.
+  nothing picked/shared, not done. Picked files are copies, deleted after reading. An archive or PDF is handed over as
+  its own file in `Caches/exports` (a mail attaches it mapped); bytes are written to the temporary directory first.
+  Either is deleted by the picker (the share in the activity controller's completion handler); **the temporary
+  directory is never swept**, since a share target may still be reading.
 - `IosFileImport.kt`'s `openUrl(url)`: a sync redirect never arrives here (`ASWebAuthenticationSession` answers it) but
   is ignored anyway, so it isn't reported as a failed import. URLs are read in order, one at a time, off the main
   thread; an unreadable file is passed on empty (reported as skipped).

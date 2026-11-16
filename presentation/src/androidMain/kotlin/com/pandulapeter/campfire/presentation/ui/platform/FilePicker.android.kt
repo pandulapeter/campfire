@@ -21,6 +21,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -45,6 +46,8 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import kotlin.coroutines.resume
 
 /**
@@ -146,7 +149,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
-        withContext(Dispatchers.IO) { keepPendingExport(file) }
+        val isKept = withContext(Dispatchers.IO) { keepPendingExport(file) }
         // Taken now rather than when the call began: an Activity recreated in between has unregistered the old ones,
         // and between two Activities there are none until the next one has composed.
         val launcher = launchers.filterNotNull().first().let { if (file.mimeType == ExportedFile.ZIP_MIME_TYPE) it.createArchive else it.createText }
@@ -159,11 +162,15 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         // The document exists from the moment the dialog is confirmed, so from here on the write is owed: a scope
         // cancelled at this point would leave it empty.
         return withContext(NonCancellable + Dispatchers.IO) {
-            clearPendingExport()
-            when {
-                uri == null -> false
-                write(uri) { it.write(file.bytes) } -> true
-                else -> throw IOException("Could not write \"${file.name}\".")
+            try {
+                when {
+                    uri == null -> false
+                    write(uri) { output -> if (isKept) pendingExport.inputStream().use { it.copyTo(output) } else file.writeTo(output) } -> true
+                    else -> throw IOException("Could not write \"${file.name}\".")
+                }
+            } finally {
+                clearPendingExport()
+                file.deleteTemporaryFile()
             }
         }
     }
@@ -171,8 +178,9 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     override val canShare = true
 
     /**
-     * The file is copied into the cache directory first: the library lives in the app's private storage, which no
-     * other app can read, and the provider declared in the manifest only exposes that one directory.
+     * The file is put into the cache directory first: the app's private storage is no other app's to read, and the
+     * provider declared in the manifest only exposes that one directory. It stays there for the app it went to, which
+     * reads it whenever it likes, until the next share of the same name replaces it.
      */
     override suspend fun shareFile(file: ExportedFile): Boolean {
         val uri = file.toSharedUri()
@@ -211,7 +219,8 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private suspend fun ExportedFile.toSharedUri() = withContext(Dispatchers.IO) {
         val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
-        val target = java.io.File(directory, name).apply { writeBytes(bytes) }
+        val target = java.io.File(directory, name)
+        moveTo(target)
         FileProvider.getUriForFile(context, "${context.packageName}.files", target)
     }
 
@@ -271,18 +280,44 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         return isWritten
     }
 
-    /** A failure here costs only the safety net, never the export it is for. */
-    private fun keepPendingExport(file: ExportedFile) {
-        try {
-            clearPendingExport()
-            pendingExport.apply { parentFile?.mkdirs() }.writeBytes(file.bytes)
-        } catch (exception: Exception) {
-            println("Could not keep a copy of \"${file.name}\": ${exception.message}")
-        }
+    /**
+     * Whether the export now is the pending one, which the save then writes from. A failure here costs only the safety
+     * net, never the export it is for, which is then written from where it is.
+     */
+    private fun keepPendingExport(file: ExportedFile) = try {
+        clearPendingExport()
+        file.moveTo(pendingExport.apply { parentFile?.mkdirs() })
+        true
+    } catch (exception: Exception) {
+        println("Could not keep a copy of \"${file.name}\": ${exception.message}")
+        false
     }
 
     private fun clearPendingExport() {
         pendingExport.parentFile?.deleteRecursively()
+    }
+
+    /**
+     * Puts the export at [target], replacing what is there: its bytes written, or its temporary file moved, which within
+     * the app's own storage is a rename and copies nothing. A file that cannot be renamed is copied and removed.
+     */
+    private fun ExportedFile.moveTo(target: java.io.File) {
+        when (val content = content) {
+            is ExportedContent.Bytes -> target.writeBytes(content.bytes)
+            is ExportedContent.TemporaryFile -> Files.move(java.io.File(content.path).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+
+    private fun ExportedFile.writeTo(output: OutputStream) {
+        when (val content = content) {
+            is ExportedContent.Bytes -> output.write(content.bytes)
+            is ExportedContent.TemporaryFile -> java.io.File(content.path).inputStream().use { it.copyTo(output) }
+        }
+    }
+
+    /** What is left of an export that could not be kept as the pending one; the exports folder is emptied on launch otherwise. */
+    private fun ExportedFile.deleteTemporaryFile() {
+        (content as? ExportedContent.TemporaryFile)?.let { java.io.File(it.path).delete() }
     }
 
     private companion object {

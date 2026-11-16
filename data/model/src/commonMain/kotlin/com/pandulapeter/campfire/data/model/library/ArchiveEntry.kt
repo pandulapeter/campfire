@@ -7,13 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.formats.zip
+package com.pandulapeter.campfire.data.model.library
 
 /**
- * One entry of an archive written by the streaming [ZipWriter.write], whose bytes [read] gives only when it is the
- * entry's turn: the writer holds one entry at a time, never the whole archive's. [read] is called exactly once.
+ * One file of an archive being packed: [name] is its path inside the archive. An archive is packed from functions that
+ * answer one each, read only when it is its turn, so that the archive is never held whole; a null leaves it out.
  */
-class ZipEntrySource(
+class ArchiveEntry(
     val name: String,
-    val read: suspend () -> ByteArray,
+    val bytes: ByteArray,
 )

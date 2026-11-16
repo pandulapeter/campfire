@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -21,6 +22,8 @@ import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 /**
  * `java.awt.FileDialog` rather than `JFileChooser`: it is the operating system's own dialog on macOS and Windows,
@@ -56,24 +59,44 @@ internal object DesktopFilePicker : FilePicker {
                 val name = this.file
                 if (directory == null || name == null) null else File(directory, name)
             }
-        } ?: return false
+        }
         return withContext(Dispatchers.IO) {
+            if (chosen == null) {
+                file.deleteTemporaryFile()
+                return@withContext false
+            }
             val extended = chosen.withExtensionOf(file.name)
             try {
-                extended.writeBytes(file.bytes)
+                file.putAt(extended)
             } catch (exception: Exception) {
                 // A sandbox grants the one path the dialog returned, and a sibling with the extension added is not that
                 // path: where it could not even be created, the file goes where the user said instead, without the
                 // extension, rather than nowhere. One that was created and failed part way is a failure like any other.
                 if (extended == chosen || extended.exists()) throw exception
                 println("Could not write \"${extended.path}\", writing \"${chosen.path}\" instead: ${exception.message}")
-                chosen.writeBytes(file.bytes)
+                file.putAt(chosen)
             }
             true
         }
     }
 
     private const val DIALOG_TITLE = "Campfire"
+}
+
+/**
+ * Puts the export at [target], which the dialog has already asked about replacing: its bytes written, or its temporary
+ * file moved there, which on another volume copies it and removes the original, so it is never held in memory.
+ */
+private fun ExportedFile.putAt(target: File) {
+    when (val content = content) {
+        is ExportedContent.Bytes -> target.writeBytes(content.bytes)
+        is ExportedContent.TemporaryFile -> Files.move(Path.of(content.path), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
+/** What a dismissed dialog leaves of a written export; the exports folder is emptied on launch should this fail. */
+private fun ExportedFile.deleteTemporaryFile() {
+    (content as? ExportedContent.TemporaryFile)?.let { Files.deleteIfExists(Path.of(it.path)) }
 }
 
 /**

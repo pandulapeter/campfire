@@ -18,22 +18,27 @@ internal class ExportedFileTest {
 
     @Test
     fun `an archive is too large to import by what it unpacks to, however small it is compressed`() {
-        assertTrue(archive(size = 1_000, unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1).isTooLargeToImport)
-        assertFalse(archive(size = 1_000, unpackedSize = ImportLimits.MAX_IMPORT_SIZE).isTooLargeToImport)
+        assertTrue(archive(size = 1_000L, unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1).isTooLargeToImport)
+        assertFalse(archive(size = 1_000L, unpackedSize = ImportLimits.MAX_IMPORT_SIZE).isTooLargeToImport)
     }
 
     @Test
     fun `an archive is too large to import by its own size too`() {
-        assertTrue(archive(size = ImportLimits.MAX_IMPORT_SIZE.toInt() + 1, unpackedSize = 1_000).isTooLargeToImport)
+        assertTrue(archive(size = ImportLimits.MAX_IMPORT_SIZE + 1, unpackedSize = 1_000).isTooLargeToImport)
     }
 
     @Test
     fun `a file that is no archive is never too large to import`() {
-        val pdf = ExportedFile(name = "songs.pdf", mimeType = ExportedFile.PDF_MIME_TYPE, bytes = ByteArray(0), unpackedSize = Long.MAX_VALUE)
+        val pdf = ExportedFile(name = "songs.pdf", mimeType = ExportedFile.PDF_MIME_TYPE, content = ExportedContent.Bytes(ByteArray(0)), unpackedSize = Long.MAX_VALUE)
 
         assertFalse(pdf.isTooLargeToImport)
     }
 
-    private fun archive(size: Int, unpackedSize: Long) =
-        ExportedFile(name = "songs.zip", mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = ByteArray(size), unpackedSize = unpackedSize)
+    private fun archive(size: Long, unpackedSize: Long) =
+        ExportedFile(
+            name = "songs.zip",
+            mimeType = ExportedFile.ZIP_MIME_TYPE,
+            content = ExportedContent.TemporaryFile(path = "/exports/songs.zip", size = size),
+            unpackedSize = unpackedSize,
+        )
 }

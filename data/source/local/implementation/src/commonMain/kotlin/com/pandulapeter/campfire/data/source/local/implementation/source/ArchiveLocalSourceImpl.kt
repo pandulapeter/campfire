@@ -13,7 +13,10 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.chordpro.abc.AbcText
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
@@ -27,6 +30,7 @@ import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.DosTimestamp
 import com.pandulapeter.campfire.data.formats.zip.UnreadZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
+import com.pandulapeter.campfire.data.formats.zip.ZipSink
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -38,8 +42,9 @@ import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.Single
 
 /**
- * Unpacking and packing run on [Dispatchers.Default] rather than IO: nothing here touches the file system, it is all
- * inflating and packing in memory, and a big archive would otherwise block whichever thread asked for it.
+ * Unpacking and packing run on [Dispatchers.Default] rather than IO: they are inflating and deflating, and a big archive
+ * would otherwise block whichever thread asked for it. What touches the file system (a streamed pack's entries and its
+ * sink) moves to its own dispatcher itself.
  */
 @Single
 internal class ArchiveLocalSourceImpl(
@@ -53,16 +58,27 @@ internal class ArchiveLocalSourceImpl(
     override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { foreignSongs(file) }
 
     override suspend fun pack(files: Map<String, ByteArray>, isDated: Boolean): ByteArray = withContext(Dispatchers.Default) {
+        ZipWriter.write(entries = files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) }, modifiedAt = timestamp(isDated))
+    }
+
+    override suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink) = withContext(Dispatchers.Default) {
         ZipWriter.write(
-            entries = files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) },
-            modifiedAt = if (isDated) {
-                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).let { dateTime ->
-                    DosTimestamp.of(dateTime.year, dateTime.month.number, dateTime.day, dateTime.hour, dateTime.minute, dateTime.second)
-                }
-            } else {
-                DosTimestamp.EARLIEST
+            entries = entries.map { read -> { read()?.let { ZipEntry(name = it.name, bytes = it.bytes) } } },
+            sink = object : ZipSink {
+                override val position get() = sink.position
+
+                override suspend fun write(bytes: ByteArray, offset: Int, length: Int) = sink.write(bytes, offset, length)
             },
-        )
+            modifiedAt = timestamp(isDated),
+        ).let { PackedArchive(entryCount = it.entryCount, unpackedSize = it.unpackedSize) }
+    }
+
+    private fun timestamp(isDated: Boolean) = if (isDated) {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).let { dateTime ->
+            DosTimestamp.of(dateTime.year, dateTime.month.number, dateTime.day, dateTime.hour, dateTime.minute, dateTime.second)
+        }
+    } else {
+        DosTimestamp.EARLIEST
     }
 
     /**

@@ -18,6 +18,9 @@ import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.domain.api.export.ClearExportFilesUseCase
+import com.pandulapeter.campfire.domain.api.export.CreateExportFileUseCase
+import com.pandulapeter.campfire.domain.api.export.DiscardExportedFileUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
@@ -63,6 +66,12 @@ class ExportControllerTest {
     /** What the export use cases were asked for, by what they hand out. */
     private val requests = mutableListOf<String>()
     private var libraryExport: ExportLibraryUseCase.Result? = null
+
+    /** Where set, what a setlist's archive waits for before it is finished. */
+    private var setlistExportGate: CompletableDeferred<Unit>? = null
+
+    /** The exports discarded, by name. */
+    private val discarded = mutableListOf<String>()
     private val picker = RecordingFilePicker()
     private var storedPreferences = testPreferences()
 
@@ -95,6 +104,19 @@ class ExportControllerTest {
         runCurrent()
         assertTrue(requests.isEmpty())
         assertTrue(picker.saved.isEmpty())
+    }
+
+    @Test
+    fun `an archive finished for a screen that has gone is discarded rather than saved`() = runTest {
+        val gate = CompletableDeferred<Unit>().also { setlistExportGate = it }
+        val (controller, dialogHost, _) = controller(visibleDialog = setlistExport)
+        controller.exportFiles(picker, setlistExport, isShare = false, rewrite = asStored)
+        runCurrent()
+        dialogHost.setVisibleDialog(null)
+        gate.complete(Unit)
+        runCurrent()
+        assertTrue(picker.saved.isEmpty())
+        assertEquals(listOf("gig.zip"), discarded)
     }
 
     @Test
@@ -193,7 +215,7 @@ class ExportControllerTest {
         val (controller, dialogHost, _) = controller(visibleDialog = setlistExport)
         val forgotten = mutableListOf<ShareTarget>()
         controller.setPrintSettings(PrintSettings(fontSize = 16))
-        controller.exportPdf(picker, "gig.pdf", setlistExport, pageCount = 2, isShare = false) { CompletableDeferred<ByteArray>().await() }
+        controller.exportPdf(picker, "gig.pdf", setlistExport, pageCount = 2, isShare = false) { _, _ -> CompletableDeferred<Unit>().await() }
         runCurrent()
         assertEquals(PdfExportProgress(done = 0, total = 2), controller.pdfExportProgress.value)
         dialogHost.setVisibleDialog(null)
@@ -262,26 +284,40 @@ class ExportControllerTest {
             effectiveCapoOf = { _, _ -> capo },
             songRenderer = testSongRenderer(),
             getSongContent = songFiles,
-            exportSongs = object : ExportSongsUseCase {
-                override suspend fun invoke(
-                    fileNames: List<String>,
-                    isArchive: Boolean,
-                    isDated: Boolean,
-                    rewrite: (fileName: String, text: String) -> String,
-                ): ExportedFile {
-                    requests += "songs $fileNames archive: $isArchive"
-                    return zip("songs.zip", size = 1)
-                }
-            },
-            exportSetlist = object : ExportSetlistUseCase {
-                override suspend fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile {
-                    requests += "setlist $setlistFileName"
-                    return zip("gig.zip", size = 1)
-                }
-            },
-            exportLibrary = object : ExportLibraryUseCase {
-                override suspend fun invoke() = libraryExport
-            },
+            useCases = ExportUseCases(
+                exportSongs = object : ExportSongsUseCase {
+                    override suspend fun invoke(
+                        fileNames: List<String>,
+                        isArchive: Boolean,
+                        isDated: Boolean,
+                        rewrite: (fileName: String, text: String) -> String,
+                    ): ExportedFile {
+                        requests += "songs $fileNames archive: $isArchive"
+                        return zip("songs.zip", size = 1)
+                    }
+                },
+                exportSetlist = object : ExportSetlistUseCase {
+                    override suspend fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile {
+                        setlistExportGate?.await()
+                        requests += "setlist $setlistFileName"
+                        return zip("gig.zip", size = 1)
+                    }
+                },
+                exportLibrary = object : ExportLibraryUseCase {
+                    override suspend fun invoke() = libraryExport
+                },
+                createExportFile = object : CreateExportFileUseCase {
+                    override suspend fun invoke(name: String) = error("No PDF is finished here.")
+                },
+                discardExportedFile = object : DiscardExportedFileUseCase {
+                    override suspend fun invoke(file: ExportedFile) {
+                        discarded += file.name
+                    }
+                },
+                clearExportFiles = object : ClearExportFilesUseCase {
+                    override suspend fun invoke() = Unit
+                },
+            ),
             updateUserPreferences = object : UpdateUserPreferencesUseCase {
                 override suspend fun invoke(update: (UserPreferences) -> UserPreferences) {
                     storedPreferences = update(storedPreferences)

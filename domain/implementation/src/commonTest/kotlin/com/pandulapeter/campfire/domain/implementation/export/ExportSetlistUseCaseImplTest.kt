@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.testSetlist
@@ -67,6 +68,7 @@ class ExportSetlistUseCaseImplTest {
                 if (fileName in readable) SongContent(fileName, "{title: $fileName}") else null
         },
         archiveRepository = archive,
+        exportFileRepository = FakeExportFileRepository(),
     )
 
     /** Holds the one setlist. */
