@@ -65,8 +65,8 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   or Play services' backport (the manifest asks for it; elsewhere the contract would fall back to the documents UI,
   which Files is already), and iOS's PHPicker. Neither asks a permission. `pickImages` also offers HEIC and HEIF (and
   AVIF on Android), which the editor converts. A picked photo is named by `pictureFileName`.
-- **Android pictures picked for a process that died under the picker are let go** (logged), unlike other files: their
-  place (the caret, a missing picture's name) died with it, and an import would be a new song nobody asked for.
+- Android pictures picked for a view model that is gone never become an import (a new song nobody asked for):
+  `presentation/src/androidMain/CLAUDE.md`.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):
   `ExportController.launchFileTransfer` runs one transfer at a time and ignores others, so one that never answers blocks
   import and export for good.

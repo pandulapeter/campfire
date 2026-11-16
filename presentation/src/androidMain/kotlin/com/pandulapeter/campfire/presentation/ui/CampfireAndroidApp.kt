@@ -127,6 +127,7 @@ fun CampfireAndroidApp(
     LaunchedEffect(filePicker, viewModel) {
         filePicker.orphanedExportResults.collect { isWritten -> if (!isWritten) viewModel.exportController.onExportFailed() }
     }
+    OrphanedPicturesEffect(filePicker = filePicker, viewModel = viewModel)
     val allFilesToImport = remember(filesToImport, filePicker) { merge(filesToImport, filePicker.orphanedFiles) }
     CompositionLocalProvider(
         LocalFilePicker provides filePicker,

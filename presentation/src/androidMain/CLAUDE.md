@@ -29,6 +29,10 @@
   from `cacheDir/pending_export`, which is the export's own file moved there (a rename, no copy), as a share's is moved
   into `cacheDir/shared`. A song is exported as `application/octet-stream`: storage providers append `.txt` to a
   `.cho` saved as text.
+- **Pictures picked for a view model that is gone** (process death, or any Activity destroyed outside a configuration
+  change, which clears it: "Don't keep activities" on every trip to the picker) have launchers of their own and never
+  join the import: `OrphanedPicturesEffect` puts them into the editor where it tops the restored back stack (its Image
+  button is that screen's only picker), else lets them go with a log line.
 - **Drops** (from another app in split screen, a desktop window, or the taskbar): URIs are read under
   `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items are a pasted
   song. A drag's description can't tell a text file from a text, so a `text/plain`-only drag starts only where

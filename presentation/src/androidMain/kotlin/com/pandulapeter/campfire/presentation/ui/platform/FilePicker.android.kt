@@ -109,10 +109,11 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
  * A process that dies under the system picker takes this object with it, and the result then arrives at one that
  * nobody is suspended on. That is what an orphaned result is: picked files are read and offered through
  * [orphanedFiles], and the location of an export is filled from the copy [saveFile] left in the cache directory before
- * it opened the picker, the outcome going to [orphanedExportResults]. Orphaned pictures are the one result let go: they
- * were picked for a place in a song (the editor's caret, a missing picture's name) that died with the process, and an
- * import of them would be a new song nobody asked for, opened over the editor the user comes back to. The editor and the
- * song come back as they were, so the pictures are simply picked again.
+ * it opened the picker, the outcome going to [orphanedExportResults]. Pictures go to [orphanedPictures] instead of the
+ * import: they were picked for a place in a song (the editor's caret, a missing picture's name), and an import of them
+ * would be a new song nobody asked for. The view model the waiting coroutine belonged to is gone even where the process
+ * lives on, since Android clears it with any Activity destroyed outside a configuration change ("Don't keep activities"
+ * does so on every trip to the picker and back).
  */
 @Single
 internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
@@ -139,9 +140,13 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _orphanedFiles = Channel<List<ImportedFile>>(Channel.BUFFERED)
     private val _orphanedExportResults = Channel<Boolean>(Channel.BUFFERED)
+    private val _orphanedPictures = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
     /** Files picked for a process that did not live to read them, to be imported like any the system hands over. */
     val orphanedFiles = _orphanedFiles.receiveAsFlow()
+
+    /** Pictures picked for a view model that did not live to read them, read at once, while they may still be read. */
+    val orphanedPictures = _orphanedPictures.receiveAsFlow()
 
     /** Whether an export whose process died under the "save as" screen was written after all. */
     val orphanedExportResults = _orphanedExportResults.receiveAsFlow()
@@ -285,7 +290,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         pickContinuation = null
         when {
             continuation != null -> continuation.resume(uris)
-            uris.isNotEmpty() -> println("Let go of ${uris.size} picture(s) picked for a process that did not live to read them.")
+            uris.isNotEmpty() -> scope.launch { _orphanedPictures.send(uris.toImportedFiles(context)) }
         }
     }
 
