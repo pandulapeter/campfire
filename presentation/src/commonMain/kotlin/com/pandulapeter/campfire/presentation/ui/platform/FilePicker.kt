@@ -48,6 +48,13 @@ interface FilePicker {
     suspend fun pickPhotos(isMultiple: Boolean): List<ImportedFile> = pickImages()
 
     /**
+     * Readies the photo library's picker for a [pickPhotos] of [isMultiple] that may follow, where it takes long to appear
+     * (iOS's Photos, out of the app's process, the first time): called as a menu offering it opens, so that the wait
+     * passes while the user reads it. Nothing elsewhere.
+     */
+    fun preparePhotos(isMultiple: Boolean) = Unit
+
+    /**
      * Whether there is a photo library apart from the files [pickImages] opens (Android's photo picker, iOS's Photos),
      * which is when the buttons that add a picture ask which of the two to pick from.
      */

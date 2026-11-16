@@ -47,6 +47,7 @@ import platform.Foundation.writeToURL
 import platform.MessageUI.MFMailComposeResult
 import platform.MessageUI.MFMailComposeViewController
 import platform.MessageUI.MFMailComposeViewControllerDelegateProtocol
+import platform.PhotosUI.PHPickerViewController
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
 import platform.UIKit.UIPresentationController
@@ -83,6 +84,12 @@ internal class IosFilePicker(
     private var delegate: NSObject? = null
     private var finishPendingPicker: (() -> Unit)? = null
 
+    // From the moment a picker is presented until UIKit has finished showing it. Photos runs out of the app's process and
+    // is not even the presented controller until it appears, seconds later the first time, so a second pick asked for
+    // meanwhile (the button that opened it pressed again) would take the first one for a picker gone without a word,
+    // answer it with nothing, and present another.
+    private var isPresenting = false
+
     // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs out in the
     // picker. What is not a song is skipped by the import and reported afterwards.
     override suspend fun pickFiles() = pick(listOf(UTTypeData, UTTypeZIP))
@@ -92,10 +99,23 @@ internal class IosFilePicker(
 
     override val canPickPhotos = true
 
+    // A Photos picker whose view was loaded ahead of the pick (preparePhotos), which starts its connection to the process
+    // it runs in: the first one a process presents takes about three seconds to appear otherwise, measured on the
+    // simulator, a second about half a second.
+    private var preparedPhotoPicker: PHPickerViewController? = null
+    private var isPreparedPhotoPickerMultiple = false
+
+    override fun preparePhotos(isMultiple: Boolean) {
+        if (preparedPhotoPicker != null && isPreparedPhotoPickerMultiple == isMultiple) return
+        preparedPhotoPicker = photoPickerController(isMultiple).apply { loadViewIfNeeded() }
+        isPreparedPhotoPickerMultiple = isMultiple
+    }
+
     override suspend fun pickPhotos(isMultiple: Boolean): List<ImportedFile> {
         val results = withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
-                val controller = photoPickerController(isMultiple)
+                val controller = preparedPhotoPicker?.takeIf { isPreparedPhotoPickerMultiple == isMultiple } ?: photoPickerController(isMultiple)
+                preparedPhotoPicker = null
                 val pickerDelegate = PhotoPickerDelegate { results ->
                     delegate = null
                     finishPendingPicker = null
@@ -232,7 +252,7 @@ internal class IosFilePicker(
         val host = viewController()
         // UIKit refuses a second presentation with nothing but a log line, and the answer it would have given never
         // comes: the caller is told nothing was picked instead of waiting for good.
-        if (host.presentedViewController != null) {
+        if (isPresenting || host.presentedViewController != null) {
             finishWithNothing()
             return
         }
@@ -243,7 +263,8 @@ internal class IosFilePicker(
         finishPendingPicker = finishWithNothing
         // A sheet swiped away tells neither of the picker's own callbacks, only its presentation controller.
         controller.presentationController?.delegate = pickerDelegate
-        host.presentViewController(controller, animated = true, completion = null)
+        isPresenting = true
+        host.presentViewController(controller, animated = true) { isPresenting = false }
     }
 }
 

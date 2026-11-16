@@ -42,6 +42,7 @@ internal fun EditorImageButton(
             modifier = modifier.bringIntoViewRequester(bringIntoViewRequester),
             state = imagePick.menuState,
             isFocusable = false,
+            isMultiple = true,
             button = { open ->
                 EditorToolbarButton(
                     label = label,

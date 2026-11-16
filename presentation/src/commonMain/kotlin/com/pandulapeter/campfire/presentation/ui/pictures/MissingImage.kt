@@ -88,7 +88,7 @@ internal fun MissingImage(
         }
     }
     if (adder?.canPickPhotos == true) {
-        PictureSourceMenu(button = addButton, onPick = { source -> adder.add(name, source) })
+        PictureSourceMenu(isMultiple = false, button = addButton, onPick = { source -> adder.add(name, source) })
     } else {
         addButton { adder?.add(name, PictureSource.FILES) }
     }
