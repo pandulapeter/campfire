@@ -445,7 +445,7 @@ internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean)
  */
 private class SettledHeight(var height: Dp)
 
-private val PAGE_BOTTOM_PADDING = 16.dp
+private val PAGE_BOTTOM_PADDING = 4.dp
 
 /** What a song in one column pads its rows to: nothing, since it is not read a row at a time. */
 private val NO_ROW_VIEWPORT = { Dp.Unspecified }

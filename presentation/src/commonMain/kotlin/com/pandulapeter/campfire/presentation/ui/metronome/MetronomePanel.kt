@@ -129,7 +129,7 @@ internal fun MetronomePanel(
                 start = contentPadding.calculateStartPadding(layoutDirection) + startPadding,
                 end = contentPadding.calculateEndPadding(layoutDirection) + endPadding,
                 // A prominent panel heads a settings page, whose own top padding and first title already part it from the rows.
-                bottom = if (isProminent) 0.dp else PANEL_PADDING,
+                bottom = if (isProminent) 0.dp else PANEL_BOTTOM_PADDING,
             )
             .height(height),
         verticalAlignment = Alignment.CenterVertically,
@@ -180,6 +180,7 @@ private fun rememberPanelVisibleState(given: MutableTransitionState<Boolean>?, i
 private const val PANEL_ANIMATION_DURATION = 250
 private val PANEL_HEIGHT = 48.dp
 private val PANEL_PADDING = 12.dp
+private val PANEL_BOTTOM_PADDING = 4.dp
 
 /**
  * The panel's margins in the song details screen's app bar, which put the beats where the song's own text starts and

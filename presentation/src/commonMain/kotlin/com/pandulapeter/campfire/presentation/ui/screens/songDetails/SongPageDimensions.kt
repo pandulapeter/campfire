@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.unit.dp
 
-internal val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the first row, and read with it.
+internal val PAGE_TOP_PADDING = 2.dp // Inside the scroll, above the first row, and read with it.
 
 internal val PAGE_HORIZONTAL_PADDING = 8.dp
 internal val STEP_BUTTON_SIZE = 40.dp
