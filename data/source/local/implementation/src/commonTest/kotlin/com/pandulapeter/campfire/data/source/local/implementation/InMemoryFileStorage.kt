@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation
 
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSink
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
@@ -54,6 +55,25 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
         val key = key(directory, name)
         files[key] = StoredFile(name = files[key]?.name ?: name, bytes = bytes)
     }
+
+    override suspend fun openSink(directory: StorageDirectory, name: String): FileSink {
+        writeBytes(directory, name, ByteArray(0))
+        return object : FileSink {
+            override var position = 0L
+                private set
+
+            override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
+                writeBytes(directory, name, readBytes(directory, name)!! + bytes.copyOfRange(offset, offset + length))
+                position += length
+            }
+
+            override suspend fun close() = Unit
+
+            override suspend fun abandon() = delete(directory, name)
+        }
+    }
+
+    override fun pathOf(directory: StorageDirectory, name: String) = "${directory.name}/$name"
 
     override suspend fun delete(directory: StorageDirectory, name: String) {
         files -= key(directory, name)

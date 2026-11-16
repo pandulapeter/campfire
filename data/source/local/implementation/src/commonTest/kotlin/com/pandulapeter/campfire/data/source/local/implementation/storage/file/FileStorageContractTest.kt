@@ -239,4 +239,30 @@ abstract class FileStorageContractTest {
             assertFailsWith<IllegalArgumentException>(name) { fileStorage.readText(StorageDirectory.SONGS, name) }
         }
     }
+
+    @Test
+    fun `a sink writes a file front to back and replaces one of the same name`() = runTest {
+        fileStorage.writeBytes(StorageDirectory.EXPORTS, "songs.zip", ByteArray(1_000) { 1 })
+        val first = ByteArray(70_000) { (it % 251).toByte() }
+        val second = "the end".encodeToByteArray()
+
+        val sink = fileStorage.openSink(StorageDirectory.EXPORTS, "songs.zip")
+        sink.write(first, 0, first.size)
+        sink.write(second, 4, 3)
+        sink.close()
+
+        assertEquals(first.size + 3L, sink.position)
+        assertContentEquals(first + "end".encodeToByteArray(), fileStorage.readBytes(StorageDirectory.EXPORTS, "songs.zip"))
+        assertTrue(fileStorage.pathOf(StorageDirectory.EXPORTS, "songs.zip").endsWith("exports/songs.zip"))
+    }
+
+    @Test
+    fun `an abandoned sink leaves no file behind`() = runTest {
+        val sink = fileStorage.openSink(StorageDirectory.EXPORTS, "songs.pdf")
+        sink.write(ByteArray(10), 0, 10)
+
+        sink.abandon()
+
+        assertFalse(fileStorage.exists(StorageDirectory.EXPORTS, "songs.pdf"))
+    }
 }

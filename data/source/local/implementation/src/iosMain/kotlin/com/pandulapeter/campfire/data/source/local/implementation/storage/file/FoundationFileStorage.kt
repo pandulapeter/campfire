@@ -145,6 +145,13 @@ internal class FoundationFileStorage(
         }
     }
 
+    override suspend fun openSink(directory: StorageDirectory, name: String): FileSink = withContext(Dispatchers.IO) {
+        fileManager.createDirectoryAtPath(directoryPath(directory), true, null, null)
+        PosixFileSink(path = filePath(directory, name), name = name)
+    }
+
+    override fun pathOf(directory: StorageDirectory, name: String) = filePath(directory, name)
+
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         val path = filePath(directory, name)
         if (fileManager.fileExistsAtPath(path) && !fileManager.removeItemAtPath(path, null)) {

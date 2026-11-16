@@ -26,7 +26,8 @@ Kotlin/Wasm entry point (`wasmJs` browser target only); the webpack output is na
   file first, so a quota refusal comes before any overwrite. **Journaled** (`.campfire-tmp`, then a `.campfire-commit`
   marker, then written in place), so a terminated worker leaves the file old or new; new files are created by the
   worker after the marker, never by the page, so a cut-short first write leaves no empty song. An unrecoverable file is
-  only logged, since failing would lock the user out of the library. Tested by
+  only logged, since failing would lock the user out of the library. An export's `stream` requests (open, append,
+  close, abort) are not journaled: nothing reads the file before it is closed. Tested by
   `node --test app/web/tests/opfs-writer.test.cjs`.
 
 ## `index.html`

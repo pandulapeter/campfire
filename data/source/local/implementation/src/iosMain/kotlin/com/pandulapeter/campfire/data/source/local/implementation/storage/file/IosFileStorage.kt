@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.annotation.Single
 import platform.Foundation.NSApplicationSupportDirectory
+import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
@@ -30,11 +31,16 @@ internal class IosFileStorage(logger: Logger) : FileStorage by FoundationFileSto
 
 private fun appRootPath(directory: StorageDirectory): String {
     // The covers are the app's own copies of something that can be downloaded again, so they are no more the
-    // Files app's business than the preferences are.
+    // Files app's business than the preferences are. The exports are in the caches directory, which no backup takes and
+    // the system may empty while the app is not running, by when they are no longer needed.
     val isApplicationSupport = directory == StorageDirectory.PREFERENCES || directory == StorageDirectory.COVERS
     return requireNotNull(
         NSFileManager.defaultManager.URLForDirectory(
-            directory = if (isApplicationSupport) NSApplicationSupportDirectory else NSDocumentDirectory,
+            directory = when {
+                directory == StorageDirectory.EXPORTS -> NSCachesDirectory
+                isApplicationSupport -> NSApplicationSupportDirectory
+                else -> NSDocumentDirectory
+            },
             inDomain = NSUserDomainMask,
             appropriateForURL = null,
             // Unlike the documents directory, application support doesn't exist until something creates it.

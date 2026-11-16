@@ -34,6 +34,11 @@ Skipped or unreadable files are logged to the injected `Logger`.
     deletes an empty leftover (omitted for names within 12 bytes of Safari's 255-byte limit).
   - The journal is replayed per directory before its handle is first handed out and after a failed write.
     `.campfire-tmp`, `.campfire-commit`, and `.campfire-new` files are hidden from every listing.
+- **Exports** (`EXPORTS`, `openSink`): written front to back in place, not atomically, since nothing reads one before it
+  is closed; an abandoned sink removes its file. JVM a buffered stream, iOS C's `fwrite` (whose failure is a short
+  count, where `NSFileHandle` raises an exception Kotlin cannot catch) into the caches directory, OPFS a writable stream
+  or the worker's sync access handle. `pathOf` is the platform's path for the shells: absolute, on the web from the
+  OPFS root.
 - **Missing vs. failed**: a read returns null **only** for a file that is not there. A file that cannot be read,
   written, or deleted, or a directory that cannot be listed, throws `LibraryStorageException` everywhere, because sync
   plans a missing file as a deletion that reaches every device. iOS asks `dataWithContentsOfFile` for its `NSError` and

@@ -218,6 +218,17 @@ internal class OpfsFileStorage : FileStorage {
         }
     }
 
+    override suspend fun openSink(directory: StorageDirectory, name: String): FileSink = withContext(Dispatchers.Default) {
+        requireValidFileName(name)
+        val stream = failingAsStorage(name) { openFileStream(directoryHandle(directory), directory.displayName, name).await<JsAny?>() }
+        OpfsFileSink(stream = stream ?: throw LibraryStorageException("Could not create \"$name\"."), name = name)
+    }
+
+    override fun pathOf(directory: StorageDirectory, name: String): String {
+        requireValidFileName(name)
+        return directory.displayName + "/" + name
+    }
+
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
             requireValidFileName(name)

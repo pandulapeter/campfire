@@ -33,11 +33,46 @@ self.onmessage = function (event) {
         if (!Array.isArray(request.path) || request.path.length === 0) throw new TypeError('No directory given.');
         var directory = await navigator.storage.getDirectory();
         for (var i = 0; i < request.path.length; i++) directory = await directory.getDirectoryHandle(request.path[i], { create: true });
-        if (request.recover) await recoverAll(directory); else await write(directory, request.name, request.data);
+        if (request.recover) await recoverAll(directory);
+        else if (request.stream) await stream(directory, request.path.join('/') + '/' + request.name, request);
+        else await write(directory, request.name, request.data);
     }).then(function () { self.postMessage({ id: request.id }); }, function (error) {
         self.postMessage({ id: request.id, error: (error && error.name) || 'Error', message: String((error && error.message) || error) });
     });
 };
+
+/*
+ * An export written front to back (`stream` is 'open', 'append', 'close' or 'abort'), with no journal: nothing reads
+ * the file before it is closed, and what an interrupted one leaves is emptied with the rest of its folder on launch.
+ * The access handle stays open between the requests, keyed by the file's path.
+ */
+var streams = new Map();
+
+async function stream(directory, key, request) {
+    var open = streams.get(key);
+    if (request.stream === 'open') {
+        if (open) { open.access.close(); streams.delete(key); }
+        var access = await (await directory.getFileHandle(request.name, { create: true })).createSyncAccessHandle();
+        try { access.truncate(0); } catch (error) { access.close(); throw error; }
+        streams.set(key, { access: access, position: 0 });
+    } else if (request.stream === 'append') {
+        if (!open) throw new Error(request.name + ' is not open.');
+        var total = request.data.byteLength;
+        for (var written = 0; written < total;) {
+            var count = open.access.write(request.data.subarray(written), { at: open.position + written });
+            if (!(count > 0)) throw new Error('Only ' + written + ' of ' + total + ' bytes could be written.');
+            written += count;
+        }
+        open.position += total;
+    } else if (request.stream === 'close') {
+        if (!open) return;
+        streams.delete(key);
+        try { open.access.flush(); } finally { open.access.close(); }
+    } else {
+        if (open) { streams.delete(key); try { open.access.close(); } catch (ignored) { } }
+        await removeIfPresent(directory, request.name);
+    }
+}
 
 async function write(directory, name, data) {
     await recover(directory, name);

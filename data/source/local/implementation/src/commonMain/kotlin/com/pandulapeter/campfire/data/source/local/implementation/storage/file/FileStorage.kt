@@ -27,6 +27,12 @@ enum class StorageDirectory {
      * is exported or synced — the address travels in the song file — and kept out of every device backup.
      */
     COVERS,
+
+    /**
+     * The files exports are written into before they are saved or shared, each removed once handed over and the whole
+     * folder emptied on launch. Outside the library and kept out of every device backup (a cache directory on iOS).
+     */
+    EXPORTS,
 }
 
 data class StoredFileInfo(
@@ -164,6 +170,18 @@ interface FileStorage {
     /** Creates the file or overwrites it. Throws [LibraryStorageException] if it cannot. */
     suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray)
 
+    /**
+     * Creates the file, replacing one of that name, to be written front to back through the [FileSink] returned. Not
+     * atomic, so only for [StorageDirectory.EXPORTS], whose files nothing reads before they are whole.
+     */
+    suspend fun openSink(directory: StorageDirectory, name: String): FileSink
+
+    /**
+     * Where the file is as the platform names it, for handing it to the system (a share sheet, a save dialog): an
+     * absolute path, on the web the path from the root of the origin private file system.
+     */
+    fun pathOf(directory: StorageDirectory, name: String): String
+
     /** Does nothing if the file does not exist. */
     suspend fun delete(directory: StorageDirectory, name: String)
 
@@ -192,6 +210,7 @@ internal val StorageDirectory.pathSegments: List<String>
         StorageDirectory.SETLISTS -> listOf(LIBRARY_DIRECTORY, "setlists")
         StorageDirectory.PREFERENCES -> listOf("preferences")
         StorageDirectory.COVERS -> listOf("covers")
+        StorageDirectory.EXPORTS -> listOf("exports")
     }
 
 /** Whether [name] is a name rather than a path or nothing: what every storage can be asked about at all. */

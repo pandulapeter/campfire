@@ -180,6 +180,14 @@ internal class JvmFileStorage(
         failingAsStorage(name) { writeAtomically(directory, name) { it.writeBytes(bytes) } }
     }
 
+    override suspend fun openSink(directory: StorageDirectory, name: String): FileSink = withContext(Dispatchers.IO) {
+        val file = file(directory, name)
+        failingAsStorage(name) { Files.createDirectories(file.toPath().parent) }
+        JvmFileSink(path = file.toPath(), name = name)
+    }
+
+    override fun pathOf(directory: StorageDirectory, name: String): String = file(directory, name).absolutePath
+
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         val file = file(directory, name)
         // Not File.delete(), whose false says nothing about why: an AccessDeniedException is a file somebody else is
