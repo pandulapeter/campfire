@@ -1342,6 +1342,7 @@
     <string name="print_format_chordpro_description">Standardowy format pliku obsługiwany przez większość aplikacji śpiewnikowych</string>
     <string name="print_format_zip_description">Pliki ChordPro w jednym archiwum, dla większości aplikacji śpiewnikowych</string>
     <string name="print_files_song_description">Tekst i akordy jako zwykły tekst, który można dalej edytować i transponować, dla każdej aplikacji obsługującej ChordPro, także Campfire.</string>
+    <string name="print_files_song_with_pictures_description">Tekst i akordy jako zwykły tekst, który można dalej edytować i transponować, spakowane razem z obrazami utworu, dla każdej aplikacji obsługującej ChordPro, także Campfire.</string>
     <string name="print_as_played">Tak, jak grane tutaj</string>
     <string name="print_as_played_songs_description">Każda piosenka z transpozycją, kapodasterem i tempem, z jakimi jest tu grana, tak jak drukuje ją PDF</string>
     <string name="print_as_written">Tak, jak zapisane</string>

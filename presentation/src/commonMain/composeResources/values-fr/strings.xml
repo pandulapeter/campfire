@@ -1309,6 +1309,7 @@
     <string name="print_format_chordpro_description">Format de fichier standard compatible avec la plupart des applications de chansonnier</string>
     <string name="print_format_zip_description">Fichiers ChordPro dans une seule archive, pour la plupart des applications de chansonnier</string>
     <string name="print_files_song_description">Paroles et accords en texte brut, toujours modifiable et transposable, pour toute application qui lit le ChordPro, Campfire compris.</string>
+    <string name="print_files_song_with_pictures_description">Paroles et accords en texte brut, toujours modifiable et transposable, compressés avec les images de la chanson, pour toute application qui lit le ChordPro, Campfire compris.</string>
     <string name="print_as_played">Tel que joué ici</string>
     <string name="print_as_played_songs_description">Chaque morceau avec la transposition, le capo et le tempo avec lesquels tu le joues ici, comme le PDF l\'imprime</string>
     <string name="print_as_written">Tel qu\'écrit</string>

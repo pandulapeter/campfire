@@ -1347,6 +1347,7 @@
     <string name="print_format_chordpro_description">Standardní formát souborů, se kterým pracuje většina zpěvníkových aplikací</string>
     <string name="print_format_zip_description">Soubory ChordPro v jednom archivu, pro většinu zpěvníkových aplikací</string>
     <string name="print_files_song_description">Text a akordy jako prostý text, který zůstane upravitelný a půjde transponovat, pro každou aplikaci, která čte ChordPro, včetně Campfire.</string>
+    <string name="print_files_song_with_pictures_description">Text a akordy jako prostý text, který zůstane upravitelný a půjde transponovat, zabalené spolu s obrázky písně, pro každou aplikaci, která čte ChordPro, včetně Campfire.</string>
     <string name="print_as_played">Jak se hraje tady</string>
     <string name="print_as_played_songs_description">Každá píseň s transpozicí, kapodastrem a tempem, se kterými se hraje tady, stejně jako ji vytiskne PDF</string>
     <string name="print_as_written">Jak je zapsáno</string>

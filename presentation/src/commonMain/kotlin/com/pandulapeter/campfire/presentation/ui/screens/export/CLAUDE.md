@@ -22,7 +22,8 @@ exported (Settings' Export library as zip). The code keeps the export names. The
   format untouched; a format picked on the screen is stored, and survives rotation over the opening's own.
 - Formats, in the order offered and recommended: **Link** (for Campfire users, one song or setlist, where the build has
   sync), the library's own files (for any ChordPro app: **ChordPro** for a song, **Zip** for a setlist with its manifest
-  or for a selection without one), and **PDF** (for printing). Link is the default; a stored format an export does not
+  or for a selection without one; a song naming a library picture is the zip it leaves as, named and described so,
+  `PrintSource.isSongWithPictures`), and **PDF** (for printing). Link is the default; a stored format an export does not
   offer opens it on PDF, the preference kept. One Share entry per item; no separate file export entry.
 - **The library's own files go out as played** (on by default, remembered): a `.cho` and a selection's zip are rewritten
   into valid ChordPro of what the reader plays (chords, `{key}`, `{define}`s, and tabs as the shapes above the capo

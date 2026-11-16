@@ -39,6 +39,8 @@ import com.pandulapeter.campfire.presentation.ui.playing.SongAsPlayed
  * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
  * if the library changes underneath the screen. [date] is already formatted in the app's language. [instrument] is the
  * reader's, whose part of a score of several the PDF engraves alone, as the screen does (`abcPartFor`).
+ * [isSongWithPictures] is whether the one song of a [Kind.SONG] is exported as a zip of itself and the library's pictures
+ * it names, rather than as its file (`IsExportedWithPicturesUseCase`).
  */
 internal data class PrintSource(
     val title: String,
@@ -47,6 +49,7 @@ internal data class PrintSource(
     val kind: Kind = Kind.SONG,
     val songs: List<PrintSong>,
     val instrument: Instrument? = null,
+    val isSongWithPictures: Boolean = false,
 ) {
     /** What is being exported: one song, a setlist, or several songs ticked in the songs screen's selection mode. */
     enum class Kind { SONG, SETLIST, SONGS }

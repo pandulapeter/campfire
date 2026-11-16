@@ -21,10 +21,11 @@ internal fun pdfFileName(source: PrintSource) = exportBaseName(source) + PDF_EXT
 
 /**
  * The name the library's own files are offered under, as the export use cases name them: a song by the rule [pdfFileName]
- * names it, keeping the extension its file is stored with, and a setlist or several songs as a zip named the same way.
+ * names it, keeping the extension its file is stored with, and a setlist, several songs, or a song that leaves with its
+ * pictures ([PrintSource.isSongWithPictures]) as a zip named the same way.
  */
 internal fun filesFileName(source: PrintSource): String {
-    val song = source.songs.singleOrNull()?.takeIf { source.kind == PrintSource.Kind.SONG }
+    val song = source.songs.singleOrNull()?.takeIf { source.kind == PrintSource.Kind.SONG && !source.isSongWithPictures }
     val extension = if (song == null) LibraryFiles.ARCHIVE_EXTENSION else "." + song.fileName.substringAfterLast('.', LibraryFiles.SONG_EXTENSION.drop(1))
     return exportBaseName(source) + extension
 }

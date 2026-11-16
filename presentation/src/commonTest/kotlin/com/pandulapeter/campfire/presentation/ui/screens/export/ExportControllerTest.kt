@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.domain.api.export.DiscardExportedFileUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.api.export.IsExportedWithPicturesUseCase
 import com.pandulapeter.campfire.domain.api.preferences.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -247,6 +248,16 @@ class ExportControllerTest {
         assertEquals(0, printed.notationChords.namingSemitones)
     }
 
+    @Test
+    fun `a song naming a picture the library holds is offered as the zip it is exported as`() = runTest {
+        val (controller, _, _) = controller(
+            visibleDialog = null,
+            songFiles = FakeSongFiles(mapOf("a.cho" to "{title: A}\n{image: src=$LIBRARY_PICTURE}", "b.cho" to "{title: B}\n[G]Hello")),
+        )
+        assertTrue(controller.preparePrintSource(DialogType.Export(song = song("a.cho")), tabNoticeLabels, sectionLabels).isSongWithPictures)
+        assertFalse(controller.preparePrintSource(DialogType.Export(song = song("b.cho")), tabNoticeLabels, sectionLabels).isSongWithPictures)
+    }
+
     private val tabNoticeLabels = TabNoticeLabels(
         octaveUp = "", octaveDown = "", otherInstrument = "", notMoved = "", notMovedInstrument = "", hidden = "", hiddenInstrument = "",
         instruments = emptyMap(),
@@ -330,6 +341,9 @@ class ExportControllerTest {
                 clearExportFiles = object : ClearExportFilesUseCase {
                     override suspend fun invoke() = Unit
                 },
+                isExportedWithPictures = object : IsExportedWithPicturesUseCase {
+                    override suspend fun invoke(text: String) = "{image: src=$LIBRARY_PICTURE}" in text
+                },
             ),
             updateUserPreferences = object : UpdateUserPreferencesUseCase {
                 override suspend fun invoke(update: (UserPreferences) -> UserPreferences) {
@@ -367,3 +381,5 @@ class ExportControllerTest {
         }
     }
 }
+
+private const val LIBRARY_PICTURE = "3f9a0c1d2e4b5a69.jpg"

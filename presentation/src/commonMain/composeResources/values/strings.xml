@@ -1304,6 +1304,7 @@
     <string name="print_format_chordpro_description">Standard file format that works with most songbook apps</string>
     <string name="print_format_zip_description">ChordPro files in one archive, for most songbook apps</string>
     <string name="print_files_song_description">Lyrics and chords as plain text that stays editable and transposable, for any app that reads ChordPro, Campfire included.</string>
+    <string name="print_files_song_with_pictures_description">Lyrics and chords as plain text that stays editable and transposable, zipped with the pictures the song shows, for any app that reads ChordPro, Campfire included.</string>
     <string name="print_as_played">As played here</string>
     <string name="print_as_played_songs_description">Each song with the transposition, capo, and tempo it is played with here, as the PDF prints it</string>
     <string name="print_as_written">As written</string>

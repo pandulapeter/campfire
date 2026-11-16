@@ -40,6 +40,13 @@ internal class PrintFileNameTest {
     }
 
     @Test
+    fun `a song that leaves with its pictures is named as the zip it is written as, its pdf as before`() {
+        val source = songSource(fileName = "chart.cho", title = "Chart", artist = "Band").copy(isSongWithPictures = true)
+        assertEquals("band-chart.zip", filesFileName(source))
+        assertEquals("band-chart.pdf", pdfFileName(source))
+    }
+
+    @Test
     fun `a link's qr code is named after the song beside its pdf`() = assertEquals(
         "tukorfurogep-arviz-qr_code.png",
         qrCodeFileName(songSource(fileName = "Foo Bar (2).cho", title = "Árvíz", artist = "Tükörfúrógép")),

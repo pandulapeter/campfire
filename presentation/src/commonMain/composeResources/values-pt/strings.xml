@@ -1306,6 +1306,7 @@
     <string name="print_format_chordpro_description">Formato de arquivo padrão, aceito pela maioria dos apps de cancioneiro</string>
     <string name="print_format_zip_description">Arquivos ChordPro num só pacote, para a maioria dos apps de cancioneiro</string>
     <string name="print_files_song_description">Letra e acordes em texto simples, que continua editável e transponível, para qualquer app que leia ChordPro, inclusive o Campfire.</string>
+    <string name="print_files_song_with_pictures_description">Letra e acordes em texto simples, que continua editável e transponível, compactados com as imagens da música, para qualquer app que leia ChordPro, inclusive o Campfire.</string>
     <string name="print_as_played">Como é tocada aqui</string>
     <string name="print_as_played_songs_description">Cada música com a transposição, o capotraste e o andamento com que é tocada aqui, como o PDF a imprime</string>
     <string name="print_as_written">Como está escrita</string>

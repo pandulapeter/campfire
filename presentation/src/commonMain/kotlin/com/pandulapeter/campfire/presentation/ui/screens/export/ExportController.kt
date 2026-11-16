@@ -273,6 +273,7 @@ internal class ExportController(
             },
             songs = printSongs,
             instrument = preferences?.instrument,
+            isSongWithPictures = setlist == null && dialog.songs.isEmpty() && printSongs.singleOrNull()?.text?.let { useCases.isExportedWithPictures(it) } == true,
         )
     }
 

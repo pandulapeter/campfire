@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.print_files_missing
 import com.pandulapeter.campfire.presentation.resources.print_files_setlist_description
 import com.pandulapeter.campfire.presentation.resources.print_files_song_description
+import com.pandulapeter.campfire.presentation.resources.print_files_song_with_pictures_description
 import com.pandulapeter.campfire.presentation.resources.print_files_songs_description
 import com.pandulapeter.campfire.presentation.resources.print_missing
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
@@ -83,7 +84,9 @@ private fun FilesSummary(
     val included = source.songs.count { it.text != null }
     val missing = source.songs.size - included
     val description = when (source.kind) {
-        PrintSource.Kind.SONG -> stringResource(Res.string.print_files_song_description)
+        PrintSource.Kind.SONG -> stringResource(
+            if (source.isSongWithPictures) Res.string.print_files_song_with_pictures_description else Res.string.print_files_song_description,
+        )
         PrintSource.Kind.SETLIST -> pluralTextResource(Res.plurals.print_files_setlist_description, included, included.toString())
         PrintSource.Kind.SONGS -> pluralTextResource(Res.plurals.print_files_songs_description, included, included.toString())
     }
