@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.CreateShareResult
@@ -73,7 +74,12 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider) {
             } else {
                 check(entry.state == SharedLinksEntry.STATE_OK) { "Share ${entry.shareId} of ${entry.fileName} is ${entry.state}" }
                 val copy = cloud.sharedFiles.getValue(entry.shareId).first.decodeToString()
-                check(copy.substringAfter('\n') == file) { "Share ${entry.shareId} of ${entry.fileName} holds $copy rather than $file" }
+                // The song's own entry first, then one `images/` entry for each picture it names that the folder holds.
+                val song = copy.substringAfter('\n').substringBefore(IMAGES_ENTRY)
+                check(song == file) { "Share ${entry.shareId} of ${entry.fileName} holds $copy rather than $file" }
+                val pictures = copy.split(IMAGES_ENTRY).drop(1).mapTo(mutableSetOf()) { it.substringBefore(']') }
+                val named = ChordProImages.referencedSources(file).filterTo(mutableSetOf()) { name -> cloud.files.keys.any { it.kind == LibraryFileKind.FILE && it.name == name } }
+                check(pictures == named) { "Share ${entry.shareId} of ${entry.fileName} holds the pictures $pictures rather than $named" }
             }
         }
     }
@@ -92,4 +98,8 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider) {
     private fun SyncKey.folded() = "${kind.shareKind.id}/${LibraryFiles.identityKey(name)}"
 
     private fun SharedLinksEntry.folded() = "$kind/${LibraryFiles.identityKey(fileName)}"
+
+    private companion object {
+        const val IMAGES_ENTRY = "\n[images/"
+    }
 }
