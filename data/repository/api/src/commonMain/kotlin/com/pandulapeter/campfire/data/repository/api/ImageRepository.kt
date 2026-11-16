@@ -40,6 +40,13 @@ interface ImageRepository {
     /** The size [loadImage]'s picture is shown at before scaling, read from its header; null as for [loadImage]. */
     suspend fun loadImageSize(name: String): ImageSize?
 
+    /**
+     * The size the picture [bytes] holds is shown at before scaling, read from its header as [loadImageSize] reads a kept
+     * one's, or null where it is not a picture every platform can show: what a picture not kept anywhere yet (one an
+     * import under review brings) is laid out by.
+     */
+    suspend fun readImageSize(bytes: ByteArray): ImageSize?
+
     /** The names of the library's pictures (never the draft's), sorted: what an export may carry. */
     suspend fun loadLibraryImageNames(): List<String>
 

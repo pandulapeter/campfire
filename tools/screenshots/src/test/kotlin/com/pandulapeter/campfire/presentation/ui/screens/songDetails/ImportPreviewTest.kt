@@ -37,15 +37,23 @@ import com.pandulapeter.campfire.presentation.resources.import_preview_name_take
 import com.pandulapeter.campfire.presentation.resources.import_preview_title
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.import_review_confirm
+import com.pandulapeter.campfire.presentation.resources.song_image
+import com.pandulapeter.campfire.presentation.resources.song_image_not_found
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.resourceText
 import com.pandulapeter.campfire.screenshots.runAppTest
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 internal class ImportPreviewTest {
@@ -102,6 +110,32 @@ internal class ImportPreviewTest {
         onNode(hasText(string(Res.string.import_conflicts_replace)) and hasClickAction() and hasAnyAncestor(isDialog())).performClick()
         waitForLibrary { NEW_SONG in songFileNames() && File(songsFolder, HOUSE_OF_THE_RISING_SUN).readText() == resourceText("songs/$COLLISION") }
     }
+
+    @Test
+    fun `an archive song's picture is shown in its preview before Import writes it`() = runAppTest(pickedFiles = listOf(archiveWithPicture())) {
+        pickFiles()
+        waitForText(string(Res.string.import_preview_title))
+        waitUntil(timeoutMillis = TIMEOUT_MILLIS) {
+            onAllNodesWithContentDescription(string(Res.string.song_image), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        assertTrue(onAllNodes(hasText(text(Res.string.song_image_not_found, "chart.png"), substring = true), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertTrue(File(library, "files").list().isNullOrEmpty(), "A picture reached the library before Import.")
+    }
+
+    /** A zip of one song and the picture it names, in an `images/` folder, as an export writes it. */
+    private fun archiveWithPicture() = ImportedFile(
+        name = "chart.zip",
+        bytes = ByteArrayOutputStream().also { bytes ->
+            ZipOutputStream(bytes).use { zip ->
+                zip.putNextEntry(ZipEntry("chart.cho"))
+                zip.write("{title: A Chart}\n{artist: Campfire Tests}\n{image: src=chart.png}\n".encodeToByteArray())
+                zip.closeEntry()
+                zip.putNextEntry(ZipEntry("images/chart.png"))
+                zip.write(ByteArrayOutputStream().also { ImageIO.write(BufferedImage(60, 40, BufferedImage.TYPE_INT_RGB), "png", it) }.toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray(),
+    )
 
     private fun AppTestScope.pickFiles() {
         onNodeWithContentDescription(string(Res.string.songs_new_song)).performClick()

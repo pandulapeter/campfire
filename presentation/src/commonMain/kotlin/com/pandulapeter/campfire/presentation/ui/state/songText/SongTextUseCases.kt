@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.songText
 import com.pandulapeter.campfire.domain.api.images.GetImageChangesUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageUseCase
+import com.pandulapeter.campfire.domain.api.images.ReadImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
 import org.koin.core.annotation.Factory
@@ -27,4 +28,5 @@ class SongTextUseCases(
     internal val getImage: GetImageUseCase,
     internal val getImageChanges: GetImageChangesUseCase,
     internal val saveSongImage: SaveSongImageUseCase,
+    internal val readImageSize: ReadImageSizeUseCase,
 )

@@ -30,6 +30,8 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun loadImageSize(name: String): ImageSize? = throw UnsupportedOperationException()
 
+    override suspend fun readImageSize(bytes: ByteArray): ImageSize? = throw UnsupportedOperationException()
+
     override suspend fun loadLibraryImageNames(): List<String> = throw UnsupportedOperationException()
 
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()

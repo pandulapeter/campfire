@@ -253,6 +253,7 @@ internal open class ImageRepositoryStub : ImageRepository {
     override val changes: StateFlow<Long> get() = unexpected()
     override suspend fun loadImage(name: String): ByteArray? = unexpected()
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
+    override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
@@ -280,6 +281,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
     override suspend fun loadImage(name: String) = library[name]
 
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
+
+    override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
 
     override suspend fun loadLibraryImageNames() = library.keys.sorted()
 

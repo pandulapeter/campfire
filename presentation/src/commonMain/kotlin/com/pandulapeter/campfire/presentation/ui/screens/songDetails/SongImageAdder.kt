@@ -24,7 +24,7 @@ internal fun rememberSongImageAdder(songTextStore: SongTextStore, fileName: Stri
     val filePicker = LocalFilePicker.current
     return if (isWritable) {
         remember(songTextStore, fileName, filePicker) {
-            { name: String -> songTextStore.addMissingImage(fileName = fileName, missingName = name, pickFiles = filePicker::pickFiles) }
+            { name: String -> songTextStore.addMissingImage(fileName = fileName, missingName = name, pickFiles = filePicker::pickImages) }
         }
     } else {
         null

@@ -31,6 +31,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -61,6 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.screens.rememberSongActionHandler
 
 /**
@@ -107,20 +109,12 @@ internal fun SongDetailsScreen(
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // A preview of songs an import has not written yet is read only like performance mode, since nothing of it is the
     // library's to change: its pages are the plan's, see ImportPreviewState.
-    val importPreview = rememberImportPreviewState(importReport = viewModel.importReportState.importReport, destination = destination)
+    val importPreview = rememberImportPreviewState(importReport = viewModel.importReportState.importReport, destination = destination, libraryImages = viewModel.songImages)
     val isImportPreview = destination.importPreview != null
     val isReadOnly = isImportPreview || isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
     val songsBeingRenamed by viewModel.songTextStore.songsBeingRenamed.collectAsStateWithLifecycle()
     val songLookup by viewModel.libraryState.songLookup.collectAsStateWithLifecycle()
-    val librarySongs = remember(destination, songLookup, songsBeingRenamed) {
-        // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
-        // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
-        // library does not hold: resolving it to the song as it was keeps the pages - and their count - exactly
-        // where they are, instead of this screen closing itself or a setlist settling on the next song. The pager's key
-        // is the file name, so a name the destination repeats - whatever built it, a saved back stack included - would
-        // be a repeated key and a crash: each song is one page.
-        songDetailsSongsOf(destination.songFileNames, songLookup, songsBeingRenamed)
-    }
+    val librarySongs = rememberLibrarySongs(destination, songLookup, songsBeingRenamed)
     val resolvedSongs = if (isImportPreview) importPreview?.songs else librarySongs
     val songs = resolvedSongs.orEmpty()
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
@@ -308,58 +302,61 @@ internal fun SongDetailsScreen(
                 )
             },
         ) { bottomPadding ->
-            SongDetailsPager(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = contentPadding,
-                songTextStore = viewModel.songTextStore,
-                overrides = viewModel.overrides,
-                preferencesController = viewModel.preferencesController,
-                fontScaleController = viewModel.fontScaleController,
-                songRenderer = viewModel.songRenderer,
-                dialogHost = viewModel.dialogHost,
-                metronomeController = viewModel.metronomeController,
-                onTunerClicked = viewModel::openTunerSheet,
-                destination = destination,
-                importPreview = importPreview,
-                pageKey = pageKey,
-                songs = songs,
-                pagerState = pagerState,
-                pageStepper = pageStepper,
-                pageScrollStates = pageScrollStates,
-                songTimings = songTimings,
-                isReadOnly = isReadOnly,
-                chordSpelling = chordSpelling,
-                shouldShowChords = shouldShowChords,
-                isMetronomeEnabled = isMetronomeEnabled,
-                isTunerEnabled = isTunerEnabled,
-                isTunerSheetShown = visibleDialog is DialogType.Tuner,
-                isMetronomePanelShown = isMetronomePanelShown,
-                isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
-                canPage = canPage,
-                settledWidth = settledWidth,
-                pageContentPadding = PaddingValues(
-                    start = contentPadding.calculateStartPadding(layoutDirection),
-                    end = contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = bottomPadding,
-                ),
-                chordDiagrams = chordDiagrams,
-                isViewportSettled = isViewportSettled,
-                currentPageScrollState = { currentPageScrollState },
-                currentPageStepper = { currentPageStepper },
-                canStepBackInSong = canStepBackInSong,
-                canStepForwardInSong = canStepForwardInSong,
-                hasPreviousSongToStepTo = hasPreviousSongToStepTo,
-                hasNextSongToStepTo = hasNextSongToStepTo,
-                stepBack = stepBackAction,
-                stepForward = stepForwardAction,
-                isContinuous = isContinuous,
-                autoScrolling = autoScrolling,
-                onCurrentPage = { scrollState, stepper, autoScroller ->
-                    currentPageScrollState = scrollState
-                    currentPageStepper = stepper
-                    autoScrolling.scroller = autoScroller
-                },
-            )
+            // A preview's pictures are the ones its review brings, which no shelf keeps before Import.
+            CompositionLocalProvider(LocalSongImageLoader provides (importPreview?.images ?: LocalSongImageLoader.current)) {
+                SongDetailsPager(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                    songTextStore = viewModel.songTextStore,
+                    overrides = viewModel.overrides,
+                    preferencesController = viewModel.preferencesController,
+                    fontScaleController = viewModel.fontScaleController,
+                    songRenderer = viewModel.songRenderer,
+                    dialogHost = viewModel.dialogHost,
+                    metronomeController = viewModel.metronomeController,
+                    onTunerClicked = viewModel::openTunerSheet,
+                    destination = destination,
+                    importPreview = importPreview,
+                    pageKey = pageKey,
+                    songs = songs,
+                    pagerState = pagerState,
+                    pageStepper = pageStepper,
+                    pageScrollStates = pageScrollStates,
+                    songTimings = songTimings,
+                    isReadOnly = isReadOnly,
+                    chordSpelling = chordSpelling,
+                    shouldShowChords = shouldShowChords,
+                    isMetronomeEnabled = isMetronomeEnabled,
+                    isTunerEnabled = isTunerEnabled,
+                    isTunerSheetShown = visibleDialog is DialogType.Tuner,
+                    isMetronomePanelShown = isMetronomePanelShown,
+                    isBeatFlashEnabled = metronomeSettings.isVisualBeatEnabled,
+                    canPage = canPage,
+                    settledWidth = settledWidth,
+                    pageContentPadding = PaddingValues(
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                        bottom = bottomPadding,
+                    ),
+                    chordDiagrams = chordDiagrams,
+                    isViewportSettled = isViewportSettled,
+                    currentPageScrollState = { currentPageScrollState },
+                    currentPageStepper = { currentPageStepper },
+                    canStepBackInSong = canStepBackInSong,
+                    canStepForwardInSong = canStepForwardInSong,
+                    hasPreviousSongToStepTo = hasPreviousSongToStepTo,
+                    hasNextSongToStepTo = hasNextSongToStepTo,
+                    stepBack = stepBackAction,
+                    stepForward = stepForwardAction,
+                    isContinuous = isContinuous,
+                    autoScrolling = autoScrolling,
+                    onCurrentPage = { scrollState, stepper, autoScroller ->
+                        currentPageScrollState = scrollState
+                        currentPageStepper = stepper
+                        autoScrolling.scroller = autoScroller
+                    },
+                )
+            }
         }
         if (hasPagerControls) {
             SongPagerControls(

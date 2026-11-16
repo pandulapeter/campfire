@@ -14,8 +14,8 @@
 The pictures a song names (`{image: src=…}`), for the song view and the PDF.
 
 - **Where pictures come from is a `SongImageLoader`** (`LocalSongImageLoader`): the library's (`LibrarySongImages`, over
-  the image use cases), provided at the app's root; a screen showing pictures from elsewhere (the editor's draft, an
-  archive under review) provides its own. `cacheKey` keeps two loaders' pictures of one name apart in Coil's memory.
+  the image use cases, whose `loadImage` falls back to the editor's draft shelf), provided at the app's root; an import
+  preview provides `ImportedSongImages` (the review's pictures by name, sized from their bytes, then the library's). `cacheKey` keeps two loaders' pictures of one name apart in Coil's memory.
 - **A size before its picture**: `sizes` is read from headers, by name, kept for the view model's life (a name is its
   content) and asked again on every `GetImageChangesUseCase` change. `SongTextStore` awaits `loadSizesOf` before it
   holds a text, so a song is laid out with its pictures' room on its first frame; a text that came another way has

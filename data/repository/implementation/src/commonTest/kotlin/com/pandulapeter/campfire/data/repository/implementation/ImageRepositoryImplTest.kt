@@ -50,6 +50,15 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `a picture kept nowhere is sized from its bytes, writing nothing, and what is no picture has no size`() = runTest {
+        val repository = repository()
+
+        assertEquals(ImageSize(width = 40, height = 30), repository.readImageSize(PHOTO))
+        assertEquals(null, repository.readImageSize("{title: Not a picture}".encodeToByteArray()))
+        assertTrue(local.shelves.values.all { it.isEmpty() })
+    }
+
+    @Test
     fun `the same picture added twice is one file`() = runTest {
         val repository = repository()
 

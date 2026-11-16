@@ -102,6 +102,8 @@ internal class ImageRepositoryImpl(
         return size
     }
 
+    override suspend fun readImageSize(bytes: ByteArray) = withContext(environment.computation) { LibraryImages.examine(bytes) }.size
+
     override suspend fun loadLibraryImageNames() = imageLocalSource.listImageNames(ImageShelf.LIBRARY).sorted()
 
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake {

@@ -20,6 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
+import com.pandulapeter.campfire.presentation.ui.pictures.LibrarySongImages
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageLoader
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewActions
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportPreviewPage
@@ -41,6 +43,8 @@ import kotlinx.coroutines.flow.StateFlow
  * @param isWriting Whether the import the preview's button started is being written, which the button shows.
  * @param folds The sections folded on each page, by its page name: a fold is a preference kept by file name, and the
  *   page names no file of the library, so the preview keeps its own for as long as it is open.
+ * @param images Where the pages' pictures come from: the ones the review's songs bring, which no shelf keeps before
+ *   Import, ahead of the library's.
  */
 internal class ImportPreviewState(
     val preview: ImportPreview,
@@ -48,6 +52,7 @@ internal class ImportPreviewState(
     val review: ImportReport.Review,
     val isWriting: Boolean,
     val folds: SnapshotStateMap<String, Set<String>>,
+    val images: SongImageLoader,
 ) {
     val songs: List<Song> = pages.map { it.song }
 
@@ -70,6 +75,7 @@ internal class ImportPreviewState(
 internal fun rememberImportPreviewState(
     importReport: StateFlow<ImportReport?>,
     destination: CampfireDestination.SongDetails,
+    libraryImages: LibrarySongImages,
 ): ImportPreviewState? {
     val report by importReport.collectAsStateWithLifecycle()
     val lastReview = remember { LastReview() }
@@ -86,13 +92,17 @@ internal fun rememberImportPreviewState(
             ImportPreviewPage(index = index, entry = entry, song = song)
         }
     }
-    return remember(preview, pages, review, report) {
+    val images = remember(review.plan, libraryImages) {
+        libraryImages.withPictures(review.plan.songs.flatMap { it.images }.mapNotNull { image -> image.name?.let { name -> image.bytes?.let { name to it } } }.toMap())
+    }
+    return remember(preview, pages, review, report, images) {
         ImportPreviewState(
             preview = preview,
             pages = pages,
             review = review,
             isWriting = report == ImportReport.Importing,
             folds = folds,
+            images = images,
         )
     }
 }

@@ -23,12 +23,15 @@ import kotlinx.coroutines.launch
  * model lives: a picture's name is its content, so it never changes under that name, and a song opened again is laid out
  * from it on its first frame. Every name is asked again whenever the library's pictures change ([imageChanges]): one
  * missing may have been added (by sync, or by the placeholder's Add), one shown may have been deleted.
+ *
+ * @param readSize The size of a picture kept nowhere yet, from its bytes, for [withPictures].
  */
 internal class LibrarySongImages(
     scope: CoroutineScope,
     private val getImageSize: suspend (name: String) -> ImageSize?,
     private val getImage: suspend (name: String) -> ByteArray?,
     imageChanges: StateFlow<Long>,
+    private val readSize: suspend (bytes: ByteArray) -> ImageSize?,
 ) : SongImageLoader {
 
     private val _sizes = MutableStateFlow(emptyMap<String, SongImageSize>())
@@ -43,6 +46,9 @@ internal class LibrarySongImages(
     }
 
     override suspend fun loadImage(name: String) = getImage(name)
+
+    /** [pictures], by the name a song's text names each by, ahead of the library's: see [ImportedSongImages]. */
+    fun withPictures(pictures: Map<String, ByteArray>): SongImageLoader = ImportedSongImages(pictures = pictures, library = this, readSize = readSize)
 
     private suspend fun sizeOf(name: String) = getImageSize(name)?.let { SongImageSize.Known(it.width, it.height) } ?: SongImageSize.Missing
 
