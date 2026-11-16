@@ -10,10 +10,10 @@
 
 # :data:formats
 
-Pure-Kotlin PDF and Word text extractors and zip reader/writer, on no third-party library (only `kotlinx.coroutines`)
-and no module but `:data:model`, `:libs:chordpro`, and `:libs:chordsheet` (a document is extracted into its
-`ChordSheet`): no `FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation` uses, and the `Deflater` `:presentation` compresses PDFs and
-PNGs with.
+Pure-Kotlin PDF and Word text extractors, zip reader/writer, and image header reader, on no third-party library (only
+`kotlinx.coroutines`) and no module but `:data:model`, `:libs:chordpro`, and `:libs:chordsheet` (a document is extracted
+into its `ChordSheet`): no `FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation`
+uses, and the `Deflater` `:presentation` compresses PDFs and PNGs with.
 Documents are read locally, never rendered, uploaded, or kept.
 
 ## `document/`
@@ -92,6 +92,12 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a separator too
   (Windows PowerShell 5.1).
+
+## `image/`
+
+Layout reserves a picture's room before decoding it, so `ImageInfo.of` reads only the header, never past a file's first
+64 KiB (a JPEG frame header behind more metadata is not read). The size is as displayed: JPEG EXIF orientation 5–8
+swaps the sides. A side over 32,768 is refused, so a lying header cannot reserve a huge box.
 
 ## Tests
 
