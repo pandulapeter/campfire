@@ -248,6 +248,20 @@ internal class FakeExportFileRepository : ExportFileRepository {
     }
 }
 
+/** An [ImageRepository] whose every member fails the same way, for a test to override only what it expects to be called. */
+internal open class ImageRepositoryStub : ImageRepository {
+    override val changes: StateFlow<Long> get() = unexpected()
+    override suspend fun loadImage(name: String): ByteArray? = unexpected()
+    override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
+    override suspend fun loadLibraryImageNames(): List<String> = unexpected()
+    override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
+    override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
+    override fun holdEditorImages(names: Set<String>): Unit = unexpected()
+    override suspend fun clearDraftImages(): Unit = unexpected()
+    override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = unexpected()
+    override fun onLibraryImagesChanged(): Unit = unexpected()
+}
+
 /**
  * The library's pictures in memory, named as the real repository names them in shape: [PNG] bytes are a picture, named by
  * a hash of their content and `.png`; [HEIC] bytes a picture of a format the library refuses; anything else no picture.
