@@ -286,7 +286,7 @@ internal fun SongLyrics(
     // sections it changed. The folds are not one of its keys but part of each chunk's content (UnitContent.foldedKeys),
     // so a fold only measures its own section again, and so is what a tune draws, so a rendering arriving only measures
     // the chunks that draw a tune again.
-    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
+    val sectionSizesPool = remember(fontScale, density, lyricsStyle, headerStyle, defaultLabels, songImageRoomOf(sections, availableHeight, ROW_GAP)) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together unless
     // it cuts between two of them (see flowLikeAMagazine): its lines, and the Chords and Scales sections' slots, one per
     // row of diagrams or chips. A folded section is one, since what is left of it is its header.
@@ -346,7 +346,7 @@ internal fun SongLyrics(
     Box(modifier = modifier) {
         // The song's body is laid out in the song's direction, its columns, sections, and chord diagrams too; the first
         // section's controls are the screen's, and SongSectionItem gives them back its direction.
-        CompositionLocalProvider(LocalLayoutDirection provides songLayoutDirection) {
+        CompositionLocalProvider(LocalLayoutDirection provides songLayoutDirection, LocalSongImageRoom provides songImageRoomOf(sections, availableHeight, ROW_GAP)) {
             LookaheadScope {
                 SongSectionsLayout(
                     modifier = Modifier.semantics { isTraversalGroup = true },

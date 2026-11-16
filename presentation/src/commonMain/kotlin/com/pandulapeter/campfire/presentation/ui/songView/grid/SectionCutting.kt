@@ -137,7 +137,8 @@ internal fun flowLikeAMagazine(
  * both sides of a cut.
  * What cannot be cut to fit what is left of a page - a staff of tablature, a pair - may start the next page only where
  * this one is at least half full: a page mostly empty because the next thing on it is long is worse than a page that
- * runs on past the screen, which is paged through like a stretch too tall for any screen, and ends there.
+ * runs on past the screen, which is paged through like a stretch too tall for any screen, and ends there. A unit
+ * [isKeptWhole] says so of (a picture, fitted to one page) never runs a page on: it always starts the next.
  */
 internal fun flowIntoPages(
     sectionStarts: IntArray,
@@ -150,6 +151,7 @@ internal fun flowIntoPages(
     lineHeight: Int,
     lineCount: (unit: Int) -> Int,
     isStanzaBreakBefore: (unit: Int) -> Boolean,
+    isKeptWhole: (unit: Int) -> Boolean = { false },
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()
@@ -167,16 +169,7 @@ internal fun flowIntoPages(
     }
     fun sectionHeight(section: Int, columnCount: Int) =
         (sectionStarts[section] until sectionStarts[section + 1]).sumOf { if (columnCount == 1) heights[it].toLong() else heightAt(it, columnCount).toLong() }
-    // How tall a section and the one after it are side by side, where they are set that way, or -1.
-    val pairHeights = LongArray(sectionCount) { section ->
-        if (section + 1 < sectionCount && isNarrow(section) && isNarrow(section + 1)) {
-            val pairHeight = max(sectionHeight(section, 2), sectionHeight(section + 1, 2))
-            val stackedHeight = sectionHeight(section, 1) + sectionGap + sectionHeight(section + 1, 1)
-            if (pairHeight < stackedHeight && pairHeight <= maxRowHeight) pairHeight else -1
-        } else {
-            -1
-        }
-    }
+    val pairHeights = pairHeightsOf(sectionCount, isNarrow, sectionGap, maxRowHeight, ::sectionHeight)
     fun bottomPaddingAt(unit: Int) = if (scoring.isSectionStart(unit)) 0 else piecePadding[unitSections[unit - 1]]
 
     // Walks the page starting at from, handing onBlock every block it is stacked of in its order - a pair, or the units
@@ -200,7 +193,7 @@ internal fun flowIntoPages(
             val isSectionStart = sectionStarts[section] == unit
             val isPageEmpty = unit == from
             val gap = if (isPageEmpty || !isSectionStart) 0L else sectionGap.toLong()
-            fun isMostlyEmpty() = isPageEmpty || used * 2 < maxRowHeight
+            fun isMostlyEmpty() = isPageEmpty || used * 2 < maxRowHeight && !isKeptWhole(unit)
             val pairHeight = if (isSectionStart) pairHeights[section] else -1
             if (pairHeight >= 0) {
                 val pairEnd = sectionStarts[section + 2]
@@ -305,4 +298,24 @@ internal fun flowIntoPages(
         joinsPrevious = joinsPrevious.toBooleanArray(),
         sharesKeyline = true,
     )
+}
+
+/**
+ * How tall each of [sectionCount] sections and the one after it are side by side ([sectionHeight] in two columns), where
+ * they are set that way: both [isNarrow], and lower so than stacked, in a row no taller than [maxRowHeight]; -1 elsewhere.
+ */
+private fun pairHeightsOf(
+    sectionCount: Int,
+    isNarrow: (section: Int) -> Boolean,
+    sectionGap: Int,
+    maxRowHeight: Int,
+    sectionHeight: (section: Int, columnCount: Int) -> Long,
+) = LongArray(sectionCount) { section ->
+    if (section + 1 < sectionCount && isNarrow(section) && isNarrow(section + 1)) {
+        val pairHeight = max(sectionHeight(section, 2), sectionHeight(section + 1, 2))
+        val stackedHeight = sectionHeight(section, 1) + sectionGap + sectionHeight(section + 1, 1)
+        if (pairHeight < stackedHeight && pairHeight <= maxRowHeight) pairHeight else -1
+    } else {
+        -1
+    }
 }

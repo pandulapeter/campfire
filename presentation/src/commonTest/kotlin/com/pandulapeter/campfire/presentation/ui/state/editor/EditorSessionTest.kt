@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
+import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -77,6 +78,10 @@ class EditorSessionTest {
                 override fun invoke() = emptyFlow<Long>()
             },
             inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
+            readImageSizes = {},
+            saveSongImage = object : SaveSongImageUseCase {
+                override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = throw NotImplementedError()
+            },
             addOnBackStackChanged = {},
             currentSongFileName = { null },
         )

@@ -9,7 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.songText
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.domain.api.images.SaveSongImageResult
+import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
@@ -23,13 +27,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * holds as the repository does.
  *
  * @param changeBeforeEveryWrite Stands in for another writer that gets to the file between every read and write.
+ *
+ * Pictures are stored by [SaveSongImageUseCase] under [STORED_IMAGE_NAME], an empty file refused as no picture, and the
+ * texts handed on for their pictures' sizes are kept in [textsReadForImages].
  */
 internal class FakeSongFiles(
     initial: Map<String, String> = emptyMap(),
     private val changeBeforeEveryWrite: ((String) -> String)? = null,
 ) : GetSongContentUseCase,
     SaveSongContentUseCase,
-    GetSongContentInvalidationsUseCase {
+    GetSongContentInvalidationsUseCase,
+    SaveSongImageUseCase {
 
     val files = initial.toMutableMap()
 
@@ -48,6 +56,16 @@ internal class FakeSongFiles(
 
     override fun invoke() = MutableStateFlow(0L)
 
+    val textsReadForImages = mutableListOf<String>()
+
+    override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = when {
+        bytes.isEmpty() -> SaveSongImageResult.Refused(ImageRefusal.NOT_AN_IMAGE)
+        else -> {
+            val text = ChordProImages.withSourcesRewritten(expectedText) { source -> STORED_IMAGE_NAME.takeIf { source == missingName } }
+            if (invoke(SongContent(fileName = fileName, text = text), expectedText)) SaveSongImageResult.Added(text) else SaveSongImageResult.SongChanged
+        }
+    }
+
     fun songTextStore(scope: CoroutineScope, messageSink: MessageSink) = SongTextStore(
         scope = scope,
         backStack = emptyList(),
@@ -57,7 +75,13 @@ internal class FakeSongFiles(
         saveSongContent = this,
         getSongContentInvalidations = this,
         inferredKeys = InferredSongKeys(inferKey = { null }, dispatcher = Dispatchers.Unconfined),
+        readImageSizes = { textsReadForImages += it },
+        saveSongImage = this,
         addOnBackStackChanged = {},
         currentSongFileName = { null },
     )
+
+    companion object {
+        const val STORED_IMAGE_NAME = "3f9a0c1d2e4b5a69.jpg"
+    }
 }

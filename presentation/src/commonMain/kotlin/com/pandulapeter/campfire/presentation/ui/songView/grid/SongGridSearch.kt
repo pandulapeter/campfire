@@ -355,6 +355,7 @@ internal class SongGridSearch(
                 lineHeight = lineHeightPx,
                 lineCount = { unit -> segment.lineCount[unit] },
                 isStanzaBreakBefore = { unit -> segment.isStanzaBreakBefore[unit] },
+                isKeptWhole = { unit -> units.isKeptWhole(segment.unitSections[unit] + sectionOffset) },
             )
             return withNarrowColumns(paged.scored())
         }

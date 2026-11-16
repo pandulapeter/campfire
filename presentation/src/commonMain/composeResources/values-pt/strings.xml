@@ -1169,6 +1169,16 @@
     <string name="song_details_no_data">Não foi possível carregar esta música</string>
     <string name="song_details_no_data_hint">Não foi possível ler o arquivo.</string>
 
+    <!-- Pictures in a song ({image}), and the placeholder of one the library lacks -->
+    <string name="song_image">Imagem</string>
+    <string name="song_image_titled">Imagem: %1$s</string>
+    <string name="song_image_view">Mostrar em ecrã inteiro</string>
+    <string name="song_image_not_found">Imagem não encontrada: %1$s</string>
+    <string name="song_image_add">Adicionar imagem</string>
+    <string name="song_image_refused_format">Este tipo de imagem não pode ser mostrado em todos os dispositivos. Escolhe antes um ficheiro PNG, JPEG, GIF ou WebP.</string>
+    <string name="song_image_refused_too_large">Esta imagem tem mais de 8 MB, o máximo que uma música pode conter.</string>
+    <string name="song_image_refused_not_image">Este ficheiro não é uma imagem.</string>
+
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Esta versão do Campfire foi gerada sem credenciais de sincronização, então não há nada a que conectar.</string>
     <string name="settings_sync_description">Mantenha a biblioteca igual em todos os dispositivos por meio de uma pasta na nuvem que é sua, junto com a transposição, o capotraste e o andamento de cada música. O Campfire não tem servidor: os arquivos vão direto entre seus dispositivos e o seu próprio armazenamento.</string>

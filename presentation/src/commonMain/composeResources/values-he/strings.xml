@@ -1208,6 +1208,16 @@
     <string name="song_details_no_data">לא ניתן היה לטעון את השיר הזה</string>
     <string name="song_details_no_data_hint">לא ניתן היה לקרוא את הקובץ.</string>
 
+    <!-- Pictures in a song ({image}), and the placeholder of one the library lacks -->
+    <string name="song_image">תמונה</string>
+    <string name="song_image_titled">תמונה: %1$s</string>
+    <string name="song_image_view">הצגה במסך מלא</string>
+    <string name="song_image_not_found">התמונה לא נמצאה: %1$s</string>
+    <string name="song_image_add">הוספת תמונה</string>
+    <string name="song_image_refused_format">לא ניתן להציג סוג תמונה זה בכל מכשיר. כדאי לבחור במקומה קובץ PNG, JPEG, GIF או WebP.</string>
+    <string name="song_image_refused_too_large">התמונה הזאת גדולה מ־8 MB, המרב ששיר יכול להכיל.</string>
+    <string name="song_image_refused_not_image">הקובץ הזה אינו תמונה.</string>
+
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">גרסה זו של Campfire נבנתה בלי פרטי גישה לסנכרון, כך שאין למה להתחבר.</string>
     <string name="settings_sync_description">הספרייה נשארת זהה בכל מכשיר דרך תיקיית ענן בבעלותכם, יחד עם הטרנספוזיציה, הקאפו והטמפו של כל שיר. ל-Campfire אין שרת: הקבצים עוברים ישירות בין המכשירים שלכם לאחסון שלכם.</string>

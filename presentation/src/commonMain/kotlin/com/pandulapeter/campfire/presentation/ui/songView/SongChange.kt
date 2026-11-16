@@ -100,7 +100,7 @@ internal fun RenderSection.leavesWith(parts: LeavingParts, items: IntRange): Boo
     is RenderSection.Timing -> parts.timing
     is RenderSection.Lines -> parts.chords && items.all { sectionItems[it].isChordsOnly() } &&
         (items.first > 0 || sectionItems.all { it.isChordsOnly() })
-    is RenderSection.Comment, is RenderSection.Metadata -> false
+    is RenderSection.Comment, is RenderSection.Metadata, is RenderSection.Image -> false
 }
 
 private fun SectionItem.isChordsOnly() = when (this) {

@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.mapper.timeSignatureOf
 import com.pandulapeter.campfire.presentation.ui.notation.groupStartOffsetsOf
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.UNNAMED_SECTION_HEADER
@@ -51,11 +52,15 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
  * of nothing else: tabs and grids say nothing without them, and a line that was only chords would leave a blank behind.
  * A comment written inside a tab or a grid goes with it, since it is a note about what is no longer there, and so does
  * the line of a key change, the key being the chords' own.
+ *
+ * A picture ([ChordProBlock.Image]) is a unit of its own where it stands, cutting the section it is written in (the
+ * rest of it is headed by its fold toggle alone, as a recall's cut is), and is drawn at the size [imageSizes] read it as.
  */
 internal fun ChordProSong.toRenderSections(
     shouldShowChords: Boolean,
     defaultLabels: DefaultSectionLabels,
     showsTiming: Boolean,
+    imageSizes: Map<String, SongImageSize> = emptyMap(),
 ): List<RenderSection> {
     val sections = mutableListOf<RenderSection>()
     // The rest of a section a change cut is folded under a key of the section it continues, so that switching the
@@ -106,7 +111,8 @@ internal fun ChordProSong.toRenderSections(
         when (block) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
 
-            is ChordProBlock.Image -> Unit // A picture draws nothing on the page.
+            // Kept in lyrics-only mode too: a picture may be all the song holds.
+            is ChordProBlock.Image -> sections += RenderSection.Image(block, imageSizes[block.src])
 
             is ChordProBlock.Timing -> if (showsTiming) sections += block.toRenderSection()
 

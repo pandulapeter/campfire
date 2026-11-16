@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.presentation.ui.components.menu.OverlayState
 import com.pandulapeter.campfire.presentation.ui.components.rememberPopupRoom
 import com.pandulapeter.campfire.presentation.ui.components.labels.LocalTagColors
 import com.pandulapeter.campfire.presentation.ui.components.coverArt.ProvideCoverArtImageLoader
+import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.localization.ApplyLanguagePreference
@@ -143,6 +144,7 @@ fun CampfireApp(
         LocalAbcRenderer provides koinInject<AbcRenderer>(),
         LocalNotationCache provides remember { NotationCache() },
         LocalNotationInstrument provides userPreferences?.instrument,
+        LocalSongImageLoader provides viewModel.songImages,
     ) {
         // The flow is handed over rather than collected here, so a change of the library recomposes nothing.
         WarmNotationEngine(songs = viewModel.libraryState.allSongs)

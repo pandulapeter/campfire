@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
-import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncProviderId
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
@@ -66,7 +65,6 @@ import com.pandulapeter.campfire.domain.api.sync.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
@@ -158,6 +156,9 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongPickerState
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextUseCases
+import com.pandulapeter.campfire.presentation.ui.pictures.LibrarySongImages
+import com.pandulapeter.campfire.presentation.ui.pictures.loadSizesOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import kotlinx.coroutines.Dispatchers
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
@@ -182,7 +183,6 @@ class CampfireViewModel(
     private val getSongContent: GetSongContentUseCase,
     private val getEditorDraft: GetEditorDraftUseCase,
     private val saveEditorDraft: SaveEditorDraftUseCase,
-    getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     createSong: CreateSongUseCase,
     draftSongFromText: DraftSongFromTextUseCase,
     createSongFromText: CreateSongFromTextUseCase,
@@ -194,6 +194,7 @@ class CampfireViewModel(
     private val prepareImport: PrepareImportUseCase,
     private val applyImport: ApplyImportUseCase,
     private val exportUseCases: ExportUseCases,
+    songTextUseCases: SongTextUseCases,
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val editSetlist: EditSetlistUseCase,
@@ -250,7 +251,7 @@ class CampfireViewModel(
      * from it.
      */
     private val _songFilter = MutableStateFlow(
-        restore<SavedSongFilter>(SONG_FILTER_KEY)
+        savedStateStore.restore<SavedSongFilter>(SONG_FILTER_KEY)
             ?.let { SongFilter(selectedTags = it.selectedTags.toSet(), selectedLanguages = it.selectedLanguages.toSet()) }
             ?: SongFilter()
     )
@@ -386,6 +387,8 @@ class CampfireViewModel(
         cancelSynchronization = cancelSynchronization,
     )
 
+    internal val songImages = LibrarySongImages(viewModelScope, songTextUseCases.getImageSize::invoke, songTextUseCases.getImage::invoke, songTextUseCases.getImageChanges())
+
     internal val songTextStore: SongTextStore = SongTextStore(
         scope = viewModelScope,
         backStack = navigator.backStack,
@@ -393,11 +396,13 @@ class CampfireViewModel(
         messageSink = messageSink,
         getSongContent = getSongContent,
         saveSongContent = saveSongContent,
-        getSongContentInvalidations = getSongContentInvalidations,
+        getSongContentInvalidations = songTextUseCases.getSongContentInvalidations,
         inferredKeys = InferredSongKeys(
             inferKey = songRenderer::inferredKeyOfText,
             dispatcher = Dispatchers.Default,
         ),
+        readImageSizes = songImages::loadSizesOf,
+        saveSongImage = songTextUseCases.saveSongImage,
         addOnBackStackChanged = navigator::addOnBackStackChanged,
         currentSongFileName = navigator::currentSongFileName,
     )
@@ -449,7 +454,7 @@ class CampfireViewModel(
         setlists = libraryState.setlists,
         songsByFileName = { libraryState.songsByFileName.value },
         updateUserPreferences = updateUserPreferences,
-        updateEditableSetlist = { fileName, transform -> updateEditableSetlist(fileName, transform) },
+        updateEditableSetlist = { fileName, transform -> setlistsController.updateEditableSetlist(fileName, transform) },
         messageSink = messageSink,
         pendingWrites = pendingWrites,
     )
@@ -820,9 +825,6 @@ class CampfireViewModel(
     /** See [AppExitController.onCleared]. */
     override fun onCleared() = appExitController.onCleared()
 
-    private suspend fun updateEditableSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
-        setlistsController.updateEditableSetlist(fileName, transform)
-
     // Sync
 
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
@@ -835,10 +837,6 @@ class CampfireViewModel(
         )
         syncController.connectSyncProvider(providerId, completionPage)
     }
-
-    // Helpers
-
-    private inline fun <reified T> restore(key: String): T? = savedStateStore.restore(key)
 
     companion object {
         private const val PREFERENCE_WRITE_DEBOUNCE_MILLIS = 500L

@@ -12,6 +12,10 @@ package com.pandulapeter.campfire.presentation.ui.state.songText
 import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.domain.api.images.SaveSongImageResult
+import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
@@ -36,6 +40,9 @@ import kotlinx.coroutines.withContext
  *
  * @param editorDraftFileName The file the open editor's draft belongs to, whose text is kept for as long as it is open.
  * @param inferredKeys Told every text before [songTexts] has it, so that the key it is in is there in the same frame.
+ * @param readImageSizes Handed every text before [songTexts] has it, and returns once the sizes of the pictures they name
+ *   are known (`SongImageLoader.loadSizesOf`), so that a song is laid out with its pictures' room from its first frame.
+ * @param saveSongImage How [addMissingImage] stores a picture and the song naming it.
  * @param addOnBackStackChanged The navigator's, through which a song screen pushed is read ahead, see [readAhead].
  * @param currentSongFileName The page a song details screen is on, see `Navigator.currentSongFileName`.
  */
@@ -48,6 +55,8 @@ internal class SongTextStore(
     private val saveSongContent: SaveSongContentUseCase,
     private val getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     val inferredKeys: InferredSongKeys,
+    private val readImageSizes: suspend (texts: Collection<String>) -> Unit,
+    private val saveSongImage: SaveSongImageUseCase,
     addOnBackStackChanged: (listener: (previousTop: CampfireDestination?, stack: List<CampfireDestination>) -> Unit) -> Unit,
     currentSongFileName: (CampfireDestination.SongDetails) -> String?,
 ) {
@@ -119,6 +128,7 @@ internal class SongTextStore(
         if (affected.isEmpty()) return
         val results = affected.map { name -> name to getSongContent(name)?.text }
         inferredKeys.inferFor(results.mapNotNull { (name, text) -> text?.let { name to it } })
+        readImageSizes(results.mapNotNull { it.second })
         _songTexts.update { texts ->
             results.fold(texts) { updated, (name, text) ->
                 when {
@@ -167,6 +177,7 @@ internal class SongTextStore(
         saveSongContent.invoke(content = SongContent(fileName = fileName, text = text), expectedText = expectedText).also { isWritten ->
             if (isWritten) {
                 inferredKeys.inferFor(listOf(fileName to text))
+                readImageSizes(listOf(text))
                 _songTexts.update { it + (fileName to text) }
             }
         }
@@ -179,6 +190,7 @@ internal class SongTextStore(
             _failedSongFileNames.update { it + fileName }
         } else {
             inferredKeys.inferFor(listOf(content.fileName to content.text))
+            readImageSizes(listOf(content.text))
             _songTexts.update { it + (content.fileName to content.text) }
         }
     }
@@ -215,6 +227,35 @@ internal class SongTextStore(
      */
     private fun startFollowingFiles() = scope.launch {
         getSongContentInvalidations().drop(1).collect { rereadSongTexts() }
+    }
+
+    /**
+     * Picks a file with [pickFiles] for the picture the song [fileName] names [missingName] but the library lacks, and
+     * stores it under that song (see [SaveSongImageUseCase]), holding [songWriteMutex] from the read the write is built
+     * on, as [editSongText] does: a file changed meanwhile is read again and tried once more. A refused file is said why
+     * in a snackbar; picking nothing does nothing. Runs in [scope], so the screen may go meanwhile.
+     */
+    fun addMissingImage(fileName: String, missingName: String, pickFiles: suspend () -> List<ImportedFile>) {
+        scope.launch {
+            val file = pickFiles().firstOrNull() ?: return@launch
+            if (file.isTooLarge) return@launch messageSink.sendMessage(Message.ImageNotAdded(ImageRefusal.TOO_LARGE))
+            songWriteMutex.withLock {
+                repeat(SONG_EDIT_ATTEMPTS) { attempt ->
+                    val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return@withLock
+                    when (val result = saveSongImage(fileName = fileName, expectedText = text, missingName = missingName, bytes = file.bytes)) {
+                        is SaveSongImageResult.Added -> {
+                            inferredKeys.inferFor(listOf(fileName to result.text))
+                            readImageSizes(listOf(result.text))
+                            _songTexts.update { it + (fileName to result.text) }
+                            return@launch
+                        }
+                        is SaveSongImageResult.Refused -> return@launch messageSink.sendMessage(Message.ImageNotAdded(result.reason))
+                        SaveSongImageResult.SongChanged -> Unit
+                    }
+                }
+            }
+            messageSink.sendMessage(Message.OperationFailed)
+        }
     }
 
     fun updateSongTexts(update: (Map<String, String>) -> Map<String, String>) = _songTexts.update(update)

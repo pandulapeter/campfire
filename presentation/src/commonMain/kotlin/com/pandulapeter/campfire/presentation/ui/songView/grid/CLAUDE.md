@@ -33,6 +33,8 @@ with the step keys, fewest pages first.
   every early page end is an extra turn; priced cuts (`LayoutScoring`), pages then evened out. Compared with the
   whole-section layout by page count, then score; a full tie keeps sections whole.
 - **Narrow columns** only for strictly fewer pages, where at most a quarter of lyric lines wrap.
+- **A picture never runs a page on** (`SongUnits.isKeptWhole`): fitted to one page, it starts the next rather than be
+  cut across two, whatever the half-full rule below says of other uncuttable things.
 - **The text is always the reader's size**, never set smaller to save a page: fitting was too costly while a pinch or a
   window drag kept coming, and fitting once it stopped rearranged the song after the reader had.
 - **A single-column width is paged** with the same scoring. Two neighbours that fit half the column unwrapped may sit

@@ -1211,6 +1211,16 @@
     <string name="song_details_no_data">Acest cântec nu a putut fi încărcat</string>
     <string name="song_details_no_data_hint">Fișierul nu a putut fi citit.</string>
 
+    <!-- Pictures in a song ({image}), and the placeholder of one the library lacks -->
+    <string name="song_image">Imagine</string>
+    <string name="song_image_titled">Imagine: %1$s</string>
+    <string name="song_image_view">Afișează pe tot ecranul</string>
+    <string name="song_image_not_found">Imaginea nu a fost găsită: %1$s</string>
+    <string name="song_image_add">Adaugă imagine</string>
+    <string name="song_image_refused_format">Acest tip de imagine nu poate fi afișat pe toate dispozitivele. Alege în schimb un fișier PNG, JPEG, GIF sau WebP.</string>
+    <string name="song_image_refused_too_large">Această imagine are peste 8 MB, cel mult cât poate conține un cântec.</string>
+    <string name="song_image_refused_not_image">Acest fișier nu este o imagine.</string>
+
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Această versiune de Campfire a fost creată fără date de acces pentru sincronizare, așa că nu ai la ce să te conectezi.</string>
     <string name="settings_sync_description">Păstrează aceeași bibliotecă pe toate dispozitivele printr-un dosar în cloud care îți aparține, împreună cu felul în care transpui fiecare cântec, unde pui capodastrul și în ce tempo îl cânți. Campfire nu are server: fișierele circulă direct între dispozitivele tale și spațiul tău de stocare.</string>

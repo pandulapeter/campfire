@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.presentation.ui.songView.firstSection.places
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Immutable
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
@@ -228,6 +230,14 @@ internal sealed interface RenderSection {
      */
     @Immutable
     data class Timing(val tempo: String?, val time: String) : RenderSection
+
+    /**
+     * A picture the song names, a unit of its own between sections, never cut or folded, and kept in lyrics-only mode,
+     * where it may be all there is. [size] is what the picture was read as before the model was built, null where it is
+     * still being read; part of the content, so a picture added or deleted measures the unit again.
+     */
+    @Immutable
+    data class Image(val image: ChordProBlock.Image, val size: SongImageSize?) : RenderSection
 }
 
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */

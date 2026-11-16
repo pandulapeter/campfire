@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.presentation.resources.export_song_saved
 import com.pandulapeter.campfire.presentation.resources.export_songs_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.SharingFailure
@@ -78,6 +79,9 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
+import com.pandulapeter.campfire.presentation.resources.song_image_refused_format
+import com.pandulapeter.campfire.presentation.resources.song_image_refused_not_image
+import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_large
 import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
 import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
 import com.pandulapeter.campfire.presentation.resources.songs_paste_no_chords
@@ -193,6 +197,13 @@ private fun messageText(current: Message?): String? =
             }
         )
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
+        is Message.ImageNotAdded -> stringResource(
+            when (current.reason) {
+                ImageRefusal.TOO_LARGE -> Res.string.song_image_refused_too_large
+                ImageRefusal.UNSUPPORTED_FORMAT -> Res.string.song_image_refused_format
+                ImageRefusal.NOT_AN_IMAGE -> Res.string.song_image_refused_not_image
+            }
+        )
         is Message.SongsUpdated -> pluralTextResource(Res.plurals.songs_selection_updated, current.count, current.count.toString())
         is Message.SongsNotUpdated -> pluralTextResource(Res.plurals.songs_selection_failed, current.count, current.count.toString())
         Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)

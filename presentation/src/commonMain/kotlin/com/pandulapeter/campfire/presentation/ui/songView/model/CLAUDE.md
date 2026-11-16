@@ -22,6 +22,9 @@
 - Lyrics-only mode drops tab, grid, and verbatim lines (comments inside a tab or grid too), a section left empty whole,
   and the info section's key, capo, tempo, and time line (the section where nothing else is).
 - A comment's bracketed chords are transposed and colored, as in the editor.
+- **A picture is a unit of its own** (`RenderSection.Image`), never joined, cut, or folded, kept in lyrics-only mode; one
+  written inside a section cuts it, the rest headed by its fold toggle alone. Its size is part of it (null while read),
+  so a picture added measures it again and keys it afresh (it fades in).
 
 ### Tempo and time changes (product side: `ui/metronome/CLAUDE.md`)
 

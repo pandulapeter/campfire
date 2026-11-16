@@ -34,6 +34,8 @@ import com.pandulapeter.campfire.presentation.ui.chords.groupedByKey
 import com.pandulapeter.campfire.presentation.ui.chords.namedAsShapes
 import com.pandulapeter.campfire.presentation.ui.chords.withDegrees
 import com.pandulapeter.campfire.presentation.ui.chords.withSearchedShapes
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
+import com.pandulapeter.campfire.presentation.ui.pictures.imageSizesOf
 import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.TabReading
@@ -132,6 +134,7 @@ internal class SongLyricsModel(
  * `:libs:chordpro` side's gate), where it grows past what the main thread can spare.
  * @param showsDegrees Whether each chord of the Chords section is labelled with the step of the key it stands on
  * ([withDegrees]), counted against [chordKeysOf]'s keys, the home the same walk finds first.
+ * @param imageSizes What each picture the song names was read as, see [RenderSection.Image].
  */
 internal fun prepareSongLyrics(
     song: ChordProSong,
@@ -152,7 +155,8 @@ internal fun prepareSongLyrics(
     shapesKey: String? = null,
     notationChords: NotationChordSpelling = NotationChordSpelling.AS_WRITTEN,
     isCapoShown: Boolean = true,
-) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming)).let { (sections, isCut) ->
+    imageSizes: Map<String, SongImageSize> = emptyMap(),
+) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels, showsTiming, imageSizes)).let { (sections, isCut) ->
     val collected = if (shouldShowChords && chordTuning != null) {
         songChordsOf(standardSong, notation, chordTuning, searchesShapes = searchesShapes, capo = shapeCapo, inferredKey = inferredKey)
     } else {
@@ -264,6 +268,8 @@ internal data class SongLyricsInputs(
     val tabs: TabReading? = null,
     val suggestsScales: Boolean = false,
     val showsDegrees: Boolean = false,
+    /** What each picture [text] names was read as ([imageSizesOf]), only those, so that a picture read for another song builds nothing again. */
+    val imageSizes: Map<String, SongImageSize> = emptyMap(),
 )
 
 /**

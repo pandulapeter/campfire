@@ -1206,6 +1206,16 @@
     <string name="song_details_no_data">Tuto píseň se nepodařilo načíst</string>
     <string name="song_details_no_data_hint">Soubor se nepodařilo přečíst.</string>
 
+    <!-- Pictures in a song ({image}), and the placeholder of one the library lacks -->
+    <string name="song_image">Obrázek</string>
+    <string name="song_image_titled">Obrázek: %1$s</string>
+    <string name="song_image_view">Zobrazit na celou obrazovku</string>
+    <string name="song_image_not_found">Obrázek nebyl nalezen: %1$s</string>
+    <string name="song_image_add">Přidat obrázek</string>
+    <string name="song_image_refused_format">Tento druh obrázku nejde zobrazit na každém zařízení. Vyber místo něj soubor PNG, JPEG, GIF nebo WebP.</string>
+    <string name="song_image_refused_too_large">Tento obrázek je větší než 8 MB, což je nejvíc, co může píseň obsahovat.</string>
+    <string name="song_image_refused_not_image">Tento soubor není obrázek.</string>
+
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Tato verze Campfire vznikla bez přístupových údajů pro synchronizaci, takže není k čemu se připojit.</string>
     <string name="settings_sync_description">Měj stejnou knihovnu na všech zařízeních díky vlastní složce v cloudu, včetně toho, jak je každá píseň transponovaná, s jakým kapodastrem a jak se hraje. Campfire nemá žádný server: soubory putují přímo mezi tvými zařízeními a tvým vlastním úložištěm.</string>

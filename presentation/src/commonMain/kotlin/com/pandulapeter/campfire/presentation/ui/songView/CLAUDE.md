@@ -59,6 +59,9 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
   breaks every line after the same bar; a row starts with a whole box. Chords in the page's chord style and names,
   colours from the scheme. Read aloud as chords and beats (`gridLineDescription`), never bar characters.
 - A paragraph holding only one tab or grid run is headed "Tab" / "Grid" (screen and PDF).
+- **A picture** (`SongImageBlock`, `ui/pictures`) answers its height at any width from its header's size, so it is placed
+  right before it is decoded; it is fitted to `LocalSongImageRoom`, the page's room less a row gap (a rest shows that
+  much of a row), which joins the measurements' keys only in a song holding a picture. Selecting it opens the viewer.
 
 ### The Scales section
 

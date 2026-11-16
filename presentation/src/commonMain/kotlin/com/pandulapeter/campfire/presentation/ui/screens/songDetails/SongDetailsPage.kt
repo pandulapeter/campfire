@@ -76,6 +76,8 @@ import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.metronome.SongTiming
+import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageAdder
+import com.pandulapeter.campfire.presentation.ui.pictures.rememberSongImageSizes
 import com.pandulapeter.campfire.presentation.ui.playing.ShapeNames
 import com.pandulapeter.campfire.presentation.ui.playing.withCapo
 import com.pandulapeter.campfire.presentation.ui.playing.withTempo
@@ -135,6 +137,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param turnsByColumn Whether a song in pages is turned a column at a time (`PageTurn.COLUMN`): set as a strip that
  *   scrolls sideways wherever it is stepped through, see [songPageScroll], and stepped by a row of buttons along the
  *   bottom ([StepControls]) rather than a column of them at the end edge, whose room it leaves under it instead.
+ * @param onAddImage Picks and stores the picture the song names by the name it is handed, see [LocalSongImageAdder].
  */
 @Composable
 internal fun SongDetailsPage(
@@ -179,6 +182,7 @@ internal fun SongDetailsPage(
     showsDegrees: Boolean,
     isContinuous: Boolean,
     turnsByColumn: Boolean,
+    onAddImage: ((name: String) -> Unit)?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -186,10 +190,7 @@ internal fun SongDetailsPage(
     contentKey = { it != null },
 ) { songText ->
     if (songText == null) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(contentPadding),
-            contentAlignment = Alignment.Center,
-        ) {
+        CenteredInPage(contentPadding) {
             if (hasFailed) {
                 EmptyState(
                     icon = painterResource(Res.drawable.ic_error),
@@ -223,6 +224,7 @@ internal fun SongDetailsPage(
             tabs = tabs,
             suggestsScales = scaleSuggestions != null,
             showsDegrees = showsDegrees,
+            imageSizes = rememberSongImageSizes(songText),
         )
         val built = rememberSongLyricsModel(
             inputs = lyricsInputs,
@@ -259,15 +261,13 @@ internal fun SongDetailsPage(
                 suggestsScales = inputs.suggestsScales,
                 showsDegrees = inputs.showsDegrees,
                 notationChords = notationChordsOf(inputs, transpose = named.metadata.transpose, nameCapo = shapes?.capo ?: 0),
+                imageSizes = inputs.imageSizes,
             )
         }
         if (built == null) {
             // A page beside the one being read whose first rendering is still being built in the background. Nobody is
             // looking at it, so it appears in one frame once it is there, the way data arriving does.
-            Box(
-                modifier = Modifier.fillMaxSize().padding(contentPadding),
-                contentAlignment = Alignment.Center,
-            ) {
+            CenteredInPage(contentPadding) {
                 DelayedLoadingIndicator()
             }
             return@AnimatedContent
@@ -296,10 +296,7 @@ internal fun SongDetailsPage(
         val model = frame.model
         if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
-            Box(
-                modifier = Modifier.fillMaxSize().padding(contentPadding),
-                contentAlignment = Alignment.Center,
-            ) {
+            CenteredInPage(contentPadding) {
                 EmptyState(
                     icon = painterResource(Res.drawable.ic_songs),
                     title = stringResource(Res.string.song_details_empty),
@@ -372,7 +369,7 @@ internal fun SongDetailsPage(
             val startPadding = contentPadding.calculateStartPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val endPadding = contentPadding.calculateEndPadding(layoutDirection) + PAGE_HORIZONTAL_PADDING
             val settledPageWidth = maxOf(settledWidth, maxWidth)
-            CompositionLocalProvider(LocalSongChange provides songChange) {
+            CompositionLocalProvider(LocalSongChange provides songChange, LocalSongImageAdder provides onAddImage) {
                 SongLyrics(
                     modifier = Modifier
                         .fillMaxSize()
@@ -446,6 +443,15 @@ internal fun pageViewportHeight(live: Dp, settled: Dp, followsViewport: Boolean)
 private class SettledHeight(var height: Dp)
 
 private val PAGE_BOTTOM_PADDING = 4.dp
+
+/** The page's room with [content] centred in it: what stands in for a song that has nothing to show yet, or ever. */
+@Composable
+private fun CenteredInPage(contentPadding: PaddingValues, content: @Composable () -> Unit) = Box(
+    modifier = Modifier.fillMaxSize().padding(contentPadding),
+    contentAlignment = Alignment.Center,
+) {
+    content()
+}
 
 /** What a song in one column pads its rows to: nothing, since it is not read a row at a time. */
 private val NO_ROW_VIEWPORT = { Dp.Unspecified }

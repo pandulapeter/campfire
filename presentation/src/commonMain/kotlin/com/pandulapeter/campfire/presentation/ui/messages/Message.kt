@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.messages
 
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.share.SharingFailure
 import com.pandulapeter.campfire.metronome.api.model.MetronomeStopReason
@@ -111,6 +112,9 @@ sealed interface Message {
 
     /** A pasted or dropped text longer than an import reads of one file. */
     data object PastedTextTooLarge : Message
+
+    /** A picture picked for a song that names it but lacks it, which the library does not keep, for [reason]. */
+    data class ImageNotAdded(val reason: ImageRefusal) : Message
 
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message

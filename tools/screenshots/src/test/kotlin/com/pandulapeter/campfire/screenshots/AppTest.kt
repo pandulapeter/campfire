@@ -108,7 +108,8 @@ internal data class TestAppearance(
  * covers are switched off unless [isCoverArtEnabled], and nothing else reaches outside unless a test opens a song
  * details lookup. The current version's What's new counts as seen.
  *
- * [preferenceFiles] are written into the data directory's `preferences` folder by name, as a device that has run the
+ * [libraryFiles] are written into the library by their path in it (`files/<name>.png`, `songs/<name>.cho`), for what a
+ * test makes rather than reads from its resources. [preferenceFiles] are written into the data directory's `preferences` folder by name, as a device that has run the
  * app before would hold them (the shared links' mirror). With [isSyncConnected] false, sync shows no account instead of
  * `Fakes.kt`'s.
  *
@@ -136,6 +137,7 @@ internal fun runAppTest(
     preferenceFiles: Map<String, String> = emptyMap(),
     extraPreferences: Map<String, JsonPrimitive> = emptyMap(),
     platform: ImpersonatedPlatform = ImpersonatedPlatform.ANDROID,
+    libraryFiles: Map<String, ByteArray> = emptyMap(),
     test: suspend AppTestScope.() -> Unit,
 ) {
     if (isFirstRun) {
@@ -159,6 +161,7 @@ internal fun runAppTest(
             writeData = { dataDirectory ->
                 if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, songLayout, pageTurn, appearance, isCoverArtEnabled, extraPreferences)
                 preferenceFiles.forEach { (name, text) -> File(dataDirectory, "preferences/" + name).writeText(text) }
+                libraryFiles.forEach { (path, bytes) -> File(dataDirectory, "library/$path").apply { parentFile.mkdirs() }.writeBytes(bytes) }
             },
             test = test,
         )

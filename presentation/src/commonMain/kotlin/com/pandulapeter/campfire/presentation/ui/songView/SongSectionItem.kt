@@ -143,6 +143,8 @@ internal fun SongSectionItem(
         style = sentenceStyle,
     )
 
+    is RenderSection.Image -> SongImageBlock(modifier = modifier.padding(horizontal = CARD_PADDING), section = section)
+
     is RenderSection.Lines -> LinesSectionItem(
         modifier = modifier,
         section = section,

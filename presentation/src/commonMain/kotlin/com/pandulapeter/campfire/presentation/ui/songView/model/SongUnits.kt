@@ -91,6 +91,15 @@ internal class SongUnits(
     val isTimingSection: BooleanArray = BooleanArray(0),
 ) {
 
+    /** Which sections are pictures, see [isKeptWhole]; set by [of] alone, and only for a song that holds one. */
+    private var isKeptWholeSection = BooleanArray(0)
+
+    /**
+     * Whether the section at [section] is a picture, which is fitted to one page and so never runs a page on past the
+     * screen with what comes before it: cut across two pages, it would never be seen whole.
+     */
+    fun isKeptWhole(section: Int) = isKeptWholeSection.getOrElse(section) { false }
+
     /**
      * Whether the section at [section] is a change of tempo or time signature, which never shares a row: one that heads
      * the stretch it starts, and one written before the song's first line, which stands in place on the first page.
@@ -192,7 +201,9 @@ internal class SongUnits(
                 timingStarts = stretches.starts,
                 timingSections = stretches.timingSections,
                 isTimingSection = BooleanArray(sections.size) { sections[it] is RenderSection.Timing },
-            )
+            ).apply {
+                if (sections.any { it is RenderSection.Image }) isKeptWholeSection = BooleanArray(sections.size) { sections[it] is RenderSection.Image }
+            }
         }
     }
 }

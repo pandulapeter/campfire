@@ -49,6 +49,9 @@ import com.pandulapeter.campfire.presentation.ui.songView.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.songView.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.songView.model.SongLyricsInputs
+import com.pandulapeter.campfire.presentation.ui.pictures.LocalSongImageLoader
+import com.pandulapeter.campfire.presentation.ui.pictures.imageSizesOf
+import com.pandulapeter.campfire.presentation.ui.pictures.loadSizesOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.songLayout.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.tabs.abcTablature
@@ -56,6 +59,7 @@ import com.pandulapeter.campfire.presentation.ui.tabs.rememberTabReading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -92,6 +96,9 @@ internal fun SongPreview(
     val tabs = rememberTabReading(userPreferences, isMoved = false)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
     val notation = editorSession.editorNotation
+    // The pictures typed in are sized as they are read, arriving as data: a preview follows the typing anyway.
+    val imageLoader = LocalSongImageLoader.current
+    val imageSizes by imageLoader.sizes.collectAsStateWithLifecycle()
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
     // typed into the field opposite it have to appear, or the editor would answer an edit with nothing. The reader's
     // transposition is a way of reading it too, so the preview is in the key the field and the stepper name - the
@@ -103,6 +110,7 @@ internal fun SongPreview(
         shouldShowChords = true,
         labels = labels,
         tabs = tabs,
+        imageSizes = imageSizesOf(text, imageSizes),
     )
     fun prepare(inputs: SongLyricsInputs) = songRenderer.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = notation, tabs = inputs.tabs).let { song ->
         prepareSongLyrics(
@@ -116,6 +124,7 @@ internal fun SongPreview(
                 notation = inputs.spelling.notation.toChordNotation(),
                 tablature = inputs.tabs?.abcTablature(capo = 0),
             ),
+            imageSizes = inputs.imageSizes,
         )
     }
     // The first rendering is built right here, so the preview never opens on an empty frame. Every later one is built
@@ -129,6 +138,9 @@ internal fun SongPreview(
             .filter { it != preview.first }
             .mapLatest { inputs -> inputs to withContext(Dispatchers.Default) { prepare(inputs) } }
             .collect { preview = it }
+    }
+    LaunchedEffect(text, imageLoader) {
+        snapshotFlow { text.value }.debounce(PREVIEW_DELAY_MILLIS).collectLatest { imageLoader.loadSizesOf(listOf(it)) }
     }
     val topPadding = 8.dp
     // The keyboard only ever covers the lower part of the preview, which the scroll room below the last line lets the

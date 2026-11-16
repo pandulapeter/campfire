@@ -18,5 +18,7 @@
 - **Inferred keys** (`InferredSongKeys`): every text read or written is walked on `Dispatchers.Default` before
   `songTexts` gets it, keyed by file name and never pruned (but for an import preview's pages), so the app bar's key is
   never a frame behind the lyrics.
+- **Pictures' sizes** are read (`readImageSizes`) before `songTexts` gets a text, as inferred keys are, so a song is laid
+  out with its pictures' room from its first frame (`ui/pictures`). `addMissingImage` is a write like the others.
 - **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,
   and passes `expectedText`: a file changed before the view model heard of it is re-read and the edit applied to it.

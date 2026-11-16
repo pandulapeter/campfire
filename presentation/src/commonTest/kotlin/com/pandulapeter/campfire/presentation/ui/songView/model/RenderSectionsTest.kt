@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.songLayout.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.runSlotCount
 import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -58,11 +59,18 @@ class RenderSectionsTest {
      *
      * @param isTransposed Whether the song's own `{transpose}` directives are applied, as they are on the page.
      */
-    private fun shape(text: String, shouldShowChords: Boolean = true, isTransposed: Boolean = false, showsTiming: Boolean = true) = prepareSongLyrics(
+    private fun shape(
+        text: String,
+        shouldShowChords: Boolean = true,
+        isTransposed: Boolean = false,
+        showsTiming: Boolean = true,
+        imageSizes: Map<String, SongImageSize> = emptyMap(),
+    ) = prepareSongLyrics(
         song = ChordProParser.parse(text).let { if (isTransposed) ChordProTransposer.transpose(it, 0) else it },
         shouldShowChords = shouldShowChords,
         labels = labels,
         showsTiming = showsTiming,
+        imageSizes = imageSizes,
     ).sections.map { section ->
         when (section) {
             is RenderSection.Comment -> "comment ${section.text}"
@@ -78,7 +86,27 @@ class RenderSectionsTest {
             is RenderSection.Metadata -> "metadata"
             is RenderSection.Chords -> "chords"
             is RenderSection.Scales -> "scales"
+            is RenderSection.Image -> "image ${section.image.src} ${section.size}"
         }
+    }
+
+    @Test
+    fun `a picture between sections is a unit of its own, sized as it was read`() {
+        val sizes = mapOf("a.jpg" to SongImageSize.Known(400, 300), "gone.jpg" to SongImageSize.Missing)
+        assertEquals(
+            listOf("Versszak: lines", "image a.jpg Known(width=400, height=300)", "image gone.jpg Missing", "image unread.jpg null", "Refrén: lines"),
+            shape("{sov}\nOne\n{eov}\n{image: src=a.jpg}\n{image: gone.jpg}\n{image: src=unread.jpg}\n{soc}\nTwo\n{eoc}", imageSizes = sizes),
+        )
+    }
+
+    @Test
+    fun `a picture inside a section cuts it, the rest headed by its toggle alone`() {
+        assertEquals(listOf("Versszak: lines", "image a.jpg null", ": lines"), shape("{sov}\nOne\n{image: a.jpg}\nTwo\n{eov}"))
+    }
+
+    @Test
+    fun `a song that is only a picture, lyrics only too, keeps it`() {
+        assertEquals(listOf("image chart.png null"), shape("{title: Chart}\n{image: chart.png}", shouldShowChords = false))
     }
 
     @Test

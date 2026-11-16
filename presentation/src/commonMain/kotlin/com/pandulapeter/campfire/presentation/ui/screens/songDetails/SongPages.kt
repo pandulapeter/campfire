@@ -218,12 +218,8 @@ internal fun SongPages(
                 songRenderer.movedKey(inferredKey = it, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },
             // Only the read only line needs it, as the controls name the key otherwise.
-            inferredKey = if (isReadOnly) {
-                inferredKeys[song.fileName]?.takeIf { song.key.isNullOrBlank() }?.let {
-                    songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
-                }
-            } else {
-                null
+            inferredKey = inferredKeys[song.fileName]?.takeIf { isReadOnly && song.key.isNullOrBlank() }?.let {
+                songRenderer.renderKey(key = it, transpose = 0, transposition = playback.soundingTransposition, spelling = chordSpelling)
             },
             // Read only, the four playing values are read rather than set, so the page draws them as the
             // line of text they have always been.
@@ -289,6 +285,7 @@ internal fun SongPages(
             showsDegrees = showsDegrees,
             isContinuous = isContinuous,
             turnsByColumn = !isContinuous && userPreferences?.pageTurn == PageTurn.COLUMN,
+            onAddImage = rememberSongImageAdder(songTextStore, song.fileName, isWritable = !isReadOnly && importPreview == null),
             scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null, toggleFold != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,
