@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
+import com.pandulapeter.campfire.data.model.preferences.SongOpens
 import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.TunerSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
@@ -425,6 +426,15 @@ internal class UserPreferencesMappersTest {
         val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
         assertEquals(true, reloaded.isOnboardingPending)
         assertEquals(false, UserPreferencesDocumentFormat.decode("{\"seenWhatsNewVersions\": [\"4.8.1\"]}").document.toModel().isOnboardingPending)
+    }
+
+    @Test
+    fun `the song opens and the spread the word flag survive saving and reloading and a negative count reads as none`() {
+        val preferences = UserPreferencesDocument().toModel().copy(songOpens = SongOpens(count = 9, dayCount = 2, lastEpochDay = 20_000), isSpreadTheWordShown = true)
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(preferences.toDocument())).document.toModel()
+        assertEquals(SongOpens(count = 9, dayCount = 2, lastEpochDay = 20_000), reloaded.songOpens)
+        assertTrue(reloaded.isSpreadTheWordShown)
+        assertEquals(SongOpens(), UserPreferencesDocumentFormat.decode("{\"songOpenCount\": -3, \"songOpenDayCount\": -1}").document.toModel().songOpens)
     }
 
     @Test

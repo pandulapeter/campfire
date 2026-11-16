@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.preferences.MetronomeSettings
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.ChordNames
 import com.pandulapeter.campfire.data.model.preferences.RandomPicksSeed
+import com.pandulapeter.campfire.data.model.preferences.SongOpens
 import com.pandulapeter.campfire.data.model.preferences.PageTurn
 import com.pandulapeter.campfire.data.model.preferences.SongLayout
 import com.pandulapeter.campfire.data.model.song.Song
@@ -89,6 +90,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes.filterValues { it.isNotBlank() },
     sharedLinkImports = sharedLinkImports.filterKeys { it.isNotBlank() }.mapValues { (_, paths) -> paths.filter { it.isNotBlank() } }.filterValues { it.isNotEmpty() },
+    songOpens = SongOpens(count = songOpenCount.coerceAtLeast(0), dayCount = songOpenDayCount.coerceAtLeast(0), lastEpochDay = lastSongOpenEpochDay),
+    isSpreadTheWordShown = isSpreadTheWordShown,
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -151,6 +154,10 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isOnboardingPending = isOnboardingPending,
     demoLibraryContentHashes = demoLibraryContentHashes,
     sharedLinkImports = sharedLinkImports,
+    songOpenCount = songOpens.count,
+    songOpenDayCount = songOpens.dayCount,
+    lastSongOpenEpochDay = songOpens.lastEpochDay,
+    isSpreadTheWordShown = isSpreadTheWordShown,
 )
 
 internal fun PrintSettingsDocument.toModel() = PrintSettings(

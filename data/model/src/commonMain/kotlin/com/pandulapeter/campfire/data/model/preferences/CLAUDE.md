@@ -16,8 +16,8 @@
   goes), and the per-song transpositions, tempos, capos, and `beatLevels`. Local only: `instrument`/`tunings`,
   `toolCapo` (a neck's, like the instrument), `areScaleNoteNamesShown`, `foldedSections` (one reader's choice),
   `tunerSettings`, `randomPicksSeed`, `seenWhatsNewVersions`, `isOnboardingPending` (default false so old
-  installations skip onboarding), and `demoLibraryContentHashes` (sync prefers the cloud's copy of an untouched demo
-  file). Song filters are never stored.
+  installations skip onboarding), `demoLibraryContentHashes` (sync prefers the cloud's copy of an untouched demo
+  file), and `songOpens` / `isSpreadTheWordShown` (asked once per device). Song filters are never stored.
 - `instrument` ids are the tuner's standard tuning ids and, for the five with shapes, `:libs:chordpro`'s; `ofTuningId`
   matches by longest prefix; the twelve-string's id names no tuning. `tunings` has no entry for standard; unknown ids
   (here and in `chordVoicings`) are kept as they are.

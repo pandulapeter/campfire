@@ -91,6 +91,10 @@ internal data class UserPreferencesDocument(
     val isOnboardingPending: Boolean = false,
     val demoLibraryContentHashes: Map<String, String> = emptyMap(),
     val sharedLinkImports: Map<String, List<String>> = emptyMap(),
+    val songOpenCount: Int = 0,
+    val songOpenDayCount: Int = 0,
+    val lastSongOpenEpochDay: Long? = null,
+    val isSpreadTheWordShown: Boolean = false,
 )
 
 @Serializable

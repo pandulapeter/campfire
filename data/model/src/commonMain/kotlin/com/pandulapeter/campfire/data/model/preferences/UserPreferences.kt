@@ -277,6 +277,10 @@ data class UserPreferences(
      * the link carries and only the file id decides which bytes it serves. Never exported or synced.
      */
     val sharedLinkImports: Map<String, List<String>> = emptyMap(),
+    /** The songs opened on this device, counted until the request to spread the word is settled. Never exported or synced. */
+    val songOpens: SongOpens = SongOpens(),
+    /** Whether the request to spread the word has appeared on this device, which it does once. Never exported or synced. */
+    val isSpreadTheWordShown: Boolean = false,
 ) {
 
     /**
