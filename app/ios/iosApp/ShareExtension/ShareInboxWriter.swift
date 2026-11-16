@@ -325,8 +325,8 @@ private enum ShareLimits {
     static let maxShareSize: Int64 = 24 << 20
     static let maxWaitingBytes: Int64 = 64 << 20
 
-    /// The types the activation rule in `Info.plist` names besides plain text, and the ChordPro family and ABC tunes the
-    /// app declares.
+    /// The types the activation rule in `Info.plist` names besides plain text (pictures included), and the ChordPro family
+    /// and ABC tunes the app declares.
     static let fileTypes = [
         "com.adobe.pdf",
         "org.openxmlformats.wordprocessingml.document",
@@ -336,6 +336,8 @@ private enum ShareLimits {
         "org.chordpro.cho",
         "org.chordpro.chordpro",
         "org.abcnotation.abc",
+        "public.png",
+        "public.jpeg",
     ]
 
     /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for, and without
@@ -344,9 +346,12 @@ private enum ShareLimits {
     private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
+    /// The pictures the activation rule names, which the app opens a new song on; read with the text limit, as
+    /// `ImportLimits.MAX_IMAGE_FILE_SIZE` is.
+    private static let pictureExtensions = ["png", "jpg", "jpeg"]
 
     static func isImportable(_ name: String) -> Bool {
-        (songExtensions + documentExtensions + archiveExtensions).contains(fileExtension(of: name))
+        (songExtensions + documentExtensions + archiveExtensions + pictureExtensions).contains(fileExtension(of: name))
     }
 
     static func maxSize(ofFileNamed name: String) -> Int64 {

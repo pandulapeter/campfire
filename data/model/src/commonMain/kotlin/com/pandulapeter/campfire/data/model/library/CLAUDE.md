@@ -23,7 +23,10 @@
 - `isLibraryImageName` is the one rule for the pictures of `library/files` (`LibraryFileKind.FILE`): 16 to 64 lowercase
   hex digits of the content's SHA-256 and a format's extension, never normalized; anything else there is left alone.
   `IMAGE_FILE_EXTENSIONS` are the names a picture arrives under on its own (refused formats included, `.svg` not, being
-  text the folder walks would read); no OS registration claims them.
+  text the folder walks would read). Only PNG and JPEG are offered to the OS, and never as its default: Android's Open
+  with and Share filters, iOS's document types (`Alternate`) and share extension, the Mac's document types
+  (`Alternate`). Not Windows (an MSI or MSIX association would take or nag for the default), Linux, or the web, which
+  registers no file types.
 - `songBaseName` is the one song naming rule (artist, dash, title; the title alone without an artist).
 - `identityKey` / `isSameLibraryName` are the one rule for whether two names are one file (NFC, then
   `uppercaseChar().lowercaseChar()` per code point, matching the JVM's `equals(ignoreCase = true)`,

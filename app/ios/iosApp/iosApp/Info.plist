@@ -237,6 +237,20 @@
 				<string>org.abcnotation.abc</string>
 			</array>
 		</dict>
+		<dict>
+			<!-- A photo of a chart, which Campfire makes a new song showing; offered, never the default for pictures. -->
+			<key>CFBundleTypeName</key>
+			<string>Picture</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.png</string>
+				<string>public.jpeg</string>
+			</array>
+		</dict>
 	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>

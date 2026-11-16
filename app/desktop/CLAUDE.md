@@ -126,7 +126,8 @@ only.
   hoc: a real signature enforces the hardened runtime, and only the store build has the JVM's entitlements.
 - The store build's runtime must have no `bin` folder; provisioning profiles lose their quarantine xattrs (ITMS-91109).
 - Document types are raw plist (`macos/document-types.plist`): the DSL's `fileAssociation` writes OS type `****`
-  (claims every file) and has no rank. `.cho` is `Default`, the rest `Alternate`. `macos/export-compliance.plist` and
+  (claims every file) and has no rank. `.cho` is `Default`, the rest `Alternate`; PNG and JPEG are an `Alternate`
+  `Viewer` (a photo opened alone is a new song), never the default. `macos/export-compliance.plist` and
   the iOS `Info.plist` both say `ITSAppUsesNonExemptEncryption` `false` — change both if encryption is added.
 - `macos/url-types.plist` claims the `campfire` scheme, in bundles only (not `run`); on Windows only the `.msix` does
   (`windows.protocol`).
@@ -135,7 +136,8 @@ only.
 
 - `.msi`: per user, fixed `upgradeUuid`. **Never change either**: both put a second Campfire next to existing installs.
 - File associations: only `.cho`, `.chopro`, `.chordpro` (an MSI can only claim an extension outright); the Store
-  package claims the same. Never zip or `.txt`. Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
+  package claims the same. Never zip, `.txt`, or pictures (an MSI could only take them from the user's photo viewer).
+  Keep in step with `LibraryFiles.SONG_EXTENSIONS`.
 - **MSIX** (`packageReleaseMsix`): identity from `campfire.windows.*` (Partner Center's, verbatim). Unsigned: Partner
   Center signs. It declares every language of the app, and Partner Center wants a listing for each.
 - MSIX AppData writes are virtualized and the Store refuses `unvirtualizedResources`, so the task adds

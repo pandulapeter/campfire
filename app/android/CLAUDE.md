@@ -42,6 +42,9 @@
     case only. `pathAdvancedPattern` doesn't backtrack either.
   - A second filter takes `text/plain`, `text/vnd.abc`, and `application/octet-stream` without a path, for URIs with
     no file name (Downloads' `msf:` ids, attachments); unrelated files offered this way are reported as skipped.
+- **Pictures**: `image/png` and `image/jpeg` in their own Open with filter and in Share (a photo alone is a new song);
+  Android makes no app a type's default unless the user picks it. A name without a picture's extension gets the one its
+  MIME type says (`withPictureExtension`), since the import knows a lone picture by its name.
 - **Share**: a stream wins over text in the same intent (the text is a caption).
 - **Shared links**: an `autoVerify` App Link for `https://campfire-songbook.com/s/` (never `/app/`, the web app) and
   `campfire://s/`. `handle` checks the OAuth redirect first; a link `ShareLinks.parse` reads goes to

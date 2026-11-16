@@ -200,6 +200,21 @@
             </intent-filter>
 
             <!--
+              A PNG or JPEG photo opened with Campfire, which makes a new song showing it (the editor opens on it, nothing
+              written before Save). Offered among the apps that open pictures, never more: Android makes no app the
+              default for a type unless the user says so, and a gallery stays theirs.
+            -->
+            <intent-filter android:label="@string/campfire">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="image/jpeg" />
+            </intent-filter>
+
+            <!--
               Coming back from the sync service's consent page. The scheme is the one every platform registers,
               see REDIRECT_SCHEME in :data:source:remote:implementation. The activity is singleTask, so this lands
               in onNewIntent of the running app rather than in a second instance - or, when the process was killed
@@ -254,8 +269,8 @@
             <!--
               Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain or, because .cho
               has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
-              senders use application/x-zip-compressed. JSON is another app's export of songs, and text/vnd.abc a file
-              of ABC tunes. Shared text arrives as
+              senders use application/x-zip-compressed. JSON is another app's export of songs, text/vnd.abc a file
+              of ABC tunes, and a PNG or JPEG photo a new song showing it. Shared text arrives as
               EXTRA_TEXT (see importSharedTexts). The importer checks the display name and skips unrelated files with
               these types.
             -->
@@ -272,6 +287,8 @@
                 <data android:mimeType="application/json" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="image/jpeg" />
             </intent-filter>
 
         </activity-alias>

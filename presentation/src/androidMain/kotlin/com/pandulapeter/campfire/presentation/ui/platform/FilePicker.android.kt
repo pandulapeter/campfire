@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
@@ -342,11 +343,12 @@ fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
     val budget = ImportBudget()
     return map { uri ->
         // The query that knows the display name can be what fails, so it is asked on its own.
-        val (name, size) = try {
+        val (displayName, size) = try {
             uri.nameAndSize(context)
         } catch (exception: Exception) {
             uri.fallbackName to null
         }
+        val name = displayName.withPictureExtension(runCatching { context.contentResolver.getType(uri) }.getOrNull())
         try {
             budget.read(name = name, size = size) { limit ->
                 // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
@@ -366,6 +368,21 @@ private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.con
         if (cursor.moveToFirst()) (cursor.getString(0) ?: fallbackName) to (if (cursor.isNull(1)) null else cursor.getLong(1)) else null
     }
     ?: (fallbackName to null)
+
+/**
+ * [this] name with the extension of the picture [mimeType] says it is, where it has none of a picture's: a gallery may
+ * share a photo under a bare number, and the import knows a picture alone by its name.
+ */
+private fun String.withPictureExtension(mimeType: String?): String {
+    val extension = when (mimeType) {
+        "image/png" -> ".png"
+        "image/jpeg" -> ".jpg"
+        "image/gif" -> ".gif"
+        "image/webp" -> ".webp"
+        else -> return this
+    }
+    return if (LibraryFiles.isImageFileName(this)) this else this + extension
+}
 
 private const val SONG_EXPORT_MIME_TYPE = "application/octet-stream"
 

@@ -62,7 +62,9 @@
 			     JSON conforms to public.text but not to public.plain-text, so it is named for the songs another
 			     app's export holds. Keep in step with LibraryFiles.IMPORTABLE_EXTENSIONS, as the app's document
 			     types are with SONG_EXTENSIONS: the legacy .doc (which the import only reports as unreadable) is
-			     left out on purpose, and OnSong's .onsong and OpenSongApp's .osb have no system type to name.
+			     left out on purpose, and OnSong's .onsong and OpenSongApp's .osb have no system type to name. A PNG or
+			     JPEG photo is a new song showing it (Photos offers a JPEG copy of a HEIC photo; one with none is not
+			     listed).
 			-->
 			<key>NSExtensionActivationRule</key>
 			<string>SUBQUERY (
@@ -77,6 +79,8 @@
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "org.openxmlformats.wordprocessingml.document"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.zip-archive"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.pandulapeter.campfire.songbookpro-backup"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.png"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.jpeg"
     ).@count &gt;= 1
 ).@count &gt;= 1</string>
 		</dict>
