@@ -42,4 +42,7 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   picture), it is re-encoded on the device (`reencodePicture`, `ui/platform`) and the copy taken by the ordinary intake,
   named by its own content. PNG first for a PNG, GIF, or WebP, else JPEG at 0.85, then smaller JPEGs, a bounded list
   (`pictureAttemptsFor`), at most 4,096 px a side and 12 MP (`reencodedSizeOf`). A snackbar says a copy was made; among
-  several pictures, a refusal is said instead. A copy that does not fit keeps the original refusal.
+  several pictures, a refusal is said instead. A copy that does not fit keeps the original refusal. Every fitting is
+  tracked by the one `PictureWork`, which brings up the window's work bar (`ui/progress`) once one has run 400 ms (a
+  large WebP takes seconds on an older phone), never blocking the editor; the picker's own read before it is not counted,
+  since the picker's screen is up for an unknown part of that time.

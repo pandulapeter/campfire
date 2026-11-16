@@ -56,6 +56,11 @@ class WorkProgressTest {
     }
 
     @Test
+    fun `a picture being made to fit runs the line, before a sync run`() {
+        assertEquals(WorkProgress(fraction = null), progress(isFittingPictures = true, syncProgress = SyncProgress(completed = 1, total = 4)))
+    }
+
+    @Test
     fun `the demo library planted on a first launch is no work`() {
         assertNull(progress(isImporting = true, isDemoLibraryPending = true))
     }
@@ -66,6 +71,7 @@ class WorkProgressTest {
         importProgress: ImportProgress? = null,
         isAddingToReview: Boolean = false,
         isEditingSongs: Boolean = false,
+        isFittingPictures: Boolean = false,
         syncProgress: SyncProgress? = null,
     ) = workProgress(
         isImporting = isImporting,
@@ -73,6 +79,7 @@ class WorkProgressTest {
         importProgress = importProgress,
         isAddingToReview = isAddingToReview,
         isEditingSongs = isEditingSongs,
+        isFittingPictures = isFittingPictures,
         syncProgress = syncProgress,
     )
 }

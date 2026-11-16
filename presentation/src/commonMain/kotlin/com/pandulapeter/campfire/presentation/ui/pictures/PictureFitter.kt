@@ -26,13 +26,17 @@ import com.pandulapeter.campfire.presentation.ui.platform.PictureEncoding
  *
  * @param examine What the library would make of a picture, writing nothing (`ExamineImageUseCase`).
  * @param reencode The platform's re-encoder (`reencodePicture`), replaced by tests.
+ * @param work What every fitting is tracked as, for the progress bar to show a slow one.
  */
 internal class PictureFitter(
     private val examine: suspend (bytes: ByteArray) -> ImageIntake,
     private val reencode: suspend (bytes: ByteArray, attempts: List<PictureAttempt>, maxBytes: Long) -> ByteArray?,
+    private val work: PictureWork,
 ) {
 
-    suspend fun fit(bytes: ByteArray): PictureFit {
+    suspend fun fit(bytes: ByteArray): PictureFit = work.track { fitNow(bytes) }
+
+    private suspend fun fitNow(bytes: ByteArray): PictureFit {
         val reason = (examine(bytes) as? ImageIntake.Refused)?.reason ?: return PictureFit.Kept(bytes)
         if (!isReencodable(bytes, reason)) return PictureFit.Refused(reason)
         val copy = reencode(bytes, pictureAttemptsFor(ImageFormats.signatureFormatOf(bytes)), ImportLimits.MAX_IMAGE_FILE_SIZE)

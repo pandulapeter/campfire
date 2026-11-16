@@ -41,6 +41,7 @@ class PictureFitterTest {
             reencoded += bytes to attempts
             copy
         },
+        work = PictureWork(),
     )
 
     init {

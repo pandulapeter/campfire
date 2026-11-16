@@ -46,6 +46,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongImageAdding
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -134,7 +135,7 @@ class EditorSessionTest {
         )
 
         /** Shrinks a picture to its last byte alone, as the platform's re-encoder would to a smaller copy. */
-        private val pictureFitter = PictureFitter(examine = useCases.examineImage::invoke, reencode = { bytes, _, _ -> byteArrayOf(bytes.last()) })
+        private val pictureFitter = PictureFitter(examine = useCases.examineImage::invoke, reencode = { bytes, _, _ -> byteArrayOf(bytes.last()) }, work = PictureWork())
 
         val session: EditorSession
         val songTextStore = SongTextStore(

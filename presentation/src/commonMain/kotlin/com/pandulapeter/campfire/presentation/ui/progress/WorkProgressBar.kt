@@ -33,7 +33,8 @@ import kotlin.time.TimeSource
 
 /**
  * The one sign of work on the library outside the screen that started it, laid along the top edge of the window over
- * everything else and every inset: an import, files read into a review, the selection's edits, or a sync run, whichever
+ * everything else and every inset: an import, files read into a review, the selection's edits, a picture being made to
+ * fit, or a sync run, whichever
  * started it ([workProgress] decides which). Once shown, it stays for as long as the work runs and for at least
  * [MINIMUM_VISIBLE_DURATION], so that work of a moment does not flash it. Work that can say how far it has got fills it,
  * with the [WorkProgressPulse] running on past the fill so that a slow transfer still moves; work that cannot runs the

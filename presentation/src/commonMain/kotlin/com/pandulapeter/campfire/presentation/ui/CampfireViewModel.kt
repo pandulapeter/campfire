@@ -155,6 +155,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextUseCases
 import com.pandulapeter.campfire.presentation.ui.state.editor.EditorUseCases
 import com.pandulapeter.campfire.presentation.ui.pictures.LibrarySongImages
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.pictures.loadSizesOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import kotlinx.coroutines.Dispatchers
@@ -383,6 +384,8 @@ class CampfireViewModel(
 
     internal val songImages = LibrarySongImages(viewModelScope, songTextUseCases.getImageSize::invoke, songTextUseCases.getImage::invoke, songTextUseCases.getImageChanges(), songTextUseCases.readImageSize::invoke)
 
+    internal val pictureWork = PictureWork()
+
     internal val songTextStore: SongTextStore = SongTextStore(
         scope = viewModelScope,
         backStack = navigator.backStack,
@@ -391,12 +394,9 @@ class CampfireViewModel(
         getSongContent = getSongContent,
         saveSongContent = saveSongContent,
         getSongContentInvalidations = songTextUseCases.getSongContentInvalidations,
-        inferredKeys = InferredSongKeys(
-            inferKey = songRenderer::inferredKeyOfText,
-            dispatcher = Dispatchers.Default,
-        ),
+        inferredKeys = InferredSongKeys(inferKey = songRenderer::inferredKeyOfText, dispatcher = Dispatchers.Default),
         readImageSizes = songImages::loadSizesOf,
-        imageAdding = songTextUseCases.imageAdding(),
+        imageAdding = songTextUseCases.imageAdding(pictureWork),
         addOnBackStackChanged = navigator::addOnBackStackChanged,
         currentSongFileName = navigator::currentSongFileName,
     )
@@ -431,7 +431,7 @@ class CampfireViewModel(
         arePreferencesLoaded = preferencesController.arePreferencesLoaded,
         getSongContent = getSongContent,
         useCases = editorUseCases,
-        images = editorUseCases.imagesFor(scope = viewModelScope, messageSink = messageSink),
+        images = editorUseCases.imagesFor(scope = viewModelScope, messageSink = messageSink, pictureWork = pictureWork),
         updateBackStack = { navigator.updateBackStack(update = it) },
         isSongShownOnTop = navigator::isSongShownOnTop,
         popBackStack = { navigator.popBackStack() },

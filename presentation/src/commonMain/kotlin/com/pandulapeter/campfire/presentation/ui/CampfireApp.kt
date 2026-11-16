@@ -224,6 +224,7 @@ private fun AppWorkProgressBar(
     val isAddingToReview by viewModel.importController.isAddingToReview.collectAsStateWithLifecycle()
     val isEditingSongs by viewModel.selectionEditing.isEditingSongs.collectAsStateWithLifecycle()
     val syncState by viewModel.syncController.syncState.collectAsStateWithLifecycle()
+    val isFittingPictures by viewModel.pictureWork.isShown.collectAsStateWithLifecycle(initialValue = false)
     WorkProgressBar(
         modifier = modifier,
         progress = workProgress(
@@ -232,6 +233,7 @@ private fun AppWorkProgressBar(
             importProgress = importProgress,
             isAddingToReview = isAddingToReview,
             isEditingSongs = isEditingSongs,
+            isFittingPictures = isFittingPictures,
             syncProgress = (syncState as? SyncState.Connected)?.progress,
         ),
     )

@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,6 +93,7 @@ internal class FakeSongFiles(
                     }
                 },
                 reencode = { bytes, _, _ -> reencode(bytes) },
+                work = PictureWork(),
             ),
             saveSongImage = this,
         ),
