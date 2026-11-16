@@ -91,7 +91,8 @@ extension (`iosApp/ShareExtension/`, Swift only).
   extension is where those are accepted. Keep in step with `LibraryFiles.SONG_EXTENSIONS`. SongbookPro's `.sbpbackup` /
   `.sbp` are an imported type with no document type, only so the extension's activation rule can name them. `.abc` is
   a `Viewer` at `Alternate` (Campfire is no editor of it), conforming to plain text, which brings it to the extension.
-  PNG and JPEG are a `Viewer` at `Alternate` too, and named by the extension's rule: a photo alone is a new song.
+  PNG, JPEG, GIF, WebP, HEIC, and HEIF are a `Viewer` at `Alternate` too, named by the extension's rule: a photo
+  alone is a new song.
 - `CFBundleLocalizations` tells UIKit which languages the app speaks (Compose resources are invisible to iOS); without
   it system UI stays English and Settings offers no per-app language. Keep in step with `:presentation`'s `values-*`.
   Each language also needs `<lang>.lproj/InfoPlist.strings` (the microphone prompt; a variant group).

@@ -249,6 +249,10 @@
 			<array>
 				<string>public.png</string>
 				<string>public.jpeg</string>
+				<string>com.compuserve.gif</string>
+				<string>org.webmproject.webp</string>
+				<string>public.heic</string>
+				<string>public.heif</string>
 			</array>
 		</dict>
 	</array>

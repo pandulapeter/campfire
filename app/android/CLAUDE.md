@@ -42,7 +42,8 @@
     case only. `pathAdvancedPattern` doesn't backtrack either.
   - A second filter takes `text/plain`, `text/vnd.abc`, and `application/octet-stream` without a path, for URIs with
     no file name (Downloads' `msf:` ids, attachments); unrelated files offered this way are reported as skipped.
-- **Pictures**: `image/png` and `image/jpeg` in their own Open with filter and in Share (a photo alone is a new song);
+- **Pictures**: PNG, JPEG, GIF, WebP, HEIC, HEIF, and AVIF in their own Open with filter and in Share (a photo alone
+  is a new song, shrunk or converted as one added in the editor is);
   Android makes no app a type's default unless the user picks it. A name without a picture's extension gets the one its
   MIME type says (`pictureFileName`), since the import knows a lone picture by its name.
 - **Photo picker backport**: a disabled `ModuleDependencies` service asks Play services for its photo picker on Android

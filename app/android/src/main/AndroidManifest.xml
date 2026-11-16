@@ -200,9 +200,10 @@
             </intent-filter>
 
             <!--
-              A PNG or JPEG photo opened with Campfire, which makes a new song showing it (the editor opens on it, nothing
-              written before Save). Offered among the apps that open pictures, never more: Android makes no app the
-              default for a type unless the user says so, and a gallery stays theirs.
+              A photo opened with Campfire, which makes a new song showing it (the editor opens on it, nothing written
+              before Save): a PNG, JPEG, GIF, or WebP, shrunk where it is too large for a song, or a HEIC, HEIF, or AVIF
+              one, converted (ui/platform's PictureReencoder). Offered among the apps that open pictures, never more:
+              Android makes no app the default for a type unless the user says so, and a gallery stays theirs.
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.VIEW" />
@@ -212,6 +213,11 @@
                 <data android:scheme="content" />
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/jpeg" />
+                <data android:mimeType="image/gif" />
+                <data android:mimeType="image/webp" />
+                <data android:mimeType="image/heic" />
+                <data android:mimeType="image/heif" />
+                <data android:mimeType="image/avif" />
             </intent-filter>
 
             <!--
@@ -270,7 +276,7 @@
               Sharing a song or zip archive to Campfire. ChordPro files may be sent as text/plain or, because .cho
               has no registered MIME type, application/octet-stream. Archives are usually application/zip; some
               senders use application/x-zip-compressed. JSON is another app's export of songs, text/vnd.abc a file
-              of ABC tunes, and a PNG or JPEG photo a new song showing it. Shared text arrives as
+              of ABC tunes, and a photo (the types of the Open with filter above) a new song showing it. Shared text arrives as
               EXTRA_TEXT (see importSharedTexts). The importer checks the display name and skips unrelated files with
               these types.
             -->
@@ -289,6 +295,11 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/jpeg" />
+                <data android:mimeType="image/gif" />
+                <data android:mimeType="image/webp" />
+                <data android:mimeType="image/heic" />
+                <data android:mimeType="image/heif" />
+                <data android:mimeType="image/avif" />
             </intent-filter>
 
         </activity-alias>

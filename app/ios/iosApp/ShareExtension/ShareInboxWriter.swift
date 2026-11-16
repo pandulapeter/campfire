@@ -342,6 +342,10 @@ private enum ShareLimits {
         "org.abcnotation.abc",
         "public.png",
         "public.jpeg",
+        "com.compuserve.gif",
+        "org.webmproject.webp",
+        "public.heic",
+        "public.heif",
     ]
 
     /// `LibraryFiles.IMPORTABLE_EXTENSIONS`, without the legacy Word format the extension is not offered for, and without
@@ -350,8 +354,9 @@ private enum ShareLimits {
     private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
-    /// The pictures the activation rule names, which the app opens a new song on, shrinking one too large for a song.
-    private static let pictureExtensions = ["png", "jpg", "jpeg"]
+    /// The pictures the activation rule names, which the app opens a new song on, shrinking one too large for a song and
+    /// converting a HEIC or HEIF photo.
+    private static let pictureExtensions = ["png", "jpg", "jpeg", "gif", "webp", "heic", "heif"]
 
     static func isImportable(_ name: String) -> Bool {
         (songExtensions + documentExtensions + archiveExtensions + pictureExtensions).contains(fileExtension(of: name))
