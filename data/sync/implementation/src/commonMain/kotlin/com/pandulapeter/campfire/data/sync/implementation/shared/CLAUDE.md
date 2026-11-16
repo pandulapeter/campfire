@@ -68,6 +68,12 @@
   `localHash`es; a setlist is the one file read), a build no older than `CAMPFIRE_BUILD_NUMBER`, and the listed hash (or
   none while `tooLarge`). Otherwise it is packed from the library's raw files as the export packs them (undated) and
   uploaded only when its hash differs; a `Conflict` is dropped.
+- **Pictures**: a copy carries the library's pictures its songs name under `images/`, sorted, as the export does. The
+  fingerprint ends in their names (none for a copy showing none, so older fingerprints stand), since a picture arriving
+  under a name a song already gives changes no hash. So the step reads the shared songs (a setlist's too) for the names,
+  but only while the index holds any picture. A copy holds at most `ImportLimits.MAX_SHARED_COPY_SIZE` (24 MiB, what
+  versions before pictures download, and packed in memory here): pictures are read one at a time up to it, and one past
+  it is `tooLarge` without packing, fingerprinted by what it was to hold so the next run reads nothing again.
 - Never stopped by inference: an item missing from the library makes the entry `orphaned`; back under its name, `ok`. A
   copy missing from a listing as new as the registry read makes it `orphaned` and `copyMissing` for good (a deleted
   file's link never comes back; a member, not a state, so older versions do not show it as working), whatever the

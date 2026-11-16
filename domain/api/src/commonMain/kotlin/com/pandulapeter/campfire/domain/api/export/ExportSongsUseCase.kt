@@ -15,7 +15,9 @@ interface ExportSongsUseCase {
 
     /**
      * A single song leaves as the `.cho` file it already is and several as a zip, unless [isArchive] asks for a zip
-     * whatever the count: the songs ticked in the selection mode, whose export screen promised one. Null when none of
+     * whatever the count: the songs ticked in the selection mode, whose export screen promised one. A single song that
+     * shows a picture the library holds is a zip too, named after it, holding the song and the pictures it shows under
+     * `images/`; every zip carries the pictures its songs show there, each once. Null when none of
      * them can be read. [isDated] is as for `ExportSetlistUseCase`, and only matters for a zip. [rewrite] is given each
      * song's file name and text as read and answers the text that goes out, the same text for the file as it is stored.
      */

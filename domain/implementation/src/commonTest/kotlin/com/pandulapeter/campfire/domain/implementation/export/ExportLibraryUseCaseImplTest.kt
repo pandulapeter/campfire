@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
+import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
@@ -39,6 +40,7 @@ class ExportLibraryUseCaseImplTest {
 
     private val archive = FakeArchiveRepository()
     private val songContents = FakeSongContentRepository()
+    private val images = FakeImageRepository()
 
     @Test
     fun `exports nothing when the song scan failed`() = runTest {
@@ -168,6 +170,23 @@ class ExportLibraryUseCaseImplTest {
         assertEquals(listOf("songs/b.cho", "songs/d.cho"), archive.packed.keys.toList())
     }
 
+    @Test
+    fun `the library's pictures its songs show go in once under images after every song and setlist`() = runTest {
+        val shown = FakeImageRepository.picture(1)
+        val unshown = FakeImageRepository.picture(2)
+        val shownName = images.store(shown)
+        images.store(unshown)
+        songContents.texts = mapOf(
+            "a.cho" to "{title: A}\n{image: src=$shownName}\n{image: src=gone.png}",
+            "b.cho" to "{title: B}\n{image: src=$shownName}",
+        )
+
+        val result = useCase(songs = listOf("a", "b").map(::song), setlists = listOf(setlist("gig"))).invoke()
+
+        assertEquals(listOf("songs/a.cho", "songs/b.cho", "setlists/gig.setlist.json", "images/$shownName"), archive.packed.keys.toList())
+        assertEquals(shown.size.toLong(), assertNotNull(result).file.unpackedImageSize)
+    }
+
     private fun useCase(
         songs: List<Song>?,
         setlists: List<Setlist>? = emptyList(),
@@ -188,11 +207,15 @@ class ExportLibraryUseCaseImplTest {
         },
         archiveRepository = archive,
         exportFileRepository = FakeExportFileRepository(),
+        imageRepository = images,
     )
 
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */
     private class FakeSongContentRepository : SongContentRepositoryStub() {
         var unreadable = emptySet<String>()
+
+        /** What a song holds where it is not its title alone. */
+        var texts = emptyMap<String, String>()
 
         /** A read of a key waits until its value has been read, which puts the reads into an order of the test's choosing. */
         var readAfter = emptyMap<String, String>()
@@ -201,7 +224,7 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
             readAfter[fileName]?.let { previous -> reads.first { previous in it } }
             reads.update { it + fileName }
-            return if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")
+            return if (fileName in unreadable) null else SongContent(fileName = fileName, text = texts[fileName] ?: "{title: $fileName}")
         }
     }
 

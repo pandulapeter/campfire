@@ -24,6 +24,9 @@ internal interface SharedCopyContents {
     /** The title the library file [fileName], holding [bytes], goes by in the app, or null where it cannot be read. */
     suspend fun titleOf(kind: SharedLinkKind, fileName: String, bytes: ByteArray): String?
 
+    /** Every file the image directives of the song [bytes] name, as the export reads them. */
+    fun imageNamesOf(bytes: ByteArray): Set<String>
+
     /** [files] packed undated, so that the same files make the same bytes on every device and at any time. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray
 }

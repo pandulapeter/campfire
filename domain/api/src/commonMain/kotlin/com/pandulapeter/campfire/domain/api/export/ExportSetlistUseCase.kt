@@ -14,7 +14,8 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 interface ExportSetlistUseCase {
 
     /**
-     * A zip of the setlist, its document unchanged, and the songs in it, so that importing it elsewhere restores both.
+     * A zip of the setlist, its document unchanged, and the songs in it, so that importing it elsewhere restores both,
+     * with the pictures those songs show under `images/`, each once.
      * [isDated] stamps the zip's entries with the time, as a file the user saves has; undated, the same files always make
      * the same bytes, as a shared copy compared by its bytes needs.
      */

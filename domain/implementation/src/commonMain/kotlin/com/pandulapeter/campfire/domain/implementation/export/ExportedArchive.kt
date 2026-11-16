@@ -15,20 +15,22 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 
 /**
- * [entries] as a zip archive called [name], written into a temporary file one entry at a time, knowing what an import
- * would unpack it to, since its entries are compressed. Null, the file removed, where not one entry could be read.
- * Whatever ends the packing early (a failure, a cancellation) removes the file before it is passed on.
+ * [entries] and then the pictures they name ([images]) as a zip archive called [name], written into a temporary file
+ * one entry at a time, knowing what an import would unpack it to, since its entries are compressed, and how much of
+ * that is pictures. Null, the file removed, where not one entry could be read. Whatever ends the packing early (a
+ * failure, a cancellation) removes the file before it is passed on.
  */
 internal suspend fun exportedArchive(
     archiveRepository: ArchiveRepository,
     exportFileRepository: ExportFileRepository,
     name: String,
     entries: List<suspend () -> ArchiveEntry?>,
+    images: ExportedImages,
     isDated: Boolean,
 ): ExportedFile? {
     val writer = exportFileRepository.create(name)
     val packed = try {
-        archiveRepository.pack(entries = entries, isDated = isDated, sink = writer)
+        archiveRepository.pack(entries = entries + images.entries, isDated = isDated, sink = writer)
     } catch (throwable: Throwable) {
         writer.abandon()
         throw throwable
@@ -43,5 +45,11 @@ internal suspend fun exportedArchive(
         writer.abandon()
         throw throwable
     }
-    return ExportedFile(name = name, mimeType = ExportedFile.ZIP_MIME_TYPE, content = content, unpackedSize = packed.unpackedSize)
+    return ExportedFile(
+        name = name,
+        mimeType = ExportedFile.ZIP_MIME_TYPE,
+        content = content,
+        unpackedSize = packed.unpackedSize,
+        unpackedImageSize = images.size,
+    )
 }

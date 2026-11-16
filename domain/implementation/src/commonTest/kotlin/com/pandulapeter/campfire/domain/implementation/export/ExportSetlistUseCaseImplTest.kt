@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
+import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.testSetlist
@@ -25,6 +26,7 @@ import kotlin.test.assertNotNull
 class ExportSetlistUseCaseImplTest {
 
     private val archive = FakeArchiveRepository()
+    private val images = FakeImageRepository()
 
     @Test
     fun `a setlist is named by its title`() = runTest {
@@ -61,14 +63,32 @@ class ExportSetlistUseCaseImplTest {
 
     private fun useCase(setlist: Setlist) = useCase(FakeSetlistRepository(setlist))
 
-    private fun useCase(setlistRepository: FakeSetlistRepository, readable: Set<String> = emptySet()) = ExportSetlistUseCaseImpl(
+    @Test
+    fun `the pictures its songs show go in once after them`() = runTest {
+        val picture = FakeImageRepository.picture(1)
+        val name = images.store(picture)
+        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))
+        val texts = mapOf("a.cho" to "{title: A}\n{image: src=$name}", "b.cho" to "{title: B}\n{image: src=$name}")
+
+        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isDated = true)
+
+        assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/$name"), archive.packed.keys.toList())
+        assertEquals(picture.size.toLong(), assertNotNull(exported).unpackedImageSize)
+    }
+
+    private fun useCase(
+        setlistRepository: FakeSetlistRepository,
+        readable: Set<String> = emptySet(),
+        texts: Map<String, String> = emptyMap(),
+    ) = ExportSetlistUseCaseImpl(
         setlistRepository = setlistRepository,
         songContentRepository = object : SongContentRepositoryStub() {
             override suspend fun loadSongContent(fileName: String, useCache: Boolean) =
-                if (fileName in readable) SongContent(fileName, "{title: $fileName}") else null
+                if (fileName in readable) SongContent(fileName, texts[fileName] ?: "{title: $fileName}") else null
         },
         archiveRepository = archive,
         exportFileRepository = FakeExportFileRepository(),
+        imageRepository = images,
     )
 
     /** Holds the one setlist. */

@@ -10,10 +10,12 @@
 package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
 import com.pandulapeter.campfire.data.model.library.ExportedContent
+import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.song.SongContent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -24,6 +26,7 @@ import kotlin.test.assertNotNull
 class ExportSongsUseCaseImplTest {
 
     private val archive = FakeArchiveRepository()
+    private val images = FakeImageRepository()
 
     @Test
     fun `a single song is named by its header`() = runTest {
@@ -73,6 +76,48 @@ class ExportSongsUseCaseImplTest {
         assertEquals("{title: B}\n", archive.packed.getValue("b.cho").decodeToString())
     }
 
+    @Test
+    fun `a song showing a picture the library holds leaves as a zip named after it, holding the song and the picture`() = runTest {
+        val picture = FakeImageRepository.picture(1)
+        val name = images.store(picture)
+        val text = "{title: A}\n{image: src=$name}\n{image: src=gone.png}\n"
+
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+
+        assertEquals("a.zip", exported.name)
+        assertEquals(ExportedFile.ZIP_MIME_TYPE, exported.mimeType)
+        assertEquals(listOf("a.cho", "images/$name"), archive.packed.keys.toList())
+        assertEquals(text, archive.packed.getValue("a.cho").decodeToString())
+        assertEquals(picture.size.toLong(), exported.unpackedImageSize)
+    }
+
+    @Test
+    fun `a song naming only pictures the library lacks stays a lone file`() = runTest {
+        images.store(FakeImageRepository.picture(1))
+        val text = "{title: A}\n{image: src=gone.png}\n{image: src=0123456789abcdef.png}\n"
+
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+
+        assertEquals("a.cho", exported.name)
+        assertEquals(ExportedFile.TEXT_MIME_TYPE, exported.mimeType)
+        assertEquals(text, (exported.content as ExportedContent.Bytes).bytes.decodeToString())
+    }
+
+    @Test
+    fun `songs zipped together carry each picture once, after the songs and in the order of their names`() = runTest {
+        val names = listOf(images.store(FakeImageRepository.picture(1)), images.store(FakeImageRepository.picture(2))).sorted()
+        val unused = images.store(FakeImageRepository.picture(3))
+
+        useCase(
+            emptyMap(),
+            "a.cho" to "{title: A}\n{image: src=${names[1]}}\n{image: src=${names[0]}}",
+            "b.cho" to "{title: B}\n{image: src=${names[1]}}",
+        ).invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = false, rewrite = asStored)
+
+        assertEquals(listOf("a.cho", "b.cho") + names.map { "images/$it" }, archive.packed.keys.toList())
+        assertEquals(false, "images/$unused" in archive.packed)
+    }
+
     private val asStored = { _: String, text: String -> text }
 
     /** @param names What the import would name a song, by the fallback title it is asked with. */
@@ -85,5 +130,6 @@ class ExportSongsUseCaseImplTest {
         },
         archiveRepository = archive,
         exportFileRepository = FakeExportFileRepository(),
+        imageRepository = images,
     )
 }

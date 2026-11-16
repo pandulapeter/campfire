@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
@@ -31,6 +33,8 @@ internal class SharedCopyContentsImpl(
         // business; the file is the one just packed, and a title read a moment later only names it.
         SharedLinkKind.SONG -> songLocalSource.loadSong(fileName)?.title
     }
+
+    override fun imageNamesOf(bytes: ByteArray) = ChordProImages.referencedSources(bytes.decodeLibraryText())
 
     override suspend fun pack(files: Map<String, ByteArray>) = archiveLocalSource.pack(files = files, isDated = false)
 }

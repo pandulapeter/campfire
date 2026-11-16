@@ -11,8 +11,10 @@ package com.pandulapeter.campfire.domain.implementation.export
 
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSongsUseCase
@@ -25,6 +27,7 @@ internal class ExportSongsUseCaseImpl(
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,
     private val exportFileRepository: ExportFileRepository,
+    private val imageRepository: ImageRepository,
 ) : ExportSongsUseCase {
 
     override suspend operator fun invoke(
@@ -37,13 +40,24 @@ internal class ExportSongsUseCaseImpl(
         // One song leaves as itself, named by its own header: a zip around a single text file would only be something
         // to unpack again. Not where a zip is what the caller's screen showed and the user picked, which is what saving
         // has to give them however many of the songs are left.
+        val images = ExportedImages.of(imageRepository)
         if (fileNames.size == 1 && !isArchive) {
             val content = songContentRepository.loadSongContent(fileNames.single(), useCache = false) ?: return null
-            return ExportedFile(
-                name = songRepository.songExportFileName(content),
-                mimeType = ExportedFile.TEXT_MIME_TYPE,
-                bytes = rewrite(content.fileName, content.text).encodeToByteArray(),
-            )
+            val name = songRepository.songExportFileName(content)
+            val text = rewrite(content.fileName, content.text)
+            // A song showing pictures is a zip of itself and them, which opens the same in any ChordPro program: a
+            // lone file would show a missing picture wherever it went.
+            if (images.isNamedBy(text)) {
+                return exportedArchive(
+                    archiveRepository = archiveRepository,
+                    exportFileRepository = exportFileRepository,
+                    name = name.substringBeforeLast('.') + LibraryFiles.ARCHIVE_EXTENSION,
+                    entries = listOf { ArchiveEntry(name = name, bytes = images.named(text).encodeToByteArray()) },
+                    images = images,
+                    isDated = isDated,
+                )
+            }
+            return ExportedFile(name = name, mimeType = ExportedFile.TEXT_MIME_TYPE, bytes = text.encodeToByteArray())
         }
         return exportedArchive(
             archiveRepository = archiveRepository,
@@ -52,10 +66,11 @@ internal class ExportSongsUseCaseImpl(
             entries = fileNames.map { fileName ->
                 {
                     songContentRepository.loadSongContent(fileName, useCache = false)?.let {
-                        ArchiveEntry(name = it.fileName, bytes = rewrite(it.fileName, it.text).encodeToByteArray())
+                        ArchiveEntry(name = it.fileName, bytes = images.named(rewrite(it.fileName, it.text)).encodeToByteArray())
                     }
                 }
             },
+            images = images,
             isDated = isDated,
         )
     }

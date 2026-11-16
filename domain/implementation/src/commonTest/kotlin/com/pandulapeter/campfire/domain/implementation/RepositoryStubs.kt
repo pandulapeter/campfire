@@ -280,6 +280,9 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
         }
     }
 
+    /** Puts [bytes] into the library, as an earlier Save would have, and answers its name. */
+    suspend fun store(bytes: ByteArray) = (libraryNameOf(bytes) as ImageIntake.Accepted).name.also { library[it] = bytes }
+
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
 
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()

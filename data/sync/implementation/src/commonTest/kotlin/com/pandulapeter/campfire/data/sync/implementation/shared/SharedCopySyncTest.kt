@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.data.sync.implementation.shared
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.sync.implementation.Device
 import com.pandulapeter.campfire.data.sync.implementation.FakeLibraryFileLocalSource
@@ -296,6 +298,85 @@ class SharedCopySyncTest {
         assertTrue(device.areSharedCopiesSettled)
     }
 
+    @Test
+    fun `a shared song gaining a picture rebuilds its copy with the picture and saving it again unchanged builds nothing`() = runTest {
+        val device = Device(library())
+        cloud.share(SONG)
+        device.sync(cloud)
+        assertFalse("images/" in cloud.copyOf(SONG.shareId))
+
+        val photo = picture("photo")
+        device.library.files[photo.first] = photo.second
+        device.library.files[song(1)] = "One\n{image: src=${photo.first.name}}".encodeToByteArray()
+        device.sync(cloud)
+        assertTrue("[images/${photo.first.name}]\nphoto" in cloud.copyOf(SONG.shareId))
+        val packs = device.sharedContents.packCount
+        val revision = cloud.sharedFiles.getValue(SONG.shareId).second
+
+        device.library.files[song(1)] = "One\n{image: src=${photo.first.name}}".encodeToByteArray()
+        device.sync(cloud)
+        assertEquals(packs, device.sharedContents.packCount)
+        assertEquals(revision, cloud.sharedFiles.getValue(SONG.shareId).second)
+    }
+
+    @Test
+    fun `a picture arriving that a shared song already names rebuilds its copy`() = runTest {
+        val photo = picture("photo")
+        val device = Device(library() + (song(1) to "One\n{image: src=${photo.first.name}}".encodeToByteArray()))
+        cloud.share(SONG)
+        // Another picture, so that the library holds one and the songs are read for the ones they name.
+        val other = picture("other")
+        device.library.files[other.first] = other.second
+        device.sync(cloud)
+        assertFalse("images/" in cloud.copyOf(SONG.shareId))
+
+        device.library.files[photo.first] = photo.second
+        device.sync(cloud)
+
+        assertTrue("[images/${photo.first.name}]\nphoto" in cloud.copyOf(SONG.shareId))
+        assertFalse(other.first.name in cloud.copyOf(SONG.shareId))
+    }
+
+    @Test
+    fun `a setlist's copy carries each picture its songs name once, after the songs and in the order of their names`() = runTest {
+        val first = picture("first")
+        val second = picture("second")
+        val (early, late) = listOf(first, second).sortedBy { it.first.name }
+        val device = Device(
+            library() + mapOf(
+                song(1) to "One\n{image: src=${late.first.name}}\n{image: src=${early.first.name}}".encodeToByteArray(),
+                song(2) to "Two\n{image: src=${late.first.name}}".encodeToByteArray(),
+                first.first to first.second,
+                second.first to second.second,
+            ),
+        )
+        cloud.share(SETLIST)
+        device.sync(cloud)
+
+        val copy = cloud.copyOf(SETLIST.shareId)
+        assertEquals(1, Regex.escape("[images/${late.first.name}]").toRegex().findAll(copy).count())
+        assertTrue(copy.indexOf("[song_2.cho]") < copy.indexOf("[images/${early.first.name}]"))
+        assertTrue(copy.indexOf("[images/${early.first.name}]") < copy.indexOf("[images/${late.first.name}]"))
+    }
+
+    @Test
+    fun `pictures past what a share may hold make the copy too large without packing it or reading them again`() = runTest {
+        val pictures = (1..4).map { index -> picture("$index".repeat(7 shl 20)) }
+        val device = Device(library() + pictures.associate { it } + (song(1) to ("One\n" + pictures.joinToString("\n") { "{image: src=${it.first.name}}" }).encodeToByteArray()))
+        cloud.share(SONG)
+        device.sync(cloud)
+        val copy = cloud.copyOf(SONG.shareId)
+        val packs = device.sharedContents.packCount
+
+        assertEquals(SharedLinksEntry.STATE_TOO_LARGE, cloud.entryOf(SONG.shareId).state)
+        assertEquals("copy", copy)
+        val reads = mutableListOf<SyncKey>()
+        device.library.onRead = { reads += it }
+        device.sync(cloud)
+        assertEquals(packs, device.sharedContents.packCount)
+        assertTrue(reads.none { key -> pictures.any { it.first == key } })
+    }
+
     /** A device with [library] whose setlist is shared, after the run that built its first copy. */
     private suspend fun sharedDevice() = Device(library()).also {
         cloud.share(SETLIST)
@@ -310,6 +391,13 @@ class SharedCopySyncTest {
 
     private companion object {
         val SETLIST = sharedEntry(shareId = "setlistshare0001", kind = SharedLinkKind.SETLIST, fileName = GIG.name, title = "Gig")
+        val SONG = sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = song(1).name, title = "One")
+
+        /** A picture of the library, named by its content as sync requires, and its bytes. */
+        fun picture(content: String): Pair<SyncKey, ByteArray> {
+            val bytes = content.encodeToByteArray()
+            return SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png") to bytes
+        }
         val ONE = "One".encodeToByteArray()
         val TWO = "Two".encodeToByteArray()
     }

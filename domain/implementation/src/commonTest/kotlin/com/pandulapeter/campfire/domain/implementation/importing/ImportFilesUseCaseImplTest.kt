@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
+import com.pandulapeter.campfire.domain.implementation.export.ExportSongsUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
@@ -860,6 +862,40 @@ class ImportFilesUseCaseImplTest {
         val stored = images.added.single()
         assertEquals(planned.length + 1, stored.length)
         assertEquals(setOf(stored), ChordProImages.referencedSources(songs.files.getValue("a.cho")))
+    }
+
+    @Test
+    fun `a song exported with its pictures imports into another library with its pictures under the same names and its text unchanged`() = runTest {
+        val source = FakeImageRepository()
+        val name = source.store(FakeImageRepository.picture(1))
+        val text = ChordProPrettifier.prettify("{title: A}\n{image: src=$name}\n")
+        val archive = FakeArchiveRepository()
+        ExportSongsUseCaseImpl(
+            songRepository = object : SongRepositoryStub() {
+                override fun importFileName(fallbackTitle: String, text: String) = "a.cho"
+            },
+            songContentRepository = object : SongContentRepositoryStub() {
+                override suspend fun loadSongContent(fileName: String, useCache: Boolean) = SongContent(fileName, text)
+            },
+            archiveRepository = archive,
+            exportFileRepository = FakeExportFileRepository(),
+            imageRepository = source,
+        ).invoke(listOf("a.cho"), isArchive = false, isDated = true) { _, text -> text }
+        // What unpacking finds for the song: the picture its directive names, in the archive's images/ folder.
+        val exported = ImportedFile(
+            name = "a.cho",
+            bytes = archive.packed.getValue("a.cho"),
+            images = listOf(ImportedImage(name, archive.packed.getValue("images/$name"), null)),
+        )
+        val songs = FakeSongRepository(mutableMapOf())
+        val target = FakeImageRepository()
+
+        val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(exported) }, images = target)(listOf(ImportedFile("a.zip", byteArrayOf(1))))
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, target).invoke(plan, ImportChoices())
+
+        assertEquals(text, songs.files.getValue("a.cho"))
+        assertEquals(source.library.keys, target.library.keys)
+        assertTrue(source.library.getValue(name).contentEquals(target.library.getValue(name)))
     }
 
     @Test

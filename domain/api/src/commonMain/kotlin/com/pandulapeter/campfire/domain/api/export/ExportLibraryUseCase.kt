@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 interface ExportLibraryUseCase {
 
     /**
-     * A zip of every song and setlist. Null when the library is empty **or could not be read**: an archive missing a
+     * A zip of every song and setlist, and the pictures the songs show under `images/`. Null when the library is empty **or could not be read**: an archive missing a
      * library it was supposed to contain is worse than no archive, since the user files it away as a backup.
      */
     suspend operator fun invoke(): Result?

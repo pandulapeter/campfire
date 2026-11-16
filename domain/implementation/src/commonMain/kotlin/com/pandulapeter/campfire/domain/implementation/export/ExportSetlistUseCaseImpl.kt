@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.domain.api.export.ExportSetlistUseCase
@@ -26,6 +27,7 @@ internal class ExportSetlistUseCaseImpl(
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,
     private val exportFileRepository: ExportFileRepository,
+    private val imageRepository: ImageRepository,
 ) : ExportSetlistUseCase {
 
     /**
@@ -40,11 +42,12 @@ internal class ExportSetlistUseCaseImpl(
         // name, and an import follows those names to wherever the songs land.
         // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
         val written = mutableSetOf(setlistFileName)
+        val images = ExportedImages.of(imageRepository)
         val songs = setlist.entries.map { entry ->
             suspend {
                 songContentRepository.loadSongContent(entry.songFileName, useCache = false)
                     ?.takeIf { written.add(it.fileName) }
-                    ?.let { ArchiveEntry(name = it.fileName, bytes = it.text.encodeToByteArray()) }
+                    ?.let { ArchiveEntry(name = it.fileName, bytes = images.named(it.text).encodeToByteArray()) }
             }
         }
         return exportedArchive(
@@ -54,6 +57,7 @@ internal class ExportSetlistUseCaseImpl(
             // is numbered where two setlists share one.
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
             entries = listOf<suspend () -> ArchiveEntry?>({ ArchiveEntry(name = setlistFileName, bytes = document.encodeToByteArray()) }) + songs,
+            images = images,
             isDated = isDated,
         )
     }

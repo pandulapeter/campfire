@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -32,6 +33,7 @@ internal class ExportLibraryUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val archiveRepository: ArchiveRepository,
     private val exportFileRepository: ExportFileRepository,
+    private val imageRepository: ImageRepository,
 ) : ExportLibraryUseCase {
 
     /**
@@ -60,6 +62,7 @@ internal class ExportLibraryUseCaseImpl(
         val setlistFileSizes = setlistRepository.loadSetlistFileSizes()
         if (songFileSizes.isEmpty() && setlistFileSizes.isEmpty()) return@withContext null
         val skipped = mutableListOf<String>()
+        val images = ExportedImages.of(imageRepository)
         val songNames = songFileSizes.keys.sorted()
         val batch = mutableMapOf<String, SongContent?>()
         val songs = songNames.mapIndexed { index, fileName ->
@@ -70,7 +73,7 @@ internal class ExportLibraryUseCaseImpl(
                 }
                 val content = batch.remove(fileName)
                 if (content == null) skipped += fileName
-                content?.let { ArchiveEntry(name = "$SONGS_DIRECTORY/$fileName", bytes = it.text.encodeToByteArray()) }
+                content?.let { ArchiveEntry(name = "$SONGS_DIRECTORY/$fileName", bytes = images.named(it.text).encodeToByteArray()) }
             }
         }
         val setlists = setlistFileSizes.keys.sorted().map { fileName ->
@@ -89,6 +92,7 @@ internal class ExportLibraryUseCaseImpl(
             exportFileRepository = exportFileRepository,
             name = ARCHIVE_NAME,
             entries = songs + setlists,
+            images = images,
             isDated = true,
         ) ?: return@withContext null
         ExportLibraryUseCase.Result(file = file, skippedFileNames = skipped)

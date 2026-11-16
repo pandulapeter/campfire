@@ -20,16 +20,27 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
  * whether the copy could differ from the one last built. The names are the ones the registry and the setlist document
  * spell, never this device's spelling of the file, so that every device makes the same fingerprint of the same files.
  *
+ * Last come the names of the library's pictures the copy's songs show, which is all a picture needs, its name being its
+ * content: what changes a copy is a picture arriving in the library, or leaving it, under a name the songs already gave,
+ * which no song's hash says. A copy showing none is fingerprinted as it was before pictures, so it is not built again for
+ * them.
+ *
  * @param songs The setlist's songs with their hashes, null for a song shared alone.
+ * @param images The pictures the copy carries, in the order it carries them.
  */
 internal fun sharedCopyFingerprint(
     kind: SharedLinkKind,
     fileName: String,
     hash: String,
     songs: List<Pair<String, String?>>?,
+    images: List<String>,
 ): String {
-    val lines = listOf("${kind.id} $fileName $hash") + songs.orEmpty().map { (name, songHash) -> "$name ${songHash ?: MISSING}" }
+    val lines = listOf("${kind.id} $fileName $hash") + songs.orEmpty().map { (name, songHash) -> "$name ${songHash ?: MISSING}" } +
+        images.map { "$IMAGE$it" }
     return localContentHash(lines.joinToString(separator = "\n").encodeToByteArray())
 }
 
 private const val MISSING = "-"
+
+/** Before a picture's name, which no song's file name can be mistaken for, since a song's never holds a `/`. */
+private const val IMAGE = "images/"

@@ -183,8 +183,8 @@ internal class SharedCopySync(
             val libraryKind = kind.libraryKind
             val indexed = index.find(libraryKind, entry.fileName)
             val localName = indexed?.key?.name ?: entry.fileName
-            // A song shared alone is judged by its index entry and not read at all; a setlist is the one file read, for
-            // the songs it names.
+            // A song shared alone is judged by its index entry and not read for that; a setlist is read for the songs it
+            // names. Their songs are read only for the pictures they name, below.
             val item = if (kind == SharedLinkKind.SETLIST || indexed == null) libraryFileLocalSource.readLibraryFile(libraryKind, localName) else null
             if ((kind == SharedLinkKind.SETLIST || indexed == null) && item == null) return orphan(entry)
             // A share newer than the listing, which could not have seen its copy.
@@ -192,11 +192,21 @@ internal class SharedCopySync(
             val songNames = item?.takeIf { kind == SharedLinkKind.SETLIST }?.let {
                 contents.setlistSongFileNames(it) ?: throw IllegalStateException("The setlist $localName cannot be read.")
             }
+            // The pictures are the one input the index cannot tell from a song's hash, since one a song names may have
+            // arrived since, so the songs are read for the names they give, but only where the library holds any picture.
+            val images = if (!index.hasImages) {
+                emptyList()
+            } else if (kind == SharedLinkKind.SETLIST) {
+                imagesNamedBy(songNames.orEmpty().mapNotNull { name -> libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name)) })
+            } else {
+                imagesNamedBy(listOfNotNull(item ?: libraryFileLocalSource.readLibraryFile(libraryKind, localName)))
+            }
             val expected = sharedCopyFingerprint(
                 kind = kind,
                 fileName = entry.fileName,
                 hash = item?.let(::localContentHash) ?: indexed!!.value.localHash,
                 songs = songNames?.map { name -> name to index.find(LibraryFileKind.SONG, name)?.value?.localHash },
+                images = images,
             )
             if (entry.isBuiltFrom(expected, remote)) {
                 if (entry.state == SharedLinksEntry.STATE_ORPHANED) changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_OK) }
@@ -217,15 +227,40 @@ internal class SharedCopySync(
             // The same files, in the same order and under the same names, as the export that made the first copy
             // (ExportSetlistUseCase or ExportSongsUseCase, undated), so that a copy of unchanged files is the same bytes.
             val files = linkedMapOf(entry.fileName to itemBytes)
+            val songTexts = mutableListOf<ByteArray>()
             val songs = songNames?.map { name ->
-                val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.find(LibraryFileKind.SONG, name)?.key?.name ?: name)
-                if (bytes != null && name !in files) files[name] = bytes
+                val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name))
+                if (bytes != null && name !in files) {
+                    files[name] = bytes
+                    songTexts += bytes
+                }
                 name to bytes?.let(::localContentHash)
             }
-            val inputs = sharedCopyFingerprint(kind = kind, fileName = entry.fileName, hash = localContentHash(itemBytes), songs = songs)
-            val copy = contents.pack(files)
+            // Then the pictures under images/, in the order of their names, as the export puts them, read one at a time
+            // and no further than the limit: a setlist of photos may name more than a phone has room for.
+            val intended = imagesNamedBy(if (kind == SharedLinkKind.SONG) listOf(itemBytes) else songTexts)
+            val included = mutableListOf<String>()
+            var size = files.values.sumOf { it.size.toLong() }
+            for (name in intended) {
+                if (size > ImportLimits.MAX_SHARED_COPY_SIZE) break
+                val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.FILE, index.localNameOf(name, LibraryFileKind.FILE)) ?: continue
+                files[IMAGES_FOLDER + name] = bytes
+                included += name
+                size += bytes.size
+            }
+            val isTooLarge = size > ImportLimits.MAX_SHARED_COPY_SIZE
+            // A copy too large is judged by what it was to hold, so that the next run finds nothing changed and reads no
+            // picture again; one that fits by what it holds, so that a picture it could not read is tried again.
+            val inputs = sharedCopyFingerprint(
+                kind = kind,
+                fileName = entry.fileName,
+                hash = localContentHash(itemBytes),
+                songs = songs,
+                images = if (isTooLarge) intended else included,
+            )
+            val copy = if (isTooLarge) null else contents.pack(files)
             // What every version opening a link downloads, and what the copy and its files may hold in memory here at once.
-            if (copy.size > ImportLimits.MAX_SHARED_COPY_SIZE || files.values.sumOf { it.size.toLong() } > ImportLimits.MAX_SHARED_COPY_SIZE) {
+            if (copy == null || copy.size > ImportLimits.MAX_SHARED_COPY_SIZE) {
                 // The file is left as it is, so the last version that fit keeps being served.
                 changes.update(entry.shareId) {
                     it.copy(state = SharedLinksEntry.STATE_TOO_LARGE, built = SharedCopyBuild(inputs = inputs, build = buildNumber))
@@ -262,6 +297,14 @@ internal class SharedCopySync(
             return built.hash?.let { it == remote.contentHash } ?: (state == SharedLinksEntry.STATE_TOO_LARGE)
         }
 
+        /**
+         * The library's pictures [songs] name, by the run's index, in the order of their names: what a copy carries besides
+         * its songs, and what its fingerprint names.
+         */
+        private suspend fun imagesNamedBy(songs: List<ByteArray>) = songs.flatMap { contents.imageNamesOf(it) }.toSet()
+            .filter { LibraryFiles.isLibraryImageName(it) && index.find(LibraryFileKind.FILE, it) != null }
+            .sorted()
+
         private fun orphan(entry: SharedLinksEntry) {
             if (entry.state != SharedLinksEntry.STATE_ORPHANED) changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_ORPHANED) }
         }
@@ -278,6 +321,12 @@ internal class SharedCopySync(
         private val entries by lazy { index.entries.associateBy { (key, _) -> key.kind to LibraryFiles.identityKey(key.name) } }
 
         fun find(kind: LibraryFileKind, name: String) = entries[kind to LibraryFiles.identityKey(name)]
+
+        /** This device's spelling of [name], where the index knows the file under another one. */
+        fun localNameOf(name: String, kind: LibraryFileKind = LibraryFileKind.SONG) = find(kind, name)?.key?.name ?: name
+
+        /** Whether the library held any picture at the end of the run, without which no song shows one. */
+        val hasImages by lazy { entries.keys.any { (kind, _) -> kind == LibraryFileKind.FILE } }
     }
 
     private val SharedLinkKind.libraryKind
@@ -285,4 +334,9 @@ internal class SharedCopySync(
             SharedLinkKind.SETLIST -> LibraryFileKind.SETLIST
             SharedLinkKind.SONG -> LibraryFileKind.SONG
         }
+
+    private companion object {
+        /** Where an archive keeps its pictures, as `ExportedImages` writes them. */
+        const val IMAGES_FOLDER = "images/"
+    }
 }
