@@ -65,7 +65,8 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
 - **Photos** (`pickPhotos`, `canPickPhotos`): Android's system photo picker, offered only where it is the system's own
   or Play services' backport (the manifest asks for it; elsewhere the contract would fall back to the documents UI,
   which Files is already), and iOS's PHPicker. Neither asks a permission. `pickImages` also offers HEIC and HEIF (and
-  AVIF on Android), which the editor converts. A picked photo is named by `pictureFileName`.
+  AVIF on Android), which the editor converts; the web only where the browser decodes HEIC
+  (`startHeicDecodingProbe`: Safari). A picked photo is named by `pictureFileName`.
 - Android pictures picked for a view model that is gone never become an import (a new song nobody asked for):
   `presentation/src/androidMain/CLAUDE.md`.
 - **Every picker must answer on every way its screen can go away** (an iOS sheet swiped off included):

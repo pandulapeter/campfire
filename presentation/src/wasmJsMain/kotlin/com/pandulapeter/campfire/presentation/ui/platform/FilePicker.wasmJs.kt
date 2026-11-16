@@ -51,8 +51,12 @@ internal object WebFilePicker : FilePicker {
     override suspend fun pickFiles(): List<ImportedFile> =
         openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
 
-    override suspend fun pickImages(): List<ImportedFile> =
-        openFileInput(accept = (PICTURE_MIME_TYPES + PICTURE_EXTENSIONS.map { ".$it" }).joinToString(",")).await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+    /** HEIC and HEIF only where the browser decodes them for the re-encoder to convert (Safari), never to be refused. */
+    override suspend fun pickImages(): List<ImportedFile> {
+        val converted = if (canDecodeHeic()) listOf("image/heic", "image/heif", ".heic", ".heif") else emptyList()
+        val accept = (PICTURE_MIME_TYPES + PICTURE_EXTENSIONS.map { ".$it" } + converted).joinToString(",")
+        return openFileInput(accept = accept).await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+    }
 
     /**
      * A download rather than a dialog: the browser decides where it lands, and there is no way to hear whether the
@@ -89,6 +93,10 @@ internal object WebFilePicker : FilePicker {
         SHARED -> true
         DISMISSED -> false
         else -> throw IllegalStateException("The browser refused to share the link (${result.removePrefix(REFUSED_PREFIX)}).")
+    }
+
+    init {
+        startHeicDecodingProbe()
     }
 }
 
