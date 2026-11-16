@@ -26,7 +26,9 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   column's width, the room (one page, so never cut), and `width` / `height` (points, or percent of the column's width
   or of the room); then `scale` of that. `align` left, centre (default), or right, physically.
 - Decoded by Coil from the loader's bytes at the size laid out (`SongPicture`, a fetcher on the request rather than the
-  app's image loader), never whole. The viewer (`ImageViewer`, a `Dialog`) decodes at twice the window, which is as far
+  app's image loader), never whole. A JPEG's EXIF orientation is applied by the decoder, as the header's size already is: Skia's
+  (desktop, iOS, web; tested on the desktop, `SongPictureOrientationTest`) and Coil's BitmapFactory decoder on Android,
+  which reads the type from the bytes, so nothing here turns a picture. The viewer (`ImageViewer`, a `Dialog`) decodes at twice the window, which is as far
   as zooming in stays sharp; zoom and pan are `ImageZoom` (tested).
 - **A missing picture** (no file, or one some platform cannot show) is `MissingImage`: the sentence, and Add image
   where `LocalSongImageAdder` is given (never in read only mode or a preview). The button keeps its room where hidden,
