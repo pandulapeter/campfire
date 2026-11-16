@@ -46,6 +46,7 @@ kotlin {
                 implementation(project(":data:repository:api"))
                 implementation(project(":data:source:local:api"))
                 implementation(project(":data:source:remote:api"))
+                implementation(project(":libs:chordpro"))
                 implementation(libs.kotlin.coroutines)
                 implementation(libs.kotlin.serialization.json)
             }

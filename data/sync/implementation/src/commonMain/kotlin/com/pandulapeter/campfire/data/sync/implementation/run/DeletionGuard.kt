@@ -26,8 +26,8 @@ internal object DeletionGuard {
      * answer waives only the guard it was given for, so a run that would empty both sides asks twice, once per run -
      * two questions about one folder are better than one answer that empties both of them.
      *
-     * @param planningIndexSize How many files the index the plan was made from knows.
-     * @param isLocalListingEmpty Whether this device listed no library file at all.
+     * @param planningIndexSize How many songs and setlists the index the plan was made from knows.
+     * @param isLocalListingEmpty Whether this device listed no song or setlist at all.
      */
     fun check(
         plan: List<SyncOperation>,
@@ -35,7 +35,9 @@ internal object DeletionGuard {
         isLocalListingEmpty: Boolean,
         policy: SyncDeletionPolicy,
     ): SyncEngine.Result.DeletionsNeedConfirmation? {
-        val localDeletions = plan.count { it is SyncOperation.DeleteLocal }
+        // Pictures follow the songs that name them, so a question about deleting much of a library counts what the user
+        // keeps: a song with three photos is one song.
+        val localDeletions = plan.count { it is SyncOperation.DeleteLocal && it.key.kind.isDocument }
         if (!policy.waivesLocalGuard && planningIndexSize > 0 && localDeletions.isTooManyToDeleteOutOf(planningIndexSize)) {
             return SyncEngine.Result.DeletionsNeedConfirmation(
                 count = localDeletions,
@@ -43,7 +45,7 @@ internal object DeletionGuard {
                 direction = SyncDeletionDirection.LOCAL,
             )
         }
-        val remoteDeletions = plan.count { it is SyncOperation.DeleteRemote }
+        val remoteDeletions = plan.count { it is SyncOperation.DeleteRemote && it.key.kind.isDocument }
         // A library folder that is gone rather than emptied looks exactly like one emptied on purpose: the JVM
         // storage recreates it and lists nothing, and iOS lists nothing for a directory that is not there. So an
         // empty local listing with an index that is not empty always asks, however small the library - the

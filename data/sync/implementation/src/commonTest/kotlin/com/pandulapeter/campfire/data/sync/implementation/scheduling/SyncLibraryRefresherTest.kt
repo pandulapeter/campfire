@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.sync.implementation.RecordingImageRepository
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.sync.implementation.RecordingSongRepository
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -28,7 +29,7 @@ class SyncLibraryRefresherTest {
     fun `the refresh a run ends with stops a live one and reads what it put back`() = runTest {
         var refreshCount = 0
         val songRepository = RecordingSongRepository(onRefresh = { if (++refreshCount == 1) awaitCancellation() })
-        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), testEnvironment())
+        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), RecordingImageRepository(), testEnvironment())
 
         refresher.onFileChanged(song("a"))
         refresher.scheduleLiveRefresh()
@@ -44,7 +45,7 @@ class SyncLibraryRefresherTest {
     @Test
     fun `a live refresh asked for inside the pause waits for its end`() = runTest {
         val songRepository = RecordingSongRepository()
-        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), testEnvironment())
+        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), RecordingImageRepository(), testEnvironment())
 
         refresher.onFileChanged(song("a"))
         refresher.scheduleLiveRefresh()
@@ -61,7 +62,7 @@ class SyncLibraryRefresherTest {
     @Test
     fun `a live refresh with nothing to read starts no pause`() = runTest {
         val songRepository = RecordingSongRepository()
-        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), testEnvironment())
+        val refresher = SyncLibraryRefresher(songRepository, RecordingSetlistRepository(), RecordingImageRepository(), testEnvironment())
 
         refresher.scheduleLiveRefresh()
         runCurrent()

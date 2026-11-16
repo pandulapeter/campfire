@@ -9,12 +9,12 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.data.sync.implementation.LocalFileState
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -26,7 +26,6 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
-import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
@@ -84,6 +83,7 @@ internal class SyncEngine(
 ) {
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
+    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, ::downloadWithinLimit)
 
     suspend fun synchronize(
         provider: SyncFolder,
@@ -127,7 +127,7 @@ internal class SyncEngine(
             documentRevisions = listing.documentRevisions
             sharedFiles = listing.sharedFiles
             index = withoutForeignEntries(index = index, listed = listed)
-            val localListing = readLocalStates()
+            val localListing = readLocalListing(libraryFileLocalSource, logger, maxSize = MAXIMUM_FILE_SIZE, batchSize = READ_BATCH_SIZE)
             val tooLarge = localListing.tooLarge
             val unreadable = localListing.unreadable
             if (pass == 0) summary = summary.plus(SyncSummary(failed = tooLarge.map { it.name }))
@@ -153,7 +153,7 @@ internal class SyncEngine(
             // which no number of runs will change. Split off before the names are folded, so that such a name is never
             // matched onto a local one either.
             if (pass == 0) summary = summary.plus(SyncSummary(failed = prepared.unstorable))
-            val plan = SyncPlanner.plan(local = local, remote = remote, index = planningIndex)
+            val plan = SyncPlanner.plan(local = local, remote = remote, index = planningIndex, imageReferences = localListing.imageReferences)
             logger.log("Sync: pass ${pass + 1}, ${remote.size} files in the folder and ${local.size} here: ${plan.describedForLog()}")
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) {
@@ -162,8 +162,8 @@ internal class SyncEngine(
             }
             DeletionGuard.check(
                 plan = plan,
-                planningIndexSize = planningIndex.size,
-                isLocalListingEmpty = local.isEmpty(),
+                planningIndexSize = planningIndex.keys.count { it.kind.isDocument },
+                isLocalListingEmpty = local.none { it.key.kind.isDocument },
                 policy = deletionPolicy,
             )?.let { question ->
                 logger.log("Sync: stopped to ask before ${question.count} of ${question.total} files are deleted (${question.direction})")
@@ -204,53 +204,6 @@ internal class SyncEngine(
             ),
         )
     }
-
-    /**
-     * Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. A file
-     * over [MAXIMUM_FILE_SIZE] is not read at all: nothing the app writes is that large, so it was put into the folder
-     * from outside, and it is no song any other device would download.
-     *
-     * A file whose read fails is one file's failure, like any other in a run, and is handed back as unreadable rather
-     * than left out: left out, it would be a file gone from this device, which the planner carries out as a deletion
-     * on every other one. Only a library of which not one file could be read ends the run, since that is the storage
-     * failing rather than a file.
-     */
-    private suspend fun readLocalStates(): LocalListing = coroutineScope {
-        val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > MAXIMUM_FILE_SIZE }
-        tooLarge.forEach { logger.log("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
-        // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is
-        // thousands of open handles and all of its bytes in memory at once.
-        val reads = files
-            .chunked(READ_BATCH_SIZE)
-            .flatMap { batch -> batch.map { file -> async { readLocalState(SyncKey(kind = file.kind, name = file.name)) } }.awaitAll() }
-        val states = reads.mapNotNull { (it as? LocalRead.Read)?.state }
-        val failures = reads.filterIsInstance<LocalRead.Failed>()
-        if (states.isEmpty() && failures.isNotEmpty()) throw failures.first().exception
-        LocalListing(
-            states = states,
-            tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
-            unreadable = failures.mapTo(mutableSetOf()) { it.key },
-        )
-    }
-
-    private suspend fun readLocalState(key: SyncKey): LocalRead = logger.recovering(
-        describe = { "Could not read \"${key.path}\": ${it.message}" },
-        fallback = { LocalRead.Failed(key, it) },
-    ) {
-        libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-            ?.let { LocalRead.Read(LocalFileState(key = key, hash = localContentHash(it))) }
-            ?: LocalRead.Absent
-    }
-
-    /** What reading one listed file came to. [Absent] is a file deleted since the listing, which really is gone. */
-    private sealed interface LocalRead {
-        class Read(val state: LocalFileState) : LocalRead
-        data object Absent : LocalRead
-        class Failed(val key: SyncKey, val exception: Exception) : LocalRead
-    }
-
-    /** What [readLocalStates] found: the files it read, the ones it left alone for their size, and the ones it could not read. */
-    private class LocalListing(val states: List<LocalFileState>, val tooLarge: Set<SyncKey>, val unreadable: Set<SyncKey>)
 
     /**
      * Every operation is at least one request of its own, and they used to be run one after another - which made a
@@ -313,9 +266,15 @@ internal class SyncEngine(
 
     private suspend fun runOperation(pass: SyncPass, operation: SyncOperation): OperationOutcome = try {
         when (operation) {
-            is SyncOperation.Download -> download(pass, operation)
-            is SyncOperation.Upload -> upload(pass, operation)
-            is SyncOperation.Resolve -> resolve(pass, operation, isFirstMeeting = operation.key !in pass.index)
+            // A picture's name is its content, so both sides holding one hold the same picture or one of them is damaged:
+            // there is never a conflict to keep two versions of.
+            is SyncOperation.Download -> if (operation.isImage) imageTransfers.bringDown(pass, operation.key, operation.revision) else download(pass, operation)
+            is SyncOperation.Upload -> if (operation.isImage) imageTransfers.sendUp(pass, operation) else upload(pass, operation)
+            is SyncOperation.Resolve -> if (operation.isImage) {
+                imageTransfers.bringDown(pass, operation.key, operation.revision)
+            } else {
+                resolve(pass, operation, isFirstMeeting = operation.key !in pass.index)
+            }
             is SyncOperation.DeleteLocal -> deleteLocally(pass, operation)
 
             is SyncOperation.DeleteRemote -> deleteRemotely(pass, listOf(operation)).single().second
@@ -381,9 +340,9 @@ internal class SyncEngine(
         // copied across by hand before sync was set up. Nothing has to travel for that, only the index.
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
         if (local != null && isSameContent(pass, local, pass.remoteFiles[key]?.contentHash)) {
-            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
+            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localHashOf(key, local), operation.revision)))
         }
-        if (local != null && localContentHash(local) != index[key]?.localHash) {
+        if (local != null && localHashOf(key, local) != index[key]?.localHash) {
             // Not the file the last run saw. With an index entry it was edited since the listing; with none it was not
             // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
             // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
@@ -424,7 +383,7 @@ internal class SyncEngine(
         // between, and an index naming the older revision for the newer content would make this device's next edit of
         // it a conflict with its own previous version.
         return OperationOutcome(
-            entries = mapOf(key to SyncIndexEntry(localContentHash(downloaded.bytes), downloaded.revision)),
+            entries = mapOf(key to SyncIndexEntry(localHashOf(key, downloaded.bytes), downloaded.revision)),
             summary = SyncSummary(downloaded = 1),
         )
     }
@@ -441,7 +400,7 @@ internal class SyncEngine(
             val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
             when {
                 local == null -> OperationOutcome(removals = setOf(key))
-                localContentHash(local) != pass.index[key]?.localHash -> null
+                localHashOf(key, local) != pass.index[key]?.localHash -> null
                 else -> {
                     // Finished together once started, as in [download].
                     withContext(NonCancellable) {
@@ -461,7 +420,7 @@ internal class SyncEngine(
         val bytes = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
         return when (val result = pass.run.provider.upload(key.kind, key.name, bytes, operation.expectedRevision)) {
             is RemoteWriteResult.Written -> OperationOutcome(
-                entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), result.revision)),
+                entries = mapOf(key to SyncIndexEntry(localHashOf(key, bytes), result.revision)),
                 summary = SyncSummary(uploaded = 1),
             )
 
@@ -500,7 +459,7 @@ internal class SyncEngine(
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
         // The two sides changed to the same thing, which is not a conflict at all - the same edit made twice.
         if (isSameContent(pass, local, pass.remoteFiles[key]?.contentHash)) {
-            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
+            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localHashOf(key, local), operation.revision)))
         }
         val remote = downloadWithinLimit(pass, key)
         // Uploaded over the revision it was compared with, so that a version that moved on again since is a conflict.
@@ -553,7 +512,7 @@ internal class SyncEngine(
             ) {
                 libraryFileLock.withLock {
                     val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-                    if (isStillRemote && local != null && localContentHash(local) == entry.localHash) {
+                    if (isStillRemote && local != null && localHashOf(key, local) == entry.localHash) {
                         libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
                     }
                 }
@@ -561,6 +520,8 @@ internal class SyncEngine(
         }
         return index - foreign.keys
     }
+
+    private val SyncOperation.isImage get() = key.kind == LibraryFileKind.FILE
 
     private val SyncOperation.order
         get() = when (this) {

@@ -57,8 +57,9 @@ class SyncPlannerUpgradeFrom520Test {
 
     private fun indexText() = File(fixture, "preferences/sync-index.json").readText()
 
+    /** 5.2.0 had no pictures, so its library has no folder for them. */
     private fun localFiles() = LibraryFileKind.entries.flatMap { kind ->
-        requireNotNull(File(fixture, "library/${kind.id}").listFiles()).map { file ->
+        File(fixture, "library/${kind.id}").listFiles().orEmpty().map { file ->
             LocalFileState(key = SyncKey(kind = kind, name = file.name), hash = localContentHash(file.readBytes()))
         }
     }

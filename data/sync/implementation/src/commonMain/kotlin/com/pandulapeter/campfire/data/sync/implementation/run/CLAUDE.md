@@ -44,3 +44,10 @@
 - **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
   failed or still contested file keeps `lastSyncedAt` where it was. A run ending in a non-`Exception` throwable rescans
   the whole library if any operation had finished, since it may have come mid-write.
+- **Pictures** (`LibraryFileKind.FILE`, named by content): never a conflict and never renamed.
+  - Not read by the listing: the size stands for the hash (`localImageHash`), so a same-size damage goes unnoticed. Every
+    transfer checks the bytes against the name (`ImageTransfers`): a damaged copy is never uploaded or written, and is
+    replaced from the other side where that side's copy is intact; two intact copies of one name need only the index.
+  - **A reference beats a deletion** (`SyncPlanner.withImagesKept`): a picture a song here names is uploaded or
+    downloaded again instead of deleted. A pass that brings a song down, deletes one here, or follows an unreadable song
+    deletes no picture on either side; the next run does. The deletion guard counts songs and setlists only.

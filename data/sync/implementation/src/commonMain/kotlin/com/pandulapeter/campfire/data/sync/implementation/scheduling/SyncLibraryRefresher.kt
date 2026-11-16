@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import kotlinx.coroutines.CancellationException
@@ -42,6 +43,7 @@ import kotlin.time.TimeMark
 internal class SyncLibraryRefresher(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
+    private val imageRepository: ImageRepository,
     private val environment: SyncEnvironment,
 ) {
 
@@ -103,6 +105,7 @@ internal class SyncLibraryRefresher(
     suspend fun rescanLibrary() {
         songRepository.rescan()
         setlistRepository.rescan()
+        imageRepository.onLibraryImagesChanged()
     }
 
     /**
@@ -116,6 +119,7 @@ internal class SyncLibraryRefresher(
         try {
             songRepository.refresh(keys.namesOf(LibraryFileKind.SONG))
             setlistRepository.refresh(keys.namesOf(LibraryFileKind.SETLIST))
+            if (keys.any { it.kind == LibraryFileKind.FILE }) imageRepository.onLibraryImagesChanged()
         } catch (exception: CancellationException) {
             withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
             throw exception
