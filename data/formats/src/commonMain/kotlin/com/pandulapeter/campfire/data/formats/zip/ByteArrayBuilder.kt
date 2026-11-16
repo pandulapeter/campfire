@@ -34,10 +34,12 @@ internal class ByteArrayBuilder(initialCapacity: Int = 64) {
         u8(((value ushr 24) and 0xFF).toInt())
     }
 
-    fun bytes(value: ByteArray) {
-        ensureCapacity(value.size)
-        value.copyInto(buffer, size)
-        size += value.size
+    fun bytes(value: ByteArray) = bytes(value, 0, value.size)
+
+    fun bytes(value: ByteArray, offset: Int, length: Int) {
+        ensureCapacity(length)
+        value.copyInto(buffer, size, offset, offset + length)
+        size += length
     }
 
     /** Appends what [value] holds so far, without the copy [build] would make. */
@@ -46,6 +48,9 @@ internal class ByteArrayBuilder(initialCapacity: Int = 64) {
         value.buffer.copyInto(buffer, size, 0, value.size)
         size += value.size
     }
+
+    /** Hands what the buffer holds so far to [sink], without the copy [build] would make. */
+    suspend fun writeTo(sink: ZipSink) = sink.write(buffer, 0, size)
 
     /** Empties the buffer and keeps its capacity, for the next entry. */
     fun clear() {
