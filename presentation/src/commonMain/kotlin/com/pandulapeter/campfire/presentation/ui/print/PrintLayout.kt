@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.chords.ChordDiagramGeometry
 import com.pandulapeter.campfire.presentation.ui.songLayout.balancedRowStarts
 import com.pandulapeter.campfire.presentation.ui.songLayout.joinCutSections
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
 import com.pandulapeter.campfire.presentation.ui.songLayout.withNumberedSections
 import kotlinx.coroutines.yield
 
@@ -55,12 +56,14 @@ internal suspend fun layoutPrintDocument(
     measureText: (text: String, style: PrintStyle) -> Float,
     notations: Map<String, Map<AbcTune, NotationDrawing>> = emptyMap(),
     measureLyric: PrintLyricMeasure? = null,
+    imageSizes: Map<String, SongImageSize> = emptyMap(),
 ): PrintDocument = PrintLayouter(
     options = settings.normalized(),
     labels = labels,
     measureText = measureText,
     measureLyric = measureLyric,
     notations = notations,
+    imageSizes = imageSizes,
 ).layout(source)
 
 /** How wide a column of the song sheets is, in PDF points: what an engraved tune is rendered for. */
@@ -88,6 +91,7 @@ private class PrintLayouter(
     measureText: (text: String, style: PrintStyle) -> Float,
     measureLyric: PrintLyricMeasure?,
     private val notations: Map<String, Map<AbcTune, NotationDrawing>>,
+    imageSizes: Map<String, SongImageSize>,
 ) {
     private val width = if (options.isLandscape) options.paper.height else options.paper.width
     private val height = if (options.isLandscape) options.paper.width else options.paper.height
@@ -111,7 +115,7 @@ private class PrintLayouter(
         capacity = capacity,
         measureText = measureText,
         measureLyric = measureLyric,
-    )
+    ).also { it.imageSizes = imageSizes }
 
     private val pages = mutableListOf<PageContent>()
     private var column = 0
@@ -184,6 +188,7 @@ private class PrintLayouter(
             row.boxes.forEach { box -> pages.last().boxes.add(box.copy(x = x + box.x, y = y + box.y)) }
             row.diagrams.forEach { diagram -> pages.last().diagrams.add(diagram.copy(x = x + diagram.x, y = y + diagram.y)) }
             row.notations.forEach { notation -> pages.last().notations.add(notation.copy(x = x + notation.x, y = y + notation.y)) }
+            row.images.forEach { image -> pages.last().images.add(image.copy(x = x + image.x, y = y + image.y)) }
             y += row.height
         }
     }
@@ -436,7 +441,7 @@ private class PrintLayouter(
                 } else {
                     page.texts
                 }
-                PrintPage(texts, page.rules, page.boxes, page.diagrams, page.notations)
+                PrintPage(texts, page.rules, page.boxes, page.diagrams, page.notations, page.images)
             },
         )
     }
@@ -471,9 +476,10 @@ private class PageContent {
     val boxes = mutableListOf<PrintBox>()
     val diagrams = mutableListOf<PrintDiagram>()
     val notations = mutableListOf<PrintNotation>()
+    val images = mutableListOf<PrintImage>()
 
     /** Whether anything was put on the page: a staff system alone, a tune running on past a page, is something. */
-    val hasContent get() = texts.isNotEmpty() || notations.isNotEmpty()
+    val hasContent get() = texts.isNotEmpty() || notations.isNotEmpty() || images.isNotEmpty()
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()

@@ -59,6 +59,9 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   the song's; "2 (chords as they sound)" otherwise, read back as the shapes over the same capo; diagrams drawn above the
   printed capo); tempo and time with `showTempo`, which also prints later changes. **Values are three spaces apart**, so
   the importer reads them back one by one. A value too wide for its row wraps.
+- **A picture** is a row of its own, fitted as on screen (`ui/pictures`, a pixel a point) to the column and to a
+  column's height, so never cut; its sizes are read for the layout (`PrintRenderer.imageSizesOf`). One the library lacks
+  prints the placeholder's sentence, never selectable (read back it would be a lyric).
 - `showMetadata` is the song sheets' artist; the running order has `showOverviewDetails` (read as `showMetadata` from a
   file older than it) and `overviewColumns`, its list under a heading spanning the page.
 
@@ -91,12 +94,15 @@ Campfire's PDFs back, so much here exists to keep the text layer importable.
   systems a page draws (painted one system at a time, never a whole tune) are cached by page (the 8 drawn last), never
   by text or tune: a frame's pages always fit, while a frame drawing more texts than a per-text bound misses every one.
 - Diagrams draw in black (root mid gray), thinnest line one page pixel.
+- Pictures (`PrintPictures`, one per export screen, shared by its renderers) are decoded by Coil at the size drawn: a
+  file's page decodes its own before it is drawn, the preview at 1.5 pixels a point in the background (a pale box
+  until then), the last 12 kept.
 
 ### Writer
 
-- Each page a 4-bit gray image (16 levels print like 256), compressed by `:data:formats`' `Deflater` (pure Kotlin: no
-  platform offers common code a compressor; the zip writer uses it too), wrapped as zlib by `deflateZlib`, which also
-  packs the share link's QR PNG.
+- Each page a 4-bit gray image (16 levels print text and lines like 256), a page holding a picture 8-bit (sixteen band
+  a photo), compressed by `:data:formats`' `Deflater` (pure Kotlin: no platform offers common code a compressor; the zip
+  writer uses it too), wrapped as zlib by `deflateZlib`, which also packs the share link's QR PNG.
 - Invisible text (`3 Tr`) at the shaped rectangles, with tiny glyphless Type 3 fonts and ToUnicode maps, so exports are
   searchable, copyable, and reimportable without OCR. Runs on one baseline, font, and size share one `TJ` with explicit
   advances, or PDFium reads dense columns as vertical text. Fonts keep bold and monospace classification for import and

@@ -273,9 +273,19 @@ internal data class PrintNotation(
     val scale: Float,
 )
 
+/** A picture a song names, the library's file [name], drawn into the [width] by [height] box at [x], [y], in PDF points. */
+internal data class PrintImage(
+    val name: String,
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+)
+
 /**
  * Everything on one page, in PDF points from its top left corner; the boxes are drawn first, then the rules, both under
- * the texts and the diagrams.
+ * the texts and the diagrams, and the pictures first of all. A page holding a picture is written in 256 grays, every
+ * other in sixteen ([PrintPdfWriter]).
  */
 internal data class PrintPage(
     val texts: List<PrintText>,
@@ -283,6 +293,7 @@ internal data class PrintPage(
     val boxes: List<PrintBox> = emptyList(),
     val diagrams: List<PrintDiagram> = emptyList(),
     val notations: List<PrintNotation> = emptyList(),
+    val images: List<PrintImage> = emptyList(),
 )
 
 /** The pages of one export, all of one size, which is the paper's in PDF points turned for the orientation. */
@@ -333,6 +344,8 @@ internal data class PrintLabels(
      * played above it.
      */
     val capoSounding: String = "$LABELLED_VALUE (chords as they sound)",
+    /** What a picture the library lacks prints as ("Image not found: photo.jpg"), [LABELLED_VALUE] standing for its name. */
+    val imageNotFound: String = "Image not found: $LABELLED_VALUE",
 ) {
     /** [value] after [label], as [labelledValue] puts it. */
     fun labelled(label: String, value: String) = labelledValue.replace(LABELLED_LABEL, label).replace(LABELLED_VALUE, value)
@@ -342,6 +355,9 @@ internal data class PrintLabels(
 
     /** [capo] over chords named as they sound, as [capoSounding] puts it. */
     fun capoSounding(capo: String) = capoSounding.replace(LABELLED_VALUE, capo)
+
+    /** The sentence a picture called [name] the library lacks prints as, see [imageNotFound]. */
+    fun imageNotFound(name: String) = imageNotFound.replace(LABELLED_VALUE, name)
 }
 
 /** What [PrintLabels.tempoValue] holds in place of the number. */

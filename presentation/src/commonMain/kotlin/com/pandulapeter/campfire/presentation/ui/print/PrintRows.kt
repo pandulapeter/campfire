@@ -21,6 +21,9 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.pictures.SongImageSize
+import com.pandulapeter.campfire.presentation.ui.pictures.fittedImageSize
+import com.pandulapeter.campfire.presentation.ui.pictures.imageLeftEdge
 import com.pandulapeter.campfire.presentation.ui.songLayout.FoldableKind
 import com.pandulapeter.campfire.presentation.ui.songLayout.firstSection
 import com.pandulapeter.campfire.presentation.ui.songLayout.foldableKind
@@ -69,6 +72,9 @@ internal class PrintRows(
     /** The engraved ABC tunes of the song being laid out, by tune; a run with none prints as its text. */
     var notations: Map<AbcTune, NotationDrawing> = emptyMap()
 
+    /** What the pictures the songs name were read as, by name; one missing here prints as missing. */
+    var imageSizes: Map<String, SongImageSize> = emptyMap()
+
     // Chord names, spaces and the other short strings are measured over and over; only they are kept, so that the
     // substrings of lyrics the wrapping tries are not held for the life of a large setlist.
     private val shortMeasurements = mutableMapOf<Pair<String, PrintStyle>, Float>()
@@ -98,8 +104,20 @@ internal class PrintRows(
         is ChordProBlock.Transpose -> listOf(keyChangeRows(first, width))
         is ChordProBlock.Timing -> listOf(timingRows(first, width))
         ChordProBlock.Break -> listOf(emptyList())
-        // A picture prints nothing, so it is a segment that prints nothing, as a break is.
-        is ChordProBlock.Image -> listOf(emptyList())
+        is ChordProBlock.Image -> listOf(imageRows(first, width))
+    }
+
+    /**
+     * A picture as a row of its own, fitted as the screen fits it (`fittedImageSize`, a pixel a point) to the column and
+     * to a column's height, so it is never cut. One the library lacks prints the placeholder's sentence, never in the
+     * text layer: read back, it would be a line of the song.
+     */
+    private fun imageRows(image: ChordProBlock.Image, width: Float): List<Row> {
+        val size = imageSizes[image.src] as? SongImageSize.Known ?: return wrapped(labels.imageNotFound(image.src), commentStyle, width, isSelectable = false)
+        val fitted = fittedImageSize(image, size.width, size.height, unit = 1f, columnWidth = width, maxHeight = capacity)
+        if (fitted.width <= 0f || fitted.height <= 0f) return emptyList()
+        val x = imageLeftEdge(image.alignment, width, fitted.width)
+        return listOf(Row(parts = emptyList(), height = fitted.height, images = listOf(PrintImage(image.src, x, y = 0f, fitted.width, fitted.height))))
     }
 
     /**
@@ -423,6 +441,7 @@ internal data class Row(
     val diagrams: List<PrintDiagram> = emptyList(),
     val notations: List<PrintNotation> = emptyList(),
     val boxes: List<PrintBox> = emptyList(),
+    val images: List<PrintImage> = emptyList(),
 )
 
 /**

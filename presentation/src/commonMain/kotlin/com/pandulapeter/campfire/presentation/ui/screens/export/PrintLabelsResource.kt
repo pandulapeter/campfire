@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpositi
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.resources.song_image_not_found
 import com.pandulapeter.campfire.presentation.ui.chords.chordTuningLabel
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.localization.plainTextResource
@@ -56,6 +57,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
     val scales = stringResource(Res.string.scales)
     val capoWithShapes = plainTextResource(Res.string.song_details_capo_shapes, LABELLED_VALUE, SHAPES_KEY)
     val capoSounding = plainTextResource(Res.string.print_capo_sounding, LABELLED_VALUE)
+    val imageNotFound = plainTextResource(Res.string.song_image_not_found, LABELLED_VALUE)
     val sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true)
     val chordTuning = preferences?.let { preferences ->
         preferences.chordTuning()?.let { tuning ->
@@ -69,7 +71,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             ).joinToString(" · ").ifEmpty { null }
         }
     }
-    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue, capoWithShapes, capoSounding) {
+    return remember(key, transposition, capo, tempo, tempoValue, time, missing, sections, chordTuning, scales, labelledValue, capoWithShapes, capoSounding, imageNotFound) {
         PrintLabels(
             key = key,
             transposition = transposition,
@@ -84,6 +86,7 @@ internal fun rememberPrintLabels(preferences: UserPreferences?): PrintLabels {
             labelledValue = labelledValue,
             capoWithShapes = capoWithShapes,
             capoSounding = capoSounding,
+            imageNotFound = imageNotFound,
         )
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
@@ -56,14 +57,19 @@ import kotlin.math.ceil
  * Draws and measures the texts of a [PrintDocument]. [textFontFamily] is the face the viewer sets lyrics in, and
  * [monospaceFontFamily] the one of its tablature and grids, so that the page reads like the screen. Every character of a
  * script of [scriptFontFamilies] is set in that script's bundled face rather than in whatever face the platform's text
- * engine falls back to, so that a PDF is the same on every platform.
+ * engine falls back to, so that a PDF is the same on every platform. The songs' pictures come from [pictures], none
+ * where it is null (each then a pale box).
  */
 internal class PrintRenderer(
     private val measurer: TextMeasurer,
     private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
     private val textFontFamily: FontFamily = FontFamily.Default,
     private val scriptFontFamilies: List<Pair<ScriptFace, FontFamily>> = emptyList(),
+    private val pictures: PrintPictures? = null,
 ) {
+
+    /** What the pictures [source]'s songs name were read as, which the layout fits them by. */
+    suspend fun imageSizesOf(source: PrintSource) = pictures?.sizesOf(source).orEmpty()
     /** The engraved tunes' outlines and words, laid out in [textFontFamily] in PDF points as the texts are. */
     private val notationPainter = NotationPainter(
         textMeasurer = measurer,
@@ -149,10 +155,20 @@ internal class PrintRenderer(
         )
     }
 
-    /** Draws [page] on white, [scale] being the size of a PDF point in the pixels of [scope]. */
-    fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
+    /**
+     * Draws [page] on white, [scale] being the size of a PDF point in the pixels of [scope], its pictures from [decoded]
+     * (the file's, decoded for the page) or else as the preview has them.
+     */
+    fun draw(scope: DrawScope, page: PrintPage, scale: Float, decoded: Map<PrintImage, Painter?>? = null) = with(scope) {
         drawRect(Color.White)
         scale(scale, scale, pivot = Offset.Zero) {
+            page.images.forEach { image ->
+                val painter = if (decoded != null) decoded[image] else pictures?.previewPainterOf(image)
+                translate(image.x, image.y) {
+                    val size = Size(image.width, image.height)
+                    if (painter == null) drawRect(PICTURE_PLACEHOLDER_COLOR, size = size) else with(painter) { draw(size) }
+                }
+            }
             page.boxes.forEach { box -> drawBox(box) }
             page.rules.forEach { rule ->
                 drawRect(
@@ -259,19 +275,24 @@ internal class PrintRenderer(
         val drawScope = CanvasDrawScope()
         val pixels = IntArray(width * PDF_BAND_ROWS)
         val packed = ByteArray(printRowBytes(width) * height)
+        // A page holding a picture is written in 256 grays, which sixteen would posterize; made for the first such page.
+        var packedGray: ByteArray? = null
         document.pages.forEachIndexed { index, page ->
             coroutineContext.ensureActive()
+            val isGray = page.images.isNotEmpty()
+            val decoded = if (isGray) pictures?.decodedFor(page, scale).orEmpty() else null
+            val pagePacked = if (isGray) packedGray ?: ByteArray(width * height).also { packedGray = it } else packed
             drawScope.draw(Density(1f), LayoutDirection.Ltr, canvas, Size(width.toFloat(), height.toFloat())) {
-                draw(this, page, scale)
+                draw(this, page, scale, decoded)
             }
             for (top in 0 until height step PDF_BAND_ROWS) {
                 coroutineContext.ensureActive()
                 yield()
                 val rows = minOf(PDF_BAND_ROWS, height - top)
                 bitmap.readPixels(pixels, startY = top, width = width, height = rows)
-                packPrintRows(pixels, width, rows, packed, firstRow = top)
+                if (isGray) packGrayRows(pixels, width, rows, pagePacked, firstRow = top) else packPrintRows(pixels, width, rows, packed, firstRow = top)
             }
-            writer.addPage(width, height, packed, selectableText(page))
+            writer.addPage(width, height, pagePacked, selectableText(page), bitsPerComponent = if (isGray) 8 else 4)
             onPage(index + 1)
             yield()
         }
@@ -304,6 +325,9 @@ private fun String.withSpans(formatting: List<Formatting>, scriptFontFamilies: L
 // keyboard's other pressed keys are mixed from it and white, and lighter than the black of every other dot.
 private val DIAGRAM_ROOT_COLOR = Color(110, 110, 110)
 private val DIAGRAM_MUTED_COLOR = Color(90, 90, 90)
+
+/** Where a picture that cannot be decoded, or is still being decoded for the preview, stands. */
+private val PICTURE_PLACEHOLDER_COLOR = Color(230, 230, 230)
 
 /** The rows of a page read out of the bitmap at a time, which is as often as an export checks whether it was cancelled. */
 private const val PDF_BAND_ROWS = 64

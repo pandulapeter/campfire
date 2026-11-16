@@ -73,6 +73,7 @@ internal fun produceLaidOutDocument(
                     measureText = measurements::width,
                     notations = notations,
                     measureLyric = measurements::lyricLayout,
+                    imageSizes = measurements.imageSizesOf(input),
                 )
             }
             value = LaidOutDocument(

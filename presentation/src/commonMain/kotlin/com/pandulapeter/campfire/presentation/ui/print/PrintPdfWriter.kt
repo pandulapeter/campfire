@@ -16,7 +16,7 @@ import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
 
 /**
- * A portable PDF 1.4 writer. Pages are 16-level grayscale images at 216 dpi, so the PDF retains the exact glyphs, chord
+ * A portable PDF 1.4 writer. Pages are 16-level grayscale images at 216 dpi (256 levels where a page holds a picture), so the PDF retains the exact glyphs, chord
  * placement and fallback fonts of the preview on every platform; sixteen grays are indistinguishable from 256 on paper
  * at that resolution, and they halve what Flate has to compress. No platform printing service, external process,
  * network request or third-party PDF library is needed. Invisible Type 3 text uses the renderer's selection rectangles
@@ -93,16 +93,18 @@ internal class PrintPdfWriter(
     }
 
     /**
-     * Adds a page from [packed], the rows of [packPrintRows]. The pixels are compressed into the writer's own output
-     * before this returns, so the caller may reuse the array for the next page.
+     * Adds a page from [packed], the rows of [packPrintRows], or of [packGrayRows] for a page of 8 [bitsPerComponent]
+     * (one holding a picture). The pixels are compressed into the writer's own output before this returns, so the caller
+     * may reuse the array for the next page.
      */
-    suspend fun addPage(pixelWidth: Int, pixelHeight: Int, packed: ByteArray, text: List<PrintPdfText> = emptyList()) {
-        require(pixelWidth > 0 && pixelHeight > 0 && packed.size == printRowBytes(pixelWidth) * pixelHeight)
+    suspend fun addPage(pixelWidth: Int, pixelHeight: Int, packed: ByteArray, text: List<PrintPdfText> = emptyList(), bitsPerComponent: Int = 4) {
+        val rowBytes = if (bitsPerComponent == 8) pixelWidth else printRowBytes(pixelWidth)
+        require(pixelWidth > 0 && pixelHeight > 0 && (bitsPerComponent == 4 || bitsPerComponent == 8) && packed.size == rowBytes * pixelHeight)
         scratch.reset()
         deflater.deflateZlib(packed, scratch)
         val image = stream(
             dictionary = "/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight " +
-                "/ColorSpace /DeviceGray /BitsPerComponent 4 /Filter /FlateDecode",
+                "/ColorSpace /DeviceGray /BitsPerComponent $bitsPerComponent /Filter /FlateDecode",
             data = scratch,
         )
         scratch.reset()
@@ -258,6 +260,18 @@ internal fun packPrintRows(pixels: IntArray, width: Int, rows: Int, packed: Byte
             val low = if (2 * column + 1 < width) printLevel(pixels[source + 2 * column + 1]) else 15
             packed[target + column] = (high shl 4 or low).toByte()
         }
+    }
+}
+
+/**
+ * Packs [rows] rows of ARGB [pixels] into [packed] from row [firstRow] on, a byte a pixel: the 256 grays of a page holding
+ * a picture, whose shades sixteen would band.
+ */
+internal fun packGrayRows(pixels: IntArray, width: Int, rows: Int, packed: ByteArray, firstRow: Int) {
+    for (row in 0 until rows) {
+        val source = row * width
+        val target = (firstRow + row) * width
+        for (column in 0 until width) packed[target + column] = printGray(pixels[source + column]).toByte()
     }
 }
 
