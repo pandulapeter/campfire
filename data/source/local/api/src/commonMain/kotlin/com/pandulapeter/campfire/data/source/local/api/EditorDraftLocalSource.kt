@@ -17,7 +17,11 @@ import com.pandulapeter.campfire.data.model.song.SongContent
  */
 interface EditorDraftLocalSource {
 
-    /** Null when there is none, and when the one there cannot be read: a draft is worth keeping, not failing over. */
+    /**
+     * Null when there is none, and when the one there does not decode: a draft is worth keeping, not failing over. One that
+     * is there and cannot be read now throws `LibraryStorageException`, since whoever deletes what a draft names (its
+     * pictures) must not take that moment for no draft.
+     */
     suspend fun loadEditorDraft(): SongContent?
 
     /** Replaces the stored draft; null deletes it. */

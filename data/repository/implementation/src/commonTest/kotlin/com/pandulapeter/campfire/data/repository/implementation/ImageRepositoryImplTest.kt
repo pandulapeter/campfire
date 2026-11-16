@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.local.api.ImageShelf
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -198,6 +199,21 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `on launch the draft's pictures are all kept while the draft cannot be read`() = runTest {
+        local.shelves.getValue(ImageShelf.DRAFT)[NAME] = PHOTO
+        repository(draftReadFails = true)
+        runCurrent()
+
+        assertTrue(NAME in local.shelves.getValue(ImageShelf.DRAFT))
+    }
+
+    @Test
+    fun `a picture of more pixels than every platform decodes safely is refused`() = runTest {
+        assertEquals(ImageIntake.Refused(ImageRefusal.TOO_MANY_PIXELS), repository().addDraftImage(png(width = 16_384, height = 16_384)))
+        assertTrue(local.shelves.values.all { it.isEmpty() })
+    }
+
+    @Test
     fun `on launch the draft's pictures no draft names are deleted`() = runTest {
         local.shelves.getValue(ImageShelf.DRAFT)[NAME] = PHOTO
         repository(draft = null)
@@ -227,11 +243,11 @@ class ImageRepositoryImplTest {
         songs.value = DataState.Idle(list.toList())
     }
 
-    private fun TestScope.repository(draft: SongContent? = null) = ImageRepositoryImpl(
+    private fun TestScope.repository(draft: SongContent? = null, draftReadFails: Boolean = false) = ImageRepositoryImpl(
         imageLocalSource = local,
         songRepository = RecordingSongRepository(songs = songs, songFileNames = { songFiles }),
         editorDraftRepository = object : EditorDraftRepository {
-            override suspend fun loadEditorDraft() = draft
+            override suspend fun loadEditorDraft() = if (draftReadFails) throw LibraryStorageException("Not readable now.") else draft
 
             override suspend fun saveEditorDraft(draft: SongContent?) = throw UnsupportedOperationException()
         },

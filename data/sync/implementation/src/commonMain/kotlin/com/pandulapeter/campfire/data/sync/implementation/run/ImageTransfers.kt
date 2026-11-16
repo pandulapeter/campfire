@@ -43,21 +43,24 @@ internal class ImageTransfers(
     private val libraryFileLock: LibraryFileLock,
     private val logger: Logger,
     private val downloadWithinLimit: suspend (SyncPass, SyncKey) -> RemoteDocument,
-    private val imageWritesGate: suspend (suspend () -> Unit) -> Unit,
+    private val imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit,
 ) {
 
     /**
      * The pass's deletions of pictures here, as one batch: the plan knew what the songs named when the run listed the
      * library, which says nothing about a song saved since. So what every song here names is read again, under the
      * library's lock and inside [imageWritesGate], and a picture a song names now goes back up instead; where a song
-     * cannot be read, nothing is deleted. A picture changed since the listing goes up too, as [sendUp] decides.
+     * cannot be read, nothing is deleted. A picture the editor's open text names (the gate's held names) is kept the same
+     * way. A picture changed since the listing goes up too, as [sendUp] decides.
      */
     suspend fun deleteLocally(pass: SyncPass, operations: List<SyncOperation>): List<Pair<SyncOperation, SyncEngine.OperationOutcome>> {
         if (operations.isEmpty()) return emptyList()
         var decided = emptyList<Pair<SyncOperation, SyncEngine.OperationOutcome?>>()
-        imageWritesGate {
+        imageWritesGate { held ->
             decided = libraryFileLock.withLock {
-                val named = namedNow() ?: return@withLock operations.map { it to SyncEngine.OperationOutcome() }
+                // What the editor's unsaved text names counts as named: a Save after this would otherwise name a picture
+                // gone from every device.
+                val named = namedNow()?.plus(held) ?: return@withLock operations.map { it to SyncEngine.OperationOutcome() }
                 operations.map { operation -> operation to deleteUnlessNamed(pass, operation.key, named) }
             }
         }

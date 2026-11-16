@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.source.local.api.EditorDraftLocalSource
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toEditorDraftDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.model.EditorDraftDocument
@@ -32,6 +33,8 @@ internal class EditorDraftLocalSourceImpl(
     override suspend fun loadEditorDraft() = try {
         fileStorage.readText(StorageDirectory.PREFERENCES, FILE_NAME)?.let { json.decodeFromString<EditorDraftDocument>(it).toModel() }
     } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: LibraryStorageException) {
         throw exception
     } catch (exception: Exception) {
         // Only the kind of failure goes into the log: a message is free to quote what it failed on, which here is

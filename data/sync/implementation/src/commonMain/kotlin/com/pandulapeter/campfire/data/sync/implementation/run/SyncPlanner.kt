@@ -77,15 +77,17 @@ internal object SyncPlanner {
      * picture back, which is why every device keeping its own songs' pictures is enough for none to be lost.
      *
      * What this device's songs name is known only for the songs it holds, and which songs it holds is what a pass that
-     * brings one down or deletes one here is changing: one coming down may name a picture this plan would delete, and
-     * one deleted here may still be kept by an edit made during the run. So such a pass deletes no picture at all, on
-     * either side, and neither does one where a song could not be read ([imageReferences] null): the deletions wait for
-     * a run that knows every song it will hold. A song this pass deletes here does not keep its pictures either, which
-     * would only send them back up for the next run to delete again.
+     * brings one down or deletes one on either side is changing: one coming down may name a picture this plan would
+     * delete, and one deleted here may still be kept by an edit made during the run. So such a pass deletes no picture
+     * at all, on either side, and neither does one where a song could not be read ([imageReferences] null): the
+     * deletions wait for a run that knows every song it will hold. A song this pass deletes here does not keep its
+     * pictures either, which would only send them back up for the next run to delete again.
      */
     private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?): List<SyncOperation> {
         val songOperations = filter { it.key.kind == LibraryFileKind.SONG }
-        val isSongSetChanging = songOperations.any { it is SyncOperation.Download || it is SyncOperation.Resolve || it is SyncOperation.DeleteLocal }
+        // A song deleted from the folder counts too: another device's edit may beat that deletion, and bring the song back
+        // naming a picture deleted beside it (a device of a version without pictures, which never puts one back).
+        val isSongSetChanging = songOperations.any { it !is SyncOperation.Upload && it !is SyncOperation.Forget }
         val leaving = songOperations.filterIsInstance<SyncOperation.DeleteLocal>().mapTo(mutableSetOf()) { it.key }
         val kept = imageReferences?.filterKeys { it !in leaving }?.values?.flatten()?.toSet()
         val mayDelete = kept != null && !isSongSetChanging

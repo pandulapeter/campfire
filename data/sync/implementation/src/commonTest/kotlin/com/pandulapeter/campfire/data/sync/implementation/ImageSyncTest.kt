@@ -50,11 +50,10 @@ class ImageSyncTest {
         b.sync(cloud)
         // The run that deletes the song here keeps the picture until a run knows the song is gone for good.
         assertContentEquals(PHOTO.bytes, b.library.files[PHOTO.key])
-        b.sync(cloud)
+        assertConverges(a, b)
 
         assertNull(b.library.files[PHOTO.key])
         assertNull(cloud.files[PHOTO.key])
-        assertConverges(a, b)
     }
 
     @Test
@@ -67,11 +66,11 @@ class ImageSyncTest {
         a.sync(cloud)
         b.sync(cloud)
         a.sync(cloud)
+        assertConverges(a, b)
 
         assertContentEquals(PHOTO.bytes, b.library.files[PHOTO.key])
         assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
         assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
-        assertConverges(a, b)
     }
 
     @Test
@@ -83,10 +82,10 @@ class ImageSyncTest {
         a.sync(cloud)
         b.sync(cloud)
         a.sync(cloud)
+        assertConverges(a, b)
 
         assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
         assertContentEquals(PHOTO.bytes, b.library.files[PHOTO.key])
-        assertConverges(a, b)
     }
 
     @Test
@@ -123,8 +122,11 @@ class ImageSyncTest {
         val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
         b.library.files -= song(1)
         b.library.files -= PHOTO.key
+        // B's first run deletes the song from the folder and keeps the picture there; its second deletes the picture.
         b.sync(cloud)
-        // The run that deletes the song here keeps the picture; the next one would delete it.
+        b.sync(cloud)
+        assertNull(cloud.files[PHOTO.key])
+        // A's first run deletes the song here and keeps the picture; the next one would delete it.
         a.sync(cloud)
         a.library.files[song("other_song_1")] = "Edited on A".encodeToByteArray()
         cloud.onUpload = { a.library.files[song(9)] = naming(PHOTO) }
@@ -138,10 +140,26 @@ class ImageSyncTest {
     }
 
     @Test
+    fun `a picture only the editor's unsaved text names is kept by sync`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        // A has the song open, its unsaved text still naming the picture, while B drops the picture's line and prunes it.
+        a.heldPictures = setOf(PHOTO.key.name)
+        b.library.files[song(1)] = "No picture any more".encodeToByteArray()
+        b.library.files -= PHOTO.key
+        b.sync(cloud)
+        a.sync(cloud)
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+    }
+
+    @Test
     fun `no picture is deleted while a song of this device cannot be read`() = runTest {
         val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to "Song 2".encodeToByteArray(), PHOTO.key to PHOTO.bytes))
         b.library.files -= song(1)
         b.library.files -= PHOTO.key
+        b.sync(cloud)
         b.sync(cloud)
         a.library.onRead = { key -> if (key == song(2)) throw LibraryStorageFailure() }
         a.sync(cloud)
@@ -222,10 +240,10 @@ class ImageSyncTest {
         photos.forEach { a.library.files -= it.key }
 
         assertIs<SyncEngine.Result.Completed>(a.attempt(cloud, SyncDeletionPolicy.ASK))
-        b.sync(cloud)
-        b.sync(cloud)
-        assertTrue(b.library.files.keys.none { it.kind == LibraryFileKind.FILE })
+        // And the run that deletes the pictures from the folder, once no song is changing, asks nothing either.
+        assertIs<SyncEngine.Result.Completed>(a.attempt(cloud, SyncDeletionPolicy.ASK))
         assertConverges(a, b)
+        assertTrue(b.library.files.keys.none { it.kind == LibraryFileKind.FILE })
     }
 
     /** With a few other songs, so that the deletions of a test are not the whole library, which the guard asks about. */
@@ -237,15 +255,22 @@ class ImageSyncTest {
         return a to b
     }
 
+    /**
+     * Runs on both devices until a round moves nothing, as a few rounds do: a picture's deletion waits for a run that
+     * changes no song. Then both devices and the folder hold the same files.
+     */
     private suspend fun assertConverges(a: Device, b: Device) {
-        a.sync(cloud)
-        b.sync(cloud)
-        val before = listOf(a.snapshot(), b.snapshot(), cloud.snapshot())
-        a.sync(cloud)
-        b.sync(cloud)
-        assertEquals(before, listOf(a.snapshot(), b.snapshot(), cloud.snapshot()))
-        assertEquals(a.snapshot(), b.snapshot())
-        assertEquals(a.snapshot(), cloud.snapshot())
+        repeat(MAXIMUM_ROUNDS) {
+            val before = listOf(a.snapshot(), b.snapshot(), cloud.snapshot())
+            a.sync(cloud)
+            b.sync(cloud)
+            if (before == listOf(a.snapshot(), b.snapshot(), cloud.snapshot())) {
+                assertEquals(a.snapshot(), b.snapshot())
+                assertEquals(a.snapshot(), cloud.snapshot())
+                return
+            }
+        }
+        throw AssertionError("Still changing after $MAXIMUM_ROUNDS rounds of runs")
     }
 
     private fun Device.snapshot() = library.files.entries.associate { (key, bytes) -> key.path to localContentHash(bytes) }
@@ -257,6 +282,8 @@ class ImageSyncTest {
     private class LibraryStorageFailure : Exception("Not readable now.")
 
     private companion object {
+
+        const val MAXIMUM_ROUNDS = 5
 
         val PHOTO = picture("photo")
 

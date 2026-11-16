@@ -26,6 +26,8 @@ class SaveWithDraftImagesUseCaseImplTest {
             isKept = true
             return try {
                 block(object : LibraryImageWriter {
+                    override val heldNames: Set<String> = emptySet()
+
                     override suspend fun addImage(bytes: ByteArray): ImageIntake = error("Not expected.")
                     override suspend fun moveDraftImages(names: Set<String>) = renamed.also { moved += names }
                 })

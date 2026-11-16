@@ -54,6 +54,17 @@ class SyncPlannerImageTest {
         ),
     )
 
+    @Test
+    fun `a picture is not deleted from the folder in the pass that deletes its song there`() = assertEquals(
+        expected = listOf<SyncOperation>(SyncOperation.DeleteRemote(song(1), "r1")),
+        actual = SyncPlanner.plan(
+            local = emptyList(),
+            remote = listOf(RemoteFileState(song(1), "r1", contentHash = null), RemoteFileState(FIRST, "r1", contentHash = null)),
+            index = mapOf(song(1) to SyncIndexEntry("a", "r1"), FIRST to SyncIndexEntry(localImageHash(10), "r1")),
+            imageReferences = emptyMap(),
+        ),
+    )
+
     private companion object {
         val FIRST = SyncKey(LibraryFileKind.FILE, "0123456789abcdef.png")
         val SECOND = SyncKey(LibraryFileKind.FILE, "fedcba9876543210.jpg")

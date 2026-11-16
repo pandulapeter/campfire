@@ -58,6 +58,9 @@ internal class Device(
     val sharedContents = FakeSharedCopyContents()
     var buildNumber = 1
 
+    /** What the open editor's unsaved text names, which sync keeps as it keeps what the songs name. */
+    var heldPictures = emptySet<String>()
+
     /** Whether the last run's shared-copy step settled every copy. */
     var areSharedCopiesSettled = true
         private set
@@ -116,6 +119,7 @@ internal class Device(
                 document = index,
                 setlistComparison = DayBlindSetlistComparison,
                 lock = lock,
+                heldPictures = heldPictures,
                 onIndexChanged = { snapshot ->
                     reported = snapshot
                     writtenIndexes += snapshot()

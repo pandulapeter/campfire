@@ -89,12 +89,14 @@ internal suspend fun synchronize(
     onIndexChanged: suspend (snapshot: () -> SyncIndexDocument) -> Unit = {},
     onLocalFileChanged: suspend (SyncKey) -> Unit = {},
     deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK,
+    heldPictures: Set<String> = emptySet(),
 ) = SyncEngine(
     libraryFileLocalSource = local,
     libraryFileLock = lock,
     setlistComparison = setlistComparison,
     plantedContentHash = plantedContentHash,
     logger = logger,
+    imageWritesGate = { block -> block(heldPictures) },
 ).synchronize(
     provider = provider,
     document = document,

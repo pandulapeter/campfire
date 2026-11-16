@@ -94,4 +94,10 @@ interface LibraryImageWriter {
      * A name neither shelf holds is left alone: the song shows it as missing.
      */
     suspend fun moveDraftImages(names: Set<String>): Map<String, String>
+
+    /**
+     * The names the editor's open text names (or, until it reports, its stored draft's): kept by the pruning, and by sync,
+     * which decides its deletions of pictures inside [ImageRepository.withImagesKept] and must keep these too.
+     */
+    val heldNames: Set<String>
 }

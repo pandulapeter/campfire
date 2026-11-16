@@ -67,7 +67,7 @@ object DataSyncModule {
         setlistComparison = setlistComparison,
         plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
         logger = logger,
-        imageWritesGate = { block -> imageRepository.withImagesKept { block() } },
+        imageWritesGate = { block -> imageRepository.withImagesKept { writer -> block(writer.heldNames) } },
     )
 
     /**

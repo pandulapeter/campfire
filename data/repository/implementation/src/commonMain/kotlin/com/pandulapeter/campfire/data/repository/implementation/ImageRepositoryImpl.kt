@@ -74,13 +74,15 @@ internal class ImageRepositoryImpl(
 
     init {
         scope.launch {
+            // Null where the draft could not be read: it may name any of the draft's pictures, so they are all kept, for the
+            // editor that reads it after all and for the next launch's tidying.
             val draftNames = environment.logger.recovering(describe = { "Could not read the editor's draft: ${it::class.simpleName}" }, fallback = { null }) {
-                editorDraftRepository.loadEditorDraft()?.text?.let(ChordProImages::referencedSources)
-            }.orEmpty()
+                editorDraftRepository.loadEditorDraft()?.text?.let(ChordProImages::referencedSources).orEmpty()
+            }
             keeping.withLock {
                 // An editor that has already said what it holds knows better than the draft it was restored from.
-                if (!hasEditorReported) editorImages = draftNames
-                tidyDraftShelf(keep = draftNames + editorImages)
+                if (!hasEditorReported) editorImages = draftNames.orEmpty()
+                if (draftNames != null) tidyDraftShelf(keep = draftNames + editorImages)
             }
             launch { songRepository.songs.filterIsInstance<DataState.Idle<*>>().collect { pruneRequests.send(Unit) } }
             for (request in pruneRequests) prune()
@@ -154,6 +156,9 @@ internal class ImageRepositoryImpl(
     override fun onLibraryImagesChanged() = _changes.update { it + 1 }
 
     private val writer: LibraryImageWriter = object : LibraryImageWriter {
+
+        /** Read only inside [withImagesKept], under [keeping], which guards [editorImages]. */
+        override val heldNames get() = editorImages
 
         override suspend fun addImage(bytes: ByteArray): ImageIntake = withContext(NonCancellable) {
             store(bytes, shelf = ImageShelf.LIBRARY, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY) })

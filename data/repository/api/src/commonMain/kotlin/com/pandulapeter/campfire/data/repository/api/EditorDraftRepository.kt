@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
  */
 interface EditorDraftRepository {
 
-    /** Null when there is none, and when the one there cannot be read. */
+    /** Null when there is none, and when the one there does not decode; throws where it is there and cannot be read now. */
     suspend fun loadEditorDraft(): SongContent?
 
     /** Replaces the stored draft, null deleting it. Writes land in the order they were asked for. */

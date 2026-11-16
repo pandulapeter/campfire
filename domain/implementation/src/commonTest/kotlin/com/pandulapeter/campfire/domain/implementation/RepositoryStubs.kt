@@ -310,6 +310,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
         isKeeping = true
         return try {
             block(object : LibraryImageWriter {
+                override val heldNames: Set<String> = emptySet()
+
                 override suspend fun addImage(bytes: ByteArray) = libraryNameOf(bytes).also { intake ->
                     check(isKeeping)
                     if (intake is ImageIntake.Accepted) {

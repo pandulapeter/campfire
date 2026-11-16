@@ -13,6 +13,9 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 
 interface GetEditorDraftUseCase {
 
-    /** The editor's unsaved text a previous run left behind, or null when there is none or it cannot be read. */
+    /**
+     * The editor's unsaved text a previous run left behind, or null when there is none or it does not decode. Throws where
+     * the draft is there and cannot be read now.
+     */
     suspend operator fun invoke(): SongContent?
 }

@@ -81,7 +81,7 @@ internal class SyncEngine(
     /** Where the failures of single files are written. */
     private val logger: Logger,
     /** Runs the deletion of pictures here exclusively of the app's writes of a picture and its song. */
-    imageWritesGate: suspend (suspend () -> Unit) -> Unit = { it() },
+    imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit = { it(emptySet()) },
 ) {
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)

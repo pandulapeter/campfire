@@ -33,6 +33,8 @@ class SaveSongImageUseCaseImplTest {
         override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T {
             isKept = true
             return block(object : LibraryImageWriter {
+                override val heldNames: Set<String> = emptySet()
+
                 override suspend fun addImage(bytes: ByteArray) = intake.also { stored += bytes }
                 override suspend fun moveDraftImages(names: Set<String>) = emptyMap<String, String>()
             }).also { isKept = false }

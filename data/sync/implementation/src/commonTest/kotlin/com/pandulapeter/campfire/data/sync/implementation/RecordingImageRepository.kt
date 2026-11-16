@@ -44,6 +44,8 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = block(
         object : LibraryImageWriter {
+            override val heldNames: Set<String> = emptySet()
+
             override suspend fun addImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
 
             override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = throw UnsupportedOperationException()

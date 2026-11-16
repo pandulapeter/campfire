@@ -87,8 +87,10 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
   name the picture). The editor's held names (or, until it reports, its saved draft's) are kept too.
 - An import, a Save, and the placeholder's Add store pictures and write their songs inside one `withImagesKept`, so a
   prune never runs between the two. A picture sync wrote before its song may still be pruned: sync brings it back.
-- The draft shelf is tidied on launch (keeping what the saved draft and the editor name, and what this process wrote)
-  and emptied by `clearDraftImages`; nothing else deletes from it.
+- The draft shelf is tidied on launch (keeping what the saved draft and the editor name, and what this process wrote;
+  nothing at all where the draft is there and cannot be read, which `EditorDraftLocalSource` throws for) and emptied by
+  `clearDraftImages`; nothing else deletes from it.
+- Sync decides its deletions of pictures inside `withImagesKept` and keeps `heldNames` (the editor's) too.
 
 ## The cover copies
 
