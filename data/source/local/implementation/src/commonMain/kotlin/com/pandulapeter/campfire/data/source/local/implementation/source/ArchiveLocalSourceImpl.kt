@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.chordpro.abc.AbcText
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
@@ -51,8 +52,9 @@ internal class ArchiveLocalSourceImpl(
     private val logger: Logger,
 ) : ArchiveLocalSource {
 
-    override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> = withContext(Dispatchers.Default) {
-        unpack(archive = archive, depth = 1, inflated = InflatedBytes(limit = maxSize))
+    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive = withContext(Dispatchers.Default) {
+        val inflated = InflatedBytes(limit = maxSize, imageLimit = maxImageSize)
+        UnpackedArchive(files = unpack(archive = archive, depth = 1, inflated = inflated), imageSize = inflated.imageCount)
     }
 
     override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { foreignSongs(file) }
@@ -125,7 +127,7 @@ internal class ArchiveLocalSourceImpl(
         inflated.count += content.chargedSize
         // An entry does not say why it was read, so one under a name the import does not know is flagged here: what is
         // not an archive of such a name was read for being text.
-        val entries = content.entries.map { entry ->
+        var entries = content.entries.map { entry ->
             val name = entry.name.fileName
             ImportedFile(
                 name = name,
@@ -148,6 +150,9 @@ internal class ArchiveLocalSourceImpl(
             )
             SongbookProBackup.Result.NotABackup -> Unit
         }
+        val images = ArchiveSongImages.read(archive = archive, content = content, maxSize = inflated.imageLimit - inflated.imageCount, isHidden = { it.isHidden })
+        inflated.imageCount += images.chargedSize
+        entries = entries.mapIndexed { index, file -> images.imagesByEntry[index].takeIf { it.isNotEmpty() }?.let { file.copy(images = it) } ?: file }
         val read = entries.flatMap { file ->
             // An archive by its name, or by its bytes under any name but a document's, as the import decides for a
             // picked file: a backup zipped up with the songs next to it is as often renamed as not.
@@ -165,9 +170,10 @@ internal class ArchiveLocalSourceImpl(
                 foreignSongs(file) ?: listOf(file)
             }
         }
-        // Hidden entries stay unreported, see above; everything else that was not read is handed over by name.
+        // Hidden entries stay unreported, see above, and so do the pictures songs took, which their songs report; everything
+        // else that was not read is handed over by name.
         val unread = content.unread
-            .filterNot { it.name.isHidden }
+            .filterNot { it.name.isHidden || it.name in images.takenEntryNames }
             .map { ImportedFile.unread(name = it.name.fileName, isTooLarge = it.reason == UnreadZipEntry.Reason.TOO_LARGE) }
         return read + unread
     }
@@ -219,9 +225,13 @@ internal class ArchiveLocalSourceImpl(
      */
     private val String.isHidden get() = split('/', '\\').any { it != "." && LibraryFiles.isHiddenFileName(it) }
 
-    /** How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they may. */
-    private class InflatedBytes(val limit: Long) {
+    /**
+     * How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they
+     * may: the songs and the pictures each within a budget of their own.
+     */
+    private class InflatedBytes(val limit: Long, val imageLimit: Long) {
         var count = 0L
+        var imageCount = 0L
     }
 
     private companion object {

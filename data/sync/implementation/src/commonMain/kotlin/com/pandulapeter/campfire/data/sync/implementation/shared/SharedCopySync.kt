@@ -224,8 +224,8 @@ internal class SharedCopySync(
             }
             val inputs = sharedCopyFingerprint(kind = kind, fileName = entry.fileName, hash = localContentHash(itemBytes), songs = songs)
             val copy = contents.pack(files)
-            // An import holds the archive and what it unpacks to to the same limit, and the archive is the smaller one.
-            if (copy.size > ImportLimits.MAX_IMPORT_SIZE || files.values.sumOf { it.size.toLong() } > ImportLimits.MAX_IMPORT_SIZE) {
+            // What every version opening a link downloads, and what the copy and its files may hold in memory here at once.
+            if (copy.size > ImportLimits.MAX_SHARED_COPY_SIZE || files.values.sumOf { it.size.toLong() } > ImportLimits.MAX_SHARED_COPY_SIZE) {
                 // The file is left as it is, so the last version that fit keeps being served.
                 changes.update(entry.shareId) {
                     it.copy(state = SharedLinksEntry.STATE_TOO_LARGE, built = SharedCopyBuild(inputs = inputs, build = buildNumber))

@@ -25,12 +25,15 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.image.ImageIntake
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -49,6 +52,7 @@ internal class PrepareImportUseCaseImpl(
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,
     private val documentRepository: DocumentRepository,
+    private val imageRepository: ImageRepository,
     private val logger: Logger,
 ) : PrepareImportUseCase {
 
@@ -65,12 +69,14 @@ internal class PrepareImportUseCaseImpl(
         val songFiles = mutableListOf<IncomingFile>()
         val setlistFiles = mutableListOf<IncomingFile>()
         val documentFiles = mutableListOf<IncomingFile>()
+        val imageFiles = mutableListOf<ImportedFile>()
         val triage = ImportTriage()
 
         // What the import may still hold once everything is unpacked, shared by every archive and plain file of it.
         // The checks here are not redundant with the platform readers: they are what holds for a caller that did not
         // read its files through an ImportBudget.
         var remaining = ImportLimits.MAX_IMPORT_SIZE
+        var remainingImages = ImportLimits.MAX_IMPORT_IMAGES_SIZE
 
         // Loose files share the null origin, and everything unpacked from the picked file at index i has origin i.
         fun sort(file: ImportedFile, origin: Int?) {
@@ -79,6 +85,9 @@ internal class PrepareImportUseCaseImpl(
                 // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
                 // carries the extension of the file it belongs to, and decoded as a song it would be a screen of binary.
                 LibraryFiles.isHiddenFileName(file.name) -> triage.skippedFileNames += file.name
+                // Read only where it was chosen on its own (see ImportBudget): whether its bytes are a picture is asked
+                // once the batch is sorted, and one that is not is skipped then.
+                origin == null && file.bytes.isNotEmpty() && LibraryFiles.isImageFileName(file.name) -> imageFiles += file
                 // Kept for reading as text under a name that says nothing (see ImportedFile.isPlainTextByContent), so
                 // held to the text limit, and a song only where it has the structure of one: a README or a licence
                 // next to the songs is not one, and as a text nobody chose it must not become prose that is.
@@ -121,9 +130,11 @@ internal class PrepareImportUseCaseImpl(
                     val songs = if (LibraryFiles.isHiddenFileName(file.name)) null else archiveRepository.songsIn(file)
                     if (songs == null) sort(file = file, origin = null) else songs.forEach { sort(file = it, origin = index) }
                 }
-                file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> triage.oversizedFileNames += file.name
+                file.isTooLarge || file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE -> triage.oversizedFileNames += file.name
                 else -> try {
-                    val entries = archiveRepository.unpack(archive = file.bytes, maxSize = remaining)
+                    val unpacked = archiveRepository.unpack(archive = file.bytes, maxSize = remaining, maxImageSize = remainingImages)
+                    remainingImages -= unpacked.imageSize
+                    val entries = unpacked.files
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
                     // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
                     // import reads is reported as the one file it was, rather than as the names of its insides.
@@ -142,6 +153,10 @@ internal class PrepareImportUseCaseImpl(
         }
 
         onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, files.size, files.size))
+        val pictures = imageFiles.filter { file ->
+            val intake = imageRepository.libraryNameOf(file.bytes)
+            (intake != ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)).also { isPicture -> if (!isPicture) triage.skippedFileNames += file.name }
+        }
         val songs = planSongs(songFiles, documentFiles, triage, onProgress)
         return ImportPlan(
             songs = songs,
@@ -150,6 +165,7 @@ internal class PrepareImportUseCaseImpl(
             oversizedFileNames = triage.oversizedFileNames,
             unreadableDocumentFileNames = triage.unreadableDocumentFileNames,
             sourceNames = files.map { it.name },
+            imageFiles = pictures,
         )
     }
 
@@ -195,6 +211,7 @@ internal class PrepareImportUseCaseImpl(
                 if (isDocument) triage.unreadableDocumentFileNames += file.name else triage.skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
+            val images = IncomingImages.planned(file.images, imageRepository)
             val songs = parts.map { part ->
                 yield()
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
@@ -203,7 +220,10 @@ internal class PrepareImportUseCaseImpl(
                 val fallbackTitle = if (parts.size == 1) file.baseName else ""
                 // All sources share the same formatter after conversion and splitting, and before naming or
                 // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
-                val text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD))
+                val (text, songImages) = IncomingImages.rewritten(
+                    text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD)),
+                    planned = images,
+                )
                 val metadata = ChordProParser.parseMetadata(text)
                 ImportPlanner.IncomingSong(
                     fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
@@ -213,6 +233,7 @@ internal class PrepareImportUseCaseImpl(
                     origin = origin,
                     title = metadata.displayTitle(fallback = fallbackTitle),
                     artist = metadata.artist.orEmpty(),
+                    images = songImages,
                 )
             }
             // Formatting adds section separators and a final newline; keep the resulting text within the same

@@ -29,7 +29,11 @@
   date or countdown (parsing gives it today; a replacement keeps the library's), so re-importing the demo setlist finds
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
-- Archives share one size budget.
+- Archives share one size budget for songs and another for the pictures songs name.
+- **Pictures** (`IncomingImages`): a song's `src` values are rewritten to the library names of the pictures it brings
+  when it is planned, so the review, the duplicate check, and the write all see the text the song will have; that is
+  the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it
+  arrived. A file chosen on its own that is a picture by its bytes is `ImportPlan.imageFiles`, never a song.
 - Plain text (a `.txt`, so every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune, since the
   converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro
   extensions never go through the converter. No readable text is `unreadableDocumentFileNames`, not unsupported. All
@@ -42,6 +46,10 @@
   re-checked at write time: setlists are re-planned on the names songs actually got (`ImportPlanner.replanSetlists`),
   and an identical song whose library file sync deleted meanwhile is written after all. A replacement is not
   re-checked: the user confirmed it by name.
+- Everything is written inside one `ImageRepository.withImagesKept`, each song's pictures just before it and the songs
+  adopted before the block ends, so no prune falls between a picture and its song. A picture whose planned name a
+  different one took meanwhile is stored under a longer one, which the written text names. An identical song stores its
+  pictures too: a library restored without them (Android's backup leaves them out) gets them back.
 - Songs before setlists. A disregarded duplicate maps to the library copy; a renamed collision (`x_2.cho`) makes the
   setlist naming it a different setlist, numbered rather than disregarded. A setlist that becomes a conflict only at
   re-plan is written numbered (no choice was offered), unless unticked.

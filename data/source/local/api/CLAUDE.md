@@ -32,9 +32,11 @@ Plain suspend functions over `:data:model` types: no flows, no platform types.
   name, or a text name over the text limit, is peeked at) are unpacked in place, three levels deep, within one inflation
   budget; tools' hidden files (`._name.cho`) and everything inside a hidden folder are dropped unreported; every other
   unread entry comes back as `ImportedFile.unread`, and one bad entry never fails the archive. Another app's document
-  that is no archive (a JSON export) comes back as its songs, in an archive and loose through `songsIn`. `pack` dates
-  entries only when asked (`isDated`, what the user saves); undated, the same files always pack to the same bytes, for
-  copies compared by their bytes.
+  that is no archive (a JSON export) comes back as its songs, in an archive and loose through `songsIn`. A ChordPro
+  song comes back with the pictures it names from the same archive (`ImportedFile.images`), read within a picture
+  budget of their own; a picture no song names stays unread and reported, one a song takes is reported with it.
+  `pack` dates entries only when asked (`isDated`, what the user saves); undated, the same files always pack to the
+  same bytes, for copies compared by their bytes.
 - `DocumentLocalSource`: on `Dispatchers.Default`; null means unsupported or unreadable; cancellation propagates.
 - `LibraryFileLocalSource` (the library as bytes for sync) never looks inside files, so unparseable songs still travel.
   `writeLibraryFileToFreeName` lands a conflict copy as ` (2)` on a name also free in the cloud folder;

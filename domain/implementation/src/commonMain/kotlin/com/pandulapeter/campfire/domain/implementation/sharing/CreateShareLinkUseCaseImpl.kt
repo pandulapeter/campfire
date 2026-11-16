@@ -53,8 +53,8 @@ internal class CreateShareLinkUseCaseImpl(
         } ?: return CreateShareResult.Missing
         // Read back whole for the upload, which is one request: the import's limit below keeps it small.
         val bytes = try {
-            // Anyone opening the link takes the copy in as an import, which refuses anything larger.
-            if (copy.isTooLargeToImport) return CreateShareResult.TooLarge
+            // Anyone opening the link takes the copy in as an import, which an older version refuses past this.
+            if (copy.isTooLargeToShare) return CreateShareResult.TooLarge
             exportFileRepository.read(copy)
         } catch (exception: CancellationException) {
             throw exception

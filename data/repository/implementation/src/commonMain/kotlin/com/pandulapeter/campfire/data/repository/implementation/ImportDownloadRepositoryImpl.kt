@@ -19,5 +19,5 @@ internal class ImportDownloadRepositoryImpl(
     private val importDownloadRemoteSource: ImportDownloadRemoteSource,
 ) : ImportDownloadRepository {
 
-    override suspend fun download(url: String) = importDownloadRemoteSource.download(url = url, maxSizeBytes = ImportLimits.MAX_IMPORT_SIZE)
+    override suspend fun download(url: String) = importDownloadRemoteSource.download(url = url, maxSizeBytes = ImportLimits.MAX_ARCHIVE_SIZE)
 }

@@ -102,6 +102,16 @@ internal class ImageRepositoryImpl(
         return size
     }
 
+    override suspend fun loadLibraryImageNames() = imageLocalSource.listImageNames(ImageShelf.LIBRARY).sorted()
+
+    override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake {
+        val examined = withContext(environment.computation) { LibraryImages.examine(bytes) }
+        examined.refusal?.let { return ImageIntake.Refused(it) }
+        return LibraryImages.contentNames(bytes, examined.extension).firstOrNull { name -> !otherBytesUnder(name, bytes, ImageShelf.LIBRARY) }
+            ?.let { ImageIntake.Accepted(it) }
+            ?: ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+    }
+
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = withContext(NonCancellable) {
         keeping.withLock {
             store(bytes, shelf = ImageShelf.DRAFT, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY, ImageShelf.DRAFT) })

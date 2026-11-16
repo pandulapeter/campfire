@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Dalok elmentve</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
     <string name="export_log_saved">Napló elmentve</string>
-    <string name="export_too_large_to_import">Ez az archívum nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importáld a dalokat néhány ezres adagokban.</string>
+    <string name="export_too_large_to_import">Ez az archívum többet tartalmaz, mint amennyit a Campfire egyszerre importálni tud: 24 MB dalt és 64 MB képet, összesen 88 MB-ot. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importálj egyszerre néhány ezer dalt, a képeikkel együtt tömörítve.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Egy fájlt nem sikerült beolvasni, így nincs benne az archívumban: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült beolvasni, így nincsenek benne az archívumban. Köztük: %2$s</item>
@@ -149,7 +149,7 @@
     <string name="import_progress_downloading">A fájl letöltése</string>
     <string name="import_failed_unreachable">%1$s nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_failed_not_found">Ezen a címen nincs mit letölteni. Lehet, hogy a link lejárt, vagy törölték.</string>
-    <string name="import_failed_too_large">Ez a fájl nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud.</string>
+    <string name="import_failed_too_large">Ez a fájl nagyobb annál a 88 MB-nál, amennyit a Campfire egyszerre importálni tud.</string>
     <string name="import_failed_unreadable">A fájlokat nem sikerült beolvasni. Semmi sem lett importálva.</string>
     <string name="import_failed_link_gone">Ez a link már nem működik. Lehet, hogy aki megosztotta, már nem osztja meg.</string>
     <string name="import_failed_link_unreachable">Nem sikerült letölteni: „%1$s”. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
@@ -208,6 +208,14 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Egyszer szerepel a fájlok között</item>
         <item quantity="other">%1$d alkalommal szerepel a fájlok között</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">%1$d képpel</item>
+        <item quantity="other">%1$d képpel</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d kép kimarad</item>
+        <item quantity="other">%1$d kép kimarad</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Előnézet: még nincs a könyvtáradban</string>

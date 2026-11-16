@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
@@ -241,6 +242,7 @@ class PrepareImportUseCaseImplTest {
         documentRepository = object : DocumentRepository {
             override suspend fun extract(file: ImportedFile): ChordSheet? = null
         },
+        imageRepository = FakeImageRepository(),
         logger = Logger.Standard,
     )
 }

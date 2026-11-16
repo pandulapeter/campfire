@@ -22,12 +22,25 @@ data class ExportedFile(
     val content: ExportedContent,
     /** What an import unpacks the file to: an archive's entries added up, which its compressed [content] is smaller than. */
     val unpackedSize: Long = content.size,
+    /** The part of [unpackedSize] that is pictures (an archive's `images/`), which an import reads within a budget of its own. */
+    val unpackedImageSize: Long = 0,
 ) {
 
     constructor(name: String, mimeType: String, bytes: ByteArray) : this(name = name, mimeType = mimeType, content = ExportedContent.Bytes(bytes))
 
-    /** Whether an import would refuse the archive: one larger than it reads, or unpacking to more than it holds. */
-    val isTooLargeToImport get() = mimeType == ZIP_MIME_TYPE && maxOf(content.size, unpackedSize) > ImportLimits.MAX_IMPORT_SIZE
+    /**
+     * Whether an import would not take the archive whole: one larger than it reads at all, unpacking to more songs than
+     * it holds, or to more pictures than it reads, the rest of which it leaves out with their songs still imported.
+     */
+    val isTooLargeToImport
+        get() = mimeType == ZIP_MIME_TYPE && (
+            content.size > ImportLimits.MAX_ARCHIVE_SIZE ||
+                unpackedSize - unpackedImageSize > ImportLimits.MAX_IMPORT_SIZE ||
+                unpackedImageSize > ImportLimits.MAX_IMPORT_IMAGES_SIZE
+            )
+
+    /** Whether the archive is larger, packed or unpacked, than a shared link's copy may be ([ImportLimits.MAX_SHARED_COPY_SIZE]). */
+    val isTooLargeToShare get() = mimeType == ZIP_MIME_TYPE && maxOf(content.size, unpackedSize) > ImportLimits.MAX_SHARED_COPY_SIZE
 
     companion object {
         const val TEXT_MIME_TYPE = "text/plain"

@@ -56,6 +56,9 @@ internal data class ImportReviewSection(
  * @param setlistSongsInImport For a setlist, how many of those are songs of this import.
  * @param songIndex For a song, the place of its entry in the plan's songs, which its preview reads; one already in the
  *   library included, which has no box.
+ * @param imageCount For a song, how many pictures it brings into the library.
+ * @param leftOutImageCount For a song, how many pictures it names that it does not bring (missing from the archive, too
+ *   large, or of a format the library refuses), which it then shows as missing.
  */
 internal data class ImportReviewRow(
     val key: ImportEntryKey?,
@@ -71,6 +74,8 @@ internal data class ImportReviewRow(
     val setlistSongCount: Int? = null,
     val setlistSongsInImport: Int? = null,
     val songIndex: Int? = null,
+    val imageCount: Int = 0,
+    val leftOutImageCount: Int = 0,
 )
 
 /**
@@ -101,6 +106,8 @@ internal fun importReviewSections(
             libraryTitle = libraryFileName?.let(songsByFileName::get)?.title,
             repeatCount = repeatCounts[index] ?: 0,
             songIndex = index,
+            imageCount = entry.images.count { it.name != null },
+            leftOutImageCount = entry.images.count { it.name == null },
         )
     }
     fun setlistRow(kind: ImportReviewSection.Kind, index: Int, entry: ImportPlan.SetlistEntry, libraryFileName: String?): ImportReviewRow {

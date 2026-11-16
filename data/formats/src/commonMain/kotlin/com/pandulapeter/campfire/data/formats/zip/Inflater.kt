@@ -318,8 +318,9 @@ internal object Inflater {
     const val INITIAL_CAPACITY_LIMIT = 1 shl 20
 
     /**
-     * The most a single entry may inflate to, which is the most an import unpacks to (`ImportLimits.MAX_IMPORT_SIZE`):
-     * the largest entry worth reading is an archive inside the archive.
+     * The most a single entry may inflate to, which is the most an import unpacks to apart from pictures
+     * (`ImportLimits.MAX_IMPORT_SIZE`): the largest entry worth reading is an archive inside the archive, which counts
+     * against the songs' budget whatever it holds, and a picture is never more than `ImportLimits.MAX_IMAGE_FILE_SIZE`.
      */
     const val MAX_ENTRY_SIZE = 24 shl 20
 

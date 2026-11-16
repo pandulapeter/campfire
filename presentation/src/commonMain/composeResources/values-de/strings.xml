@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Songs gespeichert</string>
     <string name="export_library_saved">Bibliothek exportiert</string>
     <string name="export_log_saved">Protokoll gespeichert</string>
-    <string name="export_too_large_to_import">Dieses Archiv ist größer als die 24 MB, die Campfire auf einmal importieren kann. Es ist eine vollständige Kopie deiner Bibliothek; um sie zurückzuholen, entpacke es und importiere die Songs in Portionen von einigen Tausend.</string>
+    <string name="export_too_large_to_import">Dieses Archiv enthält mehr, als Campfire auf einmal importieren kann: 24 MB Songs und 64 MB Bilder, insgesamt 88 MB. Es ist eine vollständige Kopie deiner Bibliothek; um sie zurückzuholen, entpacke es und importiere jeweils einige Tausend Songs, gezippt mit den Bildern, die sie zeigen.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Eine Datei konnte nicht gelesen werden und fehlt im Archiv: %2$s</item>
         <item quantity="other">%1$d Dateien konnten nicht gelesen werden und fehlen im Archiv. Darunter: %2$s</item>
@@ -149,7 +149,7 @@
     <string name="import_progress_downloading">Datei wird heruntergeladen</string>
     <string name="import_failed_unreachable">%1$s ist nicht erreichbar. Prüfe die Internetverbindung und versuche es erneut.</string>
     <string name="import_failed_not_found">Unter dieser Adresse gibt es nichts herunterzuladen. Der Link ist vielleicht abgelaufen oder wurde entfernt.</string>
-    <string name="import_failed_too_large">Diese Datei ist größer als die 24 MB, die Campfire auf einmal importieren kann.</string>
+    <string name="import_failed_too_large">Diese Datei ist größer als die 88 MB, die Campfire auf einmal importieren kann.</string>
     <string name="import_failed_unreadable">Die Dateien konnten nicht gelesen werden. Nichts wurde importiert.</string>
     <string name="import_failed_link_gone">Dieser Link funktioniert nicht mehr. Die Person, die ihn geteilt hat, teilt ihn vielleicht nicht mehr.</string>
     <string name="import_failed_link_unreachable">„%1$s“ konnte nicht heruntergeladen werden. Prüfe die Internetverbindung und versuche es erneut.</string>
@@ -208,6 +208,14 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Kommt einmal in den Dateien vor</item>
         <item quantity="other">Kommt %1$d-mal in den Dateien vor</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Mit %1$d Bild</item>
+        <item quantity="other">Mit %1$d Bildern</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d Bild ausgelassen</item>
+        <item quantity="other">%1$d Bilder ausgelassen</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Vorschau: noch nicht in deiner Bibliothek</string>

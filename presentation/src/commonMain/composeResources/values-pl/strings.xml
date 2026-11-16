@@ -141,7 +141,7 @@
     <string name="export_songs_saved">Zapisano piosenki</string>
     <string name="export_library_saved">Wyeksportowano bibliotekę</string>
     <string name="export_log_saved">Zapisano dziennik</string>
-    <string name="export_too_large_to_import">To archiwum jest większe niż 24 MB, które Campfire może zaimportować naraz. To pełna kopia biblioteki; aby ją przywrócić, rozpakuj archiwum i importuj piosenki po kilka tysięcy naraz.</string>
+    <string name="export_too_large_to_import">To archiwum zawiera więcej, niż Campfire może zaimportować naraz: 24 MB piosenek i 64 MB obrazów, łącznie 88 MB. To pełna kopia biblioteki; aby ją przywrócić, rozpakuj archiwum i importuj po kilka tysięcy piosenek naraz, spakowanych razem z obrazami, które pokazują.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Nie udało się odczytać jednego pliku, więc nie ma go w archiwum: %2$s</item>
         <item quantity="other">Nie udało się odczytać %1$d plików, więc nie ma ich w archiwum. Wśród nich: %2$s</item>
@@ -165,7 +165,7 @@
     <string name="import_progress_downloading">Pobieranie pliku</string>
     <string name="import_failed_unreachable">Nie udało się połączyć z %1$s. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="import_failed_not_found">Pod tym adresem nie ma nic do pobrania. Link mógł wygasnąć lub zostać usunięty.</string>
-    <string name="import_failed_too_large">Ten plik jest większy niż 24 MB, które Campfire może zaimportować naraz.</string>
+    <string name="import_failed_too_large">Ten plik jest większy niż 88 MB, które Campfire może zaimportować naraz.</string>
     <string name="import_failed_unreadable">Nie udało się odczytać plików. Niczego nie zaimportowano.</string>
     <string name="import_failed_link_gone">Ten link już nie działa. Osoba, która go udostępniła, mogła przestać go udostępniać.</string>
     <string name="import_failed_link_unreachable">Nie udało się pobrać „%1$s”. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
@@ -231,6 +231,16 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Występuje w plikach raz</item>
         <item quantity="other">Występuje w plikach %1$d razy</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Z %1$d obrazem</item>
+        <item quantity="few">Z %1$d obrazami</item>
+        <item quantity="other">Z %1$d obrazami</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d obraz pominięty</item>
+        <item quantity="few">%1$d obrazy pominięte</item>
+        <item quantity="other">%1$d obrazów pominiętych</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Podgląd: jeszcze nie w bibliotece</string>

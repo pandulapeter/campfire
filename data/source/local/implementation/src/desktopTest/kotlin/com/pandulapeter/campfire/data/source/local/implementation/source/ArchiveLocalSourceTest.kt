@@ -393,4 +393,8 @@ class ArchiveLocalSourceTest {
         assertContentEquals(packs[0], packs[1])
         assertEquals(listOf("a.cho", "s.setlist.json"), archiveLocalSource.unpack(archive = packs[0], maxSize = ImportLimits.MAX_IMPORT_SIZE).map { it.name })
     }
+
+    /** The files alone, with the whole picture budget: these tests are about the songs. */
+    private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) =
+        unpack(archive = archive, maxSize = maxSize, maxImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE).files
 }

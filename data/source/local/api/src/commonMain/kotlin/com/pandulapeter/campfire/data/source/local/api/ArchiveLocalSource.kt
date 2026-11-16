@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.PackedArchive
@@ -32,8 +33,13 @@ interface ArchiveLocalSource {
      * [maxSize] is how much the files may add up to, nested archives included; the caller owns it because one import
      * may unpack several archives. An entry that was not read - not something an import looks inside, too large, or
      * unreadable - is still returned, as `ImportedFile.unread`, so that it is reported.
+     *
+     * A ChordPro song comes back with the pictures its image directives name (`ImportedFile.images`), each found in the
+     * same archive (or the same nested one) beside the song, in an `images/` folder, or by its file name, read within
+     * [maxImageSize] all together, which the answer says how much of was taken. A picture no song names is never read,
+     * and is reported as skipped like any other entry; one a song names is reported with the song, never as skipped.
      */
-    suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
+    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive
 
     /**
      * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of

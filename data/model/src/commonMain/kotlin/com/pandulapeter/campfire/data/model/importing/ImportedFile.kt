@@ -20,12 +20,16 @@ package com.pandulapeter.campfire.data.model.importing
  * [isPlainTextByContent] marks a file kept for its bytes alone, under a name the import does not know: read as plain
  * text, and only where it has the structure of a chord sheet. The flag is carried rather than the name changed, since
  * the import reports a file under the name it came under.
+ *
+ * [images] are the pictures a ChordPro song out of an archive names, found in the same archive (see
+ * `ArchiveLocalSource.unpack`), one per file its directives name; empty for every other file.
  */
 data class ImportedFile(
     val name: String,
     val bytes: ByteArray,
     val isTooLarge: Boolean = false,
     val isPlainTextByContent: Boolean = false,
+    val images: List<ImportedImage> = emptyList(),
 ) {
 
     /**
@@ -42,11 +46,11 @@ data class ImportedFile(
 
     override fun equals(other: Any?) = this === other || (
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
-            isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes)
+            isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images
         )
 
     override fun hashCode() =
-        31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()
+        31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()
 
     companion object {
 

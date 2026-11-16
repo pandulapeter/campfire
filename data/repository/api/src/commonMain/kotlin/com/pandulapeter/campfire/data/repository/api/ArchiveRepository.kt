@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.PackedArchive
@@ -21,7 +22,7 @@ import com.pandulapeter.campfire.data.model.library.PackedArchive
 interface ArchiveRepository {
 
     /** See `ArchiveLocalSource.unpack`. */
-    suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
+    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive
 
     /** See `ArchiveLocalSource.songsIn`. */
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?

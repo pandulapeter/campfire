@@ -12,7 +12,12 @@ package com.pandulapeter.campfire.domain.implementation
 import com.pandulapeter.campfire.data.model.song.EditedSongs
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
+import com.pandulapeter.campfire.data.model.image.ImageIntake
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
+import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 import com.pandulapeter.campfire.data.model.library.ExportSink
@@ -34,6 +39,8 @@ import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
+import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SharedLinksRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
@@ -41,6 +48,8 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
 /**
@@ -181,7 +190,10 @@ internal class FakeArchiveRepository(
 
     var packed: Map<String, ByteArray> = emptyMap()
 
-    override suspend fun unpack(archive: ByteArray, maxSize: Long) = unpack.invoke(archive, maxSize)
+    /** Charges the picture budget with every distinct picture the files bring, as the real one charges each entry once. */
+    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long) = unpack.invoke(archive, maxSize).let { files ->
+        UnpackedArchive(files = files, imageSize = files.flatMap { it.images }.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() })
+    }
 
     override suspend fun songsIn(file: ImportedFile) = songsIn.invoke(file)
 
@@ -233,5 +245,75 @@ internal class FakeExportFileRepository : ExportFileRepository {
     override suspend fun discard(file: ExportedFile) {
         files -= file.name
         discarded += file.name
+    }
+}
+
+/**
+ * The library's pictures in memory, named as the real repository names them in shape: [PNG] bytes are a picture, named by
+ * a hash of their content and `.png`; [HEIC] bytes a picture of a format the library refuses; anything else no picture.
+ * A test that puts other bytes under a name in [library] makes it taken, and the picture then takes one digit more, as a
+ * SHA-256 prefix would.
+ */
+internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = mutableMapOf()) : ImageRepository {
+
+    /** Every picture [LibraryImageWriter.addImage] was handed, in order, and whether it ran inside [withImagesKept]. */
+    val added = mutableListOf<String>()
+    var isKeeping = false
+        private set
+
+    override val changes: StateFlow<Long> = MutableStateFlow(0L)
+
+    override suspend fun loadImage(name: String) = library[name]
+
+    override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
+
+    override suspend fun loadLibraryImageNames() = library.keys.sorted()
+
+    override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = when {
+        bytes.size > ImportLimits.MAX_IMAGE_FILE_SIZE -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)
+        bytes.startsWith(HEIC) -> ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
+        !bytes.startsWith(PNG) -> ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+        else -> {
+            val hex = bytes.contentHashCode().toUInt().toString(16).padStart(8, '0').repeat(8)
+            (16..64).asSequence().map { hex.take(it) + ".png" }.first { name -> library[name]?.contentEquals(bytes) != false }
+                .let { ImageIntake.Accepted(it) }
+        }
+    }
+
+    override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
+
+    override fun holdEditorImages(names: Set<String>): Unit = unexpected()
+
+    override suspend fun clearDraftImages(): Unit = unexpected()
+
+    override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T {
+        isKeeping = true
+        return try {
+            block(object : LibraryImageWriter {
+                override suspend fun addImage(bytes: ByteArray) = libraryNameOf(bytes).also { intake ->
+                    check(isKeeping)
+                    if (intake is ImageIntake.Accepted) {
+                        added += intake.name
+                        library[intake.name] = bytes
+                    }
+                }
+
+                override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = unexpected()
+            })
+        } finally {
+            isKeeping = false
+        }
+    }
+
+    override fun onLibraryImagesChanged(): Unit = unexpected()
+
+    private fun ByteArray.startsWith(prefix: ByteArray) = size >= prefix.size && prefix.indices.all { this[it] == prefix[it] }
+
+    companion object {
+        val PNG = byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
+        val HEIC = "HEIC".encodeToByteArray()
+
+        /** A picture of the fake's, different for every [seed]. */
+        fun picture(seed: Int) = PNG + byteArrayOf(seed.toByte(), (seed shr 8).toByte(), 1, 2, 3)
     }
 }

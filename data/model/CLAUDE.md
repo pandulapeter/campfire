@@ -31,6 +31,13 @@ oversized one is reported, not loaded (a text name over its limit is read only t
 written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
 song.
 
+Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`) and the pictures songs name to 64 MiB (`MAX_IMPORT_IMAGES_SIZE`),
+each budget apart; a picked or downloaded archive and a whole selection may be both (`MAX_ARCHIVE_SIZE`, 88 MiB, named
+in the strings). A shared link's copy stays at 24 MiB (`MAX_SHARED_COPY_SIZE`): versions before pictures download no
+more, and the copy is packed in memory. A picture is read only where it was chosen itself (`IMAGE_FILE_EXTENSIONS`,
+within `MAX_IMAGE_FILE_SIZE`); the folder walks leave pictures unread by name, and an archive reads one only for a song
+naming it.
+
 ## Other
 
 - `AuthorizationCompletionPage` and `SystemBrowser` live here, not in `:data:source:remote:api`, so nothing above the

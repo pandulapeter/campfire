@@ -69,7 +69,7 @@ class CreateShareLinkUseCaseImplTest {
     @Test
     fun `the copy's temporary file is removed once uploaded or refused`() = runTest {
         useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> zip(1) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
-        useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> zip(ImportLimits.MAX_IMPORT_SIZE.toInt() + 1) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
+        useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> zip(ImportLimits.MAX_SHARED_COPY_SIZE.toInt() + 1) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
 
         assertEquals(listOf("copy.zip", "copy.zip"), exportFiles.discarded)
         assertTrue(exportFiles.files.isEmpty())
@@ -90,7 +90,7 @@ class CreateShareLinkUseCaseImplTest {
     fun `a copy over the import limit is not shared`() = runTest {
         val repository = FakeSharedLinksRepository()
 
-        val result = useCase(repository, songs = { _, _, _ -> zip(ImportLimits.MAX_IMPORT_SIZE.toInt() + 1) })
+        val result = useCase(repository, songs = { _, _, _ -> zip(ImportLimits.MAX_SHARED_COPY_SIZE.toInt() + 1) })
             .invoke(SharedLinkKind.SONG, "song.cho", "Song")
 
         assertEquals(CreateShareResult.TooLarge, result)
@@ -100,7 +100,7 @@ class CreateShareLinkUseCaseImplTest {
     @Test
     fun `a copy compressed under the import limit that unpacks past it is not shared`() = runTest {
         val repository = FakeSharedLinksRepository()
-        val copy = zip(1_000).copy(unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1)
+        val copy = zip(1_000).copy(unpackedSize = ImportLimits.MAX_SHARED_COPY_SIZE + 1)
 
         val result = useCase(repository, songs = { _, _, _ -> copy }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
 

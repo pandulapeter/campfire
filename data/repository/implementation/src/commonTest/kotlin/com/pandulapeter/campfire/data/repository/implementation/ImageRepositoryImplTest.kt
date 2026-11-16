@@ -73,6 +73,32 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `the name a picture would take is the one it is then stored under, a taken one included, and asking writes nothing`() = runTest {
+        val repository = repository()
+        local.shelves.getValue(ImageShelf.LIBRARY)[Sha256.hashToHex(PHOTO).take(16) + ".png"] = OTHER
+
+        val planned = repository.libraryNameOf(PHOTO)
+        val untouched = local.shelves.getValue(ImageShelf.LIBRARY).keys.toSet()
+        val stored = repository.withImagesKept { it.addImage(PHOTO) }
+
+        assertEquals(ImageIntake.Accepted(Sha256.hashToHex(PHOTO).take(17) + ".png"), planned)
+        assertEquals(1, untouched.size)
+        assertEquals(planned, stored)
+        assertEquals(ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE), repository.libraryNameOf("{title: x}".encodeToByteArray()))
+    }
+
+    @Test
+    fun `the library's picture names are listed sorted, never the draft's`() = runTest {
+        val repository = repository()
+        val stored = assertAccepted(repository.withImagesKept { it.addImage(PHOTO) })
+        repository.addDraftImage(PHOTO.copyOf())
+        val otherName = "0000000000000000.png"
+        local.shelves.getValue(ImageShelf.LIBRARY)[otherName] = OTHER
+
+        assertEquals(listOf(otherName, stored).sorted(), repository.loadLibraryImageNames())
+    }
+
+    @Test
     fun `what cannot be shown everywhere or is too large is refused and nothing is written`() = runTest {
         val repository = repository()
         val heic = byteArrayOf(0, 0, 0, 24) + "ftypheic".encodeToByteArray() + ByteArray(12)

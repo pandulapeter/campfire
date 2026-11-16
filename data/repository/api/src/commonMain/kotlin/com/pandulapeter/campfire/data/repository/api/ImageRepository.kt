@@ -40,6 +40,16 @@ interface ImageRepository {
     /** The size [loadImage]'s picture is shown at before scaling, read from its header; null as for [loadImage]. */
     suspend fun loadImageSize(name: String): ImageSize?
 
+    /** The names of the library's pictures (never the draft's), sorted: what an export may carry. */
+    suspend fun loadLibraryImageNames(): List<String>
+
+    /**
+     * What [LibraryImageWriter.addImage] would answer for [bytes] now, with nothing written: the name the library would
+     * keep it under, or why it would refuse it. What an import plans with before anything is written; the write may
+     * still come out under a longer name, should a different picture have taken this one in between.
+     */
+    suspend fun libraryNameOf(bytes: ByteArray): ImageIntake
+
     /**
      * Keeps [bytes] for the editor's unsaved text, outside the library, under the name its `{image}` directive is to
      * name it by. Refused when it is too large or not a picture every platform can show.

@@ -144,7 +144,7 @@
     <string name="export_songs_saved">Cântece salvate</string>
     <string name="export_library_saved">Bibliotecă exportată</string>
     <string name="export_log_saved">Jurnal salvat</string>
-    <string name="export_too_large_to_import">Arhiva depășește cei 24 MB pe care Campfire îi poate importa deodată. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă cântecele câteva mii o dată.</string>
+    <string name="export_too_large_to_import">Arhiva conține mai mult decât poate importa Campfire deodată: 24 MB de cântece și 64 MB de imagini, 88 MB în total. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă câteva mii de cântece o dată, arhivate împreună cu imaginile pe care le arată.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un fișier nu a putut fi citit și nu este în arhivă: %2$s</item>
         <item quantity="few">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
@@ -169,7 +169,7 @@
     <string name="import_progress_downloading">Se descarcă fișierul</string>
     <string name="import_failed_unreachable">%1$s nu a putut fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="import_failed_not_found">Nu există nimic de descărcat la această adresă. Linkul poate să fi expirat sau să fi fost eliminat.</string>
-    <string name="import_failed_too_large">Fișierul depășește cei 24 MB pe care Campfire îi poate importa deodată.</string>
+    <string name="import_failed_too_large">Fișierul depășește cei 88 MB pe care Campfire îi poate importa deodată.</string>
     <string name="import_failed_unreadable">Fișierele nu au putut fi citite. Nu s-a importat nimic.</string>
     <string name="import_failed_link_gone">Linkul nu mai funcționează. Persoana care l-a partajat poate să fi oprit partajarea.</string>
     <string name="import_failed_link_unreachable">Nu s-a putut descărca „%1$s”. Verifică conexiunea la internet și încearcă din nou.</string>
@@ -238,6 +238,16 @@
         <item quantity="one">Apare o dată în fișiere</item>
         <item quantity="few">Apare de %1$d ori în fișiere</item>
         <item quantity="other">Apare de %1$d de ori în fișiere</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Cu %1$d imagine</item>
+        <item quantity="few">Cu %1$d imagini</item>
+        <item quantity="other">Cu %1$d de imagini</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d imagine omisă</item>
+        <item quantity="few">%1$d imagini omise</item>
+        <item quantity="other">%1$d de imagini omise</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Previzualizare: încă nu e în bibliotecă</string>

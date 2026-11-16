@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Chansons enregistrées</string>
     <string name="export_library_saved">Bibliothèque exportée</string>
     <string name="export_log_saved">Journal enregistré</string>
-    <string name="export_too_large_to_import">Cette archive dépasse les 24 Mo que Campfire peut importer en une fois. C\'est une copie complète de ta bibliothèque ; pour la récupérer, décompresse-la et importe les chansons quelques milliers à la fois.</string>
+    <string name="export_too_large_to_import">Cette archive contient plus que ce que Campfire peut importer en une fois : 24 Mo de chansons et 64 Mo d\'images, 88 Mo en tout. C\'est une copie complète de ta bibliothèque ; pour la récupérer, décompresse-la et importe quelques milliers de chansons à la fois, zippées avec les images qu\'elles affichent.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un fichier n\'a pas pu être lu et ne figure pas dans l\'archive : %2$s</item>
         <item quantity="other">%1$d fichiers n\'ont pas pu être lus et ne figurent pas dans l\'archive. Parmi eux : %2$s</item>
@@ -149,7 +149,7 @@
     <string name="import_progress_downloading">Téléchargement du fichier</string>
     <string name="import_failed_unreachable">Impossible de joindre %1$s. Vérifie la connexion Internet et réessaie.</string>
     <string name="import_failed_not_found">Il n\'y a rien à télécharger à cette adresse. Le lien a peut-être expiré ou été supprimé.</string>
-    <string name="import_failed_too_large">Ce fichier dépasse les 24 Mo que Campfire peut importer en une fois.</string>
+    <string name="import_failed_too_large">Ce fichier dépasse les 88 Mo que Campfire peut importer en une fois.</string>
     <string name="import_failed_unreadable">Les fichiers n\'ont pas pu être lus. Rien n\'a été importé.</string>
     <string name="import_failed_link_gone">Ce lien ne fonctionne plus. La personne qui l\'a partagé a peut-être arrêté de le partager.</string>
     <string name="import_failed_link_unreachable">Impossible de télécharger « %1$s ». Vérifie la connexion Internet et réessaie.</string>
@@ -211,6 +211,14 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Apparaît une fois dans les fichiers</item>
         <item quantity="other">Apparaît %1$d fois dans les fichiers</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Avec %1$d image</item>
+        <item quantity="other">Avec %1$d images</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d image omise</item>
+        <item quantity="other">%1$d images omises</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Aperçu : pas encore dans ta bibliothèque</string>

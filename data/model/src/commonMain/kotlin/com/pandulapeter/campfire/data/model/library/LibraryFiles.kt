@@ -128,6 +128,17 @@ object LibraryFiles {
      */
     val IMAGE_EXTENSIONS = listOf(".png", ".jpg", ".gif", ".webp")
 
+    /**
+     * The names a picture arrives under on its own (picked, dropped, shared, or opened with), the formats the library
+     * refuses included, so that the import can say why it was not taken rather than call it unsupported. Read only where
+     * somebody chose the file itself: in a folder or an archive a picture is read only for a song that names it. Not
+     * `.svg`, which is text: the folder walks peek at it as they do at any text, and would then read it whole.
+     */
+    val IMAGE_FILE_EXTENSIONS = IMAGE_EXTENSIONS + listOf(".jpeg", ".heic", ".heif", ".avif")
+
+    /** Whether a file called [name] is one of the [IMAGE_FILE_EXTENSIONS]. */
+    fun isImageFileName(name: String) = IMAGE_FILE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
+
     /** The fewest and the most hex digits of its SHA-256 a library picture is named by, see [isLibraryImageName]. */
     const val MIN_IMAGE_NAME_DIGITS = 16
     const val MAX_IMAGE_NAME_DIGITS = 64

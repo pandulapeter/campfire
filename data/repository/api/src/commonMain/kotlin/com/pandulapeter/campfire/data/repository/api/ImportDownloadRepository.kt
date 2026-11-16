@@ -18,6 +18,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
  */
 interface ImportDownloadRepository {
 
-    /** The file at [url], no larger than [ImportLimits.MAX_IMPORT_SIZE], or why there is none; only a cancellation is thrown. */
+    /** The file at [url], no larger than [ImportLimits.MAX_ARCHIVE_SIZE], or why there is none; only a cancellation is thrown. */
     suspend fun download(url: String): ImportDownload
 }

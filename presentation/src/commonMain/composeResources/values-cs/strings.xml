@@ -142,7 +142,7 @@
     <string name="export_songs_saved">Písně uloženy</string>
     <string name="export_library_saved">Knihovna exportována</string>
     <string name="export_log_saved">Protokol uložen</string>
-    <string name="export_too_large_to_import">Tento archiv je větší než 24 MB, které Campfire dokáže najednou importovat. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících.</string>
+    <string name="export_too_large_to_import">Tento archiv obsahuje víc, než Campfire dokáže najednou importovat: 24 MB písní a 64 MB obrázků, celkem 88 MB. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících, zabalené spolu s obrázky, které zobrazují.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Jeden soubor nešlo přečíst a v archivu chybí: %2$s</item>
         <item quantity="few">%1$d soubory nešlo přečíst a v archivu chybí. Mezi nimi: %2$s</item>
@@ -167,7 +167,7 @@
     <string name="import_progress_downloading">Stahování souboru</string>
     <string name="import_failed_unreachable">Zdroj %1$s není dostupný. Zkontroluj připojení k internetu a zkus to znovu.</string>
     <string name="import_failed_not_found">Na této adrese není nic ke stažení. Platnost odkazu možná vypršela nebo byl odstraněn.</string>
-    <string name="import_failed_too_large">Tento soubor je větší než 24 MB, které Campfire dokáže najednou importovat.</string>
+    <string name="import_failed_too_large">Tento soubor je větší než 88 MB, které Campfire dokáže najednou importovat.</string>
     <string name="import_failed_unreadable">Soubory nešlo přečíst. Nic nebylo importováno.</string>
     <string name="import_failed_link_gone">Tento odkaz už nefunguje. Ten, kdo ho sdílel, ho možná přestal sdílet.</string>
     <string name="import_failed_link_unreachable">„%1$s“ se nepodařilo stáhnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
@@ -234,6 +234,16 @@
     <plurals name="import_review_repeated">
         <item quantity="one">V souborech se objevuje jednou</item>
         <item quantity="other">V souborech se objevuje %1$dkrát</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">S %1$d obrázkem</item>
+        <item quantity="few">S %1$d obrázky</item>
+        <item quantity="other">S %1$d obrázky</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">Vynechán %1$d obrázek</item>
+        <item quantity="few">Vynechány %1$d obrázky</item>
+        <item quantity="other">Vynecháno %1$d obrázků</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Náhled: zatím není v knihovně</string>

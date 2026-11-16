@@ -17,8 +17,11 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * Android app has a heap of about 192 MB to itself, and running out of it cannot be caught.
  *
  * The numbers are the same on every platform, so that an archive imports the same everywhere. At its worst an import
- * holds what was picked, what that unpacked to and the text of it, which is two bytes a character as soon as a song
- * steps outside Latin-1: four times [MAX_IMPORT_SIZE], which has to fit next to the app itself.
+ * holds what was picked ([MAX_ARCHIVE_SIZE]), the pictures its songs name ([MAX_IMPORT_IMAGES_SIZE]), and the songs it
+ * unpacked to with their text, which is two bytes a character as soon as a song steps outside Latin-1: three times
+ * [MAX_IMPORT_SIZE]. An archive near its limit is mostly pictures, which are stored rather than deflated, so its own
+ * bytes and its pictures' are much the same bytes twice, and the songs are the small part of it. The picked archive is
+ * let go of once the review has its plan, which keeps the pictures and the songs only.
  */
 object ImportLimits {
 
@@ -40,12 +43,36 @@ object ImportLimits {
     const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
 
     /**
-     * One archive as it was picked, everything one selection reads, and everything one import unpacks to: more than
-     * twice a library of three thousand songs of 4 KB. A library exports to an archive of its own size plus about 180
-     * bytes a file, so one of about six thousand such songs exports to an archive this refuses, and the export says so.
-     * That message names the limit as 24 MB in both languages, so the strings change with it.
+     * Everything one import unpacks to apart from pictures (songs, setlists, documents): more than twice a library of
+     * three thousand songs of 4 KB. A library exports to an archive of its own size plus about 180 bytes a file, so one
+     * of about six thousand such songs exports to an archive this refuses, and the export says so. That message names
+     * the limit as 24 MB in every language, so the strings change with it.
      */
     const val MAX_IMPORT_SIZE = 24L shl 20
+
+    /**
+     * The pictures one import reads for the songs naming them, apart from [MAX_IMPORT_SIZE] so that photos never crowd
+     * songs out of an archive: about twenty phone photos, each within [MAX_IMAGE_FILE_SIZE]. A picture past it is left
+     * out and reported with its song, which still imports and shows the picture as missing. The export's message names
+     * it as 64 MB in every language.
+     */
+    const val MAX_IMPORT_IMAGES_SIZE = 64L shl 20
+
+    /**
+     * One archive as it was picked or downloaded, and everything one selection reads: the songs' budget and the
+     * pictures' together, so that an export of songs with their pictures imports whole. The import's and the export's
+     * messages name it as 88 MB in every language. Versions before pictures refuse an archive over [MAX_IMPORT_SIZE] as
+     * too large, and import a smaller one with its pictures reported as skipped and its image directives kept.
+     */
+    const val MAX_ARCHIVE_SIZE = MAX_IMPORT_SIZE + MAX_IMPORT_IMAGES_SIZE
+
+    /**
+     * One shared link's copy, packed and unpacked, pictures included. Kept at what every version that opens links
+     * downloads ([MAX_IMPORT_SIZE] before pictures), so that a link opens everywhere, and because a copy is packed in
+     * memory during a sync run, its files and the archive at once, where a phone has the least to spare. The share
+     * screen names it in MB through this constant.
+     */
+    const val MAX_SHARED_COPY_SIZE = MAX_IMPORT_SIZE
 
     /**
      * How many levels of folders a dropped folder is opened to, its own being the first: a library exported as folders is
@@ -70,7 +97,7 @@ object ImportLimits {
      * and so is a text name over its limit (see [isReadAsText]).
      */
     fun maxSizeOf(name: String) = when {
-        LibraryFiles.isArchiveFileName(name) -> MAX_IMPORT_SIZE
+        LibraryFiles.isArchiveFileName(name) -> MAX_ARCHIVE_SIZE
         LibraryFiles.isDocumentFileName(name) -> MAX_DOCUMENT_FILE_SIZE
         LibraryFiles.IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) } -> MAX_TEXT_FILE_SIZE
         else -> 0L
@@ -87,12 +114,13 @@ object ImportLimits {
 /**
  * What one selection - a pick, a drop, the files of an intent - may still read. Every platform reads its files
  * through one of these, so the rule is written once: nothing the import would not look inside is read, nothing over
- * its own limit is, and the selection as a whole stops at [ImportLimits.MAX_IMPORT_SIZE].
+ * its own limit is, and the selection as a whole stops at [ImportLimits.MAX_ARCHIVE_SIZE], what one archive may be. The
+ * import holds what the selection unpacks to its own budgets again.
  */
 class ImportBudget {
 
     @PublishedApi
-    internal var remaining = ImportLimits.MAX_IMPORT_SIZE
+    internal var remaining = ImportLimits.MAX_ARCHIVE_SIZE
 
     /**
      * @param size What the platform says the size of the file is, null where it cannot say.
@@ -100,6 +128,7 @@ class ImportBudget {
      *   file of unknown size is found out. Null for a file that cannot be read, which is then left out.
      */
     inline fun read(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
+        if (LibraryFiles.isImageFileName(name)) return readImage(name, size, readBytes)
         if (!LibraryFiles.isImportableFileName(name)) return readUnknown(name, size, readBytes)
         val ownLimit = ImportLimits.maxSizeOf(name)
         // A text name is read as far as the selection allows rather than to its own limit, since one over that limit may
@@ -135,6 +164,21 @@ class ImportBudget {
         if (!isArchive && !isText) return ImportedFile.unread(name)
         remaining -= bytes.size
         return ImportedFile(name = name, bytes = bytes, isPlainTextByContent = isText)
+    }
+
+    /**
+     * A picture chosen on its own, read within [ImportLimits.MAX_IMAGE_FILE_SIZE] for the import to tell by its bytes
+     * whether it is one the library takes. The platforms' folder walks never get here with a picture, which they leave
+     * unread by its name, so a dropped folder of photos is not read one photo at a time.
+     */
+    @PublishedApi
+    internal inline fun readImage(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
+        val limit = minOf(ImportLimits.MAX_IMAGE_FILE_SIZE, remaining)
+        if (size != null && size > limit) return ImportedFile.unread(name, isTooLarge = true)
+        val bytes = readBytes(limit) ?: return null
+        if (bytes.size > limit) return ImportedFile.unread(name, isTooLarge = true)
+        remaining -= bytes.size
+        return ImportedFile(name = name, bytes = bytes)
     }
 
     /** Whether [bytes] of a file called [name], a name the import does not know, are kept as a text to look at. */

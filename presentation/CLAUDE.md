@@ -63,6 +63,8 @@ which the script checks; everything else is handed the holders, state, and callb
 - What the review chose is written by `ApplyImportUseCase`, with what it records for the demo and each shared link;
   the link's trust rule (`sharedLinkChoices`) is `:data:model`'s.
 - Summaries report unreadable documents separately and append the number of converted songs actually written.
+- A picture arriving on its own (`ImportPlan.imageFiles`) is reported as skipped (`ImportedImageFiles.kt`) until the
+  editor opens a new song on it. A review row counts the pictures its song brings and the ones it names but leaves out.
 
 ## Strings
 

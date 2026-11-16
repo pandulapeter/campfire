@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.importing
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProTags
+import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
@@ -21,6 +22,8 @@ import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
+import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.importing.ImportFilesUseCase
@@ -37,11 +40,16 @@ internal class ImportFilesUseCaseImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     private val logger: Logger,
+    private val imageRepository: ImageRepository,
 ) : ImportFilesUseCase {
 
     /**
      * Songs first, setlists second: a setlist points at songs by file name, and a song that had to be renamed to
      * avoid a collision has to be followed to its new name before the setlist next to it in the archive is written.
+     *
+     * All of it inside one [ImageRepository.withImagesKept], each song's pictures stored just before the song, and the
+     * songs adopted before the block ends: the library's pictures are pruned to what its songs name, and a prune between
+     * a picture and the song naming it would delete the picture.
      */
     override suspend operator fun invoke(
         plan: ImportPlan,
@@ -49,24 +57,26 @@ internal class ImportFilesUseCaseImpl(
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
         val run = ImportRun(plan = plan, choices = choices, onProgress = onProgress)
-        try {
-            run.writeSongs()
-            run.writeSetlists()
-            onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, run.total, run.total))
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
-            run.failAt(exception)
-        } finally {
-            // One change to each list at the end rather than one per file, each of which would rebuild the lists
-            // downstream, and no read of the directory at all: every file written is in hand as what it became. It runs
-            // even when a write failed or the import was cancelled halfway, since the files written before that are on
-            // disk and would otherwise be missing from the lists until something else rescanned them.
-            onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
-            withContext(NonCancellable) {
-                songRepository.adoptImported(run.importedSongs)
-                setlistRepository.adoptImported(run.importedSetlists)
+        imageRepository.withImagesKept { writer ->
+            try {
+                run.writeSongs(writer)
+                run.writeSetlists()
+                onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, run.total, run.total))
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
+                run.failAt(exception)
+            } finally {
+                // One change to each list at the end rather than one per file, each of which would rebuild the lists
+                // downstream, and no read of the directory at all: every file written is in hand as what it became. It
+                // runs even when a write failed or the import was cancelled halfway, since the files written before that
+                // are on disk and would otherwise be missing from the lists until something else rescanned them.
+                onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
+                withContext(NonCancellable) {
+                    songRepository.adoptImported(run.importedSongs)
+                    setlistRepository.adoptImported(run.importedSetlists)
+                }
             }
         }
         return run.result()
@@ -99,7 +109,8 @@ internal class ImportFilesUseCaseImpl(
         private var failedFileNames = emptyList<String>()
         private var unprocessedFileNames = emptyList<String>()
 
-        suspend fun writeSongs() {
+        suspend fun writeSongs(writer: LibraryImageWriter) {
+            val storedImages = mutableMapOf<String, ImageIntake>()
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
             val storedNames = arrayOfNulls<String>(plan.songs.size)
@@ -139,7 +150,9 @@ internal class ImportFilesUseCaseImpl(
                             replacedSongFileNames.add(replacedFileName)
                         // Tagged in the text that is written rather than afterwards, so that each file is written once and
                         // a sync run sees a song arrive, not a song arrive and then change.
-                        val text = choices.tags.fold(entry.text) { text, tag -> ChordProTags.addTag(text, tag, fold = String::normalizedToNfc) }
+                        val text = choices.tags.fold(IncomingImages.store(entry, writer, storedImages)) { text, tag ->
+                            ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
+                        }
                         songRepository.importSong(
                             fileName = when {
                                 shouldReplace -> replacedFileName
@@ -161,7 +174,10 @@ internal class ImportFilesUseCaseImpl(
                     }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
+                    // The library's copy names the same pictures, which a library restored without them (Android's
+                    // backup leaves them out) gets back from the archive here; a picture it holds is not written again.
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
+                        if (entry.isIdenticalToLibraryFile) IncomingImages.store(entry, writer, storedImages)
                         // A repeat of an entry left out goes with it, and is not reported again: the review lists only
                         // the first of the repeats, which is already there.
                         if (entry.repeatedEntryIndex in leftAloneIndices) {

@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Canciones guardadas</string>
     <string name="export_library_saved">Biblioteca exportada</string>
     <string name="export_log_saved">Registro guardado</string>
-    <string name="export_too_large_to_import">Este archivo comprimido supera los 24 MB que Campfire puede importar de una vez. Es una copia completa de tu biblioteca; para recuperarla, descomprímelo e importa las canciones en tandas de unos pocos miles.</string>
+    <string name="export_too_large_to_import">Este archivo comprimido contiene más de lo que Campfire puede importar de una vez: 24 MB de canciones y 64 MB de imágenes, 88 MB en total. Es una copia completa de tu biblioteca; para recuperarla, descomprímelo e importa unos pocos miles de canciones cada vez, comprimidas junto con las imágenes que muestran.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">No se pudo leer un archivo y no está en el archivo comprimido: %2$s</item>
         <item quantity="other">No se pudieron leer %1$d archivos y no están en el archivo comprimido. Entre ellos: %2$s</item>
@@ -149,7 +149,7 @@
     <string name="import_progress_downloading">Descargando el archivo</string>
     <string name="import_failed_unreachable">No se pudo conectar con %1$s. Comprueba la conexión a internet y vuelve a intentarlo.</string>
     <string name="import_failed_not_found">No hay nada que descargar en esa dirección. Puede que el enlace haya caducado o se haya eliminado.</string>
-    <string name="import_failed_too_large">Este archivo supera los 24 MB que Campfire puede importar de una vez.</string>
+    <string name="import_failed_too_large">Este archivo supera los 88 MB que Campfire puede importar de una vez.</string>
     <string name="import_failed_unreadable">No se pudieron leer los archivos. No se importó nada.</string>
     <string name="import_failed_link_gone">Este enlace ya no funciona. Puede que quien lo compartió haya dejado de compartirlo.</string>
     <string name="import_failed_link_unreachable">No se pudo descargar «%1$s». Comprueba la conexión a internet y vuelve a intentarlo.</string>
@@ -208,6 +208,14 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Aparece una vez en los archivos</item>
         <item quantity="other">Aparece %1$d veces en los archivos</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Con %1$d imagen</item>
+        <item quantity="other">Con %1$d imágenes</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d imagen omitida</item>
+        <item quantity="other">%1$d imágenes omitidas</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Vista previa: aún no está en tu biblioteca</string>

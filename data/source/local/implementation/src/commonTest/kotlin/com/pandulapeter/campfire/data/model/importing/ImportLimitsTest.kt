@@ -48,17 +48,17 @@ internal class ImportLimitsTest {
 
         val text = budget.read(name = "riverlight.songsheet", size = sheet.size.toLong()) { sheet }
         val program = budget.read(name = "riverlight", size = binary.size.toLong()) { binary }
-        val photo = budget.read(name = "cover.png", size = sheet.size.toLong()) { sheet }
+        val recording = budget.read(name = "take.mp3", size = sheet.size.toLong()) { sheet }
 
         assertTrue(text!!.isPlainTextByContent)
         assertContentEquals(sheet, text.bytes)
         assertEquals(ImportedFile.unread("riverlight"), program)
-        assertEquals(ImportedFile.unread("cover.png"), photo)
+        assertEquals(ImportedFile.unread("take.mp3"), recording)
     }
 
     @Test
     fun `a file of an unknown type larger than the selection is not read`() {
-        val file = ImportBudget().read(name = "video.mp4", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
+        val file = ImportBudget().read(name = "video.mp4", size = ImportLimits.MAX_ARCHIVE_SIZE + 1) { error("read") }
 
         assertEquals(ImportedFile.unread("video.mp4"), file)
         assertFalse(file!!.isTooLarge)
@@ -66,13 +66,13 @@ internal class ImportLimitsTest {
 
     @Test
     fun `another app's backup is read as an archive`() {
-        assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("Library.SBPBACKUP"))
-        assertEquals(ImportLimits.MAX_IMPORT_SIZE, ImportLimits.maxSizeOf("set.sbp"))
+        assertEquals(ImportLimits.MAX_ARCHIVE_SIZE, ImportLimits.maxSizeOf("Library.SBPBACKUP"))
+        assertEquals(ImportLimits.MAX_ARCHIVE_SIZE, ImportLimits.maxSizeOf("set.sbp"))
     }
 
     @Test
     fun `a file over what is left of the selection is not read`() {
-        val file = ImportBudget().read(name = "a.cho", size = ImportLimits.MAX_IMPORT_SIZE + 1) { error("read") }
+        val file = ImportBudget().read(name = "a.cho", size = ImportLimits.MAX_ARCHIVE_SIZE + 1) { error("read") }
 
         assertTrue(file!!.isTooLarge)
     }
@@ -87,7 +87,7 @@ internal class ImportLimitsTest {
         }
 
         assertTrue(file!!.isTooLarge)
-        assertEquals(ImportLimits.MAX_IMPORT_SIZE, givenLimit)
+        assertEquals(ImportLimits.MAX_ARCHIVE_SIZE, givenLimit)
     }
 
     @Test
@@ -118,7 +118,7 @@ internal class ImportLimitsTest {
     @Test
     fun `the selection shares one budget`() {
         val budget = ImportBudget()
-        val size = 10L shl 20
+        val size = 40L shl 20
 
         val archives = List(3) { index -> budget.read(name = "$index.zip", size = size) { ByteArray(size.toInt()) }!! }
         val song = budget.read(name = "a.cho", size = 1L shl 20) { ByteArray(1 shl 20) }!!
@@ -126,6 +126,45 @@ internal class ImportLimitsTest {
         assertEquals(listOf(false, false, true), archives.map { it.isTooLarge })
         assertFalse(song.isTooLarge)
         assertEquals(1 shl 20, song.bytes.size)
+    }
+
+    @Test
+    fun `an archive of songs with their pictures may take the songs' budget and the pictures' together`() {
+        val size = ImportLimits.MAX_IMPORT_SIZE + ImportLimits.MAX_IMPORT_IMAGES_SIZE
+
+        assertEquals(size, ImportLimits.maxSizeOf("songs.zip"))
+        assertFalse(ImportBudget().read(name = "songs.zip", size = size) { ByteArray(size.toInt()) }!!.isTooLarge)
+        assertTrue(ImportBudget().read(name = "songs.zip", size = size + 1) { error("read") }!!.isTooLarge)
+    }
+
+    @Test
+    fun `a picture chosen on its own is read within the picture limit`() {
+        val budget = ImportBudget()
+        val limit = ImportLimits.MAX_IMAGE_FILE_SIZE
+
+        val photo = budget.read(name = "Photo.JPEG", size = limit) { ByteArray(limit.toInt()) }!!
+        val tooLarge = budget.read(name = "huge.png", size = limit + 1) { error("read") }!!
+        var givenLimit: Long? = null
+        val unknownSize = budget.read(name = "chart.heic", size = null) { given ->
+            givenLimit = given
+            ByteArray((given + 1).toInt())
+        }!!
+
+        assertEquals(limit.toInt(), photo.bytes.size)
+        assertTrue(tooLarge.isTooLarge)
+        assertEquals(limit, givenLimit)
+        assertTrue(unknownSize.isTooLarge)
+    }
+
+    @Test
+    fun `a picture takes its share of the selection`() {
+        val budget = ImportBudget()
+        val archive = ImportLimits.MAX_ARCHIVE_SIZE - 10
+
+        budget.read(name = "songs.zip", size = archive) { ByteArray(archive.toInt()) }
+
+        assertTrue(budget.read(name = "photo.png", size = 11) { error("read") }!!.isTooLarge)
+        assertEquals(10, budget.read(name = "photo.png", size = 10) { ByteArray(10) }!!.bytes.size)
     }
 
     @Test

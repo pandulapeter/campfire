@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Canzoni salvate</string>
     <string name="export_library_saved">Libreria esportata</string>
     <string name="export_log_saved">Log salvato</string>
-    <string name="export_too_large_to_import">Questo archivio supera i 24 MB che Campfire può importare in una volta. È una copia completa della tua libreria; per ripristinarla, estrai l\'archivio e importa le canzoni qualche migliaio alla volta.</string>
+    <string name="export_too_large_to_import">Questo archivio contiene più di quanto Campfire possa importare in una volta: 24 MB di canzoni e 64 MB di immagini, 88 MB in tutto. È una copia completa della tua libreria; per ripristinarla, estrai l\'archivio e importa qualche migliaio di canzoni alla volta, compresse insieme alle immagini che mostrano.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un file non è stato letto e non è nell\'archivio: %2$s</item>
         <item quantity="other">%1$d file non sono stati letti e non sono nell\'archivio. Tra questi: %2$s</item>
@@ -149,7 +149,7 @@
     <string name="import_progress_downloading">Download del file</string>
     <string name="import_failed_unreachable">Impossibile raggiungere %1$s. Controlla la connessione a internet e riprova.</string>
     <string name="import_failed_not_found">A quell\'indirizzo non c\'è nulla da scaricare. Il link potrebbe essere scaduto o essere stato rimosso.</string>
-    <string name="import_failed_too_large">Questo file supera i 24 MB che Campfire può importare in una volta.</string>
+    <string name="import_failed_too_large">Questo file supera i 88 MB che Campfire può importare in una volta.</string>
     <string name="import_failed_unreadable">Impossibile leggere i file. Non è stato importato nulla.</string>
     <string name="import_failed_link_gone">Questo link non funziona più. Forse chi lo ha condiviso ha smesso di condividerlo.</string>
     <string name="import_failed_link_unreachable">Impossibile scaricare «%1$s». Controlla la connessione a internet e riprova.</string>
@@ -208,6 +208,14 @@
     <plurals name="import_review_repeated">
         <item quantity="one">Compare una volta nei file</item>
         <item quantity="other">Compare %1$d volte nei file</item>
+    </plurals>
+    <plurals name="import_review_images">
+        <item quantity="one">Con %1$d immagine</item>
+        <item quantity="other">Con %1$d immagini</item>
+    </plurals>
+    <plurals name="import_review_images_left_out">
+        <item quantity="one">%1$d immagine esclusa</item>
+        <item quantity="other">%1$d immagini escluse</item>
     </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Anteprima: non ancora nella tua libreria</string>

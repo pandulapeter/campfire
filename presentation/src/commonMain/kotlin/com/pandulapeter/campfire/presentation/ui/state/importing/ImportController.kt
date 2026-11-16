@@ -524,7 +524,7 @@ internal class ImportController(
                 }
             }
         }
-        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
+        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it }.withImageFilesSkipped())
     }
 
     /** What a preparation the user cancelled leaves: nothing, the screen it was shown on included. */

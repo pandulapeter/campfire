@@ -30,6 +30,12 @@ data class ImportPlan(
     val unreadableDocumentFileNames: List<String> = emptyList(),
     /** The names of the picked files, in the order [SongEntry.origin] and [SetlistEntry.origin] count them. */
     val sourceNames: List<String> = emptyList(),
+    /**
+     * Files that arrived on their own and are pictures by their bytes, the formats the library refuses included: no
+     * song, but what the editor opens a new song on (one showing the picture), with its bytes. Never a picture out of an
+     * archive or a folder, which comes only with a song naming it ([SongEntry.images]).
+     */
+    val imageFiles: List<ImportedFile> = emptyList(),
 ) {
 
     /** True while nothing about this import needs answering, which is every import into an untouched name. */
@@ -74,7 +80,34 @@ data class ImportPlan(
         /** What the header says, or the name of the file it arrived in where the header names no title; what names [fileName]. */
         val title: String = "",
         val artist: String = "",
+        /**
+         * Every picture [text]'s image directives name, as the import found it. [text] already names each one it brings
+         * by the name the library keeps it under, which is the one change an import makes to a song's text, and what it
+         * is compared by; a directive naming one it does not bring is left as it arrived.
+         */
+        val images: List<SongImage> = emptyList(),
     )
+
+    /**
+     * A picture an incoming song names: brought under [name], the library's name for [bytes], which the song's directive
+     * now names; or not brought, for [problem], its directive left naming [source], so the song shows it as missing.
+     */
+    class SongImage(
+        /** The file the directive named as it arrived. */
+        val source: String,
+        val name: String?,
+        val bytes: ByteArray?,
+        val problem: ImportedImage.Problem?,
+    ) {
+
+        /** A name is the picture's content, so the bytes need no comparing. */
+        override fun equals(other: Any?) =
+            this === other || (other is SongImage && source == other.source && name == other.name && problem == other.problem)
+
+        override fun hashCode() = 31 * (31 * source.hashCode() + name.hashCode()) + problem.hashCode()
+
+        override fun toString() = "SongImage(source=$source, name=$name, problem=$problem)"
+    }
 
     data class SetlistEntry(
         val fileName: String,

@@ -127,7 +127,7 @@ private fun linkMessageOf(state: LinkExportState, kind: SharedLinkKind) = when (
     is LinkExportState.Failed -> when (state.problem) {
         LinkProblem.SCOPE_MISSING -> stringResource(Res.string.share_scope_missing)
         LinkProblem.AUTHORIZATION -> stringResource(Res.string.share_authorization)
-        LinkProblem.TOO_LARGE -> stringResource(Res.string.share_too_large, (ImportLimits.MAX_IMPORT_SIZE shr 20).toInt())
+        LinkProblem.TOO_LARGE -> stringResource(Res.string.share_too_large, (ImportLimits.MAX_SHARED_COPY_SIZE shr 20).toInt())
         LinkProblem.NOT_PUBLIC -> stringResource(Res.string.share_not_public)
         LinkProblem.NETWORK -> stringResource(Res.string.share_network)
         LinkProblem.REMOTE_STORAGE_FULL -> stringResource(Res.string.share_remote_full)

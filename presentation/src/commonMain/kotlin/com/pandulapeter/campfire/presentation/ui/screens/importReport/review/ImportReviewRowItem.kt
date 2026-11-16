@@ -45,6 +45,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.import_preview_open
 import com.pandulapeter.campfire.presentation.resources.import_report_converted
+import com.pandulapeter.campfire.presentation.resources.import_review_images
+import com.pandulapeter.campfire.presentation.resources.import_review_images_left_out
 import com.pandulapeter.campfire.presentation.resources.import_review_repeated
 import com.pandulapeter.campfire.presentation.resources.import_review_setlist_songs
 import com.pandulapeter.campfire.presentation.resources.import_review_setlist_songs_in_import
@@ -103,6 +105,8 @@ internal fun ImportReviewRowItem(
         // Said only where it differs: a setlist whose songs all arrive with it has nothing to warn about.
         row.setlistSongsInImport?.takeIf { it != row.setlistSongCount }?.let { stringResource(Res.string.import_review_setlist_songs_in_import, it) },
         if (row.isConverted) stringResource(Res.string.import_report_converted) else null,
+        row.imageCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_images, count, count.toString()) },
+        row.leftOutImageCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_images_left_out, count, count.toString()) },
         if (row.repeatCount > 0) pluralTextResource(Res.plurals.import_review_repeated, row.repeatCount + 1, (row.repeatCount + 1).toString()) else null,
     ).takeIf { it.isNotEmpty() }?.joinIsolated(" · ")
     val conflictChoice: (@Composable () -> Unit)? = if (isConflict) {

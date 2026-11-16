@@ -39,7 +39,7 @@ internal class FakeSharedCopyContents : SharedCopyContents {
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packCount++
-        if (isOversized) return ByteArray((ImportLimits.MAX_IMPORT_SIZE + 1).toInt())
+        if (isOversized) return ByteArray((ImportLimits.MAX_SHARED_COPY_SIZE + 1).toInt())
         if (isCompressing) return files.keys.joinToString(separator = "\n").encodeToByteArray()
         return files.entries.joinToString(separator = "\n") { (name, bytes) -> "[$name]\n${bytes.decodeToString()}" }.encodeToByteArray()
     }
