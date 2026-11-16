@@ -335,12 +335,12 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
 )
 
 /**
- * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: tablature
- * and sheet music (an `abc` block, labelled as the reader's section is, for what it holds rather than for the notation
- * it is written in) side by side, as the two that ask whom they are for, then grids, and the three kinds of comment as
- * one menu, a plain comment being the one usually wanted.
+ * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: grids, then
+ * tablature and sheet music (an `abc` block, labelled as the reader's section is, for what it holds rather than for the
+ * notation it is written in) side by side, as the two that ask whom they are for, and the three kinds of comment as one
+ * menu, a plain comment being the one usually wanted.
  *
- * Tablature, sheet music, and grids are a group of their own rather than more sections, because that is what they
+ * Grids, tablature, and sheet music are a group of their own rather than more sections, because that is what they
  * are: a `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without
  * breaking it in two, see [SectionType][com.pandulapeter.campfire.chordpro.model.SectionType].
  *
@@ -361,6 +361,7 @@ private fun lineKindInsertions(
     onPickImage: (() -> Unit)?,
 ): List<List<EditorInsertion>> = listOf(
     listOfNotNull(
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_section_tab),
             choices = listOf(EditorInsertion.tab(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, staff = tabStaff(null))) +
@@ -371,7 +372,6 @@ private fun lineKindInsertions(
             choices = listOf(EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, header = sheetMusicHeader)) +
                 sheetMusicInstruments.map { instrument -> EditorInsertion.sheetMusic(instrumentLabel(instrument), selector = instrument.id, header = sheetMusicHeader) },
         ),
-        EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
         onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it, shortcut = KeyShortcut.INSERT_IMAGE) },
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
