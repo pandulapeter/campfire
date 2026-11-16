@@ -75,6 +75,8 @@ The view model facade, the composition root, and the product rules every screen 
 - Hides every way to change the library: both "New" buttons, song menus (and their long press / right click), setlist
   header actions, reorder handles and row menus, "Add to setlist", "Choose songs", Edit song file, and the four playing
   controls, which is every way into the editor. Search, sorting, filters, text size, and the chords switch stay.
+- Folds nothing: every section is shown whole and no fold toggle is offered, so nothing goes missing on stage; the
+  saved folds are kept, and come back once the mode is off.
 - Settings keeps every row; its two library actions are disabled, not hidden.
 - Files opened with, shared to, or dropped on Campfire are still imported, and a shared or dropped one-song text still
   opens the editor (`PastedSongController.isNewSongDropAvailable`): each is the user bringing something in on purpose.

@@ -75,6 +75,7 @@ The song renderer, drawn by song details and the editor's preview; `model/` buil
 
 - Every section with a header folds, and every tab or grid run in one but a lone unnamed grid row. Saved per song in
   `UserPreferences.foldedSections`, the reader's: never in a setlist, an export, or sync; a rename carries it.
+  Performance mode folds nothing and offers no toggle, keeping what was saved (`ui/CLAUDE.md`).
 - A plain paragraph, and the rest of a section a chorus recall cut, get a chevron-only pill, named for screen readers by
   its first lyric. The preview folds nothing but draws that pill, so it lays out like details. A chorus has no pill and
   folds from its whole title row.

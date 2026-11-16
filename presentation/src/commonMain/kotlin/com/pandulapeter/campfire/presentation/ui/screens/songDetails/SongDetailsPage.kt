@@ -164,7 +164,7 @@ internal fun SongDetailsPage(
     fontScale: () -> Float,
     keepsStepButtonInset: Boolean,
     foldedSections: Set<String>,
-    onFoldToggled: (key: String) -> Unit,
+    onFoldToggled: ((key: String) -> Unit)?,
     chordSpelling: UserPreferences.ChordSpelling,
     settledWidth: Dp,
     contentPadding: PaddingValues,

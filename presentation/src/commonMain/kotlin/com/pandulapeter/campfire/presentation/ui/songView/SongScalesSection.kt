@@ -69,10 +69,10 @@ internal fun SongScalesSection(
     if (isFirstChunk) {
         SectionHeaderPill(
             header = stringResource(Res.string.scales),
-            toggle = scaleSuggestions?.let { suggestions ->
+            toggle = scaleSuggestions?.onFoldToggled?.let { onToggled ->
                 FoldToggle(
                     isExpanded = !section.isFolded,
-                    onToggled = suggestions.onFoldToggled,
+                    onToggled = onToggled,
                 )
             },
             style = headerStyle,

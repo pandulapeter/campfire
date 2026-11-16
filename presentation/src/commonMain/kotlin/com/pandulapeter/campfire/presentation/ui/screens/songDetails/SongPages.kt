@@ -177,14 +177,8 @@ internal fun SongPages(
         var hasShownLyrics by remember { mutableStateOf(text != null) }
         val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
         if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
-        val foldedSections = (importPreview?.folds?.get(song.fileName) ?: userPreferences?.foldedSections?.get(song.fileName)).orEmpty()
-        val toggleFold = { key: String ->
-            if (importPreview != null) {
-                importPreview.toggleFold(pageFileName = song.fileName, key = key)
-            } else {
-                preferencesController.toggleSectionFold(songFileName = song.fileName, key = key)
-            }
-        }
+        val foldedSections = foldedSectionsOf(song.fileName, importPreview, userPreferences, isPerformanceModeEnabled)
+        val toggleFold = foldToggleOf(song.fileName, importPreview, preferencesController).takeUnless { isPerformanceModeEnabled }
         val isChordSectionFolded = CHORDS_FOLD_KEY in foldedSections
         val isScaleSectionFolded = SCALES_FOLD_KEY in foldedSections
         val playback = songPlaybackOf(song = song, setlistFileName = destination.setlistFileName, overrides = playingOverrides)
@@ -289,17 +283,17 @@ internal fun SongPages(
                 isFolded = isChordSectionFolded,
                 previewText = text.takeIf { importPreview != null },
                 dialogHost = dialogHost,
-                onFoldToggled = { toggleFold(CHORDS_FOLD_KEY) },
+                onFoldToggled = toggleFold?.let { toggle -> { toggle(CHORDS_FOLD_KEY) } },
             ),
             tabs = tabs,
             showsDegrees = showsDegrees,
             isContinuous = isContinuous,
             turnsByColumn = !isContinuous && userPreferences?.pageTurn == PageTurn.COLUMN,
-            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null) {
+            scaleSuggestions = remember(scaleSuggestions, song.fileName, isScaleSectionFolded, shapeCapo, importPreview != null, toggleFold != null) {
                 scaleSuggestions?.copy(
                     isFolded = isScaleSectionFolded,
                     capo = shapeCapo,
-                    onFoldToggled = { toggleFold(SCALES_FOLD_KEY) },
+                    onFoldToggled = toggleFold?.let { toggle -> { toggle(SCALES_FOLD_KEY) } },
                 )
             },
         )
@@ -308,7 +302,7 @@ internal fun SongPages(
 
 /**
  * What the Chords section of [song]'s page is drawn with, from the pager's [chordDiagrams]: whether it is folded, and
- * what its diagrams open, a chord's shape sheet only where shapes may be picked ([canPickChordShapes]), and for a
+ * whether it folds at all ([onFoldToggled], null in performance mode), what its diagrams open, a chord's shape sheet only where shapes may be picked ([canPickChordShapes]), and for a
  * preview's page with the text it was drawn from ([previewText]).
  */
 @Composable
@@ -320,13 +314,14 @@ private fun rememberPageChordDiagrams(
     isFolded: Boolean,
     previewText: String?,
     dialogHost: DialogHost,
-    onFoldToggled: () -> Unit,
+    onFoldToggled: (() -> Unit)?,
 ): ChordDiagrams? {
     val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
-    return remember(chordDiagrams, song.fileName, setlistFileName, canPickChordShapes, isFolded, previewText) {
+    val canFold = onFoldToggled != null
+    return remember(chordDiagrams, song.fileName, setlistFileName, canPickChordShapes, isFolded, previewText, canFold) {
         chordDiagrams?.copy(
             isFolded = isFolded,
-            onFoldToggled = { latestOnFoldToggled() },
+            onFoldToggled = if (canFold) ({ latestOnFoldToggled?.invoke() }) else null,
             onChordClicked = if (!canPickChordShapes) null else {
                 { chordName ->
                     dialogHost.showDialog(
@@ -364,6 +359,35 @@ private fun rememberScaleSuggestions(
             onScaleClicked = { scaleId, rootName, capo -> dialogHost.showDialog(DialogType.Scale(scaleId = scaleId, rootName = rootName, capo = capo)) },
             notation = notation,
         )
+    }
+}
+
+/**
+ * The keys of the sections folded away on [songFileName]'s page: none in performance mode, which shows every section
+ * whole and offers no fold ([foldToggleOf] is not handed on), so nothing can go missing on stage. The folds saved are
+ * kept for when the mode is switched off.
+ */
+private fun foldedSectionsOf(
+    songFileName: String,
+    importPreview: ImportPreviewState?,
+    userPreferences: UserPreferences?,
+    isPerformanceModeEnabled: Boolean,
+) = if (isPerformanceModeEnabled) {
+    emptySet()
+} else {
+    (importPreview?.folds?.get(songFileName) ?: userPreferences?.foldedSections?.get(songFileName)).orEmpty()
+}
+
+/** What folds or unfolds a section of [songFileName]'s page by its key: in memory for a preview, else in the preferences. */
+private fun foldToggleOf(
+    songFileName: String,
+    importPreview: ImportPreviewState?,
+    preferencesController: PreferencesController,
+): (key: String) -> Unit = { key ->
+    if (importPreview != null) {
+        importPreview.toggleFold(pageFileName = songFileName, key = key)
+    } else {
+        preferencesController.toggleSectionFold(songFileName = songFileName, key = key)
     }
 }
 

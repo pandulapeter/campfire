@@ -32,9 +32,10 @@ pedal), at any text size on any screen. `LayoutBudget` is its only exception.
 
 - **Nothing from outside is written before Import.** Entries are drawn from their text under page names no library file
   can have, one set per review, whose inferred keys are forgotten once the review is over. Read only as performance
-  mode is, with no song actions, About the song, cover, metronome, or tuner; folds kept in memory; no override written.
-  Chord diagrams open their sheets, whose pick is a device preference. Never restored, addressed as `/import`. Without
-  the review it was opened over the screen closes itself, except while the report is `Importing`.
+  mode is, with no song actions, About the song, cover, metronome, or tuner; folds kept in memory (none in performance
+  mode); no override written. Chord diagrams open their sheets, whose pick is a device preference. Never restored,
+  addressed as `/import`. Without the review it was opened over the screen closes itself, except while the report is
+  `Importing`.
 - **Marked plainly**: a card floating at the bottom (at most 720dp wide) says the song is not in the library yet and,
   for a taken name, that it is. Its buttons sit beside the message where that keeps 140dp, else under it; the pages'
   bottom padding clears the card (pedal rule), measured in the same pass as the pages so the lyrics are never flowed

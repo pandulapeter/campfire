@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
  * suggestions switch, or the chords): whether it is folded, one choice per song ([SCALES_FOLD_KEY]), and what its
  * header and its chips do.
  *
+ * @param onFoldToggled Folds the section or unfolds it; null where nothing folds (performance mode).
  * @param onScaleClicked Opens the sheet of a scale, by its id, the note it is played on in the standard notation, and
  *   [capo]. Offered in read only mode too: the sheet changes nothing.
  * @param notation What the scales' roots are named in.
@@ -26,7 +27,7 @@ import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 @Immutable
 internal data class ScaleSuggestions(
     val isFolded: Boolean = false,
-    val onFoldToggled: () -> Unit = {},
+    val onFoldToggled: (() -> Unit)? = null,
     val onScaleClicked: (scaleId: String, rootName: String, capo: Int) -> Unit,
     val notation: ChordNotation,
     val capo: Int = 0,

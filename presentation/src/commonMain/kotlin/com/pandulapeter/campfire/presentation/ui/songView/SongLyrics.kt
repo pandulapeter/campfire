@@ -104,8 +104,8 @@ import com.pandulapeter.campfire.tuner.api.model.InstrumentTuning
  * squeezed into narrow columns).
  * @param foldedSections The keys of the sections, tabs and grids of this song the reader has folded away (see
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
- * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
- * folded on the details screen would hide the lines being typed into it.
+ * Null where nothing folds: the editor's preview, there to show what is being written, where a section folded on the
+ * details screen would hide the lines being typed into it, and performance mode, where nothing may go missing on stage.
  * @param isSongInfoShown Whether the song's first section is the card of what the song is (see
  * [SongMetadataSection]), its Song defaults tiles in place of the line, which the editor's preview does; the song
  * details screen opens it as a sheet instead.
@@ -226,21 +226,12 @@ internal fun SongLyrics(
     val shownScaleSuggestions = scaleSuggestions?.let { suggestions ->
         remember(suggestions) {
             suggestions.copy(
-                onFoldToggled = {
-                    hasScaleFoldBeenToggled = true
-                    suggestions.onFoldToggled()
-                },
+                onFoldToggled = suggestions.onFoldToggled.runningFirst { hasScaleFoldBeenToggled = true },
             )
         }
     }
-    val onChordFoldToggled = chordDiagrams?.onFoldToggled?.let { toggle ->
-        remember(toggle) {
-            {
-                hasChordFoldBeenToggled = true
-                toggle()
-            }
-        }
-    }
+    val chordFoldToggle = chordDiagrams?.onFoldToggled
+    val onChordFoldToggled = remember(chordFoldToggle) { chordFoldToggle.runningFirst { hasChordFoldBeenToggled = true } }
     // Remembered rather than built on every composition, since every section's content is handed it and compares it
     // by identity: it is rebuilt exactly when what it answers changes, and the sections skip on everything else.
     val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
@@ -446,3 +437,11 @@ internal val MAX_COLUMN_WIDTH = 560.dp
 
 private val SECTION_GAP = 16.dp
 private val ROW_GAP = 16.dp
+
+/** This fold toggle, running [action] before it, or null where nothing folds. */
+private fun (() -> Unit)?.runningFirst(action: () -> Unit): (() -> Unit)? = this?.let { toggle ->
+    {
+        action()
+        toggle()
+    }
+}
