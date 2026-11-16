@@ -62,6 +62,14 @@ class KeyChordTest {
     }
 
     @Test
+    fun `Ctrl or Cmd + Shift + I inserts a picture beside Italic, everywhere but the web, whose developer tools own it`() {
+        assertTrue(KeyShortcut.INSERT_IMAGE.chord.matches(Key.I, isCtrlOrMeta = true, isShift = true, isAlt = false))
+        assertFalse(KeyShortcut.INSERT_IMAGE.chord.matches(Key.I, isCtrlOrMeta = true, isShift = false, isAlt = false))
+        assertTrue(ShortcutPlatforms.NOT_WEB == KeyShortcut.INSERT_IMAGE.platforms)
+        assertEquals("Ctrl+Shift+I", KeyShortcut.INSERT_IMAGE.chord.label(isApple = false, names = english))
+    }
+
+    @Test
     fun `Shift is ignored, refused, or required as the chord says, and Alt is always refused`() {
         assertTrue(KeyShortcut.SAVE.chord.matches(Key.S, isCtrlOrMeta = true, isShift = true, isAlt = false))
         assertFalse(KeyShortcut.ITALIC.chord.matches(Key.I, isCtrlOrMeta = true, isShift = true, isAlt = false))

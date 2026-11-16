@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -18,7 +19,12 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.test.performSemanticsAction
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -26,6 +32,7 @@ import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_image
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
 import com.pandulapeter.campfire.screenshots.AppTestScope
 import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
@@ -87,6 +94,21 @@ internal class EditorImagesTest {
         waitForLibrary { !draftImage().exists() }
         assertFalse(libraryImage().exists(), "A discarded picture reached the library.")
         assertEquals(demoSongText(HOUSE_OF_THE_RISING_SUN), houseSong())
+    }
+
+    @Test
+    fun `Ctrl+Shift+I presses the Image button, whose tooltip names the keys`() = runAppTest(
+        window = TestWindow.DESKTOP,
+        platform = ImpersonatedPlatform.WINDOWS,
+        pickedFiles = listOf(ImportedFile("holiday.png", picture)),
+    ) {
+        openEditor()
+        onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { withKeyDown(Key.ShiftLeft) { pressKey(Key.I) } } }
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { "{image: src=$pictureName}" in fieldText() }
+        onNode(hasText(string(Res.string.song_editor_insert_image)) and hasClickAction()).performMouseInput { enter(center) }
+        waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) {
+            onAllNodes(hasText(keys(KeyShortcut.INSERT_IMAGE), substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test

@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
+import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffFor
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toggleFormatting
 
 /**
@@ -78,6 +79,16 @@ internal class EditorChordShapes(
 @Composable
 internal fun rememberEditorChordShapes(userPreferences: UserPreferences?, notation: UserPreferences.Notation) = remember(userPreferences, notation) {
     EditorChordShapes(notation = notation.toChordNotation(), storedShapes = userPreferences?.chordVoicings.orEmpty())
+}
+
+/**
+ * The empty staff the Tab button writes for the instrument picked from its menu (see `EditorToolbar`'s `tabStaff`), in
+ * standard tuning, the player's own instrument's (from [userPreferences]) for none, its strings named in [notation].
+ */
+@Composable
+internal fun rememberTabStaff(userPreferences: UserPreferences?, notation: UserPreferences.Notation) = remember(userPreferences, notation) {
+    val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
+    { tabInstrument: UserPreferences.Instrument? -> emptyTabStaffFor(tabInstrument, instrument, notation.toChordNotation()) }
 }
 
 internal fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes, instrument: ChordInstrument) = edit {

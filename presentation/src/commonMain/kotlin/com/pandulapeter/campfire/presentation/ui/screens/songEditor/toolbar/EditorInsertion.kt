@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
 import com.pandulapeter.campfire.chordpro.model.ChordProLine.Lyrics.Formatting
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import org.jetbrains.compose.resources.DrawableResource
 
 /**
@@ -32,6 +33,7 @@ import org.jetbrains.compose.resources.DrawableResource
  *   in place of the two halves; null for every other entry.
  * @param action What a button that writes nothing at once does instead (the Image button picks pictures, which arrive
  *   at the caret later); null for every other button.
+ * @param shortcut The keys that press an [action]'s button, which its tooltip names.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -46,6 +48,7 @@ internal data class EditorInsertion(
     val icon: DrawableResource? = null,
     val chordShapeInstrument: ChordInstrument? = null,
     val action: (() -> Unit)? = null,
+    val shortcut: KeyShortcut? = null,
 ) {
 
     companion object {
@@ -69,13 +72,14 @@ internal data class EditorInsertion(
             chordShapeInstrument = instrument,
         )
 
-        /** A button that writes nothing itself, but does [action]. */
-        fun action(label: String, action: () -> Unit) = EditorInsertion(
+        /** A button that writes nothing itself, but does [action], also on [shortcut]. */
+        fun action(label: String, action: () -> Unit, shortcut: KeyShortcut) = EditorInsertion(
             label = label,
             prefix = "",
             suffix = "",
             isOwnLine = true,
             action = action,
+            shortcut = shortcut,
         )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */

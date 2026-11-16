@@ -53,6 +53,12 @@ internal enum class KeyShortcut(
     ITALIC(KeyChord.command(Key.I, "I", shift = KeyChord.Shift.ABSENT), ShortcutScope.EDITOR),
     UNDERLINE(KeyChord.command(Key.U, "U", shift = KeyChord.Shift.ABSENT), ShortcutScope.EDITOR),
 
+    /**
+     * The editor's Image button, the key many text editors insert a picture by. Not on the web, where Chrome, Edge, and
+     * Firefox open their developer tools on it before the page hears it; Italic leaves Shift out for the same reason.
+     */
+    INSERT_IMAGE(KeyChord.command(Key.I, "I", shift = KeyChord.Shift.REQUIRED), ShortcutScope.EDITOR, ShortcutPlatforms.NOT_WEB),
+
     /** The New song and New setlist entries of the list screens' New menu. */
     NEW(KeyChord.command(Key.N, "N", shift = KeyChord.Shift.ABSENT), ShortcutScope.LISTS, ShortcutPlatforms.NOT_WEB),
 

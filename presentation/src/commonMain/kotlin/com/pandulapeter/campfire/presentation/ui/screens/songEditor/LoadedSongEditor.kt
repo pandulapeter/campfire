@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.rememberEditorChordShapes
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.rememberTabStaff
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorControlRow
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.EditorToolbar
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar.sheetMusicHeader
@@ -83,7 +84,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
-import com.pandulapeter.campfire.presentation.ui.tabs.emptyTabStaffFor
 import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.painterResource
 
@@ -247,6 +247,7 @@ internal fun LoadedSongEditor(
                 isFieldShown = panes != EditorPanes.PREVIEW,
                 onSave = onSaveRequested,
                 onOpenSearch = onOpenSearch,
+                onPickImage = onPickImage,
             ),
     ) {
         CampfireTopAppBar(
@@ -322,10 +323,7 @@ internal fun LoadedSongEditor(
                         textFieldState = textFieldState,
                         contentPadding = contentPadding,
                         chordShapes = rememberEditorChordShapes(userPreferences, notation),
-                        tabStaff = remember(userPreferences) {
-                            val instrument = userPreferences?.instrument ?: UserPreferences.Instrument.GUITAR
-                            { tabInstrument -> emptyTabStaffFor(tabInstrument, instrument, notation.toChordNotation()) }
-                        },
+                        tabStaff = rememberTabStaff(userPreferences, notation),
                         sheetMusicHeader = remember(summary.metadata.key, summary.metadata.time) {
                             sheetMusicHeader(summary.metadata.key?.takeIf(ChordProTransposer::isKey), summary.metadata.time)
                         },

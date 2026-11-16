@@ -89,6 +89,7 @@ import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInstruments
 import com.pandulapeter.campfire.presentation.ui.instrument.chordInstrument
 import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.keyShortcut
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 import org.jetbrains.compose.resources.painterResource
@@ -190,7 +191,7 @@ private fun EditorToolbarRow(
                     EditorToolbarButton(
                         label = insertion.label,
                         icon = insertion.icon?.let { painterResource(it) },
-                        shortcut = insertion.formatting?.keyShortcut,
+                        shortcut = insertion.shortcut ?: insertion.formatting?.keyShortcut,
                         onClick = { onInsert(insertion) },
                     )
                 } else {
@@ -365,7 +366,7 @@ private fun lineKindInsertions(
         ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
         EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_section_abc), header = sheetMusicHeader),
-        onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it) },
+        onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it, shortcut = KeyShortcut.INSERT_IMAGE) },
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(

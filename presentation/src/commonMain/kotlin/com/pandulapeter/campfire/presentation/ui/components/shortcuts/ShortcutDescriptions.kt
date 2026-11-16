@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_find_and_rep
 import com.pandulapeter.campfire.presentation.resources.song_editor_format_bold
 import com.pandulapeter.campfire.presentation.resources.song_editor_format_italic
 import com.pandulapeter.campfire.presentation.resources.song_editor_format_underline
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_image
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import org.jetbrains.compose.resources.StringResource
@@ -78,6 +79,7 @@ internal fun KeyShortcut.descriptionIn(scope: ShortcutScope, features: ShortcutF
     KeyShortcut.BOLD -> Res.string.song_editor_format_bold
     KeyShortcut.ITALIC -> Res.string.song_editor_format_italic
     KeyShortcut.UNDERLINE -> Res.string.song_editor_format_underline
+    KeyShortcut.INSERT_IMAGE -> Res.string.song_editor_insert_image
     KeyShortcut.NEW -> Res.string.shortcut_new
     KeyShortcut.SELECT_ALL -> Res.string.shortcut_select_all
     KeyShortcut.UNDO -> Res.string.song_editor_undo

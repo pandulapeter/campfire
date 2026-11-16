@@ -22,14 +22,16 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.search.edito
 
 /**
  * Every key the whole editor hears, wherever in it the focus is: Save ([saveShortcut]), Find and Find and replace
- * ([editorSearchShortcuts]), the formatting keys while the field is shown ([isFieldShown], see
- * [editorFormattingShortcuts]), and undo and redo ([editorUndoShortcuts]).
+ * ([editorSearchShortcuts]), the formatting keys and the Image button's ([onPickImage], null in read only mode, which
+ * offers no button) while the field is shown ([isFieldShown], see [editorFormattingShortcuts]), and undo and redo
+ * ([editorUndoShortcuts]).
  */
 internal fun Modifier.editorShortcuts(
     textFieldState: TextFieldState,
     isFieldShown: Boolean,
     onSave: () -> Unit,
     onOpenSearch: (EditorSearchMode) -> Unit,
+    onPickImage: (() -> Unit)?,
 ) = this
     .saveShortcut(onSave)
     .editorSearchShortcuts(
@@ -37,7 +39,15 @@ internal fun Modifier.editorShortcuts(
         onReplace = { onOpenSearch(EditorSearchMode.REPLACE) },
     )
     .editorFormattingShortcuts(isEnabled = isFieldShown, onToggle = textFieldState::toggleFormatting)
+    .editorImageShortcut(onPickImage?.takeIf { isFieldShown })
     .editorUndoShortcuts(textFieldState)
+
+/** Presses the Image button on [KeyShortcut.INSERT_IMAGE] where [onPickImage] is given, taking the key-up too, as the formatting keys do. */
+private fun Modifier.editorImageShortcut(onPickImage: (() -> Unit)?) = onPreviewKeyEvent { keyEvent ->
+    val pick = onPickImage?.takeIf { KeyShortcut.INSERT_IMAGE.matches(keyEvent) }
+    if (pick != null && keyEvent.type == KeyEventType.KeyDown) pick()
+    pick != null
+}
 
 /**
  * Ctrl / Cmd + Z undoes and Ctrl / Cmd + Shift + Z or Ctrl / Cmd + Y redoes in the field's own history, the one the title

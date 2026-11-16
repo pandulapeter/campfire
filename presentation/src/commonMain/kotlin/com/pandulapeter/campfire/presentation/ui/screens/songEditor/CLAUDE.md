@@ -114,8 +114,9 @@ key leaves numbers nothing to count from.
 
 ## Pictures (`state/editor/EditorImages`)
 
-- The Image button (never in read only mode) keeps what it picks as draft pictures, off the library, and inserts their
-  directives at the caret as one undo step (`ImageLines.kt`, tested); a pick the editor closed under keeps nothing.
+- The Image button (never in read only mode; Ctrl / Cmd + Shift + I while the field shows, not on the web) keeps what
+  it picks as draft pictures, off the library, and inserts their directives at the caret as one undo step
+  (`ImageLines.kt`, tested); a pick the editor closed under keeps nothing.
 - The text's names are held from the pruning a beat after typing pauses, once draft recovery is over. Save moves the
   draft pictures the text names into the library and writes the song under one pruning hold, renames applied
   (`SaveWithDraftImagesUseCase`; a text naming none is saved as before). The draft shelf is emptied once no editor is
