@@ -160,6 +160,19 @@ object ChordProSerializer {
         }
 
         ChordProBlock.Break -> "{column_break}"
+        is ChordProBlock.Image -> serializeImage(block)
+    }
+
+    /**
+     * Every attribute quoted, so that a flag's empty value stays an attribute. A picture drawn by its asset `id` gets the
+     * definition it was read through written before it, since the model keeps no definition of its own.
+     */
+    private fun serializeImage(block: ChordProBlock.Image): String {
+        fun quoted(value: String) = if ('"' in value) "'$value'" else "\"$value\""
+        val attributes = block.attributes.entries.joinToString(" ") { (key, value) -> "$key=${quoted(value)}" }
+        val image = "{image: $attributes}"
+        val id = block.attributes["id"]
+        return if (id != null && "src" !in block.attributes) "{image: id=${quoted(id)} src=${quoted(block.src)}}\n$image" else image
     }
 
     /** A section and its continuations, with the blocks that stood between them, as [sectionEnd] collects them. */

@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.chordpro.model
 
 /**
  * Everything a song list needs to know about a file without keeping its text: the directives that describe it,
- * whether there is a chord anywhere in it, and whether it holds sheet music. The two travel together because they are read together — a library scan
+ * whether there is a chord anywhere in it, whether it holds sheet music, and the pictures it names. The two travel together because they are read together — a library scan
  * walks each file once, and that walk is the slowest thing the app does at start.
  */
 public data class ChordProSummary(
@@ -19,4 +19,10 @@ public data class ChordProSummary(
     val hasChords: Boolean,
     /** Whether an `abc` environment holds a tune (an `X:` line), which the app draws as staff notation. */
     val hasSheetMusic: Boolean = false,
+    /**
+     * Every file an image directive names, read generously: the drawn ones, asset definitions, ones with a selector, ones
+     * in an environment handed to another program, and ones on a `#` line. The same set as
+     * `ChordProImages.referencedSources`, since it decides which of the library's pictures a song keeps.
+     */
+    val imageSources: Set<String> = emptySet(),
 )

@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProColors
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments
 import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
+import com.pandulapeter.campfire.chordpro.syntax.ChordProImageDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
@@ -40,6 +41,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TAB
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TEXT_COLOUR
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.TRANSPOSE
 import com.pandulapeter.campfire.chordpro.syntax.LineMode
+import com.pandulapeter.campfire.chordpro.syntax.ImageBlocks
 import com.pandulapeter.campfire.chordpro.syntax.MetadataBuilder
 import com.pandulapeter.campfire.chordpro.syntax.SectionBuilder
 import com.pandulapeter.campfire.chordpro.syntax.TimingChanges
@@ -74,6 +76,7 @@ public object ChordProParser {
         val section = SectionBuilder(blocks)
         val transposition = Transposition()
         val timing = TimingChanges()
+        val images = ImageBlocks()
         ChordProLineScanner.scan(text).forEach { line ->
             if (line.isSourceComment) return@forEach
             val directive = line.directive
@@ -81,7 +84,7 @@ public object ChordProParser {
                 if (line.trimmed.isNotEmpty()) transposition.startBody()
                 section.addContent(line.raw, line.trimmed)
             } else {
-                handleDirective(directive, metadata, blocks, section, transposition, timing)
+                handleDirective(directive, metadata, blocks, section, transposition, timing, images)
             }
         }
         section.close()
@@ -117,9 +120,9 @@ public object ChordProParser {
     public fun parseMetadata(text: String): ChordProMetadata = scan(text, shouldDetectChords = false, notation = ChordNotation.STANDARD).metadata
 
     /**
-     * The directives of a song, whether it has any chords, and whether it holds sheet music, from a single walk over the
-     * text. The library scan wants them for every file it reads, and asking for them separately walks each file twice.
-     * [notation] is the one [text] is written in, as for [parse].
+     * The directives of a song, whether it has any chords, whether it holds sheet music, and the pictures it names, from a
+     * single walk over the text. The library scan wants them for every file it reads, and asking for them separately walks
+     * each file twice. [notation] is the one [text] is written in, as for [parse].
      */
     public fun summarize(text: String, notation: ChordNotation = ChordNotation.STANDARD): ChordProSummary = scan(text, shouldDetectChords = true, notation = notation)
 
@@ -135,7 +138,13 @@ public object ChordProParser {
         var hasChords = false
         var hasSheetMusic = false
         var isGermanNotated = notation == ChordNotation.GERMAN
+        val imageSources = mutableSetOf<String>()
         ChordProLineScanner.scan(text).forEach { line ->
+            // Read as generously as ChordProImages.referencedSources reads them, which a directive line that is not an
+            // image cannot be outside an environment handed to another program, so only those and `#` lines are read again.
+            if (line.isSourceComment || line.isDelegated || line.directive?.name?.let(ChordProImageDirectives::isImageName) == true) {
+                ChordProImageDirectives.sourcesOn(line.raw).forEach { imageSources += it.value }
+            }
             if (line.isSourceComment) return@forEach
             val rawLine = line.raw
             val trimmedLine = line.trimmed
@@ -174,6 +183,7 @@ public object ChordProParser {
             metadata = declared.copy(key = key),
             hasChords = hasChords,
             hasSheetMusic = hasSheetMusic,
+            imageSources = imageSources,
         )
     }
 
@@ -205,6 +215,7 @@ public object ChordProParser {
         section: SectionBuilder,
         transposition: Transposition,
         timing: TimingChanges,
+        images: ImageBlocks,
     ) {
         val name = directive.name
         // A definition's selector names the instrument it is for, which Campfire draws, rather than a person or a
@@ -261,6 +272,7 @@ public object ChordProParser {
             // Never a Campfire 3 heading: that dialect wrote its headings as `{comment}` only.
             "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
+            ChordProImageDirectives.IMAGE -> images.read(directive.value)?.let(section::addBlock)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
             // Not the section's: each colour holds from here on, across sections, until another one changes it.
             CHORD_COLOUR -> section.chordColor = ChordProColors.parse(directive.value)

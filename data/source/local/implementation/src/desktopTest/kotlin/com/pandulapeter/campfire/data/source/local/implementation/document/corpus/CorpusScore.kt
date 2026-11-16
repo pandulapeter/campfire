@@ -113,7 +113,7 @@ internal fun itemsOf(blocks: List<ChordProBlock>): List<CorpusItem> = blocks.fla
             opening + block.lines.mapNotNull { itemOf(it, section) }
         }
         is ChordProBlock.Comment -> normalized(ChordProMarkup.strip(block.text).text).takeIf { it.isNotEmpty() }?.let { listOf(CorpusItem.Comment(it)) }.orEmpty()
-        is ChordProBlock.ChorusRecall, is ChordProBlock.Transpose, is ChordProBlock.Timing, ChordProBlock.Break -> emptyList()
+        is ChordProBlock.ChorusRecall, is ChordProBlock.Transpose, is ChordProBlock.Timing, ChordProBlock.Break, is ChordProBlock.Image -> emptyList()
     }
 }
 

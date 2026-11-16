@@ -70,6 +70,12 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
 - **A chord row's repeat counts, bar lines, and beat dots are marks** (`ChordProRowMarks`), written back as their bare
   text; a sung line, and a line of a mark alone, keep them as lyrics. A word is never one: `twice` is written
   `[*twice]`.
+- **`{image}`** is a block where it stands, cutting a section as a break does; a song may be a header and a picture
+  alone. Every attribute is kept in `Image.attributes`, only size, scale, alignment, and title are read; any anchor is
+  read as `float`. An `id` with a `src` and nothing else only defines an asset, as ChordPro says; one with more also
+  draws. **The files a song names are read generously** (`ChordProImages.referencedSources`, and the same set in
+  `ChordProSummary.imageSources`, read in the summary's one walk): definitions, selectors, delegated environments, and
+  `#` lines count, since the set decides which library pictures are kept, exported, and guarded from a sync deletion.
 - `ChordProSplitter` splits at `{new_song}` outside delegated environments. `comparable` (what an import compares
   against the file on disk) also folds line endings, notation, and directive spellings, which Prettify must not do.
   Both drop a BOM anywhere, or a `{title}` behind it would read as lyrics.

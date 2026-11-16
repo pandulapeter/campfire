@@ -16,6 +16,8 @@
 - `ChordProMetadataFields.set` rewrites the line the parser reads, in its own spelling, **but never a body
   `{key}`/`{tempo}`/`{time}`**; a cleared header value the body still changes is kept as an empty line, so the song
   does not start in its first change.
+- `ChordProImages` rewrites only the `src` value of each image directive its generous scan finds (a `#` line's too,
+  so a commented-out picture follows a rename), quoting the new value only where it needs quotes.
 - `ChordProHeader.insert` puts a directive in the header, never at the caret (valid but invisible mid-verse);
   `ChordProHeader.write` selects (or fills) the existing line of a kind the song may hold only once instead.
 - `ChordProPrettifier` formats raw text, never re-serializes a model, so unsupported directives survive. **No blank line

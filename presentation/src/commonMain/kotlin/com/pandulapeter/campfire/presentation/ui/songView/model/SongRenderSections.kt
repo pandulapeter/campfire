@@ -106,6 +106,8 @@ internal fun ChordProSong.toRenderSections(
         when (block) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
 
+            is ChordProBlock.Image -> Unit // A picture draws nothing on the page.
+
             is ChordProBlock.Timing -> if (showsTiming) sections += block.toRenderSection()
 
             is ChordProBlock.Transpose -> block.toRenderSection(shouldShowChords)?.let { sections += it }

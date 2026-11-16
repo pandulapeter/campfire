@@ -98,6 +98,8 @@ internal class PrintRows(
         is ChordProBlock.Transpose -> listOf(keyChangeRows(first, width))
         is ChordProBlock.Timing -> listOf(timingRows(first, width))
         ChordProBlock.Break -> listOf(emptyList())
+        // A picture prints nothing, so it is a segment that prints nothing, as a break is.
+        is ChordProBlock.Image -> listOf(emptyList())
     }
 
     /**
@@ -136,7 +138,7 @@ internal class PrintRows(
                     if (keyChangeRows(block, lineWidth).isNotEmpty()) parts += SectionPart.KeyChange(block)
                 }
                 ChordProBlock.Break -> segments += mutableListOf<SectionPart>()
-                is ChordProBlock.Timing, is ChordProBlock.ChorusRecall -> Unit
+                is ChordProBlock.Timing, is ChordProBlock.ChorusRecall, is ChordProBlock.Image -> Unit
             }
         }
         val printed = segments.map { parts -> parts.map { partRows(it, sectionLabel, lineWidth) } }

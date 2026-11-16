@@ -104,12 +104,13 @@ internal object ChordProHeaderLayout {
         get() = startOfEnvironment(name) == null && endOfEnvironment(name) == null && name !in bodyNames
 
     /**
-     * The directives [ChordProParser] makes a block of their own out of — a comment, a break, a chorus recall —
-     * and which therefore cut whatever section they stand in into two, a run of tablature included.
+     * The directives [ChordProParser] makes a block of their own out of — a comment, a break, a chorus recall, a
+     * picture — and which therefore cut whatever section they stand in into two, a run of tablature included. An
+     * `{image}` that only defines an asset makes none, but still begins the body like any other.
      */
     val blockNames = setOf(
         "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "highlight", "new_page", "np",
-        "new_physical_page", "npp", "column_break", "colb",
+        "new_physical_page", "npp", "column_break", "colb", "image",
     )
 
     private val bodyNames = blockNames + setOf("new_song", "ns")

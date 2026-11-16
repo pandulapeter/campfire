@@ -90,7 +90,48 @@ public sealed interface ChordProBlock {
 
     /** {column_break} / {new_page} and friends: a hint that the layout may break here. */
     public data object Break : ChordProBlock
+
+    /**
+     * `{image}`: a picture drawn where the directive stands, between lines like a [Break] (it cuts the section it is
+     * written in, and outside one it is a block of its own, so a song can be a header and a picture alone).
+     *
+     * [src] is the file the picture is read from, as the song names it (a bare name is looked up beside the song): the
+     * `src=` attribute, the first word of the short form `{image: x.png}`, or for `{image: id=a}` the `src` of the last
+     * `{image: id=a src=…}` before it. A directive that names no file, or an `id` nothing defined, is no block at all.
+     *
+     * Drawn: [width] and [height] (points, or a percentage of the width the image may take), [scale] (a factor,
+     * `50%` already read as 0.5), [alignment], and [title]; each is null where the file leaves it out or writes
+     * something unreadable. Kept but not drawn, in [attributes] only: `x`, `y`, `spread`, `border`, `trbl`, `href`,
+     * and `anchor`. A non-`float` anchor puts the picture on the page background in ChordPro, behind the text, which a
+     * reader of a song cannot follow, so the picture is read where it stands like any other.
+     *
+     * [attributes] is every attribute the directive writes, keys lowercased, values unquoted, the first of a repeated
+     * key winning. A bare word that is a flag (`center`, `border`) has an empty value, and the short form's file is
+     * there as `src`.
+     */
+    public data class Image(
+        val src: String,
+        val width: ImageLength? = null,
+        val height: ImageLength? = null,
+        val scale: Double? = null,
+        val alignment: ImageAlignment? = null,
+        val title: String? = null,
+        val attributes: Map<String, String> = emptyMap(),
+    ) : ChordProBlock
 }
+
+/** A width or a height an `{image}` asks for. */
+public sealed interface ImageLength {
+
+    /** In typographic points, as ChordPro measures a page. */
+    public data class Points(val points: Double) : ImageLength
+
+    /** A percentage of the width available to the image, 100 being all of it. */
+    public data class Percent(val percent: Double) : ImageLength
+}
+
+/** Where an `{image}` narrower than its column stands in it; ChordPro's own default is [CENTER]. */
+public enum class ImageAlignment { LEFT, CENTER, RIGHT }
 
 /**
  * What a section of a song *is*. Deliberately not how its lines are written down: `{start_of_tab}` and
