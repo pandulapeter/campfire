@@ -91,6 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.instrument.instrumentLabel
 import com.pandulapeter.campfire.presentation.ui.components.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcut
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.keyShortcut
+import com.pandulapeter.campfire.presentation.ui.tabs.sheetMusicInstruments
 import com.pandulapeter.campfire.presentation.ui.tabs.tabInstruments
 import org.jetbrains.compose.resources.painterResource
 
@@ -334,12 +335,12 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
 )
 
 /**
- * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: tablature,
- * grids, and sheet music (an `abc` block, labelled as the reader's section is, for what it holds rather than for
- * the notation it is written in), and the three kinds of comment as one menu, a plain comment being the one usually
- * wanted.
+ * The other ways of writing lines down, which a song holds a few of at most and so belong to the first row: tablature
+ * and sheet music (an `abc` block, labelled as the reader's section is, for what it holds rather than for the notation
+ * it is written in) side by side, as the two that ask whom they are for, then grids, and the three kinds of comment as
+ * one menu, a plain comment being the one usually wanted.
  *
- * Tablature, grids, and sheet music are a group of their own rather than more sections, because that is what they
+ * Tablature, sheet music, and grids are a group of their own rather than more sections, because that is what they
  * are: a `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without
  * breaking it in two, see [SectionType][com.pandulapeter.campfire.chordpro.model.SectionType].
  *
@@ -349,8 +350,9 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  * starts as an empty staff of one bar ([tabStaff]) — the picked instrument's strings in standard tuning, the player's
  * own instrument's for any — named, so that the file says what it is written in for whoever reads it in another
  * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
- * environment around it. Sheet music likewise starts an empty block with the header a tune needs to be drawn
- * (`sheetMusicHeader`) and only wraps a selection. A picture ([onPickImage]) is a line of its own too, after them.
+ * environment around it. Sheet music likewise asks whom the tune is for, any instrument or one of
+ * [sheetMusicInstruments], the readers of notation among them, starts an empty block with the header a tune needs to be
+ * drawn (`sheetMusicHeader`), and only wraps a selection. A picture ([onPickImage]) is a line of its own too, after them.
  */
 @Composable
 private fun lineKindInsertions(
@@ -364,8 +366,12 @@ private fun lineKindInsertions(
             choices = listOf(EditorInsertion.tab(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, staff = tabStaff(null))) +
                 tabInstruments.map { instrument -> EditorInsertion.tab(instrumentLabel(instrument), selector = instrument.id, staff = tabStaff(instrument)) },
         ),
+        EditorInsertion.menu(
+            label = stringResource(Res.string.song_editor_section_abc),
+            choices = listOf(EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, header = sheetMusicHeader)) +
+                sheetMusicInstruments.map { instrument -> EditorInsertion.sheetMusic(instrumentLabel(instrument), selector = instrument.id, header = sheetMusicHeader) },
+        ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
-        EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_section_abc), header = sheetMusicHeader),
         onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it, shortcut = KeyShortcut.INSERT_IMAGE) },
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),

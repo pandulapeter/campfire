@@ -80,17 +80,26 @@ class EditorInsertionWritesTest {
     fun `sheet music with nothing selected starts a tune header with the caret below it`() {
         val state = TextFieldState("", TextRange(0))
 
-        state.insert(EditorInsertion.sheetMusic(label = "Sheet music", header = listOf("X:1", "L:1/8", "K:G")))
+        state.insert(EditorInsertion.sheetMusic(label = "Sheet music", selector = null, header = listOf("X:1", "L:1/8", "K:G")))
 
         assertEquals("{start_of_abc}\nX:1\nL:1/8\nK:G\n\n{end_of_abc}", state.text.toString())
         assertEquals(TextRange("{start_of_abc}\nX:1\nL:1/8\nK:G\n".length), state.selection)
     }
 
     @Test
+    fun `sheet music for an instrument names it in its opening directive only`() {
+        val state = TextFieldState("", TextRange(0))
+
+        state.insert(EditorInsertion.sheetMusic(label = "Violin", selector = "violin", header = listOf("X:1", "K:G")))
+
+        assertEquals("{start_of_abc-violin}\nX:1\nK:G\n\n{end_of_abc}", state.text.toString())
+    }
+
+    @Test
     fun `sheet music around a selection only wraps it`() {
         val state = TextFieldState("X:1\nK:D\nDEF|", TextRange(0, 12))
 
-        state.insert(EditorInsertion.sheetMusic(label = "Sheet music", header = listOf("X:1", "L:1/8", "K:G")))
+        state.insert(EditorInsertion.sheetMusic(label = "Sheet music", selector = null, header = listOf("X:1", "L:1/8", "K:G")))
 
         assertEquals("{start_of_abc}\nX:1\nK:D\nDEF|\n{end_of_abc}", state.text.toString())
     }

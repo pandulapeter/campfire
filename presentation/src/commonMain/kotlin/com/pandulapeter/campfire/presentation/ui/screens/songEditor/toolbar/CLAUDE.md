@@ -37,7 +37,8 @@ The editor's Shortcuts rows and its control row.
 - Tab asks what the tab is for (Any, or a fretted instrument → `{start_of_tab-<id>}`, closed by plain `{end_of_tab}`)
   and writes one empty bar in that instrument's standard tuning (Any: the player's instrument's, a guitar's for a
   fretless one), whatever the player's tuning. With a selection it only wraps it.
-- Sheet music with nothing selected writes `X:1`, the song's meter, `L:1/8`, and its key as root, minor, or mode in
+- Sheet music sits beside Tab and asks the same (Any, or any instrument but Other → `{start_of_abc-<id>}`). With
+  nothing selected it writes `X:1`, the song's meter, `L:1/8`, and its key as root, minor, or mode in
   standard letters (abc2svg draws nothing without `X:`, fails on `K:H`, and reads `K:A-moll` as A major); with a
   selection it only wraps it.
 - Chord color and Text color offer nine ChordPro colour names, the pure ones (`yellow`, `cyan`) too: the reader moves

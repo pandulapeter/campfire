@@ -71,6 +71,13 @@ internal fun emptyTabStaffFor(
 internal val tabInstruments get() = UserPreferences.Instrument.entries.filter { it.hasFrets }
 
 /**
+ * The instruments a tune can be written for, in the order the editor's Sheet music button offers them: every one but
+ * Other, which names nobody's part, each named by its own id in the selector (`{start_of_abc-violin}`), which
+ * [tabPlayerOf] picks it out by as it does a tab's.
+ */
+internal val sheetMusicInstruments get() = UserPreferences.Instrument.entries - UserPreferences.Instrument.OTHER
+
+/**
  * The names a tab's selector may call [instrument] by, the best match first: its own, then the instrument it is a
  * kind of, whose tab a guitar with more strings or a bass with five plays all the same (moved to its strings).
  */
