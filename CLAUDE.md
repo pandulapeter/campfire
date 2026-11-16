@@ -30,8 +30,9 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   keeping nothing beyond the import.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
-  and `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
-  draft, the iOS share inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
+  (Android without `library/files/`, whose photos would pass its 25 MB cap) and `preferences.json` — never the sync
+  credentials, the sync index, the shared links mirror and journal, the editor draft and its pictures, the iOS share
+  inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
   `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with no preferences document
   forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
@@ -76,6 +77,7 @@ Library layout, inside each platform's app-private data directory:
 ```
 library/songs/*.cho                    one song per file; the file name is its identity
 library/setlists/*.setlist.json        one setlist per file
+library/files/<sha256 hex>.<ext>       the pictures songs show, named by content, deleted once no song names them
 preferences/preferences.json           UserPreferences; never exported (.bad keeps the last undecodable one)
 preferences/sync-credentials.json      desktop and web; Keystore (sync-credentials.bin) / Keychain on Android / iOS
 preferences/sync-index.json            what sync last saw of both sides, file by file
@@ -83,6 +85,7 @@ preferences/sync-credentials-forget-pending
 preferences/shared-links.json          the account's shared links as last read (the mirror)
 preferences/shared-links-journal.json  renames and deletions of shared items not yet applied to that list
 preferences/editor-draft.json          the editor's unsaved text, survives process death
+editor-draft-images/<sha256 hex>.<ext> pictures the draft names that no saved song holds yet; moved in by Save
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
 exports/<name>                         an archive or PDF written before it is saved or shared, emptied on launch (iOS: Caches)
 instance.lock / instance.endpoint      desktop only: single-instance guard
@@ -164,6 +167,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   taps only nudge it: `ui/screens/songDetails/autoScroll`, `ui/songView/grid`.
 - Selection mode starts from a song's menu, lives while Songs is on top, never deletes in bulk: `ui/screens/songs`.
 - Tags, languages, cover, and links are ChordPro directives in the song file, so they travel with it: `ui`.
+- Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB, never
+  re-encoded), kept while a song names one; a missing one draws a placeholder that can add it: `ui/songView`,
+  `data/repository/implementation`, `chordpro`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names with a capo; the keyboard always
@@ -244,7 +250,8 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   the screen; content decides what changed, never a clock; a run that would delete most of the library on either side
   stops and asks; a run starts on every return to the front, unless the last one was stopped or is waiting for an
   answer about deletions, and another device's change starts one while in front; shared copies follow the library,
-  and a share stops only by an explicit action.
+  and a share stops only by an explicit action; a picture a song names is never deleted on either side, and a copy
+  that is not what its name says never travels.
 - **Metronome** (`libs/metronome/implementation`, `ui/metronome`, `ui/playing`): timing by sample count, never a
   timer; a click never outlives its screen; tempo overrides live where transpositions do.
 - **Tuner** (`libs/tuner/implementation`, `ui/tuner`): the desktop, which cannot tell whether it may listen, remembers
