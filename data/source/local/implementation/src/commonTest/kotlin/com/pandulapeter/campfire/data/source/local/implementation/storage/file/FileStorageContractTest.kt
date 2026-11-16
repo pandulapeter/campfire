@@ -253,7 +253,8 @@ abstract class FileStorageContractTest {
 
         assertEquals(first.size + 3L, sink.position)
         assertContentEquals(first + "end".encodeToByteArray(), fileStorage.readBytes(StorageDirectory.EXPORTS, "songs.zip"))
-        assertTrue(fileStorage.pathOf(StorageDirectory.EXPORTS, "songs.zip").endsWith("exports/songs.zip"))
+        // Windows separates the folders with a backslash.
+        assertTrue(fileStorage.pathOf(StorageDirectory.EXPORTS, "songs.zip").replace('\\', '/').endsWith("exports/songs.zip"))
     }
 
     @Test

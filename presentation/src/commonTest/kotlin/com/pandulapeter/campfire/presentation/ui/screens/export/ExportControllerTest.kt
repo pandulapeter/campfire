@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.export
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
@@ -306,8 +307,20 @@ class ExportControllerTest {
                 exportLibrary = object : ExportLibraryUseCase {
                     override suspend fun invoke() = libraryExport
                 },
+                // A writer that takes the pages and is never finished: an export failing here would end on another
+                // dispatcher, clearing its progress before a test reads it.
                 createExportFile = object : CreateExportFileUseCase {
-                    override suspend fun invoke(name: String) = error("No PDF is finished here.")
+                    override suspend fun invoke(name: String) = object : ExportFileWriter {
+                        override var position = 0L
+
+                        override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
+                            position += length
+                        }
+
+                        override suspend fun finish() = error("No PDF is finished here.")
+
+                        override suspend fun abandon() = Unit
+                    }
                 },
                 discardExportedFile = object : DiscardExportedFileUseCase {
                     override suspend fun invoke(file: ExportedFile) {
