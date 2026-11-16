@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
@@ -540,6 +541,22 @@ class EditorSessionTest {
         val fixture = fixture()
         assertFalse(fixture.session.openNewSongEditor(pictureSong(byteArrayOf(HEIC)), null))
         assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), backStack.toList())
+        assertNull(fixture.session.editorDraft.value)
+    }
+
+    @Test
+    fun `a picture too large to read that arrived alone opens no editor and is said to be too large`() = runTest {
+        val fixture = fixture()
+        val song = ImportPlan.SongEntry(
+            fileName = "photo.webp",
+            text = "",
+            status = ImportPlan.Status.NEW,
+            sourceFileName = "photo.webp",
+            title = "photo",
+            images = listOf(ImportPlan.SongImage(source = "photo.webp", name = null, bytes = null, problem = ImportedImage.Problem.TOO_LARGE)),
+        )
+        assertFalse(fixture.session.openNewSongEditor(song, null))
+        assertEquals(listOf<Message>(Message.ImageTooLargeToRead), fixture.messages)
         assertNull(fixture.session.editorDraft.value)
     }
 

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -34,6 +35,26 @@ class ImportedImageFilesTest {
         assertNull(plan.pictureSong())
         assertEquals(listOf("notes.docx", "Chart page 1.jpg", "page 2.png"), plan.withImageFilesSkipped().skippedFileNames)
         assertEquals(emptyList(), plan.withImageFilesSkipped().imageFiles)
+    }
+
+    @Test
+    fun `a picture too large to read comes along unbrought, after the pictures that were read`() {
+        val song = ImportPlan(imageFiles = pictures, oversizedFileNames = listOf("huge.webp")).pictureSong()!!
+        assertEquals(listOf("Chart page 1.jpg", "page 2.png", "huge.webp"), song.images.map { it.source })
+        assertNull(song.images.last().bytes)
+        assertEquals(ImportedImage.Problem.TOO_LARGE, song.images.last().problem)
+    }
+
+    @Test
+    fun `a picture too large to read alone is a song titled by it, rather than a review`() {
+        val song = ImportPlan(oversizedFileNames = listOf("Huge photo.heic")).pictureSong()!!
+        assertEquals("Huge photo", song.title)
+        assertEquals(listOf(ImportedImage.Problem.TOO_LARGE), song.images.map { it.problem })
+    }
+
+    @Test
+    fun `pictures beside a file too large that is no picture make no song`() {
+        assertNull(ImportPlan(imageFiles = pictures, oversizedFileNames = listOf("backup.zip")).pictureSong())
     }
 
     @Test

@@ -65,7 +65,8 @@ which the script checks; everything else is handed the holders, state, and callb
 - Summaries report unreadable documents separately and append the number of converted songs actually written.
 - Pictures arriving alone (`ImportPlan.imageFiles`, nothing else in the batch, read behind no screen) are one new song
   in the editor (`pictureSong`): titled by the first file's name, a directive per picture in order, each kept as a draft
-  picture as the editor opens, a refused one said why (none kept, no editor). A picture beside anything else, or with
+  picture as the editor opens, a refused one said why (none kept, no editor), one over 40 MB among them (unread, so an
+  oversized name, never a review for it). A picture beside anything else, or with
   the songs off, is reported as skipped. A review row counts the pictures its song brings and the ones it names but
   leaves out.
 

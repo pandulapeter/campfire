@@ -185,10 +185,10 @@ internal class EditorImages(
 
     /**
      * The text a new song made of [pictures] alone opens with: the directive of each one kept, in order, a line each; null
-     * where every one was refused (said in a snackbar).
+     * where every one was refused (said in a snackbar), one left unread for its size among them.
      */
     suspend fun pictureSongText(pictures: List<ImportPlan.SongImage>): String? =
-        keep(pictures.map { ImportedFile(name = it.source, bytes = it.bytes ?: ByteArray(0)) })
+        keep(pictures.map { it.bytes?.let { bytes -> ImportedFile(name = it.source, bytes = bytes) } ?: ImportedFile.unread(it.source, isTooLarge = true) })
             .takeIf { it.isNotEmpty() }
             ?.joinToString("\n", transform = ChordProImages::directive)
 
