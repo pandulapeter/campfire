@@ -18,15 +18,12 @@ What's planned for Campfire, grouped by area.
 
 ## Short-term
 
-- **Images in songs**: ChordPro's `{image}` directive, pictures kept in the library and named by their content, synced,
-  exported, shared, and printed with the song; a lone image file imports as a song (a chart that only exists on
-  paper or as a PDF, still in the setlist). Plan: [song-images.md](plans/song-images.md)
 - **Simpler comments and annotations** on songs, add ability to make notes / markups on music
 - **Comments in setlists**, between songs
 - **External monitor support**: an audience screen (a projector, a TV, or a monitor) showing the song in big text,
   with the app as the controller. Plan: [audience-screen.md](plans/audience-screen.md)
 - **Google Drive sync**, as a second provider beside Dropbox. The groundwork landed for v5.1.0; spikes S1–S5 are next.
-    Plan: [google-drive-sync.md](plans/google-drive-sync.md)
+  Plan: [google-drive-sync.md](plans/google-drive-sync.md)
 - **A more readable sync folder**: consider organizing it in a more user-readable way (subfolders for artists), as an
   option
 
