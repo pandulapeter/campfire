@@ -22,7 +22,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -68,11 +72,18 @@ internal fun OverflowMenu(
             onDispose { overlayState.onMenuClosed() }
         }
     }
-    Box(modifier = modifier) {
+    // Where the menu hangs from, followed only while it is up and read while it is measured, so that a button moving under
+    // its open menu (the editor's Shortcuts unfolding as Ctrl / Cmd + Shift + I opens the Image menu) sizes it again.
+    var anchor by remember { mutableStateOf<Rect?>(null) }
+    Box(
+        modifier = modifier.then(
+            if (isShown) Modifier.onGloballyPositioned { anchor = Rect(it.positionInWindow(), it.size.toSize()) } else Modifier,
+        ),
+    ) {
         button(state::open)
         DropdownMenu(
             modifier = Modifier.layout { measurable, constraints ->
-                val limit = popupRoom.heightPx(this)
+                val limit = popupRoom.menuHeightPx(this, anchor)
                 val placeable = measurable.measure(
                     constraints.copy(
                         minHeight = minOf(constraints.minHeight, limit),

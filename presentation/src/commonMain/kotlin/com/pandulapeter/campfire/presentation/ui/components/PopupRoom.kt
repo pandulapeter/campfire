@@ -19,9 +19,13 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import kotlin.math.ceil
+import kotlin.math.floor
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -45,6 +49,28 @@ internal class PopupRoom(
 ) {
     fun heightPx(density: Density) = (windowInfo.containerSize.height - insets.value.getTop(density) - insets.value.getBottom(density)).coerceAtLeast(0)
 
+    /**
+     * The height a dropdown hanging from [anchor] (its bounds in the window, null before it is placed) may take: [heightPx],
+     * cut to what keeps it below or above [anchor] ([anchoredMenuHeightPx]).
+     *
+     * The room below ends [heightPx] from the window's top rather than at the top inset's end: Android places a popup by
+     * the anchor's position in the window but against the size alone of the window's visible frame, which starts below
+     * the status bar, so a menu reaching further down counts as not fitting there.
+     */
+    fun menuHeightPx(density: Density, anchor: Rect?): Int {
+        val room = heightPx(density)
+        if (anchor == null) return room
+        return with(density) {
+            anchoredMenuHeightPx(
+                room = room,
+                roomAbove = floor(anchor.top).toInt() - insets.value.getTop(density),
+                roomBelow = room - ceil(anchor.bottom).toInt(),
+                margin = MENU_VERTICAL_MARGIN.roundToPx(),
+                minimum = MIN_ANCHORED_MENU_HEIGHT.roundToPx(),
+            )
+        }
+    }
+
     /** The part of a popup's [windowSize] that no inset covers, in the coordinates a popup is placed in. */
     fun safeBounds(windowSize: IntSize, density: Density, layoutDirection: LayoutDirection) = insets.value.let { insets ->
         IntRect(
@@ -55,6 +81,25 @@ internal class PopupRoom(
         )
     }
 }
+
+/**
+ * The height a dropdown may take so that it still hangs from its anchor, [roomAbove] and [roomBelow] being the room on
+ * either side of the anchor within the [room] no inset covers. Material places a dropdown below its anchor where it fits,
+ * above it where that fits, each at least [margin] off the window's edges, and failing both centres it on the anchor's
+ * top edge, over the anchor itself: where it goes with the keyboard up in a short window, which leaves neither side room
+ * for two entries and the margin. So it is made no taller than the larger side, and scrolls, unless that side cannot show
+ * the [minimum] of one entry, which only the centring can.
+ */
+internal fun anchoredMenuHeightPx(room: Int, roomAbove: Int, roomBelow: Int, margin: Int, minimum: Int): Int {
+    val anchoredRoom = maxOf(roomAbove, roomBelow) - margin
+    return if (anchoredRoom < minimum) room else minOf(room, anchoredRoom)
+}
+
+/** Material's own distance between a dropdown and the window's top and bottom edges (its `MenuVerticalMargin`, internal). */
+private val MENU_VERTICAL_MARGIN = 48.dp
+
+/** One menu entry, with the menu's padding above and below it. */
+private val MIN_ANCHORED_MENU_HEIGHT = 64.dp
 
 /**
  * The [PopupRoom] of the app, provided next to the overlay state. Its own local rather than a part of that state: the

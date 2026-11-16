@@ -25,4 +25,6 @@
   double tap on Export would export twice.
 - A dropdown is bounded by the window less the system bars and keyboard (`PopupRoom`), resolved once in `CampfireApp` as
   its own local (`OverlayState` outlives an Android activity; the insets belong to its view), read only while measured,
-  so no closed menu resolves insets and a resize recomposes nothing.
+  so no closed menu resolves insets and a resize recomposes nothing. It is also no taller than the larger side of its
+  button (`anchoredMenuHeightPx`), where it scrolls: Material centres one that fits neither side over the button itself
+  (a short window with the keyboard up), and Android never places a popup again for the keyboard alone.
