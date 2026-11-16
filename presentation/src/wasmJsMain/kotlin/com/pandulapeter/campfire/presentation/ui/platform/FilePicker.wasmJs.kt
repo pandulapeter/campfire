@@ -49,7 +49,10 @@ import kotlin.js.Promise
 internal object WebFilePicker : FilePicker {
 
     override suspend fun pickFiles(): List<ImportedFile> =
-        openFileInput().await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+        openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+
+    override suspend fun pickImages(): List<ImportedFile> =
+        openFileInput(accept = (PICTURE_MIME_TYPES + PICTURE_EXTENSIONS.map { ".$it" }).joinToString(",")).await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
 
     /**
      * A download rather than a dialog: the browser decides where it lands, and there is no way to hear whether the
@@ -140,17 +143,18 @@ private fun shareUrl(url: String, title: String): Promise<JsString> = js(
 )
 
 /**
- * Resolves with the picked files, or with an empty list when the dialog was dismissed. A dismissed dialog is the
- * input's `cancel` event where the browser fires one. Where it does not, the window regaining focus without a
+ * Resolves with the picked files (of the kinds [accept] lists, as an `<input>`'s `accept`, where it is not empty), or
+ * with an empty list when the dialog was dismissed. A dismissed dialog is the input's `cancel` event where the browser fires one. Where it does not, the window regaining focus without a
  * `change` following it is taken to mean one - after a wait long enough for a large selection, which some browsers
  * deliver well after the window already has its focus back, to arrive first.
  */
-private fun openFileInput(): Promise<JsArray<JsAny>?> = js(
+private fun openFileInput(accept: String): Promise<JsArray<JsAny>?> = js(
     """(function () {
         return new Promise(function (resolve) {
             var input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
+            if (accept) input.accept = accept;
             input.style.display = 'none';
             document.body.appendChild(input);
             var isDone = false;

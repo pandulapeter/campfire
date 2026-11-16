@@ -12,10 +12,14 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor.toolbar
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextRange
 import com.pandulapeter.campfire.chordpro.chords.ChordNotation
 import com.pandulapeter.campfire.chordpro.edit.ChordProHeader
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.presentation.mapper.toChordNotation
 import com.pandulapeter.campfire.presentation.ui.chords.chordShapeInsertion
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.toggleFormatting
 
@@ -69,6 +73,12 @@ internal class EditorChordShapes(
     val notation: ChordNotation,
     val storedShapes: Map<String, Map<String, String>>,
 )
+
+/** The [EditorChordShapes] of a field written in [notation], with the player's choices of shape in [userPreferences]. */
+@Composable
+internal fun rememberEditorChordShapes(userPreferences: UserPreferences?, notation: UserPreferences.Notation) = remember(userPreferences, notation) {
+    EditorChordShapes(notation = notation.toChordNotation(), storedShapes = userPreferences?.chordVoicings.orEmpty())
+}
 
 internal fun TextFieldState.insertChordShape(chordShapes: EditorChordShapes, instrument: ChordInstrument) = edit {
     val insertion = chordShapeInsertion(

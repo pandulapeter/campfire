@@ -112,6 +112,16 @@ key leaves numbers nothing to count from.
   a restored process waits for draft recovery, so a long document gets its text from the draft, not the file.
 - A failed first read shows the details screen's failed state (Retry, Close).
 
+## Pictures (`state/editor/EditorImages`)
+
+- The Image button (never in read only mode) keeps what it picks as draft pictures, off the library, and inserts their
+  directives at the caret as one undo step (`ImageLines.kt`, tested); a pick the editor closed under keeps nothing.
+- The text's names are held from the pruning a beat after typing pauses, once draft recovery is over. Save moves the
+  draft pictures the text names into the library and writes the song under one pruning hold, renames applied
+  (`SaveWithDraftImagesUseCase`; a text naming none is saved as before). The draft shelf is emptied once no editor is
+  left and nothing is unsaved, not at Save, so an undo after it still finds its picture; a launch keeps only what the
+  stored draft names.
+
 ## A new song from a pasted or shared text
 
 - Opened on `NEW_SONG_FILE_NAME`, which no file has: nothing read, written, or synced before Save. A missing title and

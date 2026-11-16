@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import org.jetbrains.compose.resources.painterResource
@@ -104,6 +105,12 @@ internal fun SongEditorScreen(
         initialText = initialText ?: viewModel.songTextStore.songTexts.mapNotNull { it[destination.fileName] }.first().let(editorTextOf)
         hasOpened = true
     }
+    // Read only mode takes in no picture, as it changes nothing else: an editor is open in it only on a shared text.
+    val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val filePicker = LocalFilePicker.current
+    val onPickImage = remember(isPerformanceModeEnabled, destination.fileName, filePicker) {
+        if (isPerformanceModeEnabled) null else ({ viewModel.editorSession.images.pickImages(destination.fileName, filePicker::pickImages) })
+    }
     AnimatedContent(
         modifier = modifier.fillMaxSize(),
         targetState = initialText,
@@ -131,6 +138,7 @@ internal fun SongEditorScreen(
                 windowSize = windowSize,
                 contentPadding = contentPadding,
                 urlOpener = urlOpener,
+                onPickImage = onPickImage,
                 onBack = onBack,
             )
         }

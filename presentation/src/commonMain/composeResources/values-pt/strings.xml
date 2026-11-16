@@ -931,6 +931,7 @@
     <string name="song_editor_tab_any_instrument">Qualquer instrumento</string>
     <string name="song_editor_section_grid">Grade</string>
     <string name="song_editor_section_abc">Partitura</string>
+    <string name="song_editor_insert_image">Imagem</string>
     <string name="song_editor_insert_chorus_recall">Repetir refrão</string>
     <string name="song_editor_insert_comment">Comentário</string>
     <string name="song_editor_insert_comment_italic">Comentário em itálico</string>

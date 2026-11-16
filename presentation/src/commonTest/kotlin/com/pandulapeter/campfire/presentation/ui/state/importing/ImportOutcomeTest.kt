@@ -40,6 +40,14 @@ class ImportOutcomeTest {
     }
 
     @Test
+    fun `pictures alone are read behind no screen, and a picture beside anything else is shown`() {
+        assertFalse(requestOf("photo.jpg", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = true))
+        assertFalse(requestOf("page 1.PNG", "page 2.jpeg", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
+        assertTrue(requestOf("photo.jpg", "a.cho", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
+        assertTrue(requestOf("photo.jpg", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = false))
+    }
+
+    @Test
     fun `an import that asks for no review is not shown while it is read`() {
         assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReportedWhileRead(areSongsEnabled = true))
     }

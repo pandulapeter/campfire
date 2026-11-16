@@ -44,9 +44,7 @@ import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
-import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.CreateSongUseCase
-import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
@@ -63,7 +61,6 @@ import com.pandulapeter.campfire.domain.api.setlists.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.EditSongsUseCase
 import com.pandulapeter.campfire.domain.api.sync.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.GetCoverArtCacheSizeUseCase
-import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.library.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
@@ -78,7 +75,6 @@ import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.domain.api.songs.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
-import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.setlists.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.SearchCoverArtUseCase
@@ -157,6 +153,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongSelection
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextUseCases
+import com.pandulapeter.campfire.presentation.ui.state.editor.EditorUseCases
 import com.pandulapeter.campfire.presentation.ui.pictures.LibrarySongImages
 import com.pandulapeter.campfire.presentation.ui.pictures.loadSizesOf
 import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
@@ -181,11 +178,8 @@ class CampfireViewModel(
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
     private val getSongContent: GetSongContentUseCase,
-    private val getEditorDraft: GetEditorDraftUseCase,
-    private val saveEditorDraft: SaveEditorDraftUseCase,
+    private val editorUseCases: EditorUseCases,
     createSong: CreateSongUseCase,
-    draftSongFromText: DraftSongFromTextUseCase,
-    createSongFromText: CreateSongFromTextUseCase,
     duplicateSong: DuplicateSongUseCase,
     private val editSongs: EditSongsUseCase,
     deleteSong: DeleteSongUseCase,
@@ -322,7 +316,7 @@ class CampfireViewModel(
                 randomPicksDraw.catchUp()
             }
         }
-        addOnBackStackChanged { _, _ -> editorSession.onBackStackChanged() }
+        addOnBackStackChanged { previousTop, _ -> editorSession.onBackStackChanged(previousTop) }
         addOnBackStackChanged { _, stack -> metronomeController.onBackStackChanged(stack) }
         addOnBackStackChanged { _, _ -> importController.onBackStackChanged() }
     }
@@ -436,10 +430,8 @@ class CampfireViewModel(
         userPreferences = userPreferences,
         arePreferencesLoaded = preferencesController.arePreferencesLoaded,
         getSongContent = getSongContent,
-        getEditorDraft = getEditorDraft,
-        saveEditorDraft = saveEditorDraft,
-        draftSongFromText = draftSongFromText,
-        createSongFromText = createSongFromText,
+        useCases = editorUseCases,
+        images = editorUseCases.imagesFor(scope = viewModelScope, messageSink = messageSink),
         updateBackStack = { navigator.updateBackStack(update = it) },
         isSongShownOnTop = navigator::isSongShownOnTop,
         popBackStack = { navigator.popBackStack() },
@@ -519,7 +511,7 @@ class CampfireViewModel(
         reportState = importReportState,
         openLibraryItem = { openLibraryItem(it) },
         loadSongText = { songTextStore.loadSongContent(it).join() },
-        openNewSongEditor = { text, suggestion -> editorSession.openNewSongEditor(text, suggestion) },
+        openNewSongEditor = { song, suggestion -> editorSession.openNewSongEditor(song, suggestion) },
         areSongsEnabled = { preferencesController.areSongsEnabled.value },
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },

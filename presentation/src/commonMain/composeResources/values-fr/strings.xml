@@ -934,6 +934,7 @@
     <string name="song_editor_tab_any_instrument">Tout instrument</string>
     <string name="song_editor_section_grid">Grille</string>
     <string name="song_editor_section_abc">Partition</string>
+    <string name="song_editor_insert_image">Image</string>
     <string name="song_editor_insert_chorus_recall">Reprise du refrain</string>
     <string name="song_editor_insert_comment">Commentaire</string>
     <string name="song_editor_insert_comment_italic">Commentaire en italique</string>

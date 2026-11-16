@@ -55,7 +55,12 @@ import platform.UIKit.presentationController
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
+import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeData
+import platform.UniformTypeIdentifiers.UTTypeGIF
+import platform.UniformTypeIdentifiers.UTTypeJPEG
+import platform.UniformTypeIdentifiers.UTTypePNG
+import platform.UniformTypeIdentifiers.UTTypeWebP
 import platform.UniformTypeIdentifiers.UTTypeZIP
 import platform.darwin.NSObject
 import platform.posix.memcpy
@@ -74,11 +79,15 @@ internal class IosFilePicker(
     // UIKit keeps only a weak reference to a delegate, so the one that is in flight is held here.
     private var delegate: NSObject? = null
 
-    override suspend fun pickFiles(): List<ImportedFile> {
+    // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs out in the
+    // picker. What is not a song is skipped by the import and reported afterwards.
+    override suspend fun pickFiles() = pick(listOf(UTTypeData, UTTypeZIP))
+
+    override suspend fun pickImages() = pick(listOf(UTTypePNG, UTTypeJPEG, UTTypeGIF, UTTypeWebP))
+
+    private suspend fun pick(contentTypes: List<UTType>): List<ImportedFile> {
         val urls = suspendCancellableCoroutine<List<NSURL>> { continuation ->
-            // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs
-            // out in the picker. What is not a song is skipped by the import and reported afterwards.
-            val controller = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeData, UTTypeZIP), asCopy = true)
+            val controller = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes, asCopy = true)
             controller.allowsMultipleSelection = true
             present(controller) { urls -> continuation.resume(urls) }
         }

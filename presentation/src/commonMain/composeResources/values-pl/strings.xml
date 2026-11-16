@@ -960,6 +960,7 @@
     <string name="song_editor_tab_any_instrument">Dowolny instrument</string>
     <string name="song_editor_section_grid">Siatka</string>
     <string name="song_editor_section_abc">Nuty</string>
+    <string name="song_editor_insert_image">Obraz</string>
     <string name="song_editor_insert_chorus_recall">Powtórz refren</string>
     <string name="song_editor_insert_comment">Komentarz</string>
     <string name="song_editor_insert_comment_italic">Komentarz kursywą</string>

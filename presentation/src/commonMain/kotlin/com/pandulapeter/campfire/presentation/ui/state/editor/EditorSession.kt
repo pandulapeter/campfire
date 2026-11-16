@@ -14,11 +14,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
-import com.pandulapeter.campfire.domain.api.songs.CreateSongFromTextUseCase
-import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
-import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
-import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -47,6 +44,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -65,6 +63,7 @@ import kotlinx.coroutines.withContext
  * @param requestExit Closes the application, see `CampfireViewModel.requestExit`.
  * @param followNewSongCreated Puts the song the new song's first Save wrote under its editor, see
  *   `Navigator.followNewSongCreated`.
+ * @param images The pictures the editor's text names that are not in the library yet, let go of once no editor is left.
  */
 internal class EditorSession(
     private val scope: CoroutineScope,
@@ -76,10 +75,8 @@ internal class EditorSession(
     private val userPreferences: StateFlow<UserPreferences?>,
     private val arePreferencesLoaded: StateFlow<Boolean>,
     private val getSongContent: GetSongContentUseCase,
-    private val getEditorDraft: GetEditorDraftUseCase,
-    private val saveEditorDraft: SaveEditorDraftUseCase,
-    private val draftSongFromText: DraftSongFromTextUseCase,
-    private val createSongFromText: CreateSongFromTextUseCase,
+    private val useCases: EditorUseCases,
+    val images: EditorImages,
     private val updateBackStack: (SnapshotStateList<CampfireDestination>.() -> Unit) -> Unit,
     private val isSongShownOnTop: (fileName: String) -> Boolean,
     private val popBackStack: () -> Unit,
@@ -182,18 +179,20 @@ internal class EditorSession(
     }
 
     /**
-     * Opens the editor on a pasted, dropped or shared [text] that is one song the library does not hold, which has no
-     * file until its first Save (see [CampfireDestination.SongEditor.NEW_SONG_FILE_NAME]): shaped like a new song, with
-     * the [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed
-     * over. Nothing is unsaved in an editor it replaces on top: the import queue waits out one that has (see
-     * `ImportController`). The draft is put on disk at once rather than at the next pause, since it is now the only copy
-     * of a share that the iOS share extension's inbox lets go of.
+     * Opens the editor on [song], a pasted, dropped or shared text that is one song the library does not hold, or pictures
+     * that arrived alone ([ImportPlan.SongEntry.images], titled by the first one's name, kept as draft pictures), with no
+     * file until its first Save ([CampfireDestination.SongEditor.NEW_SONG_FILE_NAME]): shaped like a new song, with the
+     * [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed over.
+     * An editor it replaces on top has nothing unsaved: the import queue waits that out. The draft goes to disk at once, as
+     * the only copy of a share the iOS share extension's inbox lets go of. False, opening nothing, where every picture was refused.
      */
-    suspend fun openNewSongEditor(text: String, suggestion: SharedTextTitle?) {
+    suspend fun openNewSongEditor(song: ImportPlan.SongEntry, suggestion: SharedTextTitle?): Boolean {
+        val text = if (song.images.isEmpty()) song.text else images.pictureSongText(song.images) ?: return false
+        val suggestion = suggestion ?: SharedTextTitle(title = song.title, artist = null).takeIf { song.images.isNotEmpty() }
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
         val draft = editorTextOf(
-            draftSongFromText(
+            useCases.draftSongFromText(
                 text = text,
                 placeholderTitle = placeholderTitle,
                 placeholderArtist = LocalizedStrings.get(Res.string.new_song_placeholder_artist),
@@ -208,6 +207,7 @@ internal class EditorSession(
             add(CampfireDestination.SongEditor.newSong())
         }
         storeEditorDraft(currentEditorDraftToStore())
+        return true
     }
 
     private fun pushEditor(editor: CampfireDestination.SongEditor) {
@@ -261,7 +261,7 @@ internal class EditorSession(
         editorDraftStoreMutex.withLock {
             if (draft == storedEditorDraft) return@withLock
             try {
-                saveEditorDraft(draft)
+                useCases.saveEditorDraft(draft)
                 storedEditorDraft = draft
             } catch (exception: CancellationException) {
                 throw exception
@@ -280,7 +280,7 @@ internal class EditorSession(
      */
     private suspend fun recoverEditorDraft(): Boolean {
         val draft = try {
-            getEditorDraft()
+            useCases.getEditorDraft()
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -387,14 +387,17 @@ internal class EditorSession(
         _isSavingSong.update { true }
         val fileText = fileTextOf(text)
         withContext(NonCancellable) {
-            songTextStore.songWriteMutex.withLock { songTextStore.writeSongContent(fileName = fileName, text = fileText) }
-        }.also { isWritten ->
-            // A chord typed in a spelling the notation has a second one for (a German Bb, a ♭) is written the one way
-            // the file holds it, so the field is brought to what was written, or it would never stop being unsaved.
-            val writtenText = editorTextOf(fileText)
+            songTextStore.songWriteMutex.withLock {
+                useCases.saveWithDraftImages(fileText) { kept -> songTextStore.writeSongContent(fileName = fileName, text = kept) to kept }
+            }
+        }.let { (isWritten, writtenFileText) ->
+            // A chord typed in a second spelling (a German Bb, a ♭) is written the one way the file holds it, and a picture
+            // may take another name, so the field is brought to what was written, or it would never stop being unsaved.
+            val writtenText = editorTextOf(writtenFileText)
             if (isWritten && writtenText != text) {
                 _editorTextEdits.tryEmit(EditorTextEdit(fileName = fileName) { current -> if (current == text) writtenText else current })
             }
+            isWritten
         }
     } catch (exception: CancellationException) {
         throw exception
@@ -420,13 +423,15 @@ internal class EditorSession(
         }
         return try {
             _isSavingSong.update { true }
-            val fileName = withContext(NonCancellable) {
+            val (fileName, writtenFileText) = withContext(NonCancellable) {
                 songTextStore.songWriteMutex.withLock {
-                    createSongFromText(fileText).fileName.also { fileName -> songTextStore.updateSongTexts { it + (fileName to fileText) } }
+                    useCases.saveWithDraftImages(fileText) { kept ->
+                        useCases.createSongFromText(kept).fileName.also { fileName -> songTextStore.updateSongTexts { it + (fileName to kept) } } to kept
+                    }
                 }
             }
             // Asked of the editor while it still listens under the name it was opened with, see writeEditorText.
-            val writtenText = editorTextOf(fileText)
+            val writtenText = editorTextOf(writtenFileText)
             if (writtenText != text) {
                 _editorTextEdits.tryEmit(EditorTextEdit(fileName = NEW_SONG_FILE_NAME) { current -> if (current == text) writtenText else current })
             }
@@ -468,12 +473,15 @@ internal class EditorSession(
             editorDraftRecovery.complete(false)
             _isEditorDraftRecoveryPending.value = false
         }
+        images.followEditorText(_editorDraft.map { it?.text })
         hasUnsavedEditorChanges.collect { if (!it && !hasUnsavedEditorText()) storeEditorDraft(null) }
     }
 
-    /** Drops the fields kept for an editor once no editor is left on the back stack. */
-    fun onBackStackChanged() {
-        if (backStack.none { it is CampfireDestination.SongEditor }) {
+    /** Drops the fields kept for an editor, and its draft pictures (see [EditorImages.onEditorsChanged]), once no editor is left. */
+    fun onBackStackChanged(previousTop: CampfireDestination?) {
+        val hasEditor = backStack.any { it is CampfireDestination.SongEditor }
+        images.onEditorsChanged(hasEditor = hasEditor, wasEditorOnTop = previousTop is CampfireDestination.SongEditor, isUnsaved = ::hasUnsavedEditorText)
+        if (!hasEditor) {
             retainedEditorField = null
             recoveredEditorField = null
         }

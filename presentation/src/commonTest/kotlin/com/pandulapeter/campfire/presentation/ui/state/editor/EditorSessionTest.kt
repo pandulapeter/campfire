@@ -11,6 +11,18 @@ package com.pandulapeter.campfire.presentation.ui.state.editor
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.data.model.image.ImageIntake
+import com.pandulapeter.campfire.data.model.image.ImageRefusal
+import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
+import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
+import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
+import com.pandulapeter.campfire.domain.api.images.SaveWithDraftImagesUseCase
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
@@ -54,12 +66,70 @@ class EditorSessionTest {
     private var isWriteFailing = false
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
 
+    /** The pictures on the draft shelf, the ones Save moved into the library, and what the pruning was last told to hold. */
+    private val draftImages = mutableSetOf<String>()
+    private val libraryImages = mutableSetOf<String>()
+    private var heldImages = emptySet<String>()
+
     private inner class Fixture(scope: CoroutineScope, notation: UserPreferences.Notation) {
         val messageSink = MessageSink(scope)
         val dialogHost = DialogHost(scope)
         private val getSongContent = object : GetSongContentUseCase {
             override suspend fun invoke(fileName: String) = files[fileName]?.let { SongContent(fileName = fileName, text = it) }
         }
+        val useCases = EditorUseCases(
+            getEditorDraft = object : GetEditorDraftUseCase {
+                override suspend fun invoke() = storedDraft
+            },
+            saveEditorDraft = object : SaveEditorDraftUseCase {
+                override suspend fun invoke(draft: SongContent?) {
+                    storedDraft = draft
+                }
+            },
+            draftSongFromText = object : DraftSongFromTextUseCase {
+                override fun invoke(
+                    text: String,
+                    placeholderTitle: String,
+                    placeholderArtist: String,
+                    suggestedTitle: String?,
+                    suggestedArtist: String?,
+                ) = if ("{title" in text) text else "{title: ${suggestedTitle ?: placeholderTitle}}\n{artist: ${suggestedArtist ?: placeholderArtist}}\n$text"
+            },
+            createSongFromText = object : CreateSongFromTextUseCase {
+                override suspend fun invoke(text: String): Song {
+                    val title = Regex("""\{title: (.*)\}""").find(text)?.groupValues?.get(1).orEmpty()
+                    val fileName = title.lowercase().replace(' ', '_') + ".cho"
+                    files[fileName] = text
+                    return Song(
+                        fileName = fileName, title = title, artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
+                        coverArtUrl = null, hasChords = true, canUpdateFileName = false, lastModified = 0, size = 0,
+                    )
+                }
+            },
+            addDraftImage = object : AddDraftImageUseCase {
+                override suspend fun invoke(bytes: ByteArray): ImageIntake = when {
+                    bytes.isEmpty() -> ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+                    bytes.first() == HEIC -> ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
+                    else -> ImageIntake.Accepted("draft-${bytes.first()}.png").also { draftImages += it.name }
+                }
+            },
+            holdEditorImages = object : HoldEditorImagesUseCase {
+                override fun invoke(names: Set<String>) {
+                    heldImages = names
+                }
+            },
+            clearDraftImages = object : ClearDraftImagesUseCase {
+                override suspend fun invoke() = draftImages.clear()
+            },
+            saveWithDraftImages = object : SaveWithDraftImagesUseCase {
+                override suspend fun <T> invoke(text: String, save: suspend (text: String) -> T): T {
+                    val names = ChordProImages.referencedSources(text).filter { it in draftImages }
+                    libraryImages += names
+                    return save(text)
+                }
+            },
+        )
+
         val session: EditorSession
         val songTextStore = SongTextStore(
             scope = scope,
@@ -97,37 +167,22 @@ class EditorSessionTest {
                 userPreferences = MutableStateFlow(preferences(notation)),
                 arePreferencesLoaded = MutableStateFlow(true),
                 getSongContent = getSongContent,
-                getEditorDraft = object : GetEditorDraftUseCase {
-                    override suspend fun invoke() = storedDraft
+                useCases = useCases,
+                images = EditorImages(
+                    scope = scope,
+                    messageSink = messageSink,
+                    addDraftImage = useCases.addDraftImage,
+                    holdEditorImages = useCases.holdEditorImages,
+                    clearDraftImages = useCases.clearDraftImages,
+                    computation = Dispatchers.Unconfined,
+                ),
+                updateBackStack = { update ->
+                    val top = backStack.lastOrNull()
+                    backStack.update()
+                    session.onBackStackChanged(top)
                 },
-                saveEditorDraft = object : SaveEditorDraftUseCase {
-                    override suspend fun invoke(draft: SongContent?) {
-                        storedDraft = draft
-                    }
-                },
-                draftSongFromText = object : DraftSongFromTextUseCase {
-                    override fun invoke(
-                        text: String,
-                        placeholderTitle: String,
-                        placeholderArtist: String,
-                        suggestedTitle: String?,
-                        suggestedArtist: String?,
-                    ) = if ("{title" in text) text else "{title: ${suggestedTitle ?: placeholderTitle}}\n{artist: ${suggestedArtist ?: placeholderArtist}}\n$text"
-                },
-                createSongFromText = object : CreateSongFromTextUseCase {
-                    override suspend fun invoke(text: String): Song {
-                        val title = Regex("""\{title: (.*)\}""").find(text)?.groupValues?.get(1).orEmpty()
-                        val fileName = title.lowercase().replace(' ', '_') + ".cho"
-                        files[fileName] = text
-                        return Song(
-                            fileName = fileName, title = title, artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
-                            coverArtUrl = null, hasChords = true, canUpdateFileName = false, lastModified = 0, size = 0,
-                        )
-                    }
-                },
-                updateBackStack = { update -> backStack.update() },
                 isSongShownOnTop = { fileName -> (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.songFileNames?.singleOrNull() == fileName },
-                popBackStack = { backStack.removeAt(backStack.lastIndex) },
+                popBackStack = { session.onBackStackChanged(backStack.removeAt(backStack.lastIndex)) },
                 takePendingExit = { null },
                 requestExit = { _, _ -> },
                 followNewSongCreated = { fileName -> backStack.followNewSongCreated(fileName) },
@@ -350,6 +405,137 @@ class EditorSessionTest {
         assertEquals(listOf<Message>(Message.EditorDraftRestored), fixture.messages)
     }
 
+    @Test
+    fun `a picked picture is kept as a draft picture and inserted, and Save moves it into the library before the draft shelf is emptied`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        // Where the holding starts following the editor, once no stored draft is left to reopen.
+        fixture.session.startRecovery()
+        fixture.session.editorDraftRecovery.await()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorImageInsertion>()
+        backgroundScope.launch { fixture.session.images.insertions.collect { insertions += it } }
+        fixture.session.images.pickImages("a.cho") { listOf(ImportedFile(name = "photo.jpg", bytes = byteArrayOf(7))) }
+        runCurrent()
+        assertEquals(listOf(listOf("draft-7.png")), insertions.map { it.names })
+        assertEquals(setOf("draft-7.png"), draftImages)
+        val text = "{title: A}\n{image: src=draft-7.png}"
+        fixture.session.onEditorTextChanged("a.cho", text)
+        advanceTimeBy(1_000)
+        assertEquals(setOf("draft-7.png"), heldImages)
+        fixture.session.saveSongContent("a.cho", text)
+        runCurrent()
+        assertEquals(text, files["a.cho"])
+        assertEquals(setOf("draft-7.png"), libraryImages)
+        // Still there while the editor is: an undo may bring back a line naming one.
+        assertEquals(setOf("draft-7.png"), draftImages)
+        backStack.removeAt(backStack.lastIndex).let { fixture.session.onBackStackChanged(it) }
+        runCurrent()
+        assertTrue(draftImages.isEmpty())
+        assertEquals(emptySet(), heldImages)
+    }
+
+    @Test
+    fun `a picture picked into an editor that is then discarded reaches neither the library nor the draft shelf`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        fixture.session.images.pickImages("a.cho") { listOf(ImportedFile(name = "photo.jpg", bytes = byteArrayOf(7))) }
+        runCurrent()
+        fixture.session.onEditorTextChanged("a.cho", "{title: A}\n{image: src=draft-7.png}")
+        fixture.session.leaveEditorWithoutSaving()
+        runCurrent()
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), backStack.toList())
+        assertTrue(libraryImages.isEmpty())
+        assertTrue(draftImages.isEmpty())
+        assertEquals("{title: A}", files["a.cho"])
+    }
+
+    @Test
+    fun `a refused picture is said why and inserts nothing`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorImageInsertion>()
+        backgroundScope.launch { fixture.session.images.insertions.collect { insertions += it } }
+        fixture.session.images.pickImages("a.cho") { listOf(ImportedFile(name = "photo.heic", bytes = byteArrayOf(HEIC))) }
+        fixture.session.images.pickImages("a.cho") { listOf(ImportedFile.unread("huge.jpg", isTooLarge = true)) }
+        runCurrent()
+        assertTrue(insertions.isEmpty())
+        assertEquals(
+            listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT), Message.ImageNotAdded(ImageRefusal.TOO_LARGE)),
+            fixture.messages,
+        )
+    }
+
+    @Test
+    fun `a picture picked for an editor that closed meanwhile is not kept`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val picked = CompletableDeferred<List<ImportedFile>>()
+        fixture.session.images.pickImages("a.cho") { picked.await() }
+        runCurrent()
+        fixture.session.leaveEditorWithoutSaving()
+        runCurrent()
+        picked.complete(listOf(ImportedFile(name = "photo.jpg", bytes = byteArrayOf(7))))
+        runCurrent()
+        assertTrue(draftImages.isEmpty())
+    }
+
+    @Test
+    fun `pictures that arrived alone open a new song titled by the first one, showing each one kept`() = runTest {
+        val fixture = fixture()
+        val isOpened = fixture.session.openNewSongEditor(pictureSong(byteArrayOf(1), byteArrayOf(HEIC), byteArrayOf(2)), null)
+        assertTrue(isOpened)
+        assertEquals(
+            "{title: page 1}\n{artist: Unknown artist}\n{image: src=draft-1.png}\n{image: src=draft-2.png}",
+            fixture.session.editorDraft.value?.text,
+        )
+        assertEquals(fixture.session.editorDraft.value, storedDraft)
+        assertEquals(listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT)), fixture.messages)
+        assertTrue(files.isEmpty())
+        assertTrue(libraryImages.isEmpty())
+    }
+
+    @Test
+    fun `pictures that are all refused open no editor`() = runTest {
+        val fixture = fixture()
+        assertFalse(fixture.session.openNewSongEditor(pictureSong(byteArrayOf(HEIC)), null))
+        assertEquals(listOf<CampfireDestination>(CampfireDestination.Songs), backStack.toList())
+        assertNull(fixture.session.editorDraft.value)
+    }
+
+    @Test
+    fun `a new song made of a picture moves it into the library at its first save`() = runTest {
+        val fixture = fixture()
+        fixture.session.openNewSongEditor(pictureSong(byteArrayOf(1)), null)
+        val text = fixture.session.editorDraft.value!!.text
+        fixture.session.saveSongContent(CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, text)
+        runCurrent()
+        assertEquals(text, files["page_1.cho"])
+        assertEquals(setOf("draft-1.png"), libraryImages)
+    }
+
+    private fun Fixture.openEditor(fileName: String) {
+        backStack += CampfireDestination.SongEditor(fileName = fileName)
+        session.onBackStackChanged(CampfireDestination.Songs)
+        session.onEditorTextChanged(fileName, files.getValue(fileName))
+    }
+
+    private fun pictureSong(vararg pictures: ByteArray) = ImportPlan.SongEntry(
+        fileName = "page 1.jpg",
+        text = "",
+        status = ImportPlan.Status.NEW,
+        sourceFileName = "page 1.jpg",
+        title = "page 1",
+        images = pictures.mapIndexed { index, bytes -> ImportPlan.SongImage(source = "page ${index + 1}.jpg", name = null, bytes = bytes, problem = null) },
+    )
+
+    /** A pasted [text], as the import hands it over. */
+    private suspend fun EditorSession.openNewSongEditor(text: String, suggestion: SharedTextTitle?) =
+        openNewSongEditor(ImportPlan.SongEntry(fileName = "new.cho", text = text, status = ImportPlan.Status.NEW, sourceFileName = "Pasted.txt"), suggestion)
+
     private fun preferences(notation: UserPreferences.Notation) = UserPreferences(
         isPerformanceModeEnabled = false,
         shouldShowArchivedSetlists = false,
@@ -373,4 +559,8 @@ class EditorSessionTest {
         tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
         languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
     )
+
+    private companion object {
+        const val HEIC: Byte = 99
+    }
 }

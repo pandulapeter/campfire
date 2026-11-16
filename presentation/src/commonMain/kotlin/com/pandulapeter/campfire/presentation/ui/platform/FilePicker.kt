@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 
 /**
@@ -29,6 +30,13 @@ interface FilePicker {
 
     /** Opens the system picker for one or more files. An empty list when the user picked nothing. */
     suspend fun pickFiles(): List<ImportedFile>
+
+    /**
+     * [pickFiles], offering only the pictures a song can show (PNG, JPEG, GIF, and WebP: [PICTURE_MIME_TYPES] and
+     * [PICTURE_EXTENSIONS]) where the platform's picker can be told so; elsewhere it offers every file, and the caller
+     * refuses what is no such picture.
+     */
+    suspend fun pickImages(): List<ImportedFile> = pickFiles()
 
     /**
      * Offers the file to be saved: a "save as" dialog, a share sheet or a download. False when the user dismissed it
@@ -72,5 +80,11 @@ interface FilePicker {
     /** Whether [emailFile] can do anything here, asked again each time, since a mail account can be set up meanwhile. */
     val canEmailFiles: Boolean get() = false
 }
+
+/** The kinds of picture [FilePicker.pickImages] offers, by type. */
+val PICTURE_MIME_TYPES = listOf("image/png", "image/jpeg", "image/gif", "image/webp")
+
+/** The kinds of picture [FilePicker.pickImages] offers, by name (without the dot): the library's, and JPEG's longer spelling. */
+val PICTURE_EXTENSIONS = (LibraryFiles.IMAGE_EXTENSIONS + ".jpeg").map { it.removePrefix(".") }
 
 val LocalFilePicker = staticCompositionLocalOf<FilePicker> { error("No FilePicker has been provided.") }

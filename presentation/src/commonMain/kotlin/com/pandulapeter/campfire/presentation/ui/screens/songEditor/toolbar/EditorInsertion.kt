@@ -30,6 +30,8 @@ import org.jetbrains.compose.resources.DrawableResource
  *   formatting buttons', whose icons every text editor shares and which would otherwise take a word each.
  * @param chordShapeInstrument The instrument a Chord shape menu entry writes a `{define}` for (see `insertChordShape`),
  *   in place of the two halves; null for every other entry.
+ * @param action What a button that writes nothing at once does instead (the Image button picks pictures, which arrive
+ *   at the caret later); null for every other button.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -43,6 +45,7 @@ internal data class EditorInsertion(
     val formatting: Formatting.Style? = null,
     val icon: DrawableResource? = null,
     val chordShapeInstrument: ChordInstrument? = null,
+    val action: (() -> Unit)? = null,
 ) {
 
     companion object {
@@ -64,6 +67,15 @@ internal data class EditorInsertion(
             suffix = "",
             isOwnLine = true,
             chordShapeInstrument = instrument,
+        )
+
+        /** A button that writes nothing itself, but does [action]. */
+        fun action(label: String, action: () -> Unit) = EditorInsertion(
+            label = label,
+            prefix = "",
+            suffix = "",
+            isOwnLine = true,
+            action = action,
         )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */

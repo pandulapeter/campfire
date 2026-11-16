@@ -10,9 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import androidx.compose.runtime.snapshotFlow
-import com.pandulapeter.campfire.chordpro.ChordProParser
-import com.pandulapeter.campfire.chordpro.model.ChordProBlock
-import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
@@ -69,8 +66,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param openLibraryItem Opens the library's own song or setlist that a batch turned out to be, see [LibraryItemToOpen].
  * @param loadSongText Reads the text of a song just written, which the preview it was imported from becomes the screen of.
- * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, see
- *   `EditorSession.openNewSongEditor`.
+ * @param openNewSongEditor Opens the editor on a pasted or shared text that is one new song, or on pictures that arrived
+ *   alone, answering whether it did, see `EditorSession.openNewSongEditor`.
  * @param areSongsEnabled Whether the app has songs to open, which it does not with the Songs switch off: a file or a
  *   text sent to the app is then reviewed as any batch is, with nothing opened and no editor started on it.
  * @param songLookup The library as the screens look songs up in it, which the song to open is waited for in.
@@ -85,7 +82,7 @@ internal class ImportController(
     private val reportState: ImportReportState,
     private val openLibraryItem: (LibraryItemToOpen) -> Unit,
     private val loadSongText: suspend (fileName: String) -> Unit,
-    private val openNewSongEditor: suspend (text: String, suggestion: SharedTextTitle?) -> Unit,
+    private val openNewSongEditor: suspend (song: ImportPlan.SongEntry, suggestion: SharedTextTitle?) -> Boolean,
     private val areSongsEnabled: () -> Boolean,
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
@@ -337,7 +334,7 @@ internal class ImportController(
                 val recorded = request.sharedLinkFileId?.let { getSharedLinkImport(it) }
                 // Read after the last suspension, so that a tick made while the batch was read is kept.
                 val review = reportState.report as? ImportReport.Review ?: return
-                val plan = review.plan.withAdded(outcome.plan)
+                val plan = review.plan.withAdded(outcome.plan.withImageFilesSkipped())
                 if (plan === review.plan) return
                 val linkResolutions = recorded?.let { sharedLinkChoices(plan, it).conflictResolutions }.orEmpty().filterKeys { key ->
                     key.index >= if (key.kind == ImportEntryKey.Kind.SONG) review.plan.songs.size else review.plan.setlists.size
@@ -441,8 +438,8 @@ internal class ImportController(
                 val areSongsEnabled = areSongsEnabled()
                 val sharedLink = (request.source as? ImportSource.SharedLink)?.link
                 request.source = ImportSource.Files(emptyList())
-                val plan = outcome.plan
-                val newSong = if (request.isNewSongFromText && !isReviewed && areSongsEnabled) plan.newSongOf() else null
+                val plan = outcome.plan.withImageFilesSkipped()
+                val newSong = if (!isReviewed && areSongsEnabled) (if (request.isNewSongFromText) plan.newSongOf() else outcome.plan.pictureSong()) else null
                 val isPreviewed = request.shouldReview && areSongsEnabled && !request.isNewSongFromText && plan.isPreviewed
                 if (newSong != null) {
                     // The editor is not an import, and leaving it unsaved writes nothing: no progress bar runs under it,
@@ -524,7 +521,7 @@ internal class ImportController(
                 }
             }
         }
-        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it }.withImageFilesSkipped())
+        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
     }
 
     /** What a preparation the user cancelled leaves: nothing, the screen it was shown on included. */
@@ -855,9 +852,9 @@ internal class ImportController(
     }
 
     /**
-     * Opens the editor on the new song of a pasted or shared text once nothing is in its way, as the import screen waits
-     * (see [ImportReportState.awaitNothingInTheWay]: an editor it replaces has nothing unsaved), says how the text was
-     * read, and suspends until no editor is left on the back stack: the song saved and left, or discarded. It holds the
+     * Opens the editor on the new song of a pasted or shared text, or of pictures that arrived alone, once nothing is in its
+     * way, as the import screen waits (see [ImportReportState.awaitNothingInTheWay]: an editor it replaces has nothing
+     * unsaved), says how a text was read, and, unless every picture was refused, suspends until no editor is left on the back stack: the song saved and left, or discarded. It holds the
      * queue as an unanswered review does, so that texts arriving together are opened one after another rather than each
      * replacing the editor of the one before; and since the queue's count stays up meanwhile, What's new waits for it
      * too. The request is settled as soon as the editor is open, since the editor's draft holds the text from then on,
@@ -868,15 +865,10 @@ internal class ImportController(
         // A result reopened from the snackbar's Details is a report the queue did not start; it is waited out too.
         awaitImportSettled()
         if (isLeaving()) return
-        openNewSongEditor(song.text, request.suggestion)
+        val isOpened = openNewSongEditor(song, request.suggestion)
         request.settled.complete(Unit)
-        messageSink.sendMessage(
-            Message.NewSongFromText(
-                isConverted = song.isConverted,
-                hasChords = ChordProParser.summarize(song.text).hasChords,
-                hasNotation = ChordProParser.parse(song.text).blocks.any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Verbatim } },
-            ),
-        )
+        if (!isOpened) return
+        song.newSongMessage()?.let(messageSink::sendMessage)
         snapshotFlow { backStack.none { it is CampfireDestination.SongEditor } }.first { it }
     }
 

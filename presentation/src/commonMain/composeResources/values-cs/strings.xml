@@ -965,6 +965,7 @@
     <string name="song_editor_tab_any_instrument">Libovolný nástroj</string>
     <string name="song_editor_section_grid">Mřížka</string>
     <string name="song_editor_section_abc">Noty</string>
+    <string name="song_editor_insert_image">Obrázek</string>
     <string name="song_editor_insert_chorus_recall">Opakovat refrén</string>
     <string name="song_editor_insert_comment">Komentář</string>
     <string name="song_editor_insert_comment_italic">Komentář kurzívou</string>

@@ -72,6 +72,7 @@ class ImportControllerQueueTest {
     private val openedSetlists = mutableListOf<String>()
     private val loadedSongTexts = mutableListOf<String>()
     private val newSongTexts = mutableListOf<String>()
+    private val newSongPictures = mutableListOf<String>()
     private val newSongSuggestions = mutableListOf<SharedTextTitle?>()
     private val library = MutableStateFlow(SongLookup(songsByFileName = emptyMap(), isLibraryRead = true))
     private var isLibraryIndexedAtOnce = true
@@ -82,6 +83,7 @@ class ImportControllerQueueTest {
 
     /** What the plans leave out, which makes a batch of one song more than that song, and so reviewed rather than previewed. */
     private var plannedSkipped = emptyList<String>()
+    private var plannedImages = emptyList<ImportedFile>()
     private var isImportFailing = false
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
@@ -124,11 +126,13 @@ class ImportControllerQueueTest {
                 }
             },
             loadSongText = { loadedSongTexts += it },
-            openNewSongEditor = { text, suggestion ->
-                newSongTexts += text
+            openNewSongEditor = { song, suggestion ->
+                newSongTexts += song.text
                 newSongSuggestions += suggestion
+                newSongPictures += song.images.map { it.source }
                 backStack.removeAll { it is CampfireDestination.SongEditor }
                 backStack += CampfireDestination.SongEditor.newSong()
+                true
             },
             areSongsEnabled = { areSongsEnabled },
             songLookup = library,
@@ -142,7 +146,7 @@ class ImportControllerQueueTest {
                     prepareCount++
                     preparedFiles += files
                     onPrepare()
-                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped)
+                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped, imageFiles = plannedImages)
                 }
             },
             applyImport = object : ApplyImportUseCase {
@@ -861,6 +865,33 @@ class ImportControllerQueueTest {
     }
 
     private fun handOver() = controller.importFiles(listOf(ImportedFile(name = "new.cho", bytes = "{title: New}".encodeToByteArray())))
+
+    @Test
+    fun `pictures dropped alone open the editor on one new song showing them, and write nothing`() = runTest {
+        val pictures = listOf(ImportedFile(name = "page 1.jpg", bytes = byteArrayOf(1)), ImportedFile(name = "page 2.png", bytes = byteArrayOf(2)))
+        plannedSongs = emptyList()
+        plannedImages = pictures
+        startController()
+        val settled = controller.enqueueImport(ImportSource.Files(pictures), shouldOpenSong = true)
+        runCurrent()
+        assertEquals(listOf("page 1.jpg", "page 2.png"), newSongPictures)
+        assertTrue(backStack.last().let { it is CampfireDestination.SongEditor && it.isNewSong })
+        assertTrue(settled.isCompleted)
+        assertNull(reportState.importReport.value)
+        assertEquals(0, importCount)
+        // Nothing was converted from a text, so nothing is said about how one was read.
+        assertTrue(messageSink.messageQueue.value.isEmpty())
+    }
+
+    @Test
+    fun `a picture dropped beside a song is reported as skipped in the review`() = runTest {
+        plannedImages = listOf(ImportedFile(name = "photo.jpg", bytes = byteArrayOf(1)))
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(ImportedFile(name = "new.cho", bytes = byteArrayOf(1)), plannedImages.single())))
+        runCurrent()
+        assertTrue(newSongPictures.isEmpty())
+        assertEquals(listOf("photo.jpg"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.skippedFileNames)
+    }
 
     private fun enqueuePaste(suggestion: SharedTextTitle? = null) = controller.enqueueImport(
         source = ImportSource.Files(listOf(ImportedFile(name = "Pasted.txt", bytes = "Pasted".encodeToByteArray()))),

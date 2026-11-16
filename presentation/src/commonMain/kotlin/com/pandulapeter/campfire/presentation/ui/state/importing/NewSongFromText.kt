@@ -9,7 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.presentation.ui.messages.Message
 
 /** The one song a plan comes to, where it is nothing but that song: no setlist with it and nothing left out. */
 internal val ImportPlan.loneSong: ImportPlan.SongEntry?
@@ -23,3 +27,10 @@ internal val ImportPlan.loneSong: ImportPlan.SongEntry?
  * be as a file. A song whose name is taken is a new song all the same: its first Save numbers the name.
  */
 internal fun ImportPlan.newSongOf(): ImportPlan.SongEntry? = loneSong?.takeIf { it.status != ImportPlan.Status.IDENTICAL }
+
+/** What says how the text of a new song the editor was opened on was read; null for one made of pictures, which was not. */
+internal fun ImportPlan.SongEntry.newSongMessage(): Message? = if (images.isNotEmpty()) null else Message.NewSongFromText(
+    isConverted = isConverted,
+    hasChords = ChordProParser.summarize(text).hasChords,
+    hasNotation = ChordProParser.parse(text).blocks.any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Verbatim } },
+)

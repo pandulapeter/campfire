@@ -60,6 +60,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comme
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_composer
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_image
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key_change
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
@@ -115,6 +116,9 @@ import org.jetbrains.compose.resources.painterResource
  *   menu, or for none, its strings named.
  * @param sheetMusicHeader The lines the Sheet music button writes above the caret where nothing is selected
  *   (`sheetMusicHeader`).
+ * @param onPickImage What the Image button does: picks pictures, whose directives arrive at the caret once they are kept
+ *   as draft pictures (`EditorImages.pickImages`). Null where the song may not take one (read only mode), which leaves the
+ *   button out.
  * @param onValueToType Called after a write that left a value to type ([leavesValueToType]), so that the keyboard comes
  *   up for it even where the user had put it away. Never for the formatting buttons: markup is toggled around what is
  *   there, and with nothing selected its empty pair waits for words as much as a section does.
@@ -127,9 +131,11 @@ internal fun EditorToolbar(
     chordShapes: EditorChordShapes,
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
     sheetMusicHeader: List<String>,
+    onPickImage: (() -> Unit)?,
     onValueToType: () -> Unit,
 ) {
-    val onInsert = { insertion: EditorInsertion ->
+    val onInsert = onInsert@{ insertion: EditorInsertion ->
+        insertion.action?.let { action -> return@onInsert action() }
         val textBefore = textFieldState.text.toString()
         val selectionBefore = textFieldState.selection
         val instrument = insertion.chordShapeInstrument
@@ -143,7 +149,7 @@ internal fun EditorToolbar(
         verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
     ) {
         EditorToolbarRow(
-            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader),
+            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader, onPickImage),
             contentPadding = contentPadding,
             onInsert = onInsert,
         )
@@ -343,14 +349,15 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  * own instrument's for any — named, so that the file says what it is written in for whoever reads it in another
  * tuning or on another instrument; with something selected, which is most likely a tab pasted in, it only puts the
  * environment around it. Sheet music likewise starts an empty block with the header a tune needs to be drawn
- * (`sheetMusicHeader`) and only wraps a selection.
+ * (`sheetMusicHeader`) and only wraps a selection. A picture ([onPickImage]) is a line of its own too, after them.
  */
 @Composable
 private fun lineKindInsertions(
     tabStaff: (UserPreferences.Instrument?) -> List<String>,
     sheetMusicHeader: List<String>,
+    onPickImage: (() -> Unit)?,
 ): List<List<EditorInsertion>> = listOf(
-    listOf(
+    listOfNotNull(
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_section_tab),
             choices = listOf(EditorInsertion.tab(stringResource(Res.string.song_editor_tab_any_instrument), selector = null, staff = tabStaff(null))) +
@@ -358,6 +365,7 @@ private fun lineKindInsertions(
         ),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
         EditorInsertion.sheetMusic(stringResource(Res.string.song_editor_section_abc), header = sheetMusicHeader),
+        onPickImage?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_image), action = it) },
         EditorInsertion.menu(
             label = stringResource(Res.string.song_editor_insert_comment),
             choices = listOf(

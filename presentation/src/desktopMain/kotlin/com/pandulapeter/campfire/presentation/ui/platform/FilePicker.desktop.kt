@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import java.awt.FileDialog
+import java.io.FilenameFilter
 import java.awt.Frame
 import java.io.File
 import java.nio.file.Files
@@ -39,10 +40,22 @@ import java.nio.file.StandardCopyOption
  */
 internal object DesktopFilePicker : FilePicker {
 
-    override suspend fun pickFiles(): List<ImportedFile> {
+    override suspend fun pickFiles() = pick(isPicturesOnly = false)
+
+    override suspend fun pickImages() = pick(isPicturesOnly = true)
+
+    /**
+     * Pictures are offered alone through the dialog's filter, which macOS and Linux honour; Windows ignores it, and only
+     * takes the same as a wildcard pattern in the name field.
+     */
+    private suspend fun pick(isPicturesOnly: Boolean): List<ImportedFile> {
         val files = withContext(Dispatchers.Main) {
             FileDialog(null as Frame?, DIALOG_TITLE, FileDialog.LOAD).run {
                 isMultipleMode = true
+                if (isPicturesOnly) {
+                    filenameFilter = FilenameFilter { _, name -> PICTURE_EXTENSIONS.any { name.endsWith(".$it", ignoreCase = true) } }
+                    if (System.getProperty("os.name").orEmpty().startsWith("Windows")) file = PICTURE_EXTENSIONS.joinToString(";") { "*.$it" }
+                }
                 isVisible = true
                 this.files.orEmpty().toList()
             }

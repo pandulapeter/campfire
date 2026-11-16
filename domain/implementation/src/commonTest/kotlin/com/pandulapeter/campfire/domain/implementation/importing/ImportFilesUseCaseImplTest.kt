@@ -925,6 +925,15 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a picture chosen on its own and left unread for its size is reported as too large`() = runTest {
+        val plan = prepare(FakeSongRepository(mutableMapOf()))(listOf(ImportedFile.unread("huge.jpg", isTooLarge = true)))
+
+        assertEquals(listOf("huge.jpg"), plan.oversizedFileNames)
+        assertTrue(plan.skippedFileNames.isEmpty())
+        assertTrue(plan.imageFiles.isEmpty())
+    }
+
+    @Test
     fun `the archives of one import share one picture budget, apart from the songs' budget`() = runTest {
         val budgets = mutableListOf<Pair<Long, Long>>()
         val picture = FakeImageRepository.picture(1)

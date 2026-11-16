@@ -929,6 +929,7 @@
     <string name="song_editor_tab_any_instrument">Beliebiges Instrument</string>
     <string name="song_editor_section_grid">Raster</string>
     <string name="song_editor_section_abc">Noten</string>
+    <string name="song_editor_insert_image">Bild</string>
     <string name="song_editor_insert_chorus_recall">Refrain wiederholen</string>
     <string name="song_editor_insert_comment">Kommentar</string>
     <string name="song_editor_insert_comment_italic">Kursiver Kommentar</string>

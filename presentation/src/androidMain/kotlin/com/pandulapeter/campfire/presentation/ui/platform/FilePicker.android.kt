@@ -134,7 +134,11 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private val pendingExport get() = java.io.File(java.io.File(context.cacheDir, PENDING_EXPORT_DIRECTORY), PENDING_EXPORT_NAME)
 
-    override suspend fun pickFiles(): List<ImportedFile> {
+    override suspend fun pickFiles() = pick(arrayOf(ANY_MIME_TYPE))
+
+    override suspend fun pickImages() = pick(PICTURE_MIME_TYPES.toTypedArray())
+
+    private suspend fun pick(mimeTypes: Array<String>): List<ImportedFile> {
         // The view model runs one pick at a time, so a continuation still waiting here is one whose answer is never
         // coming; it is let go as a last resort rather than left hanging.
         pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
@@ -143,7 +147,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         val uris = suspendCancellableCoroutine { continuation ->
             pickContinuation = continuation
             continuation.invokeOnCancellation { pickContinuation = null }
-            launcher.launch(arrayOf(ANY_MIME_TYPE))
+            launcher.launch(mimeTypes)
         }
         return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
     }

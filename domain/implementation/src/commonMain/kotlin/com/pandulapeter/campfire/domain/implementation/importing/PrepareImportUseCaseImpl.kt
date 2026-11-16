@@ -88,6 +88,8 @@ internal class PrepareImportUseCaseImpl(
                 // Read only where it was chosen on its own (see ImportBudget): whether its bytes are a picture is asked
                 // once the batch is sorted, and one that is not is skipped then.
                 origin == null && file.bytes.isNotEmpty() && LibraryFiles.isImageFileName(file.name) -> imageFiles += file
+                // Left unread for its size: said to be too large, rather than of a kind the import does not take.
+                origin == null && file.isTooLarge && LibraryFiles.isImageFileName(file.name) -> triage.oversizedFileNames += file.name
                 // Kept for reading as text under a name that says nothing (see ImportedFile.isPlainTextByContent), so
                 // held to the text limit, and a song only where it has the structure of one: a README or a licence
                 // next to the songs is not one, and as a text nobody chose it must not become prose that is.
