@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.formats.image.TestImages.ascii
 import com.pandulapeter.campfire.data.formats.image.TestImages.bytes
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -74,6 +75,24 @@ internal class ImageFormatsTest {
         assertFalse(ImageFormats.isRefusedImage(TestImages.webpExtended(10, 10).bytes))
         val random = Random(3)
         repeat(2_000) { round -> assertFalse(ImageFormats.isRefusedImage(random.nextBytes(random.nextInt(0, 64))), "Round $round") }
+    }
+
+    @Test
+    fun `HEIC, HEIF, and AVIF pictures are HEIF but an SVG is not`() {
+        assertTrue(ImageFormats.isHeif(ftyp("heic", "mif1", "heic")))
+        assertTrue(ImageFormats.isHeif(ftyp("avif", "avif", "mif1", "miaf")))
+        assertFalse(ImageFormats.isHeif(ascii("<svg>")))
+        assertFalse(ImageFormats.isHeif(ftyp("isom", "isom", "iso2", "mp41")))
+    }
+
+    @Test
+    fun `a picture's format is told by its signature whatever size its header claims`() {
+        assertEquals(ImageFormat.PNG, ImageFormats.signatureFormatOf(TestImages.png(40_000, 40_000).bytes))
+        assertEquals(ImageFormat.GIF, ImageFormats.signatureFormatOf(TestImages.gif(10, 10).bytes))
+        assertEquals(ImageFormat.WEBP, ImageFormats.signatureFormatOf(TestImages.webpLossy(10, 10).bytes))
+        assertEquals(ImageFormat.JPEG, ImageFormats.signatureFormatOf(TestImages.jpeg(10_000, 10_000).bytes))
+        assertNull(ImageFormats.signatureFormatOf(ftyp("heic", "mif1", "heic")))
+        assertNull(ImageFormats.signatureFormatOf(ByteArray(0)))
     }
 
     @Test

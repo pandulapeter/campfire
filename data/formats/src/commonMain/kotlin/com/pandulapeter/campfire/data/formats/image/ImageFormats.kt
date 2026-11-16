@@ -21,6 +21,27 @@ object ImageFormats {
     /** Whether [bytes] hold a HEIC, HEIF, AVIF, or SVG picture, the formats a song cannot show. Never throws. */
     fun isRefusedImage(bytes: ByteArray): Boolean = isHeif(HeaderBytes(bytes)) || isSvg(bytes)
 
+    /**
+     * Whether [bytes] hold a HEIC, HEIF, or AVIF picture: the refused formats that are photos all the same, which the
+     * device that took one may convert. Never throws.
+     */
+    fun isHeif(bytes: ByteArray): Boolean = isHeif(HeaderBytes(bytes))
+
+    /**
+     * The format [bytes] begin as, by their signature alone and whatever size their header claims (unlike [ImageInfo.of]),
+     * or null for anything else. Never throws.
+     */
+    fun signatureFormatOf(bytes: ByteArray): ImageFormat? {
+        val header = HeaderBytes(bytes)
+        return when {
+            header.u8(0) == 0x89 && header.startsWith("PNG\r\n", offset = 1) -> ImageFormat.PNG
+            header.startsWith("GIF87a") || header.startsWith("GIF89a") -> ImageFormat.GIF
+            header.startsWith("RIFF") && header.startsWith("WEBP", offset = 8) -> ImageFormat.WEBP
+            header.u8(0) == 0xFF && header.u8(1) == 0xD8 && header.u8(2) == 0xFF -> ImageFormat.JPEG
+            else -> null
+        }
+    }
+
     private fun isHeif(header: HeaderBytes): Boolean {
         if (!header.startsWith("ftyp", offset = 4)) return false
         val boxEnd = minOf(header.u32be(0), header.size.toLong()).toInt()

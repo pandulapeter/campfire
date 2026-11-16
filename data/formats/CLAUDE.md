@@ -13,7 +13,8 @@
 Pure-Kotlin PDF and Word text extractors, zip reader/writer, and image header reader, on no third-party library (only
 `kotlinx.coroutines`) and no module but `:data:model`, `:libs:chordpro`, and `:libs:chordsheet` (a document is extracted
 into its `ChordSheet`): no `FileStorage`, no Koin, no network. Public is only what `:data:source:local:implementation`
-uses, and the `Deflater` `:presentation` compresses PDFs and PNGs with.
+uses, the `Deflater` `:presentation` compresses PDFs and PNGs with, and the `ImageFormats` it tells a picture to shrink
+or convert by.
 Documents are read locally, never rendered, uploaded, or kept.
 
 ## `document/`
