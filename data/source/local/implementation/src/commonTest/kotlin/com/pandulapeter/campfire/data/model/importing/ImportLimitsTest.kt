@@ -138,9 +138,9 @@ internal class ImportLimitsTest {
     }
 
     @Test
-    fun `a picture chosen on its own is read within the picture limit`() {
+    fun `a picture chosen on its own is read within the picked picture limit`() {
         val budget = ImportBudget()
-        val limit = ImportLimits.MAX_IMAGE_FILE_SIZE
+        val limit = ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE
 
         val photo = budget.read(name = "Photo.JPEG", size = limit) { ByteArray(limit.toInt()) }!!
         val tooLarge = budget.read(name = "huge.png", size = limit + 1) { error("read") }!!

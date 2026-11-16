@@ -34,10 +34,20 @@ object ImportLimits {
 
     /**
      * One picture a song shows, however it arrives (picked, dropped, shared, in an archive, or by sync): the size sync
-     * moves a file up to, so a picture the library holds can always reach the other devices. Nothing is re-encoded, so
-     * a larger photo is refused with a message naming it as 8 MB in every language.
+     * moves a file up to, so a picture the library holds can always reach the other devices. A larger one the user adds
+     * themselves is re-encoded on the device until it fits (read within [MAX_PICKED_IMAGE_FILE_SIZE]); one that cannot be
+     * is refused with a message naming this as 8 MB in every language. One in an archive or arriving by sync is never
+     * re-encoded, only refused.
      */
     const val MAX_IMAGE_FILE_SIZE = MAX_TEXT_FILE_SIZE
+
+    /**
+     * One picture chosen on its own (picked, dropped, shared, or opened with the app), which may be re-encoded into
+     * [MAX_IMAGE_FILE_SIZE]: a phone's largest photo, or a scanned page, well within it. Only its bytes are held whole;
+     * the decoding is bounded by the size it is shrunk to. A larger one is left unread, with a message naming this as
+     * 40 MB in every language.
+     */
+    const val MAX_PICKED_IMAGE_FILE_SIZE = 40L shl 20
 
     /** Documents may carry embedded fonts and images much larger than their extracted text. */
     const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
@@ -167,13 +177,13 @@ class ImportBudget {
     }
 
     /**
-     * A picture chosen on its own, read within [ImportLimits.MAX_IMAGE_FILE_SIZE] for the import to tell by its bytes
-     * whether it is one the library takes. The platforms' folder walks never get here with a picture, which they leave
+     * A picture chosen on its own, read within [ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE] for the import to tell by its
+     * bytes whether it is one the library takes, or one to shrink or convert first. The platforms' folder walks never get here with a picture, which they leave
      * unread by its name, so a dropped folder of photos is not read one photo at a time.
      */
     @PublishedApi
     internal inline fun readImage(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
-        val limit = minOf(ImportLimits.MAX_IMAGE_FILE_SIZE, remaining)
+        val limit = minOf(ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE, remaining)
         if (size != null && size > limit) return ImportedFile.unread(name, isTooLarge = true)
         val bytes = readBytes(limit) ?: return null
         if (bytes.size > limit) return ImportedFile.unread(name, isTooLarge = true)

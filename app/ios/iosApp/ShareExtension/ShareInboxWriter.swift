@@ -142,7 +142,7 @@ struct ShareInboxWriter {
         case failed
     }
 
-    /// Copied rather than read, since a share may be 24 MB and the extension has about 120 MB to live in, and from inside
+    /// Copied rather than read, since a share may be 40 MB and the extension has about 120 MB to live in, and from inside
     /// the completion handler, after which the file it was handed is gone. The size is the resource value's, not
     /// `attributesOfItem`'s, which is a file timestamp API with a privacy reason to give.
     private func copyFile(_ provider: NSItemProvider, typeIdentifier: String, to folder: URL, index: Int, remaining: Int64) async -> Copy {
@@ -322,7 +322,11 @@ private enum ShareLimits {
 
     static let maxTextSize: Int64 = 8 << 20
     static let maxDocumentSize: Int64 = 16 << 20
-    static let maxShareSize: Int64 = 24 << 20
+    static let maxArchiveSize: Int64 = 24 << 20
+    /// `ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE`: a photo the app shrinks into a song's picture once it has it.
+    static let maxPictureSize: Int64 = 40 << 20
+    /// What one share copies, all its files together: as much as its largest file may be, so that one picture fits.
+    static let maxShareSize: Int64 = maxPictureSize
     static let maxWaitingBytes: Int64 = 64 << 20
 
     /// The types the activation rule in `Info.plist` names besides plain text (pictures included), and the ChordPro family
@@ -346,8 +350,7 @@ private enum ShareLimits {
     private static let songExtensions = ["cho", "chopro", "chordpro", "crd", "chord", "pro", "abc", "txt", "json"]
     private static let documentExtensions = ["pdf", "docx"]
     private static let archiveExtensions = ["zip", "sbpbackup", "sbp"]
-    /// The pictures the activation rule names, which the app opens a new song on; read with the text limit, as
-    /// `ImportLimits.MAX_IMAGE_FILE_SIZE` is.
+    /// The pictures the activation rule names, which the app opens a new song on, shrinking one too large for a song.
     private static let pictureExtensions = ["png", "jpg", "jpeg"]
 
     static func isImportable(_ name: String) -> Bool {
@@ -356,8 +359,9 @@ private enum ShareLimits {
 
     static func maxSize(ofFileNamed name: String) -> Int64 {
         let fileExtension = fileExtension(of: name)
-        if archiveExtensions.contains(fileExtension) { return maxShareSize }
+        if archiveExtensions.contains(fileExtension) { return maxArchiveSize }
         if documentExtensions.contains(fileExtension) { return maxDocumentSize }
+        if pictureExtensions.contains(fileExtension) { return maxPictureSize }
         return maxTextSize
     }
 
