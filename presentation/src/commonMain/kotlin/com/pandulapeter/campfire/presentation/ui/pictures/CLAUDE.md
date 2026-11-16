@@ -35,7 +35,7 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   there is a photo library, taking one picture. The button keeps its room where hidden, since read only mode changes
   nothing a song's measurements are kept by. Add stores the picked file and points the
   song's directives at it in one step (`SaveSongImageUseCase`, under `SongTextStore`'s write lock); a refused file is a
-  snackbar saying why.
+  snackbar saying why, and a song that no longer names the picture by then is left alone.
 - **A picture the user adds** (the editor's Image button, one opened, shared, or dropped alone, Add image) goes through
   `PictureFitter` first, never one an archive or sync brings: kept as it is where the library takes it (never
   re-encoded); refused as too large (bytes or pixels, the read going up to 40 MB) or as HEIC or AVIF (never SVG, never no

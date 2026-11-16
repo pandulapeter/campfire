@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.pictures.MissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -233,35 +235,62 @@ internal class SongTextStore(
      * Picks a file with [pickFiles] for the picture the song [fileName] names [missingName] but the library lacks, makes it
      * fit (a smaller or converted copy, said in a snackbar), and stores it under that song (see [SaveSongImageUseCase]),
      * holding [songWriteMutex] from the read the write is built on, as [editSongText] does: a file changed meanwhile is
-     * read again and tried once more. A refused file is said why in a snackbar; picking nothing does nothing. Runs in
-     * [scope], so the screen may go meanwhile.
+     * read again and tried once more. A refused file is said why in a snackbar; picking nothing does nothing, and a song
+     * that no longer names [missingName] by then is left alone. Runs in [scope], so the screen may go meanwhile; which
+     * missing picture it picks for is kept ([SongImageAdding.pendingPick]) until [pickFiles] returns, for a view model that
+     * does not live to see it to be told ([addOrphanedMissingImage]).
      */
     fun addMissingImage(fileName: String, missingName: String, pickFiles: suspend () -> List<ImportedFile>) {
+        imageAdding.pendingPick.keep(MissingImagePick(fileName = fileName, missingName = missingName))
         scope.launch {
-            val file = pickFiles().firstOrNull() ?: return@launch
-            if (file.isTooLarge) return@launch messageSink.sendMessage(Message.ImageTooLargeToRead)
-            val picture = when (val fit = imageAdding.fitter.fit(file.bytes)) {
-                is PictureFit.Refused -> return@launch messageSink.sendMessage(Message.ImageNotAdded(fit.reason))
-                is PictureFit.Usable -> fit
+            val files = try {
+                pickFiles()
+            } finally {
+                imageAdding.pendingPick.keep(null)
             }
-            songWriteMutex.withLock {
-                repeat(SONG_EDIT_ATTEMPTS) { attempt ->
-                    val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return@withLock
-                    when (val result = imageAdding.saveSongImage(fileName = fileName, expectedText = text, missingName = missingName, bytes = picture.bytes)) {
-                        is SaveSongImageResult.Added -> {
-                            inferredKeys.inferFor(listOf(fileName to result.text))
-                            readImageSizes(listOf(result.text))
-                            _songTexts.update { it + (fileName to result.text) }
-                            picture.notice?.let { messageSink.sendMessage(it) }
-                            return@launch
-                        }
-                        is SaveSongImageResult.Refused -> return@launch messageSink.sendMessage(Message.ImageNotAdded(result.reason))
-                        SaveSongImageResult.SongChanged -> Unit
+            storeMissingImage(fileName = fileName, missingName = missingName, file = files.firstOrNull() ?: return@launch)
+        }
+    }
+
+    /**
+     * Stores the first of [files], picked for [pick] by a view model that is gone, as [addMissingImage] would have: with the
+     * same fitting and snackbars, and only while the song still names that missing picture.
+     */
+    fun addOrphanedMissingImage(pick: MissingImagePick, files: List<ImportedFile>) {
+        val file = files.firstOrNull() ?: return
+        scope.launch { storeMissingImage(fileName = pick.fileName, missingName = pick.missingName, file = file) }
+    }
+
+    /** The missing picture a pick was under way for when the last view model went, once (`PendingMissingImagePick.take`). */
+    fun takePendingMissingImagePick() = imageAdding.pendingPick.take()
+
+    private suspend fun storeMissingImage(fileName: String, missingName: String, file: ImportedFile) {
+        if (file.isTooLarge) return messageSink.sendMessage(Message.ImageTooLargeToRead)
+        val picture = when (val fit = imageAdding.fitter.fit(file.bytes)) {
+            is PictureFit.Refused -> return messageSink.sendMessage(Message.ImageNotAdded(fit.reason))
+            is PictureFit.Usable -> fit
+        }
+        songWriteMutex.withLock {
+            repeat(SONG_EDIT_ATTEMPTS) { attempt ->
+                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return@withLock
+                if (missingName !in ChordProImages.referencedSources(text)) {
+                    println("Let go of a picture picked for \"$missingName\", which \"$fileName\" no longer names.")
+                    return
+                }
+                when (val result = imageAdding.saveSongImage(fileName = fileName, expectedText = text, missingName = missingName, bytes = picture.bytes)) {
+                    is SaveSongImageResult.Added -> {
+                        inferredKeys.inferFor(listOf(fileName to result.text))
+                        readImageSizes(listOf(result.text))
+                        _songTexts.update { it + (fileName to result.text) }
+                        picture.notice?.let { messageSink.sendMessage(it) }
+                        return
                     }
+                    is SaveSongImageResult.Refused -> return messageSink.sendMessage(Message.ImageNotAdded(result.reason))
+                    SaveSongImageResult.SongChanged -> Unit
                 }
             }
-            messageSink.sendMessage(Message.OperationFailed)
         }
+        messageSink.sendMessage(Message.OperationFailed)
     }
 
     fun updateSongTexts(update: (Map<String, String>) -> Map<String, String>) = _songTexts.update(update)

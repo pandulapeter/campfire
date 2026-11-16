@@ -396,7 +396,7 @@ class CampfireViewModel(
         getSongContentInvalidations = songTextUseCases.getSongContentInvalidations,
         inferredKeys = InferredSongKeys(inferKey = songRenderer::inferredKeyOfText, dispatcher = Dispatchers.Default),
         readImageSizes = songImages::loadSizesOf,
-        imageAdding = songTextUseCases.imageAdding(pictureWork),
+        imageAdding = songTextUseCases.imageAdding(pictureWork, savedStateStore),
         addOnBackStackChanged = navigator::addOnBackStackChanged,
         currentSongFileName = navigator::currentSongFileName,
     )

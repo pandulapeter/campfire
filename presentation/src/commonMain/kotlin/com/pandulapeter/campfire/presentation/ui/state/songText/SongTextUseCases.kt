@@ -16,9 +16,11 @@ import com.pandulapeter.campfire.domain.api.images.GetImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ReadImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import org.koin.core.annotation.Factory
 
 /**
@@ -36,9 +38,13 @@ class SongTextUseCases(
     internal val examineImage: ExamineImageUseCase,
 ) {
 
-    /** How a picture picked for a song's missing one is made to fit (tracked as [pictureWork]) and stored. */
-    internal fun imageAdding(pictureWork: PictureWork) = SongImageAdding(
+    /**
+     * How a picture picked for a song's missing one is made to fit (tracked as [pictureWork]) and stored, the pick under way
+     * kept in [savedStateStore].
+     */
+    internal fun imageAdding(pictureWork: PictureWork, savedStateStore: SavedStateStore) = SongImageAdding(
         fitter = PictureFitter(examine = examineImage::invoke, reencode = ::reencodePicture, work = pictureWork),
         saveSongImage = saveSongImage,
+        pendingPick = PendingMissingImagePick(savedStateStore),
     )
 }

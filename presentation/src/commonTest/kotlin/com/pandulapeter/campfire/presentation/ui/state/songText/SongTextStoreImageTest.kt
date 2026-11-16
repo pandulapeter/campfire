@@ -13,10 +13,14 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.MissingImagePick
+import androidx.lifecycle.SavedStateHandle
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class SongTextStoreImageTest {
 
@@ -85,6 +89,46 @@ class SongTextStoreImageTest {
         val sink = MessageSink(backgroundScope)
         val store = files.songTextStore(backgroundScope, sink)
         store.addMissingImage(FILE, missingName = "photo.jpg") { emptyList() }
+        runCurrent()
+        assertEquals(emptyList(), files.writes)
+        assertEquals(emptyList(), sink.messageQueue.value)
+    }
+
+    @Test
+    fun `the missing picture a pick is for is in the saved state while its picker is up, and gone once it answers`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to TEXT))
+        val savedState = SavedStateHandle()
+        val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope), savedState)
+        val answer = CompletableDeferred<List<ImportedFile>>()
+        store.addMissingImage(FILE, missingName = "photo.jpg") { answer.await() }
+        runCurrent()
+        val restored = files.songTextStore(backgroundScope, MessageSink(backgroundScope), savedState)
+        assertEquals(MissingImagePick(fileName = FILE, missingName = "photo.jpg"), restored.takePendingMissingImagePick())
+        assertNull(restored.takePendingMissingImagePick())
+        store.addMissingImage(FILE, missingName = "photo.jpg") { answer.await() }
+        answer.complete(emptyList())
+        runCurrent()
+        assertNull(files.songTextStore(backgroundScope, MessageSink(backgroundScope), savedState).takePendingMissingImagePick())
+    }
+
+    @Test
+    fun `a picture picked for a view model that is gone is stored for the missing picture it was picked for`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to TEXT))
+        val sink = MessageSink(backgroundScope)
+        val store = files.songTextStore(backgroundScope, sink)
+        store.addOrphanedMissingImage(MissingImagePick(fileName = FILE, missingName = "photo.jpg"), listOf(ImportedFile("photo.jpg", LARGE_PHOTO)))
+        runCurrent()
+        assertEquals("{title: A}\n{image: src=${FakeSongFiles.STORED_IMAGE_NAME}}\n", files.files[FILE])
+        assertEquals(listOf<Message>(Message.ImageShrunk), sink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a picture picked for a missing picture the song no longer names is let go`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to "{title: A}\n"))
+        val sink = MessageSink(backgroundScope)
+        val store = files.songTextStore(backgroundScope, sink)
+        store.addOrphanedMissingImage(MissingImagePick(fileName = FILE, missingName = "photo.jpg"), listOf(ImportedFile("photo.jpg", byteArrayOf(1, 2))))
+        store.addMissingImage(FILE, missingName = "photo.jpg") { listOf(ImportedFile("photo.jpg", byteArrayOf(1, 2))) }
         runCurrent()
         assertEquals(emptyList(), files.writes)
         assertEquals(emptyList(), sink.messageQueue.value)

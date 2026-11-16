@@ -19,8 +19,11 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUse
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,7 +76,7 @@ internal class FakeSongFiles(
         }
     }
 
-    fun songTextStore(scope: CoroutineScope, messageSink: MessageSink) = SongTextStore(
+    fun songTextStore(scope: CoroutineScope, messageSink: MessageSink, savedStateHandle: SavedStateHandle = SavedStateHandle()) = SongTextStore(
         scope = scope,
         backStack = emptyList(),
         editorDraftFileName = { null },
@@ -96,6 +99,7 @@ internal class FakeSongFiles(
                 work = PictureWork(),
             ),
             saveSongImage = this,
+            pendingPick = PendingMissingImagePick(SavedStateStore(savedStateHandle, scope)),
         ),
         addOnBackStackChanged = {},
         currentSongFileName = { null },

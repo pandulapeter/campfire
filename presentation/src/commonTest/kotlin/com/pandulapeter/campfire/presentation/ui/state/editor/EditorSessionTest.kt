@@ -45,8 +45,11 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.followNewSongCreated
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
+import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
+import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
+import androidx.lifecycle.SavedStateHandle
 import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongImageAdding
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
@@ -161,6 +164,7 @@ class EditorSessionTest {
                 saveSongImage = object : SaveSongImageUseCase {
                     override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = throw NotImplementedError()
                 },
+                pendingPick = PendingMissingImagePick(SavedStateStore(SavedStateHandle(), scope)),
             ),
             addOnBackStackChanged = {},
             currentSongFileName = { null },
