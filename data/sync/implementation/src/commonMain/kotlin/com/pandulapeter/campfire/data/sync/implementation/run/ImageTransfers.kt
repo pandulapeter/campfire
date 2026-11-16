@@ -9,7 +9,11 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -20,6 +24,7 @@ import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteRe
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
@@ -28,13 +33,65 @@ import kotlinx.coroutines.withContext
  * picture unless one is damaged, and a picture is never a conflict: a copy whose bytes are not what its name says is
  * never uploaded, never written into the library, and is replaced by an intact one from the other side wherever there is
  * one. That check is also what stands in for the hash [readLocalListing] does not take of a picture.
+ *
+ * [imageWritesGate] is `ImageRepository.withImagesKept`, which the app holds from storing a picture to writing the song
+ * that names it: [deleteLocally] decides inside it, so that a song saved during the run naming a picture this run was
+ * about to delete either is on disk when the deletion looks, or is written after the picture is gone and stores it again.
  */
 internal class ImageTransfers(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val logger: Logger,
     private val downloadWithinLimit: suspend (SyncPass, SyncKey) -> RemoteDocument,
+    private val imageWritesGate: suspend (suspend () -> Unit) -> Unit,
 ) {
+
+    /**
+     * The pass's deletions of pictures here, as one batch: the plan knew what the songs named when the run listed the
+     * library, which says nothing about a song saved since. So what every song here names is read again, under the
+     * library's lock and inside [imageWritesGate], and a picture a song names now goes back up instead; where a song
+     * cannot be read, nothing is deleted. A picture changed since the listing goes up too, as [sendUp] decides.
+     */
+    suspend fun deleteLocally(pass: SyncPass, operations: List<SyncOperation>): List<Pair<SyncOperation, SyncEngine.OperationOutcome>> {
+        if (operations.isEmpty()) return emptyList()
+        var decided = emptyList<Pair<SyncOperation, SyncEngine.OperationOutcome?>>()
+        imageWritesGate {
+            decided = libraryFileLock.withLock {
+                val named = namedNow() ?: return@withLock operations.map { it to SyncEngine.OperationOutcome() }
+                operations.map { operation -> operation to deleteUnlessNamed(pass, operation.key, named) }
+            }
+        }
+        return decided.map { (operation, outcome) ->
+            operation to (outcome ?: sendUp(pass, SyncOperation.Upload(operation.key, expectedRevision = null)))
+        }
+    }
+
+    /** Null where the picture goes back up instead. Must be called under [libraryFileLock]. */
+    private suspend fun deleteUnlessNamed(pass: SyncPass, key: SyncKey, named: Set<String>): SyncEngine.OperationOutcome? {
+        val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return SyncEngine.OperationOutcome(removals = setOf(key))
+        if (key.name in named || localHashOf(key, local) != pass.index[key]?.localHash) return null
+        // Finished together once started, as SyncEngine's deletions are.
+        withContext(NonCancellable) {
+            libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+            pass.run.onLocalFileChanged(key)
+        }
+        return SyncEngine.OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
+    }
+
+    /** Every picture a song here names as the files are now, or null where one of them cannot be read. */
+    private suspend fun namedNow(): Set<String>? = try {
+        libraryFileLocalSource.loadLibraryFiles()
+            .filter { it.kind == LibraryFileKind.SONG }
+            .flatMapTo(mutableSetOf()) { file ->
+                if (file.size > ImportLimits.MAX_TEXT_FILE_SIZE) return null
+                libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let { ChordProImages.referencedSources(it.decodeLibraryText()) }.orEmpty()
+            }
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        logger.log("Kept the pictures this run would have deleted: the songs could not be read (${exception.message}).")
+        null
+    }
 
     /**
      * A download, or a picture on both sides that the index does not know in step. An intact copy here is the picture,

@@ -16,7 +16,10 @@ import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** Counts what sync tells the pictures about; nothing else of it is sync's to call. */
+/**
+ * Counts what sync tells the pictures about, and runs what sync runs inside [withImagesKept] (with no writer: the app
+ * stores pictures, never sync); nothing else of it is sync's to call.
+ */
 internal class RecordingImageRepository : ImageRepository {
 
     var changeCount = 0
@@ -33,7 +36,13 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun clearDraftImages() = throw UnsupportedOperationException()
 
-    override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = throw UnsupportedOperationException()
+    override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = block(
+        object : LibraryImageWriter {
+            override suspend fun addImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
+
+            override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = throw UnsupportedOperationException()
+        },
+    )
 
     override fun onLibraryImagesChanged() {
         changeCount++

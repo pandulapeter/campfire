@@ -27,6 +27,8 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
   reentry from its holder with an exception rather than deadlock: the repositories take their own locks first and this
   one inside; nothing holding it calls anything that takes it. A local write or deletion and its `onLocalFileChanged`
   finish together once started (`NonCancellable`).
+- `ImageRepository.withImagesKept`: taken by the engine around its local picture deletions, outside `LibraryFileLock`, in
+  the order the app's writes of a picture and its song take them.
 - `SyncLibraryRefresher.changedFilesMutex`: innermost.
 
 ## Invariants
@@ -47,9 +49,10 @@ Koin cannot inject; the build number). `DemoLibraryRepositoryImpl` lives here be
 A behaviour spanning devices (renames, conflicts, deletions, synced preferences) gets a case in `TwoDeviceSyncTest`.
 `SyncSimulationTest` drives two or three devices through seeded random edits, runs, and failures (the app killed before
 it writes the index included) and checks the promises above; each device's fake file system compares names as one
-platform's does (`FileSystemNaming`), and shared links must follow renames and stop only on deletions
-(`SimulatedSharing`). A failure prints its seed and steps (share ids aside, which are random), and a change to sync is
-worth a run by hand with far more seeds. The upgrade-5.2.0 test resources, here and in
+platform's does (`FileSystemNaming`), shared links must follow renames and stop only on deletions
+(`SimulatedSharing`), and songs name pictures each device prunes as the app does, none of a saved song's ever lost. A
+failure prints its seed and steps (share ids aside, which are random), and a change to sync is worth a run by hand with
+far more seeds (and a longer `runTest` timeout). The upgrade-5.2.0 test resources, here and in
 `:data:source:local:implementation`, are what the 5.2.0 release's own code wrote; never regenerate them with today's
 code, which would agree with itself whatever it reads. Further fixtures follow the root `CLAUDE.md`'s Stored formats
 rule.

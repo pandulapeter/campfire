@@ -471,6 +471,7 @@ class SyncRemoteWatcherTest {
                 libraryFileLock = LibraryFileLock(),
                 setlistComparison = NoSetlistComparison,
                 userPreferencesRepository = userPreferencesRepository,
+                imageRepository = RecordingImageRepository(),
                 logger = Logger.Standard,
             ),
             syncedPreferencesSync = syncedPreferencesSync,

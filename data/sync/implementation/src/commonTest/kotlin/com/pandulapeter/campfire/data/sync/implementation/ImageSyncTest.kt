@@ -119,6 +119,25 @@ class ImageSyncTest {
     }
 
     @Test
+    fun `a song saved during the run naming a picture the run is about to delete keeps it`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        b.library.files -= song(1)
+        b.library.files -= PHOTO.key
+        b.sync(cloud)
+        // The run that deletes the song here keeps the picture; the next one would delete it.
+        a.sync(cloud)
+        a.library.files[song("other_song_1")] = "Edited on A".encodeToByteArray()
+        cloud.onUpload = { a.library.files[song(9)] = naming(PHOTO) }
+        a.sync(cloud)
+        cloud.onUpload = {}
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+        assertConverges(a, b)
+        assertContentEquals(PHOTO.bytes, b.library.files[PHOTO.key])
+    }
+
+    @Test
     fun `no picture is deleted while a song of this device cannot be read`() = runTest {
         val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to "Song 2".encodeToByteArray(), PHOTO.key to PHOTO.bytes))
         b.library.files -= song(1)

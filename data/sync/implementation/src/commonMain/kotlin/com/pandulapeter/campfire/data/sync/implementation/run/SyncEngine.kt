@@ -80,10 +80,12 @@ internal class SyncEngine(
     plantedContentHash: suspend (SyncKey) -> String?,
     /** Where the failures of single files are written. */
     private val logger: Logger,
+    /** Runs the deletion of pictures here exclusively of the app's writes of a picture and its song. */
+    imageWritesGate: suspend (suspend () -> Unit) -> Unit = { it() },
 ) {
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
-    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, ::downloadWithinLimit)
+    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, ::downloadWithinLimit, imageWritesGate)
 
     suspend fun synchronize(
         provider: SyncFolder,
@@ -213,8 +215,8 @@ internal class SyncEngine(
      *
      * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
      * deletions. A download has to be on disk before anything that reads the library acts on it, and a deletion that
-     * ran before a download would undo it. The remote deletions are the one group that is not spread over the
-     * permits: they go to the provider together ([deleteRemotely]).
+     * ran before a download would undo it. Remote deletions go to the provider together ([deleteRemotely]), and a
+     * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits.
      *
      * [SyncRun.onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in
      * the order they were taken and the last one handed out is always the most complete. What is handed out is a way to
@@ -253,11 +255,11 @@ internal class SyncEngine(
         }
 
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
-            val deletions = group.filterIsInstance<SyncOperation.DeleteRemote>()
-            if (deletions.isNotEmpty()) {
-                deleteRemotely(pass, deletions).forEach { (operation, outcome) -> record(operation, outcome) }
-            }
-            group.filterNot { it is SyncOperation.DeleteRemote }.map { operation ->
+            group.filterIsInstance<SyncOperation.DeleteRemote>().takeIf { it.isNotEmpty() }
+                ?.let { deleteRemotely(pass, it) }?.forEach { (operation, outcome) -> record(operation, outcome) }
+            val pictureDeletions = group.filter { it is SyncOperation.DeleteLocal && it.isImage }
+            imageTransfers.deleteLocally(pass, pictureDeletions).forEach { (operation, outcome) -> record(operation, outcome) }
+            group.filterNot { it is SyncOperation.DeleteRemote || it in pictureDeletions }.map { operation ->
                 async { record(operation, permits.withPermit { runOperation(pass, operation) }) }
             }.awaitAll()
         }
@@ -485,7 +487,7 @@ internal class SyncEngine(
      */
     private suspend fun downloadWithinLimit(pass: SyncPass, key: SyncKey): RemoteDocument {
         val size = pass.remoteFiles[key]?.size ?: 0
-        if (size > MAXIMUM_FILE_SIZE) throw RemoteFileTooLargeException(size)
+        if (size > MAXIMUM_FILE_SIZE) error("The remote file is $size bytes, which is more than the $MAXIMUM_FILE_SIZE a run downloads.")
         return pass.run.provider.download(key.kind, key.name)
     }
 
@@ -522,7 +524,6 @@ internal class SyncEngine(
     }
 
     private val SyncOperation.isImage get() = key.kind == LibraryFileKind.FILE
-
     private val SyncOperation.order
         get() = when (this) {
             is SyncOperation.Resolve -> 0
@@ -567,9 +568,6 @@ internal class SyncEngine(
         val summary: SyncSummary = SyncSummary(),
         val isUnresolved: Boolean = false,
     )
-
-    private class RemoteFileTooLargeException(size: Long) :
-        Exception("The remote file is $size bytes, which is more than the $MAXIMUM_FILE_SIZE a run downloads.")
 
     private data class PassOutcome(
         val summary: SyncSummary,

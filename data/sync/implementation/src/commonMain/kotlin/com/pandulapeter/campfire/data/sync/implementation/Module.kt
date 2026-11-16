@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksJour
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksMirror
 import com.pandulapeter.campfire.data.sync.implementation.shared.SharedLinksRegistry
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
@@ -58,6 +59,7 @@ object DataSyncModule {
         libraryFileLock: LibraryFileLock,
         setlistComparison: SetlistComparison,
         userPreferencesRepository: UserPreferencesRepository,
+        imageRepository: ImageRepository,
         logger: Logger,
     ): SyncEngine = SyncEngine(
         libraryFileLocalSource = libraryFileLocalSource,
@@ -65,6 +67,7 @@ object DataSyncModule {
         setlistComparison = setlistComparison,
         plantedContentHash = { key -> userPreferencesRepository.loadUserPreferencesIfNeeded()?.demoLibraryContentHashes?.get(key.path) },
         logger = logger,
+        imageWritesGate = { block -> imageRepository.withImagesKept { block() } },
     )
 
     /**

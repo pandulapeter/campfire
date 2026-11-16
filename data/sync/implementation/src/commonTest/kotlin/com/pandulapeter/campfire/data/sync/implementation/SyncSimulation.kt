@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
@@ -38,7 +40,9 @@ import kotlin.random.Random
  * - no device and no folder holds one name in two spellings;
  * - a run nobody answered a question for deleted no more than the deletion guard lets through;
  * - every device, settled, holds what the folder does, names compared the way the service compares them, and another
- *   round of runs moves nothing.
+ *   round of runs moves nothing;
+ * - no picture a saved song names is gone from every device and the folder, while each device deletes the pictures its
+ *   own songs do not name whenever it likes, as the app's pruning does; settled, no picture is left that no song names.
  *
  * What a user saved is a version no other save has, so that whether it survived is a question of its bytes alone.
  */
@@ -101,12 +105,14 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private suspend fun userStep(device: Device) {
         if (device in lostLibraries) return
         val files = device.library.files
-        val existing = files.keys.sortedBy { it.path }
+        // Pictures are added and deleted only with the songs naming them: a save stores them, [prune] deletes them.
+        val existing = files.keys.filter { it.kind.isDocument }.sortedBy { it.path }
         when {
             existing.isNotEmpty() && random.nextInt(8) == 0 -> existing.random(random).let { key ->
                 log += "${device.label} shares ${key.name}: ${sharing.share(device, key)}"
             }
 
+            random.nextInt(6) == 0 -> prune(device)
             existing.isEmpty() || random.nextInt(10) < 5 -> {
                 save(device, existing.takeIf { random.nextBoolean() }?.randomOrNull(random) ?: newName(device))
             }
@@ -144,11 +150,24 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     }
 
     private fun save(device: Device, key: SyncKey) {
-        val version = "v${++versions} by ${device.label}"
+        // A song names a picture now and then, which the device then holds, as the app stores one before the song naming it.
+        val named = if (key.kind == LibraryFileKind.SONG && random.nextBoolean()) PICTURES.shuffled(random).take(1 + random.nextInt(2)) else emptyList()
+        named.forEach { picture -> if (picture.key !in device.library.files) device.library.files[picture.key] = picture.bytes }
+        val version = "v${++versions} by ${device.label}" + named.joinToString("") { "\n{image: src=${it.key.name}}" }
         device.library.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
         saved += version
         log += "${device.label} saves ${key.name} = $version"
     }
+
+    /** What the app's pruning does after a finished read: every picture none of this device's songs names is deleted. */
+    private fun prune(device: Device) {
+        val named = device.namedPictures()
+        val unnamed = device.library.files.keys.filter { it.kind == LibraryFileKind.FILE && it.name !in named }
+        unnamed.forEach { device.library.files.remove(it) }
+        if (unnamed.isNotEmpty()) log += "${device.label} prunes ${unnamed.joinToString { it.name }}"
+    }
+
+    private fun Device.namedPictures() = library.files.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.decodeToString()) }
 
     private suspend fun delete(device: Device, key: SyncKey) {
         device.library.remove(key)?.let { saved -= it.decodeToString() }
@@ -172,11 +191,20 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             faultCountdown = 1 + random.nextInt(5)
         }
         val described = fault?.let { ", $it at request $faultCountdown" }.orEmpty()
-        val indexSize = device.indexSize
-        val localCount = device.library.files.size
+        val indexSize = device.documentIndexSize
+        val localBefore = device.library.files.keys.filter { it.kind.isDocument }
+        val remoteBefore = cloud.files.keys.filter { it.kind.isDocument }
         val isPlain = fault == null
         val result = runOn(scope, device, SyncDeletionPolicy.ASK, described)
-        if (isPlain && result is Attempt.Ended) checkGuard(result.result, indexSize = indexSize, localCount = localCount)
+        if (isPlain && result is Attempt.Ended && result.result is SyncEngine.Result.Completed) {
+            // Songs and setlists only, as the guard counts them: pictures follow the songs that name them.
+            checkGuard(
+                deletedLocally = localBefore.count { it !in device.library.files },
+                deletedRemotely = remoteBefore.count { it !in cloud.files },
+                indexSize = indexSize,
+                localCount = localBefore.size,
+            )
+        }
         val question = (result as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation ?: return
         if (random.nextBoolean()) {
             val answer = answers(device, question.direction).random(random)
@@ -264,7 +292,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             Fault.SAVE_DURING_RUN -> {
                 // The file the request is about, as often as not, since that is where a save meets the run's own change.
                 val device = runningDevice!!.takeIf { it !in lostLibraries } ?: return
-                val local = key?.let { device.library.files.keys.firstOrNull { file -> file.isSameFileAs(it) } }
+                // Never a picture: nothing in the app writes over one.
+                val local = key?.takeIf { it.kind.isDocument }?.let { device.library.files.keys.firstOrNull { file -> file.isSameFileAs(it) } }
                 if (local != null && random.nextBoolean()) save(device, local) else userStep(device)
             }
             Fault.READ_FAILS -> runningDevice!!.library.let { library ->
@@ -298,12 +327,11 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
      * a device whose library lists nothing. The index a plan is made from is never larger than the one the device kept,
      * so a count that is too many against that one was too many for the plan as well.
      */
-    private fun checkGuard(result: SyncEngine.Result, indexSize: Int, localCount: Int) {
-        val summary = (result as? SyncEngine.Result.Completed)?.summary ?: return
+    private fun checkGuard(deletedLocally: Int, deletedRemotely: Int, indexSize: Int, localCount: Int) {
         fun Int.isTooMany() = this > 0 && (this == indexSize || (this >= DeletionGuard.MIN_DELETIONS_TO_ASK && this * 2 > indexSize))
-        check(!summary.deletedLocally.isTooMany()) { "${summary.deletedLocally} of $indexSize files deleted locally without asking" }
-        check(!summary.deletedRemotely.isTooMany()) { "${summary.deletedRemotely} of $indexSize files deleted remotely without asking" }
-        check(localCount > 0 || indexSize == 0 || summary.deletedRemotely == 0) {
+        check(!deletedLocally.isTooMany()) { "$deletedLocally of $indexSize files deleted locally without asking" }
+        check(!deletedRemotely.isTooMany()) { "$deletedRemotely of $indexSize files deleted remotely without asking" }
+        check(localCount > 0 || indexSize == 0 || deletedRemotely == 0) {
             "An empty library deleted from the folder without asking"
         }
     }
@@ -313,6 +341,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         val everywhere = devices.flatMap { it.library.files.values } + cloud.files.values.map { it.first }
         val held = everywhere.mapTo(mutableSetOf()) { it.decodeToString() }
         check(held.containsAll(saved)) { "Saved versions lost from every device and the folder: ${saved - held}" }
+        val heldPictures = (devices.flatMap { it.library.files.keys } + cloud.files.keys).filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
+        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) }
+        check(heldPictures.containsAll(namedBySaved)) { "Pictures saved songs name lost from every device and the folder: ${namedBySaved - heldPictures}" }
         (devices.map { it.label to it.library.files.keys } + ("cloud" to cloud.files.keys)).forEach { (label, keys) ->
             val twice = keys.groupBy { it.folded() }.filterValues { it.size > 1 }
             check(twice.isEmpty()) { "$label holds one name in several spellings: ${twice.values}" }
@@ -328,6 +359,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         repeat(MAXIMUM_SETTLING_ROUNDS) {
             val before = worldState()
             devices.forEach { device ->
+                prune(device)
                 val attempt = runOn(scope, device, SyncDeletionPolicy.ASK)
                 val question = (attempt as? Attempt.Ended)?.result as? SyncEngine.Result.DeletionsNeedConfirmation
                 if (question != null) {
@@ -348,6 +380,13 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             check(library == folder) { "${device.label} settled on another library than the folder's" }
         }
         check(folder.values.containsAll(saved)) { "Saved versions lost: ${saved - folder.values.toSet()}" }
+        val named = cloud.files.filterKeys { it.kind == LibraryFileKind.SONG }.values.flatMapTo(mutableSetOf()) { namedIn(it.first.decodeToString()) }
+        val pictures = cloud.files.keys.filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
+        check(pictures.all { it in named }) { "Settled with pictures no song names: ${pictures - named}" }
+        // A song may name a picture that is nowhere, where the only device holding it lost its library folder after the
+        // song went up: what sync promises is every picture of a version nobody replaced, deleted, or lost.
+        val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) }
+        check(pictures.containsAll(namedBySaved)) { "Settled without pictures saved songs name: ${namedBySaved - pictures}" }
         sharing.checkSettled()
     }
 
@@ -405,6 +444,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
      */
     private class ProcessKilled : Error("Killed")
 
+    private class Picture(val key: SyncKey, val bytes: ByteArray)
+
     private companion object {
         const val MAXIMUM_SETTLING_ROUNDS = 6
 
@@ -426,6 +467,13 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             FileSystemNaming.MAC.copy(takesWrittenSpelling = true),
             FileSystemNaming.MAC.copy(storesDecomposed = true),
         )
+        val PICTURES = (1..4).map { number ->
+            val bytes = "picture $number".encodeToByteArray()
+            Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png"), bytes)
+        }
+
+        fun namedIn(text: String) = ChordProImages.referencedSources(text)
+
         val SETLIST_NAMES = listOf("gig.setlist.json", "Gig.setlist.json", "gig (2).setlist.json", "rehearsal.setlist.json")
     }
 }

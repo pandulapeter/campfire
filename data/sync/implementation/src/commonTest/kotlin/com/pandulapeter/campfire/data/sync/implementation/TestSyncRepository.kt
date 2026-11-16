@@ -81,6 +81,7 @@ internal fun TestScope.syncRepository(
             libraryFileLock = LibraryFileLock(),
             setlistComparison = NoSetlistComparison,
             userPreferencesRepository = userPreferencesRepository,
+            imageRepository = RecordingImageRepository(),
             logger = logger,
         ),
         syncedPreferencesSync = syncedPreferencesSync,

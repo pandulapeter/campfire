@@ -185,6 +185,9 @@ internal class Device(
     /** How many files the index says the last run saw, which is what the deletion guard measures a run's deletions against. */
     val indexSize get() = index.toIndex().size
 
+    /** The songs and setlists among [indexSize], which is what the deletion guard counts. */
+    val documentIndexSize get() = index.toIndex().keys.count { it.kind.isDocument }
+
     /** What the app's rename and deletion of a shared item leave for the next run. */
     suspend fun journal(entry: SharedLinksJournal.Entry) = sharedLinksJournal.append(listOf(entry))
 
