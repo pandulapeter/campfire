@@ -25,6 +25,7 @@ import org.jetbrains.skia.Rect
 import org.jetbrains.skia.SamplingMode
 import java.awt.Color
 import java.awt.RenderingHints
+import java.awt.color.ColorSpace
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -73,6 +74,9 @@ private fun decodeWithImageIo(bytes: ByteArray): DecodedPicture? = MemoryCacheIm
     val reader = ImageIO.getImageReaders(input).asSequence().firstOrNull() ?: return null
     try {
         reader.setInput(input, true, true)
+        // ImageIO reads a CMYK or YCCK JPEG without complaint, but as plain CMYK, so an Adobe one (inverted, as Photoshop
+        // writes them) comes out washed out: Skia converts it as the song view draws it.
+        if (reader.getImageTypes(0).asSequence().any { it.colorModel.colorSpace.type == ColorSpace.TYPE_CMYK }) return null
         val storedWidth = reader.getWidth(0)
         val storedHeight = reader.getHeight(0)
         val origin = encodedOriginOf(bytes)
@@ -86,7 +90,7 @@ private fun decodeWithImageIo(bytes: ByteArray): DecodedPicture? = MemoryCacheIm
         val stored = try {
             reader.read(0, parameters)
         } catch (_: IIOException) {
-            // A JPEG in CMYK or YCCK, which ImageIO does not convert: Skia does.
+            // A JPEG whose colours ImageIO has no conversion for: Skia has.
             return null
         }
         DecodedPicture(

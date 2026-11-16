@@ -18,6 +18,7 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.Base64
 import javax.imageio.ImageIO
 import kotlin.random.Random
 import kotlin.test.Test
@@ -84,6 +85,15 @@ class PictureReencoderTest {
     }
 
     @Test
+    fun `a CMYK JPEG keeps its colours`() = runTest {
+        val copy = assertNotNull(reencodePicture(Base64.getDecoder().decode(CMYK_JPEG), pictureAttemptsFor(ImageFormat.JPEG), ImportLimits.MAX_IMAGE_FILE_SIZE))
+
+        val decoded = ImageIO.read(ByteArrayInputStream(copy))
+        assertTrue(Color(decoded.getRGB(2, 4)).run { red in 180..220 && green < 60 && blue < 70 })
+        assertTrue(Color(decoded.getRGB(13, 4)).run { red < 70 && green in 40..90 && blue in 180..220 })
+    }
+
+    @Test
     fun `bytes that are no picture come out as nothing`() = runTest {
         assertNull(reencodePicture("{title: A}".encodeToByteArray(), pictureAttemptsFor(null), ImportLimits.MAX_IMAGE_FILE_SIZE))
     }
@@ -113,4 +123,16 @@ class PictureReencoderTest {
     }
 
     private fun bytes(vararg values: Int) = ByteArray(values.size) { values[it].toByte() }
+
+    private companion object {
+
+        /**
+         * 16 × 8 pixels, the left half (200, 30, 40) and the right half (40, 60, 200), stored in CMYK with an Adobe marker
+         * (inverted), as Photoshop and Pillow write one: ImageIO cannot write such a file to make it here.
+         */
+        const val CMYK_JPEG = "/9j/7gAOQWRvYmUAZAAAAAAA/9sAQwACAQEBAQECAQEBAgICAgIEAwICAgIFBAQDBAYFBgYGBQYGBgcJCAYHCQcGBggLCAkKCgoKCgYICwwLCgwJ" +
+            "CgoK/8AAFAgACAAQBEMRAE0RAFkRAEsRAP/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNR" +
+            "YQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqi" +
+            "o6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/aAA4EQwBNAFkASwAAPwD9IK/Hevyfr9/K/l/r3iv6gKK//9k="
+    }
 }

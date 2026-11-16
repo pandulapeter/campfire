@@ -34,7 +34,8 @@ the header callback, software allocator; its header size and target share one sp
 has the attempts' sides swapped. iOS: ImageIO's thumbnail (`ThumbnailMaxPixelSize`, `WithTransform`), drawn per attempt
 into an sRGB bitmap, written by `CGImageDestination`. Desktop: `javax.imageio` with source subsampling, the EXIF
 orientation read by Skia's codec from the header and applied by hand, halving with bilinear filtering; what ImageIO
-cannot read (WebP, CMYK JPEG) is Skia's whole decode up to 64 MP; HEIC fails (tested for real, `PictureReencoderTest`).
+cannot read (WebP) or reads as plain CMYK (a CMYK or YCCK JPEG, washed out where Adobe-inverted) is Skia's whole
+decode up to 64 MP; HEIC fails (tested for real, `PictureReencoderTest`).
 Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safari.
 
 ## Background work
