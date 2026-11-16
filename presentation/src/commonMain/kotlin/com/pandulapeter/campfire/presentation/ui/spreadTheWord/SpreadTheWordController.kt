@@ -55,6 +55,13 @@ internal class SpreadTheWordController(
     /** The song details screens on the back stack as of its last change, which tells a push from a return to one. */
     private var songDetailsIds = backStack.songDetailsIds()
 
+    /**
+     * Whether this process has put the request up. The stored flag alone would do, but it reaches [userPreferencesState]
+     * only once the write has gone through the repository and the flows after it, and nothing here may depend on that
+     * being quicker than the next return from a song; a write that fails keeps it in memory too, which this repeats.
+     */
+    private var hasShownRequest = false
+
     /** Whether the last change of the back stack was a return from song details to a list, see [onTransitionEnded]. */
     private var isReturnFromSongPending = false
 
@@ -80,7 +87,7 @@ internal class SpreadTheWordController(
         val isDue = isSpreadTheWordDue(
             ownSongCount = ownSongCount(screenData.value.data?.unfilteredSongs.orEmpty().map { it.fileName }, DemoLibrary::isDemoSong),
             songOpens = preferences.songOpens,
-            isShown = preferences.isSpreadTheWordShown,
+            isShown = hasShownRequest || preferences.isSpreadTheWordShown,
         )
         val canShow = canShowSpreadTheWord(
             hasDialog = dialogHost.visibleDialog.value != null,
@@ -94,13 +101,14 @@ internal class SpreadTheWordController(
         // Recorded as it appears rather than as it closes: an app ended while it is up does not ask again, since
         // asking twice would cost more than asking once too few.
         if (isDue && canShow && dialogHost.showIfNoneIsShown(DialogType.SpreadTheWord)) {
+            hasShownRequest = true
             updatePreferences("remember the request to spread the word") { it.copy(isSpreadTheWordShown = true) }
         }
     }
 
     private fun countSongOpen() {
         val preferences = userPreferencesState.value.data ?: return
-        if (preferences.isSpreadTheWordShown || preferences.songOpens.areEnough) return
+        if (hasShownRequest || preferences.isSpreadTheWordShown || preferences.songOpens.areEnough) return
         val today = today()
         updatePreferences("count the song opened") { it.copy(songOpens = it.songOpens.counted(today)) }
     }
