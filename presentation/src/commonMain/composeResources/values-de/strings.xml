@@ -1176,6 +1176,7 @@
     <string name="song_image_add">Bild hinzufügen</string>
     <string name="song_image_refused_format">Diese Art von Bild kann nicht auf jedem Gerät angezeigt werden. Wähle stattdessen eine PNG-, JPEG-, GIF- oder WebP-Datei.</string>
     <string name="song_image_refused_too_large">Dieses Bild ist größer als 8 MB, das Höchste, was ein Song enthalten kann.</string>
+    <string name="song_image_refused_too_many_pixels">Dieses Bild hat mehr als 25 Megapixel, mehr als ein Song anzeigen kann.</string>
     <string name="song_image_refused_not_image">Diese Datei ist kein Bild.</string>
 
     <!-- Settings screen: sync -->

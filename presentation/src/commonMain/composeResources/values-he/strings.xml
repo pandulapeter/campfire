@@ -1217,6 +1217,7 @@
     <string name="song_image_add">הוספת תמונה</string>
     <string name="song_image_refused_format">לא ניתן להציג סוג תמונה זה בכל מכשיר. כדאי לבחור במקומה קובץ PNG, JPEG, GIF או WebP.</string>
     <string name="song_image_refused_too_large">התמונה הזאת גדולה מ־8 MB, המרב ששיר יכול להכיל.</string>
+    <string name="song_image_refused_too_many_pixels">בתמונה הזאת יותר מ־25 מגה־פיקסל, יותר ממה ששיר יכול להציג.</string>
     <string name="song_image_refused_not_image">הקובץ הזה אינו תמונה.</string>
 
     <!-- Settings screen: sync -->

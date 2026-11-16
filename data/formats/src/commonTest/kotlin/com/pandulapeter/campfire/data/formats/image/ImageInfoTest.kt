@@ -93,6 +93,17 @@ internal class ImageInfoTest {
     }
 
     @Test
+    fun `a picture of more pixels than every platform decodes safely is refused and recognised as such`() {
+        // 5,000 squared is exactly the limit; a megabyte of flat PNG may claim a canvas of a gigabyte decoded.
+        assertEquals(ImageInfo(ImageFormat.PNG, 5_000, 5_000), ImageInfo.of(TestImages.png(5_000, 5_000).bytes))
+        assertNull(ImageInfo.of(TestImages.png(5_000, 5_001).bytes))
+        assertNull(ImageInfo.of(TestImages.png(16_384, 16_384).bytes))
+        assertTrue(ImageInfo.isOverPixelLimit(TestImages.png(16_384, 16_384).bytes))
+        assertTrue(!ImageInfo.isOverPixelLimit(TestImages.png(5_000, 5_000).bytes))
+        assertTrue(!ImageInfo.isOverPixelLimit("not a picture".encodeToByteArray()))
+    }
+
+    @Test
     fun `a header cut short anywhere is refused, and one cut after it is read`() {
         for (image in validImages()) {
             val full = ImageInfo.of(image.bytes)

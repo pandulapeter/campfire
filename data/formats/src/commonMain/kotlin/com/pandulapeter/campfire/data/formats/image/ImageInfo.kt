@@ -32,11 +32,25 @@ data class ImageInfo(
         const val MAX_SIDE = 32_768
 
         /**
-         * The format and displayed size of the picture [bytes] holds (the whole file or at least its first
-         * [MAX_HEADER_BYTES]), or null for anything that is not a PNG, JPEG, GIF, or WebP with a readable header and
-         * sides within [MAX_SIDE]. Never throws.
+         * The most pixels a picture may have: every platform but Android decodes the whole picture before scaling it to
+         * the size drawn (Skia's lazy image), at four bytes a pixel, so a picture past this is never drawn anywhere. A
+         * small file can claim a huge canvas (a flat PNG of 16,384 squared is a megabyte and a gigabyte decoded), which
+         * would end the app on iOS and the web on every opening of its song. 25 megapixels keeps any camera's ordinary
+         * photo (12 to 24) and costs at most about 100 MB for the moment it is decoded.
          */
-        fun of(bytes: ByteArray): ImageInfo? {
+        const val MAX_PIXELS = 25_000_000L
+
+        /**
+         * The format and displayed size of the picture [bytes] holds (the whole file or at least its first
+         * [MAX_HEADER_BYTES]), or null for anything that is not a PNG, JPEG, GIF, or WebP with a readable header,
+         * sides within [MAX_SIDE], and no more than [MAX_PIXELS]. Never throws.
+         */
+        fun of(bytes: ByteArray): ImageInfo? = read(bytes)?.takeIf { it.width.toLong() * it.height <= MAX_PIXELS }
+
+        /** Whether [bytes] is a picture [of] would read but for having more than [MAX_PIXELS]. */
+        fun isOverPixelLimit(bytes: ByteArray) = read(bytes)?.let { it.width.toLong() * it.height > MAX_PIXELS } == true
+
+        private fun read(bytes: ByteArray): ImageInfo? {
             val header = HeaderBytes(bytes)
             return PngHeader.read(header) ?: GifHeader.read(header) ?: WebpHeader.read(header) ?: JpegHeader.read(header)
         }

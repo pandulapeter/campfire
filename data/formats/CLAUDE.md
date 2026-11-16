@@ -97,7 +97,9 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
 
 Layout reserves a picture's room before decoding it, so `ImageInfo.of` reads only the header, never past a file's first
 64 KiB (a JPEG frame header behind more metadata is not read). The size is as displayed: JPEG EXIF orientation 5–8
-swaps the sides. A side over 32,768 is refused, so a lying header cannot reserve a huge box.
+swaps the sides. A side over 32,768 is refused, so a lying header cannot reserve a huge box, and so is a picture over 25
+megapixels (`MAX_PIXELS`, `isOverPixelLimit` telling it apart): Skia (desktop, iOS, web) decodes a whole picture before
+scaling it, and a megabyte of flat PNG can claim a gigabyte decoded. Every size the app draws by comes from here.
 
 ## Tests
 

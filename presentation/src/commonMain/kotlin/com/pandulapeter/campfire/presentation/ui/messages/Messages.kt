@@ -82,6 +82,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_format
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_not_image
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_large
+import com.pandulapeter.campfire.presentation.resources.song_image_refused_too_many_pixels
 import com.pandulapeter.campfire.presentation.resources.songs_paste_chordpro
 import com.pandulapeter.campfire.presentation.resources.songs_paste_converted
 import com.pandulapeter.campfire.presentation.resources.songs_paste_no_chords
@@ -200,6 +201,7 @@ private fun messageText(current: Message?): String? =
         is Message.ImageNotAdded -> stringResource(
             when (current.reason) {
                 ImageRefusal.TOO_LARGE -> Res.string.song_image_refused_too_large
+                ImageRefusal.TOO_MANY_PIXELS -> Res.string.song_image_refused_too_many_pixels
                 ImageRefusal.UNSUPPORTED_FORMAT -> Res.string.song_image_refused_format
                 ImageRefusal.NOT_AN_IMAGE -> Res.string.song_image_refused_not_image
             }

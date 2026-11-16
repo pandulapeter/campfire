@@ -27,7 +27,11 @@ internal object LibraryImages {
     fun examine(bytes: ByteArray): Examined {
         if (bytes.size > ImportLimits.MAX_IMAGE_FILE_SIZE) return Examined(ImageRefusal.TOO_LARGE, "", null)
         val info = ImageInfo.of(bytes) ?: return Examined(
-            refusal = if (ImageFormats.isRefusedImage(bytes)) ImageRefusal.UNSUPPORTED_FORMAT else ImageRefusal.NOT_AN_IMAGE,
+            refusal = when {
+                ImageInfo.isOverPixelLimit(bytes) -> ImageRefusal.TOO_MANY_PIXELS
+                ImageFormats.isRefusedImage(bytes) -> ImageRefusal.UNSUPPORTED_FORMAT
+                else -> ImageRefusal.NOT_AN_IMAGE
+            },
             extension = "",
             size = null,
         )

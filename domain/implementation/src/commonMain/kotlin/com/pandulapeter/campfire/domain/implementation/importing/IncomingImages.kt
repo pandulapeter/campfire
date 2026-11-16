@@ -68,7 +68,7 @@ internal object IncomingImages {
 
     private val ImageRefusal.problem
         get() = when (this) {
-            ImageRefusal.TOO_LARGE -> ImportedImage.Problem.TOO_LARGE
+            ImageRefusal.TOO_LARGE, ImageRefusal.TOO_MANY_PIXELS -> ImportedImage.Problem.TOO_LARGE
             ImageRefusal.UNSUPPORTED_FORMAT -> ImportedImage.Problem.UNSUPPORTED_FORMAT
             ImageRefusal.NOT_AN_IMAGE -> ImportedImage.Problem.NOT_AN_IMAGE
         }

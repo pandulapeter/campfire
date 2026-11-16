@@ -1210,6 +1210,7 @@
     <string name="song_image_add">Dodaj obraz</string>
     <string name="song_image_refused_format">Tego rodzaju obrazu nie da się wyświetlić na każdym urządzeniu. Wybierz zamiast niego plik PNG, JPEG, GIF lub WebP.</string>
     <string name="song_image_refused_too_large">Ten obraz jest większy niż 8 MB, czyli najwięcej, ile może zawierać piosenka.</string>
+    <string name="song_image_refused_too_many_pixels">Ten obraz ma ponad 25 megapikseli, więcej, niż piosenka może pokazać.</string>
     <string name="song_image_refused_not_image">Ten plik nie jest obrazem.</string>
 
     <!-- Settings screen: sync -->

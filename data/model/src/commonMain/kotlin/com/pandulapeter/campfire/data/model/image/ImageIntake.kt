@@ -24,6 +24,9 @@ enum class ImageRefusal {
     /** Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, the most sync moves. */
     TOO_LARGE,
 
+    /** More pixels than every platform can decode safely (`ImageInfo.MAX_PIXELS`, 25 megapixels), whatever its file size. */
+    TOO_MANY_PIXELS,
+
     /** A picture of a format some platform cannot show (HEIC, AVIF, SVG). */
     UNSUPPORTED_FORMAT,
 
