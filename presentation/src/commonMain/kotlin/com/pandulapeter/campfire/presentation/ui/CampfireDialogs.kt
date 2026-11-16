@@ -392,16 +392,9 @@ private fun CampfireDialog(
             onSave = viewModel.editorSession::saveEditorChangesAndLeave,
         )
 
-        DialogType.WhatsNew -> {
-            // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the
-            // dialog with the update required screen, which takes it out of the composition and cancels this, and whose
-            // flow ends the process (see FirstRunController.showWhatsNewOnVersionChange).
-            LaunchedEffect(Unit) {
-                delay(WHATS_NEW_SEEN_DELAY)
-                viewModel.firstRunController.onWhatsNewShown()
-            }
-            WhatsNewDialog(onDismiss = viewModel.dialogHost::dismissDialog)
-        }
+        DialogType.WhatsNew -> RecordedWhatsNewDialog(viewModel)
+
+        DialogType.SpreadTheWord -> SpreadTheWordHost(viewModel = viewModel, urlOpener = urlOpener)
     }
 }
 
@@ -417,6 +410,19 @@ private fun SongFiltersDialog(viewModel: CampfireViewModel) = SongFiltersSheet(
     normalizeForSearch = viewModel.songRenderer::normalizeForSearch,
     onDismiss = { viewModel.dialogHost.dismissSheet(DialogType.SongFilters) },
 )
+
+/** [WhatsNewDialog], recorded as seen once it has stayed up for [WHATS_NEW_SEEN_DELAY]. */
+@Composable
+private fun RecordedWhatsNewDialog(viewModel: CampfireViewModel) {
+    // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the dialog
+    // with the update required screen, which takes it out of the composition and cancels this, and whose flow ends the
+    // process (see FirstRunController.showWhatsNewOnVersionChange).
+    LaunchedEffect(Unit) {
+        delay(WHATS_NEW_SEEN_DELAY)
+        viewModel.firstRunController.onWhatsNewShown()
+    }
+    WhatsNewDialog(onDismiss = viewModel.dialogHost::dismissDialog)
+}
 
 /** How long What's new has to stay uncovered before it counts as seen. */
 private val WHATS_NEW_SEEN_DELAY = 3.seconds

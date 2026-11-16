@@ -30,10 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_microsoft_store
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_play_store
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
@@ -62,12 +58,14 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.LocalShows
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.ShortcutPlatforms
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.processLogActionTitle
-import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.appBuild
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
+import com.pandulapeter.campfire.presentation.ui.platform.storeName
+import com.pandulapeter.campfire.presentation.ui.platform.WEBSITE_HOST
+import com.pandulapeter.campfire.presentation.ui.platform.WEBSITE_URL
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
 import com.pandulapeter.campfire.presentation.ui.settingsPage.SettingsSection
 import org.jetbrains.compose.resources.painterResource
@@ -232,16 +230,3 @@ private fun LegalSection(
         onClick = { urlOpener("${WEBSITE_URL}privacy/") },
     )
 }
-
-/** The name a rating is left under, which is the one thing the app still has to call a store. */
-private val Distribution.storeName
-    get() = when (this) {
-        Distribution.PLAY_STORE -> Res.string.settings_distribution_play_store
-        Distribution.APP_STORE -> Res.string.settings_distribution_app_store
-        Distribution.MAC_APP_STORE -> Res.string.settings_distribution_mac_app_store
-        Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_microsoft_store
-    }
-
-private const val WEBSITE_HOST = "campfire-songbook.com"
-
-private const val WEBSITE_URL = "https://$WEBSITE_HOST/"

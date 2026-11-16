@@ -42,6 +42,9 @@ internal object DemoLibrary {
 
     private const val SETLIST_FILE_NAME = "getting_started.setlist.json"
 
+    /** Whether [fileName] is one of the demo's songs, under the name it is planted with, edited since or not. */
+    fun isDemoSong(fileName: String) = fileName in songFileNames
+
     /** Whether the library already holds all of it, which is what takes the offer to load it out of the settings. */
     fun isPresentIn(songs: List<Song>, setlists: List<Setlist>): Boolean {
         val storedSongFileNames = songs.mapTo(mutableSetOf()) { it.fileName }

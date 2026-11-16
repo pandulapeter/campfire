@@ -85,15 +85,25 @@ internal expect fun PointerEvent.verticalWheelNotches(): Float
  *   address rather than a store's own scheme (`market://`, `ms-windows-store://`) so that it also opens in a
  *   browser, on a desktop where the store app may not be installed at all.
  * @property isApple Whether the store is one of Apple's, which is what decides [canAskForDonations].
+ * @property reviewUrl Where the app's own request to spread the word sends a rating, straight to the store's review
+ *   form where it has an address for one, or null where the app may not ask in a dialog of its own: Apple's guideline
+ *   5.6.1 allows only the system's review prompt, which may not show at all.
  */
 internal enum class Distribution(
     val listingUrl: String?,
     val isApple: Boolean = false,
+    val reviewUrl: String? = null,
 ) {
-    PLAY_STORE(listingUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"),
+    PLAY_STORE(
+        listingUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire",
+        reviewUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire",
+    ),
     APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
     MAC_APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
-    MICROSOFT_STORE(listingUrl = "https://apps.microsoft.com/detail/9MSR62F288M1"),
+    MICROSOFT_STORE(
+        listingUrl = "https://apps.microsoft.com/detail/9MSR62F288M1",
+        reviewUrl = "ms-windows-store://review/?ProductId=9MSR62F288M1",
+    ),
 }
 
 /** The builds Campfire is handed out as, each shipping a different set of libraries and assets. */

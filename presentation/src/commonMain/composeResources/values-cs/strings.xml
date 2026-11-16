@@ -1268,6 +1268,11 @@
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">Co je nového v Campfire %1$s</string>
     <string name="whats_new_message">• **Přehlednější mřížky akordů** Mřížky se kreslí jako řady taktů, každý akord tak široký jako jeho doby, na obrazovce i v PDF.\n• **Portugalština, polština a čeština** Aplikace je teď k dispozici v portugalštině, polštině a češtině, vybereš je v Nastavení.\n• **Přejíždění sloupců mimo setlist** Přejíždění už nepřestává fungovat u písně posouvané po sloupcích, když ji otevřeš mimo setlist.\n• **Lepší import zpěvníků** Písně vložené z některých webů si ponechají akordy, které se dřív ztrácely, řady taktů se stanou mřížkami a rozpozná se víc tabulatur.\n• **Opravy synchronizace** Synchronizace už nesmaže píseň přejmenovanou zpět na název, který jiné zařízení smazalo, ani neztratí jednu verzi konfliktu.\n• **Menší exporty a sdílené odkazy** Exportované archivy a sdílené odkazy jsou komprimované, takže zaberou méně místa a stahují se rychleji.</string>
+    <string name="spread_the_word_title">Pár slov od Pétera</string>
+    <string name="spread_the_word_message">Ahoj! Jsem ten, kdo stojí za Campfire, který je a zůstane úplně zdarma, bez reklam a bez účtu. K novým muzikantům se dostane skoro jen tehdy, když o něm někdo, kdo ho používá, řekne.\n\nPokud ti Campfire byl užitečný, nejvíc mu pomůže, když o něm řekneš kamarádovi muzikantovi, nebo ho ohodnotíš: víc než cokoli, co bych mohl udělat sám. Díky, že ho používáš!</string>
+    <string name="spread_the_word_message_without_rating">Ahoj! Jsem ten, kdo stojí za Campfire, který je a zůstane úplně zdarma, bez reklam a bez účtu. K novým muzikantům se dostane skoro jen tehdy, když o něm někdo, kdo ho používá, řekne.\n\nPokud ti Campfire byl užitečný, nejvíc mu pomůže, když o něm řekneš kamarádovi muzikantovi: víc než cokoli, co bych mohl udělat sám. Díky, že ho používáš!</string>
+    <string name="spread_the_word_rate">Ohodnotit na %1$s</string>
+    <string name="spread_the_word_share_text">Campfire je bezplatný zpěvník s texty a akordy, bez reklam a bez účtu: %1$s</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Přeskočit</string>

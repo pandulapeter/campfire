@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.data.model.sync.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
+import com.pandulapeter.campfire.presentation.ui.firstRun.isFirstLaunchAsync
+import com.pandulapeter.campfire.presentation.ui.spreadTheWord.SpreadTheWordController
 import com.pandulapeter.campfire.presentation.ui.launch.LaunchState
 import com.pandulapeter.campfire.presentation.ui.fontScale.FontScaleController
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -159,8 +161,6 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import com.pandulapeter.campfire.presentation.ui.songView.model.inferredKeyOfText
 import kotlinx.coroutines.Dispatchers
 import com.pandulapeter.campfire.presentation.ui.sync.SyncController
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -308,7 +308,10 @@ class CampfireViewModel(
         endSetlistReordering = { setlistsController.reorderingSetlistFileName = null },
         isSongSelecting = { songSelection.isSongSelecting },
         endSongSelection = { songSelection.end() },
-        onTransitionEnded = { songTextStore.pruneSongTexts() },
+        onTransitionEnded = {
+            songTextStore.pruneSongTexts()
+            spreadTheWordController.onTransitionEnded()
+        },
     ).apply {
         addOnBackStackChanged { _, stack -> modeEndings.onBackStackChanged(stack) }
         addOnBackStackChanged(soundLifetime::onBackStackChanged)
@@ -656,24 +659,8 @@ class CampfireViewModel(
 
     // Dialogs
 
-    /**
-     * Whether this is the first launch of this installation, asked once and shared. It stops being true the moment
-     * the preferences are written, which is the last thing the demo library planting does, so a second caller
-     * asking the question again would be answered by whichever coroutine got there first. Two of them need it: the
-     * demo library, and the sync connection a reinstalled app must not inherit (see [forgetSyncConnection]).
-     *
-     * An answer that could not be read is false: neither caller may act on a guess.
-     */
-    private val isFirstLaunch = viewModelScope.async {
-        try {
-            isFirstRun()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not tell whether this is a first run: ${exception.message}")
-            false
-        }
-    }
+    /** See [isFirstLaunchAsync]. */
+    private val isFirstLaunch = viewModelScope.isFirstLaunchAsync(isFirstRun)
 
     internal val firstRunController: FirstRunController = FirstRunController(
         scope = viewModelScope,
@@ -691,6 +678,18 @@ class CampfireViewModel(
         openOnboarding = { navigator.openOnboarding(isOpenedFromSettings = false) },
         isOnboardingOnLastStep = { navigator.isOnboardingOnLastStep },
         awaitAppOnScreen = { launchState.isAppOnScreen.first { it } },
+    )
+
+    private val spreadTheWordController = SpreadTheWordController(
+        scope = viewModelScope,
+        dialogHost = dialogHost,
+        backStack = navigator.backStack,
+        importController = importController,
+        importReport = importReportState.importReport,
+        syncState = syncController.syncState,
+        screenData = libraryState.screenData,
+        userPreferencesState = preferencesController.userPreferencesState,
+        updateUserPreferences = updateUserPreferences,
     )
 
     internal val launchState: LaunchState = LaunchState(
@@ -725,6 +724,7 @@ class CampfireViewModel(
         }
         importController.startQueue(firstRunController.demoLibraryDecision)
         navigator.addOnBackStackChanged { _, stack -> firstRunController.onBackStackChanged(stack) }
+        navigator.addOnBackStackChanged(spreadTheWordController::onBackStackChanged)
         dialogHost.startClosingWithSong(
             allSongs = libraryState.allSongs,
             isLoading = libraryState.isLoading,

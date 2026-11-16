@@ -197,6 +197,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   `ui/screens/songs`.
 - First run opens a skippable onboarding, one question a page, written as answered: `ui/screens/onboarding`.
 - What's new shows once per version, after startup import questions: `ui/firstRun`.
+- Once per device, someone with 5 songs of their own who has opened songs 10 times on 3 different days gets, on the way
+  back from a song, a personal note asking them to share Campfire and, on Play and the Microsoft Store, to rate it:
+  `ui/spreadTheWord`.
 - Every platform keeps a bounded log of what the app printed and what the user did, never sent by itself; Settings →
   About, and the launch after a crash, mail it to the developer (or share or save it) after a dialog saying it names
   songs: `ui/platform`.

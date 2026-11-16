@@ -1227,6 +1227,11 @@
     <!-- What's new, shown once per version after the first installed version -->
     <string name="whats_new_title">What's new in Campfire %1$s</string>
     <string name="whats_new_message">• **Improved chord grid appearance** Grids are drawn as rows of bars, each chord as wide as its beats, on screen and in the PDF.\n• **Portuguese, Polish, and Czech** The app is now available in Portuguese, Polish, and Czech, picked in Settings.\n• **Swiping columns outside a setlist** Swiping no longer stops working on a song turned a column at a time when it is opened outside a setlist.\n• **Chord sheet import improvements** Songs pasted from some websites keep chords that were lost before, rows of bars become grids, and more tabs are recognized.\n• **Sync fixes** Sync no longer deletes a song renamed back to a name another device deleted, or loses one version of a conflict.\n• **Smaller exports and shared links** Exported archives and shared links are compressed, so they take less space and download faster.</string>
+    <string name="spread_the_word_title">A word from Péter</string>
+    <string name="spread_the_word_message">Hi! I'm the guy behind Campfire, which is and will remain completely free, with no ads and no account. This app reaches new musicians almost only when someone who uses it mentions it.\n\nIf Campfire has been useful to you, telling a musician friend about it, or leaving a rating, would help it more than anything I could do myself. Thank you for using it!</string>
+    <string name="spread_the_word_message_without_rating">Hi! I'm the guy behind Campfire, which is and will remain completely free, with no ads and no account. This app reaches new musicians almost only when someone who uses it mentions it.\n\nIf Campfire has been useful to you, telling a musician friend about it would help it more than anything I could do myself. Thank you for using it!</string>
+    <string name="spread_the_word_rate">Rate on %1$s</string>
+    <string name="spread_the_word_share_text">Campfire is a free songbook app for lyrics and chords, with no ads and no account: %1$s</string>
 
     <!-- Onboarding, shown once on the first run and again from Settings -->
     <string name="onboarding_skip">Skip</string>

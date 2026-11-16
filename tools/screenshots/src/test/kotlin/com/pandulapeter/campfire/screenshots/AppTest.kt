@@ -134,12 +134,13 @@ internal fun runAppTest(
     isFirstRun: Boolean = false,
     isSyncConnected: Boolean = true,
     preferenceFiles: Map<String, String> = emptyMap(),
+    extraPreferences: Map<String, JsonPrimitive> = emptyMap(),
     platform: ImpersonatedPlatform = ImpersonatedPlatform.ANDROID,
     test: suspend AppTestScope.() -> Unit,
 ) {
     if (isFirstRun) {
         require(
-            songs.isEmpty() && setlists.isEmpty() && preferenceFiles.isEmpty() && !isCoverArtEnabled &&
+            songs.isEmpty() && setlists.isEmpty() && preferenceFiles.isEmpty() && extraPreferences.isEmpty() && !isCoverArtEnabled &&
                 fontScale == UserPreferences.DEFAULT_FONT_SCALE && songLayout == SongLayout.PAGES,
         ) {
             "A first run starts from an empty data directory, which has no songs, setlists, or preferences to set."
@@ -156,7 +157,7 @@ internal fun runAppTest(
             appearance = appearance,
             fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
             writeData = { dataDirectory ->
-                if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, songLayout, pageTurn, appearance, isCoverArtEnabled)
+                if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, songLayout, pageTurn, appearance, isCoverArtEnabled, extraPreferences)
                 preferenceFiles.forEach { (name, text) -> File(dataDirectory, "preferences/" + name).writeText(text) }
             },
             test = test,
@@ -336,6 +337,7 @@ private fun writeLibrary(
     pageTurn: PageTurn,
     appearance: TestAppearance,
     isCoverArtEnabled: Boolean,
+    extraPreferences: Map<String, JsonPrimitive>,
 ) {
     val songsFolder = File(dataDirectory, "library/songs").apply { mkdirs() }
     listOf(HOUSE_OF_THE_RISING_SUN, HOME_ON_THE_RANGE).forEach { File(songsFolder, it).writeText(demoSongText(it)) }
@@ -352,6 +354,7 @@ private fun writeLibrary(
         put("isSongLayoutChosen", true)
         put("pageTurn", pageTurn.id)
         put("isChordNamesChosen", true)
+        extraPreferences.forEach { (key, value) -> put(key, value) }
     }
     File(dataDirectory, "preferences").mkdirs()
     File(dataDirectory, "preferences/preferences.json").writeText(preferences.toString())
