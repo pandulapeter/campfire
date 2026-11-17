@@ -218,6 +218,14 @@
         <item quantity="one">%1$d kép kimarad</item>
         <item quantity="other">%1$d kép kimarad</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">%1$d csatolmánnyal</item>
+        <item quantity="other">%1$d csatolmánnyal</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">%1$d csatolmány kimarad</item>
+        <item quantity="other">%1$d csatolmány kimarad</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Előnézet: még nincs a könyvtáradban</string>
     <string name="import_preview_name_taken">Ezen a néven már van egy másik dal a könyvtáradban.</string>

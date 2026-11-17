@@ -243,6 +243,16 @@
         <item quantity="few">%1$d obrazy pominięte</item>
         <item quantity="other">%1$d obrazów pominiętych</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">Z %1$d załącznikiem</item>
+        <item quantity="few">Z %1$d załącznikami</item>
+        <item quantity="other">Z %1$d załącznikami</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">%1$d załącznik pominięty</item>
+        <item quantity="few">%1$d załączniki pominięte</item>
+        <item quantity="other">%1$d załączników pominiętych</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Podgląd: jeszcze nie w bibliotece</string>
     <string name="import_preview_name_taken">W bibliotece jest już inna piosenka o tej nazwie.</string>

@@ -81,16 +81,18 @@ data class ImportPlan(
         val title: String = "",
         val artist: String = "",
         /**
-         * Every picture [text]'s image directives name, as the import found it. [text] already names each one it brings
-         * by the name the library keeps it under, which is the one change an import makes to a song's text, and what it
-         * is compared by; a directive naming one it does not bring is left as it arrived.
+         * Every picture [text]'s image directives name, and every file its attachment lines name, as the import found
+         * it. [text] already names each one it brings by the name the library keeps it under, which is the one change an
+         * import makes to a song's text, and what it is compared by; a directive naming one it does not bring is left as
+         * it arrived.
          */
         val images: List<SongImage> = emptyList(),
     )
 
     /**
-     * A picture an incoming song names: brought under [name], the library's name for [bytes], which the song's directive
-     * now names; or not brought, for [problem], its directive left naming [source], so the song shows it as missing.
+     * A picture an incoming song names, or with [isAttachment] a file attached to it: brought under [name], the library's
+     * name for [bytes], which the song's directive now names; or not brought, for [problem], its directive left naming
+     * [source], so the song shows it as missing.
      */
     class SongImage(
         /** The file the directive named as it arrived. */
@@ -98,15 +100,17 @@ data class ImportPlan(
         val name: String?,
         val bytes: ByteArray?,
         val problem: ImportedImage.Problem?,
+        val isAttachment: Boolean = false,
     ) {
 
-        /** A name is the picture's content, so the bytes need no comparing. */
-        override fun equals(other: Any?) =
-            this === other || (other is SongImage && source == other.source && name == other.name && problem == other.problem)
+        /** A name is the file's content, so the bytes need no comparing. */
+        override fun equals(other: Any?) = this === other || (
+            other is SongImage && source == other.source && name == other.name && problem == other.problem && isAttachment == other.isAttachment
+            )
 
-        override fun hashCode() = 31 * (31 * source.hashCode() + name.hashCode()) + problem.hashCode()
+        override fun hashCode() = 31 * (31 * (31 * source.hashCode() + name.hashCode()) + problem.hashCode()) + isAttachment.hashCode()
 
-        override fun toString() = "SongImage(source=$source, name=$name, problem=$problem)"
+        override fun toString() = "SongImage(source=$source, name=$name, problem=$problem, isAttachment=$isAttachment)"
     }
 
     data class SetlistEntry(

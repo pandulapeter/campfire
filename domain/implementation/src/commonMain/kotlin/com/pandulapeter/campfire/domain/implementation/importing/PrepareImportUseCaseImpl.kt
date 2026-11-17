@@ -78,6 +78,7 @@ internal class PrepareImportUseCaseImpl(
         // read its files through an ImportBudget.
         var remaining = ImportLimits.MAX_IMPORT_SIZE
         var remainingImages = ImportLimits.MAX_IMPORT_IMAGES_SIZE
+        var remainingAttachments = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
 
         // Loose files share the null origin, and everything unpacked from the picked file at index i has origin i.
         fun sort(file: ImportedFile, origin: Int?) {
@@ -135,8 +136,14 @@ internal class PrepareImportUseCaseImpl(
                 }
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE -> triage.oversizedFileNames += file.name
                 else -> try {
-                    val unpacked = archiveRepository.unpack(archive = file.bytes, maxSize = remaining, maxImageSize = remainingImages)
+                    val unpacked = archiveRepository.unpack(
+                        archive = file.bytes,
+                        maxSize = remaining,
+                        maxImageSize = remainingImages,
+                        maxAttachmentSize = remainingAttachments,
+                    )
                     remainingImages -= unpacked.imageSize
+                    remainingAttachments -= unpacked.attachmentSize
                     val entries = unpacked.files
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
                     // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
@@ -175,7 +182,8 @@ internal class PrepareImportUseCaseImpl(
 
     /**
      * Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner], with
-     * the pictures it brings: its file's, and those of [linkedImages] (by address, [IncomingPictureLinks]) it names.
+     * the pictures it brings, its file's and those of [linkedImages] (by address, [IncomingPictureLinks]) it names, and
+     * its file's attachments.
      */
     private suspend fun planSongs(
         files: List<IncomingFile>,
@@ -219,7 +227,9 @@ internal class PrepareImportUseCaseImpl(
                 if (isDocument) triage.unreadableDocumentFileNames += file.name else triage.skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
-            val images = linkedImages + IncomingImages.planned(file.images, imageRepository)
+            val (arrivedAttachments, arrivedPictures) = file.images.partition { it.isAttachment }
+            val images = linkedImages + IncomingImages.planned(arrivedPictures, imageRepository)
+            val attachments = IncomingImages.planned(arrivedAttachments, imageRepository)
             val songs = parts.map { part ->
                 yield()
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
@@ -231,6 +241,7 @@ internal class PrepareImportUseCaseImpl(
                 val (text, songImages) = IncomingImages.rewritten(
                     text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD)),
                     planned = images,
+                    plannedAttachments = attachments,
                 )
                 val metadata = ChordProParser.parseMetadata(text)
                 ImportPlanner.IncomingSong(

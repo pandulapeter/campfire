@@ -19,4 +19,9 @@ class InflaterImportLimitTest {
     fun `the inflater allows what an import does`() {
         assertEquals(ImportLimits.MAX_IMPORT_SIZE, Inflater.MAX_ENTRY_SIZE.toLong())
     }
+
+    @Test
+    fun `the inflater allows an archive's attachment, the largest file it may declare`() {
+        assertEquals(ImportLimits.MAX_ATTACHMENT_FILE_SIZE, Inflater.MAX_DECLARED_ENTRY_SIZE.toLong())
+    }
 }

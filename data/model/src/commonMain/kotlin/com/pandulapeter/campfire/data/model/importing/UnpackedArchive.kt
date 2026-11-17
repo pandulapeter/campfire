@@ -10,10 +10,11 @@
 package com.pandulapeter.campfire.data.model.importing
 
 /**
- * What an archive unpacked to: its [files], and how much of the import's picture budget the pictures its songs name
- * took ([imageSize]), which the caller carries on to the archives after it.
+ * What an archive unpacked to: its [files], and how much of the import's picture and attachment budgets the files its
+ * songs name took ([imageSize], [attachmentSize]), which the caller carries on to the archives after it.
  */
 data class UnpackedArchive(
     val files: List<ImportedFile>,
     val imageSize: Long,
+    val attachmentSize: Long = 0,
 )

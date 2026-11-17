@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.model.library.PackedArchive
 interface ArchiveRepository {
 
     /** See `ArchiveLocalSource.unpack`. */
-    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive
+    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
 
     /** See `ArchiveLocalSource.songsIn`. */
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?

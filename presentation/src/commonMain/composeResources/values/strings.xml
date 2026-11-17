@@ -218,6 +218,14 @@
         <item quantity="one">%1$d picture left out</item>
         <item quantity="other">%1$d pictures left out</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">With %1$d attachment</item>
+        <item quantity="other">With %1$d attachments</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">%1$d attachment left out</item>
+        <item quantity="other">%1$d attachments left out</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Preview: not in your library yet</string>
     <string name="import_preview_name_taken">A different song with this name is already in your library.</string>

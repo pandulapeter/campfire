@@ -29,12 +29,18 @@
   date or countdown (parsing gives it today; a replacement keeps the library's), so re-importing the demo setlist finds
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
-- Archives share one size budget for songs and another for the pictures songs name.
+- Archives share one size budget for songs, another for the pictures songs name, and a third for their attachments.
 - **Pictures** (`IncomingImages`): a song's `src` values are rewritten to the library names of the pictures it brings
   when it is planned, so the review, the duplicate check, and the write all see the text the song will have; that is
   the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it
   arrived. A file chosen on its own that is a picture by its bytes is `ImportPlan.imageFiles`, never a song; one left unread
   for its size is oversized.
+- **Attachments** go the same way (`ImportedImage.isAttachment`, `SongImage.isAttachment`): read from the archive only
+  for a song naming them (a content-named attachment is never read as a document of its own, nor is any entry a song
+  takes), judged by size and extension (`libraryNameOfAttachment`), their lines' files rewritten, stored by
+  `addAttachment`. One missing, too large, or of a refused type keeps its line as it arrived, so sync can bring the file
+  later; the review counts brought and left-out attachments apart from pictures. A file a song both shows and attaches
+  is read once, as a picture.
 - **Pictures by address** (`IncomingPictureLinks`, only while `isPictureLinkDownloadEnabled`): every `https` `src` of
   the batch's song files is downloaded once as it is prepared (its own progress phase, four at a time), within the
   picture limit and what is left of the batch's picture budget, never re-encoded, then planned and rewritten as an

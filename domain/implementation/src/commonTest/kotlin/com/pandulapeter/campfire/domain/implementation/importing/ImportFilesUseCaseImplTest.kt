@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.image.ImageIntake
+import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
@@ -950,6 +951,60 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a song brings the files attached to it under their library names, and names those it cannot bring as they arrived`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val images = FakeImageRepository()
+        val sheet = "%PDF sheet".encodeToByteArray()
+        val text = "{title: A}\n{meta: attachment sheet.pdf Sheet.pdf}\n{meta: attachment gone.mp3 Take}\n{meta: attachment run.exe Tool}\n"
+        val archive = FakeArchiveRepository { _, _ ->
+            listOf(
+                ImportedFile(
+                    name = "a.cho",
+                    bytes = text.encodeToByteArray(),
+                    images = listOf(
+                        ImportedImage("sheet.pdf", sheet, null, isAttachment = true),
+                        ImportedImage("gone.mp3", null, ImportedImage.Problem.MISSING, isAttachment = true),
+                        ImportedImage("run.exe", byteArrayOf(1), null, isAttachment = true),
+                    ),
+                ),
+            )
+        }
+
+        val plan = prepare(songs, archive = archive, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+        val name = (images.libraryNameOfAttachment(sheet, "pdf") as ImageIntake.Accepted).name
+        val entry = plan.songs.single()
+
+        assertEquals(
+            listOf(name to null, null to ImportedImage.Problem.MISSING, null to ImportedImage.Problem.UNSUPPORTED_FORMAT),
+            entry.images.map { it.name to it.problem },
+        )
+        assertTrue(entry.images.all { it.isAttachment })
+        assertEquals(setOf(name, "gone.mp3", "run.exe"), ChordProAttachments.referencedSources(entry.text))
+
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+
+        assertEquals(listOf(name), images.added)
+        assertTrue(images.library.getValue(name).contentEquals(sheet))
+        assertEquals(entry.text, songs.files.getValue("a.cho"))
+    }
+
+    @Test
+    fun `the archives of one import share one attachment budget, apart from the pictures' budget`() = runTest {
+        val budgets = mutableListOf<Pair<Long, Long>>()
+        val archive = object : ArchiveRepository by FakeArchiveRepository() {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
+                budgets += maxImageSize to maxAttachmentSize
+                return UnpackedArchive(files = emptyList(), imageSize = 0, attachmentSize = 2_000)
+            }
+        }
+
+        prepare(FakeSongRepository(mutableMapOf()), archive = archive)(listOf(ImportedFile("one.zip", byteArrayOf(1)), ImportedFile("two.zip", byteArrayOf(1))))
+
+        assertEquals(ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE to ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE - 2_000, budgets[0].second to budgets[1].second)
+        assertEquals(ImportLimits.MAX_IMPORT_IMAGES_SIZE, budgets[1].first)
+    }
+
+    @Test
     fun `a song left out of the import leaves its pictures out too`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
@@ -989,7 +1044,7 @@ class ImportFilesUseCaseImplTest {
         val budgets = mutableListOf<Pair<Long, Long>>()
         val picture = FakeImageRepository.picture(1)
         val archive = object : ArchiveRepository by FakeArchiveRepository() {
-            override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
                 budgets += maxSize to maxImageSize
                 val song = ImportedFile("${budgets.size}.cho", "{title: ${budgets.size}}\n{image: src=x.png}\n".encodeToByteArray(), images = listOf(ImportedImage("x.png", picture, null)))
                 return UnpackedArchive(files = listOf(song), imageSize = 1_000)

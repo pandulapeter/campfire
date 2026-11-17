@@ -161,7 +161,7 @@ internal class ArchiveImagesTest {
     fun `pictures past the import's picture budget are reported too large apart from the songs' budget`() = runTest {
         val archive = archiveOf("a.cho" to song("one.png", "two.png"), "one.png" to photo, "two.png" to otherPhoto)
 
-        val unpacked = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = photo.size + 10L)
+        val unpacked = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = photo.size + 10L, maxAttachmentSize = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE)
 
         val problems = unpacked.song("a.cho").images.map { it.problem }
         assertEquals(listOf(null, ImportedImage.Problem.TOO_LARGE), problems)
@@ -173,7 +173,7 @@ internal class ArchiveImagesTest {
         val inner = archiveOf("b.cho" to song("chart.png"), "chart.png" to otherPhoto)
         val archive = archiveOf("a.cho" to song("chart.png"), "chart.png" to photo, "inner.zip" to inner)
 
-        val unpacked = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = photo.size + 10L)
+        val unpacked = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = photo.size + 10L, maxAttachmentSize = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE)
 
         assertFound(photo, unpacked.song("a.cho").images.single())
         assertProblem(ImportedImage.Problem.TOO_LARGE, unpacked.song("b.cho").images.single())
@@ -193,7 +193,7 @@ internal class ArchiveImagesTest {
             sink = sink,
         )
 
-        val unpacked = archiveLocalSource.unpack(archive = sink.bytes(), maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE)
+        val unpacked = archiveLocalSource.unpack(archive = sink.bytes(), maxSize = ImportLimits.MAX_IMPORT_SIZE, maxImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE, maxAttachmentSize = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE)
 
         assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
         assertEquals(text, unpacked.song("a.cho").bytes.decodeToString())
@@ -202,11 +202,68 @@ internal class ArchiveImagesTest {
         assertFound(otherPhoto, images.getValue("0123456789abcdef.jpg"))
     }
 
+    @Test
+    fun `a song's attachments come with it from the archive's images folder apart from its pictures`() = runTest {
+        val text = "{title: A}\n{image: src=3f9a0c1d2e3f4a5b.png}\n{meta: attachment 0123456789abcdef.pdf Sheet.pdf}\n"
+
+        val unpacked = unpack("a.cho" to text.encodeToByteArray(), "images/3f9a0c1d2e3f4a5b.png" to photo, "images/0123456789abcdef.pdf" to otherPhoto)
+
+        assertEquals(listOf("a.cho"), unpacked.files.map { it.name })
+        val (pictures, attachments) = unpacked.song("a.cho").images.partition { !it.isAttachment }
+        assertFound(photo, pictures.single())
+        assertEquals("0123456789abcdef.pdf", attachments.single().source)
+        assertFound(otherPhoto, attachments.single())
+        assertEquals(photo.size.toLong(), unpacked.imageSize)
+        assertEquals(otherPhoto.size.toLong(), unpacked.attachmentSize)
+    }
+
+    @Test
+    fun `an attachment larger than a picture may be is read within the attachment limit`() = runTest {
+        val recording = Random(4).nextBytes(ImportLimits.MAX_IMAGE_FILE_SIZE.toInt() + 1)
+
+        val unpacked = unpack("a.cho" to attachmentSong("0123456789abcdef.mp3"), "0123456789abcdef.mp3" to recording)
+
+        assertFound(recording, unpacked.song("a.cho").images.single())
+    }
+
+    @Test
+    fun `attachments past the import's attachment budget are reported too large and leave the picture budget untouched`() = runTest {
+        val archive = archiveOf(
+            "a.cho" to attachmentSong("0123456789abcdef.mp3", "fedcba9876543210.mp3"),
+            "0123456789abcdef.mp3" to photo,
+            "fedcba9876543210.mp3" to otherPhoto,
+        )
+
+        val unpacked = archiveLocalSource.unpack(
+            archive = archive,
+            maxSize = ImportLimits.MAX_IMPORT_SIZE,
+            maxImageSize = 0,
+            maxAttachmentSize = photo.size + 10L,
+        )
+
+        assertEquals(listOf(null, ImportedImage.Problem.TOO_LARGE), unpacked.song("a.cho").images.map { it.problem })
+        assertEquals(photo.size.toLong(), unpacked.attachmentSize)
+        assertEquals(0, unpacked.imageSize)
+    }
+
+    @Test
+    fun `a missing attachment is reported with its song which still comes`() = runTest {
+        val unpacked = unpack("a.cho" to attachmentSong("0123456789abcdef.pdf"))
+
+        val attachment = unpacked.song("a.cho").images.single()
+        assertTrue(attachment.isAttachment)
+        assertProblem(ImportedImage.Problem.MISSING, attachment)
+    }
+
     private suspend fun unpack(vararg entries: Pair<String, ByteArray>) = archiveLocalSource.unpack(
         archive = archiveOf(*entries),
         maxSize = ImportLimits.MAX_IMPORT_SIZE,
         maxImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE,
+        maxAttachmentSize = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE,
     )
+
+    private fun attachmentSong(vararg sources: String) =
+        (listOf("{title: A}") + sources.map { "{meta: attachment $it Take}" }).joinToString("\n").encodeToByteArray()
 
     private suspend fun archiveOf(vararg entries: Pair<String, ByteArray>) = ZipWriter.write(entries.map { (name, bytes) -> ZipEntry(name, bytes) })
 

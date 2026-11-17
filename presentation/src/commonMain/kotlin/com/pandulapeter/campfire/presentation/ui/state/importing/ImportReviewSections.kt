@@ -59,6 +59,9 @@ internal data class ImportReviewSection(
  * @param imageCount For a song, how many pictures it brings into the library.
  * @param leftOutImageCount For a song, how many pictures it names that it does not bring (missing from the archive, too
  *   large, or of a format the library refuses), which it then shows as missing.
+ * @param attachmentCount For a song, how many files attached to it it brings into the library.
+ * @param leftOutAttachmentCount For a song, how many attached files it names that it does not bring (missing, too large,
+ *   or of a type the library refuses), which it keeps naming, so that sync can still bring them.
  */
 internal data class ImportReviewRow(
     val key: ImportEntryKey?,
@@ -76,6 +79,8 @@ internal data class ImportReviewRow(
     val songIndex: Int? = null,
     val imageCount: Int = 0,
     val leftOutImageCount: Int = 0,
+    val attachmentCount: Int = 0,
+    val leftOutAttachmentCount: Int = 0,
 )
 
 /**
@@ -106,8 +111,10 @@ internal fun importReviewSections(
             libraryTitle = libraryFileName?.let(songsByFileName::get)?.title,
             repeatCount = repeatCounts[index] ?: 0,
             songIndex = index,
-            imageCount = entry.images.count { it.name != null },
-            leftOutImageCount = entry.images.count { it.name == null },
+            imageCount = entry.images.count { !it.isAttachment && it.name != null },
+            leftOutImageCount = entry.images.count { !it.isAttachment && it.name == null },
+            attachmentCount = entry.images.count { it.isAttachment && it.name != null },
+            leftOutAttachmentCount = entry.images.count { it.isAttachment && it.name == null },
         )
     }
     fun setlistRow(kind: ImportReviewSection.Kind, index: Int, entry: ImportPlan.SetlistEntry, libraryFileName: String?): ImportReviewRow {

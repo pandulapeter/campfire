@@ -250,6 +250,16 @@
         <item quantity="few">%1$d imagini omise</item>
         <item quantity="other">%1$d de imagini omise</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">Cu %1$d atașament</item>
+        <item quantity="few">Cu %1$d atașamente</item>
+        <item quantity="other">Cu %1$d de atașamente</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">%1$d atașament omis</item>
+        <item quantity="few">%1$d atașamente omise</item>
+        <item quantity="other">%1$d de atașamente omise</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Previzualizare: încă nu e în bibliotecă</string>
     <string name="import_preview_name_taken">Un alt cântec cu acest nume există deja în bibliotecă.</string>

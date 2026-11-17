@@ -25,8 +25,8 @@ internal object Inflater {
      * output buffer is that size whatever the stream declares, the inflate ends as soon as it is full, and neither the
      * declared size nor what the stream would go on to produce is checked: a peek at what an entry holds costs at most
      * this much memory, however many entries are peeked at. A stream shorter than that comes back whole.
-     * @throws ZipException when the data is malformed, when it declares more than [MAX_ENTRY_SIZE] bytes, or when it
-     * produces more than it declared (more than [MAX_ENTRY_SIZE] where it declared nothing) or fewer.
+     * @throws ZipException when the data is malformed, when it declares more than [MAX_DECLARED_ENTRY_SIZE] bytes, or
+     * when it produces more than it declared (more than [MAX_ENTRY_SIZE] where it declared nothing) or fewer.
      */
     fun inflate(
         source: ByteArray,
@@ -39,8 +39,8 @@ internal object Inflater {
             throw ZipException("Deflate input range $offset..${offset.toLong() + length} is outside the ${source.size} byte input.")
         }
         val isPrefix = maxOutput >= 0
-        if (!isPrefix && expectedSize > MAX_ENTRY_SIZE) {
-            throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")
+        if (!isPrefix && expectedSize > MAX_DECLARED_ENTRY_SIZE) {
+            throw ZipException("Entry would inflate past $MAX_DECLARED_ENTRY_SIZE bytes.")
         }
         val state = State(source, offset, length, if (isPrefix) -1 else expectedSize, maxOutput)
         try {
@@ -323,6 +323,14 @@ internal object Inflater {
      * against the songs' budget whatever it holds, and a picture is never more than `ImportLimits.MAX_IMAGE_FILE_SIZE`.
      */
     const val MAX_ENTRY_SIZE = 24 shl 20
+
+    /**
+     * The most an entry that declares its size may inflate to: a file attached to a song
+     * (`ImportLimits.MAX_ATTACHMENT_FILE_SIZE`), which is larger than anything else an archive holds. The zip reader always
+     * declares the size, which its caller's budget has already been charged for and the stream is held to as it inflates;
+     * a stream that declares nothing (a PDF's) stays within [MAX_ENTRY_SIZE].
+     */
+    const val MAX_DECLARED_ENTRY_SIZE = 50 shl 20
 
     private const val STORED = 0
     private const val FIXED = 1

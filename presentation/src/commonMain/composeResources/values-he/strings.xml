@@ -249,6 +249,16 @@
         <item quantity="two">שתי תמונות הושמטו</item>
         <item quantity="other">%1$d תמונות הושמטו</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">עם קובץ מצורף אחד</item>
+        <item quantity="two">עם שני קבצים מצורפים</item>
+        <item quantity="other">עם %1$d קבצים מצורפים</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">קובץ מצורף אחד הושמט</item>
+        <item quantity="two">שני קבצים מצורפים הושמטו</item>
+        <item quantity="other">%1$d קבצים מצורפים הושמטו</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">תצוגה מקדימה: עדיין לא בספרייה</string>
     <string name="import_preview_name_taken">שיר אחר בשם הזה כבר נמצא בספרייה.</string>

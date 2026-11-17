@@ -246,6 +246,16 @@
         <item quantity="few">Vynechány %1$d obrázky</item>
         <item quantity="other">Vynecháno %1$d obrázků</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">S %1$d přílohou</item>
+        <item quantity="few">S %1$d přílohami</item>
+        <item quantity="other">S %1$d přílohami</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">Vynechána %1$d příloha</item>
+        <item quantity="few">Vynechány %1$d přílohy</item>
+        <item quantity="other">Vynecháno %1$d příloh</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Náhled: zatím není v knihovně</string>
     <string name="import_preview_name_taken">V knihovně už je jiná píseň s tímto názvem.</string>

@@ -45,6 +45,8 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.import_preview_open
 import com.pandulapeter.campfire.presentation.resources.import_report_converted
+import com.pandulapeter.campfire.presentation.resources.import_review_attachments
+import com.pandulapeter.campfire.presentation.resources.import_review_attachments_left_out
 import com.pandulapeter.campfire.presentation.resources.import_review_images
 import com.pandulapeter.campfire.presentation.resources.import_review_images_left_out
 import com.pandulapeter.campfire.presentation.resources.import_review_repeated
@@ -107,6 +109,10 @@ internal fun ImportReviewRowItem(
         if (row.isConverted) stringResource(Res.string.import_report_converted) else null,
         row.imageCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_images, count, count.toString()) },
         row.leftOutImageCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_images_left_out, count, count.toString()) },
+        row.attachmentCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_attachments, count, count.toString()) },
+        row.leftOutAttachmentCount.takeIf { it > 0 }?.let { count ->
+            pluralTextResource(Res.plurals.import_review_attachments_left_out, count, count.toString())
+        },
         if (row.repeatCount > 0) pluralTextResource(Res.plurals.import_review_repeated, row.repeatCount + 1, (row.repeatCount + 1).toString()) else null,
     ).takeIf { it.isNotEmpty() }?.joinIsolated(" · ")
     val conflictChoice: (@Composable () -> Unit)? = if (isConflict) {

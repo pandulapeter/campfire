@@ -218,6 +218,14 @@
         <item quantity="one">%1$d Bild ausgelassen</item>
         <item quantity="other">%1$d Bilder ausgelassen</item>
     </plurals>
+    <plurals name="import_review_attachments">
+        <item quantity="one">Mit %1$d Anhang</item>
+        <item quantity="other">Mit %1$d Anhängen</item>
+    </plurals>
+    <plurals name="import_review_attachments_left_out">
+        <item quantity="one">%1$d Anhang ausgelassen</item>
+        <item quantity="other">%1$d Anhänge ausgelassen</item>
+    </plurals>
     <!-- The preview of songs an import has not written yet -->
     <string name="import_preview_title">Vorschau: noch nicht in deiner Bibliothek</string>
     <string name="import_preview_name_taken">Ein anderer Song mit diesem Namen ist schon in deiner Bibliothek.</string>

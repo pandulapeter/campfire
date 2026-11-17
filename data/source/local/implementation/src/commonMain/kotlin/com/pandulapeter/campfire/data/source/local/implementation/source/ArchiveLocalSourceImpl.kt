@@ -52,10 +52,15 @@ internal class ArchiveLocalSourceImpl(
     private val logger: Logger,
 ) : ArchiveLocalSource {
 
-    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive = withContext(Dispatchers.Default) {
-        val inflated = InflatedBytes(limit = maxSize, imageLimit = maxImageSize)
-        UnpackedArchive(files = unpack(archive = archive, depth = 1, inflated = inflated), imageSize = inflated.imageCount)
-    }
+    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive =
+        withContext(Dispatchers.Default) {
+            val inflated = InflatedBytes(limit = maxSize, imageLimit = maxImageSize, attachmentLimit = maxAttachmentSize)
+            UnpackedArchive(
+                files = unpack(archive = archive, depth = 1, inflated = inflated),
+                imageSize = inflated.imageCount,
+                attachmentSize = inflated.attachmentCount,
+            )
+        }
 
     override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { foreignSongs(file) }
 
@@ -101,11 +106,15 @@ internal class ArchiveLocalSourceImpl(
             // SongbookPro keeps a whole library in one document, which is read whatever its size within the import's.
             // A name the import does not know, and a text name larger than any text, is peeked at instead: another app's
             // backup in a zipped cloud folder is a zip under a name of its own as often as not, and its chord sheets are
-            // texts under that app's extension. What is never text by its name is not even peeked at.
+            // texts under that app's extension. What is never text by its name is not even peeked at. A file named by its
+            // content as the library names an attachment is one a song of Campfire's export carries, which is read for
+            // that song only (ArchiveSongImages), within the attachments' budget: a PDF or a text among them would
+            // otherwise be read here as a document of its own, at the cost of the songs' budget.
             limitOf = { name, declaredSize ->
                 val ownLimit = ImportLimits.maxSizeOf(name.fileName)
                 when {
                     name.isHidden -> EntryPolicy.Skip
+                    LibraryFiles.isLibraryAttachmentName(name.fileName) && !LibraryFiles.isLibraryImageName(name.fileName) -> EntryPolicy.Skip
                     name.fileName.equals(SongbookProBackup.DATA_FILE_NAME, ignoreCase = true) -> EntryPolicy.Read(ImportLimits.MAX_IMPORT_SIZE)
                     ownLimit == 0L && LibraryFiles.isBinaryFileName(name.fileName) -> EntryPolicy.Skip
                     ownLimit == 0L -> EntryPolicy.Sniff
@@ -150,9 +159,21 @@ internal class ArchiveLocalSourceImpl(
             )
             SongbookProBackup.Result.NotABackup -> Unit
         }
-        val images = ArchiveSongImages.read(archive = archive, content = content, maxSize = inflated.imageLimit - inflated.imageCount, isHidden = { it.isHidden })
+        val images = ArchiveSongImages.read(
+            archive = archive,
+            content = content,
+            maxSize = inflated.imageLimit - inflated.imageCount,
+            maxAttachmentSize = inflated.attachmentLimit - inflated.attachmentCount,
+            isHidden = { it.isHidden },
+        )
         inflated.imageCount += images.chargedSize
-        entries = entries.mapIndexed { index, file -> images.imagesByEntry[index].takeIf { it.isNotEmpty() }?.let { file.copy(images = it) } ?: file }
+        inflated.attachmentCount += images.chargedAttachmentSize
+        // An entry a song names as its picture or attachment is that song's, never a file of its own to import: a song may
+        // attach a text or a PDF under any name it likes.
+        entries = entries.mapIndexedNotNull { index, file ->
+            if (content.entries[index].name in images.takenEntryNames) return@mapIndexedNotNull null
+            images.imagesByEntry[index].takeIf { it.isNotEmpty() }?.let { file.copy(images = it) } ?: file
+        }
         val read = entries.flatMap { file ->
             // An archive by its name, or by its bytes under any name but a document's, as the import decides for a
             // picked file: a backup zipped up with the songs next to it is as often renamed as not.
@@ -170,8 +191,8 @@ internal class ArchiveLocalSourceImpl(
                 foreignSongs(file) ?: listOf(file)
             }
         }
-        // Hidden entries stay unreported, see above, and so do the pictures songs took, which their songs report; everything
-        // else that was not read is handed over by name.
+        // Hidden entries stay unreported, see above, and so do the pictures and attachments songs took, which their songs
+        // report; everything else that was not read is handed over by name.
         val unread = content.unread
             .filterNot { it.name.isHidden || it.name in images.takenEntryNames }
             .map { ImportedFile.unread(name = it.name.fileName, isTooLarge = it.reason == UnreadZipEntry.Reason.TOO_LARGE) }
@@ -227,11 +248,12 @@ internal class ArchiveLocalSourceImpl(
 
     /**
      * How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they
-     * may: the songs and the pictures each within a budget of their own.
+     * may: the songs, the pictures, and the attachments each within a budget of their own.
      */
-    private class InflatedBytes(val limit: Long, val imageLimit: Long) {
+    private class InflatedBytes(val limit: Long, val imageLimit: Long, val attachmentLimit: Long) {
         var count = 0L
         var imageCount = 0L
+        var attachmentCount = 0L
     }
 
     private companion object {

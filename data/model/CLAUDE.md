@@ -31,10 +31,11 @@ oversized one is reported, not loaded (a text name over its limit is read only t
 written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
 song.
 
-Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`) and the pictures songs name to 64 MiB (`MAX_IMPORT_IMAGES_SIZE`),
-each budget apart; a picked or downloaded archive and a whole selection may be both (`MAX_ARCHIVE_SIZE`, 88 MiB, named
-in the strings). A shared link's copy stays at 24 MiB (`MAX_SHARED_COPY_SIZE`): versions before pictures download no
-more, and the copy is packed in memory. A picture is read only where it was chosen itself (`IMAGE_FILE_EXTENSIONS`,
+Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`), the pictures songs name to 64 MiB (`MAX_IMPORT_IMAGES_SIZE`), and
+their attachments to 50 MiB (`MAX_IMPORT_ATTACHMENTS_SIZE`), each budget apart; a picked or downloaded archive and a
+whole selection may be the first two (`MAX_ARCHIVE_SIZE`, 88 MiB, named in the strings), not grown for attachments,
+since the archive is held beside what it unpacks to on a 192 MB Android heap. A shared link's copy stays at 24 MiB
+(`MAX_SHARED_COPY_SIZE`): versions before pictures download no more, and the copy is packed in memory. A picture is read only where it was chosen itself (`IMAGE_FILE_EXTENSIONS`,
 within `MAX_PICKED_IMAGE_FILE_SIZE`, 40 MiB, since `:presentation` shrinks one past `MAX_IMAGE_FILE_SIZE`); the folder
 walks leave pictures unread by name, and an archive reads one only for a song naming it, within `MAX_IMAGE_FILE_SIZE`.
 A file attached to a song is at most 50 MiB (`MAX_ATTACHMENT_FILE_SIZE`), never re-encoded.

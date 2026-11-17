@@ -38,8 +38,11 @@ interface ArchiveLocalSource {
      * same archive (or the same nested one) beside the song, in an `images/` folder, or by its file name, read within
      * [maxImageSize] all together, which the answer says how much of was taken. A picture no song names is never read,
      * and is reported as skipped like any other entry; one a song names is reported with the song, never as skipped.
+     * The files its attachment lines name come back the same way (`ImportedImage.isAttachment`), found where its pictures
+     * would be, each within `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` and all together within [maxAttachmentSize]; a file a
+     * song both shows and attaches is read once, as a picture.
      */
-    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long): UnpackedArchive
+    suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
 
     /**
      * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of

@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -191,9 +192,17 @@ internal class FakeArchiveRepository(
 
     var packed: Map<String, ByteArray> = emptyMap()
 
-    /** Charges the picture budget with every distinct picture the files bring, as the real one charges each entry once. */
-    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long) = unpack.invoke(archive, maxSize).let { files ->
-        UnpackedArchive(files = files, imageSize = files.flatMap { it.images }.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() })
+    /**
+     * Charges the picture and attachment budgets with every distinct file the files bring, as the real one charges each
+     * entry once.
+     */
+    override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long) = unpack.invoke(archive, maxSize).let { files ->
+        val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
+        UnpackedArchive(
+            files = files,
+            imageSize = pictures.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() },
+            attachmentSize = attachments.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() },
+        )
     }
 
     override suspend fun songsIn(file: ImportedFile) = songsIn.invoke(file)
@@ -258,6 +267,8 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
+
+    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
@@ -302,6 +313,16 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
         }
     }
 
+    /** Named as [libraryNameOf] names a picture, by a hash of the content, with [extension]; refused as the real one refuses. */
+    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake {
+        val named = ".${extension.lowercase().removePrefix(".")}"
+        return when {
+            bytes.size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)
+            named !in LibraryFiles.ATTACHMENT_EXTENSIONS -> ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
+            else -> ImageIntake.Accepted(bytes.contentHashCode().toUInt().toString(16).padStart(8, '0').repeat(2) + named)
+        }
+    }
+
     /** Puts [bytes] into the library, as an earlier Save would have, and answers its name. */
     suspend fun store(bytes: ByteArray) = (libraryNameOf(bytes) as ImageIntake.Accepted).name.also { library[it] = bytes }
 
@@ -327,7 +348,13 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
                     }
                 }
 
-                override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
+                override suspend fun addAttachment(bytes: ByteArray, extension: String) = libraryNameOfAttachment(bytes, extension).also { intake ->
+                    check(isKeeping)
+                    if (intake is ImageIntake.Accepted) {
+                        added += intake.name
+                        library[intake.name] = bytes
+                    }
+                }
 
                 override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = unexpected()
             })

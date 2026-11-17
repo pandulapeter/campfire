@@ -93,7 +93,7 @@ internal fun rememberImportPreviewState(
         }
     }
     val images = remember(review.plan, libraryImages) {
-        libraryImages.withPictures(review.plan.songs.flatMap { it.images }.mapNotNull { image -> image.name?.let { name -> image.bytes?.let { name to it } } }.toMap())
+        libraryImages.withPictures(review.plan.songs.flatMap { it.images }.filterNot { it.isAttachment }.mapNotNull { image -> image.name?.let { name -> image.bytes?.let { name to it } } }.toMap())
     }
     return remember(preview, pages, review, report, images) {
         ImportPreviewState(

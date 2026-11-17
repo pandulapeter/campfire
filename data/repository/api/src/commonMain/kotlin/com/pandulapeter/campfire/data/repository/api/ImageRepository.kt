@@ -67,6 +67,12 @@ interface ImageRepository {
     suspend fun libraryNameOf(bytes: ByteArray): ImageIntake
 
     /**
+     * What [LibraryImageWriter.addAttachment] would answer for [bytes] arriving with [extension] now, with nothing written,
+     * as [libraryNameOf] answers for a picture.
+     */
+    suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake
+
+    /**
      * Keeps [bytes] for the editor's unsaved text, outside the library, under the name its `{image}` directive is to
      * name it by. Refused when it is too large or not a picture every platform can show.
      */
