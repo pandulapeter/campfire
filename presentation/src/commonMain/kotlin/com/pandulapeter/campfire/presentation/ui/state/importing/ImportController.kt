@@ -23,10 +23,6 @@ import com.pandulapeter.campfire.data.model.importing.SharedLinkPart
 import com.pandulapeter.campfire.data.model.importing.sharedLinkChoices
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
-import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
-import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
-import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
-import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
@@ -87,10 +83,7 @@ internal class ImportController(
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
-    private val downloadImportFile: DownloadImportFileUseCase,
-    private val prepareImport: PrepareImportUseCase,
-    private val applyImport: ApplyImportUseCase,
-    private val getSharedLinkImport: GetSharedLinkImportUseCase,
+    private val useCases: ImportUseCases,
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
 
@@ -331,7 +324,7 @@ internal class ImportController(
             is Preparation.Failed -> messageSink.sendMessage(Message.ImportFailed)
             is Preparation.Planned -> {
                 request.source = ImportSource.Files(emptyList())
-                val recorded = request.sharedLinkFileId?.let { getSharedLinkImport(it) }
+                val recorded = request.sharedLinkFileId?.let { useCases.getSharedLinkImport(it) }
                 // Read after the last suspension, so that a tick made while the batch was read is kept.
                 val review = reportState.report as? ImportReport.Review ?: return
                 val plan = review.plan.withAdded(outcome.plan.withImageFilesSkipped())
@@ -464,7 +457,7 @@ internal class ImportController(
                     // Opening a shared link again is how its recipient updates, and Keep both would leave a numbered copy of
                     // every changed song each time. Only the names this link wrote here before are its to update, though: any
                     // other taken name may be the recipient's own song, which a stranger's link must not start on Replace.
-                    val choices = request.sharedLinkFileId?.let { sharedLinkChoices(plan, getSharedLinkImport(it)) } ?: ImportChoices()
+                    val choices = request.sharedLinkFileId?.let { sharedLinkChoices(plan, useCases.getSharedLinkImport(it)) } ?: ImportChoices()
                     val review = ImportReport.Review(
                         plan = plan,
                         choices = choices,
@@ -497,7 +490,7 @@ internal class ImportController(
             is ImportSource.Files -> source.files
             is ImportSource.Address -> {
                 _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                when (val download = downloadImportFile(source.url)) {
+                when (val download = useCases.downloadImportFile(source.url)) {
                     is ImportDownload.File -> listOf(ImportedFile(name = download.name, bytes = download.bytes)).also {
                         // A read that fails after this is tried again on the same bytes rather than downloaded again.
                         request.source = ImportSource.Files(it)
@@ -511,7 +504,7 @@ internal class ImportController(
 
             is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
                 _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                when (val download = downloadImportFile(source.link.downloadUrl).toSharedLinkDownload()) {
+                when (val download = useCases.downloadImportFile(source.link.downloadUrl).toSharedLinkDownload()) {
                     is SharedLinkDownload.Zip -> listOf(download.file).also {
                         // The title stays the screen's subtitle, and a read that fails after this reads the same bytes again.
                         request.source = source.copy(file = download.file)
@@ -521,7 +514,7 @@ internal class ImportController(
                 }
             }
         }
-        return Preparation.Planned(prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
+        return Preparation.Planned(useCases.prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
     }
 
     /** What a preparation the user cancelled leaves: nothing, the screen it was shown on included. */
@@ -636,7 +629,7 @@ internal class ImportController(
         preview: ImportReport.Review? = null,
     ) {
         try {
-            val result = applyImport(
+            val result = useCases.applyImport(
                 plan = plan,
                 choices = choices,
                 bookkeeping = (if (request.isDemoLibrary) DemoLibrary.bookkeeping else ImportBookkeeping()).copy(sharedLinkParts = sharedLinkParts),
@@ -810,6 +803,11 @@ internal class ImportController(
         } finally {
             isDeletingLibrary.value = false
         }
+    }
+
+    init {
+        // What an earlier process left in the staging folder: a crash or a closed tab during an import.
+        scope.launch { useCases.clearImportStaging() }
     }
 
     /**

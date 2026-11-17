@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -138,45 +139,50 @@ class ImportControllerQueueTest {
             songLookup = library,
             launchFileTransfer = { null },
             isLeaving = { false },
-            downloadImportFile = object : DownloadImportFileUseCase {
-                override suspend fun invoke(url: String) = download.also { downloadedUrls += url }
-            },
-            prepareImport = object : PrepareImportUseCase {
-                override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
-                    prepareCount++
-                    preparedFiles += files
-                    onPrepare()
-                    return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped, imageFiles = plannedImages)
-                }
-            },
-            applyImport = object : ApplyImportUseCase {
-                override suspend fun invoke(
-                    plan: ImportPlan,
-                    choices: ImportChoices,
-                    bookkeeping: ImportBookkeeping,
-                    onProgress: (ImportProgress) -> Unit,
-                ): ImportResult {
-                    importCount++
-                    if (isImportFailing) error("The disk is full.")
-                    // A kept-both conflict lands under a numbered name, as the storage layer writes it.
-                    val written = plan.songs.mapIndexed { index, entry ->
-                        val isKeptBoth = entry.status == ImportPlan.Status.CONFLICTING &&
-                            choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, index)) == ImportConflictResolution.KEEP_BOTH
-                        if (isKeptBoth) entry.fileName.replace(".cho", "_2.cho") else entry.fileName
+            useCases = ImportUseCases(
+                downloadImportFile = object : DownloadImportFileUseCase {
+                    override suspend fun invoke(url: String) = download.also { downloadedUrls += url }
+                },
+                prepareImport = object : PrepareImportUseCase {
+                    override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
+                        prepareCount++
+                        preparedFiles += files
+                        onPrepare()
+                        return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped, imageFiles = plannedImages)
                     }
-                    if (isLibraryIndexedAtOnce) library.value = library.value.withSongs(written)
-                    val result = ImportResult(importedSongFileNames = written)
-                    bookkeeping.sharedLinkParts.forEach { part ->
-                        val linkPlan = part.of(plan)
-                        rememberedSharedLinkImports += part.fileId to
-                            (sharedLinkSongFileNamesWrittenBy(linkPlan, result) + sharedLinkSetlistFileNamesWrittenBy(linkPlan, result))
+                },
+                applyImport = object : ApplyImportUseCase {
+                    override suspend fun invoke(
+                        plan: ImportPlan,
+                        choices: ImportChoices,
+                        bookkeeping: ImportBookkeeping,
+                        onProgress: (ImportProgress) -> Unit,
+                    ): ImportResult {
+                        importCount++
+                        if (isImportFailing) error("The disk is full.")
+                        // A kept-both conflict lands under a numbered name, as the storage layer writes it.
+                        val written = plan.songs.mapIndexed { index, entry ->
+                            val isKeptBoth = entry.status == ImportPlan.Status.CONFLICTING &&
+                                choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, index)) == ImportConflictResolution.KEEP_BOTH
+                            if (isKeptBoth) entry.fileName.replace(".cho", "_2.cho") else entry.fileName
+                        }
+                        if (isLibraryIndexedAtOnce) library.value = library.value.withSongs(written)
+                        val result = ImportResult(importedSongFileNames = written)
+                        bookkeeping.sharedLinkParts.forEach { part ->
+                            val linkPlan = part.of(plan)
+                            rememberedSharedLinkImports += part.fileId to
+                                (sharedLinkSongFileNamesWrittenBy(linkPlan, result) + sharedLinkSetlistFileNamesWrittenBy(linkPlan, result))
+                        }
+                        return result
                     }
-                    return result
-                }
-            },
-            getSharedLinkImport = object : GetSharedLinkImportUseCase {
-                override suspend fun invoke(linkFileId: String) = sharedLinkImports[linkFileId].orEmpty()
-            },
+                },
+                getSharedLinkImport = object : GetSharedLinkImportUseCase {
+                    override suspend fun invoke(linkFileId: String) = sharedLinkImports[linkFileId].orEmpty()
+                },
+                clearImportStaging = object : ClearImportStagingUseCase {
+                    override suspend fun invoke() = Unit
+                },
+            ),
             deleteLibrary = object : DeleteLibraryUseCase {
                 override suspend fun invoke() = Unit
             },

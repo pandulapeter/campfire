@@ -45,7 +45,6 @@ import com.pandulapeter.campfire.domain.api.sync.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.setlists.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
-import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.setlists.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.songs.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.songs.DuplicateSongUseCase
@@ -65,13 +64,10 @@ import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.preferences.GetUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.library.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.library.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.catalogue.LoadSongCreditsUseCase
 import com.pandulapeter.campfire.domain.api.text.NormalizeSearchTextUseCase
-import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
-import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.domain.api.songs.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.sync.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.setlists.SaveSetlistUseCase
@@ -130,6 +126,7 @@ import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportUseCases
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
@@ -183,9 +180,7 @@ class CampfireViewModel(
     private val editSongs: EditSongsUseCase,
     deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
-    downloadImportFile: DownloadImportFileUseCase,
-    private val prepareImport: PrepareImportUseCase,
-    private val applyImport: ApplyImportUseCase,
+    importUseCases: ImportUseCases,
     private val exportUseCases: ExportUseCases,
     songTextUseCases: SongTextUseCases,
     private val createSetlist: CreateSetlistUseCase,
@@ -201,7 +196,6 @@ class CampfireViewModel(
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
     private val forgetSyncConnection: ForgetSyncConnectionUseCase,
-    private val getSharedLinkImport: GetSharedLinkImportUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -515,10 +509,7 @@ class CampfireViewModel(
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
-        downloadImportFile = downloadImportFile,
-        prepareImport = prepareImport,
-        applyImport = applyImport,
-        getSharedLinkImport = getSharedLinkImport,
+        useCases = importUseCases,
         deleteLibrary = deleteLibrary,
     )
 

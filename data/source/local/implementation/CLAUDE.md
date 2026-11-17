@@ -74,11 +74,12 @@ Skipped or unreadable files are logged to the injected `Logger`.
 ## `staging/` (the import's staging folder, `IMPORTS`)
 
 - `ImportStaging` (`@Single`, one per process: its random 16-hex-digit `session`) names every file by session and
-  request, never by anything that arrived: `<session>-<request>-<n>.zip` for an archive, `<session>-<request>-<sha256>.<ext>`
-  for an unpacked file (written as `<n>.part`, renamed once hashed; a second entry of the same content is not kept
-  twice), the extension one of `ATTACHMENT_EXTENSIONS`. `deleteOtherSessions` (on launch)
-  deletes every name without this session's prefix, so it never races a cold start's own file; `deleteRequest` a
-  request's, partial ones included, and marks it dead so a sink still open fails and deletes its own file.
+  request, never by anything that arrived: `<session>-<request>-<n>.zip` for an archive,
+  `<session>-<request>-<sha256>.<ext>` for an unpacked file (written as `<n>.part`, renamed once hashed; a second entry
+  of the same content is not kept twice), the extension one of `ATTACHMENT_EXTENSIONS`. `deleteOtherSessions` (on
+  launch: `ClearImportStagingUseCase`, from `ImportController`'s `init`) deletes every name without this session's
+  prefix, so it never races a cold start's own file; `deleteRequest` a request's, partial ones included, and marks it
+  dead so a sink still open fails and deletes its own file.
 - `StagingSink`: room in the ledger before every write, SHA-256 over exactly the bytes written. A write that fails, a
   cancellation, the budget running out, or `abandon` delete the partial file and give its room back before the failure
   reaches the caller; a `StagedFile` exists only for a sink that closed cleanly.
