@@ -25,7 +25,9 @@ import com.pandulapeter.campfire.presentation.resources.import_failed_link_gone
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable_untitled
 import com.pandulapeter.campfire.presentation.resources.import_failed_no_space
+import com.pandulapeter.campfire.presentation.resources.import_failed_no_space_import_again
 import com.pandulapeter.campfire.presentation.resources.import_failed_no_space_unknown
+import com.pandulapeter.campfire.presentation.resources.import_failed_no_space_unknown_import_again
 import com.pandulapeter.campfire.presentation.resources.import_failed_not_found
 import com.pandulapeter.campfire.presentation.resources.import_failed_too_large
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreachable
@@ -36,7 +38,10 @@ import com.pandulapeter.campfire.presentation.ui.components.formattedSize
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 
-/** Why nothing could be read, in one sentence, centered where the progress was; Try again is the floating button. */
+/**
+ * Why nothing could be read, in one sentence, centered where the progress was; Try again is the floating button, or Done
+ * where the batch cannot be read again ([ImportReport.Failed.canRetry]), whose sentence then says to start again.
+ */
 @Composable
 internal fun ImportFailedContent(
     modifier: Modifier = Modifier,
@@ -51,8 +56,13 @@ internal fun ImportFailedContent(
         ImportFailure.LINK_GONE -> stringResource(Res.string.import_failed_link_gone)
         ImportFailure.LINK_UNREACHABLE -> failure.sourceName?.let { textResource(Res.string.import_failed_link_unreachable, it) }
             ?: stringResource(Res.string.import_failed_link_unreachable_untitled)
-        ImportFailure.NO_SPACE -> failure.neededBytes?.let { stringResource(Res.string.import_failed_no_space, formattedSize(it)) }
-            ?: stringResource(Res.string.import_failed_no_space_unknown)
+        ImportFailure.NO_SPACE -> if (failure.canRetry) {
+            failure.neededBytes?.let { stringResource(Res.string.import_failed_no_space, formattedSize(it)) }
+                ?: stringResource(Res.string.import_failed_no_space_unknown)
+        } else {
+            failure.neededBytes?.let { stringResource(Res.string.import_failed_no_space_import_again, formattedSize(it)) }
+                ?: stringResource(Res.string.import_failed_no_space_unknown_import_again)
+        }
         ImportFailure.WRAPPED_ARCHIVE -> stringResource(Res.string.import_failed_wrapped_archive)
         ImportFailure.INTERRUPTED -> stringResource(Res.string.import_failed_interrupted)
     },

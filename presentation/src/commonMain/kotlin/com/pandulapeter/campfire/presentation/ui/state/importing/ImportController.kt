@@ -369,7 +369,7 @@ internal class ImportController(
                 _isImporting.value = false
                 if (isReviewed) {
                     // The source is kept, so that Try again has something to read.
-                    reportState.report = ImportReport.Failed(outcome.reason, request.source.name, request.source.fileCount, outcome.neededBytes)
+                    reportState.report = outcome.reportFor(request.source)
                 } else {
                     // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
                     if (request.shouldAnnounceResult) messageSink.sendMessage(outcome.message)
@@ -458,7 +458,7 @@ internal class ImportController(
      */
     fun retryImport() {
         val request = activeRequest ?: return
-        if (reportState.report !is ImportReport.Failed) return
+        if ((reportState.report as? ImportReport.Failed)?.canRetry != true) return
         reportState.report = ImportReport.Loading(sourceName = request.source.name, sourceCount = request.source.fileCount)
         _isImporting.update { true }
         scope.launch {

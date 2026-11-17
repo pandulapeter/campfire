@@ -297,7 +297,8 @@ class ImportWork(
      * once it is whole, the batch's source changed to them, so that Try again reads the same staged copies: the
      * preparation's first phase, [ImportWorkState.RECEIVING], its bytes the [progress]. One that turns out too large or
      * unreadable is that file unread, as it would have been read whole; a disk too full for one fails the preparation
-     * ([ImportFailure.NO_SPACE]), the others left for the batch's settling. Cancelled, the preparation discards every one
+     * ([ImportFailure.NO_SPACE], with no Try again, since what it was read from is gone), the others left for the
+     * batch's settling. Cancelled, the preparation discards every one
      * before it ends, so the loading screen goes only once nothing of them is left; [interrupt]ed, it leaves them to go on
      * in the app's scope for Try again to take, since what the platform stopped was only the preparation, and the batch's
      * settling discards them whichever way it ends.
@@ -340,7 +341,7 @@ class ImportWork(
     } catch (exception: StagingRefusedException.TooLarge) {
         ImportedFile.unread(name, isTooLarge = true)
     } catch (exception: Exception) {
-        if (exception.isOutOfSpace()) throw exception
+        if (exception.isOutOfSpace()) throw ArchiveNotReceivedException(exception)
         println("Could not receive \"$name\": ${exception.message}")
         ImportedFile.unread(name)
     }

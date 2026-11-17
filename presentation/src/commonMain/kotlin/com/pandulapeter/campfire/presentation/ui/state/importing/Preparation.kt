@@ -15,6 +15,9 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 internal sealed interface Preparation {
     class Planned(val plan: ImportPlan) : Preparation
 
-    /** @param neededBytes How much free space the import needs, where it is [ImportFailure.NO_SPACE] and says. */
-    class Failed(val reason: ImportFailure, val neededBytes: Long? = null) : Preparation
+    /**
+     * @param neededBytes How much free space the import needs, where it is [ImportFailure.NO_SPACE] and says.
+     * @param canRetry False where the batch cannot be read again, see `ImportReport.Failed.canRetry`.
+     */
+    class Failed(val reason: ImportFailure, val neededBytes: Long? = null, val canRetry: Boolean = true) : Preparation
 }

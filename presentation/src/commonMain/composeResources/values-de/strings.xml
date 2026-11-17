@@ -173,6 +173,8 @@
     <string name="import_failed_link_unreachable_untitled">Der Inhalt des Links konnte nicht heruntergeladen werden. Prüfe die Internetverbindung und versuche es erneut.</string>
     <string name="import_failed_no_space">Dieser Import braucht %1$s freien Speicherplatz, mehr als auf diesem Gerät frei ist; schaffe Platz und versuche es erneut.</string>
     <string name="import_failed_no_space_unknown">Auf diesem Gerät ist nicht genügend freier Speicherplatz für diesen Import; schaffe Platz und versuche es erneut.</string>
+    <string name="import_failed_no_space_import_again">Dieser Import braucht %1$s freien Speicherplatz, mehr als auf diesem Gerät frei ist; schaffe Platz und importiere die Dateien erneut.</string>
+    <string name="import_failed_no_space_unknown_import_again">Auf diesem Gerät ist nicht genügend freier Speicherplatz für diesen Import; schaffe Platz und importiere die Dateien erneut.</string>
     <string name="import_failed_wrapped_archive">Dieses Archiv ist größer als 4 GB und wurde mit einem Programm erstellt, das so große Archive beschädigt; zippe die Dateien erneut in kleineren Teilen oder mit einem anderen Programm.</string>
     <string name="import_failed_interrupted">Der Import wurde angehalten, weil Campfire im Hintergrund nicht weiterarbeiten konnte. Es wurde nichts importiert; versuche es erneut, um ihn von vorn zu beginnen.</string>
     <string name="import_notification_channel">Importe</string>

@@ -798,6 +798,7 @@ class ImportControllerQueueTest {
         val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
         assertEquals(ImportFailure.NO_SPACE, failed.reason)
         assertEquals(2_400_000_000, failed.neededBytes)
+        assertTrue(failed.canRetry)
         onPrepare = {}
         controller.retryImport()
         settle()
@@ -1314,6 +1315,13 @@ class ImportControllerQueueTest {
         val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
         assertEquals(ImportFailure.NO_SPACE, failed.reason)
         assertEquals(100, failed.neededBytes)
+        // What the archive was read from is gone, so there is nothing for Try again to read.
+        assertFalse(failed.canRetry)
+        val prepared = prepareCount
+        controller.retryImport()
+        settle()
+        assertSame(failed, reportState.importReport.value)
+        assertEquals(prepared, prepareCount)
         leaveImportReport()
         settle()
         assertTrue(full.isDiscarded)

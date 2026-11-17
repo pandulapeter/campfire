@@ -194,6 +194,8 @@
     <string name="import_failed_link_unreachable_untitled">Nu s-a putut descărca ce partajează linkul. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="import_failed_no_space">Acest import are nevoie de %1$s de spațiu liber, mai mult decât are acest dispozitiv; eliberează spațiu și încearcă din nou.</string>
     <string name="import_failed_no_space_unknown">Nu există suficient spațiu liber pe acest dispozitiv pentru acest import; eliberează spațiu și încearcă din nou.</string>
+    <string name="import_failed_no_space_import_again">Acest import are nevoie de %1$s de spațiu liber, mai mult decât are acest dispozitiv; eliberează spațiu și importă din nou fișierele.</string>
+    <string name="import_failed_no_space_unknown_import_again">Nu există suficient spațiu liber pe acest dispozitiv pentru acest import; eliberează spațiu și importă din nou fișierele.</string>
     <string name="import_failed_wrapped_archive">Arhiva depășește 4 GB și a fost creată cu un instrument care strică arhivele atât de mari; arhivează din nou fișierele în părți mai mici sau cu alt instrument.</string>
     <string name="import_failed_interrupted">Importul s-a oprit pentru că Campfire nu a mai putut lucra în fundal. Nu s-a importat nimic; încearcă din nou ca să-l reiei de la început.</string>
     <string name="import_notification_channel">Importuri</string>

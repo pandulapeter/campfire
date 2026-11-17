@@ -173,6 +173,8 @@
     <string name="import_failed_link_unreachable_untitled">Couldn\'t download what the link shares. Check the internet connection and try again.</string>
     <string name="import_failed_no_space">This import needs %1$s of free space, more than this device has; free up some space and try again.</string>
     <string name="import_failed_no_space_unknown">There is not enough free space on this device for this import; free up some space and try again.</string>
+    <string name="import_failed_no_space_import_again">This import needs %1$s of free space, more than this device has; free up some space and import the files again.</string>
+    <string name="import_failed_no_space_unknown_import_again">There is not enough free space on this device for this import; free up some space and import the files again.</string>
     <string name="import_failed_wrapped_archive">This archive is larger than 4 GB and was made by a tool that damages archives that large; zip the files again in smaller parts or with another tool.</string>
     <string name="import_failed_interrupted">The import stopped because Campfire could not keep working in the background. Nothing was imported; try again to start it over.</string>
     <string name="import_notification_channel">Imports</string>

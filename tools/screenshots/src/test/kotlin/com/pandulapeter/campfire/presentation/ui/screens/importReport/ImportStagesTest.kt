@@ -17,7 +17,9 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.import_failed_no_space
+import com.pandulapeter.campfire.presentation.resources.import_failed_no_space_import_again
 import com.pandulapeter.campfire.presentation.resources.import_progress_bytes_unpacking
 import com.pandulapeter.campfire.presentation.resources.import_retry
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
@@ -73,6 +75,19 @@ internal class ImportStagesTest {
         val needed = string(Res.string.settings_library_size_gigabytes, "2" + string(Res.string.settings_library_size_decimal_separator) + "4")
         awaitText(string(Res.string.import_failed_no_space, needed))
         onNodeWithContentDescription(string(Res.string.import_retry)).assertHasClickAction()
+    }
+
+    @Test
+    fun `an import whose archive could not be received for lack of room says to import again and offers Done`() = runAppTest {
+        runOnIdle {
+            viewModel.importReportState.show(
+                ImportReport.Failed(reason = ImportFailure.NO_SPACE, sourceName = "library.zip", neededBytes = NEEDED_BYTES, canRetry = false),
+            )
+        }
+        val needed = string(Res.string.settings_library_size_gigabytes, "2" + string(Res.string.settings_library_size_decimal_separator) + "4")
+        awaitText(string(Res.string.import_failed_no_space_import_again, needed))
+        onNodeWithContentDescription(string(Res.string.done)).assertHasClickAction()
+        onNodeWithContentDescription(string(Res.string.import_retry)).assertDoesNotExist()
     }
 
     private fun AppTestScope.awaitText(text: String) = waitUntil(timeoutMillis = SCREEN_TIMEOUT_MILLIS) {

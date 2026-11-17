@@ -49,7 +49,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The way on from each stage: Import with the number of files it writes under review (dimmed and inert while nothing is
- * ticked, absent where there is nothing to tick), Try again after a failure, and Done once the import has an answer.
+ * ticked, absent where there is nothing to tick), Try again after a failure (Done after one nothing can be read again
+ * for, [ImportReport.Failed.canRetry]), and Done once the import has an answer.
  * Nothing while the files are read or written: there is nothing to do then but wait, and Close is still there.
  *
  * @param importCount How many files Import writes; null where the review has nothing to tick.
@@ -91,6 +92,7 @@ internal fun ImportReportButton(
         ) { shown ->
             ImportReportStageButton(
                 stage = shown,
+                canRetry = (report as? ImportReport.Failed)?.canRetry != false,
                 importCount = importCount,
                 isImportEnabled = isImportEnabled,
                 onImport = onImport,
@@ -105,6 +107,7 @@ internal fun ImportReportButton(
 @Composable
 private fun ImportReportStageButton(
     stage: KClass<out ImportReport>?,
+    canRetry: Boolean,
     importCount: Int?,
     isImportEnabled: Boolean,
     onImport: () -> Unit,
@@ -138,7 +141,7 @@ private fun ImportReportStageButton(
             )
         }
 
-        ImportReport.Failed::class -> {
+        ImportReport.Failed::class -> if (canRetry) {
             val label = stringResource(Res.string.import_retry)
             ExtendedFloatingActionButton(
                 elevation = NO_ELEVATION,
@@ -147,21 +150,26 @@ private fun ImportReportStageButton(
                 icon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
                 text = { Text(label) },
             )
+        } else {
+            DoneButton(onDone = onDone)
         }
 
-        ImportReport.Finished::class -> {
-            val label = stringResource(Res.string.done)
-            ExtendedFloatingActionButton(
-                elevation = NO_ELEVATION,
-                modifier = Modifier.semantics { contentDescription = label },
-                onClick = onDone,
-                icon = { Icon(painter = painterResource(Res.drawable.ic_check), contentDescription = null) },
-                text = { Text(label) },
-            )
-        }
+        ImportReport.Finished::class -> DoneButton(onDone = onDone)
 
         else -> Box(Modifier)
     }
+}
+
+@Composable
+private fun DoneButton(onDone: () -> Unit) {
+    val label = stringResource(Res.string.done)
+    ExtendedFloatingActionButton(
+        elevation = NO_ELEVATION,
+        modifier = Modifier.semantics { contentDescription = label },
+        onClick = onDone,
+        icon = { Icon(painter = painterResource(Res.drawable.ic_check), contentDescription = null) },
+        text = { Text(label) },
+    )
 }
 
 private val STAGES_WITH_BUTTON = setOf(ImportReport.Review::class, ImportReport.Failed::class, ImportReport.Finished::class)

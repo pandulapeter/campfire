@@ -28,6 +28,7 @@ internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
         exception.isOutOfSpace() -> Preparation.Failed(
             reason = ImportFailure.NO_SPACE,
             neededBytes = causes.firstNotNullOfOrNull { it as? StagingRefusedException.NoSpace }?.neededBytes,
+            canRetry = causes.none { it is ArchiveNotReceivedException },
         )
         causes.any { it is StagingRefusedException.TooLarge } -> Preparation.Failed(ImportFailure.TOO_LARGE)
         causes.any { it is WrappedArchiveException } -> Preparation.Failed(ImportFailure.WRAPPED_ARCHIVE)
@@ -36,6 +37,16 @@ internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
 }
 
 /** The snackbar a failure is told with where no import screen is up to say it in full. */
+/**
+ * What a preparation fails with where an archive that arrived could not be received into the staging folder ([cause]):
+ * its stream or grant is gone, so the batch cannot be read again.
+ */
+internal class ArchiveNotReceivedException(cause: Throwable) : Exception("An archive could not be received.", cause)
+
+/** The failure stage that says why [source] could not be read. */
+internal fun Preparation.Failed.reportFor(source: ImportSource) =
+    ImportReport.Failed(reason = reason, sourceName = source.name, sourceCount = source.fileCount, neededBytes = neededBytes, canRetry = canRetry)
+
 internal val Preparation.Failed.message get() = if (reason == ImportFailure.NO_SPACE) Message.StorageFull else Message.ImportFailed
 
 /** As deep as `isOutOfSpace` looks, so that both read the same chain. */
