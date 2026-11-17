@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.pictures
 
+import com.pandulapeter.campfire.data.model.song.Song
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import kotlin.test.Test
@@ -53,5 +56,44 @@ class OrphanedPicturesPlaceTest {
     fun `nothing is put anywhere in read only mode`() {
         assertEquals(OrphanedPicturesPlace.Nowhere, orphanedPicturesPlace(top = CampfireDestination.SongEditor("a.cho"), missingImagePick = pick, isReadOnly = true))
         assertEquals(OrphanedPicturesPlace.Nowhere, orphanedPicturesPlace(top = setlistPages, missingImagePick = pick, isReadOnly = true))
+    }
+
+    private val song = Song(
+        fileName = "b.cho", title = "B", artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
+        coverArtUrl = null, hasChords = true, canUpdateFileName = false, lastModified = 0, size = 0,
+    )
+    private val songDetails = CampfireDestination.SongDetails(songFileNames = listOf("b.cho"), setlistFileName = null, initialIndex = 0)
+
+    private fun attachmentsSheet(target: SongEditTarget) = DialogType.SongAttachments(song = song, attachments = emptyList(), target = target)
+
+    private fun attachmentPlace(
+        top: CampfireDestination?,
+        openDialogs: List<DialogType> = emptyList(),
+        isReadOnly: Boolean = false,
+        areAttachmentsEnabled: Boolean = true,
+    ) = orphanedAttachmentPlace(top = top, openDialogs = openDialogs, isReadOnly = isReadOnly, areAttachmentsEnabled = areAttachmentsEnabled)
+
+    @Test
+    fun `an attachment goes into the topmost Attachments sheet, over the editor too`() {
+        val file = SongEditTarget.File("b.cho")
+        val draft = SongEditTarget.EditorDraft("a.cho")
+        assertEquals(OrphanedAttachmentPlace.Sheet(file), attachmentPlace(top = songDetails, openDialogs = listOf(DialogType.SongInfo(song, file), attachmentsSheet(file))))
+        assertEquals(OrphanedAttachmentPlace.Sheet(draft), attachmentPlace(top = CampfireDestination.SongEditor("a.cho"), openDialogs = listOf(attachmentsSheet(draft))))
+    }
+
+    @Test
+    fun `an attachment with no Attachments sheet open goes into the editor on top, and nowhere else`() {
+        assertEquals(OrphanedAttachmentPlace.Editor("a.cho"), attachmentPlace(top = CampfireDestination.SongEditor("a.cho")))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = songDetails))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = null))
+    }
+
+    @Test
+    fun `no attachment is put anywhere in read only mode or with the attachments switched off`() {
+        val sheet = listOf(attachmentsSheet(SongEditTarget.File("b.cho")))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = songDetails, openDialogs = sheet, isReadOnly = true))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = CampfireDestination.SongEditor("a.cho"), isReadOnly = true))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = songDetails, openDialogs = sheet, areAttachmentsEnabled = false))
+        assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = CampfireDestination.SongEditor("a.cho"), areAttachmentsEnabled = false))
     }
 }

@@ -1274,6 +1274,7 @@
     <string name="song_attachment_refused_too_large">Acest fișier are peste 50 MB, cel mult cât poate purta un cântec. Adaugă în schimb un link către el.</string>
     <string name="song_attachment_refused_format">Fișierele de acest tip nu pot fi atașate. Un cântec acceptă documente, înregistrări, videoclipuri, imagini și fișiere de notație muzicală.</string>
     <string name="song_attachment_not_opened">Nimic de pe acest dispozitiv nu deschide acest tip de fișier.</string>
+    <string name="song_attachment_pick_lost">Campfire s-a închis cât timp alegeai fișierul, așa că nu a fost atașat. Alege-l din nou.</string>
     <string name="song_image_shrunk">Această imagine era prea mare pentru un cântec, așa că a fost adăugată o copie mai mică.</string>
     <string name="song_image_converted">Acest tip de imagine nu poate fi afișat pe toate dispozitivele, așa că a fost adăugată o copie care poate fi afișată.</string>
 

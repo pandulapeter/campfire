@@ -111,9 +111,9 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
  * [orphanedFiles], and the location of an export is filled from the copy [saveFile] left in the cache directory before
  * it opened the picker, the outcome going to [orphanedExportResults]. Pictures go to [orphanedPictures] instead of the
  * import: they were picked for a place in a song (the editor's caret, a missing picture's name), and an import of them
- * would be a new song nobody asked for. The view model the waiting coroutine belonged to is gone even where the process
- * lives on, since Android clears it with any Activity destroyed outside a configuration change ("Don't keep activities"
- * does so on every trip to the picker and back).
+ * would be a new song nobody asked for; attachments go to [orphanedAttachments] for the same reason. The view model the
+ * waiting coroutine belonged to is gone even where the process lives on, since Android clears it with any Activity
+ * destroyed outside a configuration change ("Don't keep activities" does so on every trip to the picker and back).
  */
 @Single
 internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
@@ -142,12 +142,16 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     private val _orphanedFiles = Channel<List<ImportedFile>>(Channel.BUFFERED)
     private val _orphanedExportResults = Channel<Boolean>(Channel.BUFFERED)
     private val _orphanedPictures = Channel<List<ImportedFile>>(Channel.BUFFERED)
+    private val _orphanedAttachments = Channel<ImportedFile>(Channel.BUFFERED)
 
     /** Files picked for a process that did not live to read them, to be imported like any the system hands over. */
     val orphanedFiles = _orphanedFiles.receiveAsFlow()
 
     /** Pictures picked for a view model that did not live to read them, read at once, while they may still be read. */
     val orphanedPictures = _orphanedPictures.receiveAsFlow()
+
+    /** The same for a file picked as an attachment, read at once too: its grant lasts only as long as this Activity. */
+    val orphanedAttachments = _orphanedAttachments.receiveAsFlow()
 
     /** Whether an export whose process died under the "save as" screen was written after all. */
     val orphanedExportResults = _orphanedExportResults.receiveAsFlow()
@@ -176,24 +180,27 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     override val canPickPhotos get() = ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)
 
     /**
-     * The documents UI for any one file. One picked for a view model that did not live to read it is let go of: it was
-     * picked for a song's sheet or the editor, and an import of it would be a new song nobody asked for.
+     * The documents UI for any one file. One picked for a view model that did not live to read it goes to
+     * [orphanedAttachments] rather than the import: it was picked for a song's sheet or the editor, and an import of it
+     * would be a new song nobody asked for.
      */
     override suspend fun pickAttachment(): ImportedFile? {
         val uri = pickUris { it.openAttachment.launch(arrayOf(ANY_MIME_TYPE)) }.firstOrNull() ?: return null
-        return withContext(Dispatchers.IO) {
-            val (name, size) = try {
-                uri.nameAndSize(context)
+        return readAttachment(uri)
+    }
+
+    private suspend fun readAttachment(uri: Uri) = withContext(Dispatchers.IO) {
+        val (name, size) = try {
+            uri.nameAndSize(context)
+        } catch (exception: Exception) {
+            uri.fallbackName to null
+        }
+        pickedAttachment(name = name, size = size) { limit ->
+            try {
+                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit = limit.toInt() + 1, size = size) }
             } catch (exception: Exception) {
-                uri.fallbackName to null
-            }
-            pickedAttachment(name = name, size = size) { limit ->
-                try {
-                    context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit = limit.toInt() + 1, size = size) }
-                } catch (exception: Exception) {
-                    println("Could not read \"$uri\": ${exception.message}")
-                    null
-                }
+                println("Could not read \"$uri\": ${exception.message}")
+                null
             }
         }
     }
@@ -325,7 +332,10 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     fun onAttachmentPicked(uri: Uri?) {
         val continuation = pickContinuation?.takeIf { it.isActive }
         pickContinuation = null
-        if (continuation != null) continuation.resume(listOfNotNull(uri)) else if (uri != null) println("Let go of an attachment picked for a view model that is gone.")
+        when {
+            continuation != null -> continuation.resume(listOfNotNull(uri))
+            uri != null -> scope.launch { _orphanedAttachments.send(readAttachment(uri)) }
+        }
     }
 
     fun onSaveLocationPicked(uri: Uri?) {

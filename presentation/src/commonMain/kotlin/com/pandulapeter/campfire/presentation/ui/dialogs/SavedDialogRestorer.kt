@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -48,6 +50,14 @@ internal class SavedDialogRestorer(
     private val showSavedSongEdit: (SavedDialog.SongEdit, Song) -> Unit,
 ) {
 
+    private val _isSettled = MutableStateFlow(false)
+
+    /**
+     * Whether [start] is done: the saved sheet reopened, given up on, or never there. What a picker answered after a
+     * process death waits for it, since the sheet it was picked for is not among the open dialogs before then.
+     */
+    val isSettled = _isSettled.asStateFlow()
+
     /**
      * Reopens the form sheet that was up when Android ended the process, see [SavedDialog], through the opener its menu
      * uses, so that the sheet composes where it did and its saved fields find it again. Not before the library has been
@@ -56,7 +66,11 @@ internal class SavedDialogRestorer(
      * be reopened takes its entry with it, so that the next process death does not try it again.
      */
     fun start() {
-        val saved = savedStateStore.restore<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY) ?: return
+        val saved = savedStateStore.restore<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY)
+        if (saved == null) {
+            _isSettled.value = true
+            return
+        }
         val top = backStack.lastOrNull()
         scope.launch {
             val isReopened = merge(
@@ -64,6 +78,7 @@ internal class SavedDialogRestorer(
                 snapshotFlow { backStack.lastOrNull() }.filter { it != top }.map { false },
             ).first()
             if (!isReopened) savedStateStore.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, null)
+            _isSettled.value = true
         }
     }
 

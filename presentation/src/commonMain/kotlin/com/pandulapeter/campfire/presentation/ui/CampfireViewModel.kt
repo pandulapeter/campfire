@@ -558,7 +558,7 @@ class CampfireViewModel(
         deleteSongFile = deleteSong,
     )
 
-    private val savedDialogRestorer: SavedDialogRestorer = SavedDialogRestorer(
+    internal val savedDialogRestorer: SavedDialogRestorer = SavedDialogRestorer(
         scope = viewModelScope,
         savedStateStore = savedStateStore,
         dialogHost = dialogHost,

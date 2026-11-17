@@ -32,9 +32,13 @@
 - **Pictures picked for a view model that is gone** (process death, or any Activity destroyed outside a configuration
   change, which clears it: "Don't keep activities" on every trip to the picker) have launchers of their own and never
   join the import: `OrphanedPicturesEffect` puts them into the editor where it tops the restored back stack (its Image
-  button is that screen's only picker), or into the missing picture whose Add image picked them, which the view model's
+  button is the picture picker there), or into the missing picture whose Add image picked them, which the view model's
   saved state names while its picker is up (`PendingMissingImagePick`), if the song on top still names it; else lets them
   go with a log line.
+- **An attachment picked so** is read at once (its grant ends with the Activity) and, once the saved sheet's
+  restoration has settled (`SavedDialogRestorer.isSettled`), `OrphanedAttachmentsEffect` adds it to the reopened
+  Attachments sheet, else to the editor on top; anywhere else, and in read only mode, it is let go with a message asking
+  for it again.
 - **Drops** (from another app in split screen, a desktop window, or the taskbar): URIs are read under
   `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items are a pasted
   song. A drag's description can't tell a text file from a text, so a `text/plain`-only drag starts only where

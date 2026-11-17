@@ -1271,6 +1271,7 @@
     <string name="song_attachment_refused_too_large">הקובץ הזה גדול מ־50 MB, המרב ששיר יכול לשאת. כדאי להוסיף במקומו קישור אליו.</string>
     <string name="song_attachment_refused_format">אי אפשר לצרף קבצים מהסוג הזה. שיר מקבל מסמכים, הקלטות, סרטונים, תמונות וקובצי תווים.</string>
     <string name="song_attachment_not_opened">אין במכשיר הזה דבר שפותח קובץ מהסוג הזה.</string>
+    <string name="song_attachment_pick_lost">Campfire נסגרה בזמן שבחרת את הקובץ, ולכן הוא לא צורף. יש לבחור אותו שוב.</string>
     <string name="song_image_shrunk">התמונה הזאת הייתה גדולה מדי לשיר, ולכן נוסף עותק קטן יותר שלה.</string>
     <string name="song_image_converted">לא ניתן להציג סוג תמונה זה בכל מכשיר, ולכן נוסף עותק שלה שניתן להציג בכל מקום.</string>
 

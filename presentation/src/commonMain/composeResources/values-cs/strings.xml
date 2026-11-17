@@ -1269,6 +1269,7 @@
     <string name="song_attachment_refused_too_large">Tento soubor je větší než 50 MB, což je nejvíc, co může píseň nést. Přidej místo něj odkaz.</string>
     <string name="song_attachment_refused_format">Soubory tohoto typu nejde přiložit. Píseň přijímá dokumenty, nahrávky, videa, obrázky a soubory s notovým zápisem.</string>
     <string name="song_attachment_not_opened">Nic v tomto zařízení tento druh souboru neotevře.</string>
+    <string name="song_attachment_pick_lost">Campfire se zavřel během výběru souboru, takže nebyl připojen. Vyber ho znovu.</string>
     <string name="song_image_shrunk">Tento obrázek byl pro píseň příliš velký, a tak byla přidána jeho menší kopie.</string>
     <string name="song_image_converted">Tento druh obrázku nejde zobrazit na každém zařízení, a tak byla přidána jeho kopie, kterou jde zobrazit všude.</string>
 

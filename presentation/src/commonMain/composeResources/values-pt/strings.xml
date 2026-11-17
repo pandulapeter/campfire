@@ -1229,6 +1229,7 @@
     <string name="song_attachment_refused_too_large">Este ficheiro tem mais de 50 MB, o máximo que uma música pode levar. Adiciona antes uma ligação para ele.</string>
     <string name="song_attachment_refused_format">Não é possível anexar ficheiros deste tipo. Uma música aceita documentos, gravações, vídeos, imagens e ficheiros de notação musical.</string>
     <string name="song_attachment_not_opened">Nada neste dispositivo abre este tipo de ficheiro.</string>
+    <string name="song_attachment_pick_lost">O Campfire foi fechado enquanto você escolhia o arquivo, então ele não foi anexado. Escolha-o novamente.</string>
     <string name="song_image_shrunk">Esta imagem era demasiado grande para uma música, por isso foi adicionada uma cópia mais pequena.</string>
     <string name="song_image_converted">Este tipo de imagem não pode ser mostrado em todos os dispositivos, por isso foi adicionada uma cópia que pode ser mostrada em qualquer lado.</string>
 

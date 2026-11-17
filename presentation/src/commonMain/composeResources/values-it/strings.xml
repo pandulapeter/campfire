@@ -1227,6 +1227,7 @@
     <string name="song_attachment_refused_too_large">Questo file supera i 50 MB, il massimo che una canzone può portare con sé. Aggiungi invece un link al file.</string>
     <string name="song_attachment_refused_format">I file di questo tipo non si possono allegare. Una canzone accetta documenti, registrazioni, video, immagini e file di notazione musicale.</string>
     <string name="song_attachment_not_opened">Su questo dispositivo niente apre questo tipo di file.</string>
+    <string name="song_attachment_pick_lost">Campfire si è chiuso mentre sceglievi il file, quindi non è stato allegato. Sceglilo di nuovo.</string>
     <string name="song_image_shrunk">Questa immagine era troppo grande per una canzone, quindi ne è stata aggiunta una copia più piccola.</string>
     <string name="song_image_converted">Questo tipo di immagine non si può mostrare su tutti i dispositivi, quindi ne è stata aggiunta una copia che si può mostrare ovunque.</string>
 
