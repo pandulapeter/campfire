@@ -23,6 +23,8 @@ internal class ExportFileRepositoryImpl(
 
     override suspend fun create(name: String) = exportFileLocalSource.create(name)
 
+    override suspend fun createUnique(name: String) = exportFileLocalSource.createUnique(name)
+
     override suspend fun read(file: ExportedFile) = exportFileLocalSource.read(file)
 
     override suspend fun discard(file: ExportedFile) = exportFileLocalSource.discard(file)

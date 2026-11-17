@@ -36,6 +36,19 @@ class ExportAttachmentUseCaseImplTest {
     }
 
     @Test
+    fun `a second copy under the same name is numbered rather than replacing the first`() = runTest {
+        val exports = FakeExportFileRepository()
+        val useCase = ExportAttachmentUseCaseImpl(FakeImageRepository(mutableMapOf(SOURCE to ByteArray(1))), exports)
+
+        val first = useCase(source = SOURCE, name = "Sheet.pdf")
+        val second = useCase(source = SOURCE, name = "Sheet.pdf")
+
+        assertEquals("Sheet.pdf", first?.name)
+        assertEquals("Sheet_2.pdf", second?.name)
+        assertEquals(setOf("Sheet.pdf", "Sheet_2.pdf"), exports.files.keys)
+    }
+
+    @Test
     fun `a file neither shelf holds is no copy`() = runTest {
         val exports = FakeExportFileRepository()
 

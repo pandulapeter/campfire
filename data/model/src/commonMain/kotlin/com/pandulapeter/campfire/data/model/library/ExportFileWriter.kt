@@ -15,6 +15,9 @@ package com.pandulapeter.campfire.data.model.library
  */
 interface ExportFileWriter : ExportSink {
 
+    /** The name the file is created under, which is the asked one unless it was to be unique and that one was taken. */
+    val name: String
+
     /** Closes the file and answers it, to be handed to an [ExportedFile]. Throws where it cannot be completed. */
     suspend fun finish(): ExportedContent.TemporaryFile
 

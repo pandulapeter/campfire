@@ -33,12 +33,12 @@ internal actual fun rememberFileOpener(): FileOpener {
 
 /**
  * `ACTION_VIEW` on a `FileProvider` address, under the type its name says, readable by the app that takes it. The copy
- * is moved into `cacheDir/shared` first, the one directory the provider exposes, where a share's file goes too: it stays
- * for the app reading it until the next file of its name replaces it.
+ * is moved into `cacheDir/shared` first, the one directory the provider exposes, where a share's file goes too, under a
+ * name no file there has yet ([freeFileIn]): the app the last copy of that name went to may still be reading it.
  */
 private suspend fun open(context: Context, file: ExportedFile): Boolean {
     val uri = withContext(Dispatchers.IO) {
-        val target = File(File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }, file.name)
+        val target = freeFileIn(File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }, file.name)
         when (val content = file.content) {
             is ExportedContent.Bytes -> target.writeBytes(content.bytes)
             is ExportedContent.TemporaryFile -> Files.move(File(content.path).toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
@@ -54,6 +54,14 @@ private suspend fun open(context: Context, file: ExportedFile): Boolean {
     } catch (_: ActivityNotFoundException) {
         false
     }
+}
+
+/** [name] in [directory], or where it is taken, the first free one numbered before its extension as the exports number it. */
+private fun freeFileIn(directory: File, name: String): File {
+    val extensionStart = name.lastIndexOf('.').takeIf { it > 0 } ?: name.length
+    return generateSequence(1) { it + 1 }
+        .map { index -> File(directory, if (index == 1) name else name.substring(0, extensionStart) + "_" + index + name.substring(extensionStart)) }
+        .first { !it.exists() }
 }
 
 private const val SHARED_DIRECTORY = "shared"

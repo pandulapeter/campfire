@@ -19,6 +19,8 @@ interface ExportFileRepository {
 
     suspend fun create(name: String): ExportFileWriter
 
+    suspend fun createUnique(name: String): ExportFileWriter
+
     suspend fun read(file: ExportedFile): ByteArray?
 
     suspend fun discard(file: ExportedFile)

@@ -24,8 +24,8 @@ internal class ExportAttachmentUseCaseImpl(
 
     override suspend operator fun invoke(source: String, name: String): ExportedFile? {
         val bytes = imageRepository.loadImage(source) ?: return null
-        val fileName = attachmentFileName(source = source, name = name)
-        val writer = exportFileRepository.create(fileName)
+        // Unique, since the app the last copy of this name was handed to may still have it open.
+        val writer = exportFileRepository.createUnique(attachmentFileName(source = source, name = name))
         val content = try {
             writer.write(bytes, 0, bytes.size)
             writer.finish()
@@ -34,7 +34,7 @@ internal class ExportAttachmentUseCaseImpl(
             writer.abandon()
             throw throwable
         }
-        return ExportedFile(name = fileName, mimeType = AttachmentKind.mimeTypeOf(fileName), content = content)
+        return ExportedFile(name = writer.name, mimeType = AttachmentKind.mimeTypeOf(writer.name), content = content)
     }
 }
 

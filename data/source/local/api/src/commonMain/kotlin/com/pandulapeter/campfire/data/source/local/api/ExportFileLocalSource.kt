@@ -26,6 +26,13 @@ interface ExportFileLocalSource {
     suspend fun create(name: String): ExportFileWriter
 
     /**
+     * A new file called [name], or where the folder holds one of that name, the first free one numbered before its
+     * extension (`_2`, `_3`…; the writer's `name` says which): for a copy handed to another app, which may still have the
+     * last one of that name open. Throws [LibraryStorageException] where it cannot be made.
+     */
+    suspend fun createUnique(name: String): ExportFileWriter
+
+    /**
      * [file]'s bytes, read whole: for a copy small enough to be sent in one request (a shared link's, which the import
      * limit bounds). Null where its temporary file is gone; throws [LibraryStorageException] where it cannot be read.
      */

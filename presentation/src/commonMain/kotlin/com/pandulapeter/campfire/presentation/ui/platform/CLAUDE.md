@@ -81,8 +81,10 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   asked first where the platform says it). Android's `OpenDocument` launcher of its own, whose orphaned result is let
   go of; iOS's document picker for `UTTypeItem` (a copy, mapped, then deleted); the desktop's dialog; the web's input.
 - **Opening a file** (`FileOpener`, `rememberFileOpener`): a song's attachment, copied into `exports/` under its shown
-  name first (`ExportAttachmentUseCase`), so the opening app shows that name and never writes into the library. Android:
-  `ACTION_VIEW` on a `FileProvider` address in `cacheDir/shared` (the copy moved there), no app a `false`. iOS: Quick
+  name first (`ExportAttachmentUseCase`), so the opening app shows that name and never writes into the library; numbered
+  (`_2`, `_3`…) where a copy of that name is there, since the app it went to may still have it open. Android:
+  `ACTION_VIEW` on a `FileProvider` address in `cacheDir/shared` (the copy moved there, numbered the same way), no app a
+  `false`. iOS: Quick
   Look (`:app:ios`'s `IosFileOpener`, provided through `LocalIosFileOpener`), over the topmost presented controller, its
   share button the way to any other app. Desktop: `Desktop.open`, else `open` / `xdg-open` / `cmd /c start` (their exit
   code answers); the Mac App Store sandbox allows it, since Launch Services opens a file in the app's own container and

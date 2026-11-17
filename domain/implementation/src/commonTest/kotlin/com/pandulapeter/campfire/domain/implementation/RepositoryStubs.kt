@@ -229,6 +229,7 @@ internal class FakeExportFileRepository : ExportFileRepository {
     override suspend fun clear() = files.clear()
 
     override suspend fun create(name: String): ExportFileWriter = object : ExportFileWriter {
+        override val name = name
         private var bytes = ByteArray(0)
 
         override val position get() = bytes.size.toLong()
@@ -245,6 +246,13 @@ internal class FakeExportFileRepository : ExportFileRepository {
         override suspend fun abandon() {
             discarded += name
         }
+    }
+
+    /** Numbered as the exports folder numbers a name, though by its exact spelling alone. */
+    override suspend fun createUnique(name: String): ExportFileWriter {
+        val extension = name.substringAfterLast('.', "").let { if (it.isEmpty()) "" else ".$it" }
+        val candidates = sequenceOf(name) + generateSequence(2) { it + 1 }.map { name.removeSuffix(extension) + "_" + it + extension }
+        return create(candidates.first { it !in files })
     }
 
     override suspend fun read(file: ExportedFile) = when (val content = file.content) {

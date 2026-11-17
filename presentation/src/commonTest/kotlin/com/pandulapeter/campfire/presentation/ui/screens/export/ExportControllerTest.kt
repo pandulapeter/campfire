@@ -322,6 +322,7 @@ class ExportControllerTest {
                 // dispatcher, clearing its progress before a test reads it.
                 createExportFile = object : CreateExportFileUseCase {
                     override suspend fun invoke(name: String) = object : ExportFileWriter {
+                        override val name = name
                         override var position = 0L
 
                         override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {

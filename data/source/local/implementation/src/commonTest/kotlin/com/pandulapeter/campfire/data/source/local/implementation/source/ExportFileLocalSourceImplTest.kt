@@ -61,6 +61,18 @@ internal class ExportFileLocalSourceImplTest {
     }
 
     @Test
+    fun `a copy that must be unique is numbered past every name the folder holds in any case`() = runTest {
+        localSource.create("Sheet.pdf").finish()
+        localSource.create("sheet_2.pdf").finish()
+
+        val writer = localSource.createUnique("Sheet.pdf")
+        writer.finish()
+
+        assertEquals("Sheet_3.pdf", writer.name)
+        assertEquals(setOf("Sheet.pdf", "sheet_2.pdf", "Sheet_3.pdf"), fileStorage.listNames(StorageDirectory.EXPORTS).toSet())
+    }
+
+    @Test
     fun `an abandoned export leaves nothing behind`() = runTest {
         val writer = localSource.create("songs.zip")
         writer.write(ByteArray(3), 0, 3)

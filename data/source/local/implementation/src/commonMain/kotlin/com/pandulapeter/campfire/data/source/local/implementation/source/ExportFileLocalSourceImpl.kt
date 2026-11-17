@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.source.local.api.ExportFileLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSink
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -36,6 +37,9 @@ internal class ExportFileLocalSourceImpl(
 
     private val clearing = Mutex()
     private var isCleared = false
+
+    /** Held from choosing a free name to creating the file under it, so that two copies never choose one name. */
+    private val naming = Mutex()
 
     override suspend fun clear() = clearing.withLock {
         if (isCleared) return@withLock
@@ -60,8 +64,17 @@ internal class ExportFileLocalSourceImpl(
 
     override suspend fun create(name: String): ExportFileWriter {
         clear()
+        return open(name)
+    }
+
+    override suspend fun createUnique(name: String): ExportFileWriter {
+        clear()
+        return naming.withLock { open(fileStorage.uniqueName(StorageDirectory.EXPORTS, name)) }
+    }
+
+    private suspend fun open(name: String): ExportFileWriter {
         val sink = fileStorage.openSink(StorageDirectory.EXPORTS, name)
-        return Writer(sink = sink, path = fileStorage.pathOf(StorageDirectory.EXPORTS, name))
+        return Writer(name = name, sink = sink, path = fileStorage.pathOf(StorageDirectory.EXPORTS, name))
     }
 
     override suspend fun read(file: ExportedFile) = when (val content = file.content) {
@@ -79,6 +92,7 @@ internal class ExportFileLocalSourceImpl(
     }
 
     private class Writer(
+        override val name: String,
         private val sink: FileSink,
         private val path: String,
     ) : ExportFileWriter {
