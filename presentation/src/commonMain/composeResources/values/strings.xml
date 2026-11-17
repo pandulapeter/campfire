@@ -143,7 +143,7 @@
     <string name="export_songs_saved">Songs saved</string>
     <string name="export_library_saved">Library exported</string>
     <string name="export_log_saved">Log saved</string>
-    <string name="export_too_large_to_import">This archive holds more than Campfire can import at once: 24 MB of songs, 64 MB of pictures, and 50 MB of attachments, in an archive of at most 88 MB. It is a complete copy of your library; to bring it back, unzip it and import a few thousand songs at a time, zipped with the pictures and attachments they name.</string>
+    <string name="export_too_large_to_import">This archive holds more than Campfire can import at once: 24 MB of songs and 16 GB of pictures and attachments, in an archive of at most 16 GB and 200,000 files. It is a complete copy of your library; to bring it back, unzip it and import a few thousand songs at a time, zipped with the pictures and attachments they name.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">One file could not be read and is not in the archive: %2$s</item>
         <item quantity="other">%1$d files could not be read and are not in the archive. Among them: %2$s</item>
@@ -166,7 +166,7 @@
     <string name="import_progress_downloading_pictures">Downloading the pictures the songs link to</string>
     <string name="import_failed_unreachable">%1$s could not be reached. Check the internet connection and try again.</string>
     <string name="import_failed_not_found">There is nothing to download at that address. The link may have expired or been removed.</string>
-    <string name="import_failed_too_large">This file is larger than the 88 MB Campfire can import at once.</string>
+    <string name="import_failed_too_large">This file is larger than the 16 GB Campfire can import at once.</string>
     <string name="import_failed_unreadable">The files could not be read. Nothing was imported.</string>
     <string name="import_failed_link_gone">This link no longer works. The person who shared it may have stopped sharing it.</string>
     <string name="import_failed_link_unreachable">Couldn\'t download \"%1$s\". Check the internet connection and try again.</string>

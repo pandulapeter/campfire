@@ -17,7 +17,7 @@
 "share_unsupported" = "Campfire nu poate importa asta.";
 "share_unsupported_detail" = "Importă cântece, text simplu, documente PDF și Word și arhive zip.";
 "share_too_large" = "E prea mare pentru import.";
-"share_too_large_detail" = "Campfire importă cel mult 24 MB odată, 16 MB dintr-un document și 8 MB dintr-un fișier text sau de cântec.";
+"share_too_large_detail" = "Campfire importă o arhivă zip de cel mult 16 GB și cel mult 40 MB de alte fișiere odată: 16 MB dintr-un document și 8 MB dintr-un fișier text sau de cântec.";
 "share_inbox_full" = "Unele partajări încă așteaptă.";
 "share_inbox_full_detail" = "Deschide întâi Campfire ca să le termine.";
 "share_no_space" = "Pe acest dispozitiv nu este destul spațiu liber pentru asta.";

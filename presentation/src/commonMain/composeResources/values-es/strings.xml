@@ -143,7 +143,7 @@
     <string name="export_songs_saved">Canciones guardadas</string>
     <string name="export_library_saved">Biblioteca exportada</string>
     <string name="export_log_saved">Registro guardado</string>
-    <string name="export_too_large_to_import">Este archivo comprimido contiene más de lo que Campfire puede importar de una vez: 24 MB de canciones, 64 MB de imágenes y 50 MB de adjuntos, en un archivo de 88 MB como máximo. Es una copia completa de tu biblioteca; para recuperarla, descomprímelo e importa unos pocos miles de canciones cada vez, comprimidas junto con las imágenes y los adjuntos que nombran.</string>
+    <string name="export_too_large_to_import">Este archivo comprimido contiene más de lo que Campfire puede importar de una vez: 24 MB de canciones y 16 GB de imágenes y adjuntos, en un archivo de 16 GB y 200.000 elementos como máximo. Es una copia completa de tu biblioteca; para recuperarla, descomprímelo e importa unos pocos miles de canciones cada vez, comprimidas junto con las imágenes y los adjuntos que nombran.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">No se pudo leer un archivo y no está en el archivo comprimido: %2$s</item>
         <item quantity="other">No se pudieron leer %1$d archivos y no están en el archivo comprimido. Entre ellos: %2$s</item>
@@ -166,7 +166,7 @@
     <string name="import_progress_downloading_pictures">Descargando las imágenes que enlazan las canciones</string>
     <string name="import_failed_unreachable">No se pudo conectar con %1$s. Comprueba la conexión a internet y vuelve a intentarlo.</string>
     <string name="import_failed_not_found">No hay nada que descargar en esa dirección. Puede que el enlace haya caducado o se haya eliminado.</string>
-    <string name="import_failed_too_large">Este archivo supera los 88 MB que Campfire puede importar de una vez.</string>
+    <string name="import_failed_too_large">Este archivo supera los 16 GB que Campfire puede importar de una vez.</string>
     <string name="import_failed_unreadable">No se pudieron leer los archivos. No se importó nada.</string>
     <string name="import_failed_link_gone">Este enlace ya no funciona. Puede que quien lo compartió haya dejado de compartirlo.</string>
     <string name="import_failed_link_unreachable">No se pudo descargar «%1$s». Comprueba la conexión a internet y vuelve a intentarlo.</string>

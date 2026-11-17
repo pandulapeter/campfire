@@ -17,7 +17,7 @@
 "share_unsupported" = "Ezt a Campfire nem tudja importálni.";
 "share_unsupported_detail" = "Dalokat, egyszerű szöveget, PDF- és Word-dokumentumokat, valamint zip archívumokat importál.";
 "share_too_large" = "Ez túl nagy az importáláshoz.";
-"share_too_large_detail" = "A Campfire egyszerre legfeljebb 24 MB-ot importál, egy dokumentumból 16 MB-ot, egy szövegből vagy dalfájlból 8 MB-ot.";
+"share_too_large_detail" = "A Campfire legfeljebb 16 GB-os zip-archívumot és egyszerre legfeljebb 40 MB egyéb fájlt importál: egy dokumentumból 16 MB-ot, egy szövegből vagy dalfájlból 8 MB-ot.";
 "share_inbox_full" = "Néhány megosztás még várakozik.";
 "share_inbox_full_detail" = "Előbb nyisd meg a Campfire-t, hogy befejezze őket.";
 "share_no_space" = "Nincs elég szabad hely ehhez az eszközön.";

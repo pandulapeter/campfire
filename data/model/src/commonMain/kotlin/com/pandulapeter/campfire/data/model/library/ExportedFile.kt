@@ -31,21 +31,23 @@ data class ExportedFile(
     val unpackedAttachmentSize: Long = 0,
     /** How many attachments its songs name were left out for their size, as a shared link's copy leaves them. */
     val leftOutAttachmentCount: Int = 0,
+    /** How many entries an archive holds, which an import reads no more of than [ImportLimits.MAX_ARCHIVE_ENTRIES]. */
+    val entryCount: Int = 0,
 ) {
 
     constructor(name: String, mimeType: String, bytes: ByteArray) : this(name = name, mimeType = mimeType, content = ExportedContent.Bytes(bytes))
 
     /**
-     * Whether an import would not take the archive whole: one larger than it reads at all, unpacking to more songs than
-     * it holds, or to more pictures or attachments than it reads, the rest of which it leaves out with their songs still
-     * imported.
+     * Whether an import would not take the archive whole: one larger than it receives at all, with more entries than it
+     * reads, unpacking to more song text than it holds in memory, or to more pictures and attachments than it stages. An
+     * archive past 4 GB or 65,534 entries is written as ZIP64, which the import reads like any other.
      */
     val isTooLargeToImport
         get() = mimeType == ZIP_MIME_TYPE && (
-            content.size > ImportLimits.MAX_ARCHIVE_SIZE ||
+            content.size > ImportLimits.MAX_STAGED_ARCHIVE_SIZE ||
+                entryCount > ImportLimits.MAX_ARCHIVE_ENTRIES ||
                 unpackedSize - unpackedImageSize - unpackedAttachmentSize > ImportLimits.MAX_IMPORT_SIZE ||
-                unpackedImageSize > ImportLimits.MAX_IMPORT_IMAGES_SIZE ||
-                unpackedAttachmentSize > ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
+                unpackedImageSize + unpackedAttachmentSize > ImportLimits.MAX_IMPORT_STAGED_SIZE
             )
 
     /**

@@ -158,7 +158,7 @@
     <string name="export_songs_saved">Zapisano piosenki</string>
     <string name="export_library_saved">Wyeksportowano bibliotekę</string>
     <string name="export_log_saved">Zapisano dziennik</string>
-    <string name="export_too_large_to_import">To archiwum zawiera więcej, niż Campfire może zaimportować naraz: 24 MB piosenek, 64 MB obrazów i 50 MB załączników, w archiwum o rozmiarze najwyżej 88 MB. To pełna kopia biblioteki; aby ją przywrócić, rozpakuj archiwum i importuj po kilka tysięcy piosenek naraz, spakowanych razem z obrazami i załącznikami, które wymieniają.</string>
+    <string name="export_too_large_to_import">To archiwum zawiera więcej, niż Campfire może zaimportować naraz: 24 MB piosenek oraz 16 GB obrazów i załączników, w archiwum mającym najwyżej 16 GB i 200 000 plików. To pełna kopia biblioteki; aby ją przywrócić, rozpakuj archiwum i importuj po kilka tysięcy piosenek naraz, spakowanych razem z obrazami i załącznikami, które wymieniają.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Nie udało się odczytać jednego pliku, więc nie ma go w archiwum: %2$s</item>
         <item quantity="other">Nie udało się odczytać %1$d plików, więc nie ma ich w archiwum. Wśród nich: %2$s</item>
@@ -183,7 +183,7 @@
     <string name="import_progress_downloading_pictures">Pobieranie obrazów, do których linkują piosenki</string>
     <string name="import_failed_unreachable">Nie udało się połączyć z %1$s. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="import_failed_not_found">Pod tym adresem nie ma nic do pobrania. Link mógł wygasnąć lub zostać usunięty.</string>
-    <string name="import_failed_too_large">Ten plik jest większy niż 88 MB, które Campfire może zaimportować naraz.</string>
+    <string name="import_failed_too_large">Ten plik jest większy niż 16 GB, które Campfire może zaimportować naraz.</string>
     <string name="import_failed_unreadable">Nie udało się odczytać plików. Niczego nie zaimportowano.</string>
     <string name="import_failed_link_gone">Ten link już nie działa. Osoba, która go udostępniła, mogła przestać go udostępniać.</string>
     <string name="import_failed_link_unreachable">Nie udało się pobrać „%1$s”. Sprawdź połączenie z internetem i spróbuj ponownie.</string>

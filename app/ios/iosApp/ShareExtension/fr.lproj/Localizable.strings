@@ -17,7 +17,7 @@
 "share_unsupported" = "Campfire ne peut pas importer ceci.";
 "share_unsupported_detail" = "Il importe les chansons, le texte brut, les documents PDF et Word ainsi que les archives zip.";
 "share_too_large" = "C’est trop volumineux pour être importé.";
-"share_too_large_detail" = "Campfire importe jusqu’à 24 Mo à la fois, 16 Mo par document et 8 Mo par fichier texte ou chanson.";
+"share_too_large_detail" = "Campfire importe une archive zip jusqu’à 16 Go et jusqu’à 40 Mo d’autres fichiers à la fois : 16 Mo par document et 8 Mo par fichier texte ou chanson.";
 "share_inbox_full" = "Des partages sont encore en attente.";
 "share_inbox_full_detail" = "Ouvre d’abord Campfire pour les terminer.";
 "share_no_space" = "Cet appareil n’a pas assez d’espace libre pour cela.";

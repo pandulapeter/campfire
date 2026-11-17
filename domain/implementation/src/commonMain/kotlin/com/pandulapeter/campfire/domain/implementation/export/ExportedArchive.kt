@@ -54,5 +54,6 @@ internal suspend fun exportedArchive(
         unpackedImageSize = images.size,
         unpackedAttachmentSize = images.attachmentSize,
         leftOutAttachmentCount = images.leftOutAttachmentCount,
+        entryCount = packed.entryCount,
     )
 }

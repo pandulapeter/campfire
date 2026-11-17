@@ -143,7 +143,7 @@
     <string name="export_songs_saved">Canzoni salvate</string>
     <string name="export_library_saved">Libreria esportata</string>
     <string name="export_log_saved">Log salvato</string>
-    <string name="export_too_large_to_import">Questo archivio contiene più di quanto Campfire possa importare in una volta: 24 MB di canzoni, 64 MB di immagini e 50 MB di allegati, in un archivio di al massimo 88 MB. È una copia completa della tua libreria; per ripristinarla, estrai l\'archivio e importa qualche migliaio di canzoni alla volta, compresse insieme alle immagini e agli allegati che nominano.</string>
+    <string name="export_too_large_to_import">Questo archivio contiene più di quanto Campfire possa importare in una volta: 24 MB di canzoni e 16 GB di immagini e allegati, in un archivio di al massimo 16 GB e 200.000 file. È una copia completa della tua libreria; per ripristinarla, estrai l\'archivio e importa qualche migliaio di canzoni alla volta, compresse insieme alle immagini e agli allegati che nominano.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un file non è stato letto e non è nell\'archivio: %2$s</item>
         <item quantity="other">%1$d file non sono stati letti e non sono nell\'archivio. Tra questi: %2$s</item>
@@ -166,7 +166,7 @@
     <string name="import_progress_downloading_pictures">Download delle immagini a cui rimandano le canzoni</string>
     <string name="import_failed_unreachable">Impossibile raggiungere %1$s. Controlla la connessione a internet e riprova.</string>
     <string name="import_failed_not_found">A quell\'indirizzo non c\'è nulla da scaricare. Il link potrebbe essere scaduto o essere stato rimosso.</string>
-    <string name="import_failed_too_large">Questo file supera i 88 MB che Campfire può importare in una volta.</string>
+    <string name="import_failed_too_large">Questo file supera i 16 GB che Campfire può importare in una volta.</string>
     <string name="import_failed_unreadable">Impossibile leggere i file. Non è stato importato nulla.</string>
     <string name="import_failed_link_gone">Questo link non funziona più. Forse chi lo ha condiviso ha smesso di condividerlo.</string>
     <string name="import_failed_link_unreachable">Impossibile scaricare «%1$s». Controlla la connessione a internet e riprova.</string>

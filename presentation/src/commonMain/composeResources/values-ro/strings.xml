@@ -161,7 +161,7 @@
     <string name="export_songs_saved">Cântece salvate</string>
     <string name="export_library_saved">Bibliotecă exportată</string>
     <string name="export_log_saved">Jurnal salvat</string>
-    <string name="export_too_large_to_import">Arhiva conține mai mult decât poate importa Campfire deodată: 24 MB de cântece, 64 MB de imagini și 50 MB de atașamente, într-o arhivă de cel mult 88 MB. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă câteva mii de cântece o dată, arhivate împreună cu imaginile și atașamentele pe care le numesc.</string>
+    <string name="export_too_large_to_import">Arhiva conține mai mult decât poate importa Campfire deodată: 24 MB de cântece și 16 GB de imagini și atașamente, într-o arhivă de cel mult 16 GB și 200.000 de fișiere. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă câteva mii de cântece o dată, arhivate împreună cu imaginile și atașamentele pe care le numesc.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un fișier nu a putut fi citit și nu este în arhivă: %2$s</item>
         <item quantity="few">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>
@@ -187,7 +187,7 @@
     <string name="import_progress_downloading_pictures">Se descarcă imaginile la care trimit cântecele</string>
     <string name="import_failed_unreachable">%1$s nu a putut fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="import_failed_not_found">Nu există nimic de descărcat la această adresă. Linkul poate să fi expirat sau să fi fost eliminat.</string>
-    <string name="import_failed_too_large">Fișierul depășește cei 88 MB pe care Campfire îi poate importa deodată.</string>
+    <string name="import_failed_too_large">Fișierul depășește cei 16 GB pe care Campfire îi poate importa deodată.</string>
     <string name="import_failed_unreadable">Fișierele nu au putut fi citite. Nu s-a importat nimic.</string>
     <string name="import_failed_link_gone">Linkul nu mai funcționează. Persoana care l-a partajat poate să fi oprit partajarea.</string>
     <string name="import_failed_link_unreachable">Nu s-a putut descărca „%1$s”. Verifică conexiunea la internet și încearcă din nou.</string>

@@ -31,8 +31,9 @@
   (`ExportedFile.leftOutAttachmentCount`); its songs keep no line for those (`ChordProAttachments.withoutAttachments`),
   as `SharedCopySync` writes them. Its entries are compressed, so an `ExportedFile` carries what an import
   unpacks it to (`exportedArchive`), how much of it is pictures and how much attachments (a file no song of the archive shows as a
-  picture), and `isTooLargeToImport` judges that by the import's three budgets as well as the archive's own size. A
-  library with large attachments exports to an archive the import cannot take back whole; it says so, and sync moves it.
+  picture), and how many entries it holds; `isTooLargeToImport` flags only what the streaming import refuses: an
+  archive past `MAX_STAGED_ARCHIVE_SIZE` or `MAX_ARCHIVE_ENTRIES`, song text past `MAX_IMPORT_SIZE`, or pictures and
+  attachments past `MAX_IMPORT_STAGED_SIZE`. One past 4 GB or 65,534 entries is ZIP64 and imports back.
 - A single song is named by the import's rule (`SongRepository.importFileName`), so it comes back under the same name.
   Inside an archive, library names are kept, since setlists point at songs by file name.
 - A setlist is exported whole, its document the stored file unchanged; a song missing from the library is still named.

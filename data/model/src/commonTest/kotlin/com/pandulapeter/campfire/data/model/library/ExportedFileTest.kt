@@ -23,31 +23,35 @@ internal class ExportedFileTest {
     }
 
     @Test
-    fun `an archive is too large to import by its own size too which may hold the songs' budget and the pictures'`() {
-        assertTrue(archive(size = ImportLimits.MAX_ARCHIVE_SIZE + 1, unpackedSize = 1_000).isTooLargeToImport)
-        assertFalse(archive(size = ImportLimits.MAX_ARCHIVE_SIZE, unpackedSize = 1_000).isTooLargeToImport)
+    fun `an archive is too large to import only past what the import receives`() {
+        val songs = ImportLimits.MAX_IMPORT_SIZE
+
+        assertTrue(archive(size = ImportLimits.MAX_STAGED_ARCHIVE_SIZE + 1, unpackedSize = songs, unpackedImageSize = songs).isTooLargeToImport)
+        assertFalse(archive(size = ImportLimits.MAX_STAGED_ARCHIVE_SIZE, unpackedSize = songs, unpackedImageSize = songs).isTooLargeToImport)
     }
 
     @Test
-    fun `pictures are judged by their own budget never by the songs'`() {
-        val songs = ImportLimits.MAX_IMPORT_SIZE
-        val pictures = ImportLimits.MAX_IMPORT_IMAGES_SIZE
+    fun `an archive past 4 GB or 65534 entries imports back as ZIP64`() {
+        val pictures = 5L shl 30
 
-        assertFalse(archive(size = 1_000L, unpackedSize = songs + pictures, unpackedImageSize = pictures).isTooLargeToImport)
-        assertTrue(archive(size = 1_000L, unpackedSize = songs + pictures + 1, unpackedImageSize = pictures).isTooLargeToImport)
-        assertTrue(archive(size = 1_000L, unpackedSize = pictures + 1, unpackedImageSize = pictures + 1).isTooLargeToImport)
+        assertFalse(archive(size = pictures, unpackedSize = pictures + 1_000, unpackedImageSize = pictures, entryCount = 70_000).isTooLargeToImport)
     }
 
     @Test
-    fun `attachments are judged by their own budget never by the songs' or the pictures'`() {
-        val songs = ImportLimits.MAX_IMPORT_SIZE
-        val pictures = ImportLimits.MAX_IMPORT_IMAGES_SIZE
-        val attachments = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
-        val all = songs + pictures + attachments
+    fun `an archive of more entries than the import reads is too large to import`() {
+        assertTrue(archive(size = 1_000L, unpackedSize = 1_000L, entryCount = ImportLimits.MAX_ARCHIVE_ENTRIES + 1).isTooLargeToImport)
+        assertFalse(archive(size = 1_000L, unpackedSize = 1_000L, entryCount = ImportLimits.MAX_ARCHIVE_ENTRIES).isTooLargeToImport)
+    }
 
-        assertFalse(archive(size = 1_000L, unpackedSize = all, unpackedImageSize = pictures, unpackedAttachmentSize = attachments).isTooLargeToImport)
-        assertTrue(archive(size = 1_000L, unpackedSize = all + 1, unpackedImageSize = pictures, unpackedAttachmentSize = attachments + 1).isTooLargeToImport)
-        assertTrue(archive(size = 1_000L, unpackedSize = all + 1, unpackedImageSize = pictures, unpackedAttachmentSize = attachments).isTooLargeToImport)
+    @Test
+    fun `pictures and attachments are judged by what the import stages never by the songs' budget`() {
+        val songs = ImportLimits.MAX_IMPORT_SIZE
+        val staged = ImportLimits.MAX_IMPORT_STAGED_SIZE
+        val pictures = staged / 2
+
+        assertFalse(archive(size = 1_000L, unpackedSize = songs + staged, unpackedImageSize = pictures, unpackedAttachmentSize = staged - pictures).isTooLargeToImport)
+        assertTrue(archive(size = 1_000L, unpackedSize = songs + staged + 1, unpackedImageSize = pictures, unpackedAttachmentSize = staged - pictures + 1).isTooLargeToImport)
+        assertTrue(archive(size = 1_000L, unpackedSize = songs + staged + 1, unpackedImageSize = pictures, unpackedAttachmentSize = staged - pictures).isTooLargeToImport)
     }
 
     @Test
@@ -76,7 +80,7 @@ internal class ExportedFileTest {
         assertFalse(pdf.isTooLargeToImport)
     }
 
-    private fun archive(size: Long, unpackedSize: Long, unpackedImageSize: Long = 0, unpackedAttachmentSize: Long = 0) =
+    private fun archive(size: Long, unpackedSize: Long, unpackedImageSize: Long = 0, unpackedAttachmentSize: Long = 0, entryCount: Int = 1) =
         ExportedFile(
             name = "songs.zip",
             mimeType = ExportedFile.ZIP_MIME_TYPE,
@@ -84,5 +88,6 @@ internal class ExportedFileTest {
             unpackedSize = unpackedSize,
             unpackedImageSize = unpackedImageSize,
             unpackedAttachmentSize = unpackedAttachmentSize,
+            entryCount = entryCount,
         )
 }

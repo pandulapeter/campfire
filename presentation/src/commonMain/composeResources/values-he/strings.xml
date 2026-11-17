@@ -160,7 +160,7 @@
     <string name="export_songs_saved">השירים נשמרו</string>
     <string name="export_library_saved">הספרייה יוצאה</string>
     <string name="export_log_saved">היומן נשמר</string>
-    <string name="export_too_large_to_import">הארכיון הזה מכיל יותר ממה ש־Campfire יכול לייבא בבת אחת: 24 MB של שירים, 64 MB של תמונות ו־50 MB של קבצים מצורפים, בארכיון של 88 MB לכל היותר. זהו עותק מלא של הספרייה; כדי לשחזר אותו, יש לחלץ אותו ולייבא כמה אלפי שירים בכל פעם, דחוסים יחד עם התמונות והקבצים המצורפים שהם מזכירים.</string>
+    <string name="export_too_large_to_import">הארכיון הזה מכיל יותר ממה ש־Campfire יכול לייבא בבת אחת: 24 MB של שירים ו־16 GB של תמונות וקבצים מצורפים, בארכיון של 16 GB ו־200,000 קבצים לכל היותר. זהו עותק מלא של הספרייה; כדי לשחזר אותו, יש לחלץ אותו ולייבא כמה אלפי שירים בכל פעם, דחוסים יחד עם התמונות והקבצים המצורפים שהם מזכירים.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">קובץ אחד לא נקרא ואינו נמצא בארכיון: %2$s</item>
         <item quantity="two">שני קבצים לא נקראו ואינם נמצאים בארכיון. ביניהם: %2$s</item>
@@ -186,7 +186,7 @@
     <string name="import_progress_downloading_pictures">מורידים את התמונות שהשירים מקשרים אליהן</string>
     <string name="import_failed_unreachable">אין גישה אל %1$s. בדקו את החיבור לאינטרנט ונסו שוב.</string>
     <string name="import_failed_not_found">אין מה להוריד בכתובת הזו. ייתכן שהקישור פג או הוסר.</string>
-    <string name="import_failed_too_large">הקובץ הזה גדול מ־88 MB, המגבלה ש־Campfire יכול לייבא בבת אחת.</string>
+    <string name="import_failed_too_large">הקובץ הזה גדול מ־16 GB, המגבלה ש־Campfire יכול לייבא בבת אחת.</string>
     <string name="import_failed_unreadable">לא ניתן היה לקרוא את הקבצים. שום דבר לא יובא.</string>
     <string name="import_failed_link_gone">הקישור הזה כבר לא פעיל. ייתכן שמי ששיתף אותו הפסיק לשתף.</string>
     <string name="import_failed_link_unreachable">לא ניתן היה להוריד את “%1$s”. בדקו את החיבור לאינטרנט ונסו שוב.</string>
