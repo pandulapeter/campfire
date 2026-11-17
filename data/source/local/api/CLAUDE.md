@@ -51,4 +51,5 @@ Plain suspend functions over `:data:model` types: no flows, no platform types.
 - Outside `library/`, never exported, synced, or backed up: `CoverArtLocalSource` (never throws),
   `SyncCredentialsLocalSource`, `SyncIndexLocalSource` (also the forget-credentials-owed note), `SharedLinksLocalSource`
   (mirror and journal, opaque, null only when missing), `EditorDraftLocalSource`, and
-  `ImportStagingLocalSource` (only the launch's cleanup of earlier sessions' staged files so far).
+  `ImportStagingLocalSource` (the launch's cleanup of earlier sessions' staged files, and `receiveArchive`, a download's
+  archive written in a request of its own, which anything but `finish` deletes with its request).
