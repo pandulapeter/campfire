@@ -143,6 +143,13 @@ Skipped or unreadable files are logged to the injected `Logger`.
   library never looks empty.
 - Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
   `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
+- `ArchivePathParityTest` (desktop) is the gate for the streaming archive import: every archive imported in memory and
+  staged, each into an empty library of its own over the app's whole data and domain graph (`ImportPathApp`), must give
+  the same plan, result, and library files. Its archives: every one the unpack tests hand `ArchiveUnpacks` (recorded by
+  running those tests), libraries and backups built there, the real writers' ZIP64 archives, seeded mutants, and under
+  `campfire.importCorpus` the corpus's archives and its folders packed. Allowed, each checked: files past the in-memory
+  budgets (`BudgetDifference`), ZIP64 read as its twin without it (`Zip64Twin`), and the streaming-only caps across
+  nested archives (`StreamingCaps`). Keep the CI part within a minute.
 
 ## Documents (`model/`, `mapper/`)
 

@@ -47,7 +47,10 @@ internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) 
         maxSize: Long = ImportLimits.MAX_IMPORT_SIZE,
         maxImageSize: Long = ImportLimits.MAX_IMPORT_IMAGES_SIZE,
         maxAttachmentSize: Long = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE,
-    ) = archiveLocalSource.unpack(archive = archive, maxSize = maxSize, maxImageSize = maxImageSize, maxAttachmentSize = maxAttachmentSize)
+    ): UnpackedArchive {
+        archiveRecorder?.invoke(archive)
+        return archiveLocalSource.unpack(archive = archive, maxSize = maxSize, maxImageSize = maxImageSize, maxAttachmentSize = maxAttachmentSize)
+    }
 
     /** [archive] received into a request of its own and unpacked from there, its staged files read back as bytes. */
     suspend fun streamed(archive: ByteArray, maxSize: Long = ImportLimits.MAX_IMPORT_SIZE): UnpackedArchive {
@@ -63,6 +66,7 @@ internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) 
 
     /** [archive] as a new request receives it. */
     suspend fun stage(archive: ByteArray): StagedFile {
+        archiveRecorder?.invoke(archive)
         val sink = staging.openArchive(staging.newRequest(), announcedSize = archive.size.toLong())
         sink.write(archive, 0, archive.size)
         return sink.finish()
@@ -78,3 +82,9 @@ internal class ArchiveUnpacks(val storage: FileStorage = InMemoryFileStorage()) 
         return ImportedImage(source = source, content = IncomingContent.Bytes(bytes), problem = problem, isAttachment = isAttachment)
     }
 }
+
+/**
+ * Handed every archive an [ArchiveUnpacks] unpacks either way while it is set, so that `ArchivePathParityTest` can run
+ * every archive the unpack tests build through both import paths without a second list of them to keep in step.
+ */
+internal var archiveRecorder: ((ByteArray) -> Unit)? = null
