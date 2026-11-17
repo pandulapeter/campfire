@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Single
+import kotlin.time.TimeSource
 
 /**
  * The import's work, which belongs to the app rather than to a view model, as a sync run does: the queue the batches
@@ -234,13 +235,13 @@ class ImportWork(
     /** The download, where the batch is an address or a shared link, and the reading and comparing, as one cancellable piece of work. */
     private suspend fun prepared(request: ImportRequest, count: Int): Preparation {
         val enter = { state: ImportWorkState -> if (count == preparationCount && !isWriting) _state.value = state }
+        val throttle = ImportProgressThrottle(TimeSource.Monotonic) { progress.value = it }
         try {
             val files = when (val source = request.source) {
                 is ImportSource.Files -> source.files
                 is ImportSource.Address -> {
                     enter(ImportWorkState.DOWNLOADING)
-                    progress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                    when (val download = useCases.downloadImportFile(source.url, downloadProgressOf(source.name))) {
+                    when (val download = throttle.download(source.url, source.name)) {
                         is ImportDownload.File -> listOf(download.toImportedFile()).also {
                             // A read that fails after this is tried again on the same bytes, or the same staged copy,
                             // rather than downloaded again.
@@ -255,8 +256,7 @@ class ImportWork(
 
                 is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
                     enter(ImportWorkState.DOWNLOADING)
-                    progress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                    when (val download = useCases.downloadImportFile(source.link.downloadUrl, downloadProgressOf(source.name)).toSharedLinkDownload()) {
+                    when (val download = throttle.download(source.link.downloadUrl, source.name).toSharedLinkDownload()) {
                         is SharedLinkDownload.Zip -> listOf(download.file).also {
                             // The title stays the screen's subtitle, and a read that fails after this reads the same bytes again.
                             request.source = source.copy(file = download.file)
@@ -268,7 +268,8 @@ class ImportWork(
             }
             request.stagedFiles += files.mapNotNull { it.staged }
             enter(ImportWorkState.UNPACKING)
-            val plan = useCases.prepareImport(files) { if (request.shouldAnnounceResult) progress.value = it }
+            val plan = useCases.prepareImport(files) { if (request.shouldAnnounceResult) throttle.offer(it) }
+            throttle.flush()
             request.stagedFiles += plan.stagedFiles
             return Preparation.Planned(plan)
         } finally {
@@ -277,16 +278,14 @@ class ImportWork(
     }
 
     /**
-     * The download's bytes as [progress], against the length the host declared where it sent one (a shared link's zip
-     * comes without), so the loading stage fills as a large archive arrives.
+     * Downloads [url], its bytes offered as [progress] against the length the host declared where it sent one (a shared
+     * link's zip comes without), so the loading stage fills as a large archive arrives; [fileName] names it there.
      */
-    private fun downloadProgressOf(fileName: String?) = { receivedBytes: Long, totalBytes: Long? ->
-        progress.value = ImportProgress(
-            phase = ImportProgress.Phase.DOWNLOADING,
-            fileName = fileName,
-            completedBytes = receivedBytes,
-            totalBytes = totalBytes,
-        )
+    private suspend fun ImportProgressThrottle.download(url: String, fileName: String?): ImportDownload {
+        offer(ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = fileName))
+        return useCases.downloadImportFile(url) { receivedBytes, totalBytes ->
+            offer(ImportProgress(phase = ImportProgress.Phase.DOWNLOADING, fileName = fileName, completedBytes = receivedBytes, totalBytes = totalBytes))
+        }.also { flush() }
     }
 
     private val ImportPlan.stagedFiles get() = songs.flatMap { it.images }.mapNotNull { (it.content as? IncomingContent.Staged)?.file }

@@ -32,7 +32,8 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
 ## Stages
 
 - **Loading**: Cancel only while the phase only reads; Close does the same. A phase reporting bytes says them ("Unpacking
-  340 MB of 1.2 GB", no total where unknown) instead of its file count (`importProgressLineOf`).
+  340 MB of 1.2 GB", no total where unknown) instead of its file count (`importProgressLineOf`), at most four times a
+  second (`ImportProgressThrottle`, no timer: a held-back value arrives with the next or as its phase ends).
 - **Failed**: one sentence and **Try again** (a failed download is downloaded again; once downloaded, the same bytes are
   read again). A shared link answering 4xx, or anything but a zip (a page in its place), "no longer works"; only no
   answer or a 5xx is unreachable. No space names what the import needs where known (`preparationFailureOf`); a
