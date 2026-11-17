@@ -38,7 +38,7 @@ private val DialogType.kindName get() = this::class.simpleName.orEmpty()
  */
 internal fun DialogType.stacksOver(parent: DialogType) = when (this) {
     is DialogType.SongMetadata, is DialogType.SongTags, is DialogType.SongLinks, is DialogType.SongLanguages,
-    is DialogType.SongPlaying, is DialogType.CoverArtSearch,
+    is DialogType.SongPlaying, is DialogType.CoverArtSearch, is DialogType.SongAttachments,
     -> parent is DialogType.SongInfo && parent.target == target
 
     is DialogType.RemoveSongCoverArt -> parent is DialogType.CoverArtSearch && parent.target == target

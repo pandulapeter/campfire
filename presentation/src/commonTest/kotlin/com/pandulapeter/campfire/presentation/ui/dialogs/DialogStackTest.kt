@@ -25,6 +25,8 @@ class DialogStackTest {
     fun `a dialog stacks over the one it is opened from`() {
         assertEquals(listOf(info, cover), nextUnderlyingDialogs(openDialogs = listOf(info, cover), next = remove))
         assertEquals(listOf(info, form), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = lookup))
+        val attachments = DialogType.SongAttachments(song = song, attachments = emptyList(), target = file)
+        assertEquals(listOf(info), nextUnderlyingDialogs(openDialogs = listOf(info), next = attachments))
     }
 
     @Test
