@@ -30,6 +30,7 @@ internal class ZipWalk(
     private val maxEntrySize: Long,
     private val limitOf: (name: String, declaredSize: Long) -> EntryPolicy,
     private val sniffedLimitOf: (name: String, prefix: ByteArray) -> Long?,
+    private val onCharged: (name: String, declaredSize: Long) -> Unit = { _, _ -> },
     private val sinkOf: suspend (name: String, declaredSize: Long) -> EntrySink,
 ) {
     private val source = directory.source
@@ -106,6 +107,11 @@ internal class ZipWalk(
         val declaredSize = directory.uncompressedSizes[index]
         // Charged before it is read: a damaged entry has cost what it declared all the same.
         chargedSize = checkedSum(chargedSize, declaredSize)
+        onCharged(name, declaredSize)
+        if (!directory.canProduceDeclaredSize(index)) {
+            println("Could not read \"$name\": its ${directory.compressedSizes[index]} bytes cannot hold the $declaredSize it declares.")
+            return UnreadZipEntry.Reason.UNREADABLE
+        }
         return try {
             sinkOf(name, declaredSize).receive(declaredSize, directory.crcs[index]) { writer -> readData(index, name, writer) }
             read += name

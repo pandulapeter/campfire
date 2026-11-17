@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.data.formats.zip.ByteArrayZipSource
+import com.pandulapeter.campfire.data.formats.zip.EntryPolicy
+import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
@@ -36,17 +39,31 @@ internal object BudgetDifference {
      * Checks that [old] and [new] differ only by files the in-memory path left out for its budget, and answers them.
      * A file reported too large is left out for the budget where it is within its own limit, since that limit and the
      * budget are the only two reasons the in-memory path gives for it; the files of its kind the streaming path brought
-     * must then add up to more than the budget, or the in-memory path ran out of a budget it had.
+     * must then add up to more than the budget, or the in-memory path ran out of a budget it had. Such a file may also
+     * be unreadable on the streaming path, which has no budget to run out of and finds it damaged (its data cannot be
+     * what it declares): then the files of its kind in [archive] must declare more than the budget together, which is
+     * what the in-memory path charged them as before it read any.
      */
-    fun check(label: String, old: ImportOutcome, new: ImportOutcome, libraryText: (isNew: Boolean, path: String) -> String): List<Lifted> {
+    suspend fun check(
+        label: String,
+        archive: ByteArray,
+        old: ImportOutcome,
+        new: ImportOutcome,
+        libraryText: (isNew: Boolean, path: String) -> String,
+    ): List<Lifted> {
         val oldPlan = assertNotNull(old.plan, "$label: the in-memory path failed: ${old.failure}")
         val newPlan = assertNotNull(new.plan, "$label: the streaming path failed: ${new.failure}")
         assertEquals(oldPlan.songs.size, newPlan.songs.size, "$label: songs\nin memory: $old\nstreamed: $new")
         val lifted = mutableListOf<Lifted>()
+        val relabelled = mutableListOf<ImportPlan.SongImage>()
         val liftedBySong = oldPlan.songs.zip(newPlan.songs).map { (oldSong, newSong) ->
             assertEquals(oldSong.images.map { it.source to it.isAttachment }, newSong.images.map { it.source to it.isAttachment }, "$label: ${oldSong.fileName}")
-            oldSong.images.zip(newSong.images).filter { (oldImage, newImage) -> oldImage != newImage }.map { (oldImage, newImage) ->
+            oldSong.images.zip(newSong.images).filter { (oldImage, newImage) -> oldImage != newImage }.mapNotNull { (oldImage, newImage) ->
                 assertEquals(ImportedImage.Problem.TOO_LARGE, oldImage.problem, "$label: ${oldSong.fileName} ${oldImage.source} differs other than by a budget")
+                if (newImage.problem == ImportedImage.Problem.UNREADABLE) {
+                    relabelled += newImage
+                    return@mapNotNull null
+                }
                 assertNull(newImage.problem, "$label: ${oldSong.fileName} ${oldImage.source}")
                 val content = assertNotNull(newImage.content, "$label: ${oldSong.fileName} ${oldImage.source}")
                 val name = assertNotNull(newImage.name)
@@ -61,7 +78,7 @@ internal object BudgetDifference {
                 ).also { lifted += it }
             }
         }
-        if (lifted.isEmpty()) fail("$label: the paths differ, and not by a file the in-memory path found too large\nin memory: $old\nstreamed: $new")
+        if (lifted.isEmpty() && relabelled.isEmpty()) fail("$label: the paths differ, and not by a file the in-memory path found too large\nin memory: $old\nstreamed: $new")
         for (isAttachment in listOf(false, true)) {
             if (lifted.none { it.isAttachment == isAttachment }) continue
             val budget = if (isAttachment) ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE else ImportLimits.MAX_IMPORT_IMAGES_SIZE
@@ -69,7 +86,18 @@ internal object BudgetDifference {
                 .associateBy { it.sha256Hex() }.values.sumOf { it.size }
             assertTrue(brought > budget, "$label: the streaming path brought $brought bytes, within the budget of $budget the in-memory one ran out of")
         }
-        assertEquals(oldPlan.songs.map { it.canonical(lifted, isNew = false) }, newPlan.songs.map { it.canonical(lifted, isNew = true) }, "$label: songs")
+        for (isAttachment in listOf(false, true)) {
+            if (relabelled.none { it.isAttachment == isAttachment }) continue
+            val budget = if (isAttachment) ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE else ImportLimits.MAX_IMPORT_IMAGES_SIZE
+            val limit = if (isAttachment) ImportLimits.MAX_ATTACHMENT_FILE_SIZE else ImportLimits.MAX_IMAGE_FILE_SIZE
+            val sources = newPlan.songs.flatMap { it.images }.filter { it.isAttachment == isAttachment }.map { it.source.substringAfterLast('/') }.toSet()
+            val declared = declaredSizesOf(archive).filter { (name, size) -> name.substringAfterLast('/') in sources && size <= limit }.sumOf { it.second }
+            assertTrue(declared > budget, "$label: its files declare $declared bytes, within the budget of $budget the in-memory one ran out of")
+        }
+        val relabelledOld = oldPlan.songs.map { song ->
+            song.copy(images = song.images.map { image -> relabelled.firstOrNull { it.source == image.source && it.isAttachment == image.isAttachment } ?: image })
+        }
+        assertEquals(relabelledOld.map { it.canonical(lifted, isNew = false) }, newPlan.songs.map { it.canonical(lifted, isNew = true) }, "$label: songs")
         assertEquals(oldPlan.copy(songs = emptyList()), newPlan.copy(songs = emptyList()), "$label: everything but the songs")
         val oldResult = assertNotNull(old.result)
         val leftOutAfterwards = oldResult.songsWithFilesLeftOut.mapNotNull { song ->
@@ -87,6 +115,13 @@ internal object BudgetDifference {
             assertEquals(canonical(libraryText(false, path), lifted, isNew = false), canonical(libraryText(true, path), lifted, isNew = true), "$label: $path")
         }
         return lifted
+    }
+
+    /** Every entry of [archive] (not of the archives in it) by name, with the size it declares. */
+    private suspend fun declaredSizesOf(archive: ByteArray): List<Pair<String, Long>> {
+        val declared = mutableListOf<Pair<String, Long>>()
+        ZipReader.open(ByteArrayZipSource(archive)).walk(limitOf = { name, size -> EntryPolicy.Skip.also { declared += name to size } }) { _, _ -> error("Nothing is read") }
+        return declared
     }
 
     private fun ImportPlan.SongEntry.canonical(lifted: List<Lifted>, isNew: Boolean) = copy(

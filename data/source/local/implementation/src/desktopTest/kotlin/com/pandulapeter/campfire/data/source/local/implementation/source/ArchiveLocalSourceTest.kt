@@ -415,18 +415,4 @@ class ArchiveLocalSourceTest {
 
     /** The files alone, with the whole picture and attachment budgets: these tests are about the songs. */
     private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpacks.both(archive = archive, maxSize = maxSize).files
-
-    /** Sets the uncompressed size the central directory declares for the entry [name] of this archive to [declared]. */
-    private fun ByteArray.declareUncompressedSize(name: String, declared: Long) {
-        fun u16(at: Int) = (this[at].toInt() and 0xFF) or ((this[at + 1].toInt() and 0xFF) shl 8)
-        val end = size - 22
-        var position = u16(end + 16) or (u16(end + 18) shl 16)
-        repeat(u16(end + 10)) {
-            val nameLength = u16(position + 28)
-            if (decodeToString(position + 46, position + 46 + nameLength) == name) {
-                for (byte in 0 until 4) this[position + 24 + byte] = (declared ushr (8 * byte)).toByte()
-            }
-            position += 46 + nameLength + u16(position + 30) + u16(position + 32)
-        }
-    }
 }

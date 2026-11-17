@@ -231,7 +231,8 @@ internal class StreamingArchiveUnpack(
                 in wanted.attachments -> ImportLimits.MAX_ATTACHMENT_FILE_SIZE
                 else -> continue
             }
-            if (declaredSizes[index] <= limit) reserved += declaredSizes[index]
+            // One whose data cannot be what it declares is left out unread by the walk, and is no reason to refuse the import.
+            if (declaredSizes[index] <= limit && directory.canProduceDeclaredSize(index)) reserved += declaredSizes[index]
         }
         val staged = mutableMapOf<String, StagedFile>()
         val unreadByName = mutableMapOf<String, UnreadZipEntry.Reason>()
@@ -296,7 +297,15 @@ internal class StreamingArchiveUnpack(
         private val pending = mutableListOf<Pending>()
 
         /** Walks the directory and answers the entries it did not read. */
-        suspend fun walk() = directory.walk(maxTotalSize = Long.MAX_VALUE, limitOf = ::limitOf, sniffedLimitOf = ::sniffedLimitOf, sinkOf = ::sinkOf).unread
+        suspend fun walk() = directory.walk(
+            maxTotalSize = Long.MAX_VALUE,
+            limitOf = ::limitOf,
+            sniffedLimitOf = ::sniffedLimitOf,
+            // Charged as the reader charges it, before it is read: a damaged entry has cost what it declared all the
+            // same, one whose data cannot even be that size too, which the walk leaves out without asking for a sink.
+            onCharged = { _, declaredSize -> if (!isArchive) textCharged += declaredSize },
+            sinkOf = ::sinkOf,
+        ).unread
 
         /** The entries read whole, in the directory's order. */
         fun entries() = pending.mapNotNull { entry ->
@@ -313,7 +322,7 @@ internal class StreamingArchiveUnpack(
             val policy = ArchiveEntryPolicy.limitOf(name, declaredSize)
             return when {
                 policy !is EntryPolicy.Read -> policy
-                stagesArchives && LibraryFiles.isArchiveFileName(name.fileName) -> EntryPolicy.Read(ImportLimits.MAX_STAGED_ARCHIVE_SIZE).also { isArchive = true }
+                isStaged(LibraryFiles.isArchiveFileName(name.fileName)) -> EntryPolicy.Read(ImportLimits.MAX_STAGED_ARCHIVE_SIZE).also { isArchive = true }
                 else -> EntryPolicy.Read(minOf(policy.limit, maxSize - textCharged))
             }
         }
@@ -321,7 +330,7 @@ internal class StreamingArchiveUnpack(
         private fun sniffedLimitOf(name: String, prefix: ByteArray): Long? {
             val limit = ArchiveEntryPolicy.sniffedLimitOf(name, prefix) ?: return null
             return when {
-                stagesArchives && LibraryFiles.isZipArchive(prefix) -> {
+                isStaged(LibraryFiles.isZipArchive(prefix)) -> {
                     isArchive = true
                     ImportLimits.MAX_STAGED_ARCHIVE_SIZE
                 }
@@ -333,6 +342,13 @@ internal class StreamingArchiveUnpack(
             }
         }
 
+        /**
+         * Whether the current entry, an archive by [isArchiveEntry], is staged rather than read into memory. Only where
+         * its data could be the size it declares: room is set aside for an archive as it declares itself, and one that
+         * cannot be that size is held to the in-memory unpack's rule instead, which leaves it out as that one does.
+         */
+        private fun isStaged(isArchiveEntry: Boolean) = stagesArchives && isArchiveEntry && directory.canProduceDeclaredSize(index - 1)
+
         private suspend fun sinkOf(name: String, declaredSize: Long): EntrySink = if (isArchive) {
             val entry = Pending(name, memory = null).also { pending += it }
             StagingEntrySink(staging, staging.openArchive(request, announcedSize = declaredSize)) { file ->
@@ -340,8 +356,6 @@ internal class StreamingArchiveUnpack(
                 entry.staged = file
             }
         } else {
-            // Charged as the reader charges it, before it is read: a damaged entry has cost what it declared all the same.
-            textCharged += declaredSize
             ByteArrayEntrySink(declaredSize).also { pending += Pending(name, memory = it) }
         }
     }

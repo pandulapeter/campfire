@@ -100,6 +100,11 @@ it, as the reference the other is held to.
   caller's import budget is charged before an entry is read; inflation stops at the declared size. Each entry's
   compressed bytes are charged once, and may not add up to more than the archive holds (zip bombs pointing many entries
   at the same bytes). The buffer starts at no more than 1 MiB whatever the directory claims.
+- **A declared size the data cannot be is a damaged entry** (`ZipDirectory.canProduceDeclaredSize`): a stored entry is
+  its compressed bytes, and no deflate stream inflates past `MAX_DEFLATE_RATIO` (1032, two bits per 258-byte match;
+  zlib's best over zeros stays under it, `DeflateRatioJvmTest`). The walk charges such an entry (`onCharged`) and leaves
+  it out unreadable without asking for a sink, where the in-memory reader reads it and finds it short, so nothing is set
+  aside for a lie.
 - **Two readers that read every archive alike**: `ZipReader.read(ByteArray)` in memory, and `ZipReader.open(ZipSource)`
   with `ZipDirectory.walk`, which never holds an archive or an entry whole unless its `EntrySink` does. The walk is the
   in-memory one decision for decision (same policies asked in the same order, same peeks, charges, and reasons), which

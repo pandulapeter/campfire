@@ -63,7 +63,7 @@ internal class ArchivePathParity {
                     return Verdict.PAST_STREAMING_CAPS
                 }
                 if (!isRefusedAsZip64(archive.bytes)) {
-                    BudgetDifference.check(label, old, new) { isNew, path -> (if (isNew) newApp else oldApp).libraryText(path) }
+                    BudgetDifference.check(label, archive.bytes, old, new) { isNew, path -> (if (isNew) newApp else oldApp).libraryText(path) }
                     return Verdict.PAST_IN_MEMORY_BUDGET
                 }
                 assertEquals(listOf(archive.name), old.plan?.skippedFileNames, "$label: the in-memory path refuses ZIP64 as an archive it cannot unpack")

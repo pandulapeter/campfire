@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -137,6 +138,34 @@ class StreamingArchiveUnpackTest {
 
         assertEquals(0, writes)
         assertEquals(listOf(staged.name), storage.stagedNames())
+    }
+
+    @Test
+    fun `a nested archive declaring more than its data can hold sets no room aside and is left out as in memory`() = runBlocking {
+        val inner = ZipWriter.write(listOf(ZipEntry("b.cho", "{title: B}".encodeToByteArray())))
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray()), ZipEntry("inner.zip", inner)))
+        archive.declareUncompressedSize("inner.zip", 0xF0000000L)
+        val unpacks = ArchiveUnpacks(LimitedFileStorage(capacity = 64L shl 20))
+
+        val unpacked = unpacks.both(archive)
+
+        assertEquals(listOf("a.cho", "inner.zip"), unpacked.files.map { it.name })
+        assertEquals(ImportedFile.unread("inner.zip", isTooLarge = true), unpacked.files.last())
+    }
+
+    @Test
+    fun `pictures declaring more than their data can hold set no room aside and are unreadable`() = runBlocking {
+        val count = 150
+        val song = (listOf("{title: A}") + List(count) { "{image: src=p$it.png}" }).joinToString("\n")
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", song.encodeToByteArray())) + List(count) { ZipEntry("p$it.png", Random(it).nextBytes(100)) })
+        repeat(count) { archive.declareUncompressedSize("p$it.png", ImportLimits.MAX_IMAGE_FILE_SIZE) }
+        val storage = LimitedFileStorage(capacity = 256L shl 20)
+        val unpacks = ArchiveUnpacks(storage)
+
+        val unpacked = unpacks.streamed(archive)
+
+        assertEquals(List(count) { ImportedImage.Problem.UNREADABLE }, unpacked.files.single().images.map { it.problem })
+        assertEquals(emptyList(), storage.stagedNames())
     }
 
     @Test

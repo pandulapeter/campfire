@@ -44,12 +44,30 @@ class ZipDirectory internal constructor(
     }
 
     /**
+     * Whether the data of the entry at [index] could be the size it declares: a stored entry is its compressed bytes, and
+     * no deflate stream inflates to more than [MAX_DEFLATE_RATIO] times its own length; an entry of another method is
+     * never read. One that could not is damaged whatever else it holds, so nothing is set aside for it on the strength of
+     * its declaration (a disk reservation, a staged copy): the walk leaves it out as unreadable before asking for its
+     * sink, where the in-memory reader reads it and finds it short.
+     */
+    fun canProduceDeclaredSize(index: Int): Boolean {
+        val compressedSize = compressedSizes[index]
+        return when (methods[index]) {
+            ZipReader.METHOD_STORED -> uncompressedSizes[index] == compressedSize
+            ZipReader.METHOD_DEFLATE -> compressedSize <= Long.MAX_VALUE / MAX_DEFLATE_RATIO && uncompressedSizes[index] <= compressedSize * MAX_DEFLATE_RATIO
+            else -> false
+        }
+    }
+
+    /**
      * Reads the entries in the order the central directory lists them, as [ZipReader.read] reads an archive in memory:
      * the same [EntryPolicy] asked of the same entries, the same peeks, the same charges, the same entries left out for
      * the same reasons. Each entry to be read is written into the sink [sinkOf] gives for it once its size has been
      * charged, which ends closed (it was read whole and checked) or abandoned (it was not, and is among the unread ones
      * as [UnreadZipEntry.Reason.UNREADABLE]). A stored entry is copied and a deflated one inflated, through a buffer
-     * of their own whatever their size: an entry of any 64-bit size is read, as long as [limitOf] allows it.
+     * of their own whatever their size: an entry of any 64-bit size is read, as long as [limitOf] allows it. An entry
+     * charged whose data cannot be its declared size ([canProduceDeclaredSize]) is left out as unreadable without a
+     * sink, which is why every charge is told to [onCharged], before its sink is asked for where there is one.
      *
      * Only an archive that cannot be walked at all throws a [ZipException]; whatever [sinkOf], a sink, or the source
      * throws other than that is not a damaged entry, and ends the walk.
@@ -64,6 +82,7 @@ class ZipDirectory internal constructor(
         maxTotalSize: Long = ImportLimits.MAX_IMPORT_SIZE,
         limitOf: (name: String, declaredSize: Long) -> EntryPolicy = { _, _ -> EntryPolicy.Read(Long.MAX_VALUE) },
         sniffedLimitOf: (name: String, prefix: ByteArray) -> Long? = { _, _ -> null },
+        onCharged: (name: String, declaredSize: Long) -> Unit = { _, _ -> },
         sinkOf: suspend (name: String, declaredSize: Long) -> EntrySink,
     ): ZipWalkResult = ZipWalk(
         directory = this,
@@ -71,8 +90,21 @@ class ZipDirectory internal constructor(
         maxEntrySize = Long.MAX_VALUE,
         limitOf = limitOf,
         sniffedLimitOf = sniffedLimitOf,
+        onCharged = onCharged,
         sinkOf = sinkOf,
     ).walk()
+
+    internal companion object {
+
+        /**
+         * The most bytes one byte of a deflate stream can inflate to. A literal costs at least one bit for one byte; a
+         * match costs at least a length code and a distance code of one bit each (a distance code has at least one
+         * symbol, since a match without one cannot be written), and copies at most 258 bytes. So every two bits of the
+         * stream give at most 258 bytes, and its 8 × n bits at most 258 × 4 × n; block headers, the end of block, and
+         * the first literal only lower that. zlib's best over zeros comes close (about 1030), which a test checks.
+         */
+        const val MAX_DEFLATE_RATIO = 1032L
+    }
 }
 
 /**
