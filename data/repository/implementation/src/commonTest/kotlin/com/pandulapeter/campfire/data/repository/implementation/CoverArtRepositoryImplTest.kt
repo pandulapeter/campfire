@@ -99,7 +99,7 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
-    fun `a download every caller has left before its turn is not made, and not remembered as failed`() = runTest {
+    fun `a download every caller has left before its turn is neither made nor remembered as failed`() = runTest {
         val gate = CompletableDeferred<Unit>()
         val remote = FakeCoverArtRemoteSource {
             gate.await()
@@ -303,7 +303,7 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
-    fun `a search reports every catalogue as it answers, in the order they answer`() = runTest {
+    fun `a search reports every catalogue as it answers in the order they answer`() = runTest {
         val musicBrainz = FakeCoverArtSearchRemoteSource(Catalogue.MUSIC_BRAINZ) { onBusy ->
             onBusy()
             delay(2_000)

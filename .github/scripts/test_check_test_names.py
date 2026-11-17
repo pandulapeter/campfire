@@ -32,6 +32,9 @@ class ModulesTest(unittest.TestCase):
     def test_the_formats_module_is_checked_since_its_common_tests_are_compiled_for_ios(self):
         self.assertIn("data/formats", IOS_TESTED)
 
+    def test_the_repositories_are_checked_since_their_common_tests_are_compiled_for_ios(self):
+        self.assertIn("data/repository/implementation", IOS_TESTED)
+
 
 if __name__ == "__main__":
     unittest.main()

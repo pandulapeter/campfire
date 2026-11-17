@@ -8,8 +8,8 @@
 
 """
 Fails on a backticked function name with a comma in the tests of a module whose tests are compiled for iOS: the file
-storage contract run on the simulator, and `:data:formats`, whose readers' common tests are run on the simulator by
-hand when a reader changes.
+storage contract run on the simulator, `:data:formats`, whose readers' common tests are run on the simulator by
+hand when a reader changes, and `:data:repository:implementation`, whose common tests compile for iOS.
 Kotlin/Native refuses a comma in a name ("Name contains illegal characters"), which the JVM accepts, so a test named
 that way passes `desktopTest` and stops the module's whole iOS test task from compiling, in CI only, since that task
 takes minutes to link. The other characters Kotlin/Native refuses the JVM refuses too, so `desktopTest` finds them.
@@ -24,7 +24,7 @@ import re
 import subprocess
 import sys
 
-IOS_TESTED = ["data/formats", "data/source/local/implementation"]
+IOS_TESTED = ["data/formats", "data/repository/implementation", "data/source/local/implementation"]
 TEST_SOURCE_SETS = ["commonTest", "iosTest"]
 NAME = re.compile(r"\bfun\s+`([^`\n]*,[^`\n]*)`")
 

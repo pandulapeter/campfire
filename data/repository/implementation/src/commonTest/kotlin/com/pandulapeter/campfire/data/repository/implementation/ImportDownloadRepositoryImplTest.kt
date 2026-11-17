@@ -45,7 +45,7 @@ class ImportDownloadRepositoryImplTest {
     }
 
     @Test
-    fun `a zip streamed in chunks is staged whole, with its progress passed on`() = runTest {
+    fun `a zip streamed in chunks is staged whole with its progress passed on`() = runTest {
         val chunks = zipChunks(3)
         val progress = mutableListOf<Pair<Long, Long?>>()
 
@@ -62,7 +62,7 @@ class ImportDownloadRepositoryImplTest {
     }
 
     @Test
-    fun `a body that is no zip is read into memory, as before, and nothing is staged`() = runTest {
+    fun `a body that is no zip is read into memory as before and nothing is staged`() = runTest {
         val chunks = listOf("{title: Riverlight}\n".encodeToByteArray(), "[G]Words\n".encodeToByteArray())
 
         val download = assertIs<ImportDownload.File>(repository(ScriptedRemoteSource(chunks)).downloadIntoStaging(URL) { _, _ -> })

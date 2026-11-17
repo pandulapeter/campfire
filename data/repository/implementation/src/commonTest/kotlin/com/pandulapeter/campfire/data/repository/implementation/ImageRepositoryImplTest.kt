@@ -43,7 +43,7 @@ class ImageRepositoryImplTest {
     private var songFiles = emptySet<String>()
 
     @Test
-    fun `a picture is named by its content and its format, whatever it arrived as`() = runTest {
+    fun `a picture is named by its content and its format whatever it arrived as`() = runTest {
         val repository = repository()
 
         val intake = repository.withImagesKept { it.addImage(PHOTO) }
@@ -56,7 +56,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a picture kept nowhere is sized from its bytes, writing nothing, and what is no picture has no size`() = runTest {
+    fun `a picture kept nowhere is sized from its bytes writing nothing and what is no picture has no size`() = runTest {
         val repository = repository()
 
         assertEquals(ImageSize(width = 40, height = 30), repository.readImageSize(PHOTO))
@@ -88,7 +88,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `the name a picture would take is the one it is then stored under, a taken one included, and asking writes nothing`() = runTest {
+    fun `the name a picture would take is the one it is then stored under even a taken one and asking writes nothing`() = runTest {
         val repository = repository()
         local.shelves.getValue(ImageShelf.LIBRARY)[Sha256.hashToHex(PHOTO).take(16) + ".png"] = OTHER
 
@@ -103,7 +103,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `the library's picture names are listed sorted, never the draft's`() = runTest {
+    fun `the library's picture names are listed sorted and never the draft's`() = runTest {
         val repository = repository()
         val stored = assertAccepted(repository.withImagesKept { it.addImage(PHOTO) })
         repository.addDraftImage(PHOTO.copyOf())
@@ -143,7 +143,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a picture no song names is deleted once the library has been read, and a named one is kept`() = runTest {
+    fun `a picture no song names is deleted once the library has been read and a named one is kept`() = runTest {
         val repository = repository()
         val kept = assertAccepted(repository.withImagesKept { it.addImage(PHOTO) })
         val dropped = assertAccepted(repository.withImagesKept { it.addImage(OTHER) })
@@ -155,7 +155,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `the library's sizes count its pictures, follow every write, and leave the draft's out of the totals only`() = runTest {
+    fun `the library's sizes count its pictures and follow every write and leave the draft's out of the totals only`() = runTest {
         val repository = repository()
         runCurrent()
         assertEquals(LibraryFileSizes(picturesSize = 0, attachmentsSize = 0), repository.librarySizes.value)
@@ -174,7 +174,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a file only an attachment names is kept by the pruning, and counted as an attachment`() = runTest {
+    fun `a file only an attachment names is kept by the pruning and counted as an attachment`() = runTest {
         val repository = repository()
         val attached = assertAccepted(repository.withImagesKept { it.addAttachment(DOCUMENT, "PDF") })
         val dropped = assertAccepted(repository.withImagesKept { it.addAttachment(OTHER_DOCUMENT, ".mp3") })
@@ -191,7 +191,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `an attachment of a type not taken, or past its limit, is refused and nothing is written`() = runTest {
+    fun `an attachment of a type not taken or past its limit is refused and nothing is written`() = runTest {
         val repository = repository()
 
         assertEquals(ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT), repository.addDraftAttachment(DOCUMENT, "exe"))
@@ -204,7 +204,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a draft attachment moves into the library under its name, and a picture attached past a picture's limit too`() = runTest {
+    fun `a draft attachment moves into the library under its name and so does a picture attached past a picture's limit`() = runTest {
         val repository = repository()
         val document = assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
         val largePhoto = PHOTO + ByteArray(ImportLimits.MAX_IMAGE_FILE_SIZE.toInt())
@@ -218,7 +218,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a draft attachment an open sheet holds outlives the draft being cleared, until the sheet lets it go`() = runTest {
+    fun `a draft attachment an open sheet holds outlives the draft being cleared until the sheet lets it go`() = runTest {
         val repository = repository()
         val document = assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
         repository.holdPickedAttachments(setOf(document))
@@ -267,7 +267,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `on launch the draft keeps only the pictures its saved text names, which the library keeps too`() = runTest {
+    fun `on launch the draft keeps only the pictures its saved text names - which the library keeps too`() = runTest {
         val other = Sha256.hashToHex(OTHER).take(16) + ".png"
         local.shelves.getValue(ImageShelf.DRAFT)[NAME] = PHOTO
         local.shelves.getValue(ImageShelf.DRAFT)[other] = OTHER
@@ -377,7 +377,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `a file is hashed and compared on the computation dispatcher, never on the caller's`() = runTest {
+    fun `a file is hashed and compared on the computation dispatcher and never on the caller's`() = runTest {
         val environment = testEnvironment()
         val repository = repository(environment = environment)
         val sameSizeOther = DOCUMENT.copyOf().also { it[0] = 'x'.code.toByte() }
