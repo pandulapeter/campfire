@@ -43,8 +43,9 @@
   - Remote deletions go to `SyncProvider.delete` in one call, so the folder is half deleted (what another device's guard
     sees) as briefly as possible.
 - **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
-  failed or still contested file keeps `lastSyncedAt` where it was. A run ending in a non-`Exception` throwable rescans
-  the whole library if any operation had finished, since it may have come mid-write.
+  failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
+  in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come
+  mid-write.
 - **Pictures** (`LibraryFileKind.FILE`, named by content, attachments included: every "a song names" below is
   `libraryFilesNamedBy`): never a conflict and never renamed.
   - Not read by the listing: the size stands for the hash (`localImageHash`), so a same-size damage goes unnoticed. Every

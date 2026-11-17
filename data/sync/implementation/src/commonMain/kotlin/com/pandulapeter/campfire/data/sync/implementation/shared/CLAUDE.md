@@ -86,4 +86,4 @@
   file's link never comes back; a member, not a state, so older versions do not show it as working), whatever the
   library holds; such an entry is never built again.
 - Run-ending failures end the run; anything else, `SyncScopeMissingException` included, is
-  `SyncSummary.haveSharedCopiesFailed`, which never makes a run incomplete.
+  `SyncSummary.haveSharedCopiesFailed`, which is never counted as a file that failed.

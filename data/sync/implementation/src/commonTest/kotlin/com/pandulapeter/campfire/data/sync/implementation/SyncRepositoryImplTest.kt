@@ -351,7 +351,7 @@ class SyncRepositoryImplTest {
     }
 
     @Test
-    fun `a run in which a file failed keeps the time of the last run that was in step`() = runTest {
+    fun `a run in which a file failed still records when it ran`() = runTest {
         val stateLocalSource = FakeSyncIndexLocalSource(index = """{"lastSyncedAt":42}""")
         val repository = syncRepository(
             provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = TEST_ACCOUNT),
@@ -365,7 +365,21 @@ class SyncRepositoryImplTest {
 
         val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
         assertEquals(listOf(song(1).name), outcome.summary.failed)
-        assertEquals(42, state.lastSyncedAt)
+        assertEquals(TEST_NOW.toEpochMilliseconds(), state.lastSyncedAt)
+        assertEquals(TEST_NOW.toEpochMilliseconds(), assertNotNull(stateLocalSource.document).lastSyncedAt)
+    }
+
+    @Test
+    fun `a stopped run keeps the time of the last run that got to the end`() = runTest {
+        val stateLocalSource = FakeSyncIndexLocalSource(index = """{"lastSyncedAt":42}""")
+        val repository = syncRepository(provider = FakeSyncProvider(account = TEST_ACCOUNT), stateLocalSource = stateLocalSource)
+
+        repository.restore {}
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.cancelSynchronization()
+        val state = repository.syncState.first { (it as? SyncState.Connected)?.progress == null }
+
+        assertEquals(42, (state as SyncState.Connected).lastSyncedAt)
         assertEquals(42, assertNotNull(stateLocalSource.document).lastSyncedAt)
     }
 

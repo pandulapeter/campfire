@@ -184,14 +184,9 @@ internal class SyncRunner(
                             havePreferencesFailed = settled == null,
                             haveSharedCopiesFailed = !areSharedCopiesSettled,
                         )
-                        // Only a run that moved everything it set out to move is one the two sides were in step after.
-                        // One with failures keeps the time of the last run that was, which is also what "Last synced
-                        // successfully" goes on saying while the next run is going.
-                        val syncedAt = if (summary.isComplete) {
-                            environment.clock.now().toEpochMilliseconds()
-                        } else {
-                            result.index.lastSyncedAt
-                        }
+                        // Any run that got to the end, whatever files it could not move: those are listed beside the time,
+                        // and one damaged file in the folder would otherwise leave a device with no time to show, ever.
+                        val syncedAt = environment.clock.now().toEpochMilliseconds()
                         val completed = result.index.copy(
                             lastSyncedAt = syncedAt,
                             syncedPreferences = settled?.document ?: result.index.syncedPreferences,
