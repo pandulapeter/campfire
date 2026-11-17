@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.ui.components.CampfireIconButton
+import com.pandulapeter.campfire.presentation.ui.components.menu.LocalOverlayState
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.exp
 import kotlin.math.min
@@ -63,6 +65,14 @@ internal fun ImageViewer(
     onDismissRequest = onClose,
     properties = DialogProperties(usePlatformDefaultWidth = false),
 ) {
+    // The viewer is the song view's own rather than a dialog of the view model's, so it counts itself in as an overlay for
+    // as long as it is up: otherwise the app's root and the song details screen take the keyboard's focus back from it, and
+    // Escape on the desktop or the browser's back button goes back from the screen behind instead of closing the picture.
+    val overlayState = LocalOverlayState.current
+    DisposableEffect(overlayState) {
+        overlayState.onMenuOpened()
+        onDispose { overlayState.onMenuClosed() }
+    }
     var zoom by remember { mutableStateOf(ImageZoom()) }
     BoxWithConstraints(
         modifier = Modifier

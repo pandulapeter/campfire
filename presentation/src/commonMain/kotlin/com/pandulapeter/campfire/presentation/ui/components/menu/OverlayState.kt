@@ -27,9 +27,9 @@ import androidx.compose.ui.geometry.Rect
  * The view model owns the one the app reads and [LocalOverlayState] hands it to the menus, so that nothing about it is
  * shared between two compositions of the app in one process - the screenshot tool's renders, or a test.
  *
- * A bottom sheet a screen hosts itself rather than through the view model's dialogs (the editor's search) counts itself
- * in here too, for the same reason: it is something on top that Escape and the browser's back button have to close
- * before they go back from the screen under it.
+ * A bottom sheet or a dialog a screen hosts itself rather than through the view model's dialogs (the editor's search,
+ * the picture viewer) counts itself in here too, for the same reason: it is something on top that Escape and the
+ * browser's back button have to close before they go back from the screen under it.
  *
  * A stepper's value being typed into ([StepperField][com.pandulapeter.campfire.presentation.ui.components.controls.StepperField])
  * is counted apart from those: its keys are the field's - the arrows, Space and M, which the song details screen and the
