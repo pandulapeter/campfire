@@ -35,7 +35,7 @@ internal class OpfsFileSink(
 
     override suspend fun write(bytes: ByteArray, offset: Int, length: Int) = withContext(Dispatchers.Default) {
         if (length == 0) return@withContext
-        failingAsStorage { writeFileStream(stream, latin1ToBytes(bytes.copyOfRange(offset, offset + length).toLatin1JsString())).await() }
+        failingAsStorage { writeFileStream(stream, bytes.toUint8Array(from = offset, to = offset + length)).await() }
         position += length
     }
 

@@ -13,7 +13,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
-import kotlin.js.toJsString
 
 internal fun isOpfsAvailable(): Boolean =
     js("typeof navigator !== 'undefined' && navigator.storage != null && typeof navigator.storage.getDirectory === 'function'")
@@ -124,36 +123,6 @@ internal fun readFileScans(directory: JsAny, names: String, maxSize: Double): Pr
         });
     }))"""
 )
-
-/**
- * The file's bytes as a string of one character per byte, or `null` for a file that is not there. A string is the
- * one thing that crosses the Kotlin/Wasm boundary in bulk; an `Int8Array` is read one call per element. It is built a
- * chunk at a time, since `fromCharCode` takes its bytes as arguments and an argument list has a limit.
- */
-internal fun readFileLatin1(handle: JsAny): Promise<JsString?> = js(
-    """handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) {
-        var bytes = new Uint8Array(buffer);
-        var parts = [];
-        for (var i = 0; i < bytes.length; i += 0x8000) parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)));
-        return parts.join('');
-    }).catch(function (error) {
-        if (error && error.name === 'NotFoundError') return null;
-        throw error;
-    })"""
-)
-
-/** The bytes `toLatin1JsString` carried across, for `writeFile`, which writes a string as UTF-8. */
-internal fun latin1ToBytes(text: JsString): JsAny = js(
-    """(function () {
-        var bytes = new Uint8Array(text.length);
-        for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
-        return bytes;
-    })()"""
-)
-
-internal fun String.latin1Bytes() = ByteArray(length) { this[it].code.toByte() }
-
-internal fun ByteArray.toLatin1JsString() = CharArray(size) { (this[it].toInt() and 0xFF).toChar() }.concatToString().toJsString()
 
 internal const val FIELD_SEPARATOR_CODE = 0
 internal const val ENTRY_SEPARATOR_CODE = 1

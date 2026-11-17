@@ -192,7 +192,7 @@ internal class OpfsFileStorage : FileStorage {
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name)?.let { handle -> readFileLatin1(handle).await<JsString?>()?.toString()?.latin1Bytes() }
+            fileHandle(directory, name)?.let { handle -> readFileBytes(handle).await<JsAny?>()?.toByteArray() }
         }
     }
 
@@ -201,7 +201,7 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        write(directory, name) { handle -> writeFile(handle, directory.displayName, name, latin1ToBytes(bytes.toLatin1JsString())) }
+        write(directory, name) { handle -> writeFile(handle, directory.displayName, name, bytes.toUint8Array()) }
     }
 
     /**
