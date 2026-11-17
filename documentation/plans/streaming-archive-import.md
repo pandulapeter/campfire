@@ -9,8 +9,9 @@
 -->
 # Plan: streaming archive import
 
-**Status:** final, ready to implement once [attachments-release-fixes.md](attachments-release-fixes.md) has landed
-(it carries out steps 1 and 6 here and changes how `ZipWriter` treats entries over 1 MiB). The owner's answers (ZIP64
+**Status:** final, ready to implement: the fixes plan for pictures and attachments has landed (2026-11-17), carrying
+out steps 1 and 6 here, and `ZipWriter` now stores an entry over 1 MiB whose first 64 KiB do not shrink by 3% and gives
+up deflating one whose output reaches its size (entries of 1 MiB or less are written as before, bit for bit). The owner's answers (ZIP64
 read and written, no fallback, the web's contract test in CI, an archive past 4 GB without ZIP64 refused with its own
 sentence) are folded in, and so are the corrections of a pre-mortem on 2026-11-17: the reader's ZIP64 rules follow what
 real tools write, the import's work belongs to the app rather than a view model, the free-space rule cannot refuse a
@@ -277,9 +278,6 @@ only, never committed), and its outcome is written into the step it decides befo
 
 **Landed** by item M1 of the fixes plan (`Sha256.Digest`, `Sha256.hashToHexYielding`).
 
-Carried out by item M1 of [attachments-release-fixes.md](attachments-release-fixes.md), which lands first; nothing is
-left to do here once it has.
-
 Move `Sha256` from `:data:source:remote:api/hashing` to `:data:model/hashing` verbatim (its own commit, imports
 updated), then add `Sha256.Digest` with `update(bytes, offset, length)` and `finishToHex()`. Tests: the digest over any
 chunking equals `Sha256.hash` (random chunk boundaries from a fixed seed, empty input, 55/56/64-byte boundaries).
@@ -403,9 +401,6 @@ stream. Safety: bounded memory per entry, no behaviour change for the PDF reader
 **Landed** by item M3 of the fixes plan, with `copyInto` beside `moveInto` (a copy by the system, renamed over the
 target) for the editor's Save; the web's storage moved under `WebFileStorage` over `OpfsFileStorage(rootSegments)`, so
 its contract test has a folder of its own per test.
-
-Carried out by item M3 of [attachments-release-fixes.md](attachments-release-fixes.md), exactly as written here; the
-`stage` request of the worker and everything else below is part of it.
 
 - `StorageDirectory.IMPORTS` → `imports/`: Android under `filesDir` (never `cacheDir`, which the system may clear while
   the app runs), iOS under `Library/Application Support` with the backup exclusion set on the folder (never
