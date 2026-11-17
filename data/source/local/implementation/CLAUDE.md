@@ -65,8 +65,9 @@ Skipped or unreadable files are logged to the injected `Logger`.
   send a second copy of the song to every device. Windows device names (`con.cho`) are stored with a leading underscore
   and reported back unchanged.
 - **JVM**: removes its own temp files older than an hour on first touching a directory. Reads through a `FileChannel`,
-  not `FileInputStream`, which Windows opens without delete sharing (a scan would block sync's renames), in 64 KiB
-  slices: Android reads a channel through a direct buffer of the request's size on the Java heap, cached per thread.
+  not `FileInputStream`, which Windows opens without delete sharing (a scan would block sync's renames). Channel reads
+  and sink writes go in 64 KiB slices (`JVM_IO_SLICE_SIZE`): Android moves each through a direct buffer of its size on
+  the Java heap, cached per thread for good.
   Move and delete retry three times on a Windows `AccessDeniedException` (anti-virus), and the app's own moves and
   deletions of one name take turns, since Windows refuses a replace while another of the same name is under way.
 

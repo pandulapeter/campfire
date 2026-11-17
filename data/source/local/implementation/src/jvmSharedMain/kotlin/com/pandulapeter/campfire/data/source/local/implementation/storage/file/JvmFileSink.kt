@@ -31,7 +31,15 @@ internal class JvmFileSink(
         private set
 
     override suspend fun write(bytes: ByteArray, offset: Int, length: Int) = withContext(Dispatchers.IO) {
-        failingAsStorage { output.write(bytes, offset, length) }
+        // A write past the stream's buffer goes straight to the channel, so slices bound what it takes at once.
+        failingAsStorage {
+            var written = 0
+            while (written < length) {
+                val slice = minOf(JVM_IO_SLICE_SIZE, length - written)
+                output.write(bytes, offset + written, slice)
+                written += slice
+            }
+        }
         position += length
     }
 

@@ -26,13 +26,16 @@ internal class JvmFileSource(
     override val size = failingAsStorage { channel.size() }
 
     override suspend fun read(position: Long, buffer: ByteArray, offset: Int, length: Int) = withContext(Dispatchers.IO) {
-        val target = ByteBuffer.wrap(buffer, offset, length)
+        var filled = 0
         failingAsStorage {
-            while (target.hasRemaining()) {
-                if (channel.read(target, position + target.position() - offset) < 0) break
+            while (filled < length) {
+                val target = ByteBuffer.wrap(buffer, offset + filled, minOf(JVM_IO_SLICE_SIZE, length - filled))
+                val read = channel.read(target, position + filled)
+                if (read < 0) break
+                filled += read
             }
         }
-        target.position() - offset
+        filled
     }
 
     override suspend fun close() = withContext(Dispatchers.IO) {

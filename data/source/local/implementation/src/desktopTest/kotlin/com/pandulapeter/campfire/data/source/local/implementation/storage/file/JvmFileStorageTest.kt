@@ -22,6 +22,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -58,6 +59,21 @@ class JvmFileStorageTest {
         fileStorage.writeBytes(StorageDirectory.FILES, "a.bin", bytes)
 
         assertContentEquals(bytes, fileStorage.readBytes(StorageDirectory.FILES, "a.bin"))
+    }
+
+    @Test
+    fun `writes and reads a file many slices long in one call each`() = runBlocking {
+        val bytes = Random(11).nextBytes(3 * 64 * 1024 + 17)
+        val sink = fileStorage.openSink(StorageDirectory.EXPORTS, "a.zip")
+        sink.write(bytes, 0, bytes.size)
+        sink.close()
+        val source = assertNotNull(fileStorage.openSource(StorageDirectory.EXPORTS, "a.zip"))
+        val read = ByteArray(bytes.size + 5)
+
+        assertEquals(bytes.size.toLong(), sink.position)
+        assertEquals(bytes.size, source.read(position = 0, buffer = read, offset = 5, length = bytes.size))
+        assertContentEquals(bytes, read.copyOfRange(5, read.size))
+        source.close()
     }
 
     @Test

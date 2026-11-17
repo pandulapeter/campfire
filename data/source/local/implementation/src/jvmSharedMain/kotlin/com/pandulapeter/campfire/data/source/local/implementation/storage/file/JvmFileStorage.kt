@@ -267,10 +267,8 @@ internal class JvmFileStorage(
      * refused - and a scan reads sixty-four files at a time while a sync run is writing. An NIO channel shares deletion,
      * so the same read leaves the file movable.
      *
-     * Not `Files.readAllBytes` either, nor one channel read into the whole array: a channel reads a heap buffer through
-     * a temporary direct buffer of the request's size, which Android allocates on the Java heap and keeps cached per
-     * thread, so a 50 MB attachment read in one request costs 100 MB and leaves 50 MB held. Slices of [READ_SLICE_SIZE]
-     * bound that buffer.
+     * Not `Files.readAllBytes` either, nor one channel read into the whole array: slices of [JVM_IO_SLICE_SIZE] keep
+     * Android from holding a second copy of the file.
      */
     private fun File.readAllBytes(): ByteArray = FileChannel.open(toPath(), StandardOpenOption.READ).use { channel ->
         val size = channel.size()
@@ -278,13 +276,13 @@ internal class JvmFileStorage(
         val bytes = ByteArray(size.toInt())
         var filled = 0
         while (filled < bytes.size) {
-            val read = channel.read(ByteBuffer.wrap(bytes, filled, minOf(READ_SLICE_SIZE, bytes.size - filled)))
+            val read = channel.read(ByteBuffer.wrap(bytes, filled, minOf(JVM_IO_SLICE_SIZE, bytes.size - filled)))
             if (read < 0) return@use bytes.copyOf(filled)
             filled += read
         }
         // A file that grew since its size was asked for is read to its end, as a whole read always was.
         val rest = ByteArrayOutputStream()
-        val slice = ByteArray(READ_SLICE_SIZE)
+        val slice = ByteArray(JVM_IO_SLICE_SIZE)
         while (true) {
             val read = channel.read(ByteBuffer.wrap(slice))
             if (read < 0) break
@@ -388,7 +386,6 @@ internal class JvmFileStorage(
         const val DENIED_RETRIES = 3
         const val DENIED_RETRY_DELAY_MILLIS = 20L
         const val NAME_LOCK_STRIPES = 64
-        const val READ_SLICE_SIZE = 64 * 1024
         val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)
     }
 }
