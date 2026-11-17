@@ -125,6 +125,18 @@ sealed interface Message {
     /** A picture the user added was of a format some platform cannot show, and a copy in one every platform can was kept. */
     data object ImageConverted : Message
 
+    /** A picture link that answered with nothing, or an address the app does not ask (not public `https`). */
+    data object PictureLinkMissing : Message
+
+    /** A picture link that answered with something other than a picture, most often the page showing it. */
+    data object PictureLinkNotPicture : Message
+
+    /**
+     * A picture link that did not answer, which in a browser is also how a site that does not allow other pages to
+     * download its pictures answers: the two cannot be told apart, so the message names both and the way around them.
+     */
+    data object PictureLinkUnreachable : Message
+
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message
 

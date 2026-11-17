@@ -36,6 +36,11 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   nothing a song's measurements are kept by. Add stores the picked file and points the
   song's directives at it in one step (`SaveSongImageUseCase`, under `SongTextStore`'s write lock); a refused file is a
   snackbar saying why, and a song that no longer names the picture by then is left alone.
+- **A picture named by its address** (`PictureLinks.isLink`: `https` only) is never drawn from the web. Its placeholder
+  adds Download before Add image (by the name alone, so the room is the same with the buttons hidden), which downloads
+  it (`PictureLinkDownloader`, part of `PictureWork`) and stores it as Add image does. What brings no picture is a
+  snackbar: nothing there, a page rather than a picture, or no answer, which on the web is also a site refusing other
+  pages its pictures, so that one suggests saving the picture and adding the file.
 - **A picture the user adds** (the editor's Image button, one opened, shared, or dropped alone, Add image) goes through
   `PictureFitter` first, never one an archive or sync brings: kept as it is where the library takes it (never
   re-encoded); refused as too large (bytes or pixels, the read going up to 40 MB) or as HEIC or AVIF (never SVG, never no

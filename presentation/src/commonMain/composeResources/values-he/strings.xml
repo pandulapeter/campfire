@@ -1217,6 +1217,10 @@
     <string name="song_image_view">הצגה במסך מלא</string>
     <string name="song_image_not_found">התמונה לא נמצאה: %1$s</string>
     <string name="song_image_add">הוספת תמונה</string>
+    <string name="song_image_download">הורדה</string>
+    <string name="picture_link_missing">אין תמונה להורדה בכתובת הזאת.</string>
+    <string name="picture_link_not_picture">הכתובת הזאת מובילה לדף, לא לתמונה. השתמשו בכתובת של התמונה עצמה.</string>
+    <string name="picture_link_unreachable">לא ניתן היה להוריד את התמונה: האתר לא ענה או שאינו מאפשר זאת. שמרו את התמונה, ואז הוסיפו אותה מהקבצים שלכם.</string>
     <string name="song_image_refused_format">לא ניתן להציג סוג תמונה זה בכל מכשיר. כדאי לבחור במקומה קובץ PNG, JPEG, GIF או WebP.</string>
     <string name="song_image_refused_too_large">התמונה הזאת גדולה מ־8 MB, המרב ששיר יכול להכיל.</string>
     <string name="song_image_refused_too_many_pixels">בתמונה הזאת יותר מ־25 מגה־פיקסל, יותר ממה ששיר יכול להציג.</string>

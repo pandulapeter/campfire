@@ -1176,6 +1176,10 @@
     <string name="song_image_view">Mostra a schermo intero</string>
     <string name="song_image_not_found">Immagine non trovata: %1$s</string>
     <string name="song_image_add">Aggiungi immagine</string>
+    <string name="song_image_download">Scarica</string>
+    <string name="picture_link_missing">A quell\'indirizzo non c\'è nessuna immagine da scaricare.</string>
+    <string name="picture_link_not_picture">Quell\'indirizzo porta a una pagina, non a un\'immagine. Usa l\'indirizzo dell\'immagine stessa.</string>
+    <string name="picture_link_unreachable">Impossibile scaricare l\'immagine: il sito non ha risposto o non lo consente. Salva l\'immagine, poi aggiungila dai tuoi file.</string>
     <string name="song_image_refused_format">Questo tipo di immagine non si può mostrare su tutti i dispositivi. Scegli invece un file PNG, JPEG, GIF o WebP.</string>
     <string name="song_image_refused_too_large">Questa immagine supera gli 8 MB, il massimo che una canzone può contenere.</string>
     <string name="song_image_refused_too_many_pixels">Questa immagine supera i 25 megapixel, più di quanto una canzone possa mostrare.</string>

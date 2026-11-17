@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.songText
 
+import com.pandulapeter.campfire.domain.api.images.DownloadPictureUseCase
 import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageChangesUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageSizeUseCase
@@ -16,7 +17,9 @@ import com.pandulapeter.campfire.domain.api.images.GetImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ReadImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
@@ -36,15 +39,17 @@ class SongTextUseCases(
     internal val saveSongImage: SaveSongImageUseCase,
     internal val readImageSize: ReadImageSizeUseCase,
     internal val examineImage: ExamineImageUseCase,
+    internal val downloadPicture: DownloadPictureUseCase,
 ) {
 
     /**
-     * How a picture picked for a song's missing one is made to fit (tracked as [pictureWork]) and stored, the pick under way
-     * kept in [savedStateStore].
+     * How a picture picked or downloaded for a song's missing one is made to fit (tracked as [pictureWork]) and stored, the
+     * pick under way kept in [savedStateStore], a download that brings nothing said through [messageSink].
      */
-    internal fun imageAdding(pictureWork: PictureWork, savedStateStore: SavedStateStore) = SongImageAdding(
+    internal fun imageAdding(pictureWork: PictureWork, savedStateStore: SavedStateStore, messageSink: MessageSink) = SongImageAdding(
         fitter = PictureFitter(examine = examineImage::invoke, reencode = ::reencodePicture, work = pictureWork),
         saveSongImage = saveSongImage,
         pendingPick = PendingMissingImagePick(savedStateStore),
+        linkDownloader = PictureLinkDownloader(download = downloadPicture::invoke, work = pictureWork, messageSink = messageSink),
     )
 }

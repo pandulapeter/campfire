@@ -261,6 +261,17 @@ internal class SongTextStore(
         scope.launch { storeMissingImage(fileName = pick.fileName, missingName = pick.missingName, file = file) }
     }
 
+    /**
+     * A missing picture's Download: the picture its address ([missingName]) names, downloaded and stored as
+     * [addMissingImage] stores a picked one, the song's directives then naming the library's copy.
+     */
+    fun downloadMissingImage(fileName: String, missingName: String) {
+        scope.launch {
+            val file = imageAdding.linkDownloader.picture(missingName) ?: return@launch
+            storeMissingImage(fileName = fileName, missingName = missingName, file = file)
+        }
+    }
+
     /** The missing picture a pick was under way for when the last view model went, once (`PendingMissingImagePick.take`). */
     fun takePendingMissingImagePick() = imageAdding.pendingPick.take()
 

@@ -47,6 +47,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.rendering.testSongRenderer
 import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.domain.api.images.PictureDownload
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import androidx.lifecycle.SavedStateHandle
@@ -165,6 +167,7 @@ class EditorSessionTest {
                     override suspend fun invoke(fileName: String, expectedText: String, missingName: String, bytes: ByteArray) = throw NotImplementedError()
                 },
                 pendingPick = PendingMissingImagePick(SavedStateStore(SavedStateHandle(), scope)),
+                linkDownloader = PictureLinkDownloader(download = { PictureDownload.Unreachable }, work = PictureWork(), messageSink = messageSink),
             ),
             addOnBackStackChanged = {},
             currentSongFileName = { null },

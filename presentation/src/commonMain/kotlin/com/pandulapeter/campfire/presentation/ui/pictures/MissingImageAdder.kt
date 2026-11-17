@@ -12,14 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.pictures
 import com.pandulapeter.campfire.presentation.ui.platform.PictureSource
 
 /**
- * What a missing picture's Add image does ([LocalSongImageAdder]).
+ * What a missing picture's Add image and Download do ([LocalSongImageAdder]).
  *
  * @param canPickPhotos Whether the button asks which [PictureSource] to pick from first (`FilePicker.canPickPhotos`);
  *   where it does not, it picks from [PictureSource.FILES].
  * @param add Picks a picture from the source handed for the missing picture the song names by the name handed, and
  *   stores it under that song.
+ * @param download Downloads the picture a missing one names by its address (`PictureLinks.isLink`), and stores it under
+ *   that song as [add] would.
  */
 internal class MissingImageAdder(
     val canPickPhotos: Boolean,
     val add: (name: String, source: PictureSource) -> Unit,
+    val download: (name: String) -> Unit,
 )

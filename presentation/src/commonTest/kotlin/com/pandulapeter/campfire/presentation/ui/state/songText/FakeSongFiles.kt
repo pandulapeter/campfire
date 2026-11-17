@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.domain.api.images.PictureDownload
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageResult
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
@@ -21,6 +22,7 @@ import com.pandulapeter.campfire.domain.api.songs.SaveSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PendingMissingImagePick
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import androidx.lifecycle.SavedStateHandle
@@ -36,7 +38,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
  *
  * Pictures are stored by [SaveSongImageUseCase] under [STORED_IMAGE_NAME], an empty file refused as no picture, and the
  * texts handed on for their pictures' sizes are kept in [textsReadForImages]. A picture of more than [MAX_IMAGE_BYTES] is
- * too large, and made to fit by [reencode], whose copy is the [STORED_IMAGE_NAME] picture's bytes.
+ * too large, and made to fit by [reencode], whose copy is the [STORED_IMAGE_NAME] picture's bytes. A picture link answers
+ * from [downloads] by its address, and any other address is unreachable.
  */
 internal class FakeSongFiles(
     initial: Map<String, String> = emptyMap(),
@@ -47,6 +50,9 @@ internal class FakeSongFiles(
     SaveSongImageUseCase {
 
     val files = initial.toMutableMap()
+
+    /** What downloading each picture link comes to. */
+    val downloads = mutableMapOf<String, PictureDownload>()
 
     /** Every text that reached a file. */
     val writes = mutableListOf<String>()
@@ -100,6 +106,11 @@ internal class FakeSongFiles(
             ),
             saveSongImage = this,
             pendingPick = PendingMissingImagePick(SavedStateStore(savedStateHandle, scope)),
+            linkDownloader = PictureLinkDownloader(
+                download = { url -> downloads[url] ?: PictureDownload.Unreachable },
+                work = PictureWork(),
+                messageSink = messageSink,
+            ),
         ),
         addOnBackStackChanged = {},
         currentSongFileName = { null },

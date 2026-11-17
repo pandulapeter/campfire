@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.songText
 
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.domain.api.images.PictureDownload
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.MissingImagePick
@@ -44,6 +45,35 @@ class SongTextStoreImageTest {
         assertEquals(expected, files.files[FILE])
         assertEquals(expected, store.songTexts.value[FILE])
         assertEquals(expected, files.textsReadForImages.last())
+    }
+
+    @Test
+    fun `a missing picture's link is downloaded and stored under the song in its place`() = runTest {
+        val files = FakeSongFiles(mapOf(FILE to LINKED_TEXT)).apply { downloads[LINK] = PictureDownload.Picture(byteArrayOf(1, 2)) }
+        val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.downloadMissingImage(FILE, missingName = LINK)
+        runCurrent()
+        val expected = "{title: A}\n{image: src=${FakeSongFiles.STORED_IMAGE_NAME}}\n"
+        assertEquals(expected, files.files[FILE])
+        assertEquals(expected, store.songTexts.value[FILE])
+    }
+
+    @Test
+    fun `a missing picture's link that brings no picture is said why, and nothing is written`() = runTest {
+        val outcomes = listOf(
+            PictureDownload.Unreachable to Message.PictureLinkUnreachable,
+            PictureDownload.Missing to Message.PictureLinkMissing,
+            PictureDownload.NotAPicture to Message.PictureLinkNotPicture,
+            PictureDownload.TooLarge to Message.ImageTooLargeToRead,
+        )
+        outcomes.forEach { (download, message) ->
+            val files = FakeSongFiles(mapOf(FILE to LINKED_TEXT)).apply { downloads[LINK] = download }
+            val sink = MessageSink(backgroundScope)
+            files.songTextStore(backgroundScope, sink).downloadMissingImage(FILE, missingName = LINK)
+            runCurrent()
+            assertEquals(emptyList(), files.writes)
+            assertEquals(listOf(message), sink.messageQueue.value.map { it.value })
+        }
     }
 
     @Test
@@ -137,6 +167,8 @@ class SongTextStoreImageTest {
     private companion object {
         const val FILE = "song.cho"
         const val TEXT = "{title: A}\n{image: src=photo.jpg}\n"
+        const val LINK = "https://example.com/chart.png"
+        const val LINKED_TEXT = "{title: A}\n{image: src=$LINK}\n"
 
         /** Over [FakeSongFiles.MAX_IMAGE_BYTES], with a JPEG's signature. */
         val LARGE_PHOTO = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 5)

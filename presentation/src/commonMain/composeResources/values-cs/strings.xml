@@ -1215,6 +1215,10 @@
     <string name="song_image_view">Zobrazit na celou obrazovku</string>
     <string name="song_image_not_found">Obrázek nebyl nalezen: %1$s</string>
     <string name="song_image_add">Přidat obrázek</string>
+    <string name="song_image_download">Stáhnout</string>
+    <string name="picture_link_missing">Na této adrese není žádný obrázek ke stažení.</string>
+    <string name="picture_link_not_picture">Tato adresa vede na stránku, ne na obrázek. Použij adresu samotného obrázku.</string>
+    <string name="picture_link_unreachable">Obrázek se nepodařilo stáhnout: web neodpověděl, nebo to nedovoluje. Ulož si obrázek a pak ho přidej ze svých souborů.</string>
     <string name="song_image_refused_format">Tento druh obrázku nejde zobrazit na každém zařízení. Vyber místo něj soubor PNG, JPEG, GIF nebo WebP.</string>
     <string name="song_image_refused_too_large">Tento obrázek je větší než 8 MB, což je nejvíc, co může píseň obsahovat.</string>
     <string name="song_image_refused_too_many_pixels">Tento obrázek má přes 25 megapixelů, víc, než může píseň zobrazit.</string>

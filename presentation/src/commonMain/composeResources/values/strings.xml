@@ -1176,6 +1176,10 @@
     <string name="song_image_view">Show full screen</string>
     <string name="song_image_not_found">Image not found: %1$s</string>
     <string name="song_image_add">Add image</string>
+    <string name="song_image_download">Download</string>
+    <string name="picture_link_missing">There is no picture to download at that address.</string>
+    <string name="picture_link_not_picture">That address leads to a page, not a picture. Use the address of the picture itself.</string>
+    <string name="picture_link_unreachable">The picture could not be downloaded: the site did not answer or does not allow it. Save the picture, then add it from your files.</string>
     <string name="song_image_refused_format">This kind of picture cannot be shown on every device. Pick a PNG, JPEG, GIF, or WebP file instead.</string>
     <string name="song_image_refused_too_large">This picture is larger than 8 MB, the most a song can hold.</string>
     <string name="song_image_refused_too_many_pixels">This picture has more than 25 megapixels, more than a song can show.</string>
