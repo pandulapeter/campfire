@@ -59,5 +59,6 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary, text: String): Song
         capoChartKey = if (key == null || (summary.metadata.capo ?: 0) == 0) null else SongKeys.capoChartKeyOf(ChordProParser.parse(text)),
         hasSheetMusic = summary.hasSheetMusic,
         imageNames = summary.imageSources,
+        attachmentNames = summary.attachmentSources,
     )
 }

@@ -49,6 +49,12 @@ object ImportLimits {
      */
     const val MAX_PICKED_IMAGE_FILE_SIZE = 40L shl 20
 
+    /**
+     * One file attached to a song, held whole in memory like every other file of the library: a recording or a short
+     * video fits, and a larger one is better kept as a link.
+     */
+    const val MAX_ATTACHMENT_FILE_SIZE = 50L shl 20
+
     /** Documents may carry embedded fonts and images much larger than their extracted text. */
     const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
 

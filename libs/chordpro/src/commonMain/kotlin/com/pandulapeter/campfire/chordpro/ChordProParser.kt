@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.chordpro.syntax.ChordProAttachmentDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChordRewriter
 import com.pandulapeter.campfire.chordpro.syntax.ChordProChorusRecalls
 import com.pandulapeter.campfire.chordpro.syntax.ChordProColors
@@ -30,6 +31,7 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProHeaderLayout
 import com.pandulapeter.campfire.chordpro.syntax.ChordProImageDirectives
 import com.pandulapeter.campfire.chordpro.syntax.ChordProLineScanner
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMarkup
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems
 import com.pandulapeter.campfire.chordpro.syntax.ChordProRowMarks
 import com.pandulapeter.campfire.chordpro.syntax.ChordProTokens
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.ANNOTATION_MARKER
@@ -139,11 +141,18 @@ public object ChordProParser {
         var hasSheetMusic = false
         var isGermanNotated = notation == ChordNotation.GERMAN
         val imageSources = mutableSetOf<String>()
+        val attachmentSources = mutableSetOf<String>()
         ChordProLineScanner.scan(text).forEach { line ->
             // Read as generously as ChordProImages.referencedSources reads them, which a directive line that is not an
             // image cannot be outside an environment handed to another program, so only those and `#` lines are read again.
             if (line.isSourceComment || line.isDelegated || line.directive?.name?.let(ChordProImageDirectives::isImageName) == true) {
                 ChordProImageDirectives.sourcesOn(line.raw).forEach { imageSources += it.value }
+            }
+            // The same for attachments, whose directive the scanner has already matched on every other line.
+            if (line.isSourceComment || line.isDelegated) {
+                ChordProAttachmentDirectives.sourceOn(line.raw)?.let { attachmentSources += it }
+            } else {
+                line.directive?.let(ChordProMetaItems::attachment)?.let { attachmentSources += it.source }
             }
             if (line.isSourceComment) return@forEach
             val rawLine = line.raw
@@ -184,6 +193,7 @@ public object ChordProParser {
             hasChords = hasChords,
             hasSheetMusic = hasSheetMusic,
             imageSources = imageSources,
+            attachmentSources = attachmentSources,
         )
     }
 

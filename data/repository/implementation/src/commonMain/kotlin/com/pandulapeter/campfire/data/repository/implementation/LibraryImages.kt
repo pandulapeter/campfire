@@ -41,7 +41,7 @@ internal object LibraryImages {
     /**
      * The names [bytes] may take, shortest first: its SHA-256's first [LibraryFiles.MIN_IMAGE_NAME_DIGITS] hex digits,
      * then one more at a time, for the rare different picture that took the shorter one. Every one passes
-     * [LibraryFiles.isImageNamedFor], which is how sync tells a picture from a damaged one.
+     * [LibraryFiles.isLibraryFileNamedFor], which is how sync tells a picture from a damaged one.
      */
     fun contentNames(bytes: ByteArray, extension: String): Sequence<String> {
         val hex = Sha256.hashToHex(bytes)

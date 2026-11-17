@@ -486,6 +486,7 @@ class ChordProHighlighterTest {
             "{tag: A}\n{tag: B}\n{meta: tag C}",
             "{meta: language en}\n{language: hu}",
             "{meta: link https://a.com}\n{meta: link https://b.com}",
+            "{meta: attachment a.pdf}\n{meta: attachment b.mp3}",
             "{tempo: 90}\n{time: 3/4}\nla\n{tempo: 120}\n{time: 4/4}",
             "{define: C base-fret 1 frets x 3 2 0 1 0}\n{define: C base-fret 1 frets x 3 2 0 1 0}",
             "{title: A}\n{start_of_abc}\n{title: B}\n{end_of_abc}",
@@ -509,12 +510,12 @@ class ChordProHighlighterTest {
 
     /**
      * Every spelling the parser reads for each metadata kind, as the only line of a song: `{meta: name value}` for all of
-     * them, and the standalone directive under the long name and every short one for all but the cover and the link,
-     * which are only ever read as `{meta}` items. The language's short name is a `{meta}` key as well.
+     * them, and the standalone directive under the long name and every short one for all but the cover, the link, and
+     * the attachment, which are only ever read as `{meta}` items. The language's short name is a `{meta}` key as well.
      */
     private val metadataSpellings = MetadataKind.entries.associate { kind ->
         val names = listOf(kind.longName) + kind.aliases
-        val standalone = if (kind == MetadataKind.COVER || kind == MetadataKind.LINK) emptyList() else names
+        val standalone = if (kind == MetadataKind.COVER || kind == MetadataKind.LINK || kind == MetadataKind.ATTACHMENT) emptyList() else names
         val meta = if (kind == MetadataKind.LANGUAGE) names else listOf(kind.longName)
         kind.longName to standalone.map { name -> { value: String -> "{$name: $value}" } } +
             meta.map { name -> { value: String -> "{meta: $name $value}" } }
@@ -543,6 +544,7 @@ class ChordProHighlighterTest {
         "language" -> languages.firstOrNull()
         "cover" -> coverArt
         "link" -> links.firstOrNull()
+        "attachment" -> attachments.firstOrNull()
         else -> error("Unknown kind $kind")
     }?.takeIf { it.toString().isNotEmpty() }
 

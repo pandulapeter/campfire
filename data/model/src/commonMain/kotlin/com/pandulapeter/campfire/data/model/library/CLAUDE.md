@@ -20,8 +20,10 @@
 - `normalizedName` **must stay idempotent**: an exported name is normalized again on its way back in. NFC first (it
   composes non-Latin marks). Letters outside the BMP are kept as surrogate pairs, never cut; symbols, emoji, and planes
   14–16 become separators, as does a Latin letter `Accents.kt`'s `withoutAccent` table lacks, so extend the table.
-- `isLibraryImageName` is the one rule for the pictures of `library/files` (`LibraryFileKind.FILE`): 16 to 64 lowercase
-  hex digits of the content's SHA-256 and a format's extension, never normalized; anything else there is left alone.
+- `isLibraryFileName` is the one rule for `library/files` (`LibraryFileKind.FILE`): 16 to 64 lowercase hex digits of
+  the content's SHA-256 and a picture's extension (`isLibraryImageName`) or an attachment's (`isLibraryAttachmentName`,
+  `ATTACHMENT_EXTENSIONS`, an allow-list with nothing that runs), never normalized; anything else there is left alone.
+  `isLibraryFileNamedFor` tells a file that is what its name says from a damaged one.
   `IMAGE_FILE_EXTENSIONS` are the names a picture arrives under on its own (refused formats included, `.svg` not, being
   text the folder walks would read). Only PNG and JPEG are offered to the OS, and never as its default: Android's Open
   with and Share filters, iOS's document types (`Alternate`) and share extension, the Mac's document types

@@ -177,8 +177,8 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `the tags, the languages and the links of a song are the repeatable directives`() {
-        assertEquals(setOf("tag", "language", "link"), ChordProHeader.repeatableMetadata)
+    fun `the tags, the languages, the links, and the attachments of a song are the repeatable directives`() {
+        assertEquals(setOf("tag", "language", "link", "attachment"), ChordProHeader.repeatableMetadata)
     }
 
     @Test

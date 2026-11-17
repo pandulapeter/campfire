@@ -9,8 +9,8 @@
 -->
 # chordpro/edit
 
-- Tags, languages, cover, and links are directives: `{tag}` one per value; `{meta: language en}`, `{meta: cover URL}`,
-  `{meta: link URL Optional name}`. **Language codes are normalized** to one primary subtag, two letters where one
+- Tags, languages, cover, links, and attachments are directives: `{tag}` one per value; `{meta: language en}`,
+  `{meta: cover URL}`, `{meta: link URL Optional name}`, `{meta: attachment FILE Optional name}`. **Language codes are normalized** to one primary subtag, two letters where one
   exists (a region or three-letter code would split a filter group); `und` and `zxx` mean no language. Values cannot
   inject braces or line breaks.
 - `ChordProMetadataFields.set` rewrites the line the parser reads, in its own spelling, **but never a body

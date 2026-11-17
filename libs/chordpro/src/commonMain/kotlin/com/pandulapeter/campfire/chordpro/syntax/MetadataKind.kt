@@ -69,6 +69,7 @@ internal enum class MetadataKind(
     TAG(longName = ChordProMetaItems.TAG_NAME, isRepeatable = true),
     LANGUAGE(longName = ChordProMetaItems.LANGUAGE_NAME, aliases = setOf(ChordProMetaItems.LANGUAGE_SHORT_NAME), isRepeatable = true),
     LINK(longName = ChordProMetaItems.LINK_NAME, isRepeatable = true),
+    ATTACHMENT(longName = ChordProMetaItems.ATTACHMENT_NAME, isRepeatable = true),
     ;
 
     companion object {

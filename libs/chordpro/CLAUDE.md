@@ -76,6 +76,10 @@ dependencies at all**, not even Koin: stateless `object`s called directly. Every
   draws. **The files a song names are read generously** (`ChordProImages.referencedSources`, and the same set in
   `ChordProSummary.imageSources`, read in the summary's one walk): definitions, selectors, delegated environments, and
   `#` lines count, since the set decides which library pictures are kept, exported, and guarded from a sync deletion.
+- **Attachments** (`{meta: attachment <library file> <name>}`) are read the same generous way
+  (`ChordProAttachments.referencedSources`, `ChordProSummary.attachmentSources`); a source is a bare file name, never an
+  address or a path. **`libraryFilesNamedBy`** (and `ChordProSummary.librarySources`) is the one set of files a song
+  keeps: every caller deciding what to keep, export, or guard asks it, never the pictures alone.
 - `ChordProSplitter` splits at `{new_song}` outside delegated environments. `comparable` (what an import compares
   against the file on disk) also folds line endings, notation, and directive spellings, which Prettify must not do.
   Both drop a BOM anywhere, or a `{title}` behind it would read as lyrics.

@@ -56,4 +56,35 @@ class LibraryFilePredicatesTest {
         assertNull(LibraryFiles.withoutCollisionSuffix("title_"))
         assertNull(LibraryFiles.withoutCollisionSuffix("title_2b"))
     }
+
+    @Test
+    fun `a library file is named by its content and an allowed extension, a picture's name being an attachment's too`() {
+        val digits = "3fa9c2e81b7d4f06"
+
+        assertTrue(LibraryFiles.isLibraryAttachmentName("$digits.pdf"))
+        assertTrue(LibraryFiles.isLibraryAttachmentName("$digits.jpeg"))
+        assertTrue(LibraryFiles.isLibraryAttachmentName("$digits.png"))
+        assertTrue(LibraryFiles.isLibraryImageName("$digits.png"))
+        assertFalse(LibraryFiles.isLibraryImageName("$digits.pdf"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("$digits.exe"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("$digits.html"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("$digits.PDF"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("$digits"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("${digits.take(15)}.pdf"))
+        assertFalse(LibraryFiles.isLibraryAttachmentName("Rehearsal take.pdf"))
+        assertTrue(LibraryFiles.isLibraryFileName("$digits.mp3"))
+        assertTrue(LibraryFiles.isLibraryFileName("$digits.webp"))
+        assertTrue(LibraryFileKind.FILE.matches("$digits.mscz"))
+        assertFalse(LibraryFileKind.FILE.matches("$digits.sh"))
+    }
+
+    @Test
+    fun `a library file is what its name says only where its content hashes to that name`() {
+        val hash = "3fa9c2e81b7d4f06" + "0".repeat(48)
+
+        assertTrue(LibraryFiles.isLibraryFileNamedFor("3fa9c2e81b7d4f06.pdf", hash))
+        assertTrue(LibraryFiles.isLibraryFileNamedFor("3fa9c2e81b7d4f06.png", hash))
+        assertFalse(LibraryFiles.isLibraryFileNamedFor("3fa9c2e81b7d4f07.pdf", hash))
+        assertFalse(LibraryFiles.isLibraryFileNamedFor("3fa9c2e81b7d4f06.exe", hash))
+    }
 }

@@ -13,9 +13,9 @@ package com.pandulapeter.campfire.data.model.library
  * The kinds of file the library is made of. Sync works one level above songs and setlists - it moves files, not
  * models - so it needs a way to say which of the directories a file name belongs to.
  *
- * [FILE] is what songs show besides their text: pictures, named by their content (see [LibraryFiles.isLibraryImageName]),
- * kept while a song names them. The folder is named for files rather than images so that other kinds kept with a song
- * could later share its storage, sync, and pruning without renaming a folder every user's cloud already holds. A version
+ * [FILE] is what songs keep besides their text: the pictures they show and the files attached to them, named by their
+ * content (see [LibraryFiles.isLibraryFileName]) and kept while a song names them. The folder is named for files rather
+ * than images so that both share its storage, sync, and pruning. A version
  * without this entry leaves the folder alone on both sides, which is what lets it share a cloud folder with this one.
  */
 enum class LibraryFileKind(val id: String) {
@@ -34,7 +34,7 @@ enum class LibraryFileKind(val id: String) {
     fun matches(name: String) = when (this) {
         SONG -> LibraryFiles.isSongFileName(name)
         SETLIST -> LibraryFiles.isSetlistFileName(name)
-        FILE -> LibraryFiles.isLibraryImageName(name)
+        FILE -> LibraryFiles.isLibraryFileName(name)
     }
 
     /**

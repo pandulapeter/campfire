@@ -29,7 +29,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
- * How a picture moves. Its name is its content (`LibraryFiles.isImageNamedFor`), so two copies of one name are the same
+ * How a picture moves. Its name is its content (`LibraryFiles.isLibraryFileNamedFor`), so two copies of one name are the same
  * picture unless one is damaged, and a picture is never a conflict: a copy whose bytes are not what its name says is
  * never uploaded, never written into the library, and is replaced by an intact one from the other side wherever there is
  * one. That check is also what stands in for the hash [readLocalListing] does not take of a picture.
@@ -157,7 +157,7 @@ internal class ImageTransfers(
             RemoteWriteResult.Conflict -> SyncEngine.OperationOutcome(isUnresolved = true)
         }
 
-    private fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isImageNamedFor(key.name, localContentHash(bytes))
+    private fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, localContentHash(bytes))
 
     /** The index is left alone, so the next run sees this file as it was and tries again. */
     private fun failed(key: SyncKey, reason: String): SyncEngine.OperationOutcome {

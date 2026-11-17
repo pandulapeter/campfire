@@ -37,6 +37,7 @@ in the strings). A shared link's copy stays at 24 MiB (`MAX_SHARED_COPY_SIZE`): 
 more, and the copy is packed in memory. A picture is read only where it was chosen itself (`IMAGE_FILE_EXTENSIONS`,
 within `MAX_PICKED_IMAGE_FILE_SIZE`, 40 MiB, since `:presentation` shrinks one past `MAX_IMAGE_FILE_SIZE`); the folder
 walks leave pictures unread by name, and an archive reads one only for a song naming it, within `MAX_IMAGE_FILE_SIZE`.
+A file attached to a song is at most 50 MiB (`MAX_ATTACHMENT_FILE_SIZE`), never re-encoded.
 
 ## Other
 

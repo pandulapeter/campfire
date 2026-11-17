@@ -139,7 +139,21 @@ object LibraryFiles {
     /** Whether a file called [name] is one of the [IMAGE_FILE_EXTENSIONS]. */
     fun isImageFileName(name: String) = IMAGE_FILE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
 
-    /** The fewest and the most hex digits of its SHA-256 a library picture is named by, see [isLibraryImageName]. */
+    /**
+     * The extensions a file attached to a song may have, lowercase, as it arrived: documents, recordings, videos,
+     * pictures (kept as they are, never re-encoded as a song's picture is), and other programs' music formats. Nothing
+     * that runs or a browser executes: an attachment arrives from a shared link or another person's synced song too, and
+     * opening one must never run anything.
+     */
+    val ATTACHMENT_EXTENSIONS = listOf(
+        ".pdf", ".txt", ".md", ".rtf", ".doc", ".docx", ".odt", ".xls", ".xlsx", ".ods", ".ppt", ".pptx", ".odp",
+        ".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".opus", ".aif", ".aiff", ".mid", ".midi",
+        ".mp4", ".m4v", ".mov", ".webm", ".mkv",
+        ".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".tif", ".tiff",
+        ".gp", ".gp3", ".gp4", ".gp5", ".gpx", ".mscz", ".musicxml", ".mxl", ".abc",
+    )
+
+    /** The fewest and the most hex digits of its SHA-256 a library file is named by, see [isLibraryImageName]. */
     const val MIN_IMAGE_NAME_DIGITS = 16
     const val MAX_IMAGE_NAME_DIGITS = 64
 
@@ -150,18 +164,30 @@ object LibraryFiles {
      * across case or Unicode form, is never normalized, and says what the file holds, so no rule that keeps two
      * spellings of a song apart is needed for it, and a file somebody put into the folder by hand is left alone.
      */
-    fun isLibraryImageName(name: String): Boolean {
-        val extension = IMAGE_EXTENSIONS.firstOrNull { name.endsWith(it) } ?: return false
+    fun isLibraryImageName(name: String) = isContentName(name, IMAGE_EXTENSIONS)
+
+    /**
+     * Whether [name] is a file attached to a song, named as a picture is ([isLibraryImageName]) but with one of the
+     * [ATTACHMENT_EXTENSIONS], lowercase. A picture's name is an attachment's too: identical bytes are one file, whether
+     * one song shows them and another attaches them.
+     */
+    fun isLibraryAttachmentName(name: String) = isContentName(name, ATTACHMENT_EXTENSIONS)
+
+    /** Whether [name] is a file of `library/files`: a picture or an attachment, see [LibraryFileKind.FILE]. */
+    fun isLibraryFileName(name: String) = isLibraryImageName(name) || isLibraryAttachmentName(name)
+
+    /**
+     * Whether a library file called [name] holds content whose SHA-256 is [contentHashHex] (lowercase hex): what tells a
+     * file that is what its name says from one damaged or put there by hand, which nothing copies anywhere.
+     */
+    fun isLibraryFileNamedFor(name: String, contentHashHex: String) =
+        isLibraryFileName(name) && contentHashHex.startsWith(name.substringBeforeLast('.'))
+
+    private fun isContentName(name: String, extensions: List<String>): Boolean {
+        val extension = extensions.firstOrNull { name.endsWith(it) } ?: return false
         val digits = name.length - extension.length
         return digits in MIN_IMAGE_NAME_DIGITS..MAX_IMAGE_NAME_DIGITS && (0 until digits).all { name[it] in '0'..'9' || name[it] in 'a'..'f' }
     }
-
-    /**
-     * Whether a picture called [name] holds content whose SHA-256 is [contentHashHex] (lowercase hex): what tells a
-     * picture that is what its name says from one damaged or put there by hand, which nothing copies anywhere.
-     */
-    fun isImageNamedFor(name: String, contentHashHex: String) =
-        isLibraryImageName(name) && contentHashHex.startsWith(name.substringBeforeLast('.'))
 
     /**
      * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an

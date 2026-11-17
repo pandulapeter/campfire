@@ -54,6 +54,12 @@ public data class ChordProMetadata(
      */
     val links: List<ChordProLink> = emptyList(),
     /**
+     * The files that go with the song, one per `{meta: attachment file Optional name}` directive whose file is a bare name
+     * of the library (never an address), in file order and each file once, keeping its first name. Custom metadata items
+     * like [links], which other ChordPro programs keep and ignore.
+     */
+    val attachments: List<ChordProAttachment> = emptyList(),
+    /**
      * The shapes the song gives its chords, one per `{define}` or `{chord}` directive that holds one Campfire draws, in
      * file order, the last one of a chord on an instrument taking the place of the ones before it.
      */

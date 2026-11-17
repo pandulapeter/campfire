@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.chordpro.syntax.ChordProEnvironments.startOfEnv
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.COVER_NAME
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.LANGUAGE_NAME
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.LINK_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.ATTACHMENT_NAME
+import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isAttachmentMeta
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.TAG_NAME
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isCoverMeta
 import com.pandulapeter.campfire.chordpro.syntax.ChordProMetaItems.isLanguageMeta
@@ -47,6 +49,7 @@ internal object ChordProHeaderLayout {
         isLanguageMeta(directive) -> LANGUAGE_NAME
         isCoverMeta(directive) -> COVER_NAME
         isLinkMeta(directive) -> LINK_NAME
+        isAttachmentMeta(directive) -> ATTACHMENT_NAME
         else -> {
             val name = standardMeta(directive)?.name ?: directive.name
             (metadataAliases[name] ?: name).takeIf { it in metadataOrder }

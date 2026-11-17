@@ -46,7 +46,7 @@ class ImageRepositoryImplTest {
 
         val name = assertAccepted(intake)
         assertEquals(Sha256.hashToHex(PHOTO).take(16) + ".png", name)
-        assertTrue(LibraryFiles.isImageNamedFor(name, Sha256.hashToHex(PHOTO)))
+        assertTrue(LibraryFiles.isLibraryFileNamedFor(name, Sha256.hashToHex(PHOTO)))
         assertContentEquals(PHOTO, local.shelves.getValue(ImageShelf.LIBRARY)[name])
         assertEquals(ImageSize(width = 40, height = 30), repository.loadImageSize(name))
     }

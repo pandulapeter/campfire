@@ -99,7 +99,12 @@ data class Song(
      * would cost the user the picture.
      */
     val imageNames: Set<String> = emptySet(),
+    /** Every file the file's attachment lines name, read as generously as [imageNames] and for the same reason. */
+    val attachmentNames: Set<String> = emptySet(),
 ) {
+
+    /** Every library file the song keeps, its pictures and its attachments: what the pruning and sync keep for it. */
+    val libraryFileNames: Set<String> get() = imageNames + attachmentNames
 
     /** [key] read as the key the file's chords are written in, which is what every list names the sounding key from. */
     val chordsKey: String? get() = capoChartKey ?: key

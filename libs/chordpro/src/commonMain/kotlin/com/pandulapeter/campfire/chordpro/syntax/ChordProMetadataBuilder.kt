@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro.syntax
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.CUSTOM_PREFIX
 import com.pandulapeter.campfire.chordpro.model.ChordDefinition
 import com.pandulapeter.campfire.chordpro.model.ChordInstrument
+import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 
@@ -78,6 +79,7 @@ internal class MetadataBuilder {
     private val languages = mutableListOf<String>()
     private val languageSet = mutableSetOf<String>()
     private val links = mutableListOf<ChordProLink>()
+    private val attachments = mutableListOf<ChordProAttachment>()
     private val definitions = mutableListOf<ChordDefinition>()
     private val defined = mutableSetOf<Pair<String, ChordInstrument>>()
     private val custom = mutableMapOf<String, MutableList<String>>()
@@ -118,6 +120,10 @@ internal class MetadataBuilder {
                     ChordProMetaItems.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProMetaItems.cover(directive)
                     // And for the links, every usable one of which is kept, once each.
                     ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive)?.let { if (links.none { link -> link.url == it.url }) links += it }
+                    // And for the attachments, each file once.
+                    ChordProMetaItems.isAttachmentMeta(directive) -> ChordProMetaItems.attachment(directive)?.let {
+                        if (attachments.none { attachment -> attachment.source == it.source }) attachments += it
+                    }
                     name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                 }
             }
@@ -169,6 +175,7 @@ internal class MetadataBuilder {
         tags = tags.toList(),
         languages = languages.toList(),
         links = links.toList(),
+        attachments = attachments.toList(),
         definitions = definitions.toList(),
         custom = custom.mapValues { it.value.toList() },
     )

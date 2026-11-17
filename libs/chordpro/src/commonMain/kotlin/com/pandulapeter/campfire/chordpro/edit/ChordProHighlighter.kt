@@ -336,6 +336,7 @@ public object ChordProHighlighter {
             directive.name == TRANSPOSE -> ChordProParser.transposeSemitones(value) == null
             ChordProMetaItems.isCoverMeta(directive) -> ChordProMetaItems.cover(directive) == null
             ChordProMetaItems.isLinkMeta(directive) -> ChordProMetaItems.link(directive) == null
+            ChordProMetaItems.isAttachmentMeta(directive) -> ChordProMetaItems.attachment(directive) == null
             (ChordProHeaderLayout.metadataAliases[directive.name] ?: directive.name) == ChordProMetaItems.LANGUAGE_NAME ||
                 ChordProMetaItems.isLanguageMeta(directive) -> ChordProMetaItems.language(directive) == null
             else -> false

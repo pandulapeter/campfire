@@ -12,11 +12,12 @@ package com.pandulapeter.campfire.chordpro.syntax
 import com.pandulapeter.campfire.chordpro.language.LanguageCodes
 import com.pandulapeter.campfire.chordpro.syntax.ChordProDirectives.Directive
 import com.pandulapeter.campfire.chordpro.syntax.ChordProVocabulary.META
+import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 
 /**
- * The `{meta}` items Campfire reads on top of the standard directives — the tags, the languages, the cover and the links —
- * and the web addresses the last two hold.
+ * The `{meta}` items Campfire reads on top of the standard directives — the tags, the languages, the cover, the links and
+ * the attachments — and the web addresses the cover and the links hold.
  */
 internal object ChordProMetaItems {
 
@@ -31,6 +32,9 @@ internal object ChordProMetaItems {
 
     /** The `{meta}` key a link about the song is written under, one directive per link. */
     const val LINK_NAME = "link"
+
+    /** The `{meta}` key a file that goes with the song is written under, one directive per file. */
+    const val ATTACHMENT_NAME = "attachment"
     internal const val LANGUAGE_SHORT_NAME = "lang"
 
     /**
@@ -177,6 +181,27 @@ internal object ChordProMetaItems {
 
     /** True for a `{meta}` directive whose key names a link, whatever its value then turns out to be worth. */
     fun isLinkMeta(directive: Directive) = metaKey(directive)?.equals(LINK_NAME, ignoreCase = true) == true
+
+    /**
+     * The library file and optional name a `{meta: attachment …}` directive holds, or null if it is not one or names no
+     * file [isAttachmentSource] takes: an attachment is never a link, so an address names nothing here.
+     */
+    fun attachment(directive: Directive): ChordProAttachment? {
+        val value = directive.takeIf(::isAttachmentMeta)?.let(::metaValue)?.trim() ?: return null
+        val source = value.takeWhile { !it.isWhitespace() }.takeIf(::isAttachmentSource) ?: return null
+        return ChordProAttachment(source = source, name = value.drop(source.length).trim().takeIf { it.isNotEmpty() })
+    }
+
+    /** True for a `{meta}` directive whose key names an attachment, whatever its value then turns out to be worth. */
+    fun isAttachmentMeta(directive: Directive) = metaKey(directive)?.equals(ATTACHMENT_NAME, ignoreCase = true) == true
+
+    /**
+     * Whether [value] can name a file of the library: one word with no scheme, drive, folder, or brace in it, since a
+     * library file is a bare name and anything else would point outside the library.
+     */
+    fun isAttachmentSource(value: String) = value.isNotEmpty() && value.none { it.isWhitespace() || it in ATTACHMENT_SOURCE_EXCLUDED }
+
+    private const val ATTACHMENT_SOURCE_EXCLUDED = ":/\\{}"
 
     /** The key of a `{meta}` directive, the first word of its value, or null for every other directive. */
     private fun metaKey(directive: Directive) = if (directive.name == META) directive.value?.trim()?.substringBefore(' ')?.trim() else null
