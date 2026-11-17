@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.pandulapeter.campfire.data.model.importing.ImportBudget
+import com.pandulapeter.campfire.data.model.importing.ImportIntake
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.preferences.AppLanguage
@@ -55,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.components.shortcuts.KeyShortcu
 import com.pandulapeter.campfire.presentation.ui.components.shortcuts.label
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.ImpersonatedPlatform
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
 import com.pandulapeter.campfire.presentation.ui.platform.isAppleKeyboard
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -120,6 +124,10 @@ internal data class TestAppearance(
  * With [isFirstRun] the data directory starts empty instead, as a fresh install's does: no preferences, so the
  * onboarding opens and the demo library is planted, and the language is the system's, which the test pins to
  * [appearance]'s language.
+ *
+ * Where the `campfire.screenshots.stagesArchives` system property is `true` (the `testStagedArchives` task), the import
+ * stages archives as it will once the intake's switch is on ([ImportIntake.stagesArchives]): a picked archive is
+ * received into the staging folder, as the platforms' intake receives one, and unpacked from there.
  */
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class, InternalTestApi::class)
 internal fun runAppTest(
@@ -152,6 +160,7 @@ internal fun runAppTest(
     }
     // Without a preferences document the app speaks the system's language, which the test JVM leaves to the machine.
     val systemLocale = Locale.getDefault()
+    ImportIntake.stagesArchives = System.getProperty(STAGES_ARCHIVES_PROPERTY) == "true"
     if (isFirstRun) Locale.setDefault(Locale.forLanguageTag(appearance.language.id))
     try {
         runApp(
@@ -170,6 +179,7 @@ internal fun runAppTest(
         )
     } finally {
         Locale.setDefault(systemLocale)
+        ImportIntake.stagesArchives = ImportIntake.STAGES_ARCHIVES
     }
 }
 
@@ -374,7 +384,21 @@ private class TestFilePicker(private val files: List<ImportedFile>, private val 
 
     override val canPickPhotos = photos != null
 
-    override suspend fun pickFiles() = files
+    /** While archives are staged, read as a platform's intake reads them: an archive received rather than handed over whole. */
+    override suspend fun pickFiles(): List<ImportedFile> {
+        val receiver = archiveReceiverWhileStaging() ?: return files
+        val budget = ImportBudget()
+        return files.map { file ->
+            val bytes = file.bytes
+            budget.take(
+                name = file.name,
+                size = bytes.size.toLong(),
+                head = bytes.copyOf(minOf(bytes.size, ImportLimits.SNIFF_LENGTH)),
+                readBytes = { bytes },
+                stage = { receiver.receive(name = file.name, announcedSize = bytes.size.toLong()) { archive -> archive.write(bytes, 0, bytes.size) } },
+            ) ?: file
+        }
+    }
 
     override suspend fun pickAttachment() = files.firstOrNull()
 
@@ -385,5 +409,6 @@ private class TestFilePicker(private val files: List<ImportedFile>, private val 
     override suspend fun shareFile(file: ExportedFile) = false
 }
 
+private const val STAGES_ARCHIVES_PROPERTY = "campfire.screenshots.stagesArchives"
 private const val LAUNCH_TIMEOUT_MILLIS = 30_000L
 private const val WRITE_TIMEOUT_MILLIS = 10_000L
