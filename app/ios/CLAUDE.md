@@ -61,8 +61,9 @@ extension (`iosApp/ShareExtension/`, Swift only).
   deciding (a renamed backup is received too). A copy the app owns (`Documents/Inbox`, the picker's `asCopy` file, the
   share inbox's file, a drop's file renamed out of its provider's hands in the handler) is moved into the staging
   folder, never deleted by its reader; one of the user's own is copied with `fread` a MiB at a time inside the
-  coordinated read and the security-scoped access. The share inbox's folder still goes once the share is taken, so a
-  share offered again after the process ended has lost its moved archive (reported unreadable).
+  coordinated read and the security-scoped access. A moved archive leaves the share's `share.json` at once
+  (`ShareInboxManifest.withoutFile`; the folder goes when nothing is left), so a share offered again after the process
+  ended names only what it still holds: a kill loses that preparation, never reports a moved archive as unreadable.
 
 ## Share extension
 

@@ -312,8 +312,8 @@ internal class IosFilePicker(
  *
  * With a [receiver] (while archives are staged), the file's first bytes are read first, and an archive is handed to it
  * (`receiveUrl`), its copy or move starting in the receiver's job once this read is done; [isOwnedCopy] says the file is
- * the app's own copy, moved rather than copied, and the caller then leaves it for the receiver to take; [close] runs once
- * the receiver has.
+ * the app's own copy, moved rather than copied, and the caller then leaves it for the receiver to take; [onMoved] runs
+ * once it has been moved and [close] once the receiver is done with it.
  */
 @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
 internal fun NSURL.readImportedFile(
@@ -322,6 +322,7 @@ internal fun NSURL.readImportedFile(
     receiver: ArchiveReceiver? = null,
     isOwnedCopy: Boolean = false,
     close: () -> Unit = {},
+    onMoved: () -> Unit = {},
 ): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
@@ -346,7 +347,14 @@ internal fun NSURL.readImportedFile(
                         readBytes = { limit -> url.readMapped(limit) },
                         // From the URL as it was handed over, not the coordinator's, which is the app's only in here.
                         stage = {
-                            receiver.receiveUrl(url = this@readImportedFile, name = name, size = size?.longLongValue, isOwnedCopy = isOwnedCopy, close = close)
+                            receiver.receiveUrl(
+                                url = this@readImportedFile,
+                                name = name,
+                                size = size?.longLongValue,
+                                isOwnedCopy = isOwnedCopy,
+                                close = close,
+                                onMoved = onMoved,
+                            )
                         },
                     )
                 } else {
@@ -367,8 +375,7 @@ internal fun NSURL.readImportedFile(
 
 /**
  * Mapped rather than loaded, so that a file whose attributes said nothing still gives its length away before any of it
- * is copied into the heap. Longer than [limit], it only has to say so, which the budget takes one byte past the limit to
- * mean.
+ * is copied into the heap. Longer than [limit], it only has to say so, which the budget takes one byte past it to mean.
  */
 @OptIn(ExperimentalForeignApi::class)
 private fun NSURL.readMapped(limit: Long): ByteArray? {

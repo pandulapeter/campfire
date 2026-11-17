@@ -57,8 +57,17 @@ import platform.posix.fread
  *
  * @param size What the file's attributes said, null where they said nothing; the room for it is reserved first.
  * @param close Called once as the job ends, however it ends, after the owned copy is deleted.
+ * @param onMoved Called as soon as an owned copy has been moved into the staging folder, before anything else of the
+ *   job, so that whatever still names it where it was (the share inbox's record) can forget it.
  */
-fun ArchiveReceiver.receiveUrl(url: NSURL, name: String, size: Long?, isOwnedCopy: Boolean, close: () -> Unit = {}): ImportedFile =
+fun ArchiveReceiver.receiveUrl(
+    url: NSURL,
+    name: String,
+    size: Long?,
+    isOwnedCopy: Boolean,
+    close: () -> Unit = {},
+    onMoved: () -> Unit = {},
+): ImportedFile =
     receive(
         name = name,
         announcedSize = size,
@@ -71,6 +80,7 @@ fun ArchiveReceiver.receiveUrl(url: NSURL, name: String, size: Long?, isOwnedCop
             if (isOwnedCopy) {
                 val path = url.path ?: throw IllegalStateException("\"$name\" has no path.")
                 archive.take(file = path, size = size ?: fileSizeAt(path) ?: 0L) { }
+                onMoved()
             } else {
                 url.copyCoordinated(archive, currentCoroutineContext().job)
             }

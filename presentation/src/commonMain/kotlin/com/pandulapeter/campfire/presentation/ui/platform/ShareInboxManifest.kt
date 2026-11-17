@@ -35,6 +35,13 @@ data class ShareInboxManifest(
      */
     val isFromNewerVersion get() = version > VERSION
 
+    /**
+     * This manifest once the app has taken the file at [path] out of the share (an archive moved into the import's
+     * staging folder), so that a share offered again after the process ended names only what is still there; null where
+     * nothing of the share is left, which then goes whole.
+     */
+    fun withoutFile(path: String) = copy(files = files - path).takeIf { it.files.isNotEmpty() || it.texts.isNotEmpty() }
+
     companion object {
         const val VERSION = 1
     }
@@ -46,6 +53,9 @@ fun decodeShareInboxManifest(json: String): ShareInboxManifest? = try {
 } catch (_: SerializationException) {
     null
 }
+
+/** The manifest as the extension writes it, for the app to write one back without a file it took. */
+fun encodeShareInboxManifest(manifest: ShareInboxManifest): String = manifestJson.encodeToString(ShareInboxManifest.serializer(), manifest)
 
 /** A field a newer extension adds is not a reason to refuse the share; [ShareInboxManifest.version] is. */
 private val manifestJson = Json { ignoreUnknownKeys = true }

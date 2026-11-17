@@ -43,6 +43,22 @@ class ShareInboxManifestTest {
     }
 
     @Test
+    fun `a file taken out of a share leaves a manifest of the rest that reads back the same`() {
+        val manifest = ShareInboxManifest(version = 1, subject = "Songs", files = listOf("files/0/library.zip", "files/1/song.cho"))
+
+        val rest = assertNotNull(manifest.withoutFile("files/0/library.zip"))
+
+        assertEquals(manifest.copy(files = listOf("files/1/song.cho")), rest)
+        assertEquals(rest, decodeShareInboxManifest(encodeShareInboxManifest(rest)))
+    }
+
+    @Test
+    fun `a share whose last file was taken is nothing`() {
+        assertNull(ShareInboxManifest(version = 1, files = listOf("files/0/library.zip")).withoutFile("files/0/library.zip"))
+        assertNotNull(ShareInboxManifest(version = 1, files = listOf("files/0/a.zip"), texts = listOf("texts/0.txt")).withoutFile("files/0/a.zip"))
+    }
+
+    @Test
     fun `anything that is not a manifest is null`() {
         listOf("", "garbage", "[]", """{"subject": "No version"}""", """{"version": "one"}""").forEach { assertNull(decodeShareInboxManifest(it)) }
     }
