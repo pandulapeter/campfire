@@ -102,6 +102,8 @@ internal object ParityArchives {
             ParityArchive("a library beside a backup in an archive", "everything.zip", nested),
             ParityArchive("pictures past the in-memory budget", "photos.zip", pastPictureBudget()),
             ParityArchive("attachments past the in-memory budget", "recordings.zip", pastAttachmentBudget()),
+            ParityArchive("a nested archive lying about its size", "lie.zip", nestedArchiveLyingAboutItsSize()),
+            ParityArchive("pictures lying about their size", "lies.zip", picturesLyingAboutTheirSize()),
         ) + upgradeFixtures()
     }
 
@@ -123,6 +125,24 @@ internal object ParityArchives {
             listOf(ZipEntry("takes.cho", song.encodeToByteArray()), ZipEntry("cover.png", TestPictures.png(seed = 7, size = 5_000))) +
                 names.mapIndexed { index, name -> ZipEntry("images/$name", Random(200 + index).nextBytes(27_000_000)) },
         )
+    }
+
+    /**
+     * A few hundred bytes: a song, and a nested archive whose central directory declares nearly 4 GB, which its 118
+     * bytes cannot hold, and which is more than the phone-like free space [ImportPathApp] reports.
+     */
+    private suspend fun nestedArchiveLyingAboutItsSize(): ByteArray {
+        val inner = ZipWriter.write(listOf(ZipEntry("b.cho", "{title: B}".encodeToByteArray())))
+        return ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray()), ZipEntry("inner.zip", inner)))
+            .apply { declareUncompressedSize("inner.zip", 0xF0000000L) }
+    }
+
+    /** A song naming 150 pictures of a hundred bytes that each declare the most a picture may be, 1.2 GB together. */
+    private suspend fun picturesLyingAboutTheirSize(): ByteArray {
+        val count = 150
+        val song = (listOf("{title: Lies}") + List(count) { "{image: src=p$it.png}" }).joinToString("\n")
+        return ZipWriter.write(listOf(ZipEntry("lies.cho", song.encodeToByteArray())) + List(count) { ZipEntry("p$it.png", TestPictures.png(seed = it, size = 100)) })
+            .apply { repeat(count) { declareUncompressedSize("p$it.png", ImportLimits.MAX_IMAGE_FILE_SIZE) } }
     }
 
     /** The `upgrade-*` libraries as an export packs a library: its songs and setlists, by the paths they have there. */

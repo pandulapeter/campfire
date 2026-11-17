@@ -40,6 +40,8 @@ class ArchivePathParityTest {
         val verdicts = archives.associate { it.label to parity.check(it) }
         assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["pictures past the in-memory budget"])
         assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["attachments past the in-memory budget"])
+        assertEquals(ArchivePathParity.Verdict.IDENTICAL, verdicts["a nested archive lying about its size"])
+        assertEquals(ArchivePathParity.Verdict.PAST_IN_MEMORY_BUDGET, verdicts["pictures lying about their size"])
         report("Built archives", archives.size)
     }
 

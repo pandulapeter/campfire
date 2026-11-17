@@ -46,7 +46,14 @@ import kotlin.test.assertEquals
 internal class ImportPathApp : AutoCloseable {
 
     private val root: File = Files.createTempDirectory("campfire-import-path").toFile()
-    private val storage = JvmFileStorage(root)
+
+    /**
+     * As much free space as a phone often has, whatever this machine has, so that what the streaming path sets aside
+     * for an archive is judged against a phone's room, as the import would judge it there.
+     */
+    private val storage = object : FileStorage by JvmFileStorage(root) {
+        override suspend fun availableSpace(directory: StorageDirectory) = PHONE_FREE_SPACE
+    }
     private val koinApplication = koinApplication {
         modules(
             DataLocalSourceModule::class,
@@ -103,6 +110,10 @@ internal class ImportPathApp : AutoCloseable {
     override fun close() {
         koinApplication.close()
         root.deleteRecursively()
+    }
+
+    private companion object {
+        const val PHONE_FREE_SPACE = 1L shl 30
     }
 
     /**
