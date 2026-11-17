@@ -678,6 +678,13 @@ ZIP64 (step 4) and imports back, so it is no longer flagged for that. `ImportLim
 
 ### 16. The large-archive test
 
+**Landed** (7de9a3254, 1ef81bb5f, d901a4046, 1573e38ed): `largeArchiveImportTest`, its own task and CI step (about
+5 minutes), and `OpfsStagedUnpackTimeTest` in `wasmJsBrowserTest`. By hand at 5 GB: a library archive imported in
+67 s and an export round trip in 60 s, peak staging about twice the archive. Fixed on the way: the library's sizes
+listed after every stored file, and the writer holding the whole central directory. **Open, for the owner:** exporting
+a library past 65,535 files that also holds recordings near 45 MB runs out of a 128 MiB heap (about 77 MB of per-file
+bookkeeping beside an attachment read whole); either alone is fine.
+
 `LargeArchiveImportTest` (desktop, `:data:source:local:implementation`): an archive generated on the fly into a temp
 folder with `ZipWriter`'s streaming `write` (never committed): thousands of songs naming stored and deflated pictures and
 attachments of pseudo-random bytes from a fixed seed, nested archives (one of them ZIP64), and data descriptors. It is
