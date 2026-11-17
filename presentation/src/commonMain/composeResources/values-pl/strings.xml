@@ -1144,14 +1144,27 @@
     <string name="song_details_info_tags">Tagi</string>
     <string name="song_details_info_languages">Języki</string>
     <string name="song_details_info_links">Linki</string>
+    <string name="song_details_info_attachments">Załączniki</string>
     <string name="song_details_links_edit">Zarządzaj linkami</string>
     <string name="song_details_links_add">Dodaj linki</string>
+    <string name="song_details_attachments_edit">Zarządzaj załącznikami</string>
+    <string name="song_details_attachments_add">Załącz pliki</string>
     <string name="song_details_link_name">Nazwa (opcjonalnie)</string>
     <string name="song_details_link_duplicate">Ten adres jest już na liście</string>
     <string name="song_details_languages_edit">Zarządzaj językami</string>
     <string name="song_details_languages_add">Dodaj języki</string>
     <string name="song_details_remove_cover_art_confirmation">Usunąć okładkę z piosenki %1$s?</string>
     <string name="song_details_link_add">Dodaj link</string>
+    <string name="song_details_attachment_add">Dodaj plik</string>
+    <string name="song_details_attachment_remove">Usuń %1$s</string>
+    <string name="song_details_attachment_missing">Nie ma go na tym urządzeniu</string>
+    <string name="song_details_attachments_hint">PDF z nutami, nagranie, film lub dowolny inny plik do 50 MB, który towarzyszy piosence, dokądkolwiek trafi</string>
+    <string name="song_details_attachment_document">Dokument</string>
+    <string name="song_details_attachment_audio">Nagranie</string>
+    <string name="song_details_attachment_video">Film</string>
+    <string name="song_details_attachment_picture">Obraz</string>
+    <string name="song_details_attachment_music_notation">Nuty</string>
+    <string name="song_details_attachment_other">Plik</string>
     <string name="song_details_link_remove">Usuń link do %1$s</string>
     <string name="song_details_link_move_up">Przenieś link do %1$s wyżej</string>
     <string name="song_details_link_move_down">Przenieś link do %1$s niżej</string>
@@ -1243,6 +1256,7 @@
     <string name="song_image_refused_too_large_to_read">Ten obraz jest większy niż 40 MB, więcej, niż Campfire może odczytać.</string>
     <string name="song_attachment_refused_too_large">Ten plik jest większy niż 50 MB, czyli najwięcej, ile może nieść piosenka. Dodaj zamiast niego link.</string>
     <string name="song_attachment_refused_format">Plików tego typu nie można załączyć. Piosenka przyjmuje dokumenty, nagrania, filmy, obrazy i pliki z zapisem nutowym.</string>
+    <string name="song_attachment_not_opened">Nic na tym urządzeniu nie otwiera plików tego rodzaju.</string>
     <string name="song_image_shrunk">Ten obraz był za duży dla piosenki, więc dodano jego mniejszą kopię.</string>
     <string name="song_image_converted">Tego rodzaju obrazu nie da się wyświetlić na każdym urządzeniu, więc dodano jego kopię, którą da się wyświetlić wszędzie.</string>
 

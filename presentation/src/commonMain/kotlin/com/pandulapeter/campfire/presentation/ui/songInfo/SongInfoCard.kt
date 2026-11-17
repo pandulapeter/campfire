@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.presentation.ui.components.coverArt.rememberSet
  * and the tempo and the time signature the click starts at stand in where the text names none, as in the sheet. The preview has the room the sheet would only repeat, so each tile
  * opens its own editor directly ([editing]) rather than the sheet, and a group with nothing in it offers that editor so that it
  * can be given something: a song that says nothing about itself yet has every tile all the same. Its links are not
- * followed, since a tap on a tile is meant for its editor. Its cover follows the text the way the editor's title does,
+ * followed, nor its attachments opened, since a tap on a tile is meant for its editor. Its cover follows the text the way the editor's title does,
  * once the typing has paused, and only where the cover art setting gives [editing] its cover search, which is what tells
  * the card that setting.
  */
@@ -53,5 +53,9 @@ internal fun SongInfoCard(
         isReadFromSetlist = false,
         onEdit = editing?.onEditDefaults,
     ),
+    // Chips that only label, so neither the sizes nor a way to open them; shown where the editing knows them switched on.
+    attachments = CARD_ATTACHMENTS.takeIf { editing?.onEditAttachments != null },
     onOpenLink = null,
 )
+
+private val CARD_ATTACHMENTS = SongInfoAttachments(fileSizes = emptyMap(), onOpen = null)

@@ -94,7 +94,9 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
 - **Attachments are kept exactly as pictures are**: the same shelves, pruning, and holds, every "named" set being
   `libraryFilesNamedBy` / `Song.libraryFileNames`. An attachment is judged by its size and the extension it arrived with
   only (`LibraryImages.examineAttachment`); a draft file moves into the library as a picture where its name and bytes
-  are one, else as an attachment. `librarySizes` splits `library/files` by name for Settings.
+  are one, else as an attachment. `librarySizes` splits `library/files` by name for Settings, and names every file of
+  both shelves with its size (`fileSizes`), which is how the song info sheet tells an attachment on this device from a
+  missing one.
 
 ## The cover copies
 

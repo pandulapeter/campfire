@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.state.songs.SongFilesController
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.domain.api.images.SaveSongAttachmentsResult
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageResult
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
@@ -298,6 +299,25 @@ internal class SongTextStore(
                     }
                     is SaveSongImageResult.Refused -> return messageSink.sendMessage(Message.ImageNotAdded(result.reason))
                     SaveSongImageResult.SongChanged -> Unit
+                }
+            }
+        }
+        messageSink.sendMessage(Message.OperationFailed)
+    }
+
+    /**
+     * Writes the song [fileName] with [save] (`SaveSongAttachmentsUseCase`, which moves the files it names into the library
+     * first), given the text the write is built on, holding [songWriteMutex] as [editSongText] does: a file changed
+     * meanwhile is read again and tried once more.
+     */
+    suspend fun writeAttachments(fileName: String, save: suspend (expectedText: String) -> SaveSongAttachmentsResult) {
+        songWriteMutex.withLock {
+            repeat(SONG_EDIT_ATTEMPTS) { attempt ->
+                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
+                val result = save(text)
+                if (result is SaveSongAttachmentsResult.Saved) {
+                    _songTexts.update { it + (fileName to result.text) }
+                    return
                 }
             }
         }

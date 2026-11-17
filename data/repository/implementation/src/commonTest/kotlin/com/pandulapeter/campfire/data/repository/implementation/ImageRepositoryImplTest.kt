@@ -151,7 +151,7 @@ class ImageRepositoryImplTest {
     }
 
     @Test
-    fun `the library's sizes count its pictures, follow every write, and leave the draft's out`() = runTest {
+    fun `the library's sizes count its pictures, follow every write, and leave the draft's out of the totals only`() = runTest {
         val repository = repository()
         runCurrent()
         assertEquals(LibraryFileSizes(picturesSize = 0, attachmentsSize = 0), repository.librarySizes.value)
@@ -161,7 +161,12 @@ class ImageRepositoryImplTest {
         publish(song("a.cho", name))
         runCurrent()
 
-        assertEquals(LibraryFileSizes(picturesSize = PHOTO.size.toLong(), attachmentsSize = 0), repository.librarySizes.value)
+        val draftName = assertAccepted(repository.addDraftImage(OTHER))
+        runCurrent()
+        val sizes = repository.librarySizes.value
+        assertEquals(PHOTO.size.toLong(), sizes?.picturesSize)
+        assertEquals(0L, sizes?.attachmentsSize)
+        assertEquals(mapOf(name to PHOTO.size.toLong(), draftName to OTHER.size.toLong()), sizes?.fileSizes)
     }
 
     @Test
@@ -175,7 +180,10 @@ class ImageRepositoryImplTest {
         assertEquals(Sha256.hashToHex(DOCUMENT).take(16) + ".pdf", attached)
         assertEquals(setOf(attached), local.shelves.getValue(ImageShelf.LIBRARY).keys)
         assertTrue(dropped !in local.shelves.getValue(ImageShelf.LIBRARY))
-        assertEquals(LibraryFileSizes(picturesSize = 0, attachmentsSize = DOCUMENT.size.toLong()), repository.librarySizes.value)
+        assertEquals(
+            LibraryFileSizes(picturesSize = 0, attachmentsSize = DOCUMENT.size.toLong(), fileSizes = mapOf(attached to DOCUMENT.size.toLong())),
+            repository.librarySizes.value,
+        )
     }
 
     @Test

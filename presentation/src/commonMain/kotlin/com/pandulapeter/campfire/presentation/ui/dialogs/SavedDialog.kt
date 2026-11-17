@@ -63,7 +63,7 @@ internal sealed interface SavedDialog {
         val setlistFileName: String?,
     ) : SavedDialog {
 
-        enum class Kind { TAGS, LANGUAGES, METADATA, LINKS, PLAYING, COVER_ART }
+        enum class Kind { TAGS, LANGUAGES, METADATA, LINKS, ATTACHMENTS, PLAYING, COVER_ART }
 
         val target: SongEditTarget
             get() = if (isEditorDraft) SongEditTarget.EditorDraft(songFileName) else SongEditTarget.File(songFileName)
@@ -90,6 +90,7 @@ internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     is DialogType.SongLanguages -> savedSongEdit(SavedDialog.SongEdit.Kind.LANGUAGES)
     is DialogType.SongMetadata -> savedSongEdit(SavedDialog.SongEdit.Kind.METADATA)
     is DialogType.SongLinks -> savedSongEdit(SavedDialog.SongEdit.Kind.LINKS)
+    is DialogType.SongAttachments -> savedSongEdit(SavedDialog.SongEdit.Kind.ATTACHMENTS)
     is DialogType.SongPlaying -> savedSongEdit(SavedDialog.SongEdit.Kind.PLAYING, setlistFileName)
     is DialogType.CoverArtSearch -> savedSongEdit(SavedDialog.SongEdit.Kind.COVER_ART)
     else -> null

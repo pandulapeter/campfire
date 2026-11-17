@@ -1109,14 +1109,27 @@
     <string name="song_details_info_tags">Tags</string>
     <string name="song_details_info_languages">Sprachen</string>
     <string name="song_details_info_links">Links</string>
+    <string name="song_details_info_attachments">Anhänge</string>
     <string name="song_details_links_edit">Links verwalten</string>
     <string name="song_details_links_add">Links hinzufügen</string>
+    <string name="song_details_attachments_edit">Anhänge verwalten</string>
+    <string name="song_details_attachments_add">Dateien anhängen</string>
     <string name="song_details_link_name">Name (optional)</string>
     <string name="song_details_link_duplicate">Diese Adresse ist bereits in der Liste</string>
     <string name="song_details_languages_edit">Sprachen verwalten</string>
     <string name="song_details_languages_add">Sprachen hinzufügen</string>
     <string name="song_details_remove_cover_art_confirmation">Cover von %1$s entfernen?</string>
     <string name="song_details_link_add">Link hinzufügen</string>
+    <string name="song_details_attachment_add">Datei hinzufügen</string>
+    <string name="song_details_attachment_remove">%1$s entfernen</string>
+    <string name="song_details_attachment_missing">Nicht auf diesem Gerät</string>
+    <string name="song_details_attachments_hint">Ein PDF der Noten, eine Aufnahme, ein Video oder eine andere Datei bis 50 MB, die den Song überallhin begleitet</string>
+    <string name="song_details_attachment_document">Dokument</string>
+    <string name="song_details_attachment_audio">Aufnahme</string>
+    <string name="song_details_attachment_video">Video</string>
+    <string name="song_details_attachment_picture">Bild</string>
+    <string name="song_details_attachment_music_notation">Noten</string>
+    <string name="song_details_attachment_other">Datei</string>
     <string name="song_details_link_remove">Link zu %1$s entfernen</string>
     <string name="song_details_link_move_up">Link zu %1$s nach oben verschieben</string>
     <string name="song_details_link_move_down">Link zu %1$s nach unten verschieben</string>
@@ -1207,6 +1220,7 @@
     <string name="song_image_refused_too_large_to_read">Dieses Bild ist größer als 40 MB, mehr als Campfire lesen kann.</string>
     <string name="song_attachment_refused_too_large">Diese Datei ist größer als 50 MB, das Höchste, was ein Song mitnehmen kann. Füge stattdessen einen Link darauf hinzu.</string>
     <string name="song_attachment_refused_format">Dateien dieser Art können nicht angehängt werden. Ein Song nimmt Dokumente, Aufnahmen, Videos, Bilder und Notendateien an.</string>
+    <string name="song_attachment_not_opened">Auf diesem Gerät öffnet nichts diese Art von Datei.</string>
     <string name="song_image_shrunk">Dieses Bild war zu groß für einen Song, deshalb wurde eine kleinere Kopie hinzugefügt.</string>
     <string name="song_image_converted">Diese Art von Bild kann nicht auf jedem Gerät angezeigt werden, deshalb wurde eine Kopie hinzugefügt, die überall angezeigt werden kann.</string>
 

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_remove_cover_art_confirmation
 import com.pandulapeter.campfire.presentation.ui.dialogs.ConfirmationDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongAttachmentsDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongLinksDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongMetadataDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongPlayingDialog
@@ -58,6 +59,12 @@ internal fun SongEditDialog(
 
         is DialogType.SongLinks -> SongLinksDialog(
             setSongLinks = viewModel.songMetadataEditing::setSongLinks,
+            onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
+            dialog = dialog,
+        )
+
+        is DialogType.SongAttachments -> SongAttachmentsDialog(
+            songAttachmentEditing = viewModel.songAttachmentEditing,
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             dialog = dialog,
         )

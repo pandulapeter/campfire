@@ -17,12 +17,12 @@ class SongInfoGroupsTest {
     @Test
     fun `every group is drawn in the order of the sheet`() = assertEquals(
         SongInfoGroupKind.entries,
-        songInfoGroupsOf(hasDetails = true, hasDefaults = true, hasTags = true, hasLanguages = true, hasLinks = true),
+        songInfoGroupsOf(hasDetails = true, hasDefaults = true, hasTags = true, hasLanguages = true, hasLinks = true, hasAttachments = true),
     )
 
     @Test
     fun `a group with nothing to show is left out of the count`() = assertEquals(
         listOf(SongInfoGroupKind.DEFAULTS, SongInfoGroupKind.LINKS),
-        songInfoGroupsOf(hasDetails = false, hasDefaults = true, hasTags = false, hasLanguages = false, hasLinks = true),
+        songInfoGroupsOf(hasDetails = false, hasDefaults = true, hasTags = false, hasLanguages = false, hasLinks = true, hasAttachments = false),
     )
 }

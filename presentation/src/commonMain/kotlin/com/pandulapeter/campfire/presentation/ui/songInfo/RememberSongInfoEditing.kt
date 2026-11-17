@@ -49,6 +49,7 @@ internal fun rememberSongInfoEditing(
             onEditTags = { songMetadataEditing.showSongTagsDialog(song = latestSong, target = target) },
             onEditLanguages = { songMetadataEditing.showSongLanguagesDialog(song = latestSong, target = target) },
             onEditLinks = { songMetadataEditing.showSongLinksDialog(song = latestSong, target = target) },
+            onEditAttachments = { songMetadataEditing.showSongAttachmentsDialog(song = latestSong, target = target) },
         )
     }
 }

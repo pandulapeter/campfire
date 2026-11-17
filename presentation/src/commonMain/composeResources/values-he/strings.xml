@@ -1151,14 +1151,27 @@
     <string name="song_details_info_tags">תגיות</string>
     <string name="song_details_info_languages">שפות</string>
     <string name="song_details_info_links">קישורים</string>
+    <string name="song_details_info_attachments">קבצים מצורפים</string>
     <string name="song_details_links_edit">ניהול קישורים</string>
     <string name="song_details_links_add">הוספת קישורים</string>
+    <string name="song_details_attachments_edit">ניהול קבצים מצורפים</string>
+    <string name="song_details_attachments_add">צירוף קבצים</string>
     <string name="song_details_link_name">שם (לא חובה)</string>
     <string name="song_details_link_duplicate">הכתובת הזו כבר ברשימה</string>
     <string name="song_details_languages_edit">ניהול שפות</string>
     <string name="song_details_languages_add">הוספת שפות</string>
     <string name="song_details_remove_cover_art_confirmation">להסיר את תמונת העטיפה מ־%1$s?</string>
     <string name="song_details_link_add">הוספת קישור</string>
+    <string name="song_details_attachment_add">הוספת קובץ</string>
+    <string name="song_details_attachment_remove">הסרת %1$s</string>
+    <string name="song_details_attachment_missing">לא נמצא במכשיר הזה</string>
+    <string name="song_details_attachments_hint">קובץ PDF של התווים, הקלטה, סרטון או כל קובץ אחר עד 50 MB, שנשאר עם השיר לאן שהוא הולך</string>
+    <string name="song_details_attachment_document">מסמך</string>
+    <string name="song_details_attachment_audio">הקלטה</string>
+    <string name="song_details_attachment_video">סרטון</string>
+    <string name="song_details_attachment_picture">תמונה</string>
+    <string name="song_details_attachment_music_notation">תווים</string>
+    <string name="song_details_attachment_other">קובץ</string>
     <string name="song_details_link_remove">הסרת הקישור אל %1$s</string>
     <string name="song_details_link_move_up">העברת הקישור אל %1$s למעלה</string>
     <string name="song_details_link_move_down">העברת הקישור אל %1$s למטה</string>
@@ -1250,6 +1263,7 @@
     <string name="song_image_refused_too_large_to_read">התמונה הזאת גדולה מ־40 MB, יותר ממה ש־Campfire יכול לקרוא.</string>
     <string name="song_attachment_refused_too_large">הקובץ הזה גדול מ־50 MB, המרב ששיר יכול לשאת. כדאי להוסיף במקומו קישור אליו.</string>
     <string name="song_attachment_refused_format">אי אפשר לצרף קבצים מהסוג הזה. שיר מקבל מסמכים, הקלטות, סרטונים, תמונות וקובצי תווים.</string>
+    <string name="song_attachment_not_opened">אין במכשיר הזה דבר שפותח קובץ מהסוג הזה.</string>
     <string name="song_image_shrunk">התמונה הזאת הייתה גדולה מדי לשיר, ולכן נוסף עותק קטן יותר שלה.</string>
     <string name="song_image_converted">לא ניתן להציג סוג תמונה זה בכל מכשיר, ולכן נוסף עותק שלה שניתן להציג בכל מקום.</string>
 

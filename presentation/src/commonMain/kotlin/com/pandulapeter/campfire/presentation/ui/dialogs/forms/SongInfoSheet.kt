@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.presentation.ui.state.LibraryState
 import kotlinx.coroutines.flow.StateFlow
 import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
 import com.pandulapeter.campfire.presentation.ui.state.PreferencesController
+import com.pandulapeter.campfire.presentation.ui.state.songText.SongAttachmentEditing
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongMetadataEditing
 import com.pandulapeter.campfire.presentation.ui.rendering.SongRenderer
 import com.pandulapeter.campfire.presentation.ui.playing.PlayingOverrides
@@ -41,13 +42,14 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongDefaults
 import com.pandulapeter.campfire.presentation.ui.songInfo.SongInfoBody
+import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoAttachments
 import com.pandulapeter.campfire.presentation.ui.songInfo.rememberSongInfoEditing
 
 /**
  * What a song says about itself, read from its text as it is now — the file's, or over the editor ([DialogType.SongInfo]'s
  * target) the text being typed: its details, the defaults its file declares for how it is played — with a line saying
  * where the song is being played differently from them, which is what the steppers on the page show — and its tags,
- * languages and links. It is the one place all of that is edited: outside read only mode every group is a tile that
+ * languages, links, and attachments, which open from here (read only mode too). It is the one place all of that is edited: outside read only mode every group is a tile that
  * opens its own sheet on top of this one, and the cover is what changes it; read only mode shows only what the song has.
  */
 @Composable
@@ -58,6 +60,7 @@ internal fun SongInfoSheet(
     preferencesController: PreferencesController,
     backStack: List<CampfireDestination>,
     songMetadataEditing: SongMetadataEditing,
+    songAttachmentEditing: SongAttachmentEditing,
     songRenderer: SongRenderer,
     playingOverrides: PlayingOverrides,
     onDismiss: () -> Unit,
@@ -85,6 +88,7 @@ internal fun SongInfoSheet(
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
     val editing = rememberSongInfoEditing(songMetadataEditing = songMetadataEditing, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName, target = dialog.target)
+    val attachments = rememberSongInfoAttachments(songAttachmentEditing)
     val overrides = songPlayingOverrides(playingOverrides = playingOverrides, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
@@ -120,6 +124,7 @@ internal fun SongInfoSheet(
                 } else {
                     null
                 },
+                attachments = attachments,
                 onOpenLink = urlOpener,
             )
         }

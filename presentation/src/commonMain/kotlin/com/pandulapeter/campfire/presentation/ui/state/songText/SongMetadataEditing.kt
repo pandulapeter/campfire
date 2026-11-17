@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.map
 
 /**
  * The sheets that each write one part of what a song says about itself - its tags, languages, details, links, cover
- * and song defaults - into the file, or into the editor's text where the editor is what they were opened from.
+ * and song defaults - into the file (its attachments' sheet only opened here, written by `SongAttachmentEditing`), or into the editor's text where the editor is what they were opened from.
  *
  * @param editorNotation The notation the editor's field is written in, see `EditorSession.editorNotation`.
  * @param retainedEditorField The open editor's field, see `EditorSession.retainedEditorField`.
@@ -137,6 +137,12 @@ internal class SongMetadataEditing(
         dialogHost.showDialog(DialogType.SongLinks(song = song, links = ChordProParser.parse(text).metadata.links, target = target))
     }
 
+    /** Opens the Attachments sheet on the source text, since attachments are not part of the song list's lighter metadata. */
+    fun showSongAttachmentsDialog(song: Song, target: SongEditTarget) {
+        val text = songTextOf(target) ?: return
+        dialogHost.showDialog(DialogType.SongAttachments(song = song, attachments = ChordProParser.parse(text).metadata.attachments, target = target))
+    }
+
     /** What [text] says about the song beyond its lines, for the sheet of what the song is (see [hasSongInfo] for the button opening it). */
     fun songMetadataOf(text: String): ChordProMetadata = ChordProParser.parse(text).metadata
 
@@ -188,7 +194,7 @@ internal class SongMetadataEditing(
     }
 
     /** Writes [edit] into the file, or hands it to the editor where the dialog asking for it edits the editor's draft. */
-    private fun editSong(target: SongEditTarget, edit: (String) -> String) {
+    fun editSong(target: SongEditTarget, edit: (String) -> String) {
         when (target) {
             is SongEditTarget.EditorDraft -> emitEditorTextEdit(EditorTextEdit(fileName = target.fileName, edit = edit))
             is SongEditTarget.File -> messageSink.launchLibraryChange("edit a song's details") { songTextStore.editSongText(target.fileName, edit) }
@@ -242,6 +248,7 @@ internal class SongMetadataEditing(
         SavedDialog.SongEdit.Kind.LANGUAGES -> showSongLanguagesDialog(song, saved.target)
         SavedDialog.SongEdit.Kind.METADATA -> showSongMetadataDialog(song, saved.target)
         SavedDialog.SongEdit.Kind.LINKS -> showSongLinksDialog(song, saved.target)
+        SavedDialog.SongEdit.Kind.ATTACHMENTS -> showSongAttachmentsDialog(song, saved.target)
         SavedDialog.SongEdit.Kind.PLAYING -> showSongPlayingDialog(song, saved.setlistFileName, saved.target)
         SavedDialog.SongEdit.Kind.COVER_ART -> showSongCoverArtDialog(song, saved.target)
     }

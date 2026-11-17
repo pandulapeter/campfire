@@ -1149,14 +1149,27 @@
     <string name="song_details_info_tags">Štítky</string>
     <string name="song_details_info_languages">Jazyky</string>
     <string name="song_details_info_links">Odkazy</string>
+    <string name="song_details_info_attachments">Přílohy</string>
     <string name="song_details_links_edit">Spravovat odkazy</string>
     <string name="song_details_links_add">Přidat odkazy</string>
+    <string name="song_details_attachments_edit">Spravovat přílohy</string>
+    <string name="song_details_attachments_add">Přiložit soubory</string>
     <string name="song_details_link_name">Název (nepovinné)</string>
     <string name="song_details_link_duplicate">Tato adresa už v seznamu je</string>
     <string name="song_details_languages_edit">Spravovat jazyky</string>
     <string name="song_details_languages_add">Přidat jazyky</string>
     <string name="song_details_remove_cover_art_confirmation">Odebrat obal písně %1$s?</string>
     <string name="song_details_link_add">Přidat odkaz</string>
+    <string name="song_details_attachment_add">Přidat soubor</string>
+    <string name="song_details_attachment_remove">Odebrat %1$s</string>
+    <string name="song_details_attachment_missing">Není v tomto zařízení</string>
+    <string name="song_details_attachments_hint">PDF s notami, nahrávka, video nebo jakýkoli jiný soubor do 50 MB, který píseň provází, kamkoli se dostane</string>
+    <string name="song_details_attachment_document">Dokument</string>
+    <string name="song_details_attachment_audio">Nahrávka</string>
+    <string name="song_details_attachment_video">Video</string>
+    <string name="song_details_attachment_picture">Obrázek</string>
+    <string name="song_details_attachment_music_notation">Noty</string>
+    <string name="song_details_attachment_other">Soubor</string>
     <string name="song_details_link_remove">Odebrat odkaz na %1$s</string>
     <string name="song_details_link_move_up">Posunout odkaz na %1$s nahoru</string>
     <string name="song_details_link_move_down">Posunout odkaz na %1$s dolů</string>
@@ -1248,6 +1261,7 @@
     <string name="song_image_refused_too_large_to_read">Tento obrázek je větší než 40 MB, víc, než Campfire dokáže načíst.</string>
     <string name="song_attachment_refused_too_large">Tento soubor je větší než 50 MB, což je nejvíc, co může píseň nést. Přidej místo něj odkaz.</string>
     <string name="song_attachment_refused_format">Soubory tohoto typu nejde přiložit. Píseň přijímá dokumenty, nahrávky, videa, obrázky a soubory s notovým zápisem.</string>
+    <string name="song_attachment_not_opened">Nic v tomto zařízení tento druh souboru neotevře.</string>
     <string name="song_image_shrunk">Tento obrázek byl pro píseň příliš velký, a tak byla přidána jeho menší kopie.</string>
     <string name="song_image_converted">Tento druh obrázku nejde zobrazit na každém zařízení, a tak byla přidána jeho kopie, kterou jde zobrazit všude.</string>
 

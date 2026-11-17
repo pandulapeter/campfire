@@ -1154,14 +1154,27 @@
     <string name="song_details_info_tags">Etichete</string>
     <string name="song_details_info_languages">Limbi</string>
     <string name="song_details_info_links">Linkuri</string>
+    <string name="song_details_info_attachments">Atașamente</string>
     <string name="song_details_links_edit">Gestionează linkurile</string>
     <string name="song_details_links_add">Adaugă linkuri</string>
+    <string name="song_details_attachments_edit">Gestionează atașamentele</string>
+    <string name="song_details_attachments_add">Atașează fișiere</string>
     <string name="song_details_link_name">Nume (opțional)</string>
     <string name="song_details_link_duplicate">Această adresă este deja în listă</string>
     <string name="song_details_languages_edit">Gestionează limbile</string>
     <string name="song_details_languages_add">Adaugă limbi</string>
     <string name="song_details_remove_cover_art_confirmation">Elimini coperta pentru %1$s?</string>
     <string name="song_details_link_add">Adaugă link</string>
+    <string name="song_details_attachment_add">Adaugă fișier</string>
+    <string name="song_details_attachment_remove">Elimină %1$s</string>
+    <string name="song_details_attachment_missing">Nu este pe acest dispozitiv</string>
+    <string name="song_details_attachments_hint">Un PDF cu partitura, o înregistrare, un videoclip sau orice alt fișier de până la 50 MB, păstrat împreună cu cântecul oriunde ar ajunge</string>
+    <string name="song_details_attachment_document">Document</string>
+    <string name="song_details_attachment_audio">Înregistrare</string>
+    <string name="song_details_attachment_video">Videoclip</string>
+    <string name="song_details_attachment_picture">Imagine</string>
+    <string name="song_details_attachment_music_notation">Partitură</string>
+    <string name="song_details_attachment_other">Fișier</string>
     <string name="song_details_link_remove">Elimină linkul către %1$s</string>
     <string name="song_details_link_move_up">Mută în sus linkul către %1$s</string>
     <string name="song_details_link_move_down">Mută în jos linkul către %1$s</string>
@@ -1253,6 +1266,7 @@
     <string name="song_image_refused_too_large_to_read">Această imagine are peste 40 MB, mai mult decât poate citi Campfire.</string>
     <string name="song_attachment_refused_too_large">Acest fișier are peste 50 MB, cel mult cât poate purta un cântec. Adaugă în schimb un link către el.</string>
     <string name="song_attachment_refused_format">Fișierele de acest tip nu pot fi atașate. Un cântec acceptă documente, înregistrări, videoclipuri, imagini și fișiere de notație muzicală.</string>
+    <string name="song_attachment_not_opened">Nimic de pe acest dispozitiv nu deschide acest tip de fișier.</string>
     <string name="song_image_shrunk">Această imagine era prea mare pentru un cântec, așa că a fost adăugată o copie mai mică.</string>
     <string name="song_image_converted">Acest tip de imagine nu poate fi afișat pe toate dispozitivele, așa că a fost adăugată o copie care poate fi afișată.</string>
 

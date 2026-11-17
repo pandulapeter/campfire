@@ -96,7 +96,7 @@ internal fun songInfoLinkRowHeight(fontScale: Float): Dp = LINK_BUTTON_HEIGHT * 
 
 /** Takes the part of the touch targets that stands above the first row of buttons and below the last one out of the layout. */
 @Composable
-private fun Modifier.withoutTouchTargetSlack(fontScale: Float): Modifier {
+internal fun Modifier.withoutTouchTargetSlack(fontScale: Float): Modifier {
     val buttonHeight = songInfoLinkRowHeight(fontScale)
     val touchTarget = LocalMinimumInteractiveComponentSize.current
     val slack = if (touchTarget.isSpecified) ((touchTarget - buttonHeight) / 2).coerceAtLeast(0.dp) else 0.dp

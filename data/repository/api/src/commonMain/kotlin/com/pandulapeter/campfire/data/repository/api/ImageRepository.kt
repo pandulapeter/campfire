@@ -35,8 +35,8 @@ interface ImageRepository {
     val changes: StateFlow<Long>
 
     /**
-     * What the library's files take up on disk, listed again after every [changes]; null until first listed. Never the
-     * draft's, which are not the library's until Save.
+     * What the library's files take up on disk, listed again after every [changes]; null until first listed. The totals
+     * are never the draft's, which are not the library's until Save; `LibraryFileSizes.fileSizes` names both shelves'.
      */
     val librarySizes: StateFlow<LibraryFileSizes?>
 

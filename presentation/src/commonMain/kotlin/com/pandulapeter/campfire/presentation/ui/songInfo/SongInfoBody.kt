@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProDuration
+import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -44,6 +45,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
+import com.pandulapeter.campfire.presentation.resources.song_details_attachments_add
+import com.pandulapeter.campfire.presentation.resources.song_details_attachments_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_info_attachments
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
@@ -72,13 +76,16 @@ import org.jetbrains.compose.resources.painterResource
  * What the sheet and the editor preview's card of what the song is hold, as the tiles of one grouped list: the cover
  * with the album, the year and the people behind the song as small label-over-value tiles beside it, then the song's
  * defaults where [defaults] are given, then a group of chips for each of its tags and its languages, and one of buttons
- * for its links ([SongInfoLinkButtons]). Where [editing] is given every tile is what edits its group, an empty one offering its
+ * for its links ([SongInfoLinkButtons]), and one of rows for its attachments ([SongInfoAttachmentRows]) where [attachments]
+ * is given. Where [editing] is given every tile is what edits its group, an empty one offering its
  * editor rather than being left out, and the cover (or the empty place for one) is what changes it: a tile as large as
  * what it changes is found without a button next to every title.
  *
  * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
  * is off.
  * @param defaults What the file declares for the four values the song is played by.
+ * @param attachments What the attachments' rows show beside the file; null where the Attachments feature is off, which
+ * leaves their group out.
  * @param onOpenLink Follows a link; null leaves the links as plain chips, and with no buttons left in them the tiles
  * compact (see [SongInfoGroup]'s `isCompact`).
  */
@@ -91,6 +98,7 @@ internal fun SongInfoBody(
     horizontalPadding: Dp,
     editing: SongInfoEditing?,
     defaults: SongDefaults? = null,
+    attachments: SongInfoAttachments?,
     onOpenLink: ((String) -> Unit)?,
 ) {
     val rows = listOfNotNull(
@@ -108,6 +116,7 @@ internal fun SongInfoBody(
         hasTags = metadata.tags.isNotEmpty() || editing != null,
         hasLanguages = metadata.languages.isNotEmpty() || editing != null,
         hasLinks = metadata.links.isNotEmpty() || editing != null,
+        hasAttachments = attachments != null && (metadata.attachments.isNotEmpty() || editing?.onEditAttachments != null),
     )
     fun shapeOf(group: SongInfoGroupKind) = songInfoTileShape(groups.indexOf(group), groups.size)
     Column(
@@ -197,31 +206,96 @@ internal fun SongInfoBody(
             }
         }
         if (SongInfoGroupKind.LINKS in groups) {
-            SongInfoChipGroup(
-                title = stringResource(Res.string.song_details_info_links),
-                count = metadata.links.size,
+            SongInfoLinksGroup(
+                links = metadata.links,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
                 tileShape = shapeOf(SongInfoGroupKind.LINKS),
-                isCompact = isCompact,
                 onEdit = editing?.onEditLinks,
-                editLabel = stringResource(Res.string.song_details_links_edit),
-                emptyLabel = stringResource(Res.string.song_details_links_add),
-            ) {
-                if (onOpenLink == null) {
-                    // The links stay in the order the file gives them, as the buttons keep it.
-                    metadata.links.forEach { link ->
-                        TagPill(
-                            text = linkLabel(link),
-                            leadingIcon = painterResource(Res.drawable.ic_link),
-                            fontScale = fontScale,
-                        )
-                    }
-                } else {
-                    SongInfoLinkButtons(links = metadata.links, fontScale = fontScale, onOpenLink = onOpenLink)
-                }
+                onOpenLink = onOpenLink,
+            )
+        }
+        if (attachments != null && SongInfoGroupKind.ATTACHMENTS in groups) {
+            SongInfoAttachmentsGroup(
+                attachments = metadata.attachments,
+                info = attachments,
+                fontScale = fontScale,
+                horizontalPadding = horizontalPadding,
+                tileShape = shapeOf(SongInfoGroupKind.ATTACHMENTS),
+                isCompact = isCompact,
+                onEdit = editing?.onEditAttachments,
+            )
+        }
+    }
+}
+
+/** The links' group: buttons that follow them, or where [onOpenLink] is null, chips. */
+@Composable
+private fun SongInfoLinksGroup(
+    links: List<ChordProLink>,
+    fontScale: Float,
+    horizontalPadding: Dp,
+    tileShape: Shape,
+    onEdit: (() -> Unit)?,
+    onOpenLink: ((String) -> Unit)?,
+) = SongInfoChipGroup(
+    title = stringResource(Res.string.song_details_info_links),
+    count = links.size,
+    fontScale = fontScale,
+    horizontalPadding = horizontalPadding,
+    tileShape = tileShape,
+    isCompact = onOpenLink == null,
+    onEdit = onEdit,
+    editLabel = stringResource(Res.string.song_details_links_edit),
+    emptyLabel = stringResource(Res.string.song_details_links_add),
+) {
+    if (onOpenLink == null) {
+        // The links stay in the order the file gives them, as the buttons keep it.
+        links.forEach { link ->
+            TagPill(
+                text = linkLabel(link),
+                leadingIcon = painterResource(Res.drawable.ic_link),
+                fontScale = fontScale,
+            )
+        }
+    } else {
+        SongInfoLinkButtons(links = links, fontScale = fontScale, onOpenLink = onOpenLink)
+    }
+}
+
+/**
+ * The attachments' group: rows that open them ([SongInfoAttachmentRows]), or in the compact card, whose tiles only edit,
+ * chips, each in the file's order.
+ */
+@Composable
+private fun SongInfoAttachmentsGroup(
+    attachments: List<ChordProAttachment>,
+    info: SongInfoAttachments,
+    fontScale: Float,
+    horizontalPadding: Dp,
+    tileShape: Shape,
+    isCompact: Boolean,
+    onEdit: (() -> Unit)?,
+) = SongInfoGroup(
+    title = stringResource(Res.string.song_details_info_attachments),
+    count = attachments.size,
+    fontScale = fontScale,
+    horizontalPadding = horizontalPadding,
+    tileShape = tileShape,
+    isCompact = isCompact,
+    onClick = onEdit,
+    onClickLabel = stringResource(Res.string.song_details_attachments_edit),
+    emptyLabel = stringResource(Res.string.song_details_attachments_add),
+    isContentShown = attachments.isNotEmpty(),
+) {
+    if (isCompact) {
+        TagFlowRow {
+            attachments.forEach { attachment ->
+                TagPill(text = attachmentLabel(attachment), leadingIcon = attachmentIcon(attachment), fontScale = fontScale)
             }
         }
+    } else {
+        SongInfoAttachmentRows(attachments = attachments, info = info, fontScale = fontScale)
     }
 }
 

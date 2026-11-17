@@ -16,4 +16,4 @@ private val ChordProMetadata.hasInfoRows
 
 /** Whether the song says anything about itself beyond how it is played, which is what the card and the sheet hold. */
 internal val ChordProMetadata.hasSongInfo
-    get() = hasInfoRows || tags.isNotEmpty() || languages.isNotEmpty() || links.isNotEmpty()
+    get() = hasInfoRows || tags.isNotEmpty() || languages.isNotEmpty() || links.isNotEmpty() || attachments.isNotEmpty()

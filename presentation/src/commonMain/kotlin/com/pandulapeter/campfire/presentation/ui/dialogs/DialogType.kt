@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesContext
 import com.pandulapeter.campfire.presentation.ui.preferences.PreferencesPage
 import com.pandulapeter.campfire.presentation.ui.songInfo.toSongMetadataDraft
 import com.pandulapeter.campfire.chordpro.edit.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.data.model.preferences.PrintSettings
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -189,6 +190,8 @@ sealed interface DialogType {
     ) : SongEdit
     /** A snapshot of the links offered by the overflow menu's link editor. */
     data class SongLinks(override val song: Song, val links: List<ChordProLink>, override val target: SongEditTarget) : SongEdit
+    /** A snapshot of the attachments the song carried as its Attachments sheet opened, see `SongAttachmentEditing.save`. */
+    data class SongAttachments(override val song: Song, val attachments: List<ChordProAttachment>, override val target: SongEditTarget) : SongEdit
     /** Opened from the same menu, and asking about every language at once rather than one at a time. */
     data class SongLanguages(override val song: Song, override val target: SongEditTarget) : SongEdit
 

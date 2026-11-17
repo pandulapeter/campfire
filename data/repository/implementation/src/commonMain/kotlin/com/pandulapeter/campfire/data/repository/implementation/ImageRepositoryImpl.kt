@@ -238,8 +238,15 @@ internal class ImageRepositoryImpl(
         val sizes = environment.logger.recovering(describe = { "Could not list the library's files: ${it::class.simpleName}" }, fallback = { emptyMap() }) {
             imageLocalSource.listImageSizes(ImageShelf.LIBRARY)
         }
+        val draftSizes = environment.logger.recovering(describe = { "Could not list the draft's files: ${it::class.simpleName}" }, fallback = { emptyMap() }) {
+            imageLocalSource.listImageSizes(ImageShelf.DRAFT)
+        }
         val (pictures, attachments) = sizes.entries.partition { LibraryFiles.isLibraryImageName(it.key) }
-        return LibraryFileSizes(picturesSize = pictures.sumOf { it.value }, attachmentsSize = attachments.sumOf { it.value })
+        return LibraryFileSizes(
+            picturesSize = pictures.sumOf { it.value },
+            attachmentsSize = attachments.sumOf { it.value },
+            fileSizes = draftSizes + sizes,
+        )
     }
 
     /** Must be called under [keeping]. */

@@ -20,4 +20,6 @@ internal class SongInfoEditing(
     val onEditTags: () -> Unit,
     val onEditLanguages: () -> Unit,
     val onEditLinks: () -> Unit,
+    /** Null where the Attachments feature is off, which leaves their group out. */
+    val onEditAttachments: (() -> Unit)?,
 )

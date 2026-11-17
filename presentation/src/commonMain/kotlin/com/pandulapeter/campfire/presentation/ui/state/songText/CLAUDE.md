@@ -22,3 +22,4 @@
   out with its pictures' room from its first frame (`ui/pictures`). `addMissingImage` is a write like the others.
 - **Every write to a song file holds `songWriteMutex`** from the read it is built on until `songTexts` has the result,
   and passes `expectedText`: a file changed before the view model heard of it is re-read and the edit applied to it.
+  `writeAttachments` (`SongAttachmentEditing.save`) is one of them.

@@ -16,6 +16,7 @@ internal enum class SongInfoGroupKind {
     TAGS,
     LANGUAGES,
     LINKS,
+    ATTACHMENTS,
 }
 
 /**
@@ -28,10 +29,12 @@ internal fun songInfoGroupsOf(
     hasTags: Boolean,
     hasLanguages: Boolean,
     hasLinks: Boolean,
+    hasAttachments: Boolean,
 ): List<SongInfoGroupKind> = listOfNotNull(
     SongInfoGroupKind.DETAILS.takeIf { hasDetails },
     SongInfoGroupKind.DEFAULTS.takeIf { hasDefaults },
     SongInfoGroupKind.TAGS.takeIf { hasTags },
     SongInfoGroupKind.LANGUAGES.takeIf { hasLanguages },
     SongInfoGroupKind.LINKS.takeIf { hasLinks },
+    SongInfoGroupKind.ATTACHMENTS.takeIf { hasAttachments },
 )

@@ -413,6 +413,8 @@ class CampfireViewModel(
         setChordProTag = setChordProTag,
     )
 
+    internal val songAttachmentEditing = songTextUseCases.attachments(viewModelScope, messageSink, pictureWork, songTextStore, songMetadataEditing)
+
     internal val selectionEditing: SelectionEditing = SelectionEditing(
         scope = viewModelScope,
         messageSink = messageSink,
@@ -450,8 +452,6 @@ class CampfireViewModel(
         messageSink = messageSink,
         pendingWrites = pendingWrites,
     )
-
-    // Metronome
 
     internal val metronomeController: MetronomeController = MetronomeController(
         scope = viewModelScope,

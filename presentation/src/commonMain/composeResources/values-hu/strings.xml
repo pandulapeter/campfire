@@ -1108,14 +1108,27 @@
     <string name="song_details_info_tags">Címkék</string>
     <string name="song_details_info_languages">Nyelvek</string>
     <string name="song_details_info_links">Hivatkozások</string>
+    <string name="song_details_info_attachments">Csatolmányok</string>
     <string name="song_details_links_edit">Hivatkozások kezelése</string>
     <string name="song_details_links_add">Hivatkozások hozzáadása</string>
+    <string name="song_details_attachments_edit">Csatolmányok kezelése</string>
+    <string name="song_details_attachments_add">Fájlok csatolása</string>
     <string name="song_details_link_name">Név (nem kötelező)</string>
     <string name="song_details_link_duplicate">Ez a webcím már szerepel a listában</string>
     <string name="song_details_languages_edit">Nyelvek kezelése</string>
     <string name="song_details_languages_add">Nyelvek hozzáadása</string>
     <string name="song_details_remove_cover_art_confirmation">Eltávolítod a(z) %1$s dal borítóképét?</string>
     <string name="song_details_link_add">Hivatkozás hozzáadása</string>
+    <string name="song_details_attachment_add">Fájl hozzáadása</string>
+    <string name="song_details_attachment_remove">%1$s eltávolítása</string>
+    <string name="song_details_attachment_missing">Nincs ezen az eszközön</string>
+    <string name="song_details_attachments_hint">A kotta PDF-je, egy felvétel, egy videó vagy bármilyen más, legfeljebb 50 MB-os fájl, amely mindenhová a dallal tart</string>
+    <string name="song_details_attachment_document">Dokumentum</string>
+    <string name="song_details_attachment_audio">Felvétel</string>
+    <string name="song_details_attachment_video">Videó</string>
+    <string name="song_details_attachment_picture">Kép</string>
+    <string name="song_details_attachment_music_notation">Kotta</string>
+    <string name="song_details_attachment_other">Fájl</string>
     <string name="song_details_link_remove">A(z) %1$s oldalra mutató hivatkozás eltávolítása</string>
     <string name="song_details_link_move_up">A(z) %1$s oldalra mutató hivatkozás mozgatása feljebb</string>
     <string name="song_details_link_move_down">A(z) %1$s oldalra mutató hivatkozás mozgatása lejjebb</string>
@@ -1206,6 +1219,7 @@
     <string name="song_image_refused_too_large_to_read">Ez a kép nagyobb 40 MB-nál, többet a Campfire nem tud beolvasni.</string>
     <string name="song_attachment_refused_too_large">Ez a fájl nagyobb 50 MB-nál, ami a legtöbb, amit egy dal magával vihet. Adj hozzá helyette egy hivatkozást.</string>
     <string name="song_attachment_refused_format">Ilyen típusú fájl nem csatolható. Egy dalhoz dokumentumok, felvételek, videók, képek és kottafájlok csatolhatók.</string>
+    <string name="song_attachment_not_opened">Ezen az eszközön semmi sem nyitja meg az ilyen fájlokat.</string>
     <string name="song_image_shrunk">Ez a kép túl nagy volt egy dalhoz, ezért egy kisebb másolata került bele.</string>
     <string name="song_image_converted">Ez a fajta kép nem jeleníthető meg minden eszközön, ezért egy mindenhol megjeleníthető másolata került bele.</string>
 

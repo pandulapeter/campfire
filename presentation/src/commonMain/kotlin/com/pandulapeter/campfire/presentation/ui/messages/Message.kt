@@ -125,6 +125,9 @@ sealed interface Message {
      */
     data class AttachmentNotAdded(val reason: ImageRefusal) : Message
 
+    /** An attachment opened from a song, whose type nothing on this device opens. */
+    data object AttachmentNotOpened : Message
+
     /** A picture the user added was too large for a song, and a smaller copy of it was kept instead. */
     data object ImageShrunk : Message
 

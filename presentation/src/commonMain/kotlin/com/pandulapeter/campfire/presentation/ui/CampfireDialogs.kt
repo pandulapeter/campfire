@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.DisconnectSyncConfirmat
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SendProcessLogDialog
 import com.pandulapeter.campfire.presentation.ui.dialogs.UnsavedChangesDialog
-import com.pandulapeter.campfire.presentation.ui.dialogs.forms.SongInfoSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicenseSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.about.OpenSourceLicensesSheet
 import com.pandulapeter.campfire.presentation.ui.dialogs.shortcuts.KeyboardShortcutsSheet
@@ -192,19 +191,7 @@ private fun CampfireDialog(
 
         DialogType.SongFilters -> SongFiltersDialog(viewModel = viewModel)
 
-        is DialogType.SongInfo -> SongInfoSheet(
-            libraryState = viewModel.libraryState,
-            songTextsFlow = viewModel.songTextStore.songTexts,
-            editorSession = viewModel.editorSession,
-            preferencesController = preferencesController,
-            backStack = viewModel.navigator.backStack,
-            songMetadataEditing = viewModel.songMetadataEditing,
-            songRenderer = viewModel.songRenderer,
-            playingOverrides = viewModel.overrides,
-            onDismiss = dismissSheet,
-            dialog = dialog,
-            urlOpener = urlOpener,
-        )
+        is DialogType.SongInfo -> SongInfoDialog(viewModel = viewModel, dialog = dialog, onDismiss = dismissSheet, urlOpener = urlOpener)
 
         is DialogType.ChordShape -> ChordShapeSheet(
             allSongs = viewModel.libraryState.allSongs,

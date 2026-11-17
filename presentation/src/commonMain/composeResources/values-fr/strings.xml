@@ -1114,14 +1114,27 @@
     <string name="song_details_info_tags">Étiquettes</string>
     <string name="song_details_info_languages">Langues</string>
     <string name="song_details_info_links">Liens</string>
+    <string name="song_details_info_attachments">Pièces jointes</string>
     <string name="song_details_links_edit">Gérer les liens</string>
     <string name="song_details_links_add">Ajouter des liens</string>
+    <string name="song_details_attachments_edit">Gérer les pièces jointes</string>
+    <string name="song_details_attachments_add">Joindre des fichiers</string>
     <string name="song_details_link_name">Nom (facultatif)</string>
     <string name="song_details_link_duplicate">Cette adresse est déjà dans la liste</string>
     <string name="song_details_languages_edit">Gérer les langues</string>
     <string name="song_details_languages_add">Ajouter des langues</string>
     <string name="song_details_remove_cover_art_confirmation">Supprimer la pochette de %1$s ?</string>
     <string name="song_details_link_add">Ajouter un lien</string>
+    <string name="song_details_attachment_add">Ajouter un fichier</string>
+    <string name="song_details_attachment_remove">Supprimer %1$s</string>
+    <string name="song_details_attachment_missing">Absent de cet appareil</string>
+    <string name="song_details_attachments_hint">Un PDF de la partition, un enregistrement, une vidéo ou tout autre fichier jusqu\'à 50 Mo, qui suit la chanson partout</string>
+    <string name="song_details_attachment_document">Document</string>
+    <string name="song_details_attachment_audio">Enregistrement</string>
+    <string name="song_details_attachment_video">Vidéo</string>
+    <string name="song_details_attachment_picture">Image</string>
+    <string name="song_details_attachment_music_notation">Partition</string>
+    <string name="song_details_attachment_other">Fichier</string>
     <string name="song_details_link_remove">Supprimer le lien vers %1$s</string>
     <string name="song_details_link_move_up">Monter le lien vers %1$s</string>
     <string name="song_details_link_move_down">Descendre le lien vers %1$s</string>
@@ -1212,6 +1225,7 @@
     <string name="song_image_refused_too_large_to_read">Cette image dépasse 40 Mo, plus que Campfire ne peut lire.</string>
     <string name="song_attachment_refused_too_large">Ce fichier dépasse 50 Mo, le maximum qu\'une chanson peut emporter. Ajoutez plutôt un lien vers lui.</string>
     <string name="song_attachment_refused_format">Les fichiers de ce type ne peuvent pas être joints. Une chanson accepte les documents, les enregistrements, les vidéos, les images et les fichiers de notation musicale.</string>
+    <string name="song_attachment_not_opened">Rien sur cet appareil n\'ouvre ce type de fichier.</string>
     <string name="song_image_shrunk">Cette image était trop grande pour une chanson, une copie plus petite a donc été ajoutée.</string>
     <string name="song_image_converted">Ce type d\'image ne s\'affiche pas sur tous les appareils, une copie qui s\'affiche partout a donc été ajoutée.</string>
 

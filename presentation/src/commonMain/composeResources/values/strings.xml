@@ -1109,14 +1109,27 @@
     <string name="song_details_info_tags">Tags</string>
     <string name="song_details_info_languages">Languages</string>
     <string name="song_details_info_links">Links</string>
+    <string name="song_details_info_attachments">Attachments</string>
     <string name="song_details_links_edit">Manage links</string>
     <string name="song_details_links_add">Add links</string>
+    <string name="song_details_attachments_edit">Manage attachments</string>
+    <string name="song_details_attachments_add">Attach files</string>
     <string name="song_details_link_name">Name (optional)</string>
     <string name="song_details_link_duplicate">This address is already in the list</string>
     <string name="song_details_languages_edit">Manage languages</string>
     <string name="song_details_languages_add">Add languages</string>
     <string name="song_details_remove_cover_art_confirmation">Remove the cover art from %1$s?</string>
     <string name="song_details_link_add">Add link</string>
+    <string name="song_details_attachment_add">Add file</string>
+    <string name="song_details_attachment_remove">Remove %1$s</string>
+    <string name="song_details_attachment_missing">Not on this device</string>
+    <string name="song_details_attachments_hint">A PDF of the sheet music, a recording, a video, or any other file up to 50 MB, kept with the song wherever it goes</string>
+    <string name="song_details_attachment_document">Document</string>
+    <string name="song_details_attachment_audio">Recording</string>
+    <string name="song_details_attachment_video">Video</string>
+    <string name="song_details_attachment_picture">Picture</string>
+    <string name="song_details_attachment_music_notation">Score</string>
+    <string name="song_details_attachment_other">File</string>
     <string name="song_details_link_remove">Remove the link to %1$s</string>
     <string name="song_details_link_move_up">Move the link to %1$s up</string>
     <string name="song_details_link_move_down">Move the link to %1$s down</string>
@@ -1207,6 +1220,7 @@
     <string name="song_image_refused_too_large_to_read">This picture is larger than 40 MB, more than Campfire can read.</string>
     <string name="song_attachment_refused_too_large">This file is larger than 50 MB, the most a song can carry. Add a link to it instead.</string>
     <string name="song_attachment_refused_format">Files of this type cannot be attached. A song takes documents, recordings, videos, pictures, and music notation files.</string>
+    <string name="song_attachment_not_opened">Nothing on this device opens this kind of file.</string>
     <string name="song_image_shrunk">This picture was too large for a song, so a smaller copy was added.</string>
     <string name="song_image_converted">This kind of picture cannot be shown on every device, so a copy that can was added.</string>
 
