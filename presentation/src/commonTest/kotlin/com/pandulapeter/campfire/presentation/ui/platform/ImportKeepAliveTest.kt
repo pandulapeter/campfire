@@ -41,7 +41,7 @@ class ImportKeepAliveTest {
     }
 
     @Test
-    fun `before iOS 26 background time is held from the start, and its expiry pauses the import rather than ending it`() {
+    fun `before iOS 26 background time is held from the start and its expiry pauses the import rather than ending it`() {
         val system = FakeSystem()
         val keepAlive = ImportKeepAlive(hasContinuedTasks = false, actions = system)
         keepAlive.onWorking(isAppActive = true)
@@ -66,7 +66,7 @@ class ImportKeepAliveTest {
     }
 
     @Test
-    fun `on iOS 26 a continued task is submitted only as the app is left, and finished on return`() {
+    fun `on iOS 26 a continued task is submitted only as the app is left and finished on return`() {
         val system = FakeSystem()
         val keepAlive = ImportKeepAlive(hasContinuedTasks = true, actions = system)
         keepAlive.onWorking(isAppActive = true)
@@ -88,7 +88,7 @@ class ImportKeepAliveTest {
     }
 
     @Test
-    fun `a continued task's expiry or stop interrupts the import, and no other task is asked for while away`() {
+    fun `a continued task's expiry or stop interrupts the import and no other task is asked for while away`() {
         val system = FakeSystem()
         val keepAlive = ImportKeepAlive(hasContinuedTasks = true, actions = system)
         keepAlive.onLeaving(isWorking = true)
@@ -100,7 +100,7 @@ class ImportKeepAliveTest {
     }
 
     @Test
-    fun `a refused submit falls back on background time, whose expiry does not interrupt`() {
+    fun `a refused submit falls back on background time whose expiry does not interrupt`() {
         val system = FakeSystem(isSubmitAccepted = false)
         val keepAlive = ImportKeepAlive(hasContinuedTasks = true, actions = system)
         keepAlive.onLeaving(isWorking = true)

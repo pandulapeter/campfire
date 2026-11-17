@@ -7,16 +7,14 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Fails on a backticked function name with a comma in the tests of a module whose tests are compiled for iOS: the file
-storage contract run on the simulator, `:data:formats`, whose readers' common tests are run on the simulator by
-hand when a reader changes, and `:data:repository:implementation`, whose common tests compile for iOS.
-Kotlin/Native refuses a comma in a name ("Name contains illegal characters"), which the JVM accepts, so a test named
-that way passes `desktopTest` and stops the module's whole iOS test task from compiling, in CI only, since that task
-takes minutes to link. The other characters Kotlin/Native refuses the JVM refuses too, so `desktopTest` finds them.
+Fails on a backticked function name with a comma in the common or iOS tests of any module. Kotlin/Native refuses a
+comma in a name ("Name contains illegal characters"), which the JVM accepts, so a test named that way passes
+`desktopTest` and stops the module's whole iOS test task from compiling, which CI and the pre-commit hook never do
+for most modules, since that task takes minutes to link. Every module's common tests compile for iOS, so every module
+is checked. The other characters Kotlin/Native refuses the JVM refuses too, so `desktopTest` finds them.
 
-Only the modules in `IOS_TESTED` are checked: the other modules' tests are never compiled for iOS, and many of their
-names have commas. A module whose tests start being compiled for iOS is added here in the same change. With paths it checks those files, without them every tracked Kotlin file of those modules' common
-and iOS tests; exits 1 on any finding.
+With paths it checks those files, without them every tracked Kotlin file of every module's common and iOS tests;
+exits 1 on any finding.
 """
 
 import os
@@ -24,7 +22,6 @@ import re
 import subprocess
 import sys
 
-IOS_TESTED = ["data/formats", "data/repository/implementation", "data/source/local/implementation"]
 TEST_SOURCE_SETS = ["commonTest", "iosTest"]
 NAME = re.compile(r"\bfun\s+`([^`\n]*,[^`\n]*)`")
 
@@ -36,8 +33,7 @@ def findings(text):
 
 def main(arguments):
     paths = arguments or subprocess.run(
-        ["git", "ls-files", "--", *[f"{module}/src/{source_set}/*.kt" for module in IOS_TESTED
-                                    for source_set in TEST_SOURCE_SETS]],
+        ["git", "ls-files", "--", *[f"*/src/{source_set}/*.kt" for source_set in TEST_SOURCE_SETS]],
         check=True, capture_output=True, text=True,
     ).stdout.splitlines()
     report = []
