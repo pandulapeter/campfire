@@ -65,6 +65,17 @@ class SyncPlannerImageTest {
         ),
     )
 
+    @Test
+    fun `a picture gone from the folder that a song here names goes back up`() = assertEquals(
+        expected = listOf<SyncOperation>(SyncOperation.Upload(FIRST, expectedRevision = null)),
+        actual = SyncPlanner.plan(
+            local = listOf(LocalFileState(song(1), "a"), LocalFileState(FIRST, localImageHash(10))),
+            remote = listOf(RemoteFileState(song(1), "r1", contentHash = null)),
+            index = mapOf(song(1) to SyncIndexEntry("a", "r1"), FIRST to SyncIndexEntry(localImageHash(10), "r1")),
+            imageReferences = mapOf(song(1) to setOf(FIRST.name)),
+        ),
+    )
+
     private companion object {
         val FIRST = SyncKey(LibraryFileKind.FILE, "0123456789abcdef.png")
         val SECOND = SyncKey(LibraryFileKind.FILE, "fedcba9876543210.jpg")

@@ -178,6 +178,86 @@ class ImageSyncTest {
     }
 
     @Test
+    fun `a picture gone from the folder stays and goes back up while only the editor's unsaved text names it`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        b.library.files -= song(1)
+        b.library.files -= PHOTO.key
+        b.sync(cloud)
+        b.sync(cloud)
+        assertNull(cloud.files[PHOTO.key])
+        // A's first run deletes the song and keeps the picture, the second would delete it but for the editor.
+        a.heldPictures = setOf(PHOTO.key.name)
+        a.sync(cloud)
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+    }
+
+    @Test
+    fun `an intact picture replaces a folder copy of the same name holding other bytes`() = runTest {
+        cloud.files[PHOTO.key] = "planted".encodeToByteArray() to "r1"
+        val a = Device(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+    }
+
+    @Test
+    fun `a picture is kept when a song becomes unreadable after the listing`() = runTest {
+        val a = pictureLeftOnlyOnA()
+        // Uploaded in the same pass, before the picture's deletion: the song is read fine by the listing and not after.
+        a.library.files[song("other_song_1")] = "Edited on A".encodeToByteArray()
+        cloud.onUpload = { a.library.onRead = { key -> if (key == song("other_song_2")) throw LibraryStorageFailure() } }
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+    }
+
+    @Test
+    fun `a picture changed after the listing is not deleted`() = runTest {
+        val a = pictureLeftOnlyOnA()
+        val changed = PHOTO.bytes + 1
+        a.library.files[song("other_song_1")] = "Edited on A".encodeToByteArray()
+        cloud.onUpload = { a.library.files[PHOTO.key] = changed }
+        a.sync(cloud)
+
+        assertContentEquals(changed, a.library.files[PHOTO.key])
+    }
+
+    @Test
+    fun `no picture is deleted from the folder while a song of this device cannot be read`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to "Song 2".encodeToByteArray(), PHOTO.key to PHOTO.bytes))
+        a.library.files -= song(1)
+        a.library.files -= PHOTO.key
+        a.library.onRead = { key -> if (key == song(2)) throw LibraryStorageFailure() }
+        a.sync(cloud)
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+        a.library.onRead = {}
+        assertConverges(a, b)
+        assertNull(cloud.files[PHOTO.key])
+    }
+
+    @Test
+    fun `no picture is deleted on either side while a song of this device is too large to read`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to naming(SECOND_PHOTO), PHOTO.key to PHOTO.bytes, SECOND_PHOTO.key to SECOND_PHOTO.bytes))
+        a.library.files -= song(1)
+        a.library.files -= PHOTO.key
+        b.library.files -= song(2)
+        b.library.files -= SECOND_PHOTO.key
+        b.sync(cloud)
+        a.library.files[song(3)] = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt())
+        a.sync(cloud)
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+        assertContentEquals(SECOND_PHOTO.bytes, a.library.files[SECOND_PHOTO.key])
+    }
+
+    @Test
     fun `no picture is deleted while a song of this device cannot be read`() = runTest {
         val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to "Song 2".encodeToByteArray(), PHOTO.key to PHOTO.bytes))
         b.library.files -= song(1)
@@ -369,6 +449,18 @@ class ImageSyncTest {
         return a to b
     }
 
+    /** A device whose song naming [PHOTO] another device deleted with the picture: its next run alone deletes the picture. */
+    private suspend fun pictureLeftOnlyOnA(): Device {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        b.library.files -= song(1)
+        b.library.files -= PHOTO.key
+        b.sync(cloud)
+        b.sync(cloud)
+        a.sync(cloud)
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        return a
+    }
+
     /**
      * Runs on both devices until a round moves nothing, as a few rounds do: a picture's deletion waits for a run that
      * changes no song. Then both devices and the folder hold the same files.
@@ -403,6 +495,8 @@ class ImageSyncTest {
         const val MAXIMUM_ROUNDS = 5
 
         val PHOTO = picture("photo")
+
+        val SECOND_PHOTO = picture("another photo")
 
         /** Larger than a picture may be, as a recording is, so that it moves alone. */
         val RECORDING = attachment(Random(1).nextBytes((ImportLimits.MAX_IMAGE_FILE_SIZE + 1).toInt()))
