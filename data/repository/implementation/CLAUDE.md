@@ -89,7 +89,8 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
   prune never runs between the two. A picture sync wrote before its song may still be pruned: sync brings it back.
 - The draft shelf is tidied on launch (keeping what the saved draft and the editor name, and what this process wrote;
   nothing at all where the draft is there and cannot be read, which `EditorDraftLocalSource` throws for) and emptied by
-  `clearDraftImages`; nothing else deletes from it.
+  `clearDraftImages`, both sparing what an open Attachments sheet picked (`holdPickedAttachments`); nothing else deletes
+  from it.
 - Sync decides its deletions of pictures inside `withImagesKept` and keeps `heldNames` (the editor's) too.
 - **Attachments are kept exactly as pictures are**: the same shelves, pruning, and holds, every "named" set being
   `libraryFilesNamedBy` / `Song.libraryFileNames`. An attachment is judged by its size and the extension it arrived with

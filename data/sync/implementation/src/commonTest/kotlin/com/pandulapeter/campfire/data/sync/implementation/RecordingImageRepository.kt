@@ -49,6 +49,8 @@ internal class RecordingImageRepository : ImageRepository {
 
     override fun holdEditorImages(names: Set<String>) = throw UnsupportedOperationException()
 
+    override suspend fun holdPickedAttachments(names: Set<String>) = throw UnsupportedOperationException()
+
     override suspend fun clearDraftImages() = throw UnsupportedOperationException()
 
     override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = block(

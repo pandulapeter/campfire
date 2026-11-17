@@ -66,6 +66,9 @@ internal class ImageRepositoryImpl(
     private var editorImages = emptySet<String>()
     private var hasEditorReported = false
 
+    /** What an open Attachments sheet picked and has not saved, kept from the draft shelf's tidying. Guarded by [keeping]. */
+    private var pickedAttachments = emptySet<String>()
+
     /** Draft pictures written by this process, which the launch's tidying of the draft shelf must not take. */
     private val draftImagesWrittenHere = mutableSetOf<String>()
 
@@ -87,7 +90,7 @@ internal class ImageRepositoryImpl(
             keeping.withLock {
                 // An editor that has already said what it holds knows better than the draft it was restored from.
                 if (!hasEditorReported) editorImages = draftNames.orEmpty()
-                if (draftNames != null) tidyDraftShelf(keep = draftNames + editorImages)
+                if (draftNames != null) tidyDraftShelf(keep = draftNames + editorImages + pickedAttachments)
             }
             launch { songRepository.songs.filterIsInstance<DataState.Idle<*>>().collect { pruneRequests.send(Unit) } }
             launch { changes.collectLatest { _librarySizes.value = listLibrarySizes() } }
@@ -151,10 +154,14 @@ internal class ImageRepositoryImpl(
         }
     }
 
+    override suspend fun holdPickedAttachments(names: Set<String>) = withContext(NonCancellable) {
+        keeping.withLock { pickedAttachments = names }
+    }
+
     override suspend fun clearDraftImages() = withContext(NonCancellable) {
         keeping.withLock {
             draftImagesWrittenHere.clear()
-            tidyDraftShelf(keep = emptySet())
+            tidyDraftShelf(keep = pickedAttachments)
         }
     }
 

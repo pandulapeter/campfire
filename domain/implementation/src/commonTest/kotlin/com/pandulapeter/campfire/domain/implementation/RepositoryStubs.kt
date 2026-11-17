@@ -274,6 +274,8 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
+
+    override suspend fun holdPickedAttachments(names: Set<String>): Unit = unexpected()
     override suspend fun clearDraftImages(): Unit = unexpected()
     override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = unexpected()
     override fun onLibraryImagesChanged(): Unit = unexpected()
@@ -335,6 +337,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
 
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
+
+    override suspend fun holdPickedAttachments(names: Set<String>): Unit = unexpected()
 
     override suspend fun clearDraftImages(): Unit = unexpected()
 

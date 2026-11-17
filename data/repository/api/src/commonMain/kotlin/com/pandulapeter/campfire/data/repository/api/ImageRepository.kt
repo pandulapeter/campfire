@@ -95,7 +95,17 @@ interface ImageRepository {
      */
     fun holdEditorImages(names: Set<String>)
 
-    /** Deletes the draft's pictures, once its text is saved (what it named moved into the library) or discarded. */
+    /**
+     * The draft files an open Attachments sheet picked and has not saved yet, held from every tidying of the draft shelf
+     * ([clearDraftImages] included, which an editor closing elsewhere calls) until the sheet reports another set; an empty
+     * set once no sheet is open. Each call replaces the last, and it returns once the hold is in place.
+     */
+    suspend fun holdPickedAttachments(names: Set<String>)
+
+    /**
+     * Deletes the draft's pictures, once its text is saved (what it named moved into the library) or discarded, all but
+     * the ones an Attachments sheet holds ([holdPickedAttachments]).
+     */
     suspend fun clearDraftImages()
 
     /**

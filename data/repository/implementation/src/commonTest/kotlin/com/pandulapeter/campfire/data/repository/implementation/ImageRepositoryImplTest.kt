@@ -214,6 +214,20 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `a draft attachment an open sheet holds outlives the draft being cleared, until the sheet lets it go`() = runTest {
+        val repository = repository()
+        val document = assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
+        repository.holdPickedAttachments(setOf(document))
+
+        repository.clearDraftImages()
+        assertContentEquals(DOCUMENT, local.shelves.getValue(ImageShelf.DRAFT)[document])
+
+        repository.holdPickedAttachments(emptySet())
+        repository.clearDraftImages()
+        assertTrue(local.shelves.getValue(ImageShelf.DRAFT).isEmpty())
+    }
+
+    @Test
     fun `nothing is pruned while a song file of the folder is missing from the list`() = runTest {
         repository()
         local.shelves.getValue(ImageShelf.LIBRARY)[NAME] = PHOTO

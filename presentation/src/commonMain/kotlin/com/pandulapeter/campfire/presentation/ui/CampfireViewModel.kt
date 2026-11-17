@@ -413,7 +413,7 @@ class CampfireViewModel(
         setChordProTag = setChordProTag,
     )
 
-    internal val songAttachmentEditing = songTextUseCases.attachments(viewModelScope, messageSink, pictureWork, songTextStore, songMetadataEditing)
+    internal val songAttachmentEditing = songTextUseCases.attachments(viewModelScope, messageSink, pictureWork, songTextStore, songMetadataEditing, dialogHost.openDialogs)
 
     internal val selectionEditing: SelectionEditing = SelectionEditing(
         scope = viewModelScope,

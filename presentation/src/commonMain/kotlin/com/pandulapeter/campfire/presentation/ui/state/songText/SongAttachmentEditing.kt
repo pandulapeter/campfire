@@ -15,7 +15,9 @@ import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.domain.api.export.ExportAttachmentUseCase
+import com.pandulapeter.campfire.domain.api.images.HoldPickedAttachmentsUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongAttachmentsUseCase
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
@@ -26,10 +28,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * The files attached to songs, as the About the song sheet and its Attachments sheet see them: which of them this device
@@ -37,6 +42,7 @@ import kotlinx.coroutines.launch
  * ([save]), and opening one ([open]).
  *
  * @param songMetadataEditing Where the text a sheet edits is read and the editor's draft is edited.
+ * @param openDialogs The dialogs open, which say whether an Attachments sheet is, see [heldPicks].
  */
 internal class SongAttachmentEditing(
     private val scope: CoroutineScope,
@@ -46,8 +52,31 @@ internal class SongAttachmentEditing(
     private val intake: AttachmentIntake,
     private val saveSongAttachments: SaveSongAttachmentsUseCase,
     private val exportAttachment: ExportAttachmentUseCase,
+    private val holdPickedAttachments: HoldPickedAttachmentsUseCase,
     librarySizes: StateFlow<LibraryFileSizes?>,
+    openDialogs: StateFlow<List<DialogType>>,
 ) {
+
+    /**
+     * What Add file kept on the draft shelf while an Attachments sheet was open, held from the shelf's tidying
+     * ([holdPickedAttachments]) until no sheet is open and no Save of one is underway: an editor closing elsewhere empties
+     * the shelf, and a Save after it would name a file that is not there. Touched on [scope]'s thread only, like
+     * [isSheetOpen] and [savesUnderway]; [holding] keeps the reports in the order they were made.
+     */
+    private var heldPicks = emptySet<String>()
+    private var reportedPicks = emptySet<String>()
+    private var isSheetOpen = false
+    private var savesUnderway = 0
+    private val holding = Mutex()
+
+    init {
+        scope.launch {
+            openDialogs.map { dialogs -> dialogs.any { it is DialogType.SongAttachments } }.distinctUntilChanged().collect { isOpen ->
+                isSheetOpen = isOpen
+                reportHeldPicks()
+            }
+        }
+    }
 
     /** The size of every file this device holds for a song, by name, the draft shelf's included; see `LibraryFileSizes`. */
     val fileSizes: StateFlow<Map<String, Long>> = librarySizes
@@ -70,6 +99,10 @@ internal class SongAttachmentEditing(
         scope.launch {
             val file = pickAttachment() ?: return@launch
             val attachment = intake.keep(file) ?: return@launch
+            if (isSheetOpen) {
+                heldPicks += attachment.source
+                reportHeldPicks()
+            }
             _picked.send(PickedAttachment(target = target, attachment = attachment))
         }
     }
@@ -87,10 +120,30 @@ internal class SongAttachmentEditing(
             is SongEditTarget.EditorDraft -> songMetadataEditing.editSong(target) { text ->
                 ChordProAttachments.setAttachments(text = text, attachments = withAddedElsewhere(text))
             }
-            is SongEditTarget.File -> messageSink.launchLibraryChange("set a song's attachments") {
-                songTextStore.writeAttachments(target.fileName) { text ->
-                    saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
+            is SongEditTarget.File -> {
+                // Counted before the sheet closes, so that its picks stay held until the files are moved into the library.
+                savesUnderway++
+                messageSink.launchLibraryChange("set a song's attachments") {
+                    try {
+                        songTextStore.writeAttachments(target.fileName) { text ->
+                            saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
+                        }
+                    } finally {
+                        savesUnderway--
+                        reportHeldPicks()
+                    }
                 }
+            }
+        }
+    }
+
+    private suspend fun reportHeldPicks() {
+        if (!isSheetOpen && savesUnderway == 0) heldPicks = emptySet()
+        val names = heldPicks
+        holding.withLock {
+            if (names != reportedPicks) {
+                holdPickedAttachments(names)
+                reportedPicks = names
             }
         }
     }

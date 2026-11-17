@@ -14,13 +14,17 @@ import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
+import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.export.ExportAttachmentUseCase
+import com.pandulapeter.campfire.domain.api.images.HoldPickedAttachmentsUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongAttachmentsResult
 import com.pandulapeter.campfire.domain.api.images.SaveSongAttachmentsUseCase
 import com.pandulapeter.campfire.presentation.ui.ChordProTagWriter
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.dialogs.forms.songAttachmentsToSave
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -43,6 +47,40 @@ class SongAttachmentEditingTest {
     private val edits = mutableListOf<EditorTextEdit>()
     private val files = FakeSongFiles(mapOf(FILE to "{title: A}"))
     private val exported = mutableMapOf<String, ExportedFile>()
+    private val openDialogs = MutableStateFlow<List<DialogType>>(emptyList())
+    private val holds = mutableListOf<Set<String>>()
+    private val heldAtSave = mutableListOf<Set<String>>()
+
+    @Test
+    fun `a file the sheet picked is held from the draft shelf's tidying until the sheet closes`() = runTest {
+        val editing = editing()
+        openSheet()
+        runCurrent()
+        editing.pick(SongEditTarget.File(FILE)) { ImportedFile(name = "Sheet.pdf", bytes = ByteArray(1)) }
+        runCurrent()
+        assertEquals(setOf(PICKED), holds.last())
+
+        openDialogs.value = emptyList()
+        runCurrent()
+        assertEquals(emptySet(), holds.last())
+    }
+
+    @Test
+    fun `a sheet saving its picks holds them until the song is written, though it closes first`() = runTest {
+        val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope))
+        store.loadSongContent(FILE)
+        val editing = editing(store)
+        openSheet()
+        runCurrent()
+        editing.pick(SongEditTarget.File(FILE)) { ImportedFile(name = "Sheet.pdf", bytes = ByteArray(1)) }
+        runCurrent()
+
+        editing.save(SongEditTarget.File(FILE), attachments = listOf(ChordProAttachment(source = PICKED)), offered = emptyList())
+        openDialogs.value = emptyList()
+        runCurrent()
+        assertEquals(listOf(setOf(PICKED)), heldAtSave)
+        assertEquals(emptySet(), holds.last())
+    }
 
     @Test
     fun `the sheet's attachments replace the ones it offered over the editor, and one synced in meanwhile stays`() = runTest {
@@ -104,9 +142,10 @@ class SongAttachmentEditingTest {
             messageSink = messageSink,
             songTextStore = songTextStore,
             songMetadataEditing = metadataEditing,
-            intake = AttachmentIntake(addDraftAttachment = { _, _ -> ImageIntake.Accepted("0000000000000009.pdf") }, messageSink = messageSink, work = PictureWork()),
+            intake = AttachmentIntake(addDraftAttachment = { _, _ -> ImageIntake.Accepted(PICKED) }, messageSink = messageSink, work = PictureWork()),
             saveSongAttachments = object : SaveSongAttachmentsUseCase {
                 override suspend fun invoke(fileName: String, expectedText: String, attachments: List<ChordProAttachment>): SaveSongAttachmentsResult {
+                    heldAtSave += holds.lastOrNull().orEmpty()
                     val text = ChordProAttachments.setAttachments(expectedText, attachments)
                     files.files[fileName] = text
                     return SaveSongAttachmentsResult.Saved(text)
@@ -116,11 +155,26 @@ class SongAttachmentEditingTest {
                 override suspend fun invoke(source: String, name: String) =
                     ExportedFile(name = "$name.${source.substringAfterLast('.')}", mimeType = "", bytes = ByteArray(1)).also { exported[it.name] = it }
             },
+            holdPickedAttachments = object : HoldPickedAttachmentsUseCase {
+                override suspend fun invoke(names: Set<String>) {
+                    holds += names
+                }
+            },
             librarySizes = MutableStateFlow<LibraryFileSizes?>(null),
+            openDialogs = openDialogs,
         )
+    }
+
+    private fun openSheet() {
+        val song = Song(
+            fileName = FILE, title = "A", artist = "", key = null, transpose = 0, tags = emptyList(), languages = emptyList(),
+            coverArtUrl = null, hasChords = false, canUpdateFileName = false, lastModified = 0L, size = 0L,
+        )
+        openDialogs.value = listOf(DialogType.SongAttachments(song = song, attachments = emptyList(), target = SongEditTarget.File(FILE)))
     }
 
     private companion object {
         const val FILE = "song.cho"
+        const val PICKED = "0000000000000009.pdf"
     }
 }
