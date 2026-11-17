@@ -40,7 +40,7 @@ interface FilePicker {
 
     /**
      * Opens the system picker for one file of any type, to be attached to a song, read within
-     * `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` (see [pickedAttachment]) rather than within the import's budget, which would
+     * `ImportLimits.MAX_PICKED_ATTACHMENT_SIZE` (see [pickedAttachment]) rather than within the import's budget, which would
      * hand a recording back unread. Null when the user picked nothing.
      */
     suspend fun pickAttachment(): ImportedFile? = null

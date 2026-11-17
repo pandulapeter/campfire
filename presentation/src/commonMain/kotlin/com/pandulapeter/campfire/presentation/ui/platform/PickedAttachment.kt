@@ -22,14 +22,14 @@ fun isAttachmentFileName(name: String) = name.contains('.') && ".${name.substrin
 /**
  * The file a [FilePicker.pickAttachment] answers with for the one called [name] of [size] (null where the platform does
  * not say), read with [read] only where it may be attached: one of another type is handed back unread, and one larger
- * than [ImportLimits.MAX_ATTACHMENT_FILE_SIZE] unread and [ImportedFile.isTooLarge], whether its size said so or the
+ * than [ImportLimits.MAX_PICKED_ATTACHMENT_SIZE] unread and [ImportedFile.isTooLarge], whether its size said so or the
  * read did. [read] is given the limit and reads at most a byte past it, which is how a file whose size was not known
  * says it is too large; a file it cannot read (null) is handed back empty.
  */
 inline fun pickedAttachment(name: String, size: Long?, read: (limit: Long) -> ByteArray?): ImportedFile = when {
     !isAttachmentFileName(name) -> ImportedFile.unread(name)
-    size != null && size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE -> ImportedFile.unread(name, isTooLarge = true)
-    else -> read(ImportLimits.MAX_ATTACHMENT_FILE_SIZE)?.let { bytes ->
-        if (bytes.size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE) ImportedFile.unread(name, isTooLarge = true) else ImportedFile(name = name, bytes = bytes)
+    size != null && size > ImportLimits.MAX_PICKED_ATTACHMENT_SIZE -> ImportedFile.unread(name, isTooLarge = true)
+    else -> read(ImportLimits.MAX_PICKED_ATTACHMENT_SIZE)?.let { bytes ->
+        if (bytes.size > ImportLimits.MAX_PICKED_ATTACHMENT_SIZE) ImportedFile.unread(name, isTooLarge = true) else ImportedFile(name = name, bytes = bytes)
     } ?: ImportedFile.unread(name)
 }

@@ -34,9 +34,16 @@ class PickedAttachmentTest {
 
     @Test
     fun `a file larger than a song carries is too large, whether its size says so or its read does`() {
-        val limit = ImportLimits.MAX_ATTACHMENT_FILE_SIZE
+        val limit = ImportLimits.MAX_PICKED_ATTACHMENT_SIZE
         assertTrue(pickedAttachment("concert.mp4", size = limit + 1) { fail("read") }.isTooLarge)
         assertTrue(pickedAttachment("concert.mp4", size = null) { ByteArray(it.toInt() + 1) }.isTooLarge)
+    }
+
+    @Test
+    fun `what the messages call 50 MB is taken and a byte more is not`() {
+        assertFalse(pickedAttachment("concert.mp4", size = 50_000_000) { ByteArray(50_000_000) }.isTooLarge)
+        assertTrue(pickedAttachment("concert.mp4", size = 50_000_001) { fail("read") }.isTooLarge)
+        assertTrue(pickedAttachment("concert.mp4", size = null) { ByteArray(50_000_001) }.isTooLarge)
     }
 
     @Test

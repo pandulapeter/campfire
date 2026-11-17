@@ -56,6 +56,14 @@ object ImportLimits {
      */
     const val MAX_ATTACHMENT_FILE_SIZE = 50L shl 20
 
+    /**
+     * What a file the user picks to attach may be: 50 MB as the messages say it and as file managers count, a little
+     * less than [MAX_ATTACHMENT_FILE_SIZE], so that a picked file the app calls too large is over 50 MB everywhere it is
+     * shown. Only the pickers apply it: sync, archives, and shared copies keep the larger limit, so a file a library
+     * already holds is never refused.
+     */
+    const val MAX_PICKED_ATTACHMENT_SIZE = 50_000_000L
+
     /** Documents may carry embedded fonts and images much larger than their extracted text. */
     const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
 
