@@ -532,6 +532,14 @@ needs) if a sync run would otherwise stall for minutes.
 
 ### 11. The differential test
 
+**Landed and passing in full, the corpus included** (1327911f8, 3cd5f4511, 2fa99311b, 0bddc9e4c): `ArchivePathParityTest`
+over the app's real Koin graph at a phone's 1 GiB free. The corpus holds no archives, so the test packs its folders
+into 20 (one nested); all identical. Allowed beyond the list below, each asserted narrowly: nested archives past the
+request-wide entry or directory caps reported unread; pictures left out as too large in memory but unreadable when
+streamed (both leave them out). Found and fixed: a declared size its compressed bytes cannot produce (stored: not
+equal; deflated: over 1032:1, deflate's exact limit) is unreadable before anything is reserved, so a tiny archive
+lying about a nested zip or pictures cannot fail an import for space.
+
 `ArchivePathParityTest` (desktop, `:data:source:local:implementation`, with the domain's planner wired over real
 sources): every archive the tests build, the committed fixtures (`upgrade-*`, the backup tests' archives, the ZIP64
 fixtures), the fuzz mutants of each, and every archive-like file (`.zip`, `.sbpbackup`, `.sbp`, `.osb`, and zips by
