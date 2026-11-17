@@ -189,7 +189,7 @@ internal class ImportFilesUseCaseImpl(
         suspend fun writeSongs(writer: LibraryImageWriter): Boolean {
             if (nextSongIndex == 0) {
                 libraryNames = songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
-                takenNames = libraryNames?.let(::HashSet)
+                takenNames = libraryNames?.toHashSet()
             }
             val libraryNames = libraryNames
             val takenNames = takenNames
