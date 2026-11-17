@@ -187,6 +187,10 @@ class ImportDownloadRepositoryImplTest {
 
         override suspend fun deleteOtherSessions() = Unit
 
+        override suspend fun isIntact(file: StagedFile): Boolean = throw NotImplementedError("Not expected to be called by this test.")
+
+        override suspend fun deleteRequestsOf(files: Collection<StagedFile>): Unit = throw NotImplementedError("Not expected to be called by this test.")
+
         override suspend fun receiveArchive(announcedSize: Long?): ImportStagingLocalSource.ReceivedArchive {
             if (announcedSize != null && announcedSize > room) throw StagingRefusedException.NoSpace(announcedSize)
             announcedSizes += announcedSize

@@ -25,6 +25,10 @@ internal class ImportStagingLocalSourceImpl(
 
     override suspend fun deleteOtherSessions() = importStaging.deleteOtherSessions()
 
+    override suspend fun isIntact(file: StagedFile) = importStaging.isIntact(file)
+
+    override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStaging.deleteRequestsOf(files)
+
     override suspend fun receiveArchive(announcedSize: Long?): ImportStagingLocalSource.ReceivedArchive {
         val request = importStaging.newRequest()
         val sink = endingRequestOnFailure(request) { importStaging.openArchive(request, announcedSize) }
@@ -63,8 +67,4 @@ internal class ImportStagingLocalSourceImpl(
         importStaging.deleteRequest(request)
         throw throwable
     }
-
-    override suspend fun isIntact(file: StagedFile) = importStaging.isIntact(file)
-
-    override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStaging.deleteRequestsOf(files)
 }

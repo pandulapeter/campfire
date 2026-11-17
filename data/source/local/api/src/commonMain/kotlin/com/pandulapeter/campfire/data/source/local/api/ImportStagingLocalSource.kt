@@ -46,6 +46,7 @@ interface ImportStagingLocalSource {
         suspend fun abandon()
     }
 
+    /**
      * Whether [file] is still where the staging keeps it (or where an import moved it), of the size it was staged with:
      * what an import asks of every staged file its plan names before it writes anything.
      */
