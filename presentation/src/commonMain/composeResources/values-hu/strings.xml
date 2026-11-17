@@ -166,6 +166,9 @@
     <string name="import_failed_link_gone">Ez a link már nem működik. Lehet, hogy aki megosztotta, már nem osztja meg.</string>
     <string name="import_failed_link_unreachable">Nem sikerült letölteni: „%1$s”. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_failed_link_unreachable_untitled">Nem sikerült letölteni, amit a link megoszt. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
+    <string name="import_failed_no_space">Ehhez az importáláshoz %1$s szabad hely kell, több, mint amennyi ezen az eszközön van; szabadíts fel helyet, és próbáld újra.</string>
+    <string name="import_failed_no_space_unknown">Nincs elég szabad hely ezen az eszközön ehhez az importáláshoz; szabadíts fel helyet, és próbáld újra.</string>
+    <string name="import_failed_wrapped_archive">Ez az archívum nagyobb 4 GB-nál, és olyan programmal készült, amely elrontja az ekkora archívumokat; tömörítsd újra a fájlokat kisebb részekben vagy egy másik programmal.</string>
     <string name="import_retry">Újrapróbálás</string>
     <string name="import_review_title">Import áttekintése</string>
     <string name="import_review_title_empty">Nincs mit importálni</string>

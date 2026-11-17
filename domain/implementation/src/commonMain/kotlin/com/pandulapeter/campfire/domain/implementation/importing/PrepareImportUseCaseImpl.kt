@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
@@ -156,6 +157,9 @@ internal class PrepareImportUseCaseImpl(
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
+                    // A device without room for what the archive unpacks into is no fault of this file, and a later one
+                    // would only run into it again: the whole import ends, saying so rather than skipping files.
+                    if (exception.isOutOfSpace()) throw exception
                     logger.log("Could not unpack \"${file.name}\": ${exception.message}")
                     triage.skippedFileNames += file.name
                 }

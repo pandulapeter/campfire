@@ -21,8 +21,7 @@
   OpenDocument files, e-books, and spreadsheets are zips too; a bare `.json` does not count (inside another app's
   container it is that app's configuration).
 - Each song is named by `SongRepository.importFileName` from its own header. The arrival name is only a fallback
-  *title* (and a match for a library file of exactly that name with the same text: exports carry library names,
-  possibly from an older naming rule).
+  *title* (and a match for a library file of exactly that name with the same text: exports carry library names).
 - The planner raises one conflict per library file and leaves numbering to the write. A song arriving as a numbered
   sibling of its header's name that the library lists (`x_2.cho`) is held against that file, so a backup restored with
   Replace goes back onto the files it came from; a hand-named loose `x_2.cho` then asks too. Recorded names are the
@@ -32,6 +31,7 @@
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
 - Archives share one size budget for songs, another for the pictures songs name, and a third for their attachments.
+  An archive that cannot be unpacked is skipped, unless for lack of space (`isOutOfSpace`), which ends the preparation.
 - **Pictures** (`IncomingImages`): a song's `src` values are rewritten to the library names of the pictures it brings
   when it is planned, so the review, the duplicate check, and the write all see the text the song will have; that is
   the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it
@@ -44,9 +44,9 @@
   later; the review counts brought and left-out attachments apart from pictures. A file a song both shows and attaches
   is read once, as a picture.
 - **Pictures by address** (`IncomingPictureLinks`, only while `isPictureLinkDownloadEnabled`): every `https` `src` of
-  the batch's song files is downloaded once as it is prepared (its own progress phase, four at a time), within the
-  picture limit and what is left of the batch's picture budget, never re-encoded, then planned and rewritten as an
-  archive's pictures are; written only on Import. One that brings nothing is left out unreported, its directive kept.
+  the batch's song files is downloaded once as it is prepared, four at a time, within the picture limit and what is
+  left of the batch's picture budget, never re-encoded, then planned and rewritten as an archive's pictures are;
+  written only on Import. One that brings nothing is left out unreported, its directive kept.
 - Plain text (a `.txt`, so every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune, since the
   converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro
   extensions never go through the converter. No readable text is `unreadableDocumentFileNames`, not unsupported. All
@@ -55,10 +55,9 @@
 
 ### Applying
 
-- A plan is held against the library as prepared (the review may stay open indefinitely). Only two things are
-  re-checked at write time: setlists are re-planned on the names songs actually got (`ImportPlanner.replanSetlists`),
-  and an identical song whose library file sync deleted meanwhile is written after all. A replacement is not
-  re-checked: the user confirmed it by name.
+- A plan is held against the library as prepared. Only two things are re-checked at write time: setlists are
+  re-planned on the names songs actually got (`ImportPlanner.replanSetlists`), and an identical song whose library file
+  sync deleted meanwhile is written after all. A replacement is not re-checked: the user confirmed it by name.
 - Everything is written inside one `ImageRepository.withImagesKept`, each song's pictures just before it and the songs
   adopted before the block ends, so no prune falls between a picture and its song. A picture whose planned name a
   different one took meanwhile is stored under a longer one, which the written text names. An identical song stores its

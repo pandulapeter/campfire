@@ -166,6 +166,9 @@
     <string name="import_failed_link_gone">Dieser Link funktioniert nicht mehr. Die Person, die ihn geteilt hat, teilt ihn vielleicht nicht mehr.</string>
     <string name="import_failed_link_unreachable">„%1$s“ konnte nicht heruntergeladen werden. Prüfe die Internetverbindung und versuche es erneut.</string>
     <string name="import_failed_link_unreachable_untitled">Der Inhalt des Links konnte nicht heruntergeladen werden. Prüfe die Internetverbindung und versuche es erneut.</string>
+    <string name="import_failed_no_space">Dieser Import braucht %1$s freien Speicherplatz, mehr als auf diesem Gerät frei ist; schaffe Platz und versuche es erneut.</string>
+    <string name="import_failed_no_space_unknown">Auf diesem Gerät ist nicht genügend freier Speicherplatz für diesen Import; schaffe Platz und versuche es erneut.</string>
+    <string name="import_failed_wrapped_archive">Dieses Archiv ist größer als 4 GB und wurde mit einem Programm erstellt, das so große Archive beschädigt; zippe die Dateien erneut in kleineren Teilen oder mit einem anderen Programm.</string>
     <string name="import_retry">Erneut versuchen</string>
     <string name="import_review_title">Import prüfen</string>
     <string name="import_review_title_empty">Nichts zu importieren</string>

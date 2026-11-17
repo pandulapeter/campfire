@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.chordpro.convert.ChordSheet
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -67,6 +69,17 @@ class PrepareImportUseCaseImplTest {
 
         assertEquals(listOf("broken.zip"), plan.skippedFileNames)
         assertEquals(listOf("song.cho"), plan.songs.map { it.sourceFileName })
+    }
+
+    @Test
+    fun `an archive refused for space ends the whole preparation rather than being skipped`() = runTest {
+        val archive = FakeArchiveRepository { _, _ -> throw StagingRefusedException.NoSpace(neededBytes = 2_000_000_000) }
+
+        val failure = assertFailsWith<StagingRefusedException.NoSpace> {
+            prepare(archive = archive)(listOf(ImportedFile("library.zip", byteArrayOf(1)), song("song.cho")))
+        }
+
+        assertEquals(2_000_000_000, failure.neededBytes)
     }
 
     @Test

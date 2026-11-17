@@ -166,6 +166,9 @@
     <string name="import_failed_link_gone">Este enlace ya no funciona. Puede que quien lo compartió haya dejado de compartirlo.</string>
     <string name="import_failed_link_unreachable">No se pudo descargar «%1$s». Comprueba la conexión a internet y vuelve a intentarlo.</string>
     <string name="import_failed_link_unreachable_untitled">No se pudo descargar lo que comparte el enlace. Comprueba la conexión a internet y vuelve a intentarlo.</string>
+    <string name="import_failed_no_space">Esta importación necesita %1$s de espacio libre, más del que tiene este dispositivo; libera espacio y vuelve a intentarlo.</string>
+    <string name="import_failed_no_space_unknown">No hay suficiente espacio libre en este dispositivo para esta importación; libera espacio y vuelve a intentarlo.</string>
+    <string name="import_failed_wrapped_archive">Este archivo comprimido supera los 4 GB y lo creó una herramienta que daña los archivos comprimidos tan grandes; vuelve a comprimir los archivos en partes más pequeñas o con otra herramienta.</string>
     <string name="import_retry">Reintentar</string>
     <string name="import_review_title">Revisar importación</string>
     <string name="import_review_title_empty">Nada que importar</string>

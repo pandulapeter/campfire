@@ -14,5 +14,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 /** What a preparation came to (`ImportWork.prepare`): a plan to review or write, or why there is none. */
 internal sealed interface Preparation {
     class Planned(val plan: ImportPlan) : Preparation
-    class Failed(val reason: ImportFailure) : Preparation
+
+    /** @param neededBytes How much free space the import needs, where it is [ImportFailure.NO_SPACE] and says. */
+    class Failed(val reason: ImportFailure, val neededBytes: Long? = null) : Preparation
 }

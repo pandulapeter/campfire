@@ -183,6 +183,9 @@
     <string name="import_failed_link_gone">Ten link już nie działa. Osoba, która go udostępniła, mogła przestać go udostępniać.</string>
     <string name="import_failed_link_unreachable">Nie udało się pobrać „%1$s”. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="import_failed_link_unreachable_untitled">Nie udało się pobrać tego, co udostępnia link. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
+    <string name="import_failed_no_space">Ten import wymaga %1$s wolnego miejsca, więcej niż jest na tym urządzeniu; zwolnij miejsce i spróbuj ponownie.</string>
+    <string name="import_failed_no_space_unknown">Na tym urządzeniu nie ma wystarczająco dużo wolnego miejsca na ten import; zwolnij miejsce i spróbuj ponownie.</string>
+    <string name="import_failed_wrapped_archive">To archiwum jest większe niż 4 GB i zostało utworzone narzędziem, które uszkadza tak duże archiwa; spakuj pliki ponownie w mniejszych częściach lub innym narzędziem.</string>
     <string name="import_retry">Spróbuj ponownie</string>
     <string name="import_review_title">Przejrzyj import</string>
     <string name="import_review_title_empty">Nic do zaimportowania</string>

@@ -166,6 +166,9 @@
     <string name="import_failed_link_gone">This link no longer works. The person who shared it may have stopped sharing it.</string>
     <string name="import_failed_link_unreachable">Couldn\'t download \"%1$s\". Check the internet connection and try again.</string>
     <string name="import_failed_link_unreachable_untitled">Couldn\'t download what the link shares. Check the internet connection and try again.</string>
+    <string name="import_failed_no_space">This import needs %1$s of free space, more than this device has; free up some space and try again.</string>
+    <string name="import_failed_no_space_unknown">There is not enough free space on this device for this import; free up some space and try again.</string>
+    <string name="import_failed_wrapped_archive">This archive is larger than 4 GB and was made by a tool that damages archives that large; zip the files again in smaller parts or with another tool.</string>
     <string name="import_retry">Try again</string>
     <string name="import_review_title">Review the import</string>
     <string name="import_review_title_empty">Nothing to import</string>

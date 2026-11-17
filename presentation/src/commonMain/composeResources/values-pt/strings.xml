@@ -166,6 +166,9 @@
     <string name="import_failed_link_gone">Este link não funciona mais. Quem o compartilhou pode ter parado de compartilhá-lo.</string>
     <string name="import_failed_link_unreachable">Não foi possível baixar “%1$s”. Verifique a conexão com a internet e tente de novo.</string>
     <string name="import_failed_link_unreachable_untitled">Não foi possível baixar o conteúdo do link. Verifique a conexão com a internet e tente de novo.</string>
+    <string name="import_failed_no_space">Esta importação precisa de %1$s de espaço livre, mais do que há neste dispositivo; libere espaço e tente de novo.</string>
+    <string name="import_failed_no_space_unknown">Não há espaço livre suficiente neste dispositivo para esta importação; libere espaço e tente de novo.</string>
+    <string name="import_failed_wrapped_archive">Este arquivo zip passa de 4 GB e foi criado por uma ferramenta que danifica arquivos zip desse tamanho; compacte os arquivos de novo em partes menores ou com outra ferramenta.</string>
     <string name="import_retry">Tentar de novo</string>
     <string name="import_review_title">Revisar a importação</string>
     <string name="import_review_title_empty">Nada para importar</string>

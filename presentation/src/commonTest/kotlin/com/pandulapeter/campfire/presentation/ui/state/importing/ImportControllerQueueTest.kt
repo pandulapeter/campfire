@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSetlistFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSongFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -762,6 +763,23 @@ class ImportControllerQueueTest {
         assertEquals(ImportFailure.LINK_GONE, failed.reason)
         assertEquals("Riverlight", failed.sourceName)
         assertEquals(0, prepareCount)
+    }
+
+    @Test
+    fun `a preparation refused for space fails naming the space needed, and Try again reads the batch again`() = runTest {
+        download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
+        onPrepare = { throw StagingRefusedException.NoSpace(neededBytes = 2_400_000_000) }
+        startController()
+        controller.importSharedLink(sharedLink)
+        settle()
+        val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
+        assertEquals(ImportFailure.NO_SPACE, failed.reason)
+        assertEquals(2_400_000_000, failed.neededBytes)
+        onPrepare = {}
+        controller.retryImport()
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertEquals(2, prepareCount)
     }
 
     @Test

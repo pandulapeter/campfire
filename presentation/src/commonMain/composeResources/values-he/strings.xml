@@ -186,6 +186,9 @@
     <string name="import_failed_link_gone">הקישור הזה כבר לא פעיל. ייתכן שמי ששיתף אותו הפסיק לשתף.</string>
     <string name="import_failed_link_unreachable">לא ניתן היה להוריד את “%1$s”. בדקו את החיבור לאינטרנט ונסו שוב.</string>
     <string name="import_failed_link_unreachable_untitled">לא ניתן היה להוריד את מה שהקישור משתף. בדקו את החיבור לאינטרנט ונסו שוב.</string>
+    <string name="import_failed_no_space">הייבוא הזה צריך %1$s של שטח פנוי, יותר ממה שיש במכשיר הזה; פנו מקום ונסו שוב.</string>
+    <string name="import_failed_no_space_unknown">אין מספיק שטח פנוי במכשיר הזה בשביל הייבוא הזה; פנו מקום ונסו שוב.</string>
+    <string name="import_failed_wrapped_archive">הארכיון הזה גדול מ־4 GB ונוצר בכלי שפוגע בארכיונים בגודל כזה; דחסו את הקבצים מחדש בחלקים קטנים יותר או בכלי אחר.</string>
     <string name="import_retry">ניסיון חוזר</string>
     <string name="import_review_title">סקירת הייבוא</string>
     <string name="import_review_title_empty">אין מה לייבא</string>

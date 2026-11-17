@@ -185,6 +185,9 @@
     <string name="import_failed_link_gone">Tento odkaz už nefunguje. Ten, kdo ho sdílel, ho možná přestal sdílet.</string>
     <string name="import_failed_link_unreachable">„%1$s“ se nepodařilo stáhnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
     <string name="import_failed_link_unreachable_untitled">Obsah odkazu se nepodařilo stáhnout. Zkontroluj připojení k internetu a zkus to znovu.</string>
+    <string name="import_failed_no_space">Tento import potřebuje %1$s volného místa, víc, než má toto zařízení; uvolni místo a zkus to znovu.</string>
+    <string name="import_failed_no_space_unknown">V tomto zařízení není pro tento import dostatek volného místa; uvolni místo a zkus to znovu.</string>
+    <string name="import_failed_wrapped_archive">Tento archiv je větší než 4 GB a vytvořil ho nástroj, který tak velké archivy poškozuje; zabal soubory znovu po menších částech nebo jiným nástrojem.</string>
     <string name="import_retry">Zkusit znovu</string>
     <string name="import_review_title">Kontrola importu</string>
     <string name="import_review_title_empty">Nic k importu</string>

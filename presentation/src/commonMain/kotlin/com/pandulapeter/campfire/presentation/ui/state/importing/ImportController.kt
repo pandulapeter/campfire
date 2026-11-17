@@ -284,7 +284,7 @@ internal class ImportController(
             throw exception
         } catch (exception: Exception) {
             println("Could not read the files to add to the import: ${exception.message}")
-            Preparation.Failed(ImportFailure.UNREADABLE)
+            preparationFailureOf(exception)
         } finally {
             // Unlike a batch's own preparation, this one is cancelled with the view model, as the review it joins goes with it.
             work.release(pending)
@@ -293,7 +293,7 @@ internal class ImportController(
         }
         if (work.isPreparationCancelled || reportState.report !is ImportReport.Review) return
         when (outcome) {
-            is Preparation.Failed -> messageSink.sendMessage(Message.ImportFailed)
+            is Preparation.Failed -> messageSink.sendMessage(outcome.message)
             is Preparation.Planned -> {
                 request.source = ImportSource.Files(emptyList())
                 val recorded = request.sharedLinkFileId?.let { work.useCases.getSharedLinkImport(it) }
@@ -372,7 +372,7 @@ internal class ImportController(
             null
         } catch (exception: Exception) {
             println("Could not read the files to import: ${exception.message}")
-            Preparation.Failed(ImportFailure.UNREADABLE)
+            preparationFailureOf(exception)
         }
         work.release(pending)
         // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
@@ -387,10 +387,10 @@ internal class ImportController(
                 _isImporting.value = false
                 if (isReviewed) {
                     // The source is kept, so that Try again has something to read.
-                    reportState.report = ImportReport.Failed(reason = outcome.reason, sourceName = request.source.name, sourceCount = request.source.fileCount)
+                    reportState.report = ImportReport.Failed(outcome.reason, request.source.name, request.source.fileCount, outcome.neededBytes)
                 } else {
                     // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
-                    if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
+                    if (request.shouldAnnounceResult) messageSink.sendMessage(outcome.message)
                 }
             }
 
@@ -646,7 +646,7 @@ internal class ImportController(
                 reportState.report = ImportReport.Finished(null)
             } else {
                 if (isReported) reportState.report = null
-                if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
+                if (request.shouldAnnounceResult) messageSink.sendFailure(exception, Message.ImportFailed)
             }
         } finally {
             // A write this view model stopped waiting for lets go of both itself once it ends, see ImportWork.write.

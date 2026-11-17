@@ -23,11 +23,15 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_gone
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable_untitled
+import com.pandulapeter.campfire.presentation.resources.import_failed_no_space
+import com.pandulapeter.campfire.presentation.resources.import_failed_no_space_unknown
 import com.pandulapeter.campfire.presentation.resources.import_failed_not_found
 import com.pandulapeter.campfire.presentation.resources.import_failed_too_large
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_unreadable
+import com.pandulapeter.campfire.presentation.resources.import_failed_wrapped_archive
 import com.pandulapeter.campfire.presentation.localization.textResource
+import com.pandulapeter.campfire.presentation.ui.components.formattedSize
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportFailure
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReport
 
@@ -46,6 +50,9 @@ internal fun ImportFailedContent(
         ImportFailure.LINK_GONE -> stringResource(Res.string.import_failed_link_gone)
         ImportFailure.LINK_UNREACHABLE -> failure.sourceName?.let { textResource(Res.string.import_failed_link_unreachable, it) }
             ?: stringResource(Res.string.import_failed_link_unreachable_untitled)
+        ImportFailure.NO_SPACE -> failure.neededBytes?.let { stringResource(Res.string.import_failed_no_space, formattedSize(it)) }
+            ?: stringResource(Res.string.import_failed_no_space_unknown)
+        ImportFailure.WRAPPED_ARCHIVE -> stringResource(Res.string.import_failed_wrapped_archive)
     },
     style = MaterialTheme.typography.bodyLarge,
     textAlign = TextAlign.Center,

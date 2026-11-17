@@ -27,8 +27,16 @@ sealed interface ImportReport {
      */
     data class Loading(val sourceName: String?, val sourceCount: Int = 1) : ImportReport
 
-    /** Why nothing could be read, which `ImportController.retryImport` asks again about; the source as [Loading] has it. */
-    data class Failed(val reason: ImportFailure, val sourceName: String?, val sourceCount: Int = 1) : ImportReport
+    /**
+     * Why nothing could be read, which `ImportController.retryImport` asks again about; the source as [Loading] has it,
+     * and [neededBytes] the free space an [ImportFailure.NO_SPACE] import needs, where that is known.
+     */
+    data class Failed(
+        val reason: ImportFailure,
+        val sourceName: String?,
+        val sourceCount: Int = 1,
+        val neededBytes: Long? = null,
+    ) : ImportReport
 
     /**
      * Everything the files hold, each entry ticked or not and each name already taken given its choice, see
@@ -113,6 +121,18 @@ enum class ImportFailure {
 
     /** A shared link's download got no answer, or a server error; worth asking again a minute later. */
     LINK_UNREACHABLE,
+
+    /**
+     * The device has no room for what the import stages, which `ImportReport.Failed.neededBytes` names where it is known;
+     * worth trying again once the user has made room.
+     */
+    NO_SPACE,
+
+    /**
+     * An archive larger than 4 GB written without the ZIP64 records that format needs past that size (macOS Archive
+     * Utility, some Windows tools), so its offsets have wrapped around: never recovered, the user zips it again.
+     */
+    WRAPPED_ARCHIVE,
 }
 
 /**
