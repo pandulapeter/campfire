@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
@@ -94,7 +93,7 @@ internal fun rememberImportPreviewState(
         }
     }
     val images = remember(review.plan, libraryImages) {
-        libraryImages.withPictures(review.plan.songs.flatMap { it.images }.filterNot { it.isAttachment }.mapNotNull { image -> image.name?.let { name -> (image.content as? IncomingContent.Bytes)?.bytes?.let { name to it } } }.toMap())
+        libraryImages.withPictures(review.plan.songs.flatMap { it.images }.filterNot { it.isAttachment }.mapNotNull { image -> image.name?.let { name -> image.content?.let { name to it } } }.toMap())
     }
     return remember(preview, pages, review, report, images) {
         ImportPreviewState(

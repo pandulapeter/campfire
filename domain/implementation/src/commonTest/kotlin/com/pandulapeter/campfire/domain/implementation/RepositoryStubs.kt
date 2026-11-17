@@ -291,6 +291,7 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun loadImage(name: String): ByteArray? = unexpected()
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
+    override suspend fun loadStagedImage(file: StagedFile): ByteArray? = unexpected()
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
     override suspend fun libraryNameOf(content: IncomingContent): ImageIntake = unexpected()
 
@@ -332,6 +333,8 @@ internal class FakeImageRepository(
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
 
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
+
+    override suspend fun loadStagedImage(file: StagedFile) = staging.bytesOf(file)
 
     override suspend fun loadLibraryImageNames() = library.keys.sorted()
 

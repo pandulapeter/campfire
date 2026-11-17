@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.domain.api.images.GetImageChangesUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageUseCase
 import com.pandulapeter.campfire.domain.api.images.GetLibraryFileSizesUseCase
+import com.pandulapeter.campfire.domain.api.images.GetStagedImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ReadImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
@@ -41,6 +42,7 @@ class SongTextUseCases(
     internal val getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     internal val getImageSize: GetImageSizeUseCase,
     internal val getImage: GetImageUseCase,
+    internal val getStagedImage: GetStagedImageUseCase,
     internal val getImageChanges: GetImageChangesUseCase,
     internal val getLibraryFileSizes: GetLibraryFileSizesUseCase,
     internal val saveSongImage: SaveSongImageUseCase,

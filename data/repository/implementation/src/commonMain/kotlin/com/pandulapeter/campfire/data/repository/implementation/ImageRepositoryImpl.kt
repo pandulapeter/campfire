@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
@@ -118,6 +119,17 @@ internal class ImageRepositoryImpl(
     }
 
     override suspend fun readImageSize(bytes: ByteArray) = withContext(environment.computation) { LibraryImages.examine(bytes) }.size
+
+    override suspend fun loadStagedImage(file: StagedFile): ByteArray? = if (file.size > ImportLimits.MAX_IMAGE_FILE_SIZE) {
+        null
+    } else {
+        environment.logger.recovering(
+            describe = { "Could not read the staged picture \"${file.name}\": ${it::class.simpleName}" },
+            fallback = { null },
+        ) {
+            imageLocalSource.readStagedHead(file, file.size.toInt())
+        }
+    }
 
     override suspend fun loadLibraryImageNames() = imageLocalSource.listImageNames(ImageShelf.LIBRARY).sorted()
 

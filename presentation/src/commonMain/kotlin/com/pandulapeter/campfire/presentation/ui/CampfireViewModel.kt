@@ -375,7 +375,7 @@ class CampfireViewModel(
         cancelSynchronization = cancelSynchronization,
     )
 
-    internal val songImages = LibrarySongImages(viewModelScope, songTextUseCases.getImageSize::invoke, songTextUseCases.getImage::invoke, songTextUseCases.getImageChanges(), songTextUseCases.readImageSize::invoke)
+    internal val songImages = LibrarySongImages(viewModelScope, songTextUseCases.getImageSize::invoke, songTextUseCases.getImage::invoke, songTextUseCases.getImageChanges(), songTextUseCases.readImageSize::invoke, songTextUseCases.getStagedImage::invoke)
 
     internal val pictureWork = PictureWork()
 

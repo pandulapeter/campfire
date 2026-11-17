@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
@@ -45,6 +46,8 @@ import com.pandulapeter.campfire.screenshots.HOUSE_OF_THE_RISING_SUN
 import com.pandulapeter.campfire.screenshots.TestWindow
 import com.pandulapeter.campfire.screenshots.resourceText
 import com.pandulapeter.campfire.screenshots.runAppTest
+import kotlinx.coroutines.runBlocking
+import org.koin.core.context.GlobalContext
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -119,6 +122,26 @@ internal class ImportPreviewTest {
             onAllNodesWithContentDescription(string(Res.string.song_image), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
         }
         assertTrue(onAllNodes(hasText(text(Res.string.song_image_not_found, "chart.png"), substring = true), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertTrue(File(library, "files").list().isNullOrEmpty(), "A picture reached the library before Import.")
+    }
+
+    @Test
+    fun `a staged archive song's picture is shown in its preview from the staging folder`() = runAppTest {
+        val archive = archiveWithPicture().bytes
+        val staged = runBlocking {
+            GlobalContext.get().get<ImportStagingLocalSource>().receiveArchive(announcedSize = archive.size.toLong()).run {
+                write(archive, 0, archive.size)
+                finish()
+            }
+        }
+        runOnIdle { viewModel.importController.importFiles(listOf(ImportedFile(name = "chart.zip", bytes = ByteArray(0), staged = staged))) }
+        waitForText(string(Res.string.import_preview_title))
+        waitUntil(timeoutMillis = TIMEOUT_MILLIS) {
+            onAllNodesWithContentDescription(string(Res.string.song_image), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        assertTrue(onAllNodes(hasText(text(Res.string.song_image_not_found, "chart.png"), substring = true), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        // The picture the preview shows is the one the unpack staged beside the archive, read from there.
+        assertTrue(File(dataDirectory, "imports").list().orEmpty().any { it.endsWith(".png") }, "The archive's picture was not staged.")
         assertTrue(File(library, "files").list().isNullOrEmpty(), "A picture reached the library before Import.")
     }
 

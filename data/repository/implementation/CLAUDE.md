@@ -101,9 +101,9 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
   examines a file runs on `environment.computation`, since the editor calls from the main thread. An import's staged
   file (`IncomingContent.Staged`) is examined by its head (`ImageInfo.MAX_HEADER_BYTES`) and size, named by its staged
   SHA-256, compared with a library file of the name a slice at a time (as one in memory now is too), and moved in
-  (`moveStagedFile`), never read whole. `librarySizes` splits `library/files` by name for Settings, and names every file of
-  both shelves with its size (`fileSizes`), which is how the song info sheet tells an attachment on this device from a
-  missing one.
+  (`moveStagedFile`), never read whole but by an import preview showing it (`loadStagedImage`, at most a picture's
+  8 MiB). `librarySizes` splits `library/files` by name for Settings, and names every file of both shelves with its
+  size (`fileSizes`), which is how the song info sheet tells an attachment on this device from a missing one.
 
 ## The import's downloads
 

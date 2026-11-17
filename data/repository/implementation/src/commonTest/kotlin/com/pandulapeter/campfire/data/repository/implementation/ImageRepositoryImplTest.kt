@@ -465,6 +465,26 @@ class ImageRepositoryImplTest {
         assertFailsWith<StagedFileMissingException> { repository.libraryNameOf(IncomingContent.Staged(staged)) }
     }
 
+    @Test
+    fun `a staged picture is read whole for a preview and stays staged`() = runTest {
+        val repository = repository()
+        val staged = local.stage(PHOTO, ".png")
+
+        assertContentEquals(PHOTO, repository.loadStagedImage(staged))
+        assertContentEquals(PHOTO, local.staged[staged.name])
+        assertTrue(local.shelves.values.all { it.isEmpty() })
+    }
+
+    @Test
+    fun `a staged picture that is gone or larger than a picture may be reads as none`() = runTest {
+        val repository = repository()
+        val gone = local.stage(PHOTO, ".png").also { local.staged.remove(it.name) }
+        val large = local.stage(PHOTO + ByteArray(ImportLimits.MAX_IMAGE_FILE_SIZE.toInt()), ".png")
+
+        assertEquals(null, repository.loadStagedImage(gone))
+        assertEquals(null, repository.loadStagedImage(large))
+    }
+
     private fun TestScope.repository(
         draft: SongContent? = null,
         draftReadFails: Boolean = false,

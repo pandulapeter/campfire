@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.pictures
 
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
  * missing may have been added (by sync, or by the placeholder's Add), one shown may have been deleted.
  *
  * @param readSize The size of a picture kept nowhere yet, from its bytes, for [withPictures].
+ * @param getStagedImage The bytes of a picture an import staged and no shelf keeps yet, for [withPictures].
  */
 internal class LibrarySongImages(
     scope: CoroutineScope,
@@ -32,6 +35,7 @@ internal class LibrarySongImages(
     private val getImage: suspend (name: String) -> ByteArray?,
     imageChanges: StateFlow<Long>,
     private val readSize: suspend (bytes: ByteArray) -> ImageSize?,
+    private val getStagedImage: suspend (file: StagedFile) -> ByteArray?,
 ) : SongImageLoader {
 
     private val _sizes = MutableStateFlow(emptyMap<String, SongImageSize>())
@@ -48,7 +52,8 @@ internal class LibrarySongImages(
     override suspend fun loadImage(name: String) = getImage(name)
 
     /** [pictures], by the name a song's text names each by, ahead of the library's: see [ImportedSongImages]. */
-    fun withPictures(pictures: Map<String, ByteArray>): SongImageLoader = ImportedSongImages(pictures = pictures, library = this, readSize = readSize)
+    fun withPictures(pictures: Map<String, IncomingContent>): SongImageLoader =
+        ImportedSongImages(pictures = pictures, library = this, readSize = readSize, readStaged = getStagedImage)
 
     private suspend fun sizeOf(name: String) = getImageSize(name)?.let { SongImageSize.Known(it.width, it.height) } ?: SongImageSize.Missing
 

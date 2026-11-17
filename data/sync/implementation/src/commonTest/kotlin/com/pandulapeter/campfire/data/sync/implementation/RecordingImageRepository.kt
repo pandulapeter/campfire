@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
@@ -35,6 +36,8 @@ internal class RecordingImageRepository : ImageRepository {
     override suspend fun loadImageSize(name: String): ImageSize? = throw UnsupportedOperationException()
 
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = throw UnsupportedOperationException()
+
+    override suspend fun loadStagedImage(file: StagedFile): ByteArray? = throw UnsupportedOperationException()
 
     override suspend fun loadLibraryImageNames(): List<String> = throw UnsupportedOperationException()
 

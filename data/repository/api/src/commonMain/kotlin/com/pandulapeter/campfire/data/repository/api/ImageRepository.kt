@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.api
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import kotlinx.coroutines.flow.StateFlow
 
@@ -56,6 +57,13 @@ interface ImageRepository {
      * import under review brings) is laid out by.
      */
     suspend fun readImageSize(bytes: ByteArray): ImageSize?
+
+    /**
+     * The picture an import staged as [file] (`IncomingContent.Staged`), read whole from the staging folder, or null where
+     * it is gone, cannot be read, or is larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, which no staged picture a plan
+     * brings is: what the preview of an import under review shows it from, as [loadImage] answers for a kept one.
+     */
+    suspend fun loadStagedImage(file: StagedFile): ByteArray?
 
     /** The names of the library's files, pictures and attachments (never the draft's), sorted: what an export may carry. */
     suspend fun loadLibraryImageNames(): List<String>
