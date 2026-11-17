@@ -14,7 +14,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
-import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -24,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
-import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
@@ -158,7 +156,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private val pendingExport get() = java.io.File(java.io.File(context.cacheDir, PENDING_EXPORT_DIRECTORY), PENDING_EXPORT_NAME)
 
-    override suspend fun pickFiles() = pick { it.open.launch(arrayOf(ANY_MIME_TYPE)) }
+    override suspend fun pickFiles() = pick(isImport = true) { it.open.launch(arrayOf(ANY_MIME_TYPE)) }
 
     /** The documents UI, offering the formats the photo library may hand over too, which the editor converts. */
     override suspend fun pickImages() = pick { it.openImages.launch((PICTURE_MIME_TYPES + CONVERTED_PICTURE_MIME_TYPES).toTypedArray()) }
@@ -205,9 +203,9 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         }
     }
 
-    private suspend fun pick(launch: (Launchers) -> Unit): List<ImportedFile> {
+    private suspend fun pick(isImport: Boolean = false, launch: (Launchers) -> Unit): List<ImportedFile> {
         val uris = pickUris(launch)
-        return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
+        return withContext(Dispatchers.IO) { uris.toImportedFiles(context, receiver = if (isImport) archiveReceiverWhileStaging() else null) }
     }
 
     private suspend fun pickUris(launch: (Launchers) -> Unit): List<Uri> {
@@ -325,7 +323,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         pickContinuation = null
         when {
             continuation != null -> continuation.resume(uris)
-            uris.isNotEmpty() -> scope.launch { _orphanedPictures.send(uris.toImportedFiles(context)) }
+            uris.isNotEmpty() -> scope.launch { _orphanedPictures.send(uris.toImportedFiles(context, receiver = null)) }
         }
     }
 
@@ -426,42 +424,4 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     }
 }
 
-/**
- * Reads the documents the system handed over - picked, opened with Campfire, shared to it or dropped onto it - within
- * one [ImportBudget]. One that cannot be read is handed over empty, which the import reports as skipped: the user asked
- * for it, and leaving it out would answer them with nothing at all - while one bad file still does not lose the ones
- * next to it.
- */
-fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
-    val budget = ImportBudget()
-    return map { uri ->
-        // The query that knows the display name can be what fails, so it is asked on its own.
-        val (displayName, size) = try {
-            uri.nameAndSize(context)
-        } catch (exception: Exception) {
-            uri.fallbackName to null
-        }
-        val name = pictureFileName(displayName, runCatching { context.contentResolver.getType(uri) }.getOrNull())
-        try {
-            budget.read(name = name, size = size) { limit ->
-                // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
-                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit = limit.toInt() + 1, size = size) }
-            }
-        } catch (exception: Exception) {
-            println("Could not read \"$uri\": ${exception.message}")
-            null
-        } ?: ImportedFile.unread(name)
-    }
-}
-
-/** The extension is what the import goes by, and for a content URI only the display name carries it. */
-private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.contentResolver
-    .query(this, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
-    ?.use { cursor ->
-        if (cursor.moveToFirst()) (cursor.getString(0) ?: fallbackName) to (if (cursor.isNull(1)) null else cursor.getLong(1)) else null
-    }
-    ?: (fallbackName to null)
-
 private const val SONG_EXPORT_MIME_TYPE = "application/octet-stream"
-
-private val Uri.fallbackName get() = lastPathSegment.orEmpty().substringAfterLast('/')

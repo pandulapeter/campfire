@@ -50,11 +50,17 @@ internal fun InputStream.readHead(): ByteArray = readNBytes(ImportLimits.SNIFF_L
 
 /**
  * [name], [size] bytes long where the platform says, opened once as [input] and its [head] already read: received into
- * the staging folder through [receiver] from the stream as it is, its copy starting at once and the stream closed as the
- * copy ends. The stream is the receiver's from here on.
+ * the staging folder through this receiver from the stream as it is, its copy starting at once and the stream let go
+ * of by [close] as the copy ends. The stream is the receiver's from here on.
  */
-internal fun ArchiveReceiver.receiveStream(name: String, size: Long?, head: ByteArray, input: InputStream): ImportedFile =
-    receive(name = name, announcedSize = size, close = input::close) { archive ->
+internal fun ArchiveReceiver.receiveStream(
+    name: String,
+    size: Long?,
+    head: ByteArray,
+    input: InputStream,
+    close: () -> Unit = input::close,
+): ImportedFile =
+    receive(name = name, announcedSize = size, close = close) { archive ->
         if (head.isNotEmpty()) archive.write(head, 0, head.size)
         input.copyInto(archive, expectedSize = size?.minus(head.size))
     }
