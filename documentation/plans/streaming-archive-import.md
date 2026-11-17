@@ -266,6 +266,13 @@ only, never committed), and its outcome is written into the step it decides befo
   zip; start copying its stream; then press Back from the root, and separately swipe the task away. Does a stream
   already open keep reading after its grant is gone, for a file-backed and for a pipe-backed provider? Does passing
   the URI to a service with `FLAG_GRANT_READ_URI_PERMISSION` keep it readable?
+  **Outcome (2026-11-17, API 37.1 emulator; file-, pipe-, MediaStore-, and DocumentsUI-backed URIs; Gmail and Drive
+  untested, no account):** the activity's grant ends at `onDestroy` (Back or swipe) and nothing reopens it, but a stream
+  already open keeps reading to the end while the process lives. Without a foreground service a swipe kills the process
+  at once and Back lets the cached-app freezer stop the copy within about 10 s; with one, every copy finished. Passing
+  the URI to the service with the grant flag works but is not needed. A provider process dying while
+  `openInputStream`'s stable reference is held kills Campfire too (even in front); an unstable client
+  (`acquireUnstableContentProviderClient(uri).openFile`) survives it, but a pipe then ends early as a clean EOF.
 - **iOS, background work** (decides step 14): `BGContinuedProcessingTaskRequest` on iOS 26 with an exact identifier
   registered at launch against a wildcard one (registering one identifier twice crashes the app); and what happens
   when `beginBackgroundTask`'s time expires during a write that does not stop: does returning from the handler at once
@@ -471,7 +478,10 @@ needs) if a sync run would otherwise stall for minutes.
 - Android: `toImportedFiles` opens each URI once, peeks the head, and either reads as today or hands an `IncomingFile`
   whose copy (the stream into `ImportStaging`) starts at once on `Dispatchers.IO`. The copy itself is
   `jvmSharedMain` code taking an `InputStream`, so the desktop tests cover it; Android supplies only
-  `contentResolver.openInputStream`.
+  `acquireUnstableContentProviderClient(uri).openFile(uri, "r")` (never `openInputStream`, whose stable reference
+  takes Campfire down with a dying provider: step 0), and a copy shorter than `OpenableColumns.SIZE`, where the provider
+  gives one, fails as unreadable (a dead pipe reads as a clean end; without a size, the reader's missing end record
+  refuses the truncated copy).
 - Desktop: `readAsImportedFiles` the same over `Files.newInputStream` (never `FileInputStream`: on Windows it opens
   the file without delete sharing, so the user's file would be locked for the length of the copy), closed as soon as
   the copy ends.
@@ -570,8 +580,9 @@ and each platform's start/stop decisions as plain logic where they can be, like 
   strings arrive in the intent, in every language. Android 15 gives `dataSync` six hours a day across both services:
   `onTimeout` cancels the import (the screen showing why, with Try again) and stops the service. An import and a sync run
   at once never block each other and keep a notification each. A content URI's grant ends with the activity's task: its
-  stream is opened in the activity at once by the request's copy job (step 10), and step 0's spike decides whether the
-  URI is also passed on to the service with `FLAG_GRANT_READ_URI_PERMISSION`. The manifest already declares
+  stream is opened in the activity at once by the request's copy job (step 10), and the
+  URI is not passed on to the service (step 0: the open stream keeps reading; the service only holds the process,
+  which it must, or a swipe kills the copy and Back lets the freezer stop it). The manifest already declares
   `FOREGROUND_SERVICE_DATA_SYNC`; the Play Console's `dataSync` declaration gains the import as a use.
 - **iOS: a continued processing task, with background time as the fallback.** On iOS 26 and later the import, which
   always starts from a user's action in front, submits a `BGContinuedProcessingTaskRequest` (identifier in the Info
