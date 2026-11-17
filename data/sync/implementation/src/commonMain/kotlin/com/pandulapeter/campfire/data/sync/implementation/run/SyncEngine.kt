@@ -212,9 +212,9 @@ internal class SyncEngine(
      * a wide margin. Files do not depend on each other, so they go at once, [CONCURRENT_TRANSFERS] at a time: enough
      * to hide the latency, few enough that the service answers with files rather than with rate limiting.
      *
-     * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
-     * deletions. A download has to be on disk before anything that reads the library acts on it, and a deletion that
-     * ran before a download would undo it. Remote deletions go to the provider together ([deleteRemotely]), and a
+     * The ordering that does matter is kept between the groups: incoming files, outgoing pictures, other uploads, deletions. A
+     * download has to be on disk before anything that reads the library acts on it, a deletion that ran before a download
+     * would undo it, and a song uploaded before its pictures, by a run killed in between, names files the folder lacks. Remote deletions go to the provider together ([deleteRemotely]), and a
      * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits. A large file moves
      * alone besides ([isLargeFile]): a few attachments at 50 MB each, held whole, are more than a phone's heap.
      *
@@ -519,10 +519,10 @@ internal class SyncEngine(
         get() = when (this) {
             is SyncOperation.Resolve -> 0
             is SyncOperation.Download -> 1
-            is SyncOperation.Upload -> 2
-            is SyncOperation.DeleteLocal -> 3
-            is SyncOperation.DeleteRemote -> 4
-            is SyncOperation.Forget -> 5
+            is SyncOperation.Upload -> if (isImage) 2 else 3
+            is SyncOperation.DeleteLocal -> 4
+            is SyncOperation.DeleteRemote -> 5
+            is SyncOperation.Forget -> 6
         }
 
     sealed interface Result {

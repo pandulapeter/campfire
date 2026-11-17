@@ -20,6 +20,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
@@ -42,6 +43,25 @@ class ImageSyncTest {
 
         assertContentEquals(PHOTO.bytes, b.library.files[PHOTO.key])
         assertConverges(a, b)
+    }
+
+    @Test
+    fun `a run killed while a picture goes up leaves no song in the folder naming a file it lacks`() = runTest {
+        val a = Device(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes, RECORDING.key to RECORDING.bytes, song(2) to attaching(RECORDING)))
+        // The app dies while the files are in flight, after the other transfers have had every chance to finish.
+        cloud.onUpload = { key ->
+            if (key.kind == LibraryFileKind.FILE) {
+                repeat(10) { yield() }
+                throw ProcessKilled()
+            }
+        }
+        assertFailsWith<ProcessKilled> { a.sync(cloud) }
+
+        val held = cloud.files.keys.filter { it.kind == LibraryFileKind.FILE }.map { it.name }.toSet()
+        cloud.files.filterKeys { it.kind == LibraryFileKind.SONG }.forEach { (key, file) ->
+            val named = Regex("""(?:src=|attachment )(\S+)""").findAll(file.first.decodeToString()).map { it.groupValues[1] }.toSet()
+            assertTrue(held.containsAll(named), "${key.name} names ${named - held}, which the folder lacks.")
+        }
     }
 
     @Test
@@ -375,6 +395,8 @@ class ImageSyncTest {
     private class Picture(val key: SyncKey, val bytes: ByteArray)
 
     private class LibraryStorageFailure : Exception("Not readable now.")
+
+    private class ProcessKilled : Error("Killed")
 
     private companion object {
 
