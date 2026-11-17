@@ -98,7 +98,8 @@ model, use cases, repositories, and files in a temporary home — and drives it 
   event.
 - **`viewModel` and `dataDirectory`** reach the paths no screen drives, the exit and the pause (`AppExitTest`): a holder
   is called inside `runOnIdle`, a suspending member with `runBlocking` outside it, and `storedPreferences()` /
-  `storedSetlist()` read what landed. Never `ViewModelStore.clear()` mid-test.
+  `storedSetlist()` read what landed. Never `ViewModelStore.clear()` mid-test. An import stage nothing produces yet is
+  put up through the import's state (`ImportStagesTest`), never by faking a use case.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or deleted the
   same day, never retried.
