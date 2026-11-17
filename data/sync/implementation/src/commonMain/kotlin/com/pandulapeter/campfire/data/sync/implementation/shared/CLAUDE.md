@@ -82,6 +82,8 @@
   and the next tried. The entry records how many (`leftOutAttachments`,
   an unknown member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
   left-out ones as well, so an unchanged copy is not rebuilt for them.
+- **Accepted**: a 5.4.0 device and a current one rebuild a copy whose songs name files in turn, since they fingerprint it
+  differently (5.4.0's copy carries no files): one upload per run of each until both are current. Left as it is.
 - Never stopped by inference: an item missing from the library makes the entry `orphaned`; back under its name, `ok`. A
   copy missing from a listing as new as the registry read makes it `orphaned` and `copyMissing` for good (a deleted
   file's link never comes back; a member, not a state, so older versions do not show it as working), whatever the

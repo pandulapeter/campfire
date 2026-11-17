@@ -16,7 +16,9 @@
   pictures and attachments), each once, after all else, in the order of their names (a shared copy is rebuilt in the
   same order). One lazy entry per library file,
   each left out unless a song written before it named it, since songs are read only as the writer reaches them.
-  Versions before pictures skip `images/` and keep the directives.
+  Versions before pictures keep the directives and skip the pictures, audio, and video in `images/`, but 5.4.0 reads an
+  attachment there that is a `.pdf` or `.docx` as a document, a `.txt` as a song, and an `.abc` as tunes, so its
+  review may offer songs made from attachments (nothing is written before Import).
 - **An archive is a file, never held whole** (`exportedArchive`): written into `exports/` entry by entry, each read
   only when the writer reaches it (the library's songs 64 at a time), an entry read as nothing left out, and the file
   removed on any failure, a cancellation, or no entry at all. Whoever gets the `ExportedFile` owns its file: the

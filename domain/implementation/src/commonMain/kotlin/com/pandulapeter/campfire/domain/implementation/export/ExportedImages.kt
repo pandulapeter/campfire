@@ -25,7 +25,9 @@ import com.pandulapeter.campfire.data.repository.api.ImageRepository
  * each leaving itself out unless a song written before it named it ([named]). So a picture goes in once however many
  * songs name it, only the library's own (a song may name one the library lacks), in an order that depends on nothing
  * but the names, which a shared copy built again from the same files relies on (`SharedCopySync` packs the same order).
- * Older versions skip `images/` unread, keeping the songs' directives as they are.
+ * Versions before pictures keep the songs' directives as they are and skip the pictures, audio, and video in `images/`
+ * unread, but 5.4.0 reads an attachment there that is a `.pdf` or `.docx` as a document, a `.txt` as a song, and an
+ * `.abc` as tunes, so its review may offer songs made from attachments (nothing is written before Import).
  *
  * The files attached to songs go there too, under their content names, so an import needs no other folder. One a song
  * shows as a picture counts as a picture, whatever else names it, as the import reads it. A shared link's copy

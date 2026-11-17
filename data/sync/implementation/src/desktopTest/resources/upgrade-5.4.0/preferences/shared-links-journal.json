@@ -1,0 +1,19 @@
+{
+    "entries": [
+        {
+            "type": "rename",
+            "from": "wedding.setlist.json",
+            "to": "wedding_2026.setlist.json",
+            "shareId": "Tm8QzH4vLs"
+        },
+        {
+            "type": "stop",
+            "shareId": "Rb5XwK2nPq"
+        },
+        {
+            "type": "stopItem",
+            "kind": "song",
+            "fileName": "beatles-yesterday.cho"
+        }
+    ]
+}

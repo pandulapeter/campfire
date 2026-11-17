@@ -97,7 +97,8 @@ object ImportLimits {
      * One archive as it was picked or downloaded, and everything one selection reads: the songs' budget and the
      * pictures' together, so that an export of songs with their pictures imports whole. The import's and the export's
      * messages name it as 88 MB in every language. Versions before pictures refuse an archive over [MAX_IMPORT_SIZE] as
-     * too large, and import a smaller one with its pictures reported as skipped and its image directives kept.
+     * too large, and import a smaller one with its pictures reported as skipped and its image directives kept, and 5.4.0
+     * its attachments that are documents, texts, or ABC tunes as songs it offers in the review.
      *
      * Not grown by [MAX_IMPORT_ATTACHMENTS_SIZE]: the picked archive is held whole beside what it unpacks to, and an archive
      * of stored recordings unpacks to as many bytes again, so an archive of 88 MB already costs an Android heap of about
