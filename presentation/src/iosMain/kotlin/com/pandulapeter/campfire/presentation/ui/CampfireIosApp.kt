@@ -23,9 +23,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.share.SharedLink
+import com.pandulapeter.campfire.presentation.ui.platform.FileOpener
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.IosClipboardLinkReader
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalIosFileOpener
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
@@ -43,6 +45,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param urlOpener Opens the given URL in Safari.
  * @param filePicker The document picker. Handed in for the same reason as [urlOpener]: both are UIKit, which this
  *   module stays free of.
+ * @param fileOpener Quick Look, which opens a song's attachments, handed in for the same reason.
  * @param filesToImport Files opened with Campfire, which reach the app module through `onOpenURL`.
  * @param shareLinks Campfire links the app was opened with (the Universal Link, `campfire://s/`), which reach the app
  *   module through `onOpenURL` like files.
@@ -71,6 +74,7 @@ fun CampfireIosApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (String) -> Unit,
     filePicker: FilePicker,
+    fileOpener: FileOpener,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     shareLinks: Flow<SharedLink> = emptyFlow(),
     inboxShares: Flow<InboxShare> = emptyFlow(),
@@ -81,6 +85,7 @@ fun CampfireIosApp(
     onKeyCommandsChanged: (List<IosKeyCommand>) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
+    LocalIosFileOpener provides fileOpener,
     LocalSyncNotifier provides syncNotifier,
     LocalMetronomeNotifier provides metronomeNotifier,
 ) {

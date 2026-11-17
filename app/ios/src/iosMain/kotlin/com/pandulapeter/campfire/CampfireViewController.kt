@@ -66,10 +66,12 @@ fun CampfireViewController(onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit): 
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null
     val filePicker = IosFilePicker { requireNotNull(controller) }
+    val fileOpener = IosFileOpener { requireNotNull(controller) }
     return ComposeUIViewController {
         CampfireIosApp(
             urlOpener = ::openUrl,
             filePicker = filePicker,
+            fileOpener = fileOpener,
             filesToImport = filesToImport,
             shareLinks = shareLinksToImport,
             inboxShares = inboxSharesToImport,

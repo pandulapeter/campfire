@@ -101,7 +101,7 @@ internal object WebFilePicker : FilePicker {
 }
 
 /** The export as a `Blob`: its bytes, or its file in the origin private file system, by the path from its root. */
-private suspend fun ExportedFile.blob(): JsAny = when (val content = content) {
+internal suspend fun ExportedFile.blob(): JsAny = when (val content = content) {
     is ExportedContent.Bytes -> bytesBlob(content.bytes.toInt8Array(), mimeType)
     is ExportedContent.TemporaryFile -> opfsFile(content.path).await()
 }
@@ -211,7 +211,7 @@ private fun fileBytes(file: JsAny): Promise<Int8Array?> = js(
     )"""
 )
 
-private fun downloadFile(name: String, mimeType: String, blob: JsAny): Unit = js(
+internal fun downloadFile(name: String, mimeType: String, blob: JsAny): Unit = js(
     """(function () {
         var url = URL.createObjectURL(new File([blob], name, { type: mimeType }));
         var link = document.createElement('a');

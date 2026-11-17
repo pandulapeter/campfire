@@ -32,6 +32,9 @@ extension (`iosApp/ShareExtension/`, Swift only).
   its own file in `Caches/exports` (a mail attaches it mapped); bytes are written to the temporary directory first.
   Either is deleted by the picker (the share in the activity controller's completion handler); **the temporary
   directory is never swept**, since a share target may still be reading.
+- `IosFileOpener.kt`: a song's attachment in Quick Look (`QLPreviewController`), presented over the topmost presented
+  controller, titled with the attachment's name; the data source is held by the opener, since the controller's
+  reference is weak. Its copy in `Caches/exports` is left to the launch's emptying.
 - `IosPhotoPicker.kt`: PHPicker, out of process, so no photo library permission or usage description. Asked for the
   compatible representation (HEIC arrives as JPEG where Photos can make one), the shown types read first; each photo's
   temporary file is read inside its completion handler (deleted after), one photo at a time, in the order picked. A

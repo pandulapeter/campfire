@@ -76,6 +76,14 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission. Only Android 13+
   confirms a copy itself (`isCopyConfirmedBySystem`). iOS alone can say a web address seems to be there without reading
   it (`ClipboardLinkReader.kt`), the one question asked without a tap (the first run's link offer).
+- **Opening a file** (`FileOpener`, `rememberFileOpener`): a song's attachment, copied into `exports/` under its shown
+  name first (`ExportAttachmentUseCase`), so the opening app shows that name and never writes into the library. Android:
+  `ACTION_VIEW` on a `FileProvider` address in `cacheDir/shared` (the copy moved there), no app a `false`. iOS: Quick
+  Look (`:app:ios`'s `IosFileOpener`, provided through `LocalIosFileOpener`), over the topmost presented controller, its
+  share button the way to any other app. Desktop: `Desktop.open`, else `open` / `xdg-open` / `cmd /c start` (their exit
+  code answers); the Mac App Store sandbox allows it, since Launch Services opens a file in the app's own container and
+  hands the opening app a sandbox extension. Web: a new tab on the OPFS `File`'s `blob:` address for what browsers show
+  (PDF, text, audio, video, pictures), a download for the rest or where the tab is refused.
 - `CompactKeyboardEffect` (Android only): while typing in a short window, hides the status bar of the window it is in
   (the dialog's own or the activity's), swipeable back, restoring what it found afterwards. A landscape keyboard leaves
   the smallest phone ~150dp, a third of which the status bar would take.
