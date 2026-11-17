@@ -57,7 +57,9 @@ internal class LoopbackRedirectListener(
     override suspend fun prepareRedirectUri(): String = withContext(Dispatchers.IO) {
         // A socket left over from an abandoned attempt would hold the port this one needs.
         closeSocket()
-        val socket = ServerSocket(port, 1, InetAddress.getByName(LOOPBACK_ADDRESS)).apply { soTimeout = TIMEOUT_MILLIS }
+        // A browser opens its connections side by side, so more than one can be waiting before the first is accepted.
+        // A full backlog is refused outright on Windows, where Linux and macOS let the browser try again later.
+        val socket = ServerSocket(port, BACKLOG, InetAddress.getByName(LOOPBACK_ADDRESS)).apply { soTimeout = TIMEOUT_MILLIS }
         serverSocket = socket
         loopbackRedirectUri(socket.localPort)
     }
@@ -167,6 +169,9 @@ internal class LoopbackRedirectListener(
 
     private companion object {
         const val TIMEOUT_MILLIS = 5 * 60 * 1000
+
+        /** Room for the redirect, the browser's speculative connection, and a favicon request at once, with some to spare. */
+        const val BACKLOG = 16
 
         /** A browser that connected has already sent its request line; one that has not in this long never will. */
         const val CONNECTION_TIMEOUT_MILLIS = 10 * 1000
