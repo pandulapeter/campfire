@@ -277,6 +277,14 @@ only, never committed), and its outcome is written into the step it decides befo
   registered at launch against a wildcard one (registering one identifier twice crashes the app); and what happens
   when `beginBackgroundTask`'s time expires during a write that does not stop: does returning from the handler at once
   let the app be suspended rather than killed?
+  **Outcome (2026-11-17, iOS 27.2 simulator):** registering one identifier twice throws
+  `NSInternalInconsistencyException`, and so does submitting one never registered; registering a `.*` pattern itself
+  returns false. What works is one plist entry, `<bundle>.import.*`, and a fresh concrete `<bundle>.import.<n>`
+  registered just before each submit, in front (continued tasks are exempt from registering at launch). The simulator
+  refuses every submit ("BGTaskScheduler is not available on this platform"), so the system's progress UI, its
+  cancel, and running on are left to a device in step 17. `beginBackgroundTask` gives about 30 s; ending the task
+  synchronously in the expiration handler while a write still runs lets the app be suspended (the write resumes on
+  return), while not ending it gets the app killed about 5 s later (RunningBoard `0x2182BAD2`, not `0x8badf00d`).
 - **Web, a hidden tab and the quota** (decides steps 6, 10, and 14): Chrome with Energy Saver on, a hidden tab copying
   into OPFS and inflating in Wasm for six minutes: is it frozen, do `delay`s stall? Safari before 26: a 2 GB `File`
   posted to the worker and written through a sync access handle near the quota: where does `QuotaExceededError` land?
@@ -590,8 +598,12 @@ and each platform's start/stop decisions as plain logic where they can be, like 
   progress and lets the user cancel it, which cancels the import; the task ends when the state reads idle, and its
   expiration cancels the import cleanly. Before iOS 26 (the app supports 15.3) it holds a `beginBackgroundTask` for the
   work as `IosSyncNotifier` does for a run; when iOS ends that time the import is cancelled cleanly and the screen offers
-  Try again on return. Either way a kill loses only the preparation, and the task's identifier is registered the way step 0's
-  spike showed to work. Lives in
+  Try again on return. Either way a kill loses only the preparation. Identifiers as step 0 found: one
+  `$(PRODUCT_BUNDLE_IDENTIFIER).import.*` entry, a fresh `….import.<n>` registered per import, never reused in a
+  process, a failed submit (the simulator always) falling back to `beginBackgroundTask`; `progress` in bytes updated
+  steadily (a stalled task may be expired), `setTaskCompleted` when the state reads idle. Every expiration handler only
+  asks the import to cancel and returns, `endBackgroundTask` called synchronously inside it; the cancel's cleanup may run
+  only after a suspension, on return to the front, and must be safe there. Lives in
   `app/ios` beside `IosSyncNotifier`, which `app/ios/CLAUDE.md` gains a line about.
 - **Desktop: quitting asks first.** The process keeps running in the background by itself, so nothing holds it; but
   closing the window or quitting (including Cmd+Q, through the same kept quit request the editor's unsaved text uses in
