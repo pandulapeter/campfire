@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
+import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryEnvironment
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.local.api.ImageShelf
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -321,7 +322,40 @@ class ImageRepositoryImplTest {
         songs.value = DataState.Idle(list.toList())
     }
 
-    private fun TestScope.repository(draft: SongContent? = null, draftReadFails: Boolean = false) = ImageRepositoryImpl(
+    @Test
+    fun `a file is hashed and compared on the computation dispatcher, never on the caller's`() = runTest {
+        val environment = testEnvironment()
+        val repository = repository(environment = environment)
+        val sameSizeOther = DOCUMENT.copyOf().also { it[0] = 'x'.code.toByte() }
+        val shortName = Sha256.hashToHex(DOCUMENT).take(16) + ".pdf"
+        local.shelves.getValue(ImageShelf.LIBRARY)[shortName] = sameSizeOther
+        publish(song("a.cho", shortName))
+
+        assertAccepted(repository.libraryNameOfAttachment(DOCUMENT, "pdf"))
+        assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
+        assertAccepted(repository.withImagesKept { it.addAttachment(DOCUMENT, "pdf") })
+
+        // Each of the three read the file of the same size under the name to compare it.
+        assertEquals(3, local.comparingReads.size)
+        assertTrue(local.comparingReads.all { it === environment.computation }, "Read on ${local.comparingReads}")
+    }
+
+    @Test
+    fun `a file of another size under a name makes it taken without being read`() = runTest {
+        val repository = repository()
+        local.shelves.getValue(ImageShelf.LIBRARY)[Sha256.hashToHex(DOCUMENT).take(16) + ".pdf"] = OTHER_DOCUMENT
+
+        val name = assertAccepted(repository.withImagesKept { it.addAttachment(DOCUMENT, "pdf") })
+
+        assertEquals(Sha256.hashToHex(DOCUMENT).take(17) + ".pdf", name)
+        assertTrue(local.comparingReads.isEmpty())
+    }
+
+    private fun TestScope.repository(
+        draft: SongContent? = null,
+        draftReadFails: Boolean = false,
+        environment: RepositoryEnvironment = testEnvironment(),
+    ) = ImageRepositoryImpl(
         imageLocalSource = local,
         songRepository = RecordingSongRepository(songs = songs, songFileNames = { songFiles }),
         editorDraftRepository = object : EditorDraftRepository {
@@ -329,7 +363,7 @@ class ImageRepositoryImplTest {
 
             override suspend fun saveEditorDraft(draft: SongContent?) = throw UnsupportedOperationException()
         },
-        environment = testEnvironment(),
+        environment = environment,
     )
 
     private fun assertAccepted(intake: ImageIntake) = (intake as? ImageIntake.Accepted)?.name ?: throw AssertionError("Refused: $intake")

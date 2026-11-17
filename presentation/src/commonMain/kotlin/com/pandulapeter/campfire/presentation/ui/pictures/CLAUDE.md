@@ -56,4 +56,5 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   several pictures, a refusal is said instead. A copy that does not fit keeps the original refusal. Every fitting is
   tracked by the one `PictureWork`, which brings up the window's work bar (`ui/progress`) once one has run 400 ms (a
   large WebP takes seconds on an older phone), never blocking the editor; the picker's own read before it is not counted,
-  since the picker's screen is up for an unknown part of that time.
+  since the picker's screen is up for an unknown part of that time. The editor's Save and the Attachments sheet's are
+  tracked by it too, since moving a 50 MB file into the library takes a while.

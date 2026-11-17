@@ -24,6 +24,9 @@ interface ImageLocalSource {
 
     suspend fun hasImage(shelf: ImageShelf, name: String): Boolean
 
+    /** The size of the file on disk without reading it, null where it is not there. */
+    suspend fun imageSize(shelf: ImageShelf, name: String): Long?
+
     /** Creates the picture or overwrites it, which only ever writes the same bytes again: a picture's name is its content. */
     suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray)
 

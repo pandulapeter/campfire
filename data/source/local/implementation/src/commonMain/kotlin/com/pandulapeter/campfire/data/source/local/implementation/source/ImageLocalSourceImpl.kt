@@ -30,6 +30,8 @@ internal class ImageLocalSourceImpl(
     override suspend fun hasImage(shelf: ImageShelf, name: String) =
         LibraryFiles.isLibraryFileName(name) && fileStorage.exists(shelf.directory, name)
 
+    override suspend fun imageSize(shelf: ImageShelf, name: String) = if (LibraryFiles.isLibraryFileName(name)) fileStorage.info(shelf.directory, name)?.size else null
+
     /**
      * The draft's files are kept out of the device backup the way the draft's text is, after every write, since an
      * atomic write replaces the file and the mark with it; the library's as [isLibraryFileKeptOutOfDeviceBackup] says.

@@ -390,8 +390,10 @@ internal class EditorSession(
         _isSavingSong.update { true }
         val fileText = fileTextOf(text)
         withContext(NonCancellable) {
-            songTextStore.songWriteMutex.withLock {
-                useCases.saveWithDraftImages(fileText) { kept -> songTextStore.writeSongContent(fileName = fileName, text = kept) to kept }
+            images.trackSave {
+                songTextStore.songWriteMutex.withLock {
+                    useCases.saveWithDraftImages(fileText) { kept -> songTextStore.writeSongContent(fileName = fileName, text = kept) to kept }
+                }
             }
         }.let { (isWritten, writtenFileText) ->
             // A chord typed in a second spelling (a German Bb, a ♭) is written the one way the file holds it, and a picture

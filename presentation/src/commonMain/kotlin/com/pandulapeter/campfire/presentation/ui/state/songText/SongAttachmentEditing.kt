@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.SongEditTarget
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.FileOpener
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +51,7 @@ internal class SongAttachmentEditing(
     private val songTextStore: SongTextStore,
     private val songMetadataEditing: SongMetadataEditing,
     private val intake: AttachmentIntake,
+    private val work: PictureWork,
     private val saveSongAttachments: SaveSongAttachmentsUseCase,
     private val exportAttachment: ExportAttachmentUseCase,
     private val holdPickedAttachments: HoldPickedAttachmentsUseCase,
@@ -125,8 +127,11 @@ internal class SongAttachmentEditing(
                 savesUnderway++
                 messageSink.launchLibraryChange("set a song's attachments") {
                     try {
-                        songTextStore.writeAttachments(target.fileName) { text ->
-                            saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
+                        // Tracked, since moving a large file into the library takes a while: the work bar says so.
+                        work.track {
+                            songTextStore.writeAttachments(target.fileName) { text ->
+                                saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
+                            }
                         }
                     } finally {
                         savesUnderway--

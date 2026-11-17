@@ -143,6 +143,7 @@ class SongAttachmentEditingTest {
             songTextStore = songTextStore,
             songMetadataEditing = metadataEditing,
             intake = AttachmentIntake(addDraftAttachment = { _, _ -> ImageIntake.Accepted(PICKED) }, messageSink = messageSink, work = PictureWork()),
+            work = PictureWork(),
             saveSongAttachments = object : SaveSongAttachmentsUseCase {
                 override suspend fun invoke(fileName: String, expectedText: String, attachments: List<ChordProAttachment>): SaveSongAttachmentsResult {
                     heldAtSave += holds.lastOrNull().orEmpty()

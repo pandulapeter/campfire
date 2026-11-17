@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -64,6 +65,7 @@ internal class EditorImages(
     private val holdEditorImages: HoldEditorImagesUseCase,
     private val clearDraftImages: ClearDraftImagesUseCase,
     private val computation: CoroutineDispatcher,
+    private val work: PictureWork,
 ) {
     private val mutex = Mutex()
     private var generation = 0
@@ -79,6 +81,9 @@ internal class EditorImages(
     /** Attachments kept for an open editor, for it to add to its text's header, as [insertions] are inserted. */
     private val _attachmentInsertions = Channel<EditorAttachmentInsertion>(Channel.BUFFERED)
     val attachmentInsertions = _attachmentInsertions.receiveAsFlow()
+
+    /** Runs the editor's Save as [work], which moves the draft's files into the library and may take a while for a large one. */
+    suspend fun <T> trackSave(save: suspend () -> T) = work.track(save)
 
     /**
      * Holds from the library's pruning every file the editor's text names, its pictures and its attachments, a beat after

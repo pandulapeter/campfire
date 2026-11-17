@@ -119,13 +119,14 @@ internal class ImageRepositoryImpl(
 
     override suspend fun loadLibraryFileSizes() = imageLocalSource.listImageSizes(ImageShelf.LIBRARY)
 
-    override suspend fun libraryNameOf(bytes: ByteArray) = nameFor(bytes, withContext(environment.computation) { LibraryImages.examine(bytes) })
+    override suspend fun libraryNameOf(bytes: ByteArray) = nameFor(bytes) { LibraryImages.examine(bytes) }
 
-    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String) = nameFor(bytes, LibraryImages.examineAttachment(bytes, extension))
+    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String) = nameFor(bytes) { LibraryImages.examineAttachment(bytes, extension) }
 
-    private suspend fun nameFor(bytes: ByteArray, examined: LibraryImages.Examined): ImageIntake {
-        examined.refusal?.let { return ImageIntake.Refused(it) }
-        return LibraryImages.contentNames(bytes, examined.extension).firstOrNull { name -> !otherBytesUnder(name, bytes, ImageShelf.LIBRARY) }
+    private suspend fun nameFor(bytes: ByteArray, examine: () -> LibraryImages.Examined): ImageIntake = withContext(environment.computation) {
+        val examined = examine()
+        examined.refusal?.let { return@withContext ImageIntake.Refused(it) }
+        LibraryImages.contentNames(bytes, examined.extension).firstOrNull { name -> !otherBytesUnder(name, bytes, ImageShelf.LIBRARY) }
             ?.let { ImageIntake.Accepted(it) }
             ?: ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
     }
@@ -214,13 +215,20 @@ internal class ImageRepositoryImpl(
         }
     }
 
-    /** Must be called under [keeping]. */
+    /**
+     * Must be called under [keeping]. Examining, hashing, and comparing a file are one hop to [RepositoryEnvironment.computation]:
+     * the editor and the Attachments sheet call this from the main thread, which a 50 MB attachment would hold for
+     * seconds, long enough that the work bar waiting to appear could not either.
+     */
     private suspend fun store(bytes: ByteArray, shelf: ImageShelf, examine: () -> LibraryImages.Examined, isTaken: suspend (String) -> Boolean): ImageIntake {
-        val examined = withContext(environment.computation) { examine() }
-        val refusal = examined.refusal
-        if (refusal != null) return ImageIntake.Refused(refusal)
-        // Every name taken by another picture would take 49 pictures sharing a SHA-256 prefix of 64 digits.
-        val name = LibraryImages.contentNames(bytes, examined.extension).firstOrNull { !isTaken(it) } ?: return ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+        val (examined, name) = withContext(environment.computation) {
+            val examined = examine()
+            if (examined.refusal != null) return@withContext examined to null
+            // Every name taken by another picture would take 49 pictures sharing a SHA-256 prefix of 64 digits.
+            examined to LibraryImages.contentNames(bytes, examined.extension).firstOrNull { !isTaken(it) }
+        }
+        examined.refusal?.let { return ImageIntake.Refused(it) }
+        if (name == null) return ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
         if (!imageLocalSource.hasImage(shelf, name)) {
             imageLocalSource.writeImage(shelf, name, bytes)
             if (shelf == ImageShelf.LIBRARY) mayHaveStrays = true
@@ -235,9 +243,16 @@ internal class ImageRepositoryImpl(
         return null
     }
 
-    /** Whether a shelf holds different bytes under [name], which makes the name another picture's. */
+    /**
+     * Whether a shelf holds different bytes under [name], which makes the name another picture's. A file of another size is
+     * that without being read.
+     */
     private suspend fun otherBytesUnder(name: String, bytes: ByteArray, vararg shelves: ImageShelf) = shelves.any { shelf ->
-        imageLocalSource.readImage(shelf, name)?.contentEquals(bytes) == false
+        when (imageLocalSource.imageSize(shelf, name)) {
+            null -> false
+            bytes.size.toLong() -> imageLocalSource.readImage(shelf, name)?.contentEquals(bytes) == false
+            else -> true
+        }
     }
 
     /** Zero where the folder cannot be listed, so that a failure leaves Settings showing the songs' size rather than none. */

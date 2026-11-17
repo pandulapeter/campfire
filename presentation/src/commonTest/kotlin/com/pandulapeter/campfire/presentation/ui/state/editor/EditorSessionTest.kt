@@ -207,6 +207,7 @@ class EditorSessionTest {
                     holdEditorImages = useCases.holdEditorImages,
                     clearDraftImages = useCases.clearDraftImages,
                     computation = Dispatchers.Unconfined,
+                    work = PictureWork(),
                 ),
                 updateBackStack = { update ->
                     val top = backStack.lastOrNull()

@@ -67,6 +67,7 @@ class SongTextUseCases(
         songTextStore = songTextStore,
         songMetadataEditing = songMetadataEditing,
         intake = AttachmentIntake(addDraftAttachment = attachmentUseCases.addDraftAttachment::invoke, messageSink = messageSink, work = pictureWork),
+        work = pictureWork,
         saveSongAttachments = attachmentUseCases.saveSongAttachments,
         exportAttachment = attachmentUseCases.exportAttachment,
         holdPickedAttachments = attachmentUseCases.holdPickedAttachments,

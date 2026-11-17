@@ -63,5 +63,6 @@ class EditorUseCases(
         holdEditorImages = holdEditorImages,
         clearDraftImages = clearDraftImages,
         computation = Dispatchers.Default,
+        work = pictureWork,
     )
 }

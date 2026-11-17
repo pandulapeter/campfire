@@ -21,7 +21,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Whether a picture the user added is being made to fit ([PictureFitter]), which re-encoding a large WebP or PNG on an
- * older phone can take seconds of, with nothing else on screen saying so until the snackbar. One for the whole app,
+ * older phone can take seconds of, with nothing else on screen saying so until the snackbar, or a file the user picked
+ * is being kept or moved into the library by a Save, which a 50 MB attachment takes a while for. One for the whole app,
  * shared by every fitter, so that the editor's pictures, a missing picture's Add image, and pictures arriving alone are
  * one piece of work to the progress bar along the top of the window.
  */
