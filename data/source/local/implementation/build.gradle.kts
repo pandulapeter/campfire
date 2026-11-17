@@ -16,11 +16,12 @@ plugins {
 kotlin {
     wasmJs {
         browser {
-            // Only the storage contract runs in the browser (CI's web storage step): it is the one test about what the
-            // browser itself does, and the rest of the module's tests run on the desktop.
+            // Only what the browser itself does runs there (CI's web storage step): the storage contract, and the time a
+            // staged archive of many entries takes to unpack over it. The rest of the module's tests run on the desktop.
             testTask {
                 useKarma { useChromeHeadless() }
                 filter.includeTestsMatching("*OpfsFileStorageContractTest*")
+                filter.includeTestsMatching("*OpfsStagedUnpackTimeTest*")
             }
         }
     }
@@ -76,4 +77,26 @@ val largeFileMemoryTest = tasks.register<Test>("largeFileMemoryTest") {
 tasks.named<Test>("desktopTest") {
     filter.excludeTestsMatching("*LargeFileMemoryTest")
     dependsOn(largeFileMemoryTest)
+}
+
+/**
+ * The large-archive proof of the streaming import (`LargeArchiveImportTest`): archives far larger than the heap, and as
+ * many entries as an import takes, imported in a JVM capped at 128 MiB, the largest of `campfire.largeArchiveTest`'s
+ * size. A step of CI's tests of its own and left out of `desktopTest`, which the pre-commit hook runs: it writes and
+ * imports gigabytes.
+ */
+tasks.register<Test>("largeArchiveImportTest") {
+    val desktopTest = tasks.named<Test>("desktopTest").get()
+    testClassesDirs = desktopTest.testClassesDirs
+    classpath = desktopTest.classpath
+    maxHeapSize = "128m"
+    val size = project.property("campfire.largeArchiveTest").toString()
+    systemProperty("campfire.largeArchiveTest", size)
+    inputs.property("largeArchiveTest", size)
+    filter.includeTestsMatching("*LargeArchiveImportTest")
+    testLogging { showStandardStreams = true }
+}
+
+tasks.named<Test>("desktopTest") {
+    filter.excludeTestsMatching("*LargeArchiveImportTest")
 }

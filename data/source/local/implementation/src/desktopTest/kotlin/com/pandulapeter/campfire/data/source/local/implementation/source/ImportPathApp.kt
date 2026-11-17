@@ -9,29 +9,20 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
-import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.repository.api.ImportDownloadRepository
-import com.pandulapeter.campfire.data.repository.implementation.DataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
-import com.pandulapeter.campfire.data.source.local.implementation.DataLocalSourceModule
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
-import com.pandulapeter.campfire.data.source.remote.implementation.DataRemoteSourceModule
-import com.pandulapeter.campfire.data.sync.implementation.DataSyncModule
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
-import com.pandulapeter.campfire.domain.implementation.DomainModule
 import kotlinx.coroutines.CancellationException
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
-import org.koin.plugin.module.dsl.modules
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.assertEquals
@@ -54,24 +45,7 @@ internal class ImportPathApp : AutoCloseable {
     private val storage = object : FileStorage by JvmFileStorage(root) {
         override suspend fun availableSpace(directory: StorageDirectory) = PHONE_FREE_SPACE
     }
-    private val koinApplication = koinApplication {
-        modules(
-            DataLocalSourceModule::class,
-            DataRemoteSourceModule::class,
-            DataRepositoryModule::class,
-            DataSyncModule::class,
-            DomainModule::class,
-            PresentationStandIns::class,
-        )
-        modules(
-            module {
-                single<FileStorage> { storage }
-                single<ImportDownloadRepository> { LinkedPictures }
-                // Every unpack prints what it leaves out; a few thousand imports would bury the test's own report.
-                single<Logger> { Logger { } }
-            },
-        )
-    }
+    private val koinApplication = importGraph(storage = storage, downloads = LinkedPictures)
     private val koin = koinApplication.koin
 
     suspend fun import(name: String, archive: ByteArray, isStaged: Boolean): ImportOutcome {

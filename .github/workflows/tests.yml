@@ -99,6 +99,10 @@ jobs:
       # module, a plain JVM one with no desktopTest of its own.
       - name: Run the unit tests
         run: ./gradlew spotlessCheck desktopTest :tools:screenshots:test --continue
+      # Archives far larger than the heap imported under a 128 MiB one, kept out of desktopTest (and so out of the
+      # pre-commit hook) for the gigabytes it writes.
+      - name: Run the large-archive import test
+        run: ./gradlew :data:source:local:implementation:largeArchiveImportTest
       # The build logic is a build of its own (gradle/), whose tests the unqualified task above does not reach.
       - name: Run the build logic's tests
         run: ./gradlew -p gradle :build-logic:test
@@ -110,6 +114,8 @@ jobs:
           path: |
             **/build/reports/tests/desktopTest/**
             **/build/test-results/desktopTest/*.xml
+            **/build/reports/tests/largeArchiveImportTest/**
+            **/build/test-results/largeArchiveImportTest/*.xml
             tools/screenshots/build/reports/tests/test/**
             tools/screenshots/build/test-results/test/*.xml
             gradle/build-logic/build/reports/tests/test/**

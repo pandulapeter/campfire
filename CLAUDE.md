@@ -286,6 +286,7 @@ JVM; a release is still checked by hand. Add or update tests with every change t
 ./gradlew :tools:screenshots:test          # UI tests (tools/screenshots/CLAUDE.md)
 ./gradlew :data:source:local:implementation:iosSimulatorArm64Test   # the file storage contract on the iOS simulator
 ./gradlew :data:source:local:implementation:wasmJsBrowserTest       # the same contract over OPFS, in headless Chrome
+./gradlew :data:source:local:implementation:largeArchiveImportTest  # archives past the heap imported in 128 MiB (-Pcampfire.largeArchiveTest=5g by hand)
 ./gradlew :tools:screenshots:benchmark       # timings of a 3,000-song library, by hand only (machine-dependent)
 ```
 

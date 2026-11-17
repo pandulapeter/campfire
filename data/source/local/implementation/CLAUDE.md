@@ -52,8 +52,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
   `QuotaExceededError` on the web, so the app and sync say the device is full.
 - **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage`, on the iOS
   simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job), and in headless Chrome over
-  `OpfsFileStorage` under a folder of its own per test (`wasmJsBrowserTest`, filtered to that class, CI's `compile` job);
-  what only the JVM does stays in `JvmFileStorageTest`. `LargeFileMemoryTest` exports two 50 MiB attachments and
+  `OpfsFileStorage` under a folder of its own per test (`wasmJsBrowserTest`, filtered to it and
+  `OpfsStagedUnpackTimeTest`, CI's `compile` job); what only the JVM does stays in `JvmFileStorageTest`. `LargeFileMemoryTest` exports two 50 MiB attachments and
   copies a 50 MiB draft file in a JVM capped at 128 MB (`largeFileMemoryTest`, which `desktopTest` depends on).
 - **Random reads, moves, copies, free space** (`openSource`, `moveInto`, `copyInto`, `availableSpace`): a `FileSource`
   reads at 64-bit positions (JVM `FileChannel` opened `READ` only, iOS `pread`, the web slices of one `File` snapshot);
@@ -155,6 +155,13 @@ Skipped or unreadable files are logged to the injected `Logger`.
   `campfire.importCorpus` the corpus's archives and its folders packed. Allowed, each checked: files past the in-memory
   budgets (`BudgetDifference`), ZIP64 read as its twin without it (`Zip64Twin`), and the streaming-only caps across
   nested archives (`StreamingCaps`). Keep the CI part within a minute.
+- `LargeArchiveImportTest` (desktop, its own task `largeArchiveImportTest` under a 128 MiB heap, out of `desktopTest`
+  and so of the pre-commit hook; a step of CI's tests) imports archives generated on the fly through the same graph
+  (`importGraph`) over `MeteredFileStorage`, which fails a write into `imports/` past what the ledger reserved: the
+  largest of `campfire.largeArchiveTest`'s size (600m in CI, 5g by hand), 70,000 and `MAX_ARCHIVE_ENTRIES` entries, an
+  export round trip past 65,535 files, cancellations, a filling disk, `NO_SPACE`'s amount, a killed write, a staged file
+  gone. `OpfsStagedUnpackTimeTest` (`wasmJsBrowserTest`) holds a staged 70,000-entry unpack in headless Chrome to five
+  minutes (`karma.config.d` lifts mocha's two seconds).
 
 ## Documents (`model/`, `mapper/`)
 
