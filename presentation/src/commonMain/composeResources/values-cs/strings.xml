@@ -142,7 +142,7 @@
     <string name="export_songs_saved">Písně uloženy</string>
     <string name="export_library_saved">Knihovna exportována</string>
     <string name="export_log_saved">Protokol uložen</string>
-    <string name="export_too_large_to_import">Tento archiv obsahuje víc, než Campfire dokáže najednou importovat: 24 MB písní a 64 MB obrázků, celkem 88 MB. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících, zabalené spolu s obrázky, které zobrazují.</string>
+    <string name="export_too_large_to_import">Tento archiv obsahuje víc, než Campfire dokáže najednou importovat: 24 MB písní, 64 MB obrázků a 50 MB příloh, v archivu nejvýše 88 MB. Je to úplná kopie tvé knihovny; pokud ji chceš obnovit, rozbal ho a importuj písně po několika tisících, zabalené spolu s obrázky a přílohami, které uvádějí.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Jeden soubor nešlo přečíst a v archivu chybí: %2$s</item>
         <item quantity="few">%1$d soubory nešlo přečíst a v archivu chybí. Mezi nimi: %2$s</item>

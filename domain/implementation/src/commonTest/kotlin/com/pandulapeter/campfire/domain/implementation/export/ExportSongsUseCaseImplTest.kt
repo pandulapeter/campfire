@@ -118,6 +118,22 @@ class ExportSongsUseCaseImplTest {
         assertEquals(false, "images/$unused" in archive.packed)
     }
 
+    @Test
+    fun `a song's attachment goes under images beside its pictures, counted apart from them`() = runTest {
+        val picture = FakeImageRepository.picture(1)
+        val pictureName = images.store(picture)
+        val recording = ByteArray(300) { 7 }
+        images.library["0123456789abcdef.mp3"] = recording
+        val text = "{title: A}\n{image: src=$pictureName}\n{meta: attachment 0123456789abcdef.mp3 Take.mp3}\n"
+
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+
+        assertEquals("a.zip", exported.name)
+        assertEquals(setOf("a.cho", "images/$pictureName", "images/0123456789abcdef.mp3"), archive.packed.keys)
+        assertEquals(picture.size.toLong(), exported.unpackedImageSize)
+        assertEquals(recording.size.toLong(), exported.unpackedAttachmentSize)
+    }
+
     private val asStored = { _: String, text: String -> text }
 
     /** @param names What the import would name a song, by the fallback title it is asked with. */

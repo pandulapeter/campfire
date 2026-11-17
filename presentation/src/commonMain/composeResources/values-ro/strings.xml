@@ -144,7 +144,7 @@
     <string name="export_songs_saved">Cântece salvate</string>
     <string name="export_library_saved">Bibliotecă exportată</string>
     <string name="export_log_saved">Jurnal salvat</string>
-    <string name="export_too_large_to_import">Arhiva conține mai mult decât poate importa Campfire deodată: 24 MB de cântece și 64 MB de imagini, 88 MB în total. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă câteva mii de cântece o dată, arhivate împreună cu imaginile pe care le arată.</string>
+    <string name="export_too_large_to_import">Arhiva conține mai mult decât poate importa Campfire deodată: 24 MB de cântece, 64 MB de imagini și 50 MB de atașamente, într-o arhivă de cel mult 88 MB. Este o copie completă a bibliotecii; ca s-o readuci, dezarhiveaz-o și importă câteva mii de cântece o dată, arhivate împreună cu imaginile și atașamentele pe care le numesc.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Un fișier nu a putut fi citit și nu este în arhivă: %2$s</item>
         <item quantity="few">%1$d fișiere nu au putut fi citite și nu sunt în arhivă. Printre ele: %2$s</item>

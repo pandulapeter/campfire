@@ -17,8 +17,8 @@ import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 /**
  * [entries] and then the pictures they name ([images]) as a zip archive called [name], written into a temporary file
  * one entry at a time, knowing what an import would unpack it to, since its entries are compressed, and how much of
- * that is pictures. Null, the file removed, where not one entry could be read. Whatever ends the packing early (a
- * failure, a cancellation) removes the file before it is passed on.
+ * that is pictures and attachments. Null, the file removed, where not one entry could be read. Whatever ends the packing
+ * early (a failure, a cancellation) removes the file before it is passed on.
  */
 internal suspend fun exportedArchive(
     archiveRepository: ArchiveRepository,
@@ -51,5 +51,6 @@ internal suspend fun exportedArchive(
         content = content,
         unpackedSize = packed.unpackedSize,
         unpackedImageSize = images.size,
+        unpackedAttachmentSize = images.attachmentSize,
     )
 }

@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Dalok elmentve</string>
     <string name="export_library_saved">Könyvtár exportálva</string>
     <string name="export_log_saved">Napló elmentve</string>
-    <string name="export_too_large_to_import">Ez az archívum többet tartalmaz, mint amennyit a Campfire egyszerre importálni tud: 24 MB dalt és 64 MB képet, összesen 88 MB-ot. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importálj egyszerre néhány ezer dalt, a képeikkel együtt tömörítve.</string>
+    <string name="export_too_large_to_import">Ez az archívum többet tartalmaz, mint amennyit a Campfire egyszerre importálni tud: 24 MB dalt, 64 MB képet és 50 MB csatolmányt, legfeljebb 88 MB-os archívumban. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importálj egyszerre néhány ezer dalt, a képeikkel és csatolmányaikkal együtt tömörítve.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Egy fájlt nem sikerült beolvasni, így nincs benne az archívumban: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült beolvasni, így nincsenek benne az archívumban. Köztük: %2$s</item>

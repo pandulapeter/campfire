@@ -24,19 +24,26 @@ data class ExportedFile(
     val unpackedSize: Long = content.size,
     /** The part of [unpackedSize] that is pictures (an archive's `images/`), which an import reads within a budget of its own. */
     val unpackedImageSize: Long = 0,
+    /**
+     * The part of [unpackedSize] that is files attached to songs (an archive's `images/` that no song shows as a picture),
+     * which an import reads within a budget of its own.
+     */
+    val unpackedAttachmentSize: Long = 0,
 ) {
 
     constructor(name: String, mimeType: String, bytes: ByteArray) : this(name = name, mimeType = mimeType, content = ExportedContent.Bytes(bytes))
 
     /**
      * Whether an import would not take the archive whole: one larger than it reads at all, unpacking to more songs than
-     * it holds, or to more pictures than it reads, the rest of which it leaves out with their songs still imported.
+     * it holds, or to more pictures or attachments than it reads, the rest of which it leaves out with their songs still
+     * imported.
      */
     val isTooLargeToImport
         get() = mimeType == ZIP_MIME_TYPE && (
             content.size > ImportLimits.MAX_ARCHIVE_SIZE ||
-                unpackedSize - unpackedImageSize > ImportLimits.MAX_IMPORT_SIZE ||
-                unpackedImageSize > ImportLimits.MAX_IMPORT_IMAGES_SIZE
+                unpackedSize - unpackedImageSize - unpackedAttachmentSize > ImportLimits.MAX_IMPORT_SIZE ||
+                unpackedImageSize > ImportLimits.MAX_IMPORT_IMAGES_SIZE ||
+                unpackedAttachmentSize > ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
             )
 
     /** Whether the archive is larger, packed or unpacked, than a shared link's copy may be ([ImportLimits.MAX_SHARED_COPY_SIZE]). */

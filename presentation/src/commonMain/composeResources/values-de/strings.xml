@@ -127,7 +127,7 @@
     <string name="export_songs_saved">Songs gespeichert</string>
     <string name="export_library_saved">Bibliothek exportiert</string>
     <string name="export_log_saved">Protokoll gespeichert</string>
-    <string name="export_too_large_to_import">Dieses Archiv enthält mehr, als Campfire auf einmal importieren kann: 24 MB Songs und 64 MB Bilder, insgesamt 88 MB. Es ist eine vollständige Kopie deiner Bibliothek; um sie zurückzuholen, entpacke es und importiere jeweils einige Tausend Songs, gezippt mit den Bildern, die sie zeigen.</string>
+    <string name="export_too_large_to_import">Dieses Archiv enthält mehr, als Campfire auf einmal importieren kann: 24 MB Songs, 64 MB Bilder und 50 MB Anhänge, in einem Archiv von höchstens 88 MB. Es ist eine vollständige Kopie deiner Bibliothek; um sie zurückzuholen, entpacke es und importiere jeweils einige Tausend Songs, gezippt mit den Bildern und Anhängen, die sie nennen.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">Eine Datei konnte nicht gelesen werden und fehlt im Archiv: %2$s</item>
         <item quantity="other">%1$d Dateien konnten nicht gelesen werden und fehlen im Archiv. Darunter: %2$s</item>

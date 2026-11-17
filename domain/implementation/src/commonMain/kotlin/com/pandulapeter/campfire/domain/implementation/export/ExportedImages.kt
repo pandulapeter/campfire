@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
@@ -23,6 +24,9 @@ import com.pandulapeter.campfire.data.repository.api.ImageRepository
  * songs name it, only the library's own (a song may name one the library lacks), in an order that depends on nothing
  * but the names, which a shared copy built again from the same files relies on (`SharedCopySync` packs the same order).
  * Older versions skip `images/` unread, keeping the songs' directives as they are.
+ *
+ * The files attached to songs go there too, under their content names, so an import needs no other folder. One a song
+ * shows as a picture counts as a picture, whatever else names it, as the import reads it.
  */
 internal class ExportedImages private constructor(
     private val imageRepository: ImageRepository,
@@ -31,13 +35,21 @@ internal class ExportedImages private constructor(
 
     private val held = libraryImageNames.toHashSet()
     private val named = mutableSetOf<String>()
+    private val shown = mutableSetOf<String>()
 
     /** What the pictures written so far add up to, which an import reads within a budget of its own. */
     var size = 0L
         private set
 
+    /** What the attachments written so far add up to, which an import reads within another budget of its own. */
+    var attachmentSize = 0L
+        private set
+
     /** Notes the library files [text] names (pictures and attachments), as it goes into the archive, and answers it unchanged. */
-    fun named(text: String) = text.also { named += libraryFilesNamedBy(it) }
+    fun named(text: String) = text.also {
+        named += libraryFilesNamedBy(it)
+        shown += ChordProImages.referencedSources(it)
+    }
 
     /** Whether [text] names a file the library holds, which makes a song exported alone an archive. */
     fun isNamedBy(text: String) = libraryFilesNamedBy(text).any { it in held }
@@ -49,7 +61,7 @@ internal class ExportedImages private constructor(
                 null
             } else {
                 imageRepository.loadImage(name)?.let { bytes ->
-                    size += bytes.size
+                    if (name in shown) size += bytes.size else attachmentSize += bytes.size
                     ArchiveEntry(name = "$FOLDER$name", bytes = bytes)
                 }
             }

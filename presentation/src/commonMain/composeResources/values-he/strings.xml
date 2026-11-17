@@ -143,7 +143,7 @@
     <string name="export_songs_saved">השירים נשמרו</string>
     <string name="export_library_saved">הספרייה יוצאה</string>
     <string name="export_log_saved">היומן נשמר</string>
-    <string name="export_too_large_to_import">הארכיון הזה מכיל יותר ממה ש־Campfire יכול לייבא בבת אחת: 24 MB של שירים ו־64 MB של תמונות, 88 MB בסך הכול. זהו עותק מלא של הספרייה; כדי לשחזר אותו, יש לחלץ אותו ולייבא כמה אלפי שירים בכל פעם, דחוסים יחד עם התמונות שהם מציגים.</string>
+    <string name="export_too_large_to_import">הארכיון הזה מכיל יותר ממה ש־Campfire יכול לייבא בבת אחת: 24 MB של שירים, 64 MB של תמונות ו־50 MB של קבצים מצורפים, בארכיון של 88 MB לכל היותר. זהו עותק מלא של הספרייה; כדי לשחזר אותו, יש לחלץ אותו ולייבא כמה אלפי שירים בכל פעם, דחוסים יחד עם התמונות והקבצים המצורפים שהם מזכירים.</string>
     <plurals name="export_skipped_files">
         <item quantity="one">קובץ אחד לא נקרא ואינו נמצא בארכיון: %2$s</item>
         <item quantity="two">שני קבצים לא נקראו ואינם נמצאים בארכיון. ביניהם: %2$s</item>

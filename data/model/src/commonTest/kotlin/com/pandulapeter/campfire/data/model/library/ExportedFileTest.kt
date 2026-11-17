@@ -39,6 +39,18 @@ internal class ExportedFileTest {
     }
 
     @Test
+    fun `attachments are judged by their own budget, never by the songs' or the pictures'`() {
+        val songs = ImportLimits.MAX_IMPORT_SIZE
+        val pictures = ImportLimits.MAX_IMPORT_IMAGES_SIZE
+        val attachments = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
+        val all = songs + pictures + attachments
+
+        assertFalse(archive(size = 1_000L, unpackedSize = all, unpackedImageSize = pictures, unpackedAttachmentSize = attachments).isTooLargeToImport)
+        assertTrue(archive(size = 1_000L, unpackedSize = all + 1, unpackedImageSize = pictures, unpackedAttachmentSize = attachments + 1).isTooLargeToImport)
+        assertTrue(archive(size = 1_000L, unpackedSize = all + 1, unpackedImageSize = pictures, unpackedAttachmentSize = attachments).isTooLargeToImport)
+    }
+
+    @Test
     fun `a shared copy may be no larger than every version opening a link downloads, pictures included`() {
         val limit = ImportLimits.MAX_SHARED_COPY_SIZE
 
@@ -54,12 +66,13 @@ internal class ExportedFileTest {
         assertFalse(pdf.isTooLargeToImport)
     }
 
-    private fun archive(size: Long, unpackedSize: Long, unpackedImageSize: Long = 0) =
+    private fun archive(size: Long, unpackedSize: Long, unpackedImageSize: Long = 0, unpackedAttachmentSize: Long = 0) =
         ExportedFile(
             name = "songs.zip",
             mimeType = ExportedFile.ZIP_MIME_TYPE,
             content = ExportedContent.TemporaryFile(path = "/exports/songs.zip", size = size),
             unpackedSize = unpackedSize,
             unpackedImageSize = unpackedImageSize,
+            unpackedAttachmentSize = unpackedAttachmentSize,
         )
 }

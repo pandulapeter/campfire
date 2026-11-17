@@ -17,11 +17,12 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
  * Android app has a heap of about 192 MB to itself, and running out of it cannot be caught.
  *
  * The numbers are the same on every platform, so that an archive imports the same everywhere. At its worst an import
- * holds what was picked ([MAX_ARCHIVE_SIZE]), the pictures its songs name ([MAX_IMPORT_IMAGES_SIZE]), and the songs it
- * unpacked to with their text, which is two bytes a character as soon as a song steps outside Latin-1: three times
- * [MAX_IMPORT_SIZE]. An archive near its limit is mostly pictures, which are stored rather than deflated, so its own
- * bytes and its pictures' are much the same bytes twice, and the songs are the small part of it. The picked archive is
- * let go of once the review has its plan, which keeps the pictures and the songs only.
+ * holds what was picked ([MAX_ARCHIVE_SIZE]), the pictures and attachments its songs name ([MAX_IMPORT_IMAGES_SIZE],
+ * [MAX_IMPORT_ATTACHMENTS_SIZE]), and the songs it unpacked to with their text, which is two bytes a character as soon as
+ * a song steps outside Latin-1: three times [MAX_IMPORT_SIZE]. An archive near its limit is mostly pictures and
+ * attachments, which are stored rather than deflated, so its own bytes and theirs are much the same bytes twice, and the
+ * songs are the small part of it. The picked archive is let go of once the review has its plan, which keeps the pictures,
+ * the attachments, and the songs only.
  */
 object ImportLimits {
 
@@ -75,10 +76,25 @@ object ImportLimits {
     const val MAX_IMPORT_IMAGES_SIZE = 64L shl 20
 
     /**
+     * The files attached to songs that one import reads for the songs naming them, apart from the songs' and the pictures'
+     * budgets: one attachment of [MAX_ATTACHMENT_FILE_SIZE], or several smaller ones. An attachment past it is left out
+     * and reported with its song, which still imports and keeps its attachment line, so that sync can bring the file later.
+     * Not larger, since everything an import reads is held in memory at once (see the class), and a small archive of
+     * documents that deflate well could otherwise unpack to more than the heap. The export's message names it as 50 MB
+     * in every language.
+     */
+    const val MAX_IMPORT_ATTACHMENTS_SIZE = MAX_ATTACHMENT_FILE_SIZE
+
+    /**
      * One archive as it was picked or downloaded, and everything one selection reads: the songs' budget and the
      * pictures' together, so that an export of songs with their pictures imports whole. The import's and the export's
      * messages name it as 88 MB in every language. Versions before pictures refuse an archive over [MAX_IMPORT_SIZE] as
      * too large, and import a smaller one with its pictures reported as skipped and its image directives kept.
+     *
+     * Not grown by [MAX_IMPORT_ATTACHMENTS_SIZE]: the picked archive is held whole beside what it unpacks to, and an archive
+     * of stored recordings unpacks to as many bytes again, so an archive of 88 MB already costs an Android heap of about
+     * 192 MB most of what it has. Attachments mostly fit beside the songs and pictures of a smaller archive; a library whose
+     * export is larger is moved by sync, and its export says it cannot be imported back whole.
      */
     const val MAX_ARCHIVE_SIZE = MAX_IMPORT_SIZE + MAX_IMPORT_IMAGES_SIZE
 
