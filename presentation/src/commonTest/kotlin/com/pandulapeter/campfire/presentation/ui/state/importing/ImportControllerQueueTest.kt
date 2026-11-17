@@ -49,6 +49,7 @@ import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -111,6 +113,9 @@ class ImportControllerQueueTest {
     private var prepareGate: CompletableDeferred<Unit>? = null
     private var writeGate: CompletableDeferred<Unit>? = null
 
+    /** Run as a preparation ends however it ends, as the staging a cancelled one leaves is deleted. */
+    private var onPrepareEnded: suspend () -> Unit = {}
+
     /**
      * The view model's part of the import, on [viewScope] (cancelled to clear it), over the one [ImportWork] of the app,
      * built on the first start and kept by the next.
@@ -127,7 +132,11 @@ class ImportControllerQueueTest {
                         prepareCount++
                         preparedFiles += files
                         onPrepare()
-                        prepareGate?.await()
+                        try {
+                            prepareGate?.await()
+                        } finally {
+                            onPrepareEnded()
+                        }
                         return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped, imageFiles = plannedImages)
                     }
                 },
@@ -1056,6 +1065,34 @@ class ImportControllerQueueTest {
             ),
             states,
         )
+    }
+
+    @Test
+    fun `Cancel leaves the loading screen only once the cancelled preparation has cleaned up after itself`() = runTest {
+        prepareGate = CompletableDeferred()
+        val cleanupGate = CompletableDeferred<Unit>()
+        var isCleanedUp = false
+        onPrepareEnded = {
+            withContext(NonCancellable) {
+                cleanupGate.await()
+                isCleanedUp = true
+            }
+        }
+        startController()
+        val settled = enqueueTwoSongs()
+        settle()
+        controller.cancelImportPreparation()
+        settle()
+        assertIs<ImportReport.Loading>(reportState.importReport.value)
+        assertTrue(CampfireDestination.ImportReport in backStack)
+        assertFalse(settled.isCompleted)
+        cleanupGate.complete(Unit)
+        settle()
+        assertTrue(isCleanedUp)
+        assertNull(reportState.importReport.value)
+        assertFalse(CampfireDestination.ImportReport in backStack)
+        assertTrue(settled.isCompleted)
+        assertEquals(0, importCount)
     }
 
     @Test

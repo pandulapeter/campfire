@@ -144,6 +144,8 @@ class ImportWork(
      * written by then, so the library is exactly as it was; the controller that takes the outcome lets go of the screen,
      * and the queue goes on to its next batch. Once the plan is being written or reviewed there is no preparation left to
      * cancel, and a late call does nothing. Cancellation is noticed where the preparation yields, between files and songs.
+     * The screen goes only once the preparation has ended, which awaiting a cancelled outcome waits for: what the
+     * preparation staged and deletes as it ends (under `NonCancellable`, as `ImportStaging`'s sinks do) is gone first.
      */
     fun cancel() {
         val pending = preparation ?: return
