@@ -10,17 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.messages
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.localization.joinIsolated
@@ -109,18 +104,18 @@ import com.pandulapeter.campfire.presentation.ui.firstRun.FirstRunController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
 
 /**
- * The one line of text the app has to say after something it was asked to do has finished. It sits above the
- * navigation chrome rather than inside a screen, because the screen an import was started from is often not the one
- * the user is looking at when it ends.
+ * The one line of text the app has to say after something it was asked to do has finished: the queue, composed once at
+ * the root rather than inside a screen, because the screen an import was started from is often not the one the user is
+ * looking at when it ends. It draws nothing itself; the [MessagesPresenter] of the place the user is looking at
+ * ([MessagePlaces]) does.
  */
 @Composable
 internal fun Messages(
-    modifier: Modifier = Modifier,
+    places: MessagePlaces,
     messageSink: MessageSink,
     importController: ImportController,
     firstRunController: FirstRunController,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
     // Only the head of the view model's queue is read: the text of a message can only be built in a composition
     // (string resources are composable), and two identical results in a row are still two messages - which is what
     // the numbering is for. Two failed exports are the same object, and an effect keyed on the message alone would not
@@ -139,7 +134,7 @@ internal fun Messages(
     }
     LaunchedEffect(head?.index) {
         if (head != null && text != null) {
-            val result = snackbarHostState.showSnackbar(
+            val result = places.showSnackbar(
                 message = text,
                 actionLabel = actionLabel,
                 duration = if (actionLabel != null || '\n' in text) SnackbarDuration.Long else SnackbarDuration.Short,
@@ -155,12 +150,6 @@ internal fun Messages(
             }
             messageSink.onMessageShown(head)
         }
-    }
-    SnackbarHost(
-        modifier = modifier,
-        hostState = snackbarHostState,
-    ) { data ->
-        Snackbar(snackbarData = data)
     }
 }
 

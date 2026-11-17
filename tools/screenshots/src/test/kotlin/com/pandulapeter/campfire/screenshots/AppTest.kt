@@ -375,6 +375,8 @@ private class TestFilePicker(private val files: List<ImportedFile>, private val 
 
     override suspend fun pickFiles() = files
 
+    override suspend fun pickAttachment() = files.firstOrNull()
+
     override suspend fun pickPhotos(isMultiple: Boolean) = checkNotNull(photos).let { if (isMultiple) it else it.take(1) }
 
     override suspend fun saveFile(file: ExportedFile) = false

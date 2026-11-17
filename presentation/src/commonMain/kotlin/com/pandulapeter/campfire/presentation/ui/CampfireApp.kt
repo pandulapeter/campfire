@@ -57,6 +57,8 @@ import com.pandulapeter.campfire.presentation.localization.layoutDirection
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.update.AppUpdateGate
+import com.pandulapeter.campfire.presentation.ui.messages.LocalMessagePlaces
+import com.pandulapeter.campfire.presentation.ui.messages.MessagePlaces
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeHapticsEffect
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeNotificationEffect
 import com.pandulapeter.campfire.presentation.ui.progress.WorkProgressBar
@@ -145,6 +147,7 @@ fun CampfireApp(
         LocalNotationCache provides remember { NotationCache() },
         LocalNotationInstrument provides userPreferences?.instrument,
         LocalSongImageLoader provides viewModel.songImages,
+        LocalMessagePlaces provides remember { MessagePlaces() },
     ) {
         // The flow is handed over rather than collected here, so a change of the library recomposes nothing.
         WarmNotationEngine(songs = viewModel.libraryState.allSongs)

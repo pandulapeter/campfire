@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.ui.chrome.SharedToolsButtonGroup
 import com.pandulapeter.campfire.presentation.ui.components.menu.LocalIsCoveredByRequiredUpdate
+import com.pandulapeter.campfire.presentation.ui.messages.LocalMessagePlaces
+import com.pandulapeter.campfire.presentation.ui.messages.MessagePlaces
 import com.pandulapeter.campfire.presentation.ui.messages.Messages
+import com.pandulapeter.campfire.presentation.ui.messages.MessagesPresenter
 import com.pandulapeter.campfire.presentation.ui.metronome.MetronomeIconBeat
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.export.ExportHost
@@ -72,12 +75,18 @@ internal fun BoxScope.CampfireOverlays(
             urlOpener = urlOpener,
         )
     }
-    Messages(
+    LocalMessagePlaces.current?.let { places ->
+        Messages(
+            places = places,
+            messageSink = viewModel.messageSink,
+            importController = viewModel.importController,
+            firstRunController = viewModel.firstRunController,
+        )
+    }
+    MessagesPresenter(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .padding(messagesPadding),
-        messageSink = viewModel.messageSink,
-        importController = viewModel.importController,
-        firstRunController = viewModel.firstRunController,
+        place = MessagePlaces.ROOT,
     )
 }

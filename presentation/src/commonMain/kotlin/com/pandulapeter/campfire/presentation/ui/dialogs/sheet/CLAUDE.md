@@ -44,3 +44,8 @@
   final (drag off, a cut-short hide finished, Material's own hide), so a double tap never leaves an answered sheet up.
 - Every `visibleDialog` sheet dismisses through `dismissSheet(itsOwnDialog)`, a no-op once another dialog took its
   place: a sheet replaced while hiding reports the cancelled animation as a dismissal.
+- **Messages are drawn in the topmost open sheet** (`SheetMessages`, `ui/messages/MessagePlaces`), over its content's
+  bottom, above the keyboard and the navigation bar, taking none of the pinned height; at the root while no sheet is
+  open. A sheet stops drawing them as it starts closing, so a message sent then shows at the root. One
+  `SnackbarHostState` at the root drives them all; a message already showing stays where it started while that place is
+  still open, since a host composed anew replays its enter animation.

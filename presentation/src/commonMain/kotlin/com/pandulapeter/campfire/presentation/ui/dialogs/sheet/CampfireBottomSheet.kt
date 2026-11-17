@@ -51,10 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -224,78 +220,68 @@ internal fun CampfireBottomSheet(
         val isKeyboardVisible = keyboardBackHandler()
         val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
         CompactKeyboardEffect(isEnabled = isCompactKeyboard)
-        // A sheet that opens onto none of its fields would otherwise hold no focus, and a key only travels along the
-        // focus path, so Ctrl / Cmd + S would go unheard until something in it was clicked. A bare focus target draws
-        // nothing and brings no keyboard up. It is taken a frame in, and only where nothing in the sheet has the focus
-        // by then: a form's first field asks for it from an effect of its own, and the order the two effects run in is
-        // no promise of which one ends up with it.
         // Kept clear here rather than by Material, at its tallest in a short window (animateSheetContentHeight says why).
         val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-        val sheetFocus = remember { FocusRequester() }
-        val sheetFocusState = remember { SheetFocusState() }
-        LaunchedEffect(Unit) {
-            withFrameNanos { }
-            if (!sheetFocusState.hasFocus) sheetFocus.requestFocus()
-        }
+        val sheetFocusTarget = rememberSheetFocusTarget()
         // A keyboard in a short window leaves less height than the header and a field take together, so there the
         // header and the pinned controls scroll with the rest, above the keyboard, and bringing the caret into view can
         // move them out of its way. The content keeps the window's height inside that scroll, which is what bounds
         // the lists in it that would otherwise be measured against an infinite one.
-        Column(
-            modifier = Modifier.fillMaxWidth()
-                .keepSheetFromWheelScrolls()
-                .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
-                .saveShortcut { saveShortcut.action?.invoke() }
-                .onFocusChanged { sheetFocusState.hasFocus = it.hasFocus }
-                .focusRequester(sheetFocus)
-                .focusTarget()
-                .then(
-                    if (isCompactKeyboard) {
-                        Modifier.windowInsetsPadding(topInset).heightIn(max = windowHeight).imePadding()
-                            .fadingTopEdge(scrollState, sheetContainerColor())
-                            .bounceVerticalScroll(scrollState)
-                    } else {
-                        // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
-                        // with Next is scrolled above it: padded inside the scroll, the viewport ran on under the keyboard,
-                        // where the field already counted as visible.
-                        Modifier.imePadding()
-                    },
-                ),
-        ) {
-            val consumedInsets = remember { MutableWindowInsets() }
-            val heightAnimation = remember { SheetHeightAnimation() }
+        SheetMessages(isClosing = isClosing) {
             Column(
-                modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
-                    .animateSheetContentHeight(heightAnimation) { if (isCompactKeyboard) 0 else topInset.getTop(this) }
-                    .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
+                modifier = Modifier.fillMaxWidth()
+                    .keepSheetFromWheelScrolls()
+                    .onGloballyPositioned { onTopMoved?.invoke(it.positionOnScreen().y) }
+                    .saveShortcut { saveShortcut.action?.invoke() }
+                    .then(sheetFocusTarget)
+                    .then(
+                        if (isCompactKeyboard) {
+                            Modifier.windowInsetsPadding(topInset).heightIn(max = windowHeight).imePadding()
+                                .fadingTopEdge(scrollState, sheetContainerColor())
+                                .bounceVerticalScroll(scrollState)
+                        } else {
+                            // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
+                            // with Next is scrolled above it: padded inside the scroll, the viewport ran on under the keyboard,
+                            // where the field already counted as visible.
+                            Modifier.imePadding()
+                        },
+                    ),
             ) {
-                CompositionLocalProvider(
-                    // On Android the sheet is a window whose view resolves its direction a frame after it is attached, so the
-                    // first frame of a right-to-left language would be laid out left to right and its grids animate the flip.
-                    LocalLayoutDirection provides currentLanguage.value.layoutDirection,
-                    LocalIsSheetClosing provides isClosing,
-                    // A sheet nested inside this one's content is not the dialog the request was for.
-                    LocalIsSheetCloseRequested provides false,
-                    LocalSheetSaveShortcut provides saveShortcut,
-                    LocalSheetHeightLag provides heightAnimation::heightLag,
+                val consumedInsets = remember { MutableWindowInsets() }
+                val heightAnimation = remember { SheetHeightAnimation() }
+                Column(
+                    modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
+                        .animateSheetContentHeight(heightAnimation) { if (isCompactKeyboard) 0 else topInset.getTop(this) }
+                        .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
                 ) {
-                    SheetHeader(
-                        title = title,
-                        subtitle = subtitle,
-                        titleMaxLines = titleMaxLines,
-                        actions = actions,
-                        onClose = if (isDismissibleByTouch) cancel else null,
-                        onActionDone = close,
-                    )
-                    // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-                    // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
-                    // also covers the navigation bar; reserve only the bottom space still left to this content.
-                    val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
-                        .only(WindowInsetsSides.Bottom).asPaddingValues()
-                    BottomSheetContentScope(
-                        columnScope = this,
-                        close = close,
-                    ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
+                    CompositionLocalProvider(
+                        // On Android the sheet is a window whose view resolves its direction a frame after it is attached, so the
+                        // first frame of a right-to-left language would be laid out left to right and its grids animate the flip.
+                        LocalLayoutDirection provides currentLanguage.value.layoutDirection,
+                        LocalIsSheetClosing provides isClosing,
+                        // A sheet nested inside this one's content is not the dialog the request was for.
+                        LocalIsSheetCloseRequested provides false,
+                        LocalSheetSaveShortcut provides saveShortcut,
+                        LocalSheetHeightLag provides heightAnimation::heightLag,
+                    ) {
+                        SheetHeader(
+                            title = title,
+                            subtitle = subtitle,
+                            titleMaxLines = titleMaxLines,
+                            actions = actions,
+                            onClose = if (isDismissibleByTouch) cancel else null,
+                            onActionDone = close,
+                        )
+                        // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
+                        // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
+                        // also covers the navigation bar; reserve only the bottom space still left to this content.
+                        val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
+                            .only(WindowInsetsSides.Bottom).asPaddingValues()
+                        BottomSheetContentScope(
+                            columnScope = this,
+                            close = close,
+                        ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
+                    }
                 }
             }
         }
