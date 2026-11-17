@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import kotlinx.coroutines.test.runTest
 import kotlin.random.Random
 import kotlin.test.Test
@@ -33,6 +34,7 @@ internal class ZipWriterStreamingTest {
         ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = sink)
 
         assertContentEquals(ZipWriter.write(entries), sink.bytes())
+        assertEquals("3a54450db27d81ecb35d3fd86d0219f154a314cdab882fd634affbc197f279ef", Sha256.hashToHex(sink.bytes()))
     }
 
     @Test
@@ -76,6 +78,7 @@ internal class ZipWriterStreamingTest {
         val kept = entries.filter { it.name != "covers/cover.jpg" }
         assertEquals(kept.size, summary.entryCount)
         assertContentEquals(ZipWriter.write(kept), sink.bytes())
+        assertEquals("87dc918099d23a6b26caba56b73f739f827bf15a64c9a917cd66d6ed82f362b4", Sha256.hashToHex(sink.bytes()))
     }
 
     @Test
