@@ -29,16 +29,16 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   downloaded once and kept as a library file, never drawn from the web: the address the user gives the editor's From a
   link, a missing picture's Download, and an import's songs as its review opens (the "Pictures from links" switch in
   Settings → Features removes the import's). Sync never downloads one.
-- **Shared links**: sharing a song or setlist publishes a copy as a public link in the Dropbox connected for Sync,
-  kept current by sync runs; opening one downloads that zip from `dl.dropboxusercontent.com`, needing no account and
-  keeping nothing beyond the import.
+- **Shared links**: sharing a song or setlist publishes a copy (with the pictures and, within a budget of their own,
+  the attachments its songs name) as a public link in the Dropbox connected for Sync, kept current by sync runs; opening
+  one downloads that zip from `dl.dropboxusercontent.com`, needing no account and keeping nothing beyond the import.
 - Not Campfire's requests: the web build asks its own deployment which build is current; Android asks Play for updates
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
-  (Android without `library/files/`, whose photos would pass its 25 MB cap) and `preferences.json` — never the sync
-  credentials, the sync index, the shared links mirror and journal, the editor draft and its pictures, the iOS share
-  inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item,
-  `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with no preferences document
-  forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
+  (Android without `library/files/`, whose photos would pass its 25 MB cap; iOS without the attachments there) and
+  `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
+  draft and its pictures, the iOS share inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a
+  device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with
+  no preferences document forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
 ## Architecture
 
@@ -81,7 +81,8 @@ Library layout, inside each platform's app-private data directory:
 ```
 library/songs/*.cho                    one song per file; the file name is its identity
 library/setlists/*.setlist.json        one setlist per file
-library/files/<sha256 hex>.<ext>       the pictures songs show, named by content, deleted once no song names them
+library/files/<sha256 hex>.<ext>       the pictures songs show and the files they attach, named by content, deleted
+                                       once no song names them
 preferences/preferences.json           UserPreferences; never exported (.bad keeps the last undecodable one)
 preferences/sync-credentials.json      desktop and web; Keystore (sync-credentials.bin) / Keychain on Android / iOS
 preferences/sync-index.json            what sync last saw of both sides, file by file
@@ -177,6 +178,11 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
   keep it as a draft picture until Save; one named by its `https` address is downloaded into the library, never drawn
   from the web (From a link, Download, and an import's automatic downloads): `ui/songView`, `ui/screens/songEditor`,
   `ui/pictures`, `data/repository/implementation`, `domain/implementation`, `chordpro`.
+- Attachments (`{meta: attachment <file> <name>}`) are library files beside the pictures, any type on an allow-list of
+  documents, audio, video, pictures, and music formats (nothing that runs), at most 50 MB, never re-encoded; listed and
+  added in About the song and by the editor's Attach, opened as a copy under the shown name with the app the system
+  picks; synced, exported, and shared like pictures; hidden by the Features switch: `ui/songInfo`, `ui/platform`,
+  `data/repository/implementation`, `chordpro`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names with a capo; the keyboard always

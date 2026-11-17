@@ -35,5 +35,5 @@
   folder, not the scan, so new files are included and undecodable setlist JSON is backed up as stored. Unreadable or
   oversized files are named beside the archive.
 - An attachment opened from a song is copied whole into `exports/` under the name the song shows it by
-  (`attachmentFileName`: no character a file system refuses, its file's extension kept), replacing an earlier copy of
-  that name; the platform's opener owns it from then on.
+  (`attachmentFileName`: no character a file system refuses, its file's extension kept), numbered (`_2`, `_3`…) where a
+  copy of that name is there, which the app it went to may still have open; the platform's opener owns it from then on.
