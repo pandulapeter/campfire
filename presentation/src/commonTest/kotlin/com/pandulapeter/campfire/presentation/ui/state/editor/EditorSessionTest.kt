@@ -567,6 +567,22 @@ class EditorSessionTest {
     }
 
     @Test
+    fun `a pasted text that brings pictures from its links opens as it is, its pictures kept as draft pictures`() = runTest {
+        val fixture = fixture()
+        val text = "{title: A}\n{artist: B}\n{image: src=draft-3.png}\n{image: src=https://example.com/gone.png}"
+        val song = ImportPlan.SongEntry(
+            fileName = "a.cho",
+            text = text,
+            status = ImportPlan.Status.NEW,
+            sourceFileName = "Pasted.txt",
+            images = listOf(ImportPlan.SongImage(source = "https://example.com/chart.png", name = "draft-3.png", bytes = byteArrayOf(3), problem = null)),
+        )
+        assertTrue(fixture.session.openNewSongEditor(song, null))
+        assertEquals(text, fixture.session.editorDraft.value?.text)
+        assertEquals(setOf("draft-3.png"), draftImages)
+    }
+
+    @Test
     fun `pictures that are all refused open no editor`() = runTest {
         val fixture = fixture()
         assertFalse(fixture.session.openNewSongEditor(pictureSong(byteArrayOf(HEIC)), null))

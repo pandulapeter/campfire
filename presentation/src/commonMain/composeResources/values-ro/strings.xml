@@ -167,6 +167,7 @@
     <string name="import_conflicts_mixed">Mixt</string>
     <string name="import_loading_title">Se citesc fișierele</string>
     <string name="import_progress_downloading">Se descarcă fișierul</string>
+    <string name="import_progress_downloading_pictures">Se descarcă imaginile la care trimit cântecele</string>
     <string name="import_failed_unreachable">%1$s nu a putut fi accesat. Verifică conexiunea la internet și încearcă din nou.</string>
     <string name="import_failed_not_found">Nu există nimic de descărcat la această adresă. Linkul poate să fi expirat sau să fi fost eliminat.</string>
     <string name="import_failed_too_large">Fișierul depășește cei 88 MB pe care Campfire îi poate importa deodată.</string>
@@ -499,6 +500,8 @@
     <string name="settings_song_details_lookup_description">Oferă căutarea artistului, albumului, anului și autorilor unui cântec pe MusicBrainz și iTunes cât timp îi editezi detaliile</string>
     <string name="settings_cover_art">Coperte</string>
     <string name="settings_cover_art_description">Arată lângă cântec coperta de album pe care o indică, descărcând-o o singură dată și păstrând o copie pe acest dispozitiv</string>
+    <string name="settings_picture_links">Imagini din linkuri</string>
+    <string name="settings_picture_links_description">Descarcă imaginile pe care un cântec importat le indică printr-o adresă web, păstrând o copie în cântec</string>
     <string name="settings_group_song_page">Pagina cântecului</string>
     <string name="preferences_page_song">Cântec</string>
     <string name="settings_group_diagrams">Diagrame</string>

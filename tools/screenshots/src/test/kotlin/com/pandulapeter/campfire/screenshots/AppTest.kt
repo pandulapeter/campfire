@@ -105,8 +105,8 @@ internal data class TestAppearance(
  * app asks for files, and [pickedPhotos] whenever it asks the photo library, which it has only where they are given.
  *
  * Only the network is kept out: sync is `Fakes.kt`'s, the cover search finds nothing (`OfflineCoverArtRepository`),
- * covers are switched off unless [isCoverArtEnabled], and nothing else reaches outside unless a test opens a song
- * details lookup. The current version's What's new counts as seen.
+ * covers are switched off unless [isCoverArtEnabled], an import downloads no picture a song names by its address, and
+ * nothing else reaches outside unless a test opens a song details lookup. The current version's What's new counts as seen.
  *
  * [libraryFiles] are written into the library by their path in it (`files/<name>.png`, `songs/<name>.cho`), for what a
  * test makes rather than reads from its resources. [preferenceFiles] are written into the data directory's `preferences` folder by name, as a device that has run the
@@ -354,6 +354,7 @@ private fun writeLibrary(
         put("language", appearance.language.id)
         put("uiMode", if (appearance.isDark) UserPreferences.UiMode.DARK.id else UserPreferences.UiMode.LIGHT.id)
         put("isCoverArtEnabled", isCoverArtEnabled)
+        put("isPictureLinkDownloadEnabled", false)
         put("fontScale", fontScale)
         putJsonArray("seenWhatsNewVersions") { add(JsonPrimitive(System.getProperty("campfire.screenshots.versionName"))) }
         put("songLayout", songLayout.id)

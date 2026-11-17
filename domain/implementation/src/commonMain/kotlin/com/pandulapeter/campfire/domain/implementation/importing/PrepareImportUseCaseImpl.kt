@@ -53,6 +53,7 @@ internal class PrepareImportUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val documentRepository: DocumentRepository,
     private val imageRepository: ImageRepository,
+    private val pictureLinks: IncomingPictureLinks,
     private val logger: Logger,
 ) : PrepareImportUseCase {
 
@@ -159,7 +160,8 @@ internal class PrepareImportUseCaseImpl(
             val intake = imageRepository.libraryNameOf(file.bytes)
             (intake != ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)).also { isPicture -> if (!isPicture) triage.skippedFileNames += file.name }
         }
-        val songs = planSongs(songFiles, documentFiles, triage, onProgress)
+        val linkedImages = pictureLinks.planned(files = songFiles.map { it.file }, remainingImageSize = remainingImages, onProgress = onProgress)
+        val songs = planSongs(songFiles, documentFiles, triage, linkedImages, onProgress)
         return ImportPlan(
             songs = songs,
             setlists = planSetlists(setlistFiles, triage, ImportPlanner.plannedSongFileNames(songs)),
@@ -171,11 +173,15 @@ internal class PrepareImportUseCaseImpl(
         )
     }
 
-    /** Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner]. */
+    /**
+     * Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner], with
+     * the pictures it brings: its file's, and those of [linkedImages] (by address, [IncomingPictureLinks]) it names.
+     */
     private suspend fun planSongs(
         files: List<IncomingFile>,
         documents: List<IncomingFile>,
         triage: ImportTriage,
+        linkedImages: Map<String, ImportPlan.SongImage>,
         onProgress: (ImportProgress) -> Unit,
     ): List<ImportPlan.SongEntry> {
         val incoming = (files + documents).flatMapIndexed { index, (file, origin) ->
@@ -213,7 +219,7 @@ internal class PrepareImportUseCaseImpl(
                 if (isDocument) triage.unreadableDocumentFileNames += file.name else triage.skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
-            val images = IncomingImages.planned(file.images, imageRepository)
+            val images = linkedImages + IncomingImages.planned(file.images, imageRepository)
             val songs = parts.map { part ->
                 yield()
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is

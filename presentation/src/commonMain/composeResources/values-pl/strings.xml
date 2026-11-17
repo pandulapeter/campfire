@@ -163,6 +163,7 @@
     <string name="import_conflicts_mixed">Mieszane</string>
     <string name="import_loading_title">Odczytywanie plików</string>
     <string name="import_progress_downloading">Pobieranie pliku</string>
+    <string name="import_progress_downloading_pictures">Pobieranie obrazów, do których linkują piosenki</string>
     <string name="import_failed_unreachable">Nie udało się połączyć z %1$s. Sprawdź połączenie z internetem i spróbuj ponownie.</string>
     <string name="import_failed_not_found">Pod tym adresem nie ma nic do pobrania. Link mógł wygasnąć lub zostać usunięty.</string>
     <string name="import_failed_too_large">Ten plik jest większy niż 88 MB, które Campfire może zaimportować naraz.</string>
@@ -489,6 +490,8 @@
     <string name="settings_song_details_lookup_description">Proponuj wyszukanie wykonawcy, albumu, roku i autorów piosenki w MusicBrainz i iTunes podczas edycji jej szczegółów</string>
     <string name="settings_cover_art">Okładki</string>
     <string name="settings_cover_art_description">Pokazuj obok piosenki wskazaną w niej okładkę albumu, pobraną raz i przechowywaną na tym urządzeniu</string>
+    <string name="settings_picture_links">Obrazy z linków</string>
+    <string name="settings_picture_links_description">Pobieraj obrazy, które importowana piosenka wskazuje adresem internetowym, i przechowuj ich kopię w piosence</string>
     <string name="settings_group_song_page">Strona piosenki</string>
     <string name="preferences_page_song">Piosenka</string>
     <string name="settings_group_diagrams">Diagramy</string>

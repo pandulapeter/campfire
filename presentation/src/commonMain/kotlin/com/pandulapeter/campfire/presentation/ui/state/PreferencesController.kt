@@ -220,6 +220,8 @@ internal class PreferencesController(
 
     fun setSongDetailsLookupEnabled(value: Boolean) = changeUserPreferences { copy(isSongDetailsLookupEnabled = value) }
 
+    fun setPictureLinkDownloadEnabled(value: Boolean) = changeUserPreferences { copy(isPictureLinkDownloadEnabled = value) }
+
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 
     /** Picking a layout also answers the question the first song opened asks about it. */

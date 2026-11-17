@@ -27,6 +27,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_everything_off
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
+import com.pandulapeter.campfire.presentation.resources.settings_picture_links
+import com.pandulapeter.campfire.presentation.resources.settings_picture_links_description
 import com.pandulapeter.campfire.presentation.resources.settings_random_picks_description
 import com.pandulapeter.campfire.presentation.resources.settings_scales_description
 import com.pandulapeter.campfire.presentation.resources.settings_setlists_description
@@ -139,7 +141,7 @@ private fun OnlineSection(
     preferencesController: PreferencesController,
     userPreferences: UserPreferences?,
 ) = SettingsSection(title = stringResource(Res.string.settings_group_online)) {
-    // Both are about songs, so both are disabled while the songs are off, the way the setlists are.
+    // All three are about songs, so they are disabled while the songs are off, the way the setlists are.
     val areSongsEnabled = userPreferences?.areSongsEnabled != false
     // Off, nothing is asked of either catalogue for a song's details: the button in the Edit song details form is gone.
     SwitchListItem(
@@ -157,5 +159,13 @@ private fun OnlineSection(
         isChecked = userPreferences?.isCoverArtEnabled == true,
         isEnabled = areSongsEnabled,
         onCheckedChange = preferencesController::setCoverArtEnabled,
+    )
+    // Off, an import asks no host a song file names for anything; what the user downloads by pressing a button stays.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_picture_links),
+        description = stringResource(Res.string.settings_picture_links_description),
+        isChecked = userPreferences?.isPictureLinkDownloadEnabled == true,
+        isEnabled = areSongsEnabled,
+        onCheckedChange = preferencesController::setPictureLinkDownloadEnabled,
     )
 }

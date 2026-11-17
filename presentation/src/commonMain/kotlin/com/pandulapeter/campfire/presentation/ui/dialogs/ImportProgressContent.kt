@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.import_progress_comparing
 import com.pandulapeter.campfire.presentation.resources.import_progress_count
 import com.pandulapeter.campfire.presentation.resources.import_progress_downloading
+import com.pandulapeter.campfire.presentation.resources.import_progress_downloading_pictures
 import com.pandulapeter.campfire.presentation.resources.import_progress_finishing
 import com.pandulapeter.campfire.presentation.resources.import_progress_importing
 import com.pandulapeter.campfire.presentation.resources.import_progress_reading
@@ -84,6 +85,7 @@ private val ImportProgress.Phase.label
     get() = when (this) {
         ImportProgress.Phase.DOWNLOADING -> Res.string.import_progress_downloading
         ImportProgress.Phase.UNPACKING -> Res.string.import_progress_unpacking
+        ImportProgress.Phase.DOWNLOADING_PICTURES -> Res.string.import_progress_downloading_pictures
         ImportProgress.Phase.READING -> Res.string.import_progress_reading
         ImportProgress.Phase.COMPARING -> Res.string.import_progress_comparing
         ImportProgress.Phase.IMPORTING -> Res.string.import_progress_importing
@@ -92,5 +94,5 @@ private val ImportProgress.Phase.label
 
 /** The phases that only download, read and compare: the ones after them write, and an import is never left half written. */
 internal val ImportProgress.Phase.isCancellable
-    get() = this == ImportProgress.Phase.DOWNLOADING || this == ImportProgress.Phase.UNPACKING || this == ImportProgress.Phase.READING ||
-        this == ImportProgress.Phase.COMPARING
+    get() = this == ImportProgress.Phase.DOWNLOADING || this == ImportProgress.Phase.UNPACKING ||
+        this == ImportProgress.Phase.DOWNLOADING_PICTURES || this == ImportProgress.Phase.READING || this == ImportProgress.Phase.COMPARING

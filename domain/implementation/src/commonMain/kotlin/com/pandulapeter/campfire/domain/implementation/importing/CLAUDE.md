@@ -35,6 +35,10 @@
   the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it
   arrived. A file chosen on its own that is a picture by its bytes is `ImportPlan.imageFiles`, never a song; one left unread
   for its size is oversized.
+- **Pictures by address** (`IncomingPictureLinks`, only while `isPictureLinkDownloadEnabled`): every `https` `src` of
+  the batch's song files is downloaded once as it is prepared (its own progress phase, four at a time), within the
+  picture limit and what is left of the batch's picture budget, never re-encoded, then planned and rewritten as an
+  archive's pictures are; written only on Import. One that brings nothing is left out unreported, its directive kept.
 - Plain text (a `.txt`, so every paste and share) is first asked `AbcText.isAbc`: ABC is one song per tune, since the
   converter would read its note groups (`[CEG]`) as chords; ChordPro holding an ABC block is no ABC. ChordPro
   extensions never go through the converter. No readable text is `unreadableDocumentFileNames`, not unsupported. All

@@ -17,7 +17,9 @@ package com.pandulapeter.campfire.data.model.image
 object PictureLinks {
 
     /** Whether [source], an image directive's `src`, is an `https` address: the only kind the app ever downloads. */
-    fun isLink(source: String) = source.length > HTTPS.length && source.startsWith(HTTPS, ignoreCase = true) && source.none { it.isWhitespace() }
+    fun isLink(source: String) =
+        source.length > SCHEME_PREFIX.length && source.startsWith(SCHEME_PREFIX, ignoreCase = true) && source.none { it.isWhitespace() }
 
-    private const val HTTPS = "https://"
+    /** What every link starts with, in lowercase. */
+    const val SCHEME_PREFIX = "https://"
 }

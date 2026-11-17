@@ -23,10 +23,12 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Loads the `preferences.json` Campfire 5.4.0 wrote (`resources/upgrade-5.4.0`, written by that version's own source and
- * mappers), which predates counting song opens for the request to spread the word.
+ * mappers), which predates counting song opens for the request to spread the word and the switch for downloading the
+ * pictures an import's songs name by their addresses, which starts on.
  */
 class UpgradeFrom540Test {
 
@@ -41,10 +43,11 @@ class UpgradeFrom540Test {
     }
 
     @Test
-    fun `a 5_4_0 user starts counting song opens from nothing and keeps every preference they set`() = runBlocking {
+    fun `a 5_4_0 user starts counting song opens from nothing, downloads picture links, and keeps every preference they set`() = runBlocking {
         val preferences = UserPreferencesLocalSourceImpl(fileStorage, Logger.Standard).loadUserPreferences()
 
         assertEquals(SongOpens(count = 0, dayCount = 0, lastEpochDay = null), preferences.songOpens)
+        assertTrue(preferences.isPictureLinkDownloadEnabled)
         assertFalse(preferences.isSpreadTheWordShown)
         assertEquals(
             UserPreferencesDocument().toModel().copy(

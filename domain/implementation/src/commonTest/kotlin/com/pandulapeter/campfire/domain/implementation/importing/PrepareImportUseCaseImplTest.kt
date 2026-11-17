@@ -243,6 +243,7 @@ class PrepareImportUseCaseImplTest {
             override suspend fun extract(file: ImportedFile): ChordSheet? = null
         },
         imageRepository = FakeImageRepository(),
+        pictureLinks = incomingPictureLinks(),
         logger = Logger.Standard,
     )
 }

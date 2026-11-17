@@ -147,6 +147,7 @@
     <string name="import_conflicts_mixed">Mixed</string>
     <string name="import_loading_title">Reading the files</string>
     <string name="import_progress_downloading">Downloading the file</string>
+    <string name="import_progress_downloading_pictures">Downloading the pictures the songs link to</string>
     <string name="import_failed_unreachable">%1$s could not be reached. Check the internet connection and try again.</string>
     <string name="import_failed_not_found">There is nothing to download at that address. The link may have expired or been removed.</string>
     <string name="import_failed_too_large">This file is larger than the 88 MB Campfire can import at once.</string>
@@ -461,6 +462,8 @@
     <string name="settings_song_details_lookup_description">Offer to look up a song\'s artist, album, year, and songwriters on MusicBrainz and iTunes while its details are edited</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
+    <string name="settings_picture_links">Pictures from links</string>
+    <string name="settings_picture_links_description">Download the pictures an imported song names by a web address, keeping a copy in the song</string>
     <string name="settings_group_song_page">Song page</string>
     <string name="preferences_page_song">Song</string>
     <string name="settings_group_diagrams">Diagrams</string>

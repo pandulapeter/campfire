@@ -166,6 +166,7 @@
     <string name="import_conflicts_mixed">משולב</string>
     <string name="import_loading_title">קוראים את הקבצים</string>
     <string name="import_progress_downloading">מורידים את הקובץ</string>
+    <string name="import_progress_downloading_pictures">מורידים את התמונות שהשירים מקשרים אליהן</string>
     <string name="import_failed_unreachable">אין גישה אל %1$s. בדקו את החיבור לאינטרנט ונסו שוב.</string>
     <string name="import_failed_not_found">אין מה להוריד בכתובת הזו. ייתכן שהקישור פג או הוסר.</string>
     <string name="import_failed_too_large">הקובץ הזה גדול מ־88 MB, המגבלה ש־Campfire יכול לייבא בבת אחת.</string>
@@ -498,6 +499,8 @@
     <string name="settings_song_details_lookup_description">הצעה לחפש ב־MusicBrainz וב־iTunes את האמן, האלבום, השנה והכותבים של שיר בזמן עריכת הפרטים שלו</string>
     <string name="settings_cover_art">תמונות עטיפה</string>
     <string name="settings_cover_art_description">הצגת עטיפת האלבום ששיר מציין לצידו, בהורדה חד־פעמית ושמירת עותק במכשיר הזה</string>
+    <string name="settings_picture_links">תמונות מקישורים</string>
+    <string name="settings_picture_links_description">הורדת התמונות ששיר מיובא מציין בכתובת אינטרנט, ושמירת עותק שלהן בשיר</string>
     <string name="settings_group_song_page">עמוד השיר</string>
     <string name="preferences_page_song">שיר</string>
     <string name="settings_group_diagrams">דיאגרמות</string>

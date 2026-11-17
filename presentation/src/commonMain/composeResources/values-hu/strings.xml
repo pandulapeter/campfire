@@ -147,6 +147,7 @@
     <string name="import_conflicts_mixed">Vegyes</string>
     <string name="import_loading_title">Fájlok beolvasása</string>
     <string name="import_progress_downloading">A fájl letöltése</string>
+    <string name="import_progress_downloading_pictures">A dalokban linkelt képek letöltése</string>
     <string name="import_failed_unreachable">%1$s nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
     <string name="import_failed_not_found">Ezen a címen nincs mit letölteni. Lehet, hogy a link lejárt, vagy törölték.</string>
     <string name="import_failed_too_large">Ez a fájl nagyobb annál a 88 MB-nál, amennyit a Campfire egyszerre importálni tud.</string>
@@ -461,6 +462,8 @@
     <string name="settings_song_details_lookup_description">A daladatok szerkesztésekor felajánlja, hogy a dal előadóját, albumát, évét és szerzőit megkeresd a MusicBrainzen és az iTunesban</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
+    <string name="settings_picture_links">Képek linkekről</string>
+    <string name="settings_picture_links_description">Az importált dalokban webcímmel megadott képek letöltése, egy másolatukat a dalban tárolva</string>
     <string name="settings_group_song_page">Daloldal</string>
     <string name="preferences_page_song">Dal</string>
     <string name="settings_group_diagrams">Ábrák</string>

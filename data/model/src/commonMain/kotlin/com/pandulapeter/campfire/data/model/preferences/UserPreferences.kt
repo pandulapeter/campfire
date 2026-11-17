@@ -103,6 +103,12 @@ data class UserPreferences(
      * [isCoverArtEnabled]'s.
      */
     val isSongDetailsLookupEnabled: Boolean = true,
+    /**
+     * Whether an import downloads the pictures its songs name by a web address (`{image: src=https://…}`) as its review
+     * opens, so that they are written with the songs as library files. Off, no host a song file names is asked for
+     * anything by an import; the editor's From a link and a missing picture's Download, which the user presses, stay.
+     */
+    val isPictureLinkDownloadEnabled: Boolean = true,
     /** How the song details screen lays a song out. Never exported or synced: it is how one reader reads. */
     val songLayout: SongLayout = SongLayout.PAGES,
     /** Whether a [songLayout] was picked in Preferences or confirmed in the question the first song opened asks. */

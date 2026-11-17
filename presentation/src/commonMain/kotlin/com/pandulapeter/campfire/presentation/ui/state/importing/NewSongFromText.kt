@@ -29,7 +29,7 @@ internal val ImportPlan.loneSong: ImportPlan.SongEntry?
 internal fun ImportPlan.newSongOf(): ImportPlan.SongEntry? = loneSong?.takeIf { it.status != ImportPlan.Status.IDENTICAL }
 
 /** What says how the text of a new song the editor was opened on was read; null for one made of pictures, which was not. */
-internal fun ImportPlan.SongEntry.newSongMessage(): Message? = if (images.isNotEmpty()) null else Message.NewSongFromText(
+internal fun ImportPlan.SongEntry.newSongMessage(): Message? = if (isPictureSong) null else Message.NewSongFromText(
     isConverted = isConverted,
     hasChords = ChordProParser.summarize(text).hasChords,
     hasNotation = ChordProParser.parse(text).blocks.any { block -> block is ChordProBlock.Section && block.lines.any { it is ChordProLine.Verbatim } },

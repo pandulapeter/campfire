@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.domain.implementation.importing
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.export.ExportSongsUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.FakeImportDownloadRepository
 import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
@@ -240,6 +241,7 @@ class ImportFilesUseCaseImplTest {
         archive: ArchiveRepository = FakeArchiveRepository(),
         setlists: FakeSetlistRepository = FakeSetlistRepository(),
         images: FakeImageRepository = FakeImageRepository(),
+        downloads: FakeImportDownloadRepository = FakeImportDownloadRepository(),
     ) = PrepareImportUseCaseImpl(
         archiveRepository = archive,
         songRepository = songs,
@@ -249,6 +251,7 @@ class ImportFilesUseCaseImplTest {
         setlistRepository = setlists,
         documentRepository = documents,
         imageRepository = images,
+        pictureLinks = incomingPictureLinks(downloads = downloads, images = images),
         logger = Logger.Standard,
     )
 
@@ -825,6 +828,54 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a pasted song brings the pictures it names by their addresses, written on Import under their library names`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val images = FakeImageRepository()
+        val chart = FakeImageRepository.picture(1)
+        val downloads = FakeImportDownloadRepository(mapOf(CHART_LINK to chart, PAGE_LINK to "<html></html>".encodeToByteArray()))
+        val text = "{title: A}\n{image: src=$CHART_LINK}\n{image: src=$GONE_LINK}\n{image: src=$PAGE_LINK}\n{image: src=$CHART_LINK}\n"
+
+        val plan = prepare(songs, images = images, downloads = downloads)(listOf(ImportedFile("pasted.txt", text.encodeToByteArray())))
+        val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
+        val entry = plan.songs.single()
+
+        assertEquals(listOf(CHART_LINK, GONE_LINK, PAGE_LINK).sorted(), downloads.asked.sorted())
+        assertEquals(listOf(name to null, null to ImportedImage.Problem.NOT_AN_IMAGE), entry.images.map { it.name to it.problem })
+        assertEquals(setOf(name, GONE_LINK, PAGE_LINK), ChordProImages.referencedSources(entry.text))
+        assertTrue(images.library.isEmpty())
+
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+
+        assertEquals(listOf(name), images.added)
+        assertEquals(entry.text, songs.files.getValue("a.cho"))
+    }
+
+    @Test
+    fun `with the Features switch off, no address a song names is asked`() = runTest {
+        val downloads = FakeImportDownloadRepository(mapOf(CHART_LINK to FakeImageRepository.picture(1)))
+        val images = FakeImageRepository()
+        val text = "{title: A}\n{image: src=$CHART_LINK}\n"
+        val plan = PrepareImportUseCaseImpl(
+            archiveRepository = FakeArchiveRepository(),
+            songRepository = FakeSongRepository(mutableMapOf()),
+            songContentRepository = object : SongContentRepositoryStub() {
+                override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? = null
+            },
+            setlistRepository = FakeSetlistRepository(),
+            documentRepository = object : DocumentRepository {
+                override suspend fun extract(file: ImportedFile): ChordSheet? = null
+            },
+            imageRepository = images,
+            pictureLinks = incomingPictureLinks(downloads = downloads, images = images, isEnabled = false),
+            logger = Logger.Standard,
+        )(listOf(ImportedFile("a.cho", text.encodeToByteArray())))
+
+        assertTrue(downloads.asked.isEmpty())
+        assertEquals(setOf(CHART_LINK), ChordProImages.referencedSources(plan.songs.single().text))
+        assertTrue(plan.songs.single().images.isEmpty())
+    }
+
+    @Test
     fun `a song identical but for what the archive called its pictures is already there, and brings back a picture the library lost`() = runTest {
         val chart = FakeImageRepository.picture(1)
         val images = FakeImageRepository()
@@ -1033,6 +1084,9 @@ class ImportFilesUseCaseImplTest {
     private companion object {
         const val A = "{title: Foo}\nA\n"
         const val B = "{title: Foo}\nB\n"
+        const val CHART_LINK = "https://example.com/chart.png"
+        const val GONE_LINK = "https://example.com/gone.png"
+        const val PAGE_LINK = "https://example.com/chart"
 
         fun setlist(entries: List<String>) = testSetlist(fileName = "set.setlist.json", title = "Set", entries = entries)
     }

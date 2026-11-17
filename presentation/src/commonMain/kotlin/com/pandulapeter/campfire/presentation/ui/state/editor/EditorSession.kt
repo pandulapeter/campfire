@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.presentation.ui.state.importing.isPictureSong
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -180,15 +181,17 @@ internal class EditorSession(
 
     /**
      * Opens the editor on [song], a pasted, dropped or shared text that is one song the library does not hold, or pictures
-     * that arrived alone ([ImportPlan.SongEntry.images], titled by the first one's name, kept as draft pictures), with no
+     * that arrived alone ([ImportPlan.SongEntry.images], titled by the first one's name, kept as draft pictures; a text's
+     * own pictures, which its import downloaded from the addresses it names, are kept as draft pictures too), with no
      * file until its first Save ([CampfireDestination.SongEditor.NEW_SONG_FILE_NAME]): shaped like a new song, with the
      * [suggestion]'s title and artist, or placeholders, for what it does not declare, the title selected to be typed over.
      * An editor it replaces on top has nothing unsaved: the import queue waits that out. The draft goes to disk at once, as
      * the only copy of a share the iOS share extension's inbox lets go of. False, opening nothing, where every picture was refused.
      */
     suspend fun openNewSongEditor(song: ImportPlan.SongEntry, suggestion: SharedTextTitle?): Boolean {
-        val text = if (song.images.isEmpty()) song.text else images.pictureSongText(song.images) ?: return false
-        val suggestion = suggestion ?: SharedTextTitle(title = song.title, artist = null).takeIf { song.images.isNotEmpty() }
+        val isPictureSong = song.isPictureSong
+        val text = if (isPictureSong) images.pictureSongText(song.images) ?: return false else song.text.also { images.keepBrought(song.images) }
+        val suggestion = suggestion ?: SharedTextTitle(title = song.title, artist = null).takeIf { isPictureSong }
         arePreferencesLoaded.first { it }
         val placeholderTitle = LocalizedStrings.get(Res.string.new_song_placeholder_title)
         val draft = editorTextOf(

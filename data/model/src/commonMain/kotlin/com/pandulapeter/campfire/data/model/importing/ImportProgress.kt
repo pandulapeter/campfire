@@ -22,6 +22,7 @@ data class ImportProgress(
     enum class Phase {
         DOWNLOADING,
         UNPACKING,
+        DOWNLOADING_PICTURES,
         READING,
         COMPARING,
         IMPORTING,

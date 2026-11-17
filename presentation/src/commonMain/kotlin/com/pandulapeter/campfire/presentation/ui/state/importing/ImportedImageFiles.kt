@@ -45,3 +45,9 @@ internal fun ImportPlan.pictureSong(): ImportPlan.SongEntry? {
             oversizedFileNames.map { ImportPlan.SongImage(source = it, name = null, bytes = null, problem = ImportedImage.Problem.TOO_LARGE) },
     )
 }
+
+/**
+ * Whether this is the song [ImportPlan.pictureSong] makes of pictures that arrived alone, which has no text of its own,
+ * rather than a text that brings pictures (an archive's song, or one naming pictures by their addresses).
+ */
+internal val ImportPlan.SongEntry.isPictureSong get() = text.isEmpty() && images.isNotEmpty()

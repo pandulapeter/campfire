@@ -193,6 +193,15 @@ internal class EditorImages(
     }
 
     /**
+     * Keeps the pictures a pasted or shared text brings ([pictures], those it names by their addresses, which its import
+     * downloaded and its text already names by their library names) as draft pictures, for the editor opened on it.
+     */
+    suspend fun keepBrought(pictures: List<ImportPlan.SongImage>) {
+        val brought = pictures.mapNotNull { picture -> picture.bytes?.takeIf { picture.name != null }?.let { ImportedFile(name = picture.source, bytes = it) } }
+        if (brought.isNotEmpty()) keep(brought)
+    }
+
+    /**
      * The text a new song made of [pictures] alone opens with: the directive of each one kept, in order, a line each; null
      * where every one was refused (said in a snackbar), one left unread for its size among them.
      */
