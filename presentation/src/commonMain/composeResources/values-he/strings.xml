@@ -26,6 +26,10 @@
     <string name="add_demo_library">הוספת ספריית ההדגמה</string>
     <string name="confirm_exit_title">לסגור את Campfire?</string>
     <string name="confirm_exit_message">בטוח שרוצים לצאת מהאפליקציה?</string>
+    <string name="import_exit_title">לעצור את הייבוא?</string>
+    <string name="import_exit_message">Campfire עדיין קורא את הקבצים לייבוא. יציאה עכשיו עוצרת את הייבוא, ושום דבר ממנו לא יתווסף לספרייה.</string>
+    <string name="import_exit_confirm">לעצור ולצאת</string>
+    <string name="import_exit_keep">להמשיך בייבוא</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">ייבוא קבצים</string>

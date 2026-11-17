@@ -26,6 +26,10 @@
     <string name="add_demo_library">Bemutató könyvtár hozzáadása</string>
     <string name="confirm_exit_title">Bezárod a Campfire-t?</string>
     <string name="confirm_exit_message">Biztosan ki szeretnél lépni az alkalmazásból?</string>
+    <string name="import_exit_title">Leállítod az importálást?</string>
+    <string name="import_exit_message">A Campfire még olvassa az importálandó fájlokat. Ha most kilépsz, az importálás leáll, és semmi sem kerül belőle a könyvtáradba.</string>
+    <string name="import_exit_confirm">Leállítás és kilépés</string>
+    <string name="import_exit_keep">Importálás folytatása</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Fájlok importálása</string>

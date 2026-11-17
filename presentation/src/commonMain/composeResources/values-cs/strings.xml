@@ -26,6 +26,10 @@
     <string name="add_demo_library">Přidat ukázkovou knihovnu</string>
     <string name="confirm_exit_title">Zavřít Campfire?</string>
     <string name="confirm_exit_message">Opravdu chceš aplikaci opustit?</string>
+    <string name="import_exit_title">Zastavit import?</string>
+    <string name="import_exit_message">Campfire ještě čte soubory k importu. Když teď aplikaci ukončíš, import se zastaví a nic z něj se do knihovny nepřidá.</string>
+    <string name="import_exit_confirm">Zastavit a ukončit</string>
+    <string name="import_exit_keep">Pokračovat v importu</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Import souborů</string>

@@ -28,9 +28,9 @@ The view model facade, the composition root, and the product rules every screen 
   initial value for a frame and animate the real one in. Several (`syncState`, `userPreferences`, `setlists`,
   `hasUnsavedEditorChanges`, `isSyncing`) are also acted on and must not go stale.
 - Theme and language come from `GetUserPreferencesUseCase`, not `ScreenData`, so they don't wait for the library scan.
-- `setVisibleDialog` drops work parked behind a dialog (the exit behind the unsaved changes question) once it leaves; a
-  dropped exit is reported to `requestExit`'s `onCancelled`, because the macOS quit request must be answered. The song
-  picker after a new setlist and What's new show only over no dialog (`DialogHost.showIfNoneIsShown`).
+- `setVisibleDialog` drops work parked behind a dialog (the exit behind the unsaved changes or the stop the import
+  question, `PendingExit.question`) once it leaves; a dropped exit is reported to `requestExit`'s `onCancelled`, because
+  the macOS quit request must be answered. The song picker after a new setlist and What's new show only over no dialog (`DialogHost.showIfNoneIsShown`).
 - The import is parked on the import screen and dropped however that screen leaves the back stack.
 - **The import's work belongs to the app**: the queue, the preparation and its plan, and the Import write live in
   `state/importing/ImportWork` (a `@Single` on `ApplicationScope`, the one holder Koin builds); `ImportController` is its

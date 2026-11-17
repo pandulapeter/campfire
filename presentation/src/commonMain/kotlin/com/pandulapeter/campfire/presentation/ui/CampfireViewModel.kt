@@ -635,7 +635,7 @@ class CampfireViewModel(
         dialogHost = dialogHost,
         backStack = navigator.backStack,
         editorSession = editorSession,
-        importController = importController,
+        importWork = importWork,
         syncController = syncController,
         pendingWrites = pendingWrites,
         getSyncState = getSyncState,

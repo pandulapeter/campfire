@@ -9,7 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
-import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWorkState
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
@@ -42,7 +43,7 @@ internal class AppExitController(
     private val dialogHost: DialogHost,
     private val backStack: List<CampfireDestination>,
     private val editorSession: EditorSession,
-    private val importController: ImportController,
+    private val importWork: ImportWork,
     private val syncController: SyncController,
     private val pendingWrites: PendingWrites,
     private val getSyncState: GetSyncStateUseCase,
@@ -59,9 +60,9 @@ internal class AppExitController(
         private set
 
     /**
-     * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
-     * the dialog goes away is staying, and that is reported too: on macOS the exit may be the system's own quit
-     * request, which has to be answered either way (see the desktop app module).
+     * The exit that asked the `UnsavedChanges` or the `StopImportBeforeExit` question, run once it is answered with Save,
+     * Discard, or Stop. Any other way the dialog goes away is staying, and that is reported too: on macOS the exit may be
+     * the system's own quit request, which has to be answered either way (see the desktop app module).
      */
     private var pendingExit: PendingExit? = null
 
@@ -85,7 +86,10 @@ internal class AppExitController(
      * Closing the application, which is a way out of the editor like any other. A save that is still being written
      * is waited for first, since the process ends with [onExit] - and since only then is it known whether it worked:
      * with unsaved text in the editor, which is also what a save that failed leaves behind, the `UnsavedChanges`
-     * question is asked, and [onExit] only runs once that has been answered with something other than staying.
+     * question is asked, and [onExit] only runs once that has been answered with something other than staying. An
+     * import still being received, downloaded, or unpacked asks next whether to stop it ([DialogType.StopImportBeforeExit]):
+     * it would otherwise be cancelled without a word, its files never imported. One being written asks nothing, since it
+     * is never cancelled: the exit waits for it ([settleSynchronizationBeforeExit]).
      *
      * @param onCancelled Called instead of [onExit] when the user answers the `UnsavedChanges` question by staying -
      *   dismissing it, or a save that failed. The macOS quit handler needs it: a quit request that is not answered
@@ -97,13 +101,26 @@ internal class AppExitController(
             // A second request - Cmd+Q pressed again while the question is up - answers the first one, which is
             // still waiting for something.
             takePendingExit()?.onCancelled?.invoke()
-            if (editorSession.hasUnsavedEditorText() && backStack.lastOrNull() is CampfireDestination.SongEditor) {
-                pendingExit = PendingExit(exit = onExit, onCancelled = onCancelled)
-                dialogHost.showDialog(DialogType.UnsavedChanges)
-            } else {
-                onExit()
+            val question = when {
+                editorSession.hasUnsavedEditorText() && backStack.lastOrNull() is CampfireDestination.SongEditor -> DialogType.UnsavedChanges
+                importWork.state.value.isCancellable -> DialogType.StopImportBeforeExit
+                else -> return@launch onExit()
             }
+            pendingExit = PendingExit(exit = onExit, onCancelled = onCancelled, question = question)
+            dialogHost.showDialog(question)
         }
+    }
+
+    /**
+     * The answer to [DialogType.StopImportBeforeExit] that leaves: the import is cancelled as its own Cancel would, and
+     * the exit waits for its staging to be deleted ([settleSynchronizationBeforeExit]) before the process ends, a
+     * logout or shut down that asked answered only then.
+     */
+    fun stopImportAndExit() {
+        val exit = takePendingExit() ?: return
+        importWork.cancel()
+        dialogHost.dismissDialog()
+        exit.exit()
     }
 
     /**
@@ -146,10 +163,14 @@ internal class AppExitController(
      */
     suspend fun settleSynchronizationBeforeExit() {
         isLeaving = true
-        importController.cancelImportPreparation()
+        importWork.cancel()
         // A failure or a review that is up has written nothing and has already let the import flag go, so it is dropped
-        // here rather than waited for.
-        withTimeoutOrNull(EXIT_IMPORT_GRACE) { importController.isImporting.first { !it } }
+        // here rather than waited for. The work going idle is waited for too, which is the cancelled preparation having
+        // deleted what it staged, and the write having ended.
+        withTimeoutOrNull(EXIT_IMPORT_GRACE) {
+            importWork.state.first { it == ImportWorkState.IDLE }
+            importWork.isImporting.first { !it }
+        }
         // The stored draft is removed by a collector a few hops after the editor lets its text go, which a process that
         // ends now would not wait for: a Discard answered on the way out would come back as "unsaved changes restored".
         if (!editorSession.isEditorDraftRecoveryPending.value) editorSession.storeEditorDraft(editorSession.currentEditorDraftToStore())
@@ -234,7 +255,7 @@ internal class AppExitController(
     fun onBeforeDialogChange(dialogType: DialogType?) {
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
-        if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
+        if (dialogType != pendingExit?.question) takePendingExit()?.onCancelled?.invoke()
         if (dialogType != DialogType.ConfirmExit) confirmedExit = null
     }
 

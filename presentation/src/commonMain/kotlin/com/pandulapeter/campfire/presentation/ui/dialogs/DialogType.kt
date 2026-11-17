@@ -255,6 +255,11 @@ sealed interface DialogType {
     data object UnsavedChanges : DialogType
     /** Asked before a key that otherwise only goes back closes the application, see `AppExitController.confirmExit`. */
     data object ConfirmExit : DialogType
+    /**
+     * Asked before the application closes while an import is still being received, downloaded, or unpacked, which
+     * closing would cancel, see `AppExitController.requestExit`.
+     */
+    data object StopImportBeforeExit : DialogType
 
     /**
      * Asked over the import screen before its answer overwrites [count] files of the library, which is the one

@@ -111,7 +111,7 @@ internal data class TestAppearance(
  * [libraryFiles] are written into the library by their path in it (`files/<name>.png`, `songs/<name>.cho`), for what a
  * test makes rather than reads from its resources. [preferenceFiles] are written into the data directory's `preferences` folder by name, as a device that has run the
  * app before would hold them (the shared links' mirror). With [isSyncConnected] false, sync shows no account instead of
- * `Fakes.kt`'s.
+ * `Fakes.kt`'s. [extraFakes] replace whatever else a test needs held still (a download that never answers).
  *
  * The app is drawn as [platform] draws it: Android's phone by default, which has no keyboard, so its tooltips name no
  * keys and the desktop's shortcuts are not heard; [ImpersonatedPlatform.WINDOWS] is the desktop with a keyboard, whose
@@ -139,6 +139,7 @@ internal fun runAppTest(
     extraPreferences: Map<String, JsonPrimitive> = emptyMap(),
     platform: ImpersonatedPlatform = ImpersonatedPlatform.ANDROID,
     libraryFiles: Map<String, ByteArray> = emptyMap(),
+    extraFakes: List<Module> = emptyList(),
     test: suspend AppTestScope.() -> Unit,
 ) {
     if (isFirstRun) {
@@ -159,7 +160,7 @@ internal fun runAppTest(
             pickedFiles = pickedFiles,
             pickedPhotos = pickedPhotos,
             appearance = appearance,
-            fakes = if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes),
+            fakes = (if (isSyncConnected) listOf(testFakes) else listOf(testFakes, disconnectedSyncFakes)) + extraFakes,
             writeData = { dataDirectory ->
                 if (!isFirstRun) writeLibrary(dataDirectory, songs, setlists, fontScale, songLayout, pageTurn, appearance, isCoverArtEnabled, extraPreferences)
                 preferenceFiles.forEach { (name, text) -> File(dataDirectory, "preferences/" + name).writeText(text) }

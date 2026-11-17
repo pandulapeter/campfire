@@ -26,6 +26,10 @@
     <string name="add_demo_library">Add the demo library</string>
     <string name="confirm_exit_title">Close Campfire?</string>
     <string name="confirm_exit_message">Are you sure you want to leave the app?</string>
+    <string name="import_exit_title">Stop the import?</string>
+    <string name="import_exit_message">Campfire is still reading the files to import. Closing Campfire now stops the import, and nothing from it is added to your library.</string>
+    <string name="import_exit_confirm">Stop and close</string>
+    <string name="import_exit_keep">Keep importing</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Importing files</string>

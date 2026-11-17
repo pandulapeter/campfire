@@ -23,11 +23,12 @@ only.
 
 - The window's close, `DialogType.ConfirmExit`, and the macOS quit (app menu / Cmd+Q never reach `onCloseRequest`;
   caught with `Desktop.setQuitHandler`) all go through `CampfireViewModel.requestExit`, which waits for a pending save
-  and asks the unsaved changes question.
+  and asks the unsaved changes question, then, while an import is received, downloaded, or unpacked, whether to stop
+  it (`StopImportBeforeExit`; staying answers a macOS quit with `cancelQuit`). One being written asks nothing.
 - The macOS quit keeps its response and answers it later: cancelling up front aborts a logout or shutdown.
-- All end in `leave`: the other-instance listener closed, the window hidden, then `settleSynchronizationBeforeExit` — a
-  writing import may finish (up to 30 s), then the pending automatic sync run may finish (up to 15 s), then it is
-  stopped.
+- All end in `leave`: the other-instance listener closed, the window hidden, then `settleSynchronizationBeforeExit` — an
+  import still being read is cancelled and its staging deleted, a writing import may finish (up to 30 s), then the
+  pending automatic sync run may finish (up to 15 s), then it is stopped.
 
 ## Window
 

@@ -54,9 +54,6 @@ import com.pandulapeter.campfire.presentation.localization.plainTextResource
 import com.pandulapeter.campfire.presentation.localization.pluralTextResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.close
-import com.pandulapeter.campfire.presentation.resources.confirm_exit_message
-import com.pandulapeter.campfire.presentation.resources.confirm_exit_title
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_replace_message
@@ -355,14 +352,7 @@ private fun CampfireDialog(
             dialog = dialog,
         )
 
-        DialogType.ConfirmExit -> ConfirmationDialog(
-            title = stringResource(Res.string.confirm_exit_title),
-            text = stringResource(Res.string.confirm_exit_message),
-            confirmLabel = stringResource(Res.string.close),
-            isDestructive = false,
-            onDismiss = viewModel.dialogHost::dismissDialog,
-            onConfirm = viewModel.appExitController::exitConfirmed,
-        )
+        DialogType.ConfirmExit, DialogType.StopImportBeforeExit -> ExitQuestionDialog(dialog = dialog, appExitController = viewModel.appExitController, dialogHost = viewModel.dialogHost)
 
         DialogType.UnsavedChanges -> UnsavedChangesDialog(
             isSaving = viewModel.editorSession.isSavingSong.collectAsStateWithLifecycle().value,

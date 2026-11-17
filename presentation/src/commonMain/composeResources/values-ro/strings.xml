@@ -26,6 +26,10 @@
     <string name="add_demo_library">Adaugă biblioteca demonstrativă</string>
     <string name="confirm_exit_title">Închizi Campfire?</string>
     <string name="confirm_exit_message">Sigur vrei să ieși din aplicație?</string>
+    <string name="import_exit_title">Oprești importul?</string>
+    <string name="import_exit_message">Campfire încă citește fișierele de importat. Dacă ieși acum, importul se oprește și nimic din el nu ajunge în biblioteca ta.</string>
+    <string name="import_exit_confirm">Oprește și ieși</string>
+    <string name="import_exit_keep">Continuă importul</string>
 
     <!-- Import and export -->
     <string name="import_progress_title">Se importă fișierele</string>

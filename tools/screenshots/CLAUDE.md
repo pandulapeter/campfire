@@ -86,7 +86,7 @@ model, use cases, repositories, and files in a temporary home — and drives it 
   own `library/`. A preferences document is written, so no onboarding, no planted demo, and no question dialogs; covers
   are off unless asked for. `isFirstRun` starts from an empty data directory instead, in English.
 - **What may be faked** is only what reaches outside or picks files (`Fakes.kt`, `TestFakes.kt`, the test's file
-  picker). A new fake comes with the test that needs it.
+  picker, a test's own `extraFakes`). A new fake comes with the test that needs it.
 - **The keyboard** is the test's to raise (`keyboardHeight`). It reaches the app twice, through
   `LocalPlatformWindowInsets` and through the scene's own insets, since a dialog (every bottom sheet) is a layer of the
   scene and `imePadding` reads its root's insets, not the composition's.

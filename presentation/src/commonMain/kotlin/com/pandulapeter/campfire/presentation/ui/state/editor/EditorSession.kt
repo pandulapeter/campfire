@@ -341,10 +341,10 @@ internal class EditorSession(
                 !isSaved -> dialogHost.dismissDialog()
                 dialogHost.visibleDialog.value == DialogType.UnsavedChanges -> {
                     // Taken before leaving, which dismisses the dialog and would otherwise report this exit as
-                    // cancelled.
+                    // cancelled. Asked again, for what else an exit may have to ask about (an import still being read).
                     val exit = takePendingExit()
                     leaveEditor()
-                    exit?.exit?.invoke()
+                    exit?.let { requestExit(it.exit, it.onCancelled) }
                 }
             }
         }.also { currentSaveJob = it }

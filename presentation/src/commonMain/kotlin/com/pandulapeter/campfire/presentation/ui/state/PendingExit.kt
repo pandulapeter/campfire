@@ -9,8 +9,15 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state
 
-/** An exit that is waiting for an answer, and what to tell the caller if the answer is staying. */
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
+
+/**
+ * An exit that is waiting for an answer, and what to tell the caller if the answer is staying.
+ *
+ * @param question The dialog asking, which the exit is kept for for as long as it is the one on screen.
+ */
 internal class PendingExit(
     val exit: () -> Unit,
     val onCancelled: () -> Unit,
+    val question: DialogType,
 )
