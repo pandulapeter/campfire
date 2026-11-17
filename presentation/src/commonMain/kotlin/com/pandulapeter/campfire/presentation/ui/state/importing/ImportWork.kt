@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
-import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
@@ -193,9 +192,10 @@ class ImportWork(
                 is ImportSource.Address -> {
                     enter(ImportWorkState.DOWNLOADING)
                     progress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                    when (val download = useCases.downloadImportFile(source.url)) {
-                        is ImportDownload.File -> listOf(ImportedFile(name = download.name, bytes = download.bytes)).also {
-                            // A read that fails after this is tried again on the same bytes rather than downloaded again.
+                    when (val download = useCases.downloadImportFile(source.url, downloadProgressOf(source.name))) {
+                        is ImportDownload.File -> listOf(download.toImportedFile()).also {
+                            // A read that fails after this is tried again on the same bytes, or the same staged copy,
+                            // rather than downloaded again.
                             request.source = ImportSource.Files(it)
                         }
 
@@ -208,7 +208,7 @@ class ImportWork(
                 is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
                     enter(ImportWorkState.DOWNLOADING)
                     progress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                    when (val download = useCases.downloadImportFile(source.link.downloadUrl).toSharedLinkDownload()) {
+                    when (val download = useCases.downloadImportFile(source.link.downloadUrl, downloadProgressOf(source.name)).toSharedLinkDownload()) {
                         is SharedLinkDownload.Zip -> listOf(download.file).also {
                             // The title stays the screen's subtitle, and a read that fails after this reads the same bytes again.
                             request.source = source.copy(file = download.file)
@@ -223,6 +223,19 @@ class ImportWork(
         } finally {
             enter(ImportWorkState.IDLE)
         }
+    }
+
+    /**
+     * The download's bytes as [progress], against the length the host declared where it sent one (a shared link's zip
+     * comes without), so the loading stage fills as a large archive arrives.
+     */
+    private fun downloadProgressOf(fileName: String?) = { receivedBytes: Long, totalBytes: Long? ->
+        progress.value = ImportProgress(
+            phase = ImportProgress.Phase.DOWNLOADING,
+            fileName = fileName,
+            completedBytes = receivedBytes,
+            totalBytes = totalBytes,
+        )
     }
 
     init {

@@ -20,7 +20,8 @@
   uncached: the first save would make a cached `false` wrong.
 - `CoverArtRepository.getCoverArt` answers bytes or nothing, never a failure. The catalogue searches emit progress as
   each catalogue answers, a failing one recorded in `failed`, not thrown; `loadSongCredits` never throws. Nothing from
-  the details lookup or `ImportDownloadRepository` is kept.
+  the details lookup or `ImportDownloadRepository` is kept, but a staged download's archive, whose request the import
+  owns.
 - `SyncRepository` caches no list (a run feeds the song and setlist repositories through `refresh`) and is the only
   thing above the data layer that knows a service is involved. `forgetStoredConnection` is local-only, retried by
   `restore` until it works.

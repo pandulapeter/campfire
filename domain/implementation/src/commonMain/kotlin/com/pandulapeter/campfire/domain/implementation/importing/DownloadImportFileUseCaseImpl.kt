@@ -18,5 +18,6 @@ internal class DownloadImportFileUseCaseImpl(
     private val importDownloadRepository: ImportDownloadRepository,
 ) : DownloadImportFileUseCase {
 
-    override suspend operator fun invoke(url: String) = importDownloadRepository.download(url)
+    override suspend operator fun invoke(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit) =
+        importDownloadRepository.download(url = url, onProgress = onProgress)
 }

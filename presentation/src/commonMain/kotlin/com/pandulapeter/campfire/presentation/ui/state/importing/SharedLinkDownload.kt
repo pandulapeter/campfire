@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 /** What the download of a shared link comes to for the import: the zip to read, or why there is none. */
 internal sealed interface SharedLinkDownload {
 
+    /** The zip, in memory or received into the staging folder ([ImportedFile.staged]), which Try again reads again. */
     class Zip(val file: ImportedFile) : SharedLinkDownload
 
     class Failed(val reason: ImportFailure) : SharedLinkDownload
@@ -28,8 +29,9 @@ internal sealed interface SharedLinkDownload {
  * stopped, revoked, or deleted link with a 4xx, and only no answer, a timeout, or a server error is worth trying again.
  */
 internal fun ImportDownload.toSharedLinkDownload(): SharedLinkDownload = when (this) {
-    is ImportDownload.File -> if (LibraryFiles.isZipArchive(bytes)) {
-        SharedLinkDownload.Zip(ImportedFile(name = name, bytes = bytes))
+    // Only a zip by its first bytes is ever staged, so a staged download is one.
+    is ImportDownload.File -> if (staged != null || LibraryFiles.isZipArchive(bytes)) {
+        SharedLinkDownload.Zip(toImportedFile())
     } else {
         SharedLinkDownload.Failed(ImportFailure.LINK_GONE)
     }
@@ -38,3 +40,6 @@ internal fun ImportDownload.toSharedLinkDownload(): SharedLinkDownload = when (t
     ImportDownload.Missing -> SharedLinkDownload.Failed(ImportFailure.LINK_GONE)
     ImportDownload.Unreachable -> SharedLinkDownload.Failed(ImportFailure.LINK_UNREACHABLE)
 }
+
+/** The downloaded file as the import takes it: its bytes, or the staged copy a read that fails is tried again on. */
+internal fun ImportDownload.File.toImportedFile() = ImportedFile(name = name, bytes = bytes, staged = staged)

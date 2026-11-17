@@ -12,8 +12,11 @@ package com.pandulapeter.campfire.data.model.importing
 /** What downloading a file to import from an address came to; only a cancellation is ever thrown instead. */
 sealed interface ImportDownload {
 
-    /** The file, under the name the host gave it or the address's path ends in, which the import triages it by. */
-    class File(val name: String, val bytes: ByteArray) : ImportDownload
+    /**
+     * The file, under the name the host gave it or the address's path ends in, which the import triages it by: in
+     * [bytes], or, for an archive received into the staging folder, in [staged], the bytes then empty.
+     */
+    class File(val name: String, val bytes: ByteArray, val staged: StagedFile? = null) : ImportDownload
 
     /** The host answered with more than an import reads, see [ImportLimits.MAX_ARCHIVE_SIZE]; nothing of it is kept. */
     data object TooLarge : ImportDownload

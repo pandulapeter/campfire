@@ -125,7 +125,8 @@ class ImportControllerQueueTest {
             scope = ApplicationScope(CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext[Job]))),
             useCases = ImportUseCases(
                 downloadImportFile = object : DownloadImportFileUseCase {
-                    override suspend fun invoke(url: String) = download.also { downloadedUrls += url }
+                    override suspend fun invoke(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit) =
+                        download.also { downloadedUrls += url }
                 },
                 prepareImport = object : PrepareImportUseCase {
                     override suspend fun invoke(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {

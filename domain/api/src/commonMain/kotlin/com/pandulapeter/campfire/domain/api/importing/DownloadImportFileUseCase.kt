@@ -15,8 +15,10 @@ interface DownloadImportFileUseCase {
 
     /**
      * Downloads the file at [url] for an import the user started, as large as an import of picked files may be, and
-     * keeps nothing of it; the caller hands a [ImportDownload.File] to [PrepareImportUseCase] as one picked file. Only
-     * a cancellation is thrown.
+     * keeps nothing of it but an archive received into the staging folder (`ImportDownload.File.staged`, see
+     * `ImportDownloadRepository.download`), telling [onProgress] the bytes received and the declared length as they
+     * arrive; the caller hands a [ImportDownload.File] to [PrepareImportUseCase] as one picked file. Only a cancellation
+     * is thrown, and, staging, a failure to find room for the archive or write it.
      */
-    suspend operator fun invoke(url: String): ImportDownload
+    suspend operator fun invoke(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit): ImportDownload
 }

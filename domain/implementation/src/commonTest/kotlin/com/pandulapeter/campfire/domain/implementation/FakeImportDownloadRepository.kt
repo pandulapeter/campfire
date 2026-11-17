@@ -25,7 +25,7 @@ internal class FakeImportDownloadRepository(private val pictures: Map<String, By
 
     private val recording = Mutex()
 
-    override suspend fun download(url: String): ImportDownload = throw NotImplementedError("Not expected to be called by this test.")
+    override suspend fun download(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit): ImportDownload = throw NotImplementedError("Not expected to be called by this test.")
 
     override suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload {
         recording.withLock { asked += url }
