@@ -198,12 +198,31 @@ internal class FakeSyncProvider(
         deleted.forEach { deletion ->
             val target = stored(SyncKey(kind = deletion.kind, name = deletion.name))
             if (deletion.expectedRevision == null || files[target]?.second == deletion.expectedRevision) {
-                files -= target
+                files.remove(target)?.let { (bytes, _) -> deletedFiles[target] = bytes }
                 listedSpellings -= target.foldedForResolving()
                 feed.value += target.path
             }
         }
         return refused.associateWith { "refused" }
+    }
+
+    /**
+     * The last content of every file [delete] took out of the folder, which [restoreDeleted] puts back for as long as
+     * the fake lives, as a service's history of deleted files does for a month or so; a test may plant its own.
+     * [restoreRequests] is every name asked for.
+     */
+    val deletedFiles = mutableMapOf<SyncKey, ByteArray>()
+
+    val restoreRequests = mutableListOf<SyncKey>()
+
+    override suspend fun restoreDeleted(kind: LibraryFileKind, name: String): Boolean {
+        val key = SyncKey(kind = kind, name = name)
+        restoreRequests += key
+        if (stored(key) in files) return true
+        val bytes = deletedFiles[key] ?: return false
+        files[key] = bytes to "r${nextRevision++}"
+        feed.value += key.path
+        return true
     }
 
     /** The folder's own documents, by name, with their revisions. */

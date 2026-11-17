@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -79,6 +80,7 @@ internal class SyncEngine(
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
     private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, imageWritesGate)
+    private val lostFileRestorer = LostFileRestorer(libraryFileLocalSource, logger)
     private val documentTransfers = DocumentTransfers(libraryFileLocalSource, libraryFileLock, conflictResolver, logger)
 
     suspend fun synchronize(
@@ -114,6 +116,9 @@ internal class SyncEngine(
         var documentRevisions = emptyMap<String, String>()
         var sharedFiles = emptyList<RemoteSharedFile>()
         var asksForFollowUp = false
+        val startIndex = index
+        var lastListed = emptyList<RemoteFile>()
+        var lastLocalListing: LocalListing? = null
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -125,6 +130,8 @@ internal class SyncEngine(
             sharedFiles = listing.sharedFiles
             index = withoutForeignEntries(index = index, listed = listed, libraryFileLocalSource = libraryFileLocalSource, libraryFileLock = libraryFileLock, logger = logger)
             val localListing = readLocalListing(libraryFileLocalSource, logger, batchSize = READ_BATCH_SIZE)
+            lastListed = listed
+            lastLocalListing = localListing
             val tooLarge = localListing.tooLarge
             val unreadable = localListing.unreadable
             if (pass == 0) summary = summary.plus(SyncSummary(failed = tooLarge.map { it.name }))
@@ -189,6 +196,10 @@ internal class SyncEngine(
         // the way a file that failed is, since a run that says nothing about it would count as the last successful one
         // and read as a library that is in step.
         summary = summary.plus(SyncSummary(failed = unresolved.map { it.name }))
+        // The next run downloads what came back, whose integrity check is what guards against a wrong revision.
+        if (lastLocalListing != null && lostFileRestorer.restoreMissing(provider, lastLocalListing, lastListed, before = startIndex, after = index)) {
+            asksForFollowUp = true
+        }
 
         return Result.Completed(
             summary = summary,
@@ -349,7 +360,8 @@ internal class SyncEngine(
          * @param documentRevisions The folder-level documents' revisions, as the run's last listing named them.
          * @param sharedFiles The shared copies, as the run's last listing named them, for the shared-copy step.
          * @param asksForFollowUp Whether the run left something for one more run to finish, which nothing else would
-         *   start: pictures no song names any more, kept while the songs were changing ([SyncPlan.holdsDeletionsBack]).
+         *   start: pictures no song names any more, kept while the songs were changing ([SyncPlan.holdsDeletionsBack]),
+         *   or files a song names brought back into the folder from its history ([LostFileRestorer]).
          */
         data class Completed(
             val summary: SyncSummary,

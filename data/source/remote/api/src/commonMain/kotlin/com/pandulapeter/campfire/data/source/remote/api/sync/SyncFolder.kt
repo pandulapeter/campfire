@@ -122,6 +122,19 @@ interface SyncFolder {
      */
     suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String>
 
+    /**
+     * Brings back, from the service's own history of deleted files, the last content the folder held under this name,
+     * and answers whether the folder holds the name now. False where it holds no such content: a name never written,
+     * a history past what the service keeps, a service that keeps none, or one the connection may not read. A refusal is
+     * an answer, never a failure; only what ends a run elsewhere ([SyncNetworkException], [SyncAuthorizationException])
+     * is thrown.
+     *
+     * The content may be any earlier version: the caller checks what it downloads afterwards, as it checks any file.
+     * Called for library files a song names that no side holds and the last run did not know: deleted by a device once
+     * none of its songs named them, then named again by a song that a version knowing nothing of them edited back.
+     */
+    suspend fun restoreDeleted(kind: LibraryFileKind, name: String): Boolean
+
     // Documents
 
     /**

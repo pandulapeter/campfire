@@ -14,8 +14,8 @@
 - Every app change to a library file (`LibraryChanges`) or a synced preference schedules a run `AUTOMATIC_RUN_DELAY`
   after the latest request; a request during a run is carried out after it. A run's own writes go around the
   repositories, so a run schedules no run through them; it asks for one follow-up, `AUTOMATIC_RUN_DELAY` after it
-  completes, only when it held picture deletions back (`Result.Completed.asksForFollowUp`). A follow-up asks for none,
-  and neither does a stopped run or one waiting for an answer about deletions.
+  completes, only when it held picture deletions back or restored a file (`Result.Completed.asksForFollowUp`). A
+  follow-up asks for none, and neither does a stopped run or one waiting for an answer about deletions.
 - A run ending in `Failure(NETWORK)` (only that reason) is retried while the app is alive after `NETWORK_RETRY_DELAYS`
   (capped, reset by any other ending and by a requested run); a waiting change wins; Stop, Disconnect, and a reconnect
   drop it (`stopForConnectionChange`); leaving the front hands it to the keep-alive only once it is due.

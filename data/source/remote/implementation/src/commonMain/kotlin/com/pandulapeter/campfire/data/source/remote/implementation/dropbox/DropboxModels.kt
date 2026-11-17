@@ -55,6 +55,13 @@ internal data class DropboxFileMetadata(
     @SerialName("content_hash") val contentHash: String? = null,
 )
 
+/** What `files/list_revisions` answers: the file's revisions, newest first, and whether the path is deleted now. */
+@Serializable
+internal data class DropboxListRevisionsResponse(
+    @SerialName("is_deleted") val isDeleted: Boolean,
+    val entries: List<DropboxFileMetadata>,
+)
+
 @Serializable
 internal data class DropboxAccountResponse(
     @SerialName("account_id") val accountId: String,

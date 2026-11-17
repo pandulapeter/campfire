@@ -58,6 +58,8 @@
   permission prompt. Android: the default network becoming validated (a network whose check is blocked never is, so its
   waits run their full length); iOS: the path monitor; web: the `online` event; desktop: nothing, the JVM has no such
   callback.
+- `DropboxDeletedFiles`: `files/list_revisions` (mode `path`), then `files/restore` of the newest revision, the next on
+  `invalid_revision` (three at most); any refusal, a missing scope too (logged once), is "not restored".
 - A run's deletions go as `files/delete_batch` jobs (≤1000 files) polled with `delete_batch/check`: single deletions in
   parallel hit the folder write lock (`too_many_write_operations`) and crawled at ~1/s. A job runs at ~7 files/s and is
   not atomic. Entries refused as busy are retried with the normal back-off.

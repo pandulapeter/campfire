@@ -258,6 +258,39 @@ class ImageSyncTest {
     }
 
     @Test
+    fun `a picture gone from every device comes back from the folder's history when an older version revives its song`() = runTest {
+        val (a, _) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        a.library.files -= song(1)
+        a.library.files -= PHOTO.key
+        a.sync(cloud)
+        a.sync(cloud)
+        assertNull(cloud.files[PHOTO.key])
+        // A version that knows nothing of pictures uploads its offline edit of the song, still naming the picture.
+        cloud.files[song(1)] = naming(PHOTO, extra = "Edited by an older version") to "r-old"
+        a.sync(cloud)
+        a.sync(cloud)
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+    }
+
+    @Test
+    fun `a current device that still holds a revived song's picture brings it back without the history`() = runTest {
+        val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), PHOTO.key to PHOTO.bytes))
+        a.library.files -= song(1)
+        a.library.files -= PHOTO.key
+        a.sync(cloud)
+        a.sync(cloud)
+        cloud.deletedFiles.clear()
+        b.library.files[song(1)] = naming(PHOTO, extra = "Edited on B")
+        b.sync(cloud)
+        assertConverges(a, b)
+
+        assertContentEquals(PHOTO.bytes, a.library.files[PHOTO.key])
+        assertContentEquals(PHOTO.bytes, cloud.files[PHOTO.key]?.first)
+    }
+
+    @Test
     fun `no picture is deleted while a song of this device cannot be read`() = runTest {
         val (a, b) = inStep(mapOf(song(1) to naming(PHOTO), song(2) to "Song 2".encodeToByteArray(), PHOTO.key to PHOTO.bytes))
         b.library.files -= song(1)

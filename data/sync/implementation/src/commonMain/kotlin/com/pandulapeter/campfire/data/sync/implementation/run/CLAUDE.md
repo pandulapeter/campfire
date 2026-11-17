@@ -56,6 +56,10 @@
     unreadable song deletes no picture on either side; the next run does (an older version's edit may beat a song's
     deletion in the folder, and it never puts a picture back), which the run that held them back asks for
     (`SyncPlan.holdsDeletionsBack`, see `scheduling/`). The deletion guard counts songs and setlists only.
+  - **A file nothing holds comes back from the folder's history** (`LostFileRestorer`, `SyncFolder.restoreDeleted`):
+    such an edit may name a picture already gone everywhere. A completed run asks back what songs here name and no side
+    or index holds (20 a run, each name once per process); the follow-up downloads it. Dropbox keeps ~30 days; older
+    ones stay lost.
   - A pass's local picture deletions run as one batch inside `ImageRepository.withImagesKept` and `LibraryFileLock`,
     after reading what every song names *now*, plus what the editor's unsaved text names (`LibraryImageWriter.heldNames`):
     either sends the picture back up instead.

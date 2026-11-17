@@ -90,6 +90,8 @@ internal class DropboxSyncProvider(
 
     private val downloads = DropboxDownloads(httpClientHolder = httpClientHolder, requests = requests)
 
+    private val deletedFiles = DropboxDeletedFiles(requests = requests, logger = logger)
+
     override suspend fun isConnected() = credentialsStore.load()?.takeIf { it.providerId == id.id }?.refreshToken?.isNotEmpty() == true
 
     // Authorization
@@ -292,6 +294,8 @@ internal class DropboxSyncProvider(
         bytes: ByteArray,
         expectedRevision: String?,
     ) = upload(path = sharedFilePath(shareId), bytes = bytes, expectedRevision = expectedRevision)
+
+    override suspend fun restoreDeleted(kind: LibraryFileKind, name: String) = deletedFiles.restore(remotePath(kind, name))
 
     override suspend fun createSharedLink(shareId: String) = sharing.createLink(sharedFilePath(shareId))
 
