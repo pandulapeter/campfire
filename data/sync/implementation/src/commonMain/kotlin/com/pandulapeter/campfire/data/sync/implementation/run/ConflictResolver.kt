@@ -40,8 +40,8 @@ internal class ConflictResolver(
 ) {
 
     /**
-     * `SyncEngine.resolve` from the point where both versions are in hand, also for a download that found a save under its
-     * write.
+     * `DocumentTransfers.resolve` from the point where both versions are in hand, also for a download that found a save
+     * under its write.
      *
      * Every device gives an undated setlist the day it first reads it on, so after an update every setlist two devices
      * shared changed on both sides, in nothing but that day. Kept as a conflict, that would be a copy of every setlist
