@@ -34,7 +34,7 @@ self.onmessage = function (event) {
         var directory = await navigator.storage.getDirectory();
         for (var i = 0; i < request.path.length; i++) directory = await directory.getDirectoryHandle(request.path[i], { create: true });
         if (request.recover) await recoverAll(directory);
-        else if (request.stage) await stage(directory, request.name, request.stage);
+        else if (request.stage) await stage(directory, request.name, request.stage, request.from, request.to);
         else if (request.stream) await stream(directory, request.path.join('/') + '/' + request.name, request);
         else await write(directory, request.name, request.data);
     }).then(function () { self.postMessage({ id: request.id }); }, function (error) {
@@ -78,16 +78,21 @@ async function stream(directory, key, request) {
 /*
  * A file the user picked, posted as the `File` itself, copied into the imports' folder a slice at a time, so that an
  * archive of any size never crosses into the page or the worker whole. No journal, as for an export: nothing reads the
- * copy before it is whole, and one that fails is removed.
+ * copy before it is whole, and one that fails is removed. A request may copy only the bytes from `from` to `to`, which
+ * the page asks for one after another so that it hears how far the copy is and can stop it between them: the file is
+ * cut to `from` first, so the first range starts it afresh and each later one carries on where the last ended.
  */
 var STAGE_SLICE_SIZE = 1024 * 1024;
 
-async function stage(directory, name, file) {
+async function stage(directory, name, file, from, to) {
+    var start = from || 0;
+    var end = to == null ? file.size : Math.min(to, file.size);
     var access = await (await directory.getFileHandle(name, { create: true })).createSyncAccessHandle();
     try {
-        access.truncate(0);
-        for (var position = 0; position < file.size;) {
-            var slice = new Uint8Array(await file.slice(position, position + STAGE_SLICE_SIZE).arrayBuffer());
+        access.truncate(start);
+        for (var position = start; position < end;) {
+            var slice = new Uint8Array(await file.slice(position, Math.min(position + STAGE_SLICE_SIZE, end)).arrayBuffer());
+            if (slice.byteLength === 0) throw new Error('The file ended after ' + position + ' of ' + file.size + ' bytes.');
             for (var written = 0; written < slice.byteLength;) {
                 var count = access.write(slice.subarray(written), { at: position + written });
                 if (!(count > 0)) throw new Error('Only ' + (position + written) + ' of ' + file.size + ' bytes could be written.');

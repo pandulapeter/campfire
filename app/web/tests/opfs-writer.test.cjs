@@ -124,6 +124,26 @@ test('a staged file is copied a slice at a time, whole, over whatever had its na
     assert.deepEqual(instance.files.get('archive.zip'), content);
 });
 
+test('a staged file copied a range at a time carries on where the last range ended', async () => {
+    const instance = worker(new Map([['archive.zip', Buffer.from('an older, longer copy of something else entirely')]]));
+    instance.context.STAGE_SLICE_SIZE = 8;
+    const content = Buffer.from('a picked archive of several slices and ranges');
+    const file = new Blob([content]);
+    for (let from = 0; from < content.length; from += 20) {
+        assert.equal((await instance.send({ path: ['imports'], name: 'archive.zip', stage: file, from, to: from + 20 })).error, undefined);
+        assert.deepEqual(instance.files.get('archive.zip'), content.subarray(0, Math.min(from + 20, content.length)));
+    }
+});
+
+test('a staged range that fails leaves no file behind, the ranges before it included', async () => {
+    const instance = worker(new Map());
+    const file = new Blob([Buffer.from('a picked archive of two ranges')]);
+    assert.equal((await instance.send({ path: ['imports'], name: 'archive.zip', stage: file, from: 0, to: 10 })).error, undefined);
+    instance.failNextWrite('archive.zip');
+    assert.equal((await instance.send({ path: ['imports'], name: 'archive.zip', stage: file, from: 10, to: 30 })).error, 'Error');
+    assert.deepEqual([...instance.files.keys()], []);
+});
+
 test('a staged copy that fails leaves no file behind', async () => {
     const instance = worker(new Map());
     instance.failNextWrite('archive.zip');

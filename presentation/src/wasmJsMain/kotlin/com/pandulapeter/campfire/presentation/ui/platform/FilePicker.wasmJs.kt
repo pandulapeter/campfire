@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.web.PickedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.await
@@ -49,7 +50,7 @@ import kotlin.js.Promise
 internal object WebFilePicker : FilePicker {
 
     override suspend fun pickFiles(): List<ImportedFile> =
-        openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
+        openFileInput(accept = "").await<JsArray<JsAny>?>()?.toImportedFiles(receiver = archiveReceiverWhileStaging()).orEmpty()
 
     /** HEIC and HEIF only where the browser decodes them for the re-encoder to convert (Safari), never to be refused. */
     override suspend fun pickImages(): List<ImportedFile> {
@@ -265,7 +266,7 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
         maxEntries = ImportLimits.MAX_FOLDER_ENTRIES,
     )
     while (true) {
-        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles(isDrop = true).orEmpty())
+        emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles(isDrop = true, receiver = archiveReceiverWhileStaging()).orEmpty())
     }
 }.catch { exception ->
     // The collector is a LaunchedEffect at the root of the app, and what leaves one of those takes the
@@ -276,12 +277,18 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
 /**
  * Read within one [ImportBudget], which is what keeps a file the import would not look inside out of memory. A drop's
  * items are the files paired with whether they came out of a folder (see [listenForDrops]); a pick's are the files.
+ * With a [receiver] (while archives are staged), an archive is not read but received into the staging folder, the
+ * `File` copied there in JavaScript a range at a time (`ReceivedArchive.take`), its bytes never crossing into Wasm.
  */
-private suspend fun JsArray<JsAny>.toImportedFiles(isDrop: Boolean = false): List<ImportedFile> {
+private suspend fun JsArray<JsAny>.toImportedFiles(isDrop: Boolean = false, receiver: ArchiveReceiver? = null): List<ImportedFile> {
     val budget = ImportBudget()
     return (0 until length).mapNotNull { index ->
         get(index)?.let { item ->
-            if (isDrop) droppedFile(item).toImportedFile(budget, isInFolder = isDroppedInFolder(item)) else item.toImportedFile(budget, isInFolder = false)
+            if (isDrop) {
+                droppedFile(item).toImportedFile(budget, isInFolder = isDroppedInFolder(item), receiver = receiver)
+            } else {
+                item.toImportedFile(budget, isInFolder = false, receiver = receiver)
+            }
         }
     }
 }
@@ -299,7 +306,7 @@ private suspend fun JsArray<JsAny>.toImportedFiles(isDrop: Boolean = false): Lis
  * `Throwable` rather than `Exception`: what a `js(...)` block throws arrives as a `JsException`, which is not an
  * `Exception`, and what a rejected promise arrives as is the coroutines library's business.
  */
-private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boolean): ImportedFile? {
+private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boolean, receiver: ArchiveReceiver?): ImportedFile? {
     val (name, size) = try {
         fileName(this).toString() to fileSize(this).toLong()
     } catch (_: Throwable) {
@@ -308,17 +315,33 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boole
     if (isInFolder && !LibraryFiles.isImportableFileName(name) && (LibraryFiles.isBinaryFileName(name) || !isWorthReading())) {
         return ImportedFile.unread(name)
     }
-    return budget.read(name = name, size = size) {
-        try {
-            fileBytes(this).await<JsAny?>()?.toByteArray()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Throwable) {
-            println("Could not read \"$name\": ${exception.message}")
-            null
-        } ?: ByteArray(0)
-    }
+    if (receiver == null) return budget.read(name = name, size = size) { readWhole(name) }
+    val head = try {
+        fileHead(this, ImportLimits.SNIFF_LENGTH).await<JsAny?>()?.toByteArray()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Throwable) {
+        println("Could not read \"$name\": ${exception.message}")
+        null
+    } ?: return ImportedFile.unread(name)
+    val file = PickedFile(this)
+    return budget.take(
+        name = name,
+        size = size,
+        head = head,
+        readBytes = { readWhole(name) },
+        stage = { receiver.receive(name = name, announcedSize = size) { archive -> archive.take(file = file, size = size) {} } },
+    )
 }
+
+private suspend fun JsAny.readWhole(name: String) = try {
+    fileBytes(this).await<JsAny?>()?.toByteArray()
+} catch (exception: CancellationException) {
+    throw exception
+} catch (exception: Throwable) {
+    println("Could not read \"$name\": ${exception.message}")
+    null
+} ?: ByteArray(0)
 
 private suspend fun JsAny.isWorthReading() = try {
     fileHead(this, ImportLimits.SNIFF_LENGTH).await<JsAny?>()?.toByteArray()?.let(ImportBudget::isWorthReadingUnknown) == true

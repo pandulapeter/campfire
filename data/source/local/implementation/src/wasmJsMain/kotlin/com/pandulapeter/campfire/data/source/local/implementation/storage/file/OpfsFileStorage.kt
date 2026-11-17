@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.web.PickedFile
 import com.pandulapeter.campfire.data.model.web.toByteArray
 import com.pandulapeter.campfire.data.model.web.toUint8Array
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
@@ -226,6 +227,14 @@ internal class OpfsFileStorage(private val rootSegments: List<String>) : FileSto
         val stream = failingAsStorage(name) { openFileStream(directoryHandle(directory), directory.displayName, name).await<JsAny?>() }
         OpfsFileSink(stream = stream ?: throw LibraryStorageException("Could not create \"$name\"."), name = name)
     }
+
+    /** [file] is a [PickedFile], copied in JavaScript (see [takeFile]). */
+    override suspend fun takeInto(directory: StorageDirectory, name: String, file: Any, onProgress: (copiedBytes: Long) -> Unit) =
+        withContext(Dispatchers.Default) {
+            requireValidFileName(name)
+            val handle = (file as? PickedFile)?.file ?: throw UnsupportedOperationException("Only a picked file can be taken into the web's storage.")
+            failingAsStorage(name) { takeFile(directoryHandle(directory), directory.displayName, name, handle, onProgress) }
+        }
 
     /** The `File` is taken once, a snapshot every read of the source slices, so the file cannot change under it. */
     override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = withContext(Dispatchers.Default) {
