@@ -66,13 +66,41 @@ internal class ImportRequest(
     }
 
     /**
-     * The failure stage an Import that threw [exception] turns into, its Try again reading the batch again, or null where
-     * the failure is not that: nothing was written, and the plan names a staged file that is gone
-     * ([StagedFileMissingException]), so reading again what is still staged is the one way back.
+     * The batches read to join this one's review ([joinReviewOf]): written with it, and read again with it by Try again
+     * ([readAgainAfter]).
      */
-    fun readAgainAfter(exception: Exception): ImportReport.Failed? {
-        val staged = stagedSource?.takeIf { exception is StagedFileMissingException } ?: return null
-        source = staged
-        return ImportReport.Failed(ImportFailure.UNREADABLE, staged.name, staged.fileCount)
+    private val joined = mutableListOf<ImportRequest>()
+
+    /**
+     * Empties [source] once this batch's plan was added to the review of [lead] (`ImportController.addToReview`), and
+     * makes it one of [lead]'s [joined]: Try again after an Import that finds a staged file gone reads it again too.
+     */
+    fun joinReviewOf(lead: ImportRequest?) {
+        forgetSource()
+        lead?.joined?.add(this)
+    }
+
+    /**
+     * The batches that had joined this one's review, let go of for Try again to send back into the queue once the review is
+     * up again, which adds them to it as it did the first time. They are neither enqueued nor settled again: they are
+     * still counted, and settled with the batch they joined.
+     */
+    fun takeJoined(): List<ImportRequest> = joined.toList().also { joined.clear() }
+
+    /**
+     * The batch whose Try again reads again what of this one and of every batch [joined] to its review was staged, after
+     * an Import that threw [exception], or null where the failure is not that: nothing was written, and the plan names a
+     * staged file that is gone ([StagedFileMissingException]), so reading again what is still staged is the one way back.
+     * The first batch that staged anything leads, the rest becoming its [joined] for Try again to add to its review again;
+     * a batch read whole into memory has nothing left to read, its bytes gone with its forgotten [source].
+     */
+    fun readAgainAfter(exception: Exception): ImportRequest? {
+        if (exception !is StagedFileMissingException) return null
+        val batches = (listOf(this) + joined).filter { it.stagedSource != null }
+        joined.clear()
+        val lead = batches.firstOrNull() ?: return null
+        batches.forEach { batch -> batch.source = checkNotNull(batch.stagedSource) }
+        lead.joined += batches.drop(1)
+        return lead
     }
 }

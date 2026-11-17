@@ -13,7 +13,6 @@ import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
@@ -294,30 +293,14 @@ internal class ImportController(
         when (outcome) {
             is Preparation.Failed -> messageSink.sendMessage(outcome.message)
             is Preparation.Planned -> {
-                request.source = ImportSource.Files(emptyList())
+                request.joinReviewOf(activeRequest)
                 val recorded = request.sharedLinkFileId?.let { work.useCases.getSharedLinkImport(it) }
                 // Read after the last suspension, so that a tick made while the batch was read is kept.
                 val review = reportState.report as? ImportReport.Review ?: return
                 val plan = review.plan.withAdded(outcome.plan.withImageFilesSkipped())
                 if (plan === review.plan) return
-                val linkResolutions = recorded?.let { sharedLinkChoices(plan, it).conflictResolutions }.orEmpty().filterKeys { key ->
-                    key.index >= if (key.kind == ImportEntryKey.Kind.SONG) review.plan.songs.size else review.plan.setlists.size
-                }
-                request.sharedLinkFileId?.let { fileId ->
-                    sharedLinkParts += SharedLinkPart(
-                        fileId = fileId,
-                        songIndices = review.plan.songs.size until plan.songs.size,
-                        setlistIndices = review.plan.setlists.size until plan.setlists.size,
-                    )
-                }
-                reportState.report = review.copy(
-                    plan = plan,
-                    // A choice made for a name that is no longer a question would only be counted as a replacement.
-                    choices = review.choices.copy(
-                        conflictResolutions = (review.choices.conflictResolutions + linkResolutions).filterKeys(plan::isConflicting),
-                    ),
-                    sharedLinkUpdateCount = review.sharedLinkUpdateCount + linkResolutions.size,
-                )
+                request.sharedLinkFileId?.let { fileId -> sharedLinkParts += review.plan.sharedLinkPartAdded(fileId = fileId, grown = plan) }
+                reportState.report = review.withPlanGrown(plan = plan, recorded = recorded)
             }
         }
     }
@@ -469,13 +452,19 @@ internal class ImportController(
     /** The loading stage's Cancel, see [ImportWork.cancel]: nothing is announced, and the queue goes on to its next batch. */
     fun cancelImportPreparation() = work.cancel()
 
-    /** The failure stage's Try again: the same address downloaded again, or the same bytes read again. */
+    /**
+     * The failure stage's Try again: the same address downloaded again, or the same bytes read again, and the batches that
+     * had joined the review ([ImportRequest.joined]) sent back into the queue once it is up again, which adds them to it.
+     */
     fun retryImport() {
         val request = activeRequest ?: return
         if (reportState.report !is ImportReport.Failed) return
         reportState.report = ImportReport.Loading(sourceName = request.source.name, sourceCount = request.source.fileCount)
         _isImporting.update { true }
-        scope.launch { prepare(request = request, isReviewed = true) }
+        scope.launch {
+            prepare(request = request, isReviewed = true)
+            if (activeRequest === request && reportState.report is ImportReport.Review) request.takeJoined().forEach { work.queue.trySend(it) }
+        }
     }
 
     /**
@@ -641,7 +630,8 @@ internal class ImportController(
             _importProgress.value = null
             val readAgain = if (isReported && reportState.isOnBackStack) request.readAgainAfter(exception) else null
             if (readAgain != null) {
-                reportState.report = readAgain.also { activeRequest = request }
+                activeRequest = readAgain
+                reportState.report = ImportReport.Failed(ImportFailure.UNREADABLE, readAgain.source.name, readAgain.source.fileCount)
             } else if (preview != null && reportState.isOnBackStack) {
                 restorePreview(preview, request, sharedLinkParts)
             } else if (isReported && reportState.isOnBackStack) {

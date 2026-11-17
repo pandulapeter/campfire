@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.SharedLinkPart
+import com.pandulapeter.campfire.data.model.importing.sharedLinkChoices
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
@@ -103,3 +105,29 @@ internal fun ImportPlan.isConflicting(key: ImportEntryKey) = when (key.kind) {
     ImportEntryKey.Kind.SONG -> songs.getOrNull(key.index)?.status
     ImportEntryKey.Kind.SETLIST -> setlists.getOrNull(key.index)?.status
 } == ImportPlan.Status.CONFLICTING
+
+/**
+ * This review with [plan], its own plan with a batch added ([withAdded]), every tick and choice made in it kept: what the
+ * batch adds starts ticked, and where the batch is a shared link, whose earlier imports wrote [recorded], its own taken
+ * names start on Replace as in its own review (see [sharedLinkChoices]).
+ */
+internal fun ImportReport.Review.withPlanGrown(plan: ImportPlan, recorded: Set<String>?): ImportReport.Review {
+    val linkResolutions = recorded?.let { sharedLinkChoices(plan, it).conflictResolutions }.orEmpty().filterKeys { key ->
+        key.index >= if (key.kind == ImportEntryKey.Kind.SONG) this.plan.songs.size else this.plan.setlists.size
+    }
+    return copy(
+        plan = plan,
+        // A choice made for a name that is no longer a question would only be counted as a replacement.
+        choices = choices.copy(
+            conflictResolutions = (choices.conflictResolutions + linkResolutions).filterKeys(plan::isConflicting),
+        ),
+        sharedLinkUpdateCount = sharedLinkUpdateCount + linkResolutions.size,
+    )
+}
+
+/** What of [grown], this plan with a batch added ([withAdded]), the shared link [fileId] that batch is brought. */
+internal fun ImportPlan.sharedLinkPartAdded(fileId: String, grown: ImportPlan) = SharedLinkPart(
+    fileId = fileId,
+    songIndices = songs.size until grown.songs.size,
+    setlistIndices = setlists.size until grown.setlists.size,
+)

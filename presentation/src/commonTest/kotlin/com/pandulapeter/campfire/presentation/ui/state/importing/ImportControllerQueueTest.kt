@@ -859,6 +859,40 @@ class ImportControllerQueueTest {
     }
 
     @Test
+    fun `Try again after a staged file was found gone reads again every batch the review held`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        nextPlans += listOf(songEntry("new.cho").withStagedPicture())
+        nextPlans += listOf(songEntry("other.cho"))
+        importFailure = { StagedFileMissingException(STAGED_PICTURE.name) }
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(STAGED_ARCHIVE)))
+        settle()
+        val joinedSettled = controller.enqueueImport(ImportSource.Files(listOf(OTHER_STAGED_ARCHIVE)))
+        settle()
+        assertEquals(listOf("new.cho", "other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        controller.resolveImport()
+        settle()
+        assertIs<ImportReport.Failed>(reportState.importReport.value)
+        importFailure = null
+        nextPlans += listOf(songEntry("new.cho").withStagedPicture())
+        nextPlans += listOf(songEntry("other.cho"))
+        controller.retryImport()
+        settle()
+        assertEquals(
+            listOf(listOf(STAGED_ARCHIVE), listOf(OTHER_STAGED_ARCHIVE), listOf(STAGED_ARCHIVE), listOf(OTHER_STAGED_ARCHIVE)),
+            preparedFiles,
+        )
+        assertEquals(listOf("new.cho", "other.cho"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.songs.map { it.fileName })
+        assertFalse(joinedSettled.isCompleted)
+        controller.resolveImport()
+        settle()
+        assertEquals(2, importCount)
+        assertEquals(setOf("new.cho", "other.cho"), library.value.songsByFileName.keys)
+        assertTrue(joinedSettled.isCompleted)
+        assertEquals(setOf(STAGED_ARCHIVE.staged!!, OTHER_STAGED_ARCHIVE.staged!!, STAGED_PICTURE), deletedStaging.toSet())
+    }
+
+    @Test
     fun `a shared link that could not be reached is downloaded again on Try again`() = runTest {
         startController()
         controller.importSharedLink(sharedLink)
@@ -1241,6 +1275,12 @@ private val STAGED_ARCHIVE = ImportedFile(
     name = "library.zip",
     bytes = ByteArray(0),
     staged = StagedFile(name = "0123456789abcdef-1-1.zip", size = 10, sha256Hex = null),
+)
+
+private val OTHER_STAGED_ARCHIVE = ImportedFile(
+    name = "other.zip",
+    bytes = ByteArray(0),
+    staged = StagedFile(name = "0123456789abcdef-2-1.zip", size = 10, sha256Hex = null),
 )
 
 /** The entry with a picture its archive staged, as a staged archive's plan brings one. */
