@@ -288,6 +288,15 @@ only, never committed), and its outcome is written into the step it decides befo
 - **Web, a hidden tab and the quota** (decides steps 6, 10, and 14): Chrome with Energy Saver on, a hidden tab copying
   into OPFS and inflating in Wasm for six minutes: is it frozen, do `delay`s stall? Safari before 26: a 2 GB `File`
   posted to the worker and written through a sync access handle near the quota: where does `QuotaExceededError` land?
+  **Outcome (2026-11-17, headful Chrome 157; Safari before 26 not available, answered from WebKit's source):** with
+  Energy Saver forced on, Chrome froze every CPU-busy hidden tab, its dedicated worker included, after about 6 minutes,
+  and a held Web Lock exempted the tab (Campfire holds one for its library; confirm in the app). Without Energy Saver
+  nothing froze. A loop yielding by `setTimeout(0)` ran about a step a second at once and a step a minute after five;
+  `postMessage`/`MessageChannel` yields (what Kotlin/Wasm's `Dispatchers.Default` and `yield()` use) and awaited OPFS
+  or `Blob` I/O were never throttled; `delay` stalls as expected. `QuotaExceededError` lands on the sync access handle's
+  `write()` (and `truncate`), never `flush`/`close`, in both engines, leaving the partial file; `createWritable()`'s
+  `write()` or `pipeTo` reject and leave an empty entry. Both engines grow a file's capacity by doubling, so a write can
+  be refused with up to half of what remains still free.
 
 ### 1. SHA-256 in `:data:model`, incremental
 
@@ -512,7 +521,10 @@ needs) if a sync run would otherwise stall for minutes.
   `MAX_STAGED_ARCHIVE_SIZE` only together with a free-space check before it copies: its copy into the App Group inbox
   is the one copy an extension cannot avoid, and the app then moves it. The inbox bound stops counting archives
   against its 64 MB.
-- Web: the picked or dropped `File` is piped into OPFS in JavaScript, never crossing into Wasm.
+- Web: the picked or dropped `File` is piped into OPFS in JavaScript, never crossing into Wasm. A quota refusal comes from a
+  `write()` (step 0) and the partial file is deleted explicitly. Because capacity grows by doubling, the ledger
+  charges a staged file on the web as up to twice its size (`isSpaceAQuota`), so the early answer does not promise
+  room the engine will refuse.
 - Behind `IncomingFile` nothing is queued differently: a request with a receiving file shows Loading at once.
 - Not yet switched on: the intake still reads archives whole until step 15, behind one `ImportIntake` constant.
 
@@ -619,8 +631,9 @@ and each platform's start/stop decisions as plain logic where they can be, like 
   (`CampfireWebApp.kt`); a hidden tab keeps importing as far as the browser lets it: nothing in the import waits
   on the frame clock (a hidden tab stops `requestAnimationFrame`) or on `delay` and `withTimeout` (a hidden tab's
   timers run once a minute after five), the OPFS worker's progress still arrives, and the Loading stage says to keep
-  the tab open. Chrome may still freeze or discard a hidden tab that works for minutes (Energy Saver); that is a
-  stated limit, which step 0's spike measures, not something the app can prevent. A closed tab loses only
+  the tab open. Every import loop yields with `yield()` or awaited I/O, never a timer (step 0). The library's Web Lock
+  stays held through the import, which kept Chrome's Energy Saver from freezing the tab in step 0; a discard after
+  long hours hidden stays a stated limit. A closed tab loses only
   the preparation; the next launch empties the staging.
 - **Safety:** none of these touches the library or staging; a kill with or without them loses only the preparation
   (staging cleaned at the next launch, step 7), never a library file (the Import write moves files atomically, step 9). A kill
