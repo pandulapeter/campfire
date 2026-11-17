@@ -52,13 +52,16 @@ import com.pandulapeter.campfire.presentation.ui.dialogs.sheet.sheetContainerCol
  * the sheet, the download going on under the window's progress bar. Only an `https` address is taken
  * ([PictureLinks.isLink]); anything else typed says so under the field, which keeps one line for it whether or not it is
  * shown, so that the sheet does not change height as the address is typed.
+ *
+ * @param initialAddress What the field starts with: the address of the last download that did not arrive, else nothing.
  */
 @Composable
 internal fun PictureLinkSheet(
+    initialAddress: String,
     onDismiss: () -> Unit,
     onDownload: (url: String) -> Unit,
 ) {
-    var address by rememberSaveable { mutableStateOf("") }
+    var address by rememberSaveable { mutableStateOf(initialAddress) }
     val url = address.trim()
     val isValid = PictureLinks.isLink(url)
     val focusRequester = rememberFirstFieldFocusRequester()

@@ -104,10 +104,20 @@ internal class EditorImages(
     }
 
     /**
-     * The Image menu's From a link: the picture at [url], downloaded and then kept and inserted into the editor of
-     * [fileName] as a picked one is; one that does not arrive is said why.
+     * The address of the last From a link whose picture did not arrive, null once one has: the sheet starts from it, since
+     * the sheet closes as the download starts and a retry (the host answering a moment later, a typo corrected) would
+     * otherwise mean typing the whole address again.
      */
-    fun downloadImage(fileName: String, url: String) = pickImages(fileName) { listOfNotNull(linkDownloader.picture(url)) }
+    var failedLinkAddress: String? = null
+        private set
+
+    /**
+     * The Image menu's From a link: the picture at [url], downloaded and then kept and inserted into the editor of
+     * [fileName] as a picked one is; one that does not arrive is said why, and its address kept in [failedLinkAddress].
+     */
+    fun downloadImage(fileName: String, url: String) = pickImages(fileName) {
+        listOfNotNull(linkDownloader.picture(url)).also { failedLinkAddress = if (it.isEmpty()) url else null }
+    }
 
     /**
      * Keeps [files] as draft pictures, answering the names they are kept under in their order, a picture brought twice

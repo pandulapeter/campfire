@@ -34,6 +34,7 @@ internal fun EditorDialog(
         )
 
         is DialogType.PictureLink -> PictureLinkSheet(
+            initialAddress = viewModel.editorSession.images.failedLinkAddress.orEmpty(),
             onDismiss = { viewModel.dialogHost.dismissSheet(dialog) },
             onDownload = { url -> viewModel.editorSession.images.downloadImage(fileName = dialog.editorFileName, url = url) },
         )

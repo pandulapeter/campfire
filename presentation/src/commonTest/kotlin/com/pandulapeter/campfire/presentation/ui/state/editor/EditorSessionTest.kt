@@ -492,6 +492,21 @@ class EditorSessionTest {
     }
 
     @Test
+    fun `the address of a picture that does not arrive is kept for a retry, and forgotten once one arrives`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        backgroundScope.launch { fixture.session.images.insertions.collect {} }
+        fixture.session.images.downloadImage("a.cho", "https://example.com/chart.png")
+        runCurrent()
+        assertEquals("https://example.com/chart.png", fixture.session.images.failedLinkAddress)
+        linkedPictures["https://example.com/chart.png"] = PictureDownload.Picture(byteArrayOf(7))
+        fixture.session.images.downloadImage("a.cho", "https://example.com/chart.png")
+        runCurrent()
+        assertEquals(null, fixture.session.images.failedLinkAddress)
+    }
+
+    @Test
     fun `a refused picture is said why and inserts nothing`() = runTest {
         files["a.cho"] = "{title: A}"
         val fixture = fixture()
