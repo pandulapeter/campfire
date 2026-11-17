@@ -937,6 +937,10 @@
     <string name="song_editor_insert_image">Image</string>
     <string name="picture_source_photos">Photos</string>
     <string name="picture_source_files">Fichiers</string>
+    <string name="picture_source_link">Depuis un lien</string>
+    <string name="picture_link_address">Adresse de l\'image</string>
+    <string name="picture_link_hint">L\'adresse d\'une image sur le web. Campfire la télécharge une seule fois et en garde une copie dans la chanson, qui s\'affiche donc aussi hors ligne.</string>
+    <string name="picture_link_invalid">Saisis une adresse qui commence par https://</string>
     <string name="song_editor_insert_chorus_recall">Reprise du refrain</string>
     <string name="song_editor_insert_comment">Commentaire</string>
     <string name="song_editor_insert_comment_italic">Commentaire en italique</string>

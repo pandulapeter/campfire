@@ -96,6 +96,20 @@ class SavedDialogRestorerTest {
     }
 
     @Test
+    fun `a saved picture link sheet is reopened over its own editor only`() = runTest {
+        backStack.add(CampfireDestination.SongEditor("a.cho"))
+        restorer(SavedDialog.PictureLink("a.cho")).start()
+        readLibrary()
+        runCurrent()
+        assertEquals(DialogType.PictureLink("a.cho"), dialogHost.visibleDialog.value)
+
+        restorer(SavedDialog.PictureLink("b.cho")).start()
+        runCurrent()
+        assertNull(dialogHost.visibleDialog.value)
+        assertNull(savedDialog)
+    }
+
+    @Test
     fun `a sheet over a setlist that is gone is forgotten`() = runTest {
         restorer(SavedDialog.EditSetlist("missing.setlist.json")).start()
         readLibrary()

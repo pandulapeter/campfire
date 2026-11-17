@@ -963,6 +963,10 @@
     <string name="song_editor_insert_image">Obraz</string>
     <string name="picture_source_photos">Zdjęcia</string>
     <string name="picture_source_files">Pliki</string>
+    <string name="picture_source_link">Z linku</string>
+    <string name="picture_link_address">Adres obrazu</string>
+    <string name="picture_link_hint">Adres obrazu w sieci. Campfire pobiera go raz i przechowuje kopię w piosence, więc widać go także offline.</string>
+    <string name="picture_link_invalid">Wpisz adres zaczynający się od https://</string>
     <string name="song_editor_insert_chorus_recall">Powtórz refren</string>
     <string name="song_editor_insert_comment">Komentarz</string>
     <string name="song_editor_insert_comment_italic">Komentarz kursywą</string>

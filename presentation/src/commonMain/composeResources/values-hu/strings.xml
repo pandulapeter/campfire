@@ -931,6 +931,10 @@
     <string name="song_editor_insert_image">Kép</string>
     <string name="picture_source_photos">Fotók</string>
     <string name="picture_source_files">Fájlok</string>
+    <string name="picture_source_link">Linkről</string>
+    <string name="picture_link_address">A kép címe</string>
+    <string name="picture_link_hint">Egy webes kép címe. A Campfire egyszer letölti, és egy másolatát a dalban tárolja, így internet nélkül is látszik.</string>
+    <string name="picture_link_invalid">Adj meg egy https://-sel kezdődő címet</string>
     <string name="song_editor_insert_chorus_recall">Refrén ismétlése</string>
     <string name="song_editor_insert_comment">Megjegyzés</string>
     <string name="song_editor_insert_comment_italic">Dőlt megjegyzés</string>

@@ -23,9 +23,10 @@ The editor's Shortcuts rows and its control row.
 - A write that leaves a value to type (a new selection, or the caret inside braces or brackets) brings the keyboard up
   and scrolls to it, even if the user had put it away; sections, tabs, Repeat chorus, wrapping a selection, and the
   formatting buttons never do.
-- Everything in braces goes on a line of its own (the only way ChordPro reads a directive). Image picks pictures and
-  writes their directives after the line the caret is on (above it at a line's start) once they are kept, never
-  splitting a line.
+- Everything in braces goes on a line of its own (the only way ChordPro reads a directive). Image is a menu on every
+  platform (Photos where there is a photo library, Files, From a link); its pictures' directives go after the line the
+  caret is on (above it at a line's start) once they are kept, never splitting a line. From a link asks for an `https`
+  address in a sheet (`PictureLinkSheet`) and downloads it under the progress bar, kept as a picked picture is.
 - Deliberately absent: `{new_song}` (one song per editor), `{new_page}` / `{column_break}` (Campfire flows sections into
   columns itself). `{transpose}` is offered only as **Key change**, at the caret, never in the header: one at the top
   would silently shift every chord away from what the file spells.

@@ -19,21 +19,24 @@ import androidx.compose.ui.focus.focusProperties
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_folder
+import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.ic_photo_library
 import com.pandulapeter.campfire.presentation.resources.picture_source_files
+import com.pandulapeter.campfire.presentation.resources.picture_source_link
 import com.pandulapeter.campfire.presentation.resources.picture_source_photos
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.PictureSource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The popup a button that adds a picture opens where the platform has a photo library apart from its files
- * (`FilePicker.canPickPhotos`): Photos first, since that is where a phone's pictures are, then Files. The photo picker is
- * readied as it opens (`FilePicker.preparePhotos`).
+ * The popup a button that adds a picture opens: Photos first where the platform has a photo library apart from its files
+ * ([hasPhotos], `FilePicker.canPickPhotos`), since that is where a phone's pictures are, then Files, then From a link
+ * where [onLink] is given. The photo picker is readied as it opens (`FilePicker.preparePhotos`).
  *
  * @param isFocusable See [OverflowMenu]; false also keeps the entries from taking the focus.
  * @param isMultiple Whether Photos will be asked for several pictures rather than one.
  * @param onPick Called with the source picked, once the menu is closed.
+ * @param onLink Called once the menu is closed, for the picture's address to be asked.
  */
 @Composable
 internal fun PictureSourceMenu(
@@ -41,12 +44,14 @@ internal fun PictureSourceMenu(
     state: OverflowMenuState = rememberOverflowMenuState(),
     isFocusable: Boolean = true,
     isMultiple: Boolean,
+    hasPhotos: Boolean = true,
     button: @Composable (open: () -> Unit) -> Unit,
     onPick: (PictureSource) -> Unit,
+    onLink: (() -> Unit)? = null,
 ) {
     val filePicker = LocalFilePicker.current
-    LaunchedEffect(state.isExpanded, filePicker, isMultiple) {
-        if (state.isExpanded) filePicker.preparePhotos(isMultiple)
+    LaunchedEffect(state.isExpanded, filePicker, isMultiple, hasPhotos) {
+        if (state.isExpanded && hasPhotos) filePicker.preparePhotos(isMultiple)
     }
     OverflowMenu(
         modifier = modifier,
@@ -54,9 +59,10 @@ internal fun PictureSourceMenu(
         isFocusable = isFocusable,
         button = button,
     ) { select ->
-        PictureSource.entries.forEach { source ->
+        val entryModifier = if (isFocusable) Modifier else Modifier.focusProperties { canFocus = false }
+        PictureSource.entries.filter { hasPhotos || it != PictureSource.PHOTOS }.forEach { source ->
             DropdownMenuItem(
-                modifier = if (isFocusable) Modifier else Modifier.focusProperties { canFocus = false },
+                modifier = entryModifier,
                 text = {
                     Text(
                         stringResource(
@@ -79,6 +85,14 @@ internal fun PictureSourceMenu(
                     )
                 },
                 onClick = { select { onPick(source) } },
+            )
+        }
+        if (onLink != null) {
+            DropdownMenuItem(
+                modifier = entryModifier,
+                text = { Text(stringResource(Res.string.picture_source_link)) },
+                leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_link), contentDescription = null) },
+                onClick = { select(onLink) },
             )
         }
     }

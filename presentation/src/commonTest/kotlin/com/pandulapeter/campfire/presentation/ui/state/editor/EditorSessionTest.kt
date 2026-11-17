@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.domain.api.images.DownloadPictureUseCase
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
@@ -72,6 +73,7 @@ import kotlin.test.assertTrue
 class EditorSessionTest {
 
     private val files = mutableMapOf<String, String>()
+    private val linkedPictures = mutableMapOf<String, PictureDownload>()
     private var storedDraft: SongContent? = null
     private var isWriteFailing = false
     private val backStack = mutableStateListOf<CampfireDestination>(CampfireDestination.Songs)
@@ -137,6 +139,9 @@ class EditorSessionTest {
                     return save(text)
                 }
             },
+            downloadPicture = object : DownloadPictureUseCase {
+                override suspend fun invoke(url: String) = linkedPictures[url] ?: PictureDownload.Unreachable
+            },
         )
 
         /** Shrinks a picture to its last byte alone, as the platform's re-encoder would to a smaller copy. */
@@ -190,6 +195,7 @@ class EditorSessionTest {
                     messageSink = messageSink,
                     addDraftImage = useCases.addDraftImage,
                     pictureFitter = pictureFitter,
+                    linkDownloader = PictureLinkDownloader(download = useCases.downloadPicture::invoke, work = PictureWork(), messageSink = messageSink),
                     holdEditorImages = useCases.holdEditorImages,
                     clearDraftImages = useCases.clearDraftImages,
                     computation = Dispatchers.Unconfined,
@@ -467,6 +473,22 @@ class EditorSessionTest {
         assertTrue(libraryImages.isEmpty())
         assertTrue(draftImages.isEmpty())
         assertEquals("{title: A}", files["a.cho"])
+    }
+
+    @Test
+    fun `a picture from a link is kept as a draft picture and inserted, and one that does not arrive is said why`() = runTest {
+        files["a.cho"] = "{title: A}"
+        linkedPictures["https://example.com/chart.png"] = PictureDownload.Picture(byteArrayOf(7))
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorImageInsertion>()
+        backgroundScope.launch { fixture.session.images.insertions.collect { insertions += it } }
+        fixture.session.images.downloadImage("a.cho", "https://example.com/chart.png")
+        fixture.session.images.downloadImage("a.cho", "https://example.com/gone.png")
+        runCurrent()
+        assertEquals(listOf(listOf("draft-7.png")), insertions.map { it.names })
+        assertEquals(setOf("draft-7.png"), draftImages)
+        assertEquals(listOf<Message>(Message.PictureLinkUnreachable), fixture.messages)
     }
 
     @Test

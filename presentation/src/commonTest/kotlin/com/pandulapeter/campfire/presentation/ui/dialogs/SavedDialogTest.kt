@@ -50,6 +50,7 @@ class SavedDialogTest {
             SavedDialog.SetlistPicker(songFileName = "a.cho", setlistFileName = "s.setlist.json"),
             DialogType.SetlistPicker(song, "s.setlist.json").toSavedDialog(),
         )
+        assertEquals(SavedDialog.PictureLink("a.cho"), DialogType.PictureLink("a.cho").toSavedDialog())
     }
 
     @Test
@@ -104,6 +105,7 @@ class SavedDialogTest {
             SavedDialog.DuplicateSetlist("s.setlist.json"),
             SavedDialog.SongPicker("s.setlist.json"),
             SavedDialog.SetlistPicker(songFileName = "a.cho", setlistFileName = null),
+            SavedDialog.PictureLink("a.cho"),
             SavedDialog.SongEdit(SavedDialog.SongEdit.Kind.PLAYING, songFileName = "a.cho", isEditorDraft = false, setlistFileName = "s.setlist.json"),
         ).forEach { saved ->
             store.persist<SavedDialog?>(SavedStateStore.VISIBLE_DIALOG_KEY, saved)

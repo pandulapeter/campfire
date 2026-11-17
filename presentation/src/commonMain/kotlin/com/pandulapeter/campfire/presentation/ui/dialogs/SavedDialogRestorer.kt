@@ -104,6 +104,8 @@ internal class SavedDialogRestorer(
             // The editor reports its text only once it has composed, which it may never do if it is not on top.
             if (top !is CampfireDestination.SongEditor || top.fileName != saved.songFileName) return false
         }
+        // A picture's address is asked for the editor it is inserted into, which must be the one on top.
+        if (saved is SavedDialog.PictureLink && (top !is CampfireDestination.SongEditor || top.fileName != saved.editorFileName)) return false
         val lookup = songLookup.first { it.isLibraryRead }
         fun songOf(fileName: String) = lookup.songsByFileName[fileName]
         fun setlistOf(fileName: String) = setlists.value.firstOrNull { it.fileName == fileName }
@@ -128,6 +130,7 @@ internal class SavedDialogRestorer(
                 DialogType.SetlistPicker(song = songOf(saved.songFileName) ?: return false, setlistFileName = saved.setlistFileName),
             )
             is SavedDialog.SongEdit -> showSavedSongEdit(saved, songOf(saved.songFileName) ?: return false)
+            is SavedDialog.PictureLink -> dialogHost.showDialog(DialogType.PictureLink(saved.editorFileName))
         }
         // An opener that found nothing to open on puts nothing up.
         return dialogHost.visibleDialog.value != null

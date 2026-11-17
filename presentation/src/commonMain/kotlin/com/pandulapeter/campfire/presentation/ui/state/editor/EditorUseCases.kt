@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.editor
 
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
+import com.pandulapeter.campfire.domain.api.images.DownloadPictureUseCase
 import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveWithDraftImagesUseCase
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.reencodePicture
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,7 @@ class EditorUseCases(
     internal val holdEditorImages: HoldEditorImagesUseCase,
     internal val clearDraftImages: ClearDraftImagesUseCase,
     internal val saveWithDraftImages: SaveWithDraftImagesUseCase,
+    internal val downloadPicture: DownloadPictureUseCase,
 ) {
 
     /**
@@ -52,6 +55,7 @@ class EditorUseCases(
         messageSink = messageSink,
         addDraftImage = addDraftImage,
         pictureFitter = PictureFitter(examine = examineImage::invoke, reencode = ::reencodePicture, work = pictureWork),
+        linkDownloader = PictureLinkDownloader(download = downloadPicture::invoke, work = pictureWork, messageSink = messageSink),
         holdEditorImages = holdEditorImages,
         clearDraftImages = clearDraftImages,
         computation = Dispatchers.Default,

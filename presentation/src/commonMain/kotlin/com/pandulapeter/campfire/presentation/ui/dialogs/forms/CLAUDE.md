@@ -11,8 +11,8 @@
 
 # :presentation — ui/dialogs/forms
 
-- **First-field focus is per form**: new song, new and duplicate setlist, tag and language management, and library
-  deletion focus their first field; duplicate song, edit setlist, song metadata, links, and cover art do not. Both
+- **First-field focus is per form**: new song, new and duplicate setlist, tag and language management, a picture's
+  address, and library deletion focus their first field; duplicate song, edit setlist, song metadata, links, and cover art do not. Both
   assignment pickers leave search unfocused at every height.
 - Every typed field has a clear button, and every keyboard action does something (at least hiding the keyboard).
 - **Every list sharing a sheet with a text field hides the keyboard as it starts scrolling down**

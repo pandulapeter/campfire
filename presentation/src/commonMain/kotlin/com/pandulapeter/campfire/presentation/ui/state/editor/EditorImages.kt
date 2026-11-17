@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
+import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.imageNamesOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -47,6 +48,7 @@ import kotlinx.coroutines.withContext
  * under the editor it was meant for.
  *
  * @param pictureFitter What a picture is made to fit with before it is kept.
+ * @param linkDownloader What a picture asked for by its address is downloaded with, see [downloadImage].
  * @param computation Where the names a text holds are read, away from the main thread: a long song is read on every
  *   pause in the typing.
  */
@@ -55,6 +57,7 @@ internal class EditorImages(
     private val messageSink: MessageSink,
     private val addDraftImage: AddDraftImageUseCase,
     private val pictureFitter: PictureFitter,
+    private val linkDownloader: PictureLinkDownloader,
     private val holdEditorImages: HoldEditorImagesUseCase,
     private val clearDraftImages: ClearDraftImagesUseCase,
     private val computation: CoroutineDispatcher,
@@ -99,6 +102,12 @@ internal class EditorImages(
             if (names.isNotEmpty()) _insertions.send(EditorImageInsertion(fileName = fileName, names = names))
         }
     }
+
+    /**
+     * The Image menu's From a link: the picture at [url], downloaded and then kept and inserted into the editor of
+     * [fileName] as a picked one is; one that does not arrive is said why.
+     */
+    fun downloadImage(fileName: String, url: String) = pickImages(fileName) { listOfNotNull(linkDownloader.picture(url)) }
 
     /**
      * Keeps [files] as draft pictures, answering the names they are kept under in their order, a picture brought twice

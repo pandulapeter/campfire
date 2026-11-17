@@ -971,6 +971,10 @@
     <string name="song_editor_insert_image">תמונה</string>
     <string name="picture_source_photos">תמונות</string>
     <string name="picture_source_files">קבצים</string>
+    <string name="picture_source_link">מקישור</string>
+    <string name="picture_link_address">כתובת התמונה</string>
+    <string name="picture_link_hint">כתובת של תמונה ברשת. Campfire מוריד אותה פעם אחת ושומר עותק בשיר, כך שהיא מוצגת גם בלי חיבור.</string>
+    <string name="picture_link_invalid">הזינו כתובת שמתחילה ב־https://</string>
     <string name="song_editor_insert_chorus_recall">חזרה על הפזמון</string>
     <string name="song_editor_insert_comment">הערה</string>
     <string name="song_editor_insert_comment_italic">הערה נטויה</string>

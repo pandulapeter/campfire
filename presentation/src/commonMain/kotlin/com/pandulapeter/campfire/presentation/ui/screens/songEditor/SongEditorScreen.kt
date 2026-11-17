@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
+import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
@@ -116,9 +117,14 @@ internal fun SongEditorScreen(
         if (isPerformanceModeEnabled) {
             null
         } else {
-            EditorImagePick(canPickPhotos = filePicker.canPickPhotos, menuState = imageMenuState) { source ->
-                viewModel.editorSession.images.pickImages(destination.fileName) { filePicker.pickPictures(source, isMultiple = true) }
-            }
+            EditorImagePick(
+                canPickPhotos = filePicker.canPickPhotos,
+                menuState = imageMenuState,
+                onPick = { source ->
+                    viewModel.editorSession.images.pickImages(destination.fileName) { filePicker.pickPictures(source, isMultiple = true) }
+                },
+                onLink = { viewModel.dialogHost.showDialog(DialogType.PictureLink(destination.fileName)) },
+            )
         }
     }
     AnimatedContent(

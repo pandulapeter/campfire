@@ -71,8 +71,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_action
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
-import com.pandulapeter.campfire.presentation.resources.song_editor_revert
-import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_duplicate_song
 import com.pandulapeter.campfire.presentation.localization.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.songLabel
@@ -346,13 +344,7 @@ private fun CampfireDialog(
             onDismiss = dismissSheet,
         )
 
-        DialogType.RevertChanges -> ConfirmationDialog(
-            title = stringResource(Res.string.song_editor_revert),
-            text = stringResource(Res.string.song_editor_revert_confirmation),
-            confirmLabel = stringResource(Res.string.song_editor_revert),
-            onDismiss = viewModel.dialogHost::dismissDialog,
-            onConfirm = viewModel.editorSession::revertEditorChanges,
-        )
+        DialogType.RevertChanges, is DialogType.PictureLink -> EditorDialog(viewModel = viewModel, dialog = dialog)
 
         is DialogType.ConfirmImportReplace -> ConfirmationDialog(
             title = pluralTextResource(Res.plurals.import_replace_title, dialog.count, dialog.count.toString()),

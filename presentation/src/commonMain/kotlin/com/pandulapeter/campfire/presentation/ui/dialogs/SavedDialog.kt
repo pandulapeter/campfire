@@ -46,6 +46,9 @@ internal sealed interface SavedDialog {
     @Serializable
     data class SetlistPicker(val songFileName: String, val setlistFileName: String?) : SavedDialog
 
+    @Serializable
+    data class PictureLink(val editorFileName: String) : SavedDialog
+
     /**
      * One of the [DialogType.SongEdit] sheets.
      *
@@ -82,6 +85,7 @@ internal fun DialogType.toSavedDialog(): SavedDialog? = when (this) {
     is DialogType.DuplicateSetlist -> SavedDialog.DuplicateSetlist(setlist.fileName)
     is DialogType.SongPicker -> SavedDialog.SongPicker(setlist.fileName)
     is DialogType.SetlistPicker -> SavedDialog.SetlistPicker(songFileName = song.fileName, setlistFileName = setlistFileName)
+    is DialogType.PictureLink -> SavedDialog.PictureLink(editorFileName)
     is DialogType.SongTags -> savedSongEdit(SavedDialog.SongEdit.Kind.TAGS)
     is DialogType.SongLanguages -> savedSongEdit(SavedDialog.SongEdit.Kind.LANGUAGES)
     is DialogType.SongMetadata -> savedSongEdit(SavedDialog.SongEdit.Kind.METADATA)

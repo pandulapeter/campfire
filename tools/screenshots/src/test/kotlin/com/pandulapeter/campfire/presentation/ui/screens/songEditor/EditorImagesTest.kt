@@ -106,13 +106,14 @@ internal class EditorImagesTest {
     }
 
     @Test
-    fun `Ctrl+Shift+I presses the Image button, whose tooltip names the keys`() = runAppTest(
+    fun `Ctrl+Shift+I opens the Image button's menu, whose tooltip names the keys`() = runAppTest(
         window = TestWindow.DESKTOP,
         platform = ImpersonatedPlatform.WINDOWS,
         pickedFiles = listOf(ImportedFile("holiday.png", picture)),
     ) {
         openEditor()
         onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { withKeyDown(Key.ShiftLeft) { pressKey(Key.I) } } }
+        pickFrom(Res.string.picture_source_files)
         waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { "{image: src=$pictureName}" in fieldText() }
         onNode(hasText(string(Res.string.song_editor_insert_image)) and hasClickAction()).performMouseInput { enter(center) }
         waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) {
@@ -161,9 +162,10 @@ internal class EditorImagesTest {
         onNode(entry).performSemanticsAction(SemanticsActions.OnClick)
     }
 
-    /** Presses the toolbar's Image button, whose picker hands over the test's picture, and waits for its line. */
+    /** Picks Files from the toolbar's Image button, whose picker hands over the test's picture, and waits for its line. */
     private fun AppTestScope.insertPicture() {
         onNode(hasText(string(Res.string.song_editor_insert_image)) and hasClickAction()).performSemanticsAction(SemanticsActions.OnClick)
+        pickFrom(Res.string.picture_source_files)
         waitUntil(timeoutMillis = EDITOR_TIMEOUT_MILLIS) { "{image: src=$pictureName}" in fieldText() }
     }
 

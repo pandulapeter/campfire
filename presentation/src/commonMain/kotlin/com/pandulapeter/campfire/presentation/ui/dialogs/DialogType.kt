@@ -265,6 +265,12 @@ sealed interface DialogType {
     /** Asked before the editor throws away everything typed since the last save, see `EditorSession.revertEditorChanges`. */
     data object RevertChanges : DialogType
 
+    /**
+     * The editor's Image menu's From a link: the address of a picture to download and insert into the editor of
+     * [editorFileName], as a picked one is (`EditorImages.downloadImage`).
+     */
+    data class PictureLink(val editorFileName: String) : DialogType
+
     /** The current version's introduction, shown once after the first installed version. */
     data object WhatsNew : DialogType
 
