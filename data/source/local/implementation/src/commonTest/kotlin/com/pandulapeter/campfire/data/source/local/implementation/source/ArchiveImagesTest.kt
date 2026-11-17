@@ -85,12 +85,17 @@ internal class ArchiveImagesTest {
         val absolute = unpack("a.cho" to song("/Users/me/Pictures/chart.png"), "chart.png" to photo)
         val address = unpack("a.cho" to song("https://example.com/chart.png"), "chart.png" to photo)
         val backslashes = unpack("songs\\a.cho" to song("art\\chart.png"), "songs\\art\\chart.png" to photo)
+        // Two entries of the name, so only the path can answer.
+        val aboveRoot = unpack("a.cho" to song("../chart.png"), "chart.png" to photo, "x/chart.png" to otherPhoto)
+        val intoImages = unpack("songs/a.cho" to song("../images/chart.png"), "images/chart.png" to photo, "x/chart.png" to otherPhoto)
 
         assertFound(photo, relative.song("a.cho").images.single())
         assertFound(photo, climbing.song("a.cho").images.single())
         assertFound(photo, absolute.song("a.cho").images.single())
         assertProblem(ImportedImage.Problem.MISSING, address.song("a.cho").images.single())
         assertFound(photo, backslashes.song("a.cho").images.single())
+        assertProblem(ImportedImage.Problem.MISSING, aboveRoot.song("a.cho").images.single())
+        assertFound(photo, intoImages.song("a.cho").images.single())
     }
 
     @Test

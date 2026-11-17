@@ -21,7 +21,9 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
  *
  * Paths compare with `\` read as `/` (PowerShell writes it) and `.` and `..` segments resolved, and only ever among the
  * archive's own entries: a path climbing out of the archive, or an absolute one (the author's own disk), is found by its
- * file name alone, and an address (`https://…`) is never an entry, since nothing outside the archive is looked at.
+ * file name alone, and an address (`https://…`) is never an entry, since nothing outside the archive is looked at. A
+ * value that climbs above where it starts is never looked for in an `images/` folder, whose name its `..` would only
+ * cancel: `../x.png` beside a song at the root is outside the archive, not the root's `x.png`.
  */
 internal class ArchiveImagePaths(names: Collection<String>) {
 
@@ -36,7 +38,8 @@ internal class ArchiveImagePaths(names: Collection<String>) {
         val folder = normalized(songPath)?.substringBeforeLast('/', "")?.let { if (it.isEmpty()) "" else "$it/" } ?: ""
         val isAbsolute = value.startsWith('/')
         if (!isAbsolute) {
-            listOf("$folder$value", "$IMAGES_FOLDER$value", "$folder$IMAGES_FOLDER$value").forEach { candidate ->
+            val inImagesFolder = if (normalized(value) == null) emptyList() else listOf("$IMAGES_FOLDER$value", "$folder$IMAGES_FOLDER$value")
+            (listOf("$folder$value") + inImagesFolder).forEach { candidate ->
                 normalized(candidate)?.let(byPath::get)?.let { return it }
             }
         }
