@@ -34,7 +34,7 @@ class ImportNotificationTextTest {
     }
 
     @Test
-    fun `counted bytes are written in the screen's sizes, with the separator handed over`() {
+    fun `counted bytes are written in the screen's sizes - with the separator handed over`() {
         val progress = ImportProgress(ImportProgress.Phase.UNPACKING, completedBytes = 1_250_000, totalBytes = 3_400_000_000)
         assertEquals("Unpacking 1,3 MB of 3,4 GB", WORDS.textOf(ImportWorkState.UNPACKING, progress))
         assertEquals(ImportBytes(completed = 1_250_000, total = 3_400_000_000), importBytesOf(ImportWorkState.UNPACKING, progress))

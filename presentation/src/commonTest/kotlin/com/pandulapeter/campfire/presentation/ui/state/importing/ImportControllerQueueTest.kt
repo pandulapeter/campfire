@@ -1215,7 +1215,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `an interrupted preparation cleans up, fails with Try again, and Try again reads the batch again`() = runTest {
+    fun `an interrupted preparation cleans up and fails with Try again and Try again reads the batch again`() = runTest {
         prepareGate = CompletableDeferred()
         val cleanupGate = CompletableDeferred<Unit>()
         onPrepareEnded = { withContext(NonCancellable) { cleanupGate.await() } }
