@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.ImageLocalSource
 import com.pandulapeter.campfire.data.source.local.api.ImageShelf
@@ -29,6 +30,12 @@ internal class FakeImageLocalSource : ImageLocalSource {
     override suspend fun hasImage(shelf: ImageShelf, name: String) = name in shelves.getValue(shelf)
 
     override suspend fun imageSize(shelf: ImageShelf, name: String) = shelves.getValue(shelf)[name]?.size?.toLong()
+
+    override suspend fun hashImage(shelf: ImageShelf, name: String) = shelves.getValue(shelf)[name]?.let(Sha256::hashToHex)
+
+    override suspend fun copyImage(from: ImageShelf, name: String, to: ImageShelf, toName: String) {
+        shelves.getValue(to)[toName] = checkNotNull(shelves.getValue(from)[name]) { "$name is not there to be copied." }.copyOf()
+    }
 
     override suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray) {
         shelves.getValue(shelf)[name] = bytes

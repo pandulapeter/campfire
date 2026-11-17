@@ -27,6 +27,16 @@ interface ImageLocalSource {
     /** The size of the file on disk without reading it, null where it is not there. */
     suspend fun imageSize(shelf: ImageShelf, name: String): Long?
 
+    /** The file's SHA-256 as lowercase hex, read a slice at a time and never held whole; null where it is not there. */
+    suspend fun hashImage(shelf: ImageShelf, name: String): String?
+
+    /**
+     * Writes a copy of [name] of the shelf [from] as [toName] of [to], replacing a file there atomically and never holding
+     * it whole (but on the web, one file at a time); the original stays. Kept out of the device backup as [writeImage]
+     * keeps a file it writes. A file that is not there throws `LibraryStorageException`.
+     */
+    suspend fun copyImage(from: ImageShelf, name: String, to: ImageShelf, toName: String)
+
     /** Creates the picture or overwrites it, which only ever writes the same bytes again: a picture's name is its content. */
     suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray)
 

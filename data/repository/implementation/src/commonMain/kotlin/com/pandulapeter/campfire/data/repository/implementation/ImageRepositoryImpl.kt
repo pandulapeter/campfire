@@ -194,14 +194,42 @@ internal class ImageRepositoryImpl(
         override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = withContext(NonCancellable) {
             val renamed = mutableMapOf<String, String>()
             names.forEach { name ->
-                val bytes = imageLocalSource.readImage(ImageShelf.DRAFT, name) ?: return@forEach
-                when (val intake = addDraftFile(name, bytes)) {
+                when (val intake = withContext(environment.computation) { copyDraftFile(name) }) {
+                    null -> Unit
                     is ImageIntake.Accepted -> if (intake.name != name) renamed[name] = intake.name
                     // Taken in as a draft, so it passes again; were it ever refused, the song shows it as missing.
                     is ImageIntake.Refused -> environment.logger.log("Could not keep the file \"$name\": ${intake.reason}")
                 }
             }
             renamed
+        }
+
+        /**
+         * A draft file put into the library under the content name it was given at intake, checked by hashing it where it
+         * lies: a name the library holds with the same bytes needs nothing written, one it holds with other bytes passes to
+         * the next content name, as [store] does. Copied rather than moved, never read whole: the editor may still show it
+         * from the draft shelf, and its Undo may bring back a line naming it after a later Save let the library prune it.
+         * Null where the draft holds no such file.
+         */
+        private suspend fun copyDraftFile(name: String): ImageIntake? {
+            val size = imageLocalSource.imageSize(ImageShelf.DRAFT, name) ?: return null
+            val hex = imageLocalSource.hashImage(ImageShelf.DRAFT, name) ?: return null
+            if (!LibraryFiles.isLibraryFileNamedFor(name, hex)) {
+                // Not what its name says (damaged, or put there by hand): taken in from its bytes, as any file is.
+                return imageLocalSource.readImage(ImageShelf.DRAFT, name)?.let { addDraftFile(name, it) }
+            }
+            for (candidate in LibraryImages.contentNamesOf(hex, "." + name.substringAfterLast('.'))) {
+                when (imageLocalSource.imageSize(ImageShelf.LIBRARY, candidate)) {
+                    null -> {
+                        imageLocalSource.copyImage(from = ImageShelf.DRAFT, name = name, to = ImageShelf.LIBRARY, toName = candidate)
+                        mayHaveStrays = true
+                        _changes.update { it + 1 }
+                        return ImageIntake.Accepted(candidate)
+                    }
+                    size -> if (imageLocalSource.hashImage(ImageShelf.LIBRARY, candidate) == hex) return ImageIntake.Accepted(candidate)
+                }
+            }
+            return ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
         }
 
         /**

@@ -57,8 +57,9 @@ internal object LibraryImages {
      * [LibraryFiles.isLibraryFileNamedFor], which is how sync tells a picture from a damaged one. Hashing an attachment
      * takes seconds, so the caller runs this on a computation dispatcher.
      */
-    suspend fun contentNames(bytes: ByteArray, extension: String): Sequence<String> {
-        val hex = Sha256.hashToHexYielding(bytes)
-        return (LibraryFiles.MIN_IMAGE_NAME_DIGITS..LibraryFiles.MAX_IMAGE_NAME_DIGITS).asSequence().map { hex.take(it) + extension }
-    }
+    suspend fun contentNames(bytes: ByteArray, extension: String) = contentNamesOf(Sha256.hashToHexYielding(bytes), extension)
+
+    /** [contentNames] of a file whose SHA-256 is [hex], hashed where it lies. */
+    fun contentNamesOf(hex: String, extension: String): Sequence<String> =
+        (LibraryFiles.MIN_IMAGE_NAME_DIGITS..LibraryFiles.MAX_IMAGE_NAME_DIGITS).asSequence().map { hex.take(it) + extension }
 }

@@ -323,6 +323,57 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `a picture whose line comes back by Undo after a Save let the library prune it is saved again`() = runTest {
+        val repository = repository()
+        runCurrent()
+        val name = assertAccepted(repository.addDraftImage(PHOTO))
+        repository.holdEditorImages(setOf(name))
+        repository.withImagesKept { writer -> writer.moveDraftImages(setOf(name)).also { publish(song("a.cho", name)) } }
+        runCurrent()
+
+        // The line removed and saved: the library prunes the picture no song and no editor names.
+        repository.holdEditorImages(emptySet())
+        repository.withImagesKept { publish(song("a.cho")) }
+        runCurrent()
+        assertTrue(local.shelves.getValue(ImageShelf.LIBRARY).isEmpty())
+
+        // Undo brings the line back, and the next Save has it to put into the library again.
+        repository.holdEditorImages(setOf(name))
+        val renamed = repository.withImagesKept { writer -> writer.moveDraftImages(setOf(name)).also { publish(song("a.cho", name)) } }
+        runCurrent()
+
+        assertEquals(emptyMap(), renamed)
+        assertContentEquals(PHOTO, local.shelves.getValue(ImageShelf.LIBRARY)[name])
+        assertContentEquals(PHOTO, repository.loadImage(name))
+    }
+
+    @Test
+    fun `a draft file the library holds under its name with other bytes of the same size takes the next name`() = runTest {
+        val repository = repository()
+        val name = assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
+        val sameSizeOther = DOCUMENT.copyOf().also { it[0] = 'x'.code.toByte() }
+        local.shelves.getValue(ImageShelf.LIBRARY)[name] = sameSizeOther
+
+        val renamed = repository.withImagesKept { writer -> writer.moveDraftImages(setOf(name)).also { publish(song("a.cho", name, it.getValue(name))) } }
+
+        assertEquals(mapOf(name to Sha256.hashToHex(DOCUMENT).take(17) + ".pdf"), renamed)
+        assertContentEquals(DOCUMENT, local.shelves.getValue(ImageShelf.LIBRARY)[renamed.getValue(name)])
+        assertContentEquals(sameSizeOther, local.shelves.getValue(ImageShelf.LIBRARY)[name])
+    }
+
+    @Test
+    fun `a draft file that is not what its name says is taken in by its bytes`() = runTest {
+        val repository = repository()
+        val wrongName = "0000000000000000.pdf"
+        local.shelves.getValue(ImageShelf.DRAFT)[wrongName] = DOCUMENT
+
+        val renamed = repository.withImagesKept { writer -> writer.moveDraftImages(setOf(wrongName)).also { publish(song("a.cho", it.getValue(wrongName))) } }
+
+        assertEquals(mapOf(wrongName to Sha256.hashToHex(DOCUMENT).take(16) + ".pdf"), renamed)
+        assertContentEquals(DOCUMENT, local.shelves.getValue(ImageShelf.LIBRARY)[renamed.getValue(wrongName)])
+    }
+
+    @Test
     fun `a file is hashed and compared on the computation dispatcher, never on the caller's`() = runTest {
         val environment = testEnvironment()
         val repository = repository(environment = environment)

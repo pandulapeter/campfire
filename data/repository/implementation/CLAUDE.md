@@ -94,8 +94,11 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
 - Sync decides its deletions of pictures inside `withImagesKept` and keeps `heldNames` (the editor's) too.
 - **Attachments are kept exactly as pictures are**: the same shelves, pruning, and holds, every "named" set being
   `libraryFilesNamedBy` / `Song.libraryFileNames`. An attachment is judged by its size and the extension it arrived with
-  only (`LibraryImages.examineAttachment`); a draft file moves into the library as a picture where its name and bytes
-  are one, else as an attachment. `librarySizes` splits `library/files` by name for Settings, and names every file of
+  only (`LibraryImages.examineAttachment`). Save copies a draft file into the library by the content name it took at
+  intake, checked by hashing it where it lies (`hashImage`, never a whole read), the next name where the library holds
+  other bytes under it; a copy, not a move, since the editor's Undo may bring back a line whose library file a later Save
+  pruned. Only a draft file that is not what its name says is read and taken in again. Everything that hashes or
+  examines a file runs on `environment.computation`, since the editor calls from the main thread. `librarySizes` splits `library/files` by name for Settings, and names every file of
   both shelves with its size (`fileSizes`), which is how the song info sheet tells an attachment on this device from a
   missing one.
 
