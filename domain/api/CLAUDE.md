@@ -35,4 +35,5 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
   `ApplyImportUseCase` records a planted demo, which lets sync take another version's untouched demo instead of keeping
   both.
 - Import application stops on a write failure and returns a partial `ImportResult` rather than losing what was
-  written; cancellation still throws. The `ImportProgress` observer may run on the worker dispatcher.
+  written; cancellation still throws, and so does a staged file gone before the first write
+  (`StagedFileMissingException`, nothing written). `DeleteImportStagingUseCase` is the end of a settled import's staging. The `ImportProgress` observer may run on the worker dispatcher.

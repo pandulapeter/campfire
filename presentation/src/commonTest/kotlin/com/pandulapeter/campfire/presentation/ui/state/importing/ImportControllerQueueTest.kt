@@ -21,6 +21,9 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSetlistFileNamesWrittenBy
 import com.pandulapeter.campfire.data.model.importing.sharedLinkSongFileNamesWrittenBy
@@ -34,6 +37,7 @@ import com.pandulapeter.campfire.domain.api.library.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
+import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
@@ -96,6 +100,8 @@ class ImportControllerQueueTest {
     private var plannedSkipped = emptyList<String>()
     private var plannedImages = emptyList<ImportedFile>()
     private var isImportFailing = false
+    private var importFailure: (() -> Exception)? = null
+    private val deletedStaging = mutableListOf<StagedFile>()
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
     private val downloadedUrls = mutableListOf<String>()
@@ -151,6 +157,7 @@ class ImportControllerQueueTest {
                         importCount++
                         writeGate?.await()
                         if (isImportFailing) error("The disk is full.")
+                        importFailure?.let { throw it() }
                         // A kept-both conflict lands under a numbered name, as the storage layer writes it.
                         val written = plan.songs.mapIndexed { index, entry ->
                             val isKeptBoth = entry.status == ImportPlan.Status.CONFLICTING &&
@@ -172,6 +179,11 @@ class ImportControllerQueueTest {
                 },
                 clearImportStaging = object : ClearImportStagingUseCase {
                     override suspend fun invoke() = Unit
+                },
+                deleteImportStaging = object : DeleteImportStagingUseCase {
+                    override suspend fun invoke(files: Collection<StagedFile>) {
+                        deletedStaging += files
+                    }
                 },
             ),
         )
@@ -793,6 +805,60 @@ class ImportControllerQueueTest {
     }
 
     @Test
+    fun `what a batch staged is deleted once it has been imported, and not while it is reviewed or written`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        plannedSongs = listOf(songEntry("new.cho").withStagedPicture())
+        val gate = CompletableDeferred<Unit>().also { writeGate = it }
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(STAGED_ARCHIVE)))
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(deletedStaging.isEmpty())
+        controller.resolveImport()
+        settle()
+        assertTrue(deletedStaging.isEmpty())
+        gate.complete(Unit)
+        settle()
+        assertEquals(1, importCount)
+        assertEquals(setOf(STAGED_ARCHIVE.staged!!, STAGED_PICTURE), deletedStaging.toSet())
+    }
+
+    @Test
+    fun `what a batch staged is deleted once its review is left unanswered`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        plannedSongs = listOf(songEntry("new.cho").withStagedPicture())
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(STAGED_ARCHIVE)))
+        settle()
+        leaveImportReport()
+        settle()
+        assertEquals(0, importCount)
+        assertEquals(setOf(STAGED_ARCHIVE.staged!!, STAGED_PICTURE), deletedStaging.toSet())
+    }
+
+    @Test
+    fun `an Import that finds a staged file gone fails writing nothing, and Try again reads the staged batch again`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        plannedSongs = listOf(songEntry("new.cho").withStagedPicture())
+        importFailure = { StagedFileMissingException(STAGED_PICTURE.name) }
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(STAGED_ARCHIVE)))
+        settle()
+        controller.resolveImport()
+        settle()
+        assertEquals(ImportFailure.UNREADABLE, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
+        assertTrue(deletedStaging.isEmpty())
+        importFailure = null
+        controller.retryImport()
+        settle()
+        assertEquals(listOf(listOf(STAGED_ARCHIVE), listOf(STAGED_ARCHIVE)), preparedFiles)
+        controller.resolveImport()
+        settle()
+        assertEquals(2, importCount)
+        assertEquals(setOf(STAGED_ARCHIVE.staged!!, STAGED_PICTURE), deletedStaging.toSet())
+    }
+
+    @Test
     fun `a shared link that could not be reached is downloaded again on Try again`() = runTest {
         startController()
         controller.importSharedLink(sharedLink)
@@ -1133,6 +1199,18 @@ class ImportControllerQueueTest {
 }
 
 private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview?.isReviewPager == false
+
+private val STAGED_PICTURE = StagedFile(name = "0123456789abcdef-1-${"a".repeat(64)}.png", size = 3, sha256Hex = "a".repeat(64))
+private val STAGED_ARCHIVE = ImportedFile(
+    name = "library.zip",
+    bytes = ByteArray(0),
+    staged = StagedFile(name = "0123456789abcdef-1-1.zip", size = 10, sha256Hex = null),
+)
+
+/** The entry with a picture its archive staged, as a staged archive's plan brings one. */
+private fun ImportPlan.SongEntry.withStagedPicture() = copy(
+    images = listOf(ImportPlan.SongImage(source = "chart.png", name = "aaaaaaaaaaaaaaaa.png", content = IncomingContent.Staged(STAGED_PICTURE), problem = null)),
+)
 
 private fun songEntry(
     fileName: String,

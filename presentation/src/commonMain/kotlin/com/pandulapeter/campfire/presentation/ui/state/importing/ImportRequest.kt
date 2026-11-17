@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.data.model.importing.StagedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.sharedLinkChoices
 import com.pandulapeter.campfire.presentation.ui.firstRun.DemoLibrary
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
@@ -42,4 +44,35 @@ internal class ImportRequest(
     val suggestion: SharedTextTitle? = null,
     val sharedLinkFileId: String? = null,
     val settled: CompletableDeferred<Unit> = CompletableDeferred(),
-)
+) {
+
+    /**
+     * Every staged file the batch was read from or planned with (a received or downloaded archive, and the pictures and
+     * attachments unpacked from it), whose staging requests are deleted once the batch has settled for good
+     * (`ImportWork.settle`), never before: Try again reads the same staged archive.
+     */
+    val stagedFiles = mutableSetOf<StagedFile>()
+
+    /**
+     * What of [source] was staged, kept once [source] is emptied after a successful preparation: an Import that finds a
+     * staged file gone fails before writing anything, and Try again reads this again.
+     */
+    private var stagedSource: ImportSource? = null
+
+    /** Empties [source] once its plan is made, keeping what of it was staged ([stagedSource]). */
+    fun forgetSource() {
+        stagedSource = source.stagedPart
+        source = ImportSource.Files(emptyList())
+    }
+
+    /**
+     * The failure stage an Import that threw [exception] turns into, its Try again reading the batch again, or null where
+     * the failure is not that: nothing was written, and the plan names a staged file that is gone
+     * ([StagedFileMissingException]), so reading again what is still staged is the one way back.
+     */
+    fun readAgainAfter(exception: Exception): ImportReport.Failed? {
+        val staged = stagedSource?.takeIf { exception is StagedFileMissingException } ?: return null
+        source = staged
+        return ImportReport.Failed(ImportFailure.UNREADABLE, staged.name, staged.fileCount)
+    }
+}

@@ -15,6 +15,14 @@ import com.pandulapeter.campfire.data.model.share.SharedLink.Readable as Readabl
 /** Where the files of one import come from. */
 internal sealed interface ImportSource {
 
+    /** What of this is staged rather than in memory, which costs nothing to keep for reading again; null for nothing. */
+    val stagedPart: ImportSource?
+        get() = when (this) {
+            is Files -> files.filter { it.staged != null }.takeIf { it.isNotEmpty() }?.let(::Files)
+            is Address -> null
+            is SharedLink -> takeIf { file?.staged != null }
+        }
+
     /** What the import screen's subtitle names while the source is read; null where there is nothing worth naming. */
     val name: String?
 

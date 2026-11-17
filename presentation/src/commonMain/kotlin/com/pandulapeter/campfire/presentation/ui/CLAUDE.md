@@ -35,7 +35,11 @@ The view model facade, the composition root, and the product rules every screen 
 - **The import's work belongs to the app**: the queue, the preparation and its plan, and the Import write live in
   `state/importing/ImportWork` (a `@Single` on `ApplicationScope`, the one holder Koin builds); `ImportController` is its
   view. A cleared view model cancels none of it: the next one's `startQueue` takes a preparation left behind first and
-  waits out a write. A review waiting for the user is not work and goes with its view model.
+  waits out a write. A review waiting for the user is not work and goes with its view model. What a batch staged (its
+  received or downloaded archive and the files unpacked from it, `ImportRequest.stagedFiles`) is deleted when
+  `ImportWork.settle` lets it go, never before, so Try again reads the same staged archive. An Import that finds a
+  staged file gone (`StagedFileMissingException`, nothing written) turns into the failure stage, whose Try again reads
+  what of the batch was staged (`ImportRequest.readAgainAfter`) again.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
   snackbar, not a crash; a write refused for space says so (`MessageSink.sendFailure`, `Message.StorageFull`). An import's writes and the selection's tag/language writes run `NonCancellable` once started
   (no half-imported archive, no tag on half the songs); planning stays cancellable.

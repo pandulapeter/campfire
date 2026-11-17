@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
+import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
@@ -24,4 +25,5 @@ class ImportUseCases(
     internal val applyImport: ApplyImportUseCase,
     internal val getSharedLinkImport: GetSharedLinkImportUseCase,
     internal val clearImportStaging: ClearImportStagingUseCase,
+    internal val deleteImportStaging: DeleteImportStagingUseCase,
 )

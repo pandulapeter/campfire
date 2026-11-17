@@ -50,7 +50,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Every import as the screens see it: what is said and shown of the batches [work] queues, reads, and writes (the work
@@ -401,7 +400,7 @@ internal class ImportController(
                 // preview on a screen the switch removes, and sends the batch to the review.
                 val areSongsEnabled = areSongsEnabled()
                 val sharedLink = (request.source as? ImportSource.SharedLink)?.link
-                request.source = ImportSource.Files(emptyList())
+                request.forgetSource()
                 val plan = outcome.plan.withImageFilesSkipped()
                 val newSong = if (!isReviewed && areSongsEnabled) (if (request.isNewSongFromText) plan.newSongOf() else outcome.plan.pictureSong()) else null
                 val isPreviewed = request.shouldReview && areSongsEnabled && !request.isNewSongFromText && plan.isPreviewed
@@ -640,7 +639,10 @@ internal class ImportController(
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
             _importProgress.value = null
-            if (preview != null && reportState.isOnBackStack) {
+            val readAgain = if (isReported && reportState.isOnBackStack) request.readAgainAfter(exception) else null
+            if (readAgain != null) {
+                reportState.report = readAgain.also { activeRequest = request }
+            } else if (preview != null && reportState.isOnBackStack) {
                 restorePreview(preview, request, sharedLinkParts)
             } else if (isReported && reportState.isOnBackStack) {
                 reportState.report = ImportReport.Finished(null)
@@ -817,5 +819,3 @@ internal class ImportController(
         if (reportState.onBackStackChanged()) onImportReportLeft()
     }
 }
-
-private val SONG_LOOKUP_TIMEOUT = 10.seconds

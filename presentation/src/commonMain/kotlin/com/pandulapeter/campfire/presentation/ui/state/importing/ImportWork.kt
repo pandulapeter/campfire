@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
@@ -114,10 +115,19 @@ class ImportWork(
         queue.trySend(request)
     }
 
-    /** Completes [request] as over, and stops counting it if it came through [queue]: once, however often it is called. */
+    /**
+     * Completes [request] as over, and stops counting it if it came through [queue]: once, however often it is called.
+     * What it staged is deleted then, on [scope] so that no view model leaving takes the deletion with it: imported,
+     * cancelled, or failed and dismissed, nothing staged outlives its batch in this process.
+     */
     internal fun settle(request: ImportRequest) {
         if (counted.remove(request)) queuedImportCount.update { it - 1 }
         request.settled.complete(Unit)
+        if (request.stagedFiles.isNotEmpty()) {
+            val staged = request.stagedFiles.toList()
+            request.stagedFiles.clear()
+            scope.launch { useCases.deleteImportStaging(staged) }
+        }
     }
 
     /**
@@ -218,8 +228,11 @@ class ImportWork(
                     }
                 }
             }
+            request.stagedFiles += files.mapNotNull { it.staged }
             enter(ImportWorkState.UNPACKING)
-            return Preparation.Planned(useCases.prepareImport(files) { if (request.shouldAnnounceResult) progress.value = it })
+            val plan = useCases.prepareImport(files) { if (request.shouldAnnounceResult) progress.value = it }
+            request.stagedFiles += plan.stagedFiles
+            return Preparation.Planned(plan)
         } finally {
             enter(ImportWorkState.IDLE)
         }
@@ -237,6 +250,8 @@ class ImportWork(
             totalBytes = totalBytes,
         )
     }
+
+    private val ImportPlan.stagedFiles get() = songs.flatMap { it.images }.mapNotNull { (it.content as? IncomingContent.Staged)?.file }
 
     init {
         // What an earlier process left in the staging folder: a crash or a closed tab during an import. Once per process,
