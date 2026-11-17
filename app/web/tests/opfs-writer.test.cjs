@@ -25,7 +25,7 @@ function worker(initial) {
     const snapshots = [];
     const snapshot = () => snapshots.push(new Map([...files].map(([name, data]) => [name, Buffer.from(data)])));
     const missing = () => Object.assign(new Error('Missing'), { name: 'NotFoundError' });
-    let failWrite = false;
+    let failWrite = null;
     const directory = {
         getDirectoryHandle: async () => directory,
         keys: async function* () { yield* [...files.keys()]; },
@@ -39,7 +39,7 @@ function worker(initial) {
                 getSize: () => files.get(name).length,
                 read: (target, { at }) => { const count = Math.min(5, target.length, files.get(name).length - at); target.set(files.get(name).subarray(at, at + count)); return count; },
                 write: (data, { at }) => {
-                    if (failWrite && name === 'song.cho') { failWrite = false; throw new Error('Quota'); }
+                    if (failWrite === name) { failWrite = null; throw new Error('Quota'); }
                     const count = Math.min(5, data.length);
                     let bytes = files.get(name);
                     if (bytes.length < at + count) { const grown = Buffer.alloc(at + count); bytes.copy(grown); bytes = grown; }
@@ -54,7 +54,7 @@ function worker(initial) {
     let reply;
     const context = vm.createContext({ navigator: { storage: { getDirectory: async () => directory } }, self: { postMessage: result => { reply = result; } }, Uint8Array, console });
     vm.runInContext(source, context);
-    return { files, snapshots, failNextWrite: () => { failWrite = true; }, send: async request => {
+    return { files, snapshots, context, failNextWrite: (name = 'song.cho') => { failWrite = name; }, send: async request => {
         context.self.onmessage({ data: { id: 1, path: ['songs'], ...request } });
         await context.queue; return reply;
     } };
@@ -114,4 +114,19 @@ test('an interrupted first write never leaves an empty file under its name', asy
         assert.ok(content === undefined || content.equals(next));
         assert.ok([...restarted.files.keys()].every(name => name === 'song.cho'));
     }
+});
+
+test('a staged file is copied a slice at a time, whole, over whatever had its name', async () => {
+    const instance = worker(new Map([['archive.zip', Buffer.from('an older, longer copy of something else')]]));
+    instance.context.STAGE_SLICE_SIZE = 8;
+    const content = Buffer.from('a picked archive of several slices');
+    assert.equal((await instance.send({ path: ['imports'], name: 'archive.zip', stage: new Blob([content]) })).error, undefined);
+    assert.deepEqual(instance.files.get('archive.zip'), content);
+});
+
+test('a staged copy that fails leaves no file behind', async () => {
+    const instance = worker(new Map());
+    instance.failNextWrite('archive.zip');
+    assert.equal((await instance.send({ path: ['imports'], name: 'archive.zip', stage: new Blob([Buffer.from('a picked archive')]) })).error, 'Error');
+    assert.deepEqual([...instance.files.keys()], []);
 });

@@ -22,12 +22,13 @@ internal fun opfsRoot(): Promise<JsAny?> = js("navigator.storage.getDirectory()"
 internal fun getDirectoryHandle(parent: JsAny, name: String): Promise<JsAny?> = js("parent.getDirectoryHandle(name, { create: true })")
 
 /**
- * Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there. Every other rejection is
+ * Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there, or a `TypeMismatchError`
+ * when a directory is under its name, which is no file either, as `listEntries` leaves it out. Every other rejection is
  * passed on: a file that is there but cannot be reached is not the same as a missing one.
  */
 internal fun getFileHandle(parent: JsAny, name: String): Promise<JsAny?> = js(
     """parent.getFileHandle(name).catch(function (error) {
-        if (error && error.name === 'NotFoundError') return null;
+        if (error && (error.name === 'NotFoundError' || error.name === 'TypeMismatchError')) return null;
         throw error;
     })"""
 )
@@ -82,6 +83,7 @@ internal fun fileInfo(handle: JsAny): Promise<JsString?> = js(
  * the file has to be decoded by `decodeLibraryText` instead (not valid UTF-8, or a NUL in it), `null` for a file that
  * is not there, and STX with the error's name and message for one that is there and could not be read. A failure is its
  * own answer rather than the batch's, and the texts cross into Kotlin as strings, where bytes would cross one call each.
+ * A directory under the name is `null`, as for `getFileHandle`.
  */
 internal fun readFileTexts(directory: JsAny, names: String): Promise<JsArray<JsString?>> = js(
     """Promise.all((names.length === 0 ? [] : names.split(String.fromCharCode(1))).map(function (name) {
@@ -93,7 +95,7 @@ internal fun readFileTexts(directory: JsAny, names: String): Promise<JsArray<JsS
             catch (error) { return String.fromCharCode(1); }
             return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) : String.fromCharCode(0) + text;
         }).catch(function (error) {
-            if (error && error.name === 'NotFoundError') return null;
+            if (error && (error.name === 'NotFoundError' || error.name === 'TypeMismatchError')) return null;
             return String.fromCharCode(2) + ((error && error.name) || 'Error') + ': ' + ((error && error.message) || String(error));
         });
     }))"""

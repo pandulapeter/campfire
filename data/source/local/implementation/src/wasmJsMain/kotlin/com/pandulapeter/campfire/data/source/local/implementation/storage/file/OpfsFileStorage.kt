@@ -19,7 +19,6 @@ import kotlinx.coroutines.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
 import kotlin.js.toJsString
@@ -32,9 +31,11 @@ import kotlin.js.toJsString
  *
  * The browser has a single thread, so [Dispatchers.Default] is the closest thing to `Dispatchers.IO` here; the OPFS
  * calls themselves are asynchronous anyway.
+ *
+ * Every directory is under [rootSegments], none in the app ([WebFileStorage]) and a folder of its own per test, since an
+ * origin has one file system.
  */
-@Single
-internal class OpfsFileStorage : FileStorage {
+internal class OpfsFileStorage(private val rootSegments: List<String>) : FileStorage {
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.Default) {
         failingAsStorage(directory.displayName) {
@@ -224,6 +225,28 @@ internal class OpfsFileStorage : FileStorage {
         OpfsFileSink(stream = stream ?: throw LibraryStorageException("Could not create \"$name\"."), name = name)
     }
 
+    /** The `File` is taken once, a snapshot every read of the source slices, so the file cannot change under it. */
+    override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = withContext(Dispatchers.Default) {
+        failingAsStorage(name) {
+            fileHandle(directory, name)?.let { handle -> openFileSnapshot(handle).await<JsAny?>() }?.let { file -> OpfsFileSource(file = file, name = name) }
+        }
+    }
+
+    /** OPFS has no rename that every browser offers, so the file is read and written whole, one file at a time. */
+    override suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) {
+        copyInto(from = from, fromName = fromName, to = to, toName = toName)
+        delete(from, fromName)
+    }
+
+    override suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) {
+        val bytes = readBytes(from, fromName) ?: throw LibraryStorageException("Could not copy \"$fromName\": it is not there.")
+        writeBytes(to, toName, bytes)
+    }
+
+    override suspend fun availableSpace(directory: StorageDirectory) = withContext(Dispatchers.Default) {
+        failingAsStorage(directory.displayName) { storageSpaceLeft().await<JsNumber>().toDouble().toLong() }
+    }
+
     override fun pathOf(directory: StorageDirectory, name: String): String {
         requireValidFileName(name)
         return directory.displayName + "/" + name
@@ -258,7 +281,7 @@ internal class OpfsFileStorage : FileStorage {
         throw LibraryStorageException("Could not access \"$name\".", exception)
     }
 
-    private val StorageDirectory.displayName get() = pathSegments.joinToString("/")
+    private val StorageDirectory.displayName get() = (rootSegments + pathSegments).joinToString("/")
 
     private suspend fun fileHandle(directory: StorageDirectory, name: String): JsAny? {
         requireValidFileName(name)
@@ -285,7 +308,7 @@ internal class OpfsFileStorage : FileStorage {
             }
             installOpfsWriter()
             var handle = opfsRoot().await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
-            directory.pathSegments.forEach { segment ->
+            (rootSegments + directory.pathSegments).forEach { segment ->
                 handle = getDirectoryHandle(handle, segment).await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
             }
             failingAsStorage(directory.displayName) { recoverInterruptedWrites(handle, directory.displayName).await() }

@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.implementation
 
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSink
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
@@ -74,6 +76,31 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
             override suspend fun abandon() = delete(directory, name)
         }
     }
+
+    override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = readBytes(directory, name)?.let { bytes ->
+        object : FileSource {
+            override val size = bytes.size.toLong()
+
+            override suspend fun read(position: Long, buffer: ByteArray, offset: Int, length: Int): Int {
+                if (position >= size) return 0
+                val end = minOf(size, position + length).toInt()
+                bytes.copyInto(buffer, offset, position.toInt(), end)
+                return end - position.toInt()
+            }
+
+            override suspend fun close() = Unit
+        }
+    }
+
+    override suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) {
+        val file = files.remove(key(from, fromName)) ?: throw LibraryStorageException("$fromName is not there to be moved.")
+        files[key(to, toName)] = StoredFile(name = toName, bytes = file.bytes, isKeptOutOfDeviceBackup = file.isKeptOutOfDeviceBackup)
+    }
+
+    override suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) =
+        writeBytes(to, toName, readBytes(from, fromName) ?: throw LibraryStorageException("$fromName is not there to be copied."))
+
+    override suspend fun availableSpace(directory: StorageDirectory) = Long.MAX_VALUE
 
     override fun pathOf(directory: StorageDirectory, name: String) = "${directory.name}/$name"
 

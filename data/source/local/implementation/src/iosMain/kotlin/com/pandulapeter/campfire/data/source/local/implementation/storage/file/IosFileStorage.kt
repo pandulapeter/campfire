@@ -33,9 +33,9 @@ private fun appRootPath(directory: StorageDirectory): String {
     // The covers are the app's own copies of something that can be downloaded again, and the draft's pictures belong to an
     // unsaved edit, so they are no more the Files app's business than the preferences are. The exports are in the caches
     // directory, which no backup takes and the system may empty while the app is not running, by when they are no longer
-    // needed.
+    // needed. The imports are not: the system may purge the caches while the app is suspended with a review waiting.
     val isApplicationSupport = directory == StorageDirectory.PREFERENCES || directory == StorageDirectory.COVERS ||
-        directory == StorageDirectory.DRAFT_IMAGES
+        directory == StorageDirectory.DRAFT_IMAGES || directory == StorageDirectory.IMPORTS
     return requireNotNull(
         NSFileManager.defaultManager.URLForDirectory(
             directory = when {

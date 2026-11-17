@@ -285,13 +285,14 @@ JVM; a release is still checked by hand. Add or update tests with every change t
 ./gradlew -p gradle :build-logic:test      # packaging helpers
 ./gradlew :tools:screenshots:test          # UI tests (tools/screenshots/CLAUDE.md)
 ./gradlew :data:source:local:implementation:iosSimulatorArm64Test   # the file storage contract on the iOS simulator
+./gradlew :data:source:local:implementation:wasmJsBrowserTest       # the same contract over OPFS, in headless Chrome
 ./gradlew :tools:screenshots:benchmark       # timings of a 3,000-song library, by hand only (machine-dependent)
 ```
 
 The web build's JavaScript has Node tests (`app/web`), and the Python scripts in `.github/scripts` have `unittest`s
 beside them (`test_*.py`). `.github/workflows/tests.yml` runs all of them plus `spotlessCheck` and the scripts'
 checks, runs the unit tests again on Windows, and compiles every platform (iOS on macOS, where the storage tests also
-run on the simulator), on every PR, on every push to `main` that changes more than `documentation/`, and before
+run on the simulator, and the web, whose storage tests run in headless Chrome), on every PR, on every push to `main` that changes more than `documentation/`, and before
 `publish-all.yml` builds anything.
 
 The importer is scored against a private corpus of other programs' documents (`ImportCorpusTest`, outside git, named by

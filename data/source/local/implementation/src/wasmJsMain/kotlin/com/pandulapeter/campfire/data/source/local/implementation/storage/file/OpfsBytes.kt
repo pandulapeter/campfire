@@ -32,17 +32,19 @@ internal fun readFileBytes(handle: JsAny): Promise<JsAny?> = js(
  * character, then the module's two), on top of the file's bytes on both sides, more than a phone's tab spares. Chunked,
  * a file costs its bytes on each side and a chunk.
  */
-internal fun JsAny.toByteArray(): ByteArray {
+internal fun JsAny.toByteArray(): ByteArray = ByteArray(byteLength(this)).also { copyInto(it, 0) }
+
+/** Copies a `Uint8Array`'s bytes into [target] at [offset], as [toByteArray] carries them, and answers how many. */
+internal fun JsAny.copyInto(target: ByteArray, offset: Int): Int {
     val size = byteLength(this)
-    val bytes = ByteArray(size)
     var start = 0
     while (start < size) {
         val end = minOf(start + LATIN1_CHUNK_SIZE, size)
         val chunk = latin1Chunk(this, start, end).toString()
-        for (index in chunk.indices) bytes[start + index] = chunk[index].code.toByte()
+        for (index in chunk.indices) target[offset + start + index] = chunk[index].code.toByte()
         start = end
     }
-    return bytes
+    return size
 }
 
 /**

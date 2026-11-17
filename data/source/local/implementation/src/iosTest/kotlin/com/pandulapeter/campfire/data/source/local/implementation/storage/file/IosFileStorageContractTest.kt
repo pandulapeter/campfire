@@ -28,11 +28,11 @@ class IosFileStorageContractTest : FileStorageContractTest() {
 
     override fun newStorage(): FileStorage = FoundationFileStorage(logger = { }, rootPath = { root })
 
-    override fun deleteDirectoryBehindItsBack(directory: StorageDirectory) {
+    override suspend fun deleteDirectoryBehindItsBack(directory: StorageDirectory) {
         fileManager.removeItemAtPath(directoryPath(directory), null)
     }
 
-    override fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String) {
+    override suspend fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String) {
         fileManager.createDirectoryAtPath("${directoryPath(directory)}/$name", true, null, null)
     }
 

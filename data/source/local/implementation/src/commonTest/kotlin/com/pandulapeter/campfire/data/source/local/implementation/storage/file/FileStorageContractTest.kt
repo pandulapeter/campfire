@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.arrivingCollisionSuffix
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
@@ -23,6 +24,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -39,10 +41,10 @@ abstract class FileStorageContractTest {
     abstract fun newStorage(): FileStorage
 
     /** Deletes [directory] with everything in it, the way the Files app or the user would, without the storage knowing. */
-    abstract fun deleteDirectoryBehindItsBack(directory: StorageDirectory)
+    abstract suspend fun deleteDirectoryBehindItsBack(directory: StorageDirectory)
 
     /** Creates a directory called [name] inside [directory], which the storage itself never makes. */
-    abstract fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String)
+    abstract suspend fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String)
 
     @AfterTest
     open fun tearDown() = Unit
@@ -265,5 +267,104 @@ abstract class FileStorageContractTest {
         sink.abandon()
 
         assertFalse(fileStorage.exists(StorageDirectory.EXPORTS, "songs.pdf"))
+    }
+
+    @Test
+    fun `a sink writes into the imports folder`() = runTest {
+        val sink = fileStorage.openSink(StorageDirectory.IMPORTS, "archive.zip")
+        sink.write(BYTES, 0, BYTES.size)
+        sink.close()
+
+        assertContentEquals(BYTES, fileStorage.readBytes(StorageDirectory.IMPORTS, "archive.zip"))
+    }
+
+    @Test
+    fun `a source reads at every offset and stops at the end of the file`() = runTest {
+        fileStorage.writeBytes(StorageDirectory.FILES, "a.bin", BYTES)
+        val source = assertNotNull(fileStorage.openSource(StorageDirectory.FILES, "a.bin"))
+
+        try {
+            assertEquals(BYTES.size.toLong(), source.size)
+            listOf(0, 1, 4_095, 65_536, BYTES.size - 7).forEach { position ->
+                val buffer = ByteArray(16) { -1 }
+                val read = source.read(position.toLong(), buffer, 3, 10)
+                val expected = minOf(10, BYTES.size - position)
+                assertEquals(expected, read, "at $position")
+                assertContentEquals(BYTES.copyOfRange(position, position + expected), buffer.copyOfRange(3, 3 + expected), "at $position")
+                assertEquals(-1, buffer[2], "at $position")
+            }
+            assertEquals(0, source.read(BYTES.size.toLong(), ByteArray(4), 0, 4))
+            assertEquals(0, source.read(BYTES.size + 100L, ByteArray(4), 0, 4))
+        } finally {
+            source.close()
+        }
+    }
+
+    @Test
+    fun `a source of a missing file or of a directory is none`() = runTest {
+        makeDirectoryUnderFileName(StorageDirectory.FILES, "folder.bin")
+
+        assertNull(fileStorage.openSource(StorageDirectory.FILES, "missing.bin"))
+        assertNull(fileStorage.openSource(StorageDirectory.FILES, "folder.bin"))
+    }
+
+    @Test
+    fun `a source of a file deleted meanwhile reads what it was opened on or fails as storage`() = runTest {
+        fileStorage.writeBytes(StorageDirectory.FILES, "a.bin", BYTES)
+        val source = assertNotNull(fileStorage.openSource(StorageDirectory.FILES, "a.bin"))
+        fileStorage.delete(StorageDirectory.FILES, "a.bin")
+
+        try {
+            val buffer = ByteArray(100)
+            val read = source.read(1_000, buffer, 0, buffer.size)
+            assertEquals(100, read)
+            assertContentEquals(BYTES.copyOfRange(1_000, 1_100), buffer)
+        } catch (_: LibraryStorageException) {
+        } finally {
+            source.close()
+        }
+    }
+
+    @Test
+    fun `a move puts the file under its new name over nothing and over a file there`() = runTest {
+        fileStorage.writeBytes(StorageDirectory.IMPORTS, "first.bin", BYTES)
+        fileStorage.writeBytes(StorageDirectory.IMPORTS, "second.bin", "second".encodeToByteArray())
+        fileStorage.writeBytes(StorageDirectory.FILES, "taken.bin", "old".encodeToByteArray())
+
+        fileStorage.moveInto(StorageDirectory.IMPORTS, "first.bin", StorageDirectory.FILES, "new.bin")
+        fileStorage.moveInto(StorageDirectory.IMPORTS, "second.bin", StorageDirectory.FILES, "taken.bin")
+
+        assertContentEquals(BYTES, fileStorage.readBytes(StorageDirectory.FILES, "new.bin"))
+        assertEquals("second", fileStorage.readText(StorageDirectory.FILES, "taken.bin"))
+        assertEquals(emptyList(), fileStorage.list(StorageDirectory.IMPORTS))
+        assertEquals(listOf("new.bin", "taken.bin"), fileStorage.list(StorageDirectory.FILES).map { it.name })
+    }
+
+    @Test
+    fun `a move or a copy of a missing file fails as storage`() = runTest {
+        assertFailsWith<LibraryStorageException> { fileStorage.moveInto(StorageDirectory.IMPORTS, "missing.bin", StorageDirectory.FILES, "a.bin") }
+        assertFailsWith<LibraryStorageException> { fileStorage.copyInto(StorageDirectory.DRAFT_IMAGES, "missing.bin", StorageDirectory.FILES, "a.bin") }
+        assertFalse(fileStorage.exists(StorageDirectory.FILES, "a.bin"))
+    }
+
+    @Test
+    fun `a copy keeps the original and replaces a file there`() = runTest {
+        fileStorage.writeBytes(StorageDirectory.DRAFT_IMAGES, "a.bin", BYTES)
+        fileStorage.writeBytes(StorageDirectory.FILES, "a.bin", "old".encodeToByteArray())
+
+        fileStorage.copyInto(StorageDirectory.DRAFT_IMAGES, "a.bin", StorageDirectory.FILES, "a.bin")
+
+        assertContentEquals(BYTES, fileStorage.readBytes(StorageDirectory.DRAFT_IMAGES, "a.bin"))
+        assertContentEquals(BYTES, fileStorage.readBytes(StorageDirectory.FILES, "a.bin"))
+        assertEquals(listOf("a.bin"), fileStorage.list(StorageDirectory.FILES).map { it.name })
+    }
+
+    @Test
+    fun `there is space available in a folder not created yet`() = runTest {
+        assertTrue(fileStorage.availableSpace(StorageDirectory.IMPORTS) > 0)
+    }
+
+    private companion object {
+        val BYTES = ByteArray(200_000) { (it * 31 % 251).toByte() }
     }
 }

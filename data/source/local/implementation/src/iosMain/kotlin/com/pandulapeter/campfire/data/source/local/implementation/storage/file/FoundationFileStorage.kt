@@ -23,6 +23,7 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArrayOf
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.toKString
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
@@ -43,11 +44,17 @@ import platform.Foundation.NSURLContentModificationDateKey
 import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.NSURLIsDirectoryKey
 import platform.Foundation.NSURLIsExcludedFromBackupKey
+import platform.Foundation.NSURLVolumeAvailableCapacityForImportantUsageKey
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfFile
 import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
+import platform.posix.errno
 import platform.posix.memcpy
+import platform.posix.remove
+import platform.posix.rename
+import platform.posix.strerror
+import kotlin.uuid.Uuid
 
 /**
  * A [FileStorage] on top of `NSFileManager`, under the folder [rootPath] names for each directory: the app's own
@@ -137,7 +144,7 @@ internal class FoundationFileStorage(
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = writeBytes(directory, name, text.encodeToByteArray())
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.IO) {
-        fileManager.createDirectoryAtPath(directoryPath(directory), true, null, null)
+        createDirectory(directory)
         val path = filePath(directory, name)
         // `atomically` writes to a neighbouring temporary file and swaps it in, so a failure never truncates the file.
         if (!bytes.toNSData().writeToFile(path, atomically = true)) {
@@ -146,8 +153,49 @@ internal class FoundationFileStorage(
     }
 
     override suspend fun openSink(directory: StorageDirectory, name: String): FileSink = withContext(Dispatchers.IO) {
-        fileManager.createDirectoryAtPath(directoryPath(directory), true, null, null)
+        createDirectory(directory)
         PosixFileSink(path = filePath(directory, name), name = name)
+    }
+
+    override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = withContext(Dispatchers.IO) {
+        PosixFileSource.openFile(path = filePath(directory, name), name = name)
+    }
+
+    /** POSIX `rename`, which replaces the target in one step: every directory is in the app's one container and volume. */
+    override suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) = withContext(Dispatchers.IO) {
+        val source = filePath(from, fromName)
+        val target = filePath(to, toName)
+        createDirectory(to)
+        if (rename(source, target) != 0) throw LibraryStorageException("Could not move \"$fromName\": ${strerror(errno)?.toKString()}")
+    }
+
+    /**
+     * Copied by the system under a name of its own beside the target and renamed over it, so a failure never truncates
+     * the target, as [writeBytes]'s `atomically` does not either.
+     */
+    override suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) = withContext(Dispatchers.IO) {
+        val source = filePath(from, fromName)
+        val target = filePath(to, toName)
+        val temporary = "${directoryPath(to)}/.campfire-${Uuid.random()}.tmp"
+        createDirectory(to)
+        memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            if (!fileManager.copyItemAtPath(source, toPath = temporary, error = error.ptr)) {
+                throw LibraryStorageException("Could not copy \"$fromName\": ${error.value?.localizedDescription}")
+            }
+        }
+        if (rename(temporary, target) != 0) {
+            val failure = LibraryStorageException("Could not copy \"$fromName\": ${strerror(errno)?.toKString()}")
+            remove(temporary)
+            throw failure
+        }
+    }
+
+    override suspend fun availableSpace(directory: StorageDirectory) = withContext(Dispatchers.IO) {
+        // The nearest folder that is there, since a directory is only created by its first write.
+        val existing = generateSequence(directoryPath(directory)) { it.substringBeforeLast('/', "").ifEmpty { null } }.first { fileManager.fileExistsAtPath(it) }
+        val values = NSURL.fileURLWithPath(existing).resourceValuesForKeys(listOf(NSURLVolumeAvailableCapacityForImportantUsageKey), null)
+        (values?.get(NSURLVolumeAvailableCapacityForImportantUsageKey) as? NSNumber)?.longLongValue ?: 0L
     }
 
     override fun pathOf(directory: StorageDirectory, name: String) = filePath(directory, name)
@@ -185,6 +233,19 @@ internal class FoundationFileStorage(
                 if (!fileManager.fileExistsAtPath(path, isDirectory = isDirectory.ptr) || isDirectory.value) return null
                 throw LibraryStorageException("Could not read \"$name\": ${error.value?.localizedDescription}")
             }
+        }
+    }
+
+    /**
+     * Creates the directory where it is not there yet. The imports' folder is kept out of the device backup as a whole,
+     * on the folder itself, since what it holds comes and goes faster than a mark on each file would be set.
+     */
+    private fun createDirectory(directory: StorageDirectory) {
+        val path = directoryPath(directory)
+        if (fileManager.fileExistsAtPath(path)) return
+        fileManager.createDirectoryAtPath(path, true, null, null)
+        if (directory == StorageDirectory.IMPORTS && !NSURL.fileURLWithPath(path, isDirectory = true).setResourceValue(true, NSURLIsExcludedFromBackupKey, null)) {
+            logger.log("Could not keep the imports' folder out of the device backup.")
         }
     }
 

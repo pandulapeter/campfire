@@ -186,6 +186,38 @@ internal class JvmFileStorage(
         JvmFileSink(path = file.toPath(), name = name)
     }
 
+    override suspend fun openSource(directory: StorageDirectory, name: String): FileSource? = withContext(Dispatchers.IO) {
+        val file = file(directory, name)
+        // READ alone: a channel opened so shares deletion on Windows, as readAllBytes' does, so an open source never
+        // blocks sync's renames. A directory opens on some systems and fails on others; it is no file either way.
+        val channel = try {
+            readingAsStorage(name) { FileChannel.open(file.toPath(), StandardOpenOption.READ) }
+        } catch (exception: LibraryStorageException) {
+            if (file.isDirectory) null else throw exception
+        }
+        if (channel != null && file.isDirectory) channel.close()
+        channel?.takeIf { it.isOpen }?.let { JvmFileSource(channel = it, name = name) }
+    }
+
+    override suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) = withContext(Dispatchers.IO) {
+        val source = file(from, fromName).toPath()
+        val target = file(to, toName).toPath()
+        failingAsStorage(fromName) {
+            directoryFile(to).mkdirs()
+            withNameLock(to, toName) { retryingWhileDenied { moveReplacing(source, target) } }
+        }
+    }
+
+    override suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String) = withContext(Dispatchers.IO) {
+        val source = file(from, fromName).toPath()
+        failingAsStorage(fromName) { writeAtomically(to, toName) { Files.copy(source, it.toPath(), StandardCopyOption.REPLACE_EXISTING) } }
+    }
+
+    override suspend fun availableSpace(directory: StorageDirectory) = withContext(Dispatchers.IO) {
+        // The nearest folder that is there, since a directory is only created by its first write.
+        generateSequence(directoryFile(directory)) { it.parentFile }.first { it.exists() }.usableSpace
+    }
+
     override fun pathOf(directory: StorageDirectory, name: String): String = file(directory, name).absolutePath
 
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
@@ -255,19 +287,19 @@ internal class JvmFileStorage(
             write(temporary.toFile())
             // Flushed to the device before the rename, or a power loss right after could keep the name and lose the bytes.
             FileChannel.open(temporary, StandardOpenOption.WRITE).use { it.force(true) }
-            withNameLock(directory, name) {
-                retryingWhileDenied {
-                    try {
-                        Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-                    } catch (_: AtomicMoveNotSupportedException) {
-                        // Some file systems (network shares, some Android storage) cannot do it in one step; the plain
-                        // move still never leaves the target truncated, since it copies first and replaces at the end.
-                        Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
-                    }
-                }
-            }
+            withNameLock(directory, name) { retryingWhileDenied { moveReplacing(temporary, target) } }
         } finally {
             Files.deleteIfExists(temporary)
+        }
+    }
+
+    private fun moveReplacing(source: Path, target: Path) {
+        try {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch (_: AtomicMoveNotSupportedException) {
+            // Some file systems (network shares, some Android storage) cannot do it in one step; the plain move still
+            // never leaves the target truncated, since it copies first and replaces at the end.
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING)
         }
     }
 

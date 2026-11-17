@@ -400,6 +400,10 @@ stream. Safety: bounded memory per entry, no behaviour change for the PDF reader
 
 ### 6. `FileStorage`: a staging folder, random reads, moves, and free space
 
+**Landed** by item M3 of the fixes plan, with `copyInto` beside `moveInto` (a copy by the system, renamed over the
+target) for the editor's Save; the web's storage moved under `WebFileStorage` over `OpfsFileStorage(rootSegments)`, so
+its contract test has a folder of its own per test.
+
 Carried out by item M3 of [attachments-release-fixes.md](attachments-release-fixes.md), exactly as written here; the
 `stage` request of the worker and everything else below is part of it.
 

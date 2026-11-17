@@ -14,6 +14,16 @@ plugins {
 }
 
 kotlin {
+    wasmJs {
+        browser {
+            // Only the storage contract runs in the browser (CI's web storage step): it is the one test about what the
+            // browser itself does, and the rest of the module's tests run on the desktop.
+            testTask {
+                useKarma { useChromeHeadless() }
+                filter.includeTestsMatching("*OpfsFileStorageContractTest*")
+            }
+        }
+    }
     sourceSets {
         commonMain.dependencies {
             api(project(":data:source:local:api"))

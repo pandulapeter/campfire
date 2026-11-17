@@ -19,11 +19,11 @@ class JvmFileStorageContractTest : FileStorageContractTest() {
 
     override fun newStorage(): FileStorage = JvmFileStorage(root)
 
-    override fun deleteDirectoryBehindItsBack(directory: StorageDirectory) {
+    override suspend fun deleteDirectoryBehindItsBack(directory: StorageDirectory) {
         root.resolve(directory.pathSegments.joinToString("/")).deleteRecursively()
     }
 
-    override fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String) {
+    override suspend fun makeDirectoryUnderFileName(directory: StorageDirectory, name: String) {
         root.resolve(directory.pathSegments.joinToString("/")).resolve(name).mkdirs()
     }
 

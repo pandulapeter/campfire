@@ -47,9 +47,15 @@ Skipped or unreadable files are logged to the injected `Logger`.
   other `IOException`s; OPFS folds only `NotFoundError` into null, and drops an entry that vanishes between listing and
   stat (sync deletes while the live rescan lists).
 - Every `catch (Exception)` around a read rethrows `CancellationException` first.
-- **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage` and on the iOS
-  simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job); what only the JVM does stays
-  in `JvmFileStorageTest`. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
+- **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage`, on the iOS
+  simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job), and in headless Chrome over
+  `OpfsFileStorage` under a folder of its own per test (`wasmJsBrowserTest`, filtered to that class, CI's `compile` job);
+  what only the JVM does stays in `JvmFileStorageTest`.
+- **Random reads, moves, copies, free space** (`openSource`, `moveInto`, `copyInto`, `availableSpace`): a `FileSource`
+  reads at 64-bit positions (JVM `FileChannel` opened `READ` only, iOS `pread`, the web slices of one `File` snapshot);
+  a move is a rename (JVM `ATOMIC_MOVE`, iOS `rename`, every directory on one volume), on the web a read, a `writeBytes`,
+  and a delete; a copy is the system's into a temporary name renamed over the target, so it is never held whole but on
+  the web, and carries no backup mark. `IMPORTS` holds what an import receives; iOS marks its folder out of the backup. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
 - **Names**: `canHoldFileName` refuses a path or nothing (`/`, `\`, `.`, `..`) everywhere, and on Windows `? : * " < >
   |`, a trailing space or dot, or a control character. Refused, never mapped: a mapping that failed to reverse would
   send a second copy of the song to every device. Windows device names (`con.cho`) are stored with a leading underscore

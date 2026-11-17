@@ -139,6 +139,10 @@ jobs:
           :app:desktop:proguardReleaseJars
           :app:web:compileProductionExecutableKotlinWasmJs
           :tools:screenshots:compileKotlin
+      # The web's file storage is the origin private file system, which only a browser has: the contract every
+      # platform's storage keeps runs over it in headless Chrome, as it runs on the desktop and the iOS simulator.
+      - name: Run the storage tests in headless Chrome
+        run: ./gradlew :data:source:local:implementation:wasmJsBrowserTest
 
   compile-ios:
     name: Compile the iOS app

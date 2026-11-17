@@ -48,6 +48,14 @@ enum class StorageDirectory {
      * folder emptied on launch. Outside the library and kept out of every device backup (a cache directory on iOS).
      */
     EXPORTS,
+
+    /**
+     * What an import receives before it is read: an archive copied in by streaming, and the files unpacked from it. Out
+     * of every backup and sync; on Android under `filesDir` (never the cache, which the system may clear while the app
+     * runs), on iOS under Application Support with the folder kept out of the backup (never Caches, which the system may
+     * purge while a review waits), on the desktop and the web beside the exports.
+     */
+    IMPORTS,
 }
 
 data class StoredFileInfo(
@@ -187,9 +195,38 @@ interface FileStorage {
 
     /**
      * Creates the file, replacing one of that name, to be written front to back through the [FileSink] returned. Not
-     * atomic, so only for [StorageDirectory.EXPORTS], whose files nothing reads before they are whole.
+     * atomic, so only for [StorageDirectory.EXPORTS] and [StorageDirectory.IMPORTS], whose files nothing reads before they
+     * are whole.
      */
     suspend fun openSink(directory: StorageDirectory, name: String): FileSink
+
+    /**
+     * The file opened for reads at any position (see [FileSource]), null if it does not exist; one that exists and cannot
+     * be opened throws [LibraryStorageException]. The caller closes it.
+     */
+    suspend fun openSource(directory: StorageDirectory, name: String): FileSource?
+
+    /**
+     * Moves [fromName] of [from] to [toName] of [to], replacing a file there. A rename where the platform has one (every
+     * directory is on the app's one volume), so atomic and without reading the file; the web, which has none, reads the
+     * file and writes it whole with [writeBytes], one file at a time, then deletes the original. A file that is not there throws [LibraryStorageException].
+     */
+    suspend fun moveInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String)
+
+    /**
+     * Writes a copy of [fromName] of [from] as [toName] of [to], replacing a file there atomically, as [writeBytes]
+     * does, without holding the file whole where the platform can copy it (on the web, which reads it whole, one file at
+     * a time). A file that is not there throws [LibraryStorageException]. The copy is a new file: whatever mark the
+     * original carried, such as [keepOutOfDeviceBackup]'s, it does not.
+     */
+    suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String)
+
+    /**
+     * About how many bytes may still be written into [directory]: the volume's free space for the app, the origin's quota
+     * left on the web. Only an early answer, imprecise on purpose in Safari; a write that runs out of space anyway fails
+     * as any other write does.
+     */
+    suspend fun availableSpace(directory: StorageDirectory): Long
 
     /**
      * Where the file is as the platform names it, for handing it to the system (a share sheet, a save dialog): an
@@ -228,6 +265,7 @@ internal val StorageDirectory.pathSegments: List<String>
         StorageDirectory.PREFERENCES -> listOf("preferences")
         StorageDirectory.COVERS -> listOf("covers")
         StorageDirectory.EXPORTS -> listOf("exports")
+        StorageDirectory.IMPORTS -> listOf("imports")
     }
 
 /** Whether [name] is a name rather than a path or nothing: what every storage can be asked about at all. */
