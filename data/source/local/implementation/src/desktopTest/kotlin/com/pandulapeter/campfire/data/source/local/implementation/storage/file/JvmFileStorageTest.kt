@@ -16,7 +16,9 @@ import java.nio.file.AccessDeniedException
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import kotlin.test.AfterTest
+import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -48,6 +50,14 @@ class JvmFileStorageTest {
         assertFalse(File(songs, ".campfire-123.tmp").exists())
         assertFalse(File(songs, "a.cho.456.tmp").exists())
         assertTrue(File(songs, "notes.tmp").exists())
+    }
+
+    @Test
+    fun `reads a file many read slices long whole and byte for byte`() = runBlocking {
+        val bytes = Random(7).nextBytes(3 * 64 * 1024 + 17)
+        fileStorage.writeBytes(StorageDirectory.FILES, "a.bin", bytes)
+
+        assertContentEquals(bytes, fileStorage.readBytes(StorageDirectory.FILES, "a.bin"))
     }
 
     @Test

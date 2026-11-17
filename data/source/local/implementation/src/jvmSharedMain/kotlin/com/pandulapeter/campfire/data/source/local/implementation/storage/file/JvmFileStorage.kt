@@ -21,8 +21,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.AccessDeniedException
 import java.nio.file.AtomicMoveNotSupportedException
@@ -262,10 +264,34 @@ internal class JvmFileStorage(
     /**
      * Not [File.readBytes], which opens a `FileInputStream`: on Windows the JDK opens one without
      * `FILE_SHARE_DELETE`, so for as long as a scan holds the stream, a rename over that file or a deletion of it is
-     * refused - and a scan reads sixty-four files at a time while a sync run is writing. The NIO channel behind
-     * `Files.readAllBytes` shares deletion, so the same read leaves the file movable.
+     * refused - and a scan reads sixty-four files at a time while a sync run is writing. An NIO channel shares deletion,
+     * so the same read leaves the file movable.
+     *
+     * Not `Files.readAllBytes` either, nor one channel read into the whole array: a channel reads a heap buffer through
+     * a temporary direct buffer of the request's size, which Android allocates on the Java heap and keeps cached per
+     * thread, so a 50 MB attachment read in one request costs 100 MB and leaves 50 MB held. Slices of [READ_SLICE_SIZE]
+     * bound that buffer.
      */
-    private fun File.readAllBytes(): ByteArray = Files.readAllBytes(toPath())
+    private fun File.readAllBytes(): ByteArray = FileChannel.open(toPath(), StandardOpenOption.READ).use { channel ->
+        val size = channel.size()
+        if (size > Int.MAX_VALUE - 8) throw IOException("${toPath()} is too large to read whole.")
+        val bytes = ByteArray(size.toInt())
+        var filled = 0
+        while (filled < bytes.size) {
+            val read = channel.read(ByteBuffer.wrap(bytes, filled, minOf(READ_SLICE_SIZE, bytes.size - filled)))
+            if (read < 0) return@use bytes.copyOf(filled)
+            filled += read
+        }
+        // A file that grew since its size was asked for is read to its end, as a whole read always was.
+        val rest = ByteArrayOutputStream()
+        val slice = ByteArray(READ_SLICE_SIZE)
+        while (true) {
+            val read = channel.read(ByteBuffer.wrap(slice))
+            if (read < 0) break
+            rest.write(slice, 0, read)
+        }
+        if (rest.size() == 0) bytes else bytes + rest.toByteArray()
+    }
 
     /**
      * Read without asking first whether it is a file, which is a call into the file system per read: a file that is
@@ -362,6 +388,7 @@ internal class JvmFileStorage(
         const val DENIED_RETRIES = 3
         const val DENIED_RETRY_DELAY_MILLIS = 20L
         const val NAME_LOCK_STRIPES = 64
+        const val READ_SLICE_SIZE = 64 * 1024
         val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)
     }
 }
