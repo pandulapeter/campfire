@@ -101,7 +101,7 @@ internal class ZipReaderStreamingTest {
     }
 
     @Test
-    fun `a directory says what it holds of both caps, directories counted among its records`() = runTest {
+    fun `a directory says what it holds of both caps with directories counted among its records`() = runTest {
         val archive = ZipWriter.write(listOf(ZipEntry("songs/", ByteArray(0)), ZipEntry("songs/a.cho", "a".encodeToByteArray())))
         val directorySize = archive.u32(archive.size - 22 + 12)
 
