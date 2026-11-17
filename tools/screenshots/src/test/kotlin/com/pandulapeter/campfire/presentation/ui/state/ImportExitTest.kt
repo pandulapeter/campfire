@@ -46,7 +46,7 @@ internal class ImportExitTest {
     private val neverAnsweringDownload = module {
         factory<DownloadImportFileUseCase> {
             object : DownloadImportFileUseCase {
-                override suspend fun invoke(url: String): ImportDownload = try {
+                override suspend fun invoke(url: String, onProgress: (Long, Long?) -> Unit): ImportDownload = try {
                     awaitCancellation()
                 } finally {
                     isDownloadCancelled = true
