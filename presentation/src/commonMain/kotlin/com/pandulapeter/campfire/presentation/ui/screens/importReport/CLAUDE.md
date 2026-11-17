@@ -58,7 +58,8 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
   import and gone with it. Only added to each song's text as it is written, never removing one; a song already in the
   library is not written, so it keeps its own.
 - **Finished**: a clean reviewed import closes into a snackbar with **Details**; one that left anything out (the user's
-  unticks included), stopped, or failed stays here, failures first (tested).
+  unticks included, and a picture or attachment a song names but the batch did not bring, listed by song with the
+  review's counts), stopped, or failed stays here, failures first (tested).
 
 ## Search and leaving
 

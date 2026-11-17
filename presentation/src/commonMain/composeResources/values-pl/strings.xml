@@ -75,6 +75,11 @@
         <item quantity="few">%1$d dokumenty bez czytelnego tekstu</item>
         <item quantity="other">%1$d dokumentów bez czytelnego tekstu</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d piosenka bez niektórych obrazów lub załączników</item>
+        <item quantity="few">%1$d piosenki bez niektórych obrazów lub załączników</item>
+        <item quantity="other">%1$d piosenek bez niektórych obrazów lub załączników</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d pliku nie udało się zaimportować</item>
         <item quantity="other">%1$d plików nie udało się zaimportować</item>

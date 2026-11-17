@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
+import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -390,6 +391,66 @@ class ImportFilesUseCaseImplTest {
 
         assertEquals(listOf("set.setlist.json"), result.duplicateFileNames)
         assertEquals(listOf("set.setlist.json"), setlists.files.keys.toList())
+    }
+
+    @Test
+    fun `a setlist the batch writes and then brings again is not also listed as already in the library`() = runTest {
+        val setlists = FakeSetlistRepository()
+        val plan = ImportPlan(
+            setlists = listOf(
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(emptyList()), ImportPlan.Status.NEW, "a/set.setlist.json"),
+                ImportPlan.SetlistEntry("set.setlist.json", setlist(emptyList()), ImportPlan.Status.IDENTICAL, "b/set.setlist.json"),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+
+        assertEquals(listOf("set.setlist.json"), result.importedSetlistFileNames)
+        assertEquals(emptyList(), result.duplicateFileNames)
+    }
+
+    @Test
+    fun `the songs written or already there that come without files they name are reported with what they lack`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("kept.cho" to A))
+        fun missing(source: String, isAttachment: Boolean = false) =
+            ImportPlan.SongImage(source = source, name = null, bytes = null, problem = ImportedImage.Problem.MISSING, isAttachment = isAttachment)
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(
+                    fileName = "new.cho",
+                    text = B,
+                    status = ImportPlan.Status.NEW,
+                    sourceFileName = "new.cho",
+                    images = listOf(missing("a.png"), missing("b.png"), missing("take.mp3", isAttachment = true)),
+                ),
+                ImportPlan.SongEntry(
+                    fileName = "kept.cho",
+                    text = A,
+                    status = ImportPlan.Status.IDENTICAL,
+                    sourceFileName = "kept.cho",
+                    images = listOf(missing("sheet.pdf", isAttachment = true)),
+                ),
+                // A repeat of the song already there is the same file, reported once.
+                ImportPlan.SongEntry(
+                    fileName = "kept.cho",
+                    text = A,
+                    status = ImportPlan.Status.IDENTICAL,
+                    sourceFileName = "again/kept.cho",
+                    repeatedEntryIndex = 1,
+                    images = listOf(missing("sheet.pdf", isAttachment = true)),
+                ),
+            ),
+        )
+
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+
+        assertEquals(
+            listOf(
+                ImportResult.SongWithFilesLeftOut(fileName = "new.cho", pictureCount = 2, attachmentCount = 1),
+                ImportResult.SongWithFilesLeftOut(fileName = "kept.cho", pictureCount = 0, attachmentCount = 1),
+            ),
+            result.songsWithFilesLeftOut,
+        )
     }
 
     @Test

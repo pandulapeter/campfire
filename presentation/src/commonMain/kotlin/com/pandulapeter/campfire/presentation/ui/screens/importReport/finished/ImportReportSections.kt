@@ -31,6 +31,7 @@ internal data class ImportReportSection(
         SKIPPED,
         OVERSIZED,
         UNREADABLE,
+        FILES_LEFT_OUT,
         SONGS,
         SETLISTS,
         DUPLICATES,
@@ -44,6 +45,8 @@ internal data class ImportReportSection(
  * @param title What the library calls the song or setlist the file became, where it holds one under that name.
  * @param subtitle The artist of that song.
  * @param isSong Whether [fileName] is a song of the library, which is what can be opened from the row.
+ * @param leftOutPictureCount For a song of [ImportReportSection.Kind.FILES_LEFT_OUT], how many pictures it came without.
+ * @param leftOutAttachmentCount The same for its attachments.
  */
 internal data class ImportReportRow(
     val key: String,
@@ -52,6 +55,8 @@ internal data class ImportReportRow(
     val subtitle: String? = null,
     val isSong: Boolean = false,
     val isConverted: Boolean = false,
+    val leftOutPictureCount: Int = 0,
+    val leftOutAttachmentCount: Int = 0,
 )
 
 /**
@@ -86,6 +91,13 @@ internal fun importReportSections(
         ImportReportSection(ImportReportSection.Kind.SKIPPED, result.skippedFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.OVERSIZED, result.oversizedFileNames.toRows()),
         ImportReportSection(ImportReportSection.Kind.UNREADABLE, result.unreadableDocumentFileNames.toRows()),
+        // Each with what it came without, as the review's row said it would.
+        ImportReportSection(
+            ImportReportSection.Kind.FILES_LEFT_OUT,
+            result.songsWithFilesLeftOut.map { it.fileName }.toSongRows().zip(result.songsWithFilesLeftOut) { row, song ->
+                row.copy(leftOutPictureCount = song.pictureCount, leftOutAttachmentCount = song.attachmentCount)
+            },
+        ),
         ImportReportSection(ImportReportSection.Kind.SONGS, result.importedSongFileNames.toSongRows()),
         ImportReportSection(
             ImportReportSection.Kind.SETLISTS,

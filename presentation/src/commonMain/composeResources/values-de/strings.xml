@@ -68,6 +68,10 @@
         <item quantity="one">%1$d Dokument ohne lesbaren Text</item>
         <item quantity="other">%1$d Dokumente ohne lesbaren Text</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d Song, dem Bilder oder Anhänge fehlen</item>
+        <item quantity="other">%1$d Songs, denen Bilder oder Anhänge fehlen</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d Datei, die nicht importiert werden konnte</item>
         <item quantity="other">%1$d Dateien, die nicht importiert werden konnten</item>

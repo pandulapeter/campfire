@@ -68,6 +68,10 @@
         <item quantity="one">%1$d documento sin texto legible</item>
         <item quantity="other">%1$d documentos sin texto legible</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d canción sin algunas imágenes o adjuntos</item>
+        <item quantity="other">%1$d canciones sin algunas imágenes o adjuntos</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d archivo no se pudo importar</item>
         <item quantity="other">%1$d archivos no se pudieron importar</item>

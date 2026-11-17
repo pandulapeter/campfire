@@ -68,6 +68,10 @@
         <item quantity="one">%1$d olvasható szöveg nélküli dokumentum</item>
         <item quantity="other">%1$d olvasható szöveg nélküli dokumentum</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d dal, amelyből képek vagy csatolmányok hiányoznak</item>
+        <item quantity="other">%1$d dal, amelyből képek vagy csatolmányok hiányoznak</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d nem importálható fájl</item>
         <item quantity="other">%1$d nem importálható fájl</item>

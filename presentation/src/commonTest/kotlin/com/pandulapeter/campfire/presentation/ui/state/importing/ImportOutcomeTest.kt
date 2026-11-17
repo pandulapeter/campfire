@@ -70,6 +70,7 @@ class ImportOutcomeTest {
         assertFalse(ImportResult(oversizedFileNames = listOf("a.pdf")).isClean)
         assertFalse(ImportResult(unreadableDocumentFileNames = listOf("a.docx")).isClean)
         assertFalse(ImportResult(isFailed = true).isClean)
+        assertFalse(ImportResult(songsWithFilesLeftOut = listOf(ImportResult.SongWithFilesLeftOut("a.cho", pictureCount = 1, attachmentCount = 0))).isClean)
     }
 
     @Test

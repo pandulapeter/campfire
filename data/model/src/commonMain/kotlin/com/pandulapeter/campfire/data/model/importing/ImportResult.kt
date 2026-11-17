@@ -37,4 +37,17 @@ data class ImportResult(
     val unprocessedFileNames: List<String> = emptyList(),
     /** Stored names of converted songs that were actually written by this import. */
     val convertedSongFileNames: List<String> = emptyList(),
-)
+    /**
+     * The songs written, or found already in the library, that name pictures or attachments the batch did not bring,
+     * each once, as the review counted them; their files show as missing.
+     */
+    val songsWithFilesLeftOut: List<SongWithFilesLeftOut> = emptyList(),
+) {
+
+    /** A song of [songsWithFilesLeftOut], by its library name, and how many of the files it names it came without. */
+    data class SongWithFilesLeftOut(
+        val fileName: String,
+        val pictureCount: Int,
+        val attachmentCount: Int,
+    )
+}

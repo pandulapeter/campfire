@@ -75,6 +75,11 @@
         <item quantity="two">שני מסמכים ללא טקסט קריא</item>
         <item quantity="other">%1$d מסמכים ללא טקסט קריא</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">שיר אחד שחסרות בו תמונות או קבצים מצורפים</item>
+        <item quantity="two">שני שירים שחסרות בהם תמונות או קבצים מצורפים</item>
+        <item quantity="other">%1$d שירים שחסרות בהם תמונות או קבצים מצורפים</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">קובץ אחד שלא ניתן היה לייבא</item>
         <item quantity="two">שני קבצים שלא ניתן היה לייבא</item>

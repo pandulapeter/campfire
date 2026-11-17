@@ -125,4 +125,5 @@ internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String
     importedSetlistFileNames = importedSetlistFileNames.mapNotNull(fileName),
     duplicateFileNames = duplicateFileNames.mapNotNull(fileName),
     convertedSongFileNames = convertedSongFileNames.mapNotNull(fileName),
+    songsWithFilesLeftOut = songsWithFilesLeftOut.mapNotNull { song -> fileName(song.fileName)?.let { song.copy(fileName = it) } },
 )

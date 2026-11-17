@@ -91,6 +91,7 @@ internal class ImportFilesUseCaseImpl(
         val importedSongs = mutableListOf<Song>()
         private val duplicateFileNames = mutableListOf<String>()
         private val convertedSongFileNames = mutableListOf<String>()
+        private val songsWithFilesLeftOut = mutableListOf<ImportResult.SongWithFilesLeftOut>()
 
         /**
          * Where each imported file ended up, for the setlists. Only files that held exactly one song are in here: a file
@@ -170,6 +171,7 @@ internal class ImportFilesUseCaseImpl(
                             takenNames?.add(LibraryFiles.identityKey(it.fileName))
                             importedSongs += it
                             if (entry.isConverted) convertedSongFileNames += it.fileName
+                            noteFilesLeftOut(entry, it.fileName)
                         }.fileName
                     }
 
@@ -177,7 +179,10 @@ internal class ImportFilesUseCaseImpl(
                     // The library's copy names the same pictures, which a library restored without them (Android's
                     // backup leaves them out) gets back from the archive here; a picture it holds is not written again.
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
-                        if (entry.isIdenticalToLibraryFile) IncomingImages.store(entry, writer, storedImages)
+                        if (entry.isIdenticalToLibraryFile) {
+                            IncomingImages.store(entry, writer, storedImages)
+                            noteFilesLeftOut(entry, it)
+                        }
                         // A repeat of an entry left out goes with it, and is not reported again: the review lists only
                         // the first of the repeats, which is already there.
                         if (entry.repeatedEntryIndex in leftAloneIndices) {
@@ -255,6 +260,15 @@ internal class ImportFilesUseCaseImpl(
             }
         }
 
+        /** Counted as the review's row counts them, so that the report names what the review said would be missing. */
+        private fun noteFilesLeftOut(entry: ImportPlan.SongEntry, fileName: String) {
+            val pictureCount = entry.images.count { !it.isAttachment && it.name == null }
+            val attachmentCount = entry.images.count { it.isAttachment && it.name == null }
+            if (pictureCount + attachmentCount > 0) {
+                songsWithFilesLeftOut += ImportResult.SongWithFilesLeftOut(fileName = fileName, pictureCount = pictureCount, attachmentCount = attachmentCount)
+            }
+        }
+
         fun failAt(exception: Exception) {
             logger.log("Could not import ${currentFileName ?: "the batch"}: ${exception.message}")
             isFailed = true
@@ -290,11 +304,13 @@ internal class ImportFilesUseCaseImpl(
             failedFileNames = failedFileNames,
             unprocessedFileNames = unprocessedFileNames,
             // Names library files and is filled once per incoming entry, so a song the batch brings twice would be named
-            // twice; and a repeat of a song this import wrote was not in the library before it.
-            duplicateFileNames = duplicateFileNames.distinct() - importedSongs.mapTo(hashSetOf()) { it.fileName },
+            // twice; and a repeat of a song or a setlist this import wrote was not in the library before it.
+            duplicateFileNames = duplicateFileNames.distinct() - importedSongs.mapTo(hashSetOf()) { it.fileName } -
+                importedSetlists.mapTo(hashSetOf()) { it.fileName },
             oversizedFileNames = plan.oversizedFileNames,
             unreadableDocumentFileNames = plan.unreadableDocumentFileNames,
             convertedSongFileNames = convertedSongFileNames,
+            songsWithFilesLeftOut = songsWithFilesLeftOut,
         )
     }
 

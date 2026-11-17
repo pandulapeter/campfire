@@ -82,6 +82,10 @@ class ImportReportSectionsTest {
             skippedFileNames = listOf("deleted.cho"),
             duplicateFileNames = listOf("a.cho"),
             convertedSongFileNames = listOf("a.cho", "deleted.cho"),
+            songsWithFilesLeftOut = listOf(
+                ImportResult.SongWithFilesLeftOut("a.cho", pictureCount = 1, attachmentCount = 2),
+                ImportResult.SongWithFilesLeftOut("deleted.cho", pictureCount = 1, attachmentCount = 0),
+            ),
         ).followingLibraryFileNames { fileName ->
             when {
                 fileName.startsWith("deleted") -> null
@@ -95,9 +99,33 @@ class ImportReportSectionsTest {
                 skippedFileNames = listOf("deleted.cho"),
                 duplicateFileNames = listOf("b.cho"),
                 convertedSongFileNames = listOf("b.cho"),
+                songsWithFilesLeftOut = listOf(ImportResult.SongWithFilesLeftOut("b.cho", pictureCount = 1, attachmentCount = 2)),
             ),
             result,
         )
+    }
+
+    @Test
+    fun `songs that came without files they name are listed among the problems with what each lacks`() {
+        val sections = importReportSections(
+            result = ImportResult(
+                importedSongFileNames = listOf("a.cho"),
+                duplicateFileNames = listOf("b.cho"),
+                songsWithFilesLeftOut = listOf(
+                    ImportResult.SongWithFilesLeftOut("a.cho", pictureCount = 2, attachmentCount = 0),
+                    ImportResult.SongWithFilesLeftOut("b.cho", pictureCount = 0, attachmentCount = 1),
+                ),
+            ),
+            songs = listOf(song("a", artist = "Artist"), song("b")),
+            setlists = emptyList(),
+        )
+        assertEquals(listOf(Kind.FILES_LEFT_OUT, Kind.SONGS, Kind.DUPLICATES), sections.map { it.kind })
+        val (written, alreadyThere) = sections.first().rows
+        assertEquals("Title a", written.title)
+        assertEquals("Artist", written.subtitle)
+        assertTrue(written.isSong)
+        assertEquals(2 to 0, written.leftOutPictureCount to written.leftOutAttachmentCount)
+        assertEquals(0 to 1, alreadyThere.leftOutPictureCount to alreadyThere.leftOutAttachmentCount)
     }
 
     @Test

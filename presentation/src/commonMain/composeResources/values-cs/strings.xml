@@ -75,6 +75,11 @@
         <item quantity="few">%1$d dokumenty bez čitelného textu</item>
         <item quantity="other">%1$d dokumentů bez čitelného textu</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d píseň bez některých obrázků nebo příloh</item>
+        <item quantity="few">%1$d písně bez některých obrázků nebo příloh</item>
+        <item quantity="other">%1$d písní bez některých obrázků nebo příloh</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d soubor, který nešlo importovat</item>
         <item quantity="few">%1$d soubory, které nešlo importovat</item>

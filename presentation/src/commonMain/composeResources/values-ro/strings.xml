@@ -75,6 +75,11 @@
         <item quantity="few">%1$d documente fără text lizibil</item>
         <item quantity="other">%1$d de documente fără text lizibil</item>
     </plurals>
+    <plurals name="import_status_files_left_out">
+        <item quantity="one">%1$d cântec fără unele imagini sau atașamente</item>
+        <item quantity="few">%1$d cântece fără unele imagini sau atașamente</item>
+        <item quantity="other">%1$d de cântece fără unele imagini sau atașamente</item>
+    </plurals>
     <plurals name="import_status_failed">
         <item quantity="one">%1$d fișier care nu a putut fi importat</item>
         <item quantity="few">%1$d fișiere care nu au putut fi importate</item>

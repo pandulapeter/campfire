@@ -32,12 +32,13 @@ private fun List<ImportedFile>.isSingleSong() = singleOrNull()?.let { LibraryFil
 private fun List<ImportedFile>.arePicturesAlone() = isNotEmpty() && all { LibraryFiles.isImageFileName(it.name) }
 
 /**
- * Whether an import went the one way a snackbar is enough for: everything written, nothing left out and nothing
- * stopped. Files that were already in the library count as written, since nothing of them is lost.
+ * Whether an import went the one way a snackbar is enough for: everything written, nothing left out (a picture or an
+ * attachment a song names included) and nothing stopped. Files that were already in the library count as written, since
+ * nothing of them is lost.
  */
 internal val ImportResult.isClean
     get() = !isFailed && skippedFileNames.isEmpty() && leftOutFileNames.isEmpty() &&
-        oversizedFileNames.isEmpty() && unreadableDocumentFileNames.isEmpty()
+        oversizedFileNames.isEmpty() && unreadableDocumentFileNames.isEmpty() && songsWithFilesLeftOut.isEmpty()
 
 /** How many files the plan has something to say about, which is what makes an import more than one file's. */
 internal val ImportPlan.entryCount

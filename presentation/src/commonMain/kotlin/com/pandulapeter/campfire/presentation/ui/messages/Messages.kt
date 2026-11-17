@@ -54,6 +54,8 @@ import com.pandulapeter.campfire.presentation.resources.import_result_songs_alre
 import com.pandulapeter.campfire.presentation.resources.import_result_nothing
 import com.pandulapeter.campfire.presentation.resources.import_result_setlists
 import com.pandulapeter.campfire.presentation.resources.import_result_skipped
+import com.pandulapeter.campfire.presentation.resources.import_review_attachments_left_out
+import com.pandulapeter.campfire.presentation.resources.import_review_images_left_out
 import com.pandulapeter.campfire.presentation.resources.import_result_songs
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_open
 import com.pandulapeter.campfire.presentation.resources.onboarding_clipboard_link_question
@@ -274,6 +276,8 @@ private fun importCounts(result: ImportResult) = listOf(
     Res.plurals.import_result_songs_already_there to result.duplicateFileNames.count { !LibraryFiles.isSetlistFileName(it) },
     Res.plurals.import_result_setlists_already_there to result.duplicateFileNames.count(LibraryFiles::isSetlistFileName),
     Res.plurals.import_result_skipped to result.skippedFileNames.size,
+    Res.plurals.import_review_images_left_out to result.songsWithFilesLeftOut.sumOf { it.pictureCount },
+    Res.plurals.import_review_attachments_left_out to result.songsWithFilesLeftOut.sumOf { it.attachmentCount },
 ).filter { (_, count) -> count > 0 }
     .map { (resource, count) -> pluralTextResource(resource, count, count.toString()) }
     .ifEmpty { listOf(stringResource(Res.string.import_result_nothing)) }

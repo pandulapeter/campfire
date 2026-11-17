@@ -54,6 +54,9 @@ import com.pandulapeter.campfire.presentation.resources.import_report_left_out
 import com.pandulapeter.campfire.presentation.resources.import_report_search
 import com.pandulapeter.campfire.presentation.resources.import_status_duplicates
 import com.pandulapeter.campfire.presentation.resources.import_status_failed
+import com.pandulapeter.campfire.presentation.resources.import_status_files_left_out
+import com.pandulapeter.campfire.presentation.resources.import_review_attachments_left_out
+import com.pandulapeter.campfire.presentation.resources.import_review_images_left_out
 import com.pandulapeter.campfire.presentation.resources.import_status_oversized
 import com.pandulapeter.campfire.presentation.resources.import_status_partial
 import com.pandulapeter.campfire.presentation.resources.import_status_setlists
@@ -98,7 +101,7 @@ internal fun LazyListScope.finishedHeader(
 
 private val ImportResult.isClean
     get() = skippedFileNames.isEmpty() && leftOutFileNames.isEmpty() && oversizedFileNames.isEmpty() &&
-        unreadableDocumentFileNames.isEmpty()
+        unreadableDocumentFileNames.isEmpty() && songsWithFilesLeftOut.isEmpty()
 
 /**
  * Every section with a heading and a count, and its files under it. A song the library holds opens in a pager over
@@ -169,6 +172,10 @@ private fun ImportReportRowItem(
     supportingContent = listOfNotNull(
         row.subtitle,
         if (row.isConverted) stringResource(Res.string.import_report_converted) else null,
+        row.leftOutPictureCount.takeIf { it > 0 }?.let { count -> pluralTextResource(Res.plurals.import_review_images_left_out, count, count.toString()) },
+        row.leftOutAttachmentCount.takeIf { it > 0 }?.let { count ->
+            pluralTextResource(Res.plurals.import_review_attachments_left_out, count, count.toString())
+        },
     ).takeIf { it.isNotEmpty() }?.let { lines ->
         {
             Text(
@@ -200,6 +207,7 @@ private val ImportReportSection.Kind.label: PluralStringResource
         ImportReportSection.Kind.SKIPPED -> Res.plurals.import_status_skipped
         ImportReportSection.Kind.OVERSIZED -> Res.plurals.import_status_oversized
         ImportReportSection.Kind.UNREADABLE -> Res.plurals.import_status_unreadable
+        ImportReportSection.Kind.FILES_LEFT_OUT -> Res.plurals.import_status_files_left_out
         ImportReportSection.Kind.SONGS -> Res.plurals.import_status_songs
         ImportReportSection.Kind.SETLISTS -> Res.plurals.import_status_setlists
         ImportReportSection.Kind.DUPLICATES -> Res.plurals.import_status_duplicates

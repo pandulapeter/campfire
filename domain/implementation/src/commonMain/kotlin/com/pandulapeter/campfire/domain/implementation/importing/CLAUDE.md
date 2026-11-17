@@ -68,6 +68,8 @@
   re-plan is written numbered (no choice was offered), unless unticked.
 - An unticked entry is left alone with its repeats; a new song left out is still pointed at by its batch's setlists
   under its arrival name (shown as missing). Identical entries are disregarded whatever the choices say.
+- The result lists songs naming files the batch left out (`songsWithFilesLeftOut`, the review's counts); what the
+  batch wrote is never also a duplicate.
 - A write failure stops before any dependent setlist. What was written is adopted in one change (`adoptImported`, also
   after failure or cancellation), from the models built, not by rescanning.
 - `ApplyImportUseCaseImpl` writes the plan and then its records (the demo's names, each shared link's) whole, even for a
