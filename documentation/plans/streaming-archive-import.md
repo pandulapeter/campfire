@@ -275,6 +275,8 @@ only, never committed), and its outcome is written into the step it decides befo
 
 ### 1. SHA-256 in `:data:model`, incremental
 
+**Landed** by item M1 of the fixes plan (`Sha256.Digest`, `Sha256.hashToHexYielding`).
+
 Carried out by item M1 of [attachments-release-fixes.md](attachments-release-fixes.md), which lands first; nothing is
 left to do here once it has.
 

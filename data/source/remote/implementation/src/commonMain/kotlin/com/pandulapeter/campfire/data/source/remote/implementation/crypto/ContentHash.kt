@@ -24,7 +24,7 @@ internal fun dropboxContentHash(bytes: ByteArray): String {
     var written = 0
     while (offset < bytes.size) {
         val end = minOf(offset + BLOCK_SIZE, bytes.size)
-        Sha256.hash(bytes.copyOfRange(offset, end)).copyInto(blockHashes, written)
+        Sha256.Digest().apply { update(bytes, offset, end - offset) }.finish().copyInto(blockHashes, written)
         written += 32
         offset = end
     }

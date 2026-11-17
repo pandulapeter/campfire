@@ -7,11 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api.hashing
+package com.pandulapeter.campfire.data.model.hashing
 
+import kotlinx.coroutines.test.runTest
+import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 
 class Sha256Test {
 
@@ -41,8 +43,50 @@ class Sha256Test {
     )
 
     @Test
-    fun `a single changed byte changes the local content hash`() = assertNotEquals(
-        illegal = localContentHash("{title: Song}".encodeToByteArray()),
-        actual = localContentHash("{title: Songs}".encodeToByteArray()),
+    fun `hashes the 896-bit message to the published digest`() = assertEquals(
+        expected = "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1",
+        actual = Sha256.hashToHex(
+            "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+                .encodeToByteArray(),
+        ),
     )
+
+    @Test
+    fun `a digest fed in pieces equals the one-shot hash at every block boundary`() {
+        val random = Random(seed = 42)
+        (listOf(0, 1, 55, 56, 63, 64, 65) + (119..129) + listOf(1_000, 70_000)).forEach { size ->
+            val bytes = random.nextBytes(size)
+            repeat(20) {
+                val digest = Sha256.Digest()
+                var offset = 0
+                while (offset < size) {
+                    val length = random.nextInt(1, size - offset + 1).coerceAtMost(random.nextInt(1, 200))
+                    digest.update(bytes, offset, length)
+                    offset += length
+                }
+                assertEquals(Sha256.hashToHex(bytes), digest.finishToHex(), "size $size")
+            }
+        }
+    }
+
+    @Test
+    fun `a digest reads only the range it is given of a larger array`() {
+        val bytes = Random(seed = 7).nextBytes(300)
+        assertEquals(
+            expected = Sha256.hashToHex(bytes.copyOfRange(13, 213)),
+            actual = Sha256.Digest().apply { update(bytes, 13, 200) }.finishToHex(),
+        )
+    }
+
+    @Test
+    fun `a finished digest takes no more input`() {
+        val digest = Sha256.Digest().apply { finish() }
+        assertFailsWith<IllegalStateException> { digest.update(ByteArray(1)) }
+    }
+
+    @Test
+    fun `the yielding hash equals the one-shot hash across several slices`() = runTest {
+        val bytes = Random(seed = 3).nextBytes(Sha256.YIELD_CHUNK_SIZE * 2 + 17)
+        assertEquals(Sha256.hashToHex(bytes), Sha256.hashToHexYielding(bytes))
+    }
 }

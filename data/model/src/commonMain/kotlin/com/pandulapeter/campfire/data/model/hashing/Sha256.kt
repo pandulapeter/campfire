@@ -7,7 +7,9 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.data.source.remote.api.hashing
+package com.pandulapeter.campfire.data.model.hashing
+
+import kotlinx.coroutines.yield
 
 /**
  * SHA-256, written out rather than taken from a library.
@@ -21,17 +23,103 @@ package com.pandulapeter.campfire.data.source.remote.api.hashing
  */
 object Sha256 {
 
-    fun hash(bytes: ByteArray): ByteArray {
-        val state = INITIAL_STATE.copyOf()
-        val padded = pad(bytes)
-        val schedule = IntArray(64)
+    fun hash(bytes: ByteArray) = Digest().apply { update(bytes) }.finish()
+
+    fun hashToHex(bytes: ByteArray) = hash(bytes).toHex()
+
+    /**
+     * [hashToHex] for a file-sized array, fed in [YIELD_CHUNK_SIZE] slices with a yield between them, so that a 50 MB
+     * attachment hashed on a computation dispatcher neither holds a thread of it for seconds nor ignores cancellation.
+     * The caller picks the dispatcher: this function does not move off the one it is called on.
+     */
+    suspend fun hashToHexYielding(bytes: ByteArray): String {
+        val digest = Digest()
         var offset = 0
-        while (offset < padded.size) {
+        while (offset < bytes.size) {
+            if (offset > 0) yield()
+            val length = minOf(YIELD_CHUNK_SIZE, bytes.size - offset)
+            digest.update(bytes, offset, length)
+            offset += length
+        }
+        return digest.finishToHex()
+    }
+
+    fun ByteArray.toHex() = buildString(size * 2) {
+        this@toHex.forEach { byte ->
+            val value = byte.toInt() and 0xFF
+            append(HEX_DIGITS[value ushr 4])
+            append(HEX_DIGITS[value and 0x0F])
+        }
+    }
+
+    /**
+     * SHA-256 fed in pieces, so a file of any size is hashed while it streams past and never has to be held whole.
+     *
+     * Whole 64-byte blocks are compressed straight from the caller's array, and only a block's remainder is buffered,
+     * so feeding a large array at offsets costs no copy of it. Any chunking gives the same digest as one call.
+     * It is deliberately not `suspend`: a caller hashing megabytes feeds it in slices and yields between them itself.
+     * A digest is spent once finished.
+     */
+    class Digest {
+        private val state = INITIAL_STATE.copyOf()
+        private val block = ByteArray(BLOCK_SIZE)
+        private val schedule = IntArray(64)
+        private var blockFill = 0
+        private var totalLength = 0L
+        private var isFinished = false
+
+        fun update(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size - offset) {
+            check(!isFinished) { "The digest is already finished." }
+            require(offset >= 0 && length >= 0 && offset + length <= bytes.size) { "The range is outside the array." }
+            var position = offset
+            var remaining = length
+            totalLength += length
+            if (blockFill > 0) {
+                val taken = minOf(BLOCK_SIZE - blockFill, remaining)
+                bytes.copyInto(block, blockFill, position, position + taken)
+                blockFill += taken
+                position += taken
+                remaining -= taken
+                if (blockFill < BLOCK_SIZE) return
+                compress(block, 0)
+                blockFill = 0
+            }
+            while (remaining >= BLOCK_SIZE) {
+                compress(bytes, position)
+                position += BLOCK_SIZE
+                remaining -= BLOCK_SIZE
+            }
+            bytes.copyInto(block, 0, position, position + remaining)
+            blockFill = remaining
+        }
+
+        /** Pads the buffered remainder (a 1 bit, zeroes, and the bit length as a big endian 64 bit number) and hashes it. */
+        fun finish(): ByteArray {
+            check(!isFinished) { "The digest is already finished." }
+            isFinished = true
+            val tail = ByteArray(if (blockFill < BLOCK_SIZE - 8) BLOCK_SIZE else BLOCK_SIZE * 2)
+            block.copyInto(tail, 0, 0, blockFill)
+            tail[blockFill] = 0x80.toByte()
+            val bitLength = totalLength * 8
+            for (index in 0 until 8) {
+                tail[tail.size - 1 - index] = (bitLength ushr (8 * index)).toByte()
+            }
+            var offset = 0
+            while (offset < tail.size) {
+                compress(tail, offset)
+                offset += BLOCK_SIZE
+            }
+            return ByteArray(32) { index -> (state[index / 4] ushr (24 - (index % 4) * 8)).toByte() }
+        }
+
+        fun finishToHex() = finish().toHex()
+
+        private fun compress(bytes: ByteArray, offset: Int) {
             for (index in 0 until 16) {
-                schedule[index] = (padded[offset + index * 4].toInt() and 0xFF shl 24) or
-                        (padded[offset + index * 4 + 1].toInt() and 0xFF shl 16) or
-                        (padded[offset + index * 4 + 2].toInt() and 0xFF shl 8) or
-                        (padded[offset + index * 4 + 3].toInt() and 0xFF)
+                schedule[index] = (bytes[offset + index * 4].toInt() and 0xFF shl 24) or
+                        (bytes[offset + index * 4 + 1].toInt() and 0xFF shl 16) or
+                        (bytes[offset + index * 4 + 2].toInt() and 0xFF shl 8) or
+                        (bytes[offset + index * 4 + 3].toInt() and 0xFF)
             }
             for (index in 16 until 64) {
                 val previous = schedule[index - 15]
@@ -72,33 +160,13 @@ object Sha256 {
             state[5] += f
             state[6] += g
             state[7] += h
-            offset += 64
-        }
-        return ByteArray(32) { index -> (state[index / 4] ushr (24 - (index % 4) * 8)).toByte() }
-    }
-
-    fun hashToHex(bytes: ByteArray) = hash(bytes).toHex()
-
-    fun ByteArray.toHex() = buildString(size * 2) {
-        this@toHex.forEach { byte ->
-            val value = byte.toInt() and 0xFF
-            append(HEX_DIGITS[value ushr 4])
-            append(HEX_DIGITS[value and 0x0F])
         }
     }
 
-    /** The message, a 1 bit, zeroes up to 56 bytes modulo 64, and the bit length as a big endian 64 bit number. */
-    private fun pad(bytes: ByteArray): ByteArray {
-        val bitLength = bytes.size.toLong() * 8
-        val paddingLength = ((56 - (bytes.size + 1) % 64) + 64) % 64
-        val padded = ByteArray(bytes.size + 1 + paddingLength + 8)
-        bytes.copyInto(padded)
-        padded[bytes.size] = 0x80.toByte()
-        for (index in 0 until 8) {
-            padded[padded.size - 1 - index] = (bitLength ushr (8 * index)).toByte()
-        }
-        return padded
-    }
+    private const val BLOCK_SIZE = 64
+
+    /** 256 KiB: a few milliseconds of hashing on a phone, short between yields and long enough that yielding costs nothing. */
+    const val YIELD_CHUNK_SIZE = 256 * 1024
 
     private fun Int.rotateRight(bits: Int) = (this ushr bits) or (this shl (32 - bits))
 

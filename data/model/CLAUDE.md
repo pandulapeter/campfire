@@ -9,7 +9,7 @@
 -->
 # :data:model
 
-Pure Kotlin domain models, no dependencies; stored documents and bytes never leak past their own module. The one
+Pure Kotlin domain models, depending on kotlinx datetime and coroutines alone; stored documents and bytes never leak past their own module. The one
 platform difference is `normalizedToNfc` (expect/actual).
 
 ## Songs and setlists
@@ -52,6 +52,9 @@ A file attached to a song is at most 50 MiB (`MAX_ATTACHMENT_FILE_SIZE`), never 
   form a platform hands over, tells a newer format (`SharedLink.FromNewerVersion`) from no link, and builds the download
   address from the validated parts, never from the link. A title's control characters read as spaces; its format
   characters, the joiners aside, are dropped.
+- `hashing/Sha256` is here because both sync and local storage hash files; `Sha256.Digest` hashes one in pieces, and a
+  file-sized array goes through `hashToHexYielding` on a computation dispatcher. Content names and sync fingerprints
+  depend on it bit for bit.
 - `JsonBounds` is the one check (depth, tokens outside strings) of outside JSON before it is parsed.
 - `SyncState.Connected` carries the last run's outcome so a failure stays on screen until replaced. `SyncSummary.failed`
   files or `havePreferencesFailed` make a run not `isComplete`; `haveSharedCopiesFailed` never does.
