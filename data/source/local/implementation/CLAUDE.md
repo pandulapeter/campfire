@@ -76,7 +76,7 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - `ImportStaging` (`@Single`, one per process: its random 16-hex-digit `session`) names every file by session and
   request, never by anything that arrived: `<session>-<request>-<n>.zip` for an archive,
   `<session>-<request>-<sha256>.<ext>` for an unpacked file (written as `<n>.part`, renamed once hashed; a second entry
-  of the same content is not kept twice), the extension one of `ATTACHMENT_EXTENSIONS`. `deleteOtherSessions` (on
+  of the same content is not kept twice), the extension one of `ATTACHMENT_EXTENSIONS` or `.bin`. `deleteOtherSessions` (on
   launch: `ClearImportStagingUseCase`, from `ImportWork`'s `init`, once per process) deletes every name without this
   session's prefix, so it never races a cold start's own file; `deleteRequest` a request's, partial ones included, and marks it
   dead so a sink still open fails and deletes its own file.
@@ -88,6 +88,12 @@ Skipped or unreadable files are logged to the injected `Logger`.
   and has not written yet (written bytes are already gone from the free space). Reservations are measured one at a
   time. `StagingRefusedException.NoSpace` carries `OutOfSpaceException` as its cause; `TooLarge` is a passed
   `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
+- `StreamingArchiveUnpack` (`source/`) is the in-memory unpack's walk over the staged file: song texts into memory
+  within the songs' budget; nested archives above the last level staged (not charged to it), walked, deleted; the
+  pictures and attachments songs name reserved from declared sizes, then staged. A text-named entry that turns out a
+  zip is unpacked from memory, as there. A song naming an archive gets it re-read as its file. Records read and
+  directories held count across nested archives (`ZipDirectory.recordCount`, `centralDirectorySize`); one past either
+  is reported unread. Any other failure deletes what the unpack staged, never what the request held before.
 
 ## `SecretStore` (sync credentials only)
 

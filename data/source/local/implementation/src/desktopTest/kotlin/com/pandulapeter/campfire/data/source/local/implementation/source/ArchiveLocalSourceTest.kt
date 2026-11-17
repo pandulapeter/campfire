@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import kotlinx.coroutines.runBlocking
@@ -22,10 +21,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** What comes out of an archive, against the archives the desktops actually produce. */
+/**
+ * What comes out of an archive, against the archives the desktops actually produce, read into memory and from the
+ * staging folder alike (see [ArchiveUnpacks]).
+ */
 class ArchiveLocalSourceTest {
 
-    private val archiveLocalSource = ArchiveLocalSourceImpl(Logger.Standard)
+    private val unpacks = ArchiveUnpacks()
+    private val archiveLocalSource = unpacks.archiveLocalSource
 
     @Test
     fun `documents retain their bytes and docx is not unpacked as a nested archive`() = runBlocking {
@@ -353,10 +356,15 @@ class ArchiveLocalSourceTest {
         damaged[30 + "x.cho".length] = 'y'.code.toByte()
         val good = ZipWriter.write(listOf(ZipEntry("song.cho", ByteArray(20) { 's'.code.toByte() })))
         val archive = ZipWriter.write(listOf(ZipEntry("a.zip", damaged), ZipEntry("b.zip", good)))
+        val maxSize = damaged.size + good.size + damagedSize + 10L
 
-        val files = archiveLocalSource.unpack(archive = archive, maxSize = damaged.size + good.size + damagedSize + 10L)
+        // In memory the nested archives count against the songs' budget too; staged, only the disk holds them.
+        val inMemory = unpacks.inMemory(archive = archive, maxSize = maxSize).files
+        val streamed = unpacks.streamed(archive = archive, maxSize = damagedSize + 10L).files
 
-        assertTrue(files.single { it.name == "song.cho" }.isTooLarge)
+        assertTrue(inMemory.single { it.name == "song.cho" }.isTooLarge)
+        assertTrue(streamed.single { it.name == "song.cho" }.isTooLarge)
+        assertFalse(unpacks.streamed(archive = archive, maxSize = damagedSize + 20L).files.single { it.name == "song.cho" }.isTooLarge)
     }
 
     @Test
@@ -395,10 +403,5 @@ class ArchiveLocalSourceTest {
     }
 
     /** The files alone, with the whole picture and attachment budgets: these tests are about the songs. */
-    private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpack(
-        archive = archive,
-        maxSize = maxSize,
-        maxImageSize = ImportLimits.MAX_IMPORT_IMAGES_SIZE,
-        maxAttachmentSize = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE,
-    ).files
+    private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpacks.both(archive = archive, maxSize = maxSize).files
 }

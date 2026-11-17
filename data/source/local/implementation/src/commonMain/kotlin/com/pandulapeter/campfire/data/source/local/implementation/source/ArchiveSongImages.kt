@@ -31,7 +31,8 @@ import com.pandulapeter.campfire.data.model.library.decodeLibraryText
  * picture budget, every attachment to [ImportLimits.MAX_ATTACHMENT_FILE_SIZE] and all of them to the attachment budget,
  * each charged as the entries declare themselves before they are read, so a file past either is reported with its song
  * rather than read. A file named by several songs is read once, and one a song shows as a picture is read as a picture
- * however many attach it, so that the one read serves both.
+ * however many attach it, so that the one read serves both. [read] is the in-memory unpack's; [StreamingArchiveUnpack]
+ * stages the same files through [wanted], [policyOf], and [found], within the disk rather than the two budgets.
  */
 internal object ArchiveSongImages {
 
@@ -60,7 +61,7 @@ internal object ArchiveSongImages {
         )
         return found(
             wanted = wanted,
-            bytesByName = wanted.readFirst + walks.flatMap { it.content.entries }.associate { it.name to it.bytes },
+            contentByName = (wanted.readFirst + walks.flatMap { it.content.entries }.associate { it.name to it.bytes }).mapValues { IncomingContent.Bytes(it.value) },
             unreadByName = walks.flatMap { walk -> walk.content.unread.filter { it.name in walk.wanted } }.associate { it.name to it.reason },
             chargedSize = walks.firstOrNull { !it.isAttachment }?.content?.chargedSize ?: 0,
             chargedAttachmentSize = walks.firstOrNull { it.isAttachment }?.content?.chargedSize ?: 0,
@@ -104,19 +105,19 @@ internal object ArchiveSongImages {
     }
 
     /**
-     * Each entry's pictures and attachments, out of the files [wanted] names that were read ([bytesByName], the first
+     * Each entry's pictures and attachments, out of the files [wanted] names that were read ([contentByName], the first
      * walk's among them) or why not ([unreadByName]), with what reading them cost.
      */
     fun found(
         wanted: Wanted,
-        bytesByName: Map<String, ByteArray>,
+        contentByName: Map<String, IncomingContent>,
         unreadByName: Map<String, UnreadZipEntry.Reason>,
         chargedSize: Long,
         chargedAttachmentSize: Long,
     ): Found {
         val images = wanted.resolvedPictures.indices.map { index ->
-            wanted.resolvedPictures[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = false) } +
-                wanted.resolvedAttachments[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = true) }
+            wanted.resolvedPictures[index].map { (source, name) -> found(source, name, contentByName, unreadByName, isAttachment = false) } +
+                wanted.resolvedAttachments[index].map { (source, name) -> found(source, name, contentByName, unreadByName, isAttachment = true) }
         }
         return Found(
             imagesByEntry = images,
@@ -129,16 +130,16 @@ internal object ArchiveSongImages {
     private fun found(
         source: String,
         name: String?,
-        bytesByName: Map<String, ByteArray>,
+        contentByName: Map<String, IncomingContent>,
         unreadByName: Map<String, UnreadZipEntry.Reason>,
         isAttachment: Boolean,
     ): ImportedImage {
-        val bytes = name?.let(bytesByName::get)
+        val content = name?.let(contentByName::get)
         return ImportedImage(
             source = source,
-            content = bytes?.let(IncomingContent::Bytes),
+            content = content,
             problem = when {
-                bytes != null -> null
+                content != null -> null
                 name == null -> ImportedImage.Problem.MISSING
                 unreadByName[name] == UnreadZipEntry.Reason.TOO_LARGE -> ImportedImage.Problem.TOO_LARGE
                 else -> ImportedImage.Problem.UNREADABLE

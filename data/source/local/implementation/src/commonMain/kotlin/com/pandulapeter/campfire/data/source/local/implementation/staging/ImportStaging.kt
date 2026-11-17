@@ -32,7 +32,8 @@ import kotlin.uuid.Uuid
  * Every name it writes carries the session and the request that wrote it, and nothing that arrived with the file:
  * `<session>-<request>-<n>.zip` for a received or nested archive, `<session>-<request>-<sha256>.<ext>` for an unpacked
  * picture or attachment (written as `<session>-<request>-<n>.part` until its hash is known, then renamed), the session
- * 16 and the hash 64 lowercase hex digits, the extension one of [LibraryFiles.ATTACHMENT_EXTENSIONS]. So a hostile
+ * 16 and the hash 64 lowercase hex digits, the extension one of [LibraryFiles.ATTACHMENT_EXTENSIONS] or
+ * [UNKNOWN_TYPE_EXTENSION]. So a hostile
  * entry name never becomes a path, [deleteOtherSessions] can empty the folder on launch of whatever a crash, a killed
  * process, or a closed tab left without touching a file this process has already received (a cold start's "Open
  * with"), and [deleteRequest] removes exactly one request's files.
@@ -86,10 +87,11 @@ internal class ImportStaging(
 
     /**
      * A sink for a picture or attachment [request] unpacks, named by its content's SHA-256 and [extension] (with its dot,
-     * one of [LibraryFiles.ATTACHMENT_EXTENSIONS]) once it is whole.
+     * one of [LibraryFiles.ATTACHMENT_EXTENSIONS], or [UNKNOWN_TYPE_EXTENSION] for a file of any other name) once it is
+     * whole.
      */
     suspend fun openUnpacked(request: StagingRequest, extension: String, announcedSize: Long?): StagingSink {
-        require(extension in LibraryFiles.ATTACHMENT_EXTENSIONS) { "Not an extension a staged file can have: \"$extension\"." }
+        require(extension in LibraryFiles.ATTACHMENT_EXTENSIONS || extension == UNKNOWN_TYPE_EXTENSION) { "Not an extension a staged file can have: \"$extension\"." }
         return open(request = request, extension = extension, announcedSize = announcedSize)
     }
 
@@ -179,6 +181,19 @@ internal class ImportStaging(
         listQuietly().filterNot { it.startsWith(prefix) }.forEach { deleteQuietly(it) }
     }
 
+    /**
+     * The live request [file] was staged for, which its name carries: what an archive unpacks belongs to the request that
+     * received it, so that settling the request removes both. Throws for a file of another session or a deleted request.
+     */
+    suspend fun requestOf(file: StagedFile): StagingRequest = files.withLock {
+        val id = file.name.takeIf { it.startsWith("$session-") }?.removePrefix("$session-")?.substringBefore('-', "")?.toLongOrNull()
+        check(id != null && id in liveRequests) { "\"${file.name}\" is not a staged file of a live request." }
+        StagingRequest(id)
+    }
+
+    /** The unpacked files [request] holds now, which a later sink of the same content is handed instead of a new one. */
+    suspend fun unpackedNamesOf(request: StagingRequest): Set<String> = files.withLock { unpackedFiles[request.id]?.keys?.toSet().orEmpty() }
+
     internal fun isLive(request: StagingRequest) = request.id in liveRequests
 
     private suspend fun requireLive(request: StagingRequest) = files.withLock { requireLiveLocked(request) }
@@ -213,3 +228,9 @@ internal data class StagingRequest(val id: Long)
 private const val SESSION_DIGITS = 16
 private const val ARCHIVE_EXTENSION = ".zip"
 private const val PARTIAL_EXTENSION = ".part"
+
+/**
+ * The extension of a staged file whose name has none the library keeps (a picture a song names as `chart`, a file
+ * attached as `run.exe`): staged all the same, so that the import judges it by its content as it judges one in memory.
+ */
+internal const val UNKNOWN_TYPE_EXTENSION = ".bin"

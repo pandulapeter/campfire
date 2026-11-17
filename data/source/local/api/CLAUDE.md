@@ -35,6 +35,10 @@ Plain suspend functions over `:data:model` types: no flows, no platform types.
   that is no archive (a JSON export) comes back as its songs, in an archive and loose through `songsIn`. A ChordPro
   song comes back with the pictures it names from the same archive (`ImportedFile.images`), read within a picture
   budget of their own; a picture no song names stays unread and reported, one a song takes is reported with it.
+  `unpack(StagedFile, …)` reads an archive in the staging folder by the same rules (`ArchiveEntryPolicy`,
+  `ArchiveSongImages`, shared with the in-memory one), staging pictures, attachments, and nested archives in the
+  archive's own request; it differs only in what bounds them (the disk, not the in-memory budgets) and in the
+  request-wide entry and held-directory caps.
   `pack` dates entries only when asked (`isDated`, what the user saves); undated, the same files always pack to the
   same bytes, for copies compared by their bytes.
 - `DocumentLocalSource`: on `Dispatchers.Default`; null means unsupported or unreadable; cancellation propagates.

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
@@ -43,6 +44,25 @@ interface ArchiveLocalSource {
      * song both shows and attaches is read once, as a picture.
      */
     suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
+
+    /**
+     * [unpack] of an archive in the staging folder, read from there and never held whole: the same files, setlists,
+     * reports, and pictures and attachments, decided by the same rules, but a picture's or attachment's content is
+     * staged (`IncomingContent.Staged`) in the request that staged [archive], and so is each nested archive (above the
+     * last level unpacked), deleted once it is unpacked. Song texts are read into memory within [maxSize], as there.
+     *
+     * Pictures and attachments are held to their own limits each, and all of them, with the nested archives, to the
+     * disk the staging may use rather than to the in-memory budgets, reserved from the sizes the archive declares before
+     * any is read, so an archive that passed those budgets brings more of its files. Across [archive] and the archives
+     * nested in it, at most `ImportLimits.MAX_ARCHIVE_ENTRIES` central directory records are read and at most
+     * `ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE` of directories held at once; a nested archive past either is reported as
+     * one that cannot be read.
+     *
+     * [archive] itself is left in place for its owner. Throws when it is not a readable archive, when the staging
+     * refuses the room (`StagingRefusedException`), and when the storage fails; whatever ends it so, a cancellation
+     * included, first deletes every file the unpack staged.
+     */
+    suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive
 
     /**
      * The songs a foreign document holds - another app's export that is not an archive, such as a JSON document of

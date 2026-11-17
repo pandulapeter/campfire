@@ -11,6 +11,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
@@ -18,6 +19,8 @@ import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.source.ArchiveEntryPolicy.isHidden
+import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.DosTimestamp
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
@@ -40,6 +43,8 @@ import org.koin.core.annotation.Single
 @Single
 internal class ArchiveLocalSourceImpl(
     private val logger: Logger,
+    private val fileStorage: FileStorage,
+    private val importStaging: ImportStaging,
 ) : ArchiveLocalSource {
 
     override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive =
@@ -51,6 +56,16 @@ internal class ArchiveLocalSourceImpl(
                 attachmentSize = inflated.attachmentCount,
             )
         }
+
+    override suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive = withContext(Dispatchers.Default) {
+        StreamingArchiveUnpack(
+            fileStorage = fileStorage,
+            staging = importStaging,
+            logger = logger,
+            request = importStaging.requestOf(archive),
+            maxSize = maxSize,
+        ).unpack(archive)
+    }
 
     override suspend fun songsIn(file: ImportedFile): List<ImportedFile>? = withContext(Dispatchers.Default) { ArchiveEntryPolicy.foreignSongs(file) }
 
