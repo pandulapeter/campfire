@@ -172,13 +172,20 @@ private fun shareUrl(url: String, title: String): Promise<JsString> = js(
 
 /**
  * Resolves with the picked files (of the kinds [accept] lists, as an `<input>`'s `accept`, where it is not empty), or
- * with an empty list when the dialog was dismissed. A dismissed dialog is the input's `cancel` event where the browser fires one. Where it does not, the window regaining focus without a
- * `change` following it is taken to mean one - after a wait long enough for a large selection, which some browsers
- * deliver well after the window already has its focus back, to arrive first.
+ * with an empty list when the dialog was dismissed. A dismissed dialog is the input's `cancel` event where the browser
+ * fires one. Where it does not, the window regaining focus without a `change` following it is taken to mean one - after
+ * a wait long enough for a large selection, which some browsers deliver well after the window already has its focus
+ * back, to arrive first. A click with no user activation behind it (the press long gone, or a pick started by no press)
+ * opens no dialog, and then no event at all follows: it resolves with nothing picked at once, since a promise left
+ * pending would hold the caller's one transfer at a time, and every later pick with it, until a reload.
  */
 private fun openFileInput(accept: String): Promise<JsArray<JsAny>?> = js(
     """(function () {
         return new Promise(function (resolve) {
+            if (navigator.userActivation && !navigator.userActivation.isActive) {
+                resolve([]);
+                return;
+            }
             var input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
