@@ -25,8 +25,9 @@
   name it is stored under (`TemporaryFile.storedName`), so two of one name in flight never share a file.
 - A zip is dated when the user saves it; a shared link's copy (`isSharedCopy`) is undated, so it packs to the same
   bytes wherever and whenever it is built, and carries only the attachments `sharedCopyAttachments` picks within their
-  budget (by the listed sizes, decided when the first `images/` entry is reached), counting the rest
-  (`ExportedFile.leftOutAttachmentCount`). Its entries are compressed, so an `ExportedFile` carries what an import
+  budget (by the listed sizes, decided from its songs before the first is written), counting the rest
+  (`ExportedFile.leftOutAttachmentCount`); its songs keep no line for those (`ChordProAttachments.withoutAttachments`),
+  as `SharedCopySync` writes them. Its entries are compressed, so an `ExportedFile` carries what an import
   unpacks it to (`exportedArchive`), how much of it is pictures and how much attachments (a file no song of the archive shows as a
   picture), and `isTooLargeToImport` judges that by the import's three budgets as well as the archive's own size. A
   library with large attachments exports to an archive the import cannot take back whole; it says so, and sync moves it.

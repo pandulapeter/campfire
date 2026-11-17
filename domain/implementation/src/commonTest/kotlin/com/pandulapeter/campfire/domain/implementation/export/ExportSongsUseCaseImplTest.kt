@@ -144,10 +144,13 @@ class ExportSongsUseCaseImplTest {
         val shared = assertNotNull(useCase(emptyMap(), "a.cho" to text).invoke(listOf("a.cho"), isArchive = true, isSharedCopy = true, rewrite = asStored))
         assertEquals(setOf("a.cho", "images/fedcba9876543210.pdf"), archive.packed.keys)
         assertEquals(1, shared.leftOutAttachmentCount)
+        // What the sync run that rebuilds the copy writes too: the song names no file the copy lacks.
+        assertEquals("{title: A}\n{meta: attachment fedcba9876543210.pdf Sheet}\n", archive.packed.getValue("a.cho").decodeToString())
 
         val saved = assertNotNull(useCase(emptyMap(), "a.cho" to text).invoke(listOf("a.cho"), isArchive = true, isSharedCopy = false, rewrite = asStored))
         assertEquals(setOf("a.cho", "images/0123456789abcdef.mp4", "images/fedcba9876543210.pdf"), archive.packed.keys)
         assertEquals(0, saved.leftOutAttachmentCount)
+        assertEquals(text, archive.packed.getValue("a.cho").decodeToString())
     }
 
     private val asStored = { _: String, text: String -> text }

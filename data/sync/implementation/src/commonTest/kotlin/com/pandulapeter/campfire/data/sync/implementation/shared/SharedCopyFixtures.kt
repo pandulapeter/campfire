@@ -47,6 +47,12 @@ internal class FakeSharedCopyContents : SharedCopyContents {
 
     override fun attachmentNamesOf(bytes: ByteArray) = ChordProAttachments.referencedSources(bytes.decodeToString()).toList()
 
+    override fun withoutAttachments(bytes: ByteArray, sources: Set<String>): ByteArray {
+        val text = bytes.decodeToString()
+        val stripped = ChordProAttachments.withoutAttachments(text, sources)
+        return if (stripped === text) bytes else stripped.encodeToByteArray()
+    }
+
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packCount++
         if (isOversized) return ByteArray((ImportLimits.MAX_SHARED_COPY_SIZE + ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())

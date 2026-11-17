@@ -85,6 +85,18 @@ public object ChordProAttachments {
         return if (isChanged) ChordProLines.joinLines(rewritten, text) else text
     }
 
+    /**
+     * [text] without a line for any of [sources]: every line [referencedSources] reads one of them on, commented-out ones
+     * included, so that nothing in the text names a file that does not travel with it. What a shared link's copy does
+     * with an attachment it leaves out for its size; a text naming none of them returns unchanged.
+     */
+    public fun withoutAttachments(text: String, sources: Set<String>): String {
+        if (sources.isEmpty()) return text
+        val lines = ChordProLines.splitLines(text)
+        val kept = lines.filterNot { ChordProAttachmentDirectives.sourceOn(it) in sources }
+        return if (kept.size == lines.size) text else ChordProLines.joinLines(kept, text)
+    }
+
     /** The line that carries [attachment], what the editor inserts; its name cleaned as [setAttachments] cleans it. */
     public fun directive(attachment: ChordProAttachment): String =
         "{meta: ${ChordProMetaItems.ATTACHMENT_NAME} ${listOfNotNull(attachment.source, cleanName(attachment.name)).joinToString(" ")}}"

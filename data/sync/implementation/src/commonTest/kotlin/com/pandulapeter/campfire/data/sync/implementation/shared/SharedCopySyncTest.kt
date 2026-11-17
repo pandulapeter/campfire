@@ -412,6 +412,9 @@ class SharedCopySyncTest {
         assertTrue(large.all { "[images/${it.first.name}]" in copy })
         assertFalse("[images/${small.first.name}]" in copy)
         assertTrue("[images/${tiny.first.name}]" in copy)
+        // The copy's song names no file the copy lacks, and every one it carries.
+        assertFalse(small.first.name in copy)
+        assertTrue((large + tiny).all { "{meta: attachment ${it.first.name} File}" in copy })
         assertEquals(1, cloud.entryOf(SONG.shareId).leftOutAttachments)
         val packs = device.sharedContents.packCount
         device.sync(cloud)

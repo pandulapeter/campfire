@@ -45,6 +45,7 @@ internal class ExportSongsUseCaseImpl(
             val content = songContentRepository.loadSongContent(fileNames.single(), useCache = false) ?: return null
             val name = songRepository.songExportFileName(content)
             val text = rewrite(content.fileName, content.text)
+            if (isSharedCopy) images.decideSharedAttachments(listOf(text))
             // A song showing pictures is a zip of itself and them, which opens the same in any ChordPro program: a
             // lone file would show a missing picture wherever it went.
             if (images.isNamedBy(text)) {
@@ -58,6 +59,12 @@ internal class ExportSongsUseCaseImpl(
                 )
             }
             return ExportedFile(name = name, mimeType = ExportedFile.TEXT_MIME_TYPE, bytes = text.encodeToByteArray())
+        }
+        // A shared copy's songs are read once before they are written, for the attachments it carries (ExportedImages).
+        if (isSharedCopy) {
+            images.decideSharedAttachments(
+                fileNames.mapNotNull { fileName -> songContentRepository.loadSongContent(fileName, useCache = false)?.let { rewrite(it.fileName, it.text) } },
+            )
         }
         return exportedArchive(
             archiveRepository = archiveRepository,

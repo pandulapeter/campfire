@@ -42,5 +42,11 @@ internal class SharedCopyContentsImpl(
 
     override fun attachmentNamesOf(bytes: ByteArray) = ChordProAttachments.referencedSources(bytes.decodeLibraryText()).toList()
 
+    override fun withoutAttachments(bytes: ByteArray, sources: Set<String>): ByteArray {
+        val text = bytes.decodeLibraryText()
+        val stripped = ChordProAttachments.withoutAttachments(text, sources)
+        return if (stripped === text) bytes else stripped.encodeToByteArray()
+    }
+
     override suspend fun pack(files: Map<String, ByteArray>) = archiveLocalSource.pack(files = files, isDated = false)
 }

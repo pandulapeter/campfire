@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.testSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.SongContent
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -74,6 +75,24 @@ class ExportSetlistUseCaseImplTest {
 
         assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/$name"), archive.packed.keys.toList())
         assertEquals(picture.size.toLong(), assertNotNull(exported).unpackedImageSize)
+    }
+
+    @Test
+    fun `a shared copy's songs keep no line for an attachment it leaves out, whichever song names it`() = runTest {
+        images.library["0123456789abcdef.mp4"] = ByteArray((ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())
+        images.library["fedcba9876543210.pdf"] = ByteArray(100)
+        val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))
+        val texts = mapOf(
+            "a.cho" to "{title: A}\n{meta: attachment fedcba9876543210.pdf Sheet}",
+            "b.cho" to "{title: B}\n{meta: attachment 0123456789abcdef.mp4 Video}\n[C]Line",
+        )
+
+        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isSharedCopy = true)
+
+        assertEquals(1, assertNotNull(exported).leftOutAttachmentCount)
+        assertEquals(texts.getValue("a.cho"), archive.packed.getValue("a.cho").decodeToString())
+        assertEquals("{title: B}\n[C]Line", archive.packed.getValue("b.cho").decodeToString())
+        assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/fedcba9876543210.pdf"), archive.packed.keys.toList())
     }
 
     private fun useCase(

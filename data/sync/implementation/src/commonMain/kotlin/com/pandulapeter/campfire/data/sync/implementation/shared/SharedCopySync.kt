@@ -263,6 +263,12 @@ internal class SharedCopySync(
                     readFile(name)?.also { read[name] = it }?.size?.toLong()
                 }.leftOut
             }
+            // Its songs keep no line for an attachment the copy leaves out, as the share's export writes them (ExportedImages).
+            if (leftOut.isNotEmpty()) {
+                files.keys.filter { kind == SharedLinkKind.SONG || it != entry.fileName }.forEach { name ->
+                    files[name] = contents.withoutAttachments(files.getValue(name), leftOut)
+                }
+            }
             intended.forEach { name -> read[name]?.let { files[IMAGES_FOLDER + name] = it } }
             // A copy too large is judged by what it was to hold, so that the next run finds nothing changed and reads no
             // picture again; one that fits by what it holds and what it left out for its size, so that a file it could

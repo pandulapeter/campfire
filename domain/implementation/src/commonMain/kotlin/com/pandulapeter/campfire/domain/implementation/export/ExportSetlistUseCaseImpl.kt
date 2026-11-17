@@ -43,6 +43,12 @@ internal class ExportSetlistUseCaseImpl(
         // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
         val written = mutableSetOf(setlistFileName)
         val images = ExportedImages.of(imageRepository, isSharedCopy)
+        // A shared copy's songs are read once before they are written, for the attachments it carries (ExportedImages).
+        if (isSharedCopy) {
+            images.decideSharedAttachments(
+                setlist.entries.map { it.songFileName }.distinct().mapNotNull { songContentRepository.loadSongContent(it, useCache = false)?.text },
+            )
+        }
         val songs = setlist.entries.map { entry ->
             suspend {
                 songContentRepository.loadSongContent(entry.songFileName, useCache = false)

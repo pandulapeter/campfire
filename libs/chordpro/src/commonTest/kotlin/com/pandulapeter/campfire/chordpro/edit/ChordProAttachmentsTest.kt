@@ -105,6 +105,26 @@ class ChordProAttachmentsTest {
     }
 
     @Test
+    fun `a file declared twice is kept once when the attachments are written back`() {
+        val text = "{title: T}\n{meta: attachment $sheet Sheet}\n{meta: attachment $take Take}\n[C]Line\n{meta: attachment $sheet Sheet}"
+
+        val written = ChordProAttachments.setAttachments(text, ChordProParser.parseMetadata(text).attachments)
+
+        assertEquals("{title: T}\n{meta: attachment $sheet Sheet}\n{meta: attachment $take Take}\n[C]Line", written)
+    }
+
+    @Test
+    fun `an attachment left out loses every line naming it, commented out or not, and nothing else`() {
+        val text = "{title: T}\r\n{meta: attachment $sheet Sheet}\r\n# {meta: attachment $sheet Old}\r\n{meta: attachment $take Take}\r\n[C]Line"
+
+        assertEquals(
+            "{title: T}\r\n{meta: attachment $take Take}\r\n[C]Line",
+            ChordProAttachments.withoutAttachments(text, setOf(sheet)),
+        )
+        assertSame(text, ChordProAttachments.withoutAttachments(text, setOf("ffffffffffffffff.pdf")))
+    }
+
+    @Test
     fun `attachments survive a round trip through the serializer`() {
         val text = "{title: T}\n{meta: attachment $sheet Sheet music.pdf}\n{meta: attachment $take}\n[C]Line"
         val expected = listOf(ChordProAttachment(sheet, "Sheet music.pdf"), ChordProAttachment(take))

@@ -33,6 +33,12 @@ internal interface SharedCopyContents {
     /** The files the song [bytes] attaches, in the order it names them, which a copy carries as far as they fit. */
     fun attachmentNamesOf(bytes: ByteArray): List<String>
 
+    /**
+     * The song [bytes] without a line for any of the attachments [sources], as `ChordProAttachments.withoutAttachments`
+     * writes it for the share's own copy too: the same bytes where it names none of them.
+     */
+    fun withoutAttachments(bytes: ByteArray, sources: Set<String>): ByteArray
+
     /** [files] packed undated, so that the same files make the same bytes on every device and at any time. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray
 }

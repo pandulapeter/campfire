@@ -78,7 +78,8 @@
   names pictures, so attaching a file republishes the copy. They have a budget of their own beside the 24 MiB
   (`MAX_SHARED_ATTACHMENTS_SIZE`, 50 MiB, what an import reads), filled in the order the songs name them by
   `sharedCopyAttachments` (`:data:model`), the one rule the share's first copy (the export) follows too: one that does
-  not fit is left out, never refusing the share, and the next tried. The entry records how many (`leftOutAttachments`,
+  not fit is left out, never refusing the share, its lines taken out of the copy's songs as the export takes them out,
+  and the next tried. The entry records how many (`leftOutAttachments`,
   an unknown member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
   left-out ones as well, so an unchanged copy is not rebuilt for them.
 - Never stopped by inference: an item missing from the library makes the entry `orphaned`; back under its name, `ok`. A
