@@ -498,6 +498,13 @@ needs) if a sync run would otherwise stall for minutes.
 
 ### 10. Intake: receiving into staging
 
+**Landed** (24028245c…354004035, da15494dd, 58fa8961c), behind `ImportIntake.STAGES_ARCHIVES` and, in the share
+extension, its mirror `ShareLimits.stagesArchives` (step 15 flips both). `ImportIntake.decide` returns `Stage`,
+`ReadWhole`, or `LeaveUnread`; a `.docx` and a picture are never staged by their zip bytes. A short copy or an I/O
+error leaves that file unread; only a disk too full ends the batch, with Done rather than Try again (the stream or
+grant is gone). An archive moved out of an iOS share leaves the share's record at once. The import UI tests run a
+second time with staging on (`testStagedArchives`). The iOS privacy manifests declare the free-space query (E174.1).
+
 - A pure decision in `:data:model` (`ImportIntake.decide(name, size, head)`: read whole within a limit, stage, or leave
   unread), replacing the archive branch of `ImportBudget.read`, tested against every `ImportLimitsTest` case.
 - Android: `toImportedFiles` opens each URI once, peeks the head, and either reads as today or hands an `IncomingFile`
