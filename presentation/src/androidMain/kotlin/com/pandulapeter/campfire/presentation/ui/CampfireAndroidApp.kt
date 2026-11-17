@@ -35,6 +35,8 @@ import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.ImportNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.LocalImportNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
@@ -62,6 +64,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param shareLinks Campfire links the app was opened with (the App Link, `campfire://s/`), read by the same activity.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
+ * @param importNotifier Hands the words of the foreground service an import needs once the app is left to the shell,
+ *   which starts and stops that service itself.
  * @param metronomeNotifier Starts the media playback service a playing metronome is kept alive and controlled by, for
  *   the same reason.
  * @param onAppReady Released when the app itself is on screen, which is what the activity holds the system splash
@@ -79,6 +83,7 @@ fun CampfireAndroidApp(
     sharedTexts: Flow<SharedTextPayload> = emptyFlow(),
     shareLinks: Flow<SharedLink> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
+    importNotifier: ImportNotifier = ImportNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onAppReady: () -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
@@ -133,6 +138,7 @@ fun CampfireAndroidApp(
     CompositionLocalProvider(
         LocalFilePicker provides filePicker,
         LocalSyncNotifier provides syncNotifier,
+        LocalImportNotifier provides importNotifier,
         LocalMetronomeNotifier provides metronomeNotifier,
     ) {
         Box(modifier = Modifier.fillMaxSize().libraryDropTarget(viewModel)) {

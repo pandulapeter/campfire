@@ -73,6 +73,20 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
 - **Only ever stops itself after `startForeground`**, or the system treats the missing foreground call as a crash.
   `onTimeout` (Android 15's six-hour data sync budget) stops the run and the service.
 
+## `importing/CampfireImportService`
+
+- The sync service's twin for an import that receives, downloads, unpacks, or writes (`ImportWork`), with a notification
+  of its own (id 3) beside sync's; a `dataSync` service too, sharing Android 15's six hours a day. It imports nothing.
+- Started by `ImportServiceStarter` as sync's is (`onPause`, not on rotation; work that starts after that; dismissed in
+  `onResume`); the words arrive in the intent (`ImportNotification.toWords`), the text and bytes come from the work it
+  watches (`ImportNotificationText.kt`), at most twice a second, a new phase at once.
+- **Cancel only before the write** (`ImportWorkState.isCancellable`); it calls `ImportWork.cancel` and lets the work's
+  end stop the service, so the staging is deleted under it. `onTimeout` calls `ImportWork.interrupt` (the import screen
+  then says why, with Try again) and stops at once.
+- The URI is never passed to it: the activity's copy job opens the stream, which keeps reading after the grant ends
+  while the process lives (step 0's spike in the streaming import plan).
+- The Play Console's `dataSync` declaration names the import as a use beside sync.
+
 ## `metronome/CampfireMetronomeService`
 
 - `mediaPlayback` foreground service: a framework `MediaSession` (no Media3; minSdk 28) and a `MediaStyle`

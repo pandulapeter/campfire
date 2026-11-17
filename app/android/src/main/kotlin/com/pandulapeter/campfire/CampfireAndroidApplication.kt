@@ -11,6 +11,7 @@ package com.pandulapeter.campfire
 
 import android.app.Application
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
+import com.pandulapeter.campfire.importing.CampfireImportService
 import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
 import com.pandulapeter.campfire.sync.CampfireSyncService
 import org.koin.android.ext.koin.androidContext
@@ -23,8 +24,9 @@ class CampfireAndroidApplication : Application() {
         // process too.
         installProcessLog(noBackupFilesDir)
         startCampfireDependencyGraph { androidContext(this@CampfireAndroidApplication) }
-        // A run whose process never came back left its notification behind, and this is the first moment anything
+        // A run or an import whose process never came back left its notification behind, and this is the first moment anything
         // of Campfire's is running again to take it down. See CampfireSyncService.clearStaleNotification.
         CampfireSyncService.clearStaleNotification(this)
+        CampfireImportService.clearStaleNotification(this)
     }
 }

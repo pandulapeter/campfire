@@ -19,19 +19,27 @@ import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.preferences.UserPreferences
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
+import com.pandulapeter.campfire.importing.ImportServiceStarter
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import com.pandulapeter.campfire.metronome.CampfireMetronomeService
 import com.pandulapeter.campfire.sync.SyncServiceStarter
+import kotlinx.coroutines.launch
+import org.koin.mp.KoinPlatform
 
 class CampfireMainActivity : ComponentActivity() {
 
     private var isAppReady = false
 
     private val syncServiceStarter = SyncServiceStarter(this)
+
+    private val importWork by lazy { KoinPlatform.getKoin().get<ImportWork>() }
+    private val importServiceStarter by lazy { ImportServiceStarter(activity = this, workState = importWork.state) }
 
     /** The theme color the launcher icon is to be in, known once the preferences have been read. */
     private var appIconColor: UserPreferences.ThemeColor? = null
@@ -55,6 +63,9 @@ class CampfireMainActivity : ComponentActivity() {
         if (savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
             handle(intent)
         }
+        // The import's work belongs to the process, and is watched for as long as this activity exists, so that work
+        // starting after the app was left still gets its service (see ImportServiceStarter.onImportWorkChanged).
+        lifecycleScope.launch { importWork.state.collect { importServiceStarter.onImportWorkChanged() } }
         setContent {
             CampfireAndroidApp(
                 urlOpener = this::openUrl,
@@ -62,6 +73,7 @@ class CampfireMainActivity : ComponentActivity() {
                 sharedTexts = sharedTextsToImport,
                 shareLinks = shareLinksToImport,
                 syncNotifier = syncServiceStarter::onSyncNotificationChanged,
+                importNotifier = importServiceStarter::onImportNotificationChanged,
                 metronomeNotifier = { notification ->
                     // Nothing is done for a click that ended: the service follows the engine itself, since this activity
                     // may be gone by then.
@@ -160,6 +172,7 @@ class CampfireMainActivity : ComponentActivity() {
         super.onPause()
         if (isChangingConfigurations) return
         syncServiceStarter.onLeaving()
+        importServiceStarter.onLeaving()
     }
 
     /**
@@ -169,6 +182,7 @@ class CampfireMainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         syncServiceStarter.onReturned()
+        importServiceStarter.onReturned()
     }
 
     /**

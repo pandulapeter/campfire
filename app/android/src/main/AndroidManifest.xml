@@ -25,9 +25,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
-      A sync run has to survive the user leaving the app, which on Android means a foreground service, which in
-      turn means a notification. The notification permission is only ever asked for when sync is switched on; a
-      refusal costs the notification, not the sync.
+      A sync run, and an import that downloads or unpacks, has to survive the user leaving the app, which on Android
+      means a foreground service, which in turn means a notification. The notification permission is only ever asked
+      for when sync is switched on; a refusal costs the notification, not the sync or the import.
     -->
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
@@ -512,6 +512,17 @@
         -->
         <service
             android:name=".sync.CampfireSyncService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
+        <!--
+          Keeps the process alive while an import downloads, unpacks, or writes once the user has left the app, and shows
+          how far it is. It imports nothing of its own, see CampfireImportService. Not stopped with its task, for the
+          same reason as the sync service: swiping Campfire away is no request to abandon an import halfway.
+        -->
+        <service
+            android:name=".importing.CampfireImportService"
             android:exported="false"
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false" />
