@@ -122,15 +122,10 @@ internal class PrepareImportUseCaseImpl(
         files.forEachIndexed { index, file ->
             yield()
             onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
-            // An archive by its name, or a file of any other name but a document's whose bytes are an archive's: the
-            // library backups of other apps are zip archives of their own extension, or renamed to a text file's on their
-            // way over, and the songs in them are worth looking for. Only a document is taken at its name's word, since
-            // a Word file is a zip archive of its parts.
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
             val staged = file.staged
-            val isArchive = staged != null || isArchiveByName || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
-                !isArchive -> {
+                !file.isArchive -> {
                     // Another app's export that is no archive (a JSON document of songs) is the songs it holds, before a
                     // setlist is tried or its name is found unknown. They are numbered within it as an archive's entries
                     // are, since their names are unique only within it.
@@ -138,6 +133,12 @@ internal class PrepareImportUseCaseImpl(
                     if (songs == null) sort(file = file, origin = null) else songs.forEach { sort(file = it, origin = index) }
                 }
                 file.isTooLarge || (staged == null && file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE) -> triage.oversizedFileNames += file.name
+                // One that could not be read, under an archive's name, holds nothing to unpack: skipped as an unpack of
+                // nothing would have it, without reading nothing as an archive in memory.
+                staged == null && file.bytes.isEmpty() -> {
+                    logger.log("Could not unpack \"${file.name}\": nothing was read.")
+                    triage.skippedFileNames += file.name
+                }
                 else -> try {
                     val unpacked = if (staged != null) {
                         // Its pictures and attachments are staged on disk, within the staging's budget rather than the
@@ -145,6 +146,8 @@ internal class PrepareImportUseCaseImpl(
                         // received archive stays the request's, for Try again, until the request settles.
                         archiveRepository.unpack(archive = staged, maxSize = remaining)
                     } else {
+                        // Only the tests hand an archive over in memory: the app stages every one before it is prepared
+                        // (`ImportWork`), so this unpack is the reference the streaming one is held to.
                         archiveRepository.unpack(
                             archive = file.bytes,
                             maxSize = remaining,

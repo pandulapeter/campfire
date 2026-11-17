@@ -82,6 +82,7 @@ fun openUrl(url: NSURL) {
     // and from outside the one module that may go online.
     if (!url.fileURL) return
     val name = url.lastPathComponent.orEmpty()
+    startProcess()
     val receiver = archiveReceiverWhileStaging()
     val inboxPath = url.takeIf { it.isInboxCopy() }?.URLByResolvingSymlinksInPath?.path
     val close: () -> Unit = { inboxPath?.let(receivingInboxCopies::remove) }

@@ -100,10 +100,8 @@ model, use cases, repositories, and files in a temporary home — and drives it 
   is called inside `runOnIdle`, a suspending member with `runBlocking` outside it, and `storedPreferences()` /
   `storedSetlist()` read what landed. Never `ViewModelStore.clear()` mid-test. An import stage nothing produces yet is
   put up through the import's state (`ImportStagesTest`), never by faking a use case.
-- **The import's tests run twice**: `test` also runs `testStagedArchives`, the import packages' tests with the
-  `campfire.screenshots.stagesArchives` property, under which `runAppTest` turns `ImportIntake.stagesArchives` on and
-  the test's picker receives an archive into the staging folder as a platform's intake does. Until the switch lands,
-  both paths must pass.
+- **The test's picker receives an archive into the staging folder** as a platform's intake does, so the import's
+  tests drive the streaming import the app runs.
 - The view model keeps `Dispatchers.Main` (Swing) while the composition runs on the test clock, and library writes
   happen on IO threads: wait with `waitForLibrary` / `waitUntil`, never a sleep. A flaky test is fixed or deleted the
   same day, never retried.

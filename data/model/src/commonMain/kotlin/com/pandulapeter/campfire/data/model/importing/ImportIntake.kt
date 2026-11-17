@@ -16,14 +16,15 @@ object ImportIntake {
 
     /**
      * Whether an archive that arrives is received into the staging folder (`imports/`) and unpacked from there rather
-     * than read whole into memory. The one switch between the two paths: off while the streaming one is proven equal to
-     * the in-memory one, which stays what runs until then.
+     * than read whole into memory. The one switch between the two paths, on: the streaming one is the only one the app
+     * runs, and the in-memory one stays only as the reference the tests hold it to.
      */
-    const val STAGES_ARCHIVES = false
+    const val STAGES_ARCHIVES = true
 
     /**
-     * What the platforms' intake and the download read [STAGES_ARCHIVES] through: the same value in every build, set
-     * otherwise only by tests, which run the import both ways.
+     * What the platforms' intake, the download, and the import's preparation (`ImportWork`) read [STAGES_ARCHIVES]
+     * through: the same value in every build, set otherwise only by tests, which run the in-memory import as the
+     * reference.
      */
     var stagesArchives = STAGES_ARCHIVES
 

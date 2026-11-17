@@ -28,7 +28,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class ImportDownloadRepositoryImplTest {
@@ -36,13 +35,12 @@ class ImportDownloadRepositoryImplTest {
     private val staging = FakeImportStagingLocalSource()
 
     @Test
-    fun `the download read into memory is what runs while the intake does not stage archives`() = runTest {
+    fun `the download stages a zip as the intake stages archives`() = runTest {
         val remote = ScriptedRemoteSource(chunks = zipChunks(2))
 
-        val download = ImportDownloadRepositoryImpl(remote, staging).download(URL) { _, _ -> }
+        val download = assertIs<ImportDownload.File>(ImportDownloadRepositoryImpl(remote, staging).download(URL) { _, _ -> })
 
-        assertSame(ScriptedRemoteSource.IN_MEMORY, download)
-        assertTrue(staging.files.isEmpty())
+        assertEquals(setOf(assertIs<StagedFile>(download.staged).name), staging.files.keys)
     }
 
     @Test

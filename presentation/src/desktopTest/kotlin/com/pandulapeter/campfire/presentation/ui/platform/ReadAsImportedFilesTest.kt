@@ -33,7 +33,7 @@ class ReadAsImportedFilesTest {
         writeText(text)
     }
 
-    private fun File.importedNames() = listOf(absolutePath).readAsImportedFiles().map { it.name }
+    private fun File.importedNames() = listOf(absolutePath).readAsImportedFiles(receiver = null).map { it.name }
 
     @Test
     fun `a dropped folder is read through the folders inside it, each in name order`() {
@@ -56,7 +56,7 @@ class ReadAsImportedFilesTest {
             file("photo.jpg", text = "not a zip")
         }
 
-        val files = listOf(root.absolutePath).readAsImportedFiles()
+        val files = listOf(root.absolutePath).readAsImportedFiles(receiver = null)
 
         assertEquals(listOf("a.cho", "photo.jpg"), files.map { it.name })
         assertEquals(listOf(true, false), files.map { it.bytes.isNotEmpty() })
@@ -71,7 +71,7 @@ class ReadAsImportedFilesTest {
             File(this, "photo.heic").writeBytes(ByteArray(4096) { 7 })
         }
 
-        val files = listOf(root.absolutePath).readAsImportedFiles()
+        val files = listOf(root.absolutePath).readAsImportedFiles(receiver = null)
 
         assertEquals(listOf("backup.bak", "photo.heic"), files.map { it.name })
         assertContentEquals(zip, files.first().bytes)
@@ -82,7 +82,7 @@ class ReadAsImportedFilesTest {
     fun `a folder reads an extensionless chord sheet as text`() {
         val root = folder { file("Riverlight", text = "G   D\nDown by the river\n") }
 
-        val file = listOf(root.absolutePath).readAsImportedFiles().single()
+        val file = listOf(root.absolutePath).readAsImportedFiles(receiver = null).single()
 
         assertEquals("Riverlight", file.name)
         assertTrue(file.isPlainTextByContent)
@@ -103,6 +103,6 @@ class ReadAsImportedFilesTest {
     fun `a file named on its own is handed over whatever it is called, to be reported as skipped`() {
         val root = folder { file("photo.jpg") }
 
-        assertEquals(listOf("photo.jpg"), listOf(File(root, "photo.jpg").absolutePath).readAsImportedFiles().map { it.name })
+        assertEquals(listOf("photo.jpg"), listOf(File(root, "photo.jpg").absolutePath).readAsImportedFiles(receiver = null).map { it.name })
     }
 }

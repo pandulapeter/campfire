@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
@@ -40,6 +41,7 @@ import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.ReceiveImportArchiveUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogHost
 import com.pandulapeter.campfire.presentation.ui.dialogs.DialogType
@@ -103,6 +105,9 @@ class ImportControllerQueueTest {
     private var isImportFailing = false
     private var importFailure: (() -> Exception)? = null
     private val deletedStaging = mutableListOf<StagedFile>()
+
+    /** The archives held in memory that the preparation staged before reading them. */
+    private val stagedFromMemory = mutableListOf<StagedFile>()
     private val nextPlans = ArrayDeque<List<ImportPlan.SongEntry>>()
     private var download: ImportDownload = ImportDownload.Unreachable
     private val downloadedUrls = mutableListOf<String>()
@@ -184,6 +189,21 @@ class ImportControllerQueueTest {
                 deleteImportStaging = object : DeleteImportStagingUseCase {
                     override suspend fun invoke(files: Collection<StagedFile>) {
                         deletedStaging += files
+                    }
+                },
+                receiveImportArchive = object : ReceiveImportArchiveUseCase {
+                    override suspend fun invoke(announcedSize: Long?) = object : ReceivedArchive {
+                        private var size = 0L
+
+                        override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
+                            size += length
+                        }
+
+                        override suspend fun take(file: Any, size: Long, onProgress: (receivedBytes: Long) -> Unit) = throw UnsupportedOperationException()
+
+                        override suspend fun finish() = StagedFile(name = "memory-${stagedFromMemory.size}.zip", size = size, sha256Hex = null).also { stagedFromMemory += it }
+
+                        override suspend fun abandon() = Unit
                     }
                 },
             ),
@@ -836,6 +856,23 @@ class ImportControllerQueueTest {
         settle()
         assertEquals(0, importCount)
         assertEquals(setOf(STAGED_ARCHIVE.staged!!, STAGED_PICTURE), deletedStaging.toSet())
+    }
+
+    @Test
+    fun `an archive held in memory is prepared from a staged copy deleted once its batch settles`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        plannedSongs = listOf(songEntry("new.cho"))
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(ImportedFile(name = "backup.dat", bytes = ZIP_BYTES), ImportedFile(name = "loose.cho", bytes = "{title: Loose}".encodeToByteArray()))))
+        settle()
+        val prepared = preparedFiles.single()
+        assertEquals(listOf("backup.dat", "loose.cho"), prepared.map { it.name })
+        assertEquals(stagedFromMemory.single(), prepared.first().staged)
+        assertTrue(prepared.first().bytes.isEmpty())
+        assertNull(prepared.last().staged)
+        leaveImportReport()
+        settle()
+        assertEquals(stagedFromMemory.toSet(), deletedStaging.toSet())
     }
 
     @Test

@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
-import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
@@ -302,6 +302,10 @@ class ImportWork(
      * before it ends, so the loading screen goes only once nothing of them is left; [interrupt]ed, it leaves them to go on
      * in the app's scope for Try again to take, since what the platform stopped was only the preparation, and the batch's
      * settling discards them whichever way it ends.
+     *
+     * An archive the batch holds in memory ([isArchiveHeldInMemory]) is staged here too, so that the preparation unpacks
+     * every archive from the staging folder and none in memory. Its source stays the bytes, which Try again stages anew;
+     * a copy whose preparation ends before it is planned is deleted at once.
      */
     private suspend fun received(
         request: ImportRequest,
@@ -310,32 +314,46 @@ class ImportWork(
         throttle: ImportProgressThrottle,
     ): List<ImportedFile> {
         val receptions = files.mapNotNull { it.receiving }
-        if (receptions.isEmpty()) return files
-        enter(ImportWorkState.RECEIVING)
+        if (receptions.isEmpty() && files.none { it.isArchiveHeldInMemory }) return files
+        // A copy out of memory takes no longer than the unpack's first moments, so it is shown as no phase of its own.
+        if (receptions.isNotEmpty()) enter(ImportWorkState.RECEIVING)
         val fileName = request.source.name
         val totalBytes = receptions.map { it.announcedSize }.takeIf { sizes -> sizes.none { it == null } }?.sumOf { it ?: 0L }
+        val stagedFromMemory = mutableListOf<StagedFile>()
         try {
             val received = coroutineScope {
-                val reporting = launch {
+                val reporting = if (receptions.isEmpty()) null else launch {
                     combine(receptions.map { it.receivedBytes }) { it.sum() }.collect { bytes ->
                         throttle.offer(ImportProgress(ImportProgress.Phase.RECEIVING, fileName = fileName, completedBytes = bytes, totalBytes = totalBytes))
                     }
                 }
-                files.map { file -> file.receiving?.let { receivedFile(file.name, it) } ?: file }.also {
-                    reporting.cancel()
+                files.map { file ->
+                    val reception = file.receiving
+                    when {
+                        reception != null -> receivedFile(file.name) { reception.await() }
+                        file.isArchiveHeldInMemory -> receivedFile(file.name) {
+                            useCases.receiveImportArchive.stage(file.bytes).also { stagedFromMemory += it }
+                        }
+                        else -> file
+                    }
+                }.also {
+                    reporting?.cancel()
                     throttle.flush()
                 }
             }
-            request.source = ImportSource.Files(received)
+            if (receptions.isNotEmpty()) request.source = ImportSource.Files(received)
             return received
-        } catch (exception: CancellationException) {
-            if (preparationInterruption?.isCompleted != true) withContext(NonCancellable) { receptions.forEach { it.discard() } }
-            throw exception
+        } catch (throwable: Throwable) {
+            withContext(NonCancellable) {
+                if (throwable is CancellationException && preparationInterruption?.isCompleted != true) receptions.forEach { it.discard() }
+                if (stagedFromMemory.isNotEmpty()) useCases.deleteImportStaging(stagedFromMemory)
+            }
+            throw throwable
         }
     }
 
-    private suspend fun receivedFile(name: String, reception: ReceivingArchive): ImportedFile = try {
-        ImportedFile(name = name, bytes = ByteArray(0), staged = reception.await())
+    private suspend fun receivedFile(name: String, receive: suspend () -> StagedFile): ImportedFile = try {
+        ImportedFile(name = name, bytes = ByteArray(0), staged = receive())
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: StagingRefusedException.TooLarge) {

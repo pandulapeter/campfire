@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.domain.api.importing.ClearImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.DownloadImportFileUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.api.importing.ReceiveImportArchiveUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import org.koin.core.annotation.Factory
 
@@ -26,4 +27,5 @@ class ImportUseCases(
     internal val getSharedLinkImport: GetSharedLinkImportUseCase,
     internal val clearImportStaging: ClearImportStagingUseCase,
     internal val deleteImportStaging: DeleteImportStagingUseCase,
+    internal val receiveImportArchive: ReceiveImportArchiveUseCase,
 )

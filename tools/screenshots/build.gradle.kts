@@ -104,30 +104,6 @@ tasks.test {
     systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
 }
 
-/**
- * The import's UI tests again with archives staged as the streaming import's switch will have them
- * (`ImportIntake.stagesArchives`, set by `runAppTest` from the system property), so that both paths are driven
- * through the screens until the switch makes the staged one the only one. Run with `test`.
- */
-val testStagedArchives = tasks.register<Test>("testStagedArchives") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    useJUnitPlatform()
-    timeout = Duration.ofMinutes(20)
-    filter {
-        includeTestsMatching("com.pandulapeter.campfire.presentation.ui.screens.importReport.*")
-        includeTestsMatching("com.pandulapeter.campfire.presentation.ui.screens.songDetails.ImportPreviewTest")
-        includeTestsMatching("com.pandulapeter.campfire.presentation.ui.state.ImportExitTest")
-    }
-    systemProperty("java.awt.headless", "true")
-    systemProperty("campfire.screenshots.versionName", project.property("campfire.versionName").toString())
-    systemProperty("campfire.screenshots.stagesArchives", "true")
-}
-
-tasks.test {
-    dependsOn(testStagedArchives)
-}
-
 tasks.named<JavaExec>("run") {
     dependsOn(downloadFonts)
     // Every run renders afresh from the library, which Gradle cannot see change.

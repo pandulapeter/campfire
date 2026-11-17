@@ -40,6 +40,17 @@ import org.koin.mp.KoinPlatform
 private val koinApplication by lazy { startCampfireDependencyGraph() }
 
 /**
+ * Starts the process's log and then its dependency graph, once, on the main thread. The view controller does, and so
+ * does whatever hands the app a file before it (a cold start's opened file, the share inbox drained as the scene becomes
+ * active), since the intake asks the graph for the import's staging as the file arrives.
+ */
+internal fun startProcess() {
+    // Before anything else of the app's, so that the log has the start of its own process too.
+    installProcessLog()
+    koinApplication
+}
+
+/**
  * One per process, like the run it follows: a second one would watch the same state and hold a background task of its
  * own. Created after Koin, which the state comes from.
  */
@@ -72,9 +83,7 @@ fun CampfireViewController(
     continuedImportTasks: ContinuedImportTasks?,
     onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit,
 ): UIViewController {
-    // Before anything else of the app's, so that the log has the start of its own process too.
-    installProcessLog()
-    koinApplication
+    startProcess()
     if (processContinuedImportTasks == null) processContinuedImportTasks = continuedImportTasks
     importKeeper
     // The picker needs something to present itself from, which is the controller being created here.

@@ -66,6 +66,7 @@ private val drainLock = Mutex()
 @Suppress("unused")
 @OptIn(ExperimentalForeignApi::class)
 fun drainShareInbox() {
+    startProcess()
     inboxScope.launch { drainLock.withLock { drain() } }
 }
 
