@@ -160,7 +160,7 @@ class CreateShareLinkUseCaseImplTest {
         return ExportedFile(
             name = "copy.zip",
             mimeType = ExportedFile.ZIP_MIME_TYPE,
-            content = ExportedContent.TemporaryFile(path = "/exports/copy.zip", size = size.toLong()),
+            content = ExportedContent.TemporaryFile(path = "/exports/copy.zip", size = size.toLong(), storedName = "copy.zip"),
         )
     }
 

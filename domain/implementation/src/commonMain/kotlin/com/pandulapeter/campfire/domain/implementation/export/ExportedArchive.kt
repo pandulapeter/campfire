@@ -15,9 +15,10 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.ExportFileRepository
 
 /**
- * [entries] and then the pictures they name ([images]) as a zip archive called [name], written into a temporary file
- * one entry at a time, knowing what an import would unpack it to, since its entries are compressed, and how much of
- * that is pictures and attachments. Null, the file removed, where not one entry could be read. Whatever ends the packing
+ * [entries] and then the pictures they name ([images]) as a zip archive called [name], written one entry at a time into
+ * a temporary file of its own (numbered where another export of that name is in the folder, the [ExportedFile] still
+ * called [name]), knowing what an import would unpack it to, since its entries are compressed, and how much of that is
+ * pictures and attachments. Null, the file removed, where not one entry could be read. Whatever ends the packing
  * early (a failure, a cancellation) removes the file before it is passed on.
  */
 internal suspend fun exportedArchive(
@@ -28,7 +29,7 @@ internal suspend fun exportedArchive(
     images: ExportedImages,
     isDated: Boolean,
 ): ExportedFile? {
-    val writer = exportFileRepository.create(name)
+    val writer = exportFileRepository.createUnique(name)
     val packed = try {
         archiveRepository.pack(entries = entries + images.entries, isDated = isDated, sink = writer)
     } catch (throwable: Throwable) {

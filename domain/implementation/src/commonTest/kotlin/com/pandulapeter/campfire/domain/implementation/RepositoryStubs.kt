@@ -228,9 +228,10 @@ internal class FakeExportFileRepository : ExportFileRepository {
 
     override suspend fun clear() = files.clear()
 
-    override suspend fun create(name: String): ExportFileWriter = object : ExportFileWriter {
+    /** Made at once, as the exports folder makes it, so that a second export of the name in flight is numbered. */
+    private fun create(name: String): ExportFileWriter = object : ExportFileWriter {
         override val name = name
-        private var bytes = ByteArray(0)
+        private var bytes = ByteArray(0).also { files[name] = it }
 
         override val position get() = bytes.size.toLong()
 
@@ -240,10 +241,11 @@ internal class FakeExportFileRepository : ExportFileRepository {
 
         override suspend fun finish(): ExportedContent.TemporaryFile {
             files[name] = bytes
-            return ExportedContent.TemporaryFile(path = "/exports/$name", size = position)
+            return ExportedContent.TemporaryFile(path = "/exports/$name", size = position, storedName = name)
         }
 
         override suspend fun abandon() {
+            files -= name
             discarded += name
         }
     }
@@ -257,11 +259,11 @@ internal class FakeExportFileRepository : ExportFileRepository {
 
     override suspend fun read(file: ExportedFile) = when (val content = file.content) {
         is ExportedContent.Bytes -> content.bytes
-        is ExportedContent.TemporaryFile -> files[file.name]
+        is ExportedContent.TemporaryFile -> files[content.storedName]
     }
 
     override suspend fun discard(file: ExportedFile) {
-        files -= file.name
+        (file.content as? ExportedContent.TemporaryFile)?.let { files -= it.storedName }
         discarded += file.name
     }
 }

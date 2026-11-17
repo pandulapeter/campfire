@@ -80,7 +80,7 @@ internal class ExportedFileTest {
         ExportedFile(
             name = "songs.zip",
             mimeType = ExportedFile.ZIP_MIME_TYPE,
-            content = ExportedContent.TemporaryFile(path = "/exports/songs.zip", size = size),
+            content = ExportedContent.TemporaryFile(path = "/exports/songs.zip", size = size, storedName = "songs.zip"),
             unpackedSize = unpackedSize,
             unpackedImageSize = unpackedImageSize,
             unpackedAttachmentSize = unpackedAttachmentSize,

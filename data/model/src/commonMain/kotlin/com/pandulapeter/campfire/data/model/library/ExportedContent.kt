@@ -25,12 +25,14 @@ sealed interface ExportedContent {
 
     /**
      * A file in the app's exports folder, at [path] as the platform names it (absolute, on the web from the root of the
-     * origin private file system), and named as the [ExportedFile] is, so that a share sheet given it shows that name.
-     * Whoever it is handed to (a platform's save or share) removes it, or moves it out of the way, once nothing reads it
-     * any more; what is left of one is emptied with the folder on the next launch.
+     * origin private file system), and named [storedName] there: as the [ExportedFile] is, so that a share sheet given it
+     * shows that name, unless another export of that name was in the folder, which numbers this one (`_2`). Whoever it is
+     * handed to (a platform's save or share) removes it, or moves it out of the way, once nothing reads it any more; what
+     * is left of one is emptied with the folder on the next launch.
      */
     data class TemporaryFile(
         val path: String,
         override val size: Long,
+        val storedName: String,
     ) : ExportedContent
 }

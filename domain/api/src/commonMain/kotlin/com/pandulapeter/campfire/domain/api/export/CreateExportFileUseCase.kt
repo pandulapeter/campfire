@@ -12,9 +12,10 @@ package com.pandulapeter.campfire.domain.api.export
 import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 
 /**
- * A temporary file called [name] for an export the caller writes itself (a PDF, page by page), replacing one of that
- * name. The caller ends it with `finish` or `abandon`, and owns the file `finish` answers until it hands it to the
- * platform or to [DiscardExportedFileUseCase]. Throws where the file cannot be made.
+ * A temporary file called [name] for an export the caller writes itself (a PDF, page by page), numbered where another
+ * export of that name is in the folder (the writer's `name` says which), so that two in flight never share one. The
+ * caller ends it with `finish` or `abandon`, and owns the file `finish` answers until it hands it to the platform or to
+ * [DiscardExportedFileUseCase]. Throws where the file cannot be made.
  */
 interface CreateExportFileUseCase {
 

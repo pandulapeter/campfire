@@ -26,8 +26,8 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 /**
- * The folder is emptied once per process, before anything is written into it: [clear] on launch, or the first [create]
- * where an export comes first, so an export can never be one of the files the emptying removes.
+ * The folder is emptied once per process, before anything is written into it: [clear] on launch, or the first
+ * [createUnique] where an export comes first, so an export can never be one of the files the emptying removes.
  */
 @Single
 internal class ExportFileLocalSourceImpl(
@@ -62,11 +62,6 @@ internal class ExportFileLocalSourceImpl(
         }
     }
 
-    override suspend fun create(name: String): ExportFileWriter {
-        clear()
-        return open(name)
-    }
-
     override suspend fun createUnique(name: String): ExportFileWriter {
         clear()
         return naming.withLock { open(fileStorage.uniqueName(StorageDirectory.EXPORTS, name)) }
@@ -79,13 +74,14 @@ internal class ExportFileLocalSourceImpl(
 
     override suspend fun read(file: ExportedFile) = when (val content = file.content) {
         is ExportedContent.Bytes -> content.bytes
-        is ExportedContent.TemporaryFile -> fileStorage.readBytes(StorageDirectory.EXPORTS, file.name)
+        is ExportedContent.TemporaryFile -> fileStorage.readBytes(StorageDirectory.EXPORTS, content.storedName)
     }
 
+    /** By the name it is stored under, which another export of the same name in flight does not share. */
     override suspend fun discard(file: ExportedFile) {
-        if (file.content !is ExportedContent.TemporaryFile) return
+        val content = file.content as? ExportedContent.TemporaryFile ?: return
         try {
-            withContext(NonCancellable) { fileStorage.delete(StorageDirectory.EXPORTS, file.name) }
+            withContext(NonCancellable) { fileStorage.delete(StorageDirectory.EXPORTS, content.storedName) }
         } catch (exception: Exception) {
             logger.log("Could not remove the export \"${file.name}\": ${exception.message}")
         }
@@ -103,7 +99,7 @@ internal class ExportFileLocalSourceImpl(
 
         override suspend fun finish(): ExportedContent.TemporaryFile {
             sink.close()
-            return ExportedContent.TemporaryFile(path = path, size = sink.position)
+            return ExportedContent.TemporaryFile(path = path, size = sink.position, storedName = name)
         }
 
         override suspend fun abandon() = sink.abandon()

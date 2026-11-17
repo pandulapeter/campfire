@@ -20,7 +20,9 @@
 - **An archive is a file, never held whole** (`exportedArchive`): written into `exports/` entry by entry, each read
   only when the writer reaches it (the library's songs 64 at a time), an entry read as nothing left out, and the file
   removed on any failure, a cancellation, or no entry at all. Whoever gets the `ExportedFile` owns its file: the
-  platform once handed over, else `DiscardExportedFileUseCase` (a shared link's copy is read back and discarded).
+  platform once handed over, else `DiscardExportedFileUseCase` (a shared link's copy is read back and discarded). Every
+  export file, a PDF's too, is numbered where its name is in the folder (`createUnique`), and read and discarded by the
+  name it is stored under (`TemporaryFile.storedName`), so two of one name in flight never share a file.
 - A zip is dated when the user saves it; a shared link's copy (`isSharedCopy`) is undated, so it packs to the same
   bytes wherever and whenever it is built, and carries only the attachments `sharedCopyAttachments` picks within their
   budget (by the listed sizes, decided when the first `images/` entry is reached), counting the rest

@@ -30,18 +30,18 @@ internal class ExportFileLocalSourceImplTest {
     fun `what an earlier process left is gone before the first export is written`() = runTest {
         fileStorage.writeBytes(StorageDirectory.EXPORTS, "left.zip", ByteArray(5))
 
-        val writer = localSource.create("songs.zip")
+        val writer = localSource.createUnique("songs.zip")
         writer.write(ByteArray(3) { 7 }, 0, 3)
         val content = writer.finish()
 
         assertEquals(listOf("songs.zip"), fileStorage.listNames(StorageDirectory.EXPORTS))
-        assertEquals(ExportedContent.TemporaryFile(path = fileStorage.pathOf(StorageDirectory.EXPORTS, "songs.zip"), size = 3), content)
+        assertEquals(ExportedContent.TemporaryFile(path = fileStorage.pathOf(StorageDirectory.EXPORTS, "songs.zip"), size = 3, storedName = "songs.zip"), content)
     }
 
     @Test
     fun `the folder is emptied once per process and never under an export already written`() = runTest {
         localSource.clear()
-        localSource.create("songs.zip").finish()
+        localSource.createUnique("songs.zip").finish()
 
         localSource.clear()
 
@@ -50,7 +50,7 @@ internal class ExportFileLocalSourceImplTest {
 
     @Test
     fun `a finished export reads back and is removed when discarded`() = runTest {
-        val writer = localSource.create("songs.pdf")
+        val writer = localSource.createUnique("songs.pdf")
         writer.write("%PDF".encodeToByteArray(), 0, 4)
         val file = ExportedFile(name = "songs.pdf", mimeType = ExportedFile.PDF_MIME_TYPE, content = writer.finish())
 
@@ -62,8 +62,8 @@ internal class ExportFileLocalSourceImplTest {
 
     @Test
     fun `a copy that must be unique is numbered past every name the folder holds in any case`() = runTest {
-        localSource.create("Sheet.pdf").finish()
-        localSource.create("sheet_2.pdf").finish()
+        localSource.createUnique("Sheet.pdf").finish()
+        localSource.createUnique("sheet_2.pdf").finish()
 
         val writer = localSource.createUnique("Sheet.pdf")
         writer.finish()
@@ -73,8 +73,23 @@ internal class ExportFileLocalSourceImplTest {
     }
 
     @Test
+    fun `two exports of one name in flight keep their own bytes and discarding one leaves the other`() = runTest {
+        val first = localSource.createUnique("songs.zip")
+        val second = localSource.createUnique("songs.zip")
+        first.write(byteArrayOf(1), 0, 1)
+        second.write(byteArrayOf(2, 2), 0, 2)
+        val firstFile = ExportedFile(name = "songs.zip", mimeType = ExportedFile.ZIP_MIME_TYPE, content = first.finish())
+        val secondFile = ExportedFile(name = "songs.zip", mimeType = ExportedFile.ZIP_MIME_TYPE, content = second.finish())
+
+        localSource.discard(firstFile)
+
+        assertEquals(null, localSource.read(firstFile))
+        assertContentEquals(byteArrayOf(2, 2), localSource.read(secondFile))
+    }
+
+    @Test
     fun `an abandoned export leaves nothing behind`() = runTest {
-        val writer = localSource.create("songs.zip")
+        val writer = localSource.createUnique("songs.zip")
         writer.write(ByteArray(3), 0, 3)
 
         writer.abandon()

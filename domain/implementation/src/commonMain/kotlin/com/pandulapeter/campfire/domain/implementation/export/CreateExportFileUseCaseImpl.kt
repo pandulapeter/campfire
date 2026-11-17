@@ -18,5 +18,5 @@ internal class CreateExportFileUseCaseImpl(
     private val exportFileRepository: ExportFileRepository,
 ) : CreateExportFileUseCase {
 
-    override suspend operator fun invoke(name: String) = exportFileRepository.create(name)
+    override suspend operator fun invoke(name: String) = exportFileRepository.createUnique(name)
 }

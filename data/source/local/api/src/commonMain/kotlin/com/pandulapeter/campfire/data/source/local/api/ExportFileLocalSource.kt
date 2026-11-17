@@ -22,13 +22,11 @@ interface ExportFileLocalSource {
     /** Empties the folder of what an earlier process left (a crash, a share still being read). Called once on launch. */
     suspend fun clear()
 
-    /** A new file called [name], replacing one of that name. Throws [LibraryStorageException] where it cannot be made. */
-    suspend fun create(name: String): ExportFileWriter
-
     /**
      * A new file called [name], or where the folder holds one of that name, the first free one numbered before its
-     * extension (`_2`, `_3`…; the writer's `name` says which): for a copy handed to another app, which may still have the
-     * last one of that name open. Throws [LibraryStorageException] where it cannot be made.
+     * extension (`_2`, `_3`…; the writer's `name` says which): two exports of one name in flight never write into or
+     * discard each other's file, and another app may still have the last one of that name open. Throws
+     * [LibraryStorageException] where it cannot be made.
      */
     suspend fun createUnique(name: String): ExportFileWriter
 
