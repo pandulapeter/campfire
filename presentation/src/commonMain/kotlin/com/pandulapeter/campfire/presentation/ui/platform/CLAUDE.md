@@ -46,8 +46,12 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
 - The run started by leaving the app (`AppExitController.onAppPaused`) is handed over from the ON_PAUSE callback itself,
   not through state: turning the screen off pauses and stops with no frame between, and shells can only be told while in
   front.
-- `SyncNotificationScheduler` (both phone shells, tested): progress throttled to one post per interval; the keep-alive
-  released only after a 2 s grace with no run, so a chained run can start in it.
+- `BackgroundNotificationScheduler` (both phone shells, sync and import, tested): progress throttled to one post per
+  interval; the keep-alive released only after a 2 s grace with no run, so a chained run (a download's unpacking) can
+  start in it.
+- `ImportNotifier` hands the shells an import's words the same way (`ImportNotification`, resolved by
+  `ui/ImportNotificationEffect.kt`); the shells watch `ImportWork` themselves and render the text with
+  `state/importing/ImportNotificationText.kt`.
 - `BeatHaptics.kt`: web vibration only where `navigator.vibrate` can vibrate; on Android felt while composed, not only
   resumed. Every heard click is felt, at three strengths (`BeatTap`).
 

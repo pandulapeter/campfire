@@ -169,6 +169,8 @@
     <string name="import_failed_no_space">Questa importazione richiede %1$s di spazio libero, più di quello disponibile su questo dispositivo; libera spazio e riprova.</string>
     <string name="import_failed_no_space_unknown">Non c\'è abbastanza spazio libero su questo dispositivo per questa importazione; libera spazio e riprova.</string>
     <string name="import_failed_wrapped_archive">Questo archivio supera i 4 GB ed è stato creato da uno strumento che danneggia gli archivi così grandi; comprimi di nuovo i file in parti più piccole o con un altro strumento.</string>
+    <string name="import_failed_interrupted">L\'importazione si è interrotta perché Campfire non ha potuto continuare a lavorare in background. Non è stato importato nulla; riprova per ricominciarla da capo.</string>
+    <string name="import_notification_channel">Importazioni</string>
     <string name="import_retry">Riprova</string>
     <string name="import_review_title">Rivedi importazione</string>
     <string name="import_review_title_empty">Niente da importare</string>

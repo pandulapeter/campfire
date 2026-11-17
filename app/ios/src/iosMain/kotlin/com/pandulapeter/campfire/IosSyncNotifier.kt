@@ -12,7 +12,7 @@ package com.pandulapeter.campfire
 import com.pandulapeter.campfire.data.model.sync.SyncProgress
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
-import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
+import com.pandulapeter.campfire.presentation.ui.platform.BackgroundNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlinx.coroutines.MainScope
@@ -67,7 +67,7 @@ class IosSyncNotifier(
     private var words: SyncNotification? = null
     private var progress: SyncProgress? = null
     private var isInBackground = false
-    private val scheduler = SyncNotificationScheduler(
+    private val scheduler = BackgroundNotificationScheduler(
         scope = scope,
         updateInterval = 1.seconds,
         handoverGrace = 2.seconds,
@@ -165,7 +165,7 @@ class IosSyncNotifier(
 
     /**
      * Gives the background task back after the scheduler's handover grace rather than at once, for a run chained behind
-     * this one to start in (see [SyncNotificationScheduler.scheduleRelease]). Only a task this notifier began.
+     * this one to start in (see [BackgroundNotificationScheduler.scheduleRelease]). Only a task this notifier began.
      */
     private fun scheduleBackgroundTaskEnd() {
         if (backgroundTask != UIBackgroundTaskInvalid) scheduler.scheduleRelease()

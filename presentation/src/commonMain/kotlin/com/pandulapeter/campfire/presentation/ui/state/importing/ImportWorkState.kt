@@ -25,5 +25,11 @@ enum class ImportWorkState {
     UNPACKING,
 
     /** Writing what the review chose (or the demo library); never cancelled once started. */
-    WRITING,
+    WRITING;
+
+    /**
+     * Whether [ImportWork.cancel] would end this work, which is what a platform offers Cancel for: everything before the
+     * write, which leaves the library as it was.
+     */
+    val isCancellable get() = this == RECEIVING || this == DOWNLOADING || this == UNPACKING
 }

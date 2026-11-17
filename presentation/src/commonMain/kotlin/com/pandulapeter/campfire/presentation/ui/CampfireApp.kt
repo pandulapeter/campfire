@@ -107,6 +107,7 @@ fun CampfireApp(
 ) {
     ImportHandOverEffects(viewModel = viewModel, filesToImport = filesToImport, sharedTexts = sharedTexts, shareLinks = shareLinks)
     val showSyncNotification = rememberSyncNotifications(viewModel.syncController.syncState)
+    ImportNotificationEffect()
     MetronomeNotificationEffect(metronomeController = viewModel.metronomeController, songsByFileNameFlow = viewModel.libraryState.songsByFileName)
     MetronomeHapticsEffect(viewModel.metronomeController)
     ProvideCoverArtImageLoader()

@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.sync.SyncState
 import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
-import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationScheduler
+import com.pandulapeter.campfire.presentation.ui.platform.BackgroundNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,7 @@ class CampfireSyncService : Service() {
     private var words: Words? = null
     private var completed = 0
     private var total = 0
-    private val scheduler = SyncNotificationScheduler(
+    private val scheduler = BackgroundNotificationScheduler(
         scope = scope,
         updateInterval = 500.milliseconds,
         handoverGrace = 2.seconds,
@@ -168,7 +168,7 @@ class CampfireSyncService : Service() {
 
     /**
      * Stops the service once no run has been going for the scheduler's handover grace, for a run chained behind this
-     * one to start in (see [SyncNotificationScheduler.scheduleRelease]).
+     * one to start in (see [BackgroundNotificationScheduler.scheduleRelease]).
      *
      * Only once the service is in the foreground: stopping before then would leave the system waiting for the
      * `startForeground` that `startForegroundService` promised it, which it treats as a crash of the app.

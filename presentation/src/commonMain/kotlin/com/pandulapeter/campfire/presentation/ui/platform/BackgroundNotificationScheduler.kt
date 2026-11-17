@@ -17,10 +17,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The two timings a phone shell's sync notification lives by, shared by the Android service and the iOS notifier: how
- * often a running count is posted, and how long whatever keeps the process alive outlives a run. What each shell
- * decides around them - when a run counts as chained, when there is anything to release - stays in the shell. Not
- * thread safe: every call, and [scope], is expected on the main thread.
+ * The two timings a phone shell's background notification lives by, shared by the sync and import keep-alives of the
+ * Android services and the iOS notifiers: how often a running count is posted, and how long whatever keeps the process
+ * alive outlives a run (a sync run, or an import's download, unpacking, or write). What each shell decides around them -
+ * when a run counts as chained, when there is anything to release - stays in the shell. Not thread safe: every call, and
+ * [scope], is expected on the main thread.
  *
  * @param updateInterval The least time between two posted counts.
  * @param handoverGrace How long [release] waits after a run for the one chained behind it, see [scheduleRelease].
@@ -28,7 +29,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param release Gives back what keeps the process alive. May call [cancelRelease] and [cancelUpdate] itself.
  * @param isRunGoing Whether a run is going at the moment the grace ends.
  */
-class SyncNotificationScheduler(
+class BackgroundNotificationScheduler(
     private val scope: CoroutineScope,
     private val updateInterval: Duration,
     private val handoverGrace: Duration = 2.seconds,

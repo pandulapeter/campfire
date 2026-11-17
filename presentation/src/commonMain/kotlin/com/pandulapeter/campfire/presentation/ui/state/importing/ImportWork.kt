@@ -18,9 +18,11 @@ import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,6 +90,9 @@ class ImportWork(
     /** The phase of an import the user asked for and how far into it it is, which the import screen shows. */
     internal val progress = MutableStateFlow<ImportProgress?>(null)
 
+    /** [progress] for the platforms that show the work in a notification beside [state] (`ImportNotificationText.kt`). */
+    val currentProgress: StateFlow<ImportProgress?> = progress.asStateFlow()
+
     /**
      * The preparation under way, or finished with nobody yet to take what it came to: the one [cancel] ends, and the one
      * a view model left behind for the next. Let go of with [release] by the controller that took its outcome.
@@ -138,7 +143,25 @@ class ImportWork(
     internal fun prepare(request: ImportRequest, isReviewed: Boolean): Pending {
         isPreparationCancelled = false
         val count = ++preparationCount
-        val outcome = scope.async { prepared(request = request, count = count) }
+        val interruption = CompletableDeferred<Unit>().also { preparationInterruption = it }
+        val outcome = scope.async {
+            // A child, so that the outcome of an interrupted preparation is only ready once it has cleaned up after
+            // itself, as a cancelled one's is.
+            val preparing = async { prepared(request = request, count = count) }
+            val interrupting = launch {
+                interruption.await()
+                preparing.cancel()
+            }
+            try {
+                preparing.await()
+            } catch (exception: CancellationException) {
+                ensureActive()
+                if (!interruption.isCompleted) throw exception
+                Preparation.Failed(ImportFailure.INTERRUPTED)
+            } finally {
+                interrupting.cancel()
+            }
+        }
         return Pending(request = request, isReviewed = isReviewed, outcome = outcome).also { preparation = it }
     }
 
@@ -161,6 +184,19 @@ class ImportWork(
         isPreparationCancelled = true
         pending.outcome.cancel()
     }
+
+    /**
+     * Ends a preparation because the platform will not keep the app working any longer (Android's daily allowance for a
+     * data sync service, iOS's background time or its continued task expiring), rather than because the user asked: the
+     * staging is deleted as by [cancel], but the import ends in [ImportFailure.INTERRUPTED], which the import screen shows
+     * with Try again on the user's return. Like [cancel], nothing once the write has started.
+     */
+    fun interrupt() {
+        preparationInterruption?.complete(Unit)
+    }
+
+    /** Completed by [interrupt] to end the latest preparation, see [prepare]. */
+    private var preparationInterruption: CompletableDeferred<Unit>? = null
 
     /**
      * Writes what the review chose. Run on [scope] and never cancelled (the use case writes `NonCancellable` as well), so

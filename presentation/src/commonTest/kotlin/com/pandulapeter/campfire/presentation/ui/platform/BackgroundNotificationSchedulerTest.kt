@@ -19,13 +19,13 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-class SyncNotificationSchedulerTest {
+class BackgroundNotificationSchedulerTest {
 
     private class Harness(scope: CoroutineScope, onRelease: Harness.() -> Unit = {}) {
         var posts = 0
         var releases = 0
         var isRunGoing = false
-        val scheduler: SyncNotificationScheduler = SyncNotificationScheduler(
+        val scheduler: BackgroundNotificationScheduler = BackgroundNotificationScheduler(
             scope = scope,
             updateInterval = INTERVAL,
             handoverGrace = GRACE,

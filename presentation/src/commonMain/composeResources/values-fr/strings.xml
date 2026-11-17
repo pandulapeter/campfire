@@ -169,6 +169,8 @@
     <string name="import_failed_no_space">Cette importation nécessite %1$s d\'espace libre, plus qu\'il n\'en reste sur cet appareil ; libère de l\'espace et réessaie.</string>
     <string name="import_failed_no_space_unknown">Il n\'y a pas assez d\'espace libre sur cet appareil pour cette importation ; libère de l\'espace et réessaie.</string>
     <string name="import_failed_wrapped_archive">Cette archive dépasse 4 Go et a été créée par un outil qui endommage les archives de cette taille ; compresse à nouveau les fichiers en parties plus petites ou avec un autre outil.</string>
+    <string name="import_failed_interrupted">L\'importation s\'est arrêtée, car Campfire n\'a pas pu continuer en arrière-plan. Rien n\'a été importé ; réessaie pour la recommencer.</string>
+    <string name="import_notification_channel">Importations</string>
     <string name="import_retry">Réessayer</string>
     <string name="import_review_title">Vérifier l\'importation</string>
     <string name="import_review_title_empty">Rien à importer</string>

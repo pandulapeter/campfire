@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.import_failed_interrupted
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_gone
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable
 import com.pandulapeter.campfire.presentation.resources.import_failed_link_unreachable_untitled
@@ -53,6 +54,7 @@ internal fun ImportFailedContent(
         ImportFailure.NO_SPACE -> failure.neededBytes?.let { stringResource(Res.string.import_failed_no_space, formattedSize(it)) }
             ?: stringResource(Res.string.import_failed_no_space_unknown)
         ImportFailure.WRAPPED_ARCHIVE -> stringResource(Res.string.import_failed_wrapped_archive)
+        ImportFailure.INTERRUPTED -> stringResource(Res.string.import_failed_interrupted)
     },
     style = MaterialTheme.typography.bodyLarge,
     textAlign = TextAlign.Center,

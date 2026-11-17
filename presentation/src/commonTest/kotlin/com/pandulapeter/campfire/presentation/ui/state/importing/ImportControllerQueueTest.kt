@@ -1180,6 +1180,42 @@ class ImportControllerQueueTest {
         assertTrue(messageSink.messageQueue.value.isEmpty())
     }
 
+    @Test
+    fun `an interrupted preparation cleans up, fails with Try again, and Try again reads the batch again`() = runTest {
+        prepareGate = CompletableDeferred()
+        val cleanupGate = CompletableDeferred<Unit>()
+        onPrepareEnded = { withContext(NonCancellable) { cleanupGate.await() } }
+        startController()
+        enqueueTwoSongs()
+        settle()
+        work.interrupt()
+        settle()
+        assertIs<ImportReport.Loading>(reportState.importReport.value)
+        cleanupGate.complete(Unit)
+        settle()
+        assertEquals(ImportWorkState.IDLE, work.state.value)
+        assertEquals(ImportFailure.INTERRUPTED, assertIs<ImportReport.Failed>(reportState.importReport.value).reason)
+        prepareGate = null
+        onPrepareEnded = {}
+        controller.retryImport()
+        settle()
+        assertEquals(2, prepareCount)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+    }
+
+    @Test
+    fun `an interruption once the plan is ready leaves the review alone`() = runTest {
+        startController()
+        enqueueTwoSongs()
+        settle()
+        work.interrupt()
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        controller.confirmImport()
+        settle()
+        assertEquals(1, importCount)
+    }
+
     /**
      * Two song files, which the import screen is put up for while they are read (see [isReportedWhileRead]), planned as
      * two songs, which it reviews rather than previews.

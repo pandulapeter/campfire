@@ -67,7 +67,7 @@ Play Store app only, read on a first launch (`presentation/src/androidMain/CLAUD
   process alive. Strings arrive in the intent, so the notification follows the in-app language.
 - **Runs only while the app is not in front**: otherwise every edit's run would flash a notification. `SyncServiceStarter`
   starts it in `onPause` (not on rotation), or at once for a run handed over after that, and stops it in `onResume`.
-- Notification updates at most twice a second (`SyncNotificationScheduler`); Android sheds more than five a second.
+- Notification updates at most twice a second (`BackgroundNotificationScheduler`); Android sheds more than five a second.
 - It watches `GetSyncStateUseCase` itself and stops when no run is going (the activity may be gone), after a 2 s grace
   so a chained run, typically started in the background where the service couldn't be restarted, keeps it.
 - **Only ever stops itself after `startForeground`**, or the system treats the missing foreground call as a crash.

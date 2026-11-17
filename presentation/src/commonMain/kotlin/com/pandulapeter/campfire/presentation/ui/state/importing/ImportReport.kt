@@ -133,6 +133,12 @@ enum class ImportFailure {
      * Utility, some Windows tools), so its offsets have wrapped around: never recovered, the user zips it again.
      */
     WRAPPED_ARCHIVE,
+
+    /**
+     * The platform stopped keeping the app working while the import was read in the background (`ImportWork.interrupt`):
+     * nothing was imported, and trying again reads the same files again.
+     */
+    INTERRUPTED,
 }
 
 /**
