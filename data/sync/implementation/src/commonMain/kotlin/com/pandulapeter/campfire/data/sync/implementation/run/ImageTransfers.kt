@@ -25,6 +25,8 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -43,6 +45,15 @@ internal class ImageTransfers(
     private val logger: Logger,
     private val imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit,
 ) {
+
+    /**
+     * The folder's copies found not to be what their names say, by name, with the content hash the folder gave them: one
+     * is not downloaded again while the listing shows it unchanged, which would fetch the whole file on every run and
+     * every change of the folder only to refuse it again. In memory for the life of the process (the engine is one), and
+     * forgotten once the listing shows other content under the name or none.
+     */
+    private val damagedInFolder = mutableMapOf<String, String>()
+    private val damagedInFolderLock = Mutex()
 
     /**
      * The pass's deletions of pictures here, as one batch: the plan knew what the songs named when the run listed the
@@ -102,8 +113,12 @@ internal class ImageTransfers(
     suspend fun bringDown(pass: SyncPass, key: SyncKey, revision: String): SyncEngine.OperationOutcome {
         val (settled, sizeHere) = settleWithCopyHere(pass, key, revision)
         if (settled != null) return settled
+        if (isKnownDamaged(pass, key)) return failed(key, "the cloud folder's copy is still the damaged one, not downloaded again")
         val downloaded = pass.downloadWithinLimit(key)
-        if (!isIntact(key, downloaded.bytes)) return failed(key, "the cloud folder's copy is not the picture its name says")
+        if (!isIntact(key, downloaded.bytes)) {
+            pass.run.provider.contentHashOf(downloaded.bytes)?.let { hash -> damagedInFolderLock.withLock { damagedInFolder[key.name] = hash } }
+            return failed(key, "the cloud folder's copy is not the picture its name says")
+        }
         val isWritten = libraryFileLock.withLock {
             // Anything intact under this name is this very picture, written meanwhile by an import or a Save. Only a file
             // that was not there before the download, or is of another size now, can be one, so only such a file is read.
@@ -125,6 +140,12 @@ internal class ImageTransfers(
             entries = mapOf(key to SyncIndexEntry(localHashOf(key, downloaded.bytes), downloaded.revision)),
             summary = if (isWritten) SyncSummary(downloaded = 1) else SyncSummary(),
         )
+    }
+
+    /** Whether the folder's copy is one found damaged before, unchanged since; forgets every other one first. */
+    private suspend fun isKnownDamaged(pass: SyncPass, key: SyncKey) = damagedInFolderLock.withLock {
+        damagedInFolder.entries.removeAll { (name, hash) -> pass.remoteFiles[SyncKey(kind = LibraryFileKind.FILE, name = name)]?.contentHash != hash }
+        key.name in damagedInFolder
     }
 
     /**
