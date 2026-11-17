@@ -54,6 +54,24 @@
         android:required="false" />
 
     <!--
+      Which apps open a song's attachment, so that Campfire can leave itself out of the list it offers (its own alias
+      takes many of the same types, to import them). Without these, Android 11 and later would show it almost no app,
+      and every attachment would read as one nothing opens. The second asks for the apps that claim content addresses
+      only, as the attachment's address is one.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data
+                android:mimeType="*/*"
+                android:scheme="content" />
+        </intent>
+    </queries>
+    <!--
       The library is the only copy of the user's own work, so it is in the device's backup and in a transfer to a
       new phone, together with the settings: see the two rules files, one per generation of Android. That copy is
       made by the system, to wherever the user's device backs up to - the app's own process still makes no request

@@ -85,7 +85,8 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   name first (`ExportAttachmentUseCase`), so the opening app shows that name and never writes into the library; numbered
   (`_2`, `_3`…) where a copy of that name is there, since the app it went to may still have it open. Android:
   `ACTION_VIEW` on a `FileProvider` address in `cacheDir/shared` (the copy moved there, numbered the same way), no app a
-  `false`. iOS: Quick
+  `false`; Campfire's own import alias is left out of the apps offered (the manifest's `<queries>` let it see them), and
+  an empty query keeps the plain intent. iOS: Quick
   Look (`:app:ios`'s `IosFileOpener`, provided through `LocalIosFileOpener`), over the topmost presented controller, its
   share button the way to any other app. Desktop: `Desktop.open`, else `open` / `xdg-open` / `cmd /c start` (their exit
   code answers); the Mac App Store sandbox allows it, since Launch Services opens a file in the app's own container and
