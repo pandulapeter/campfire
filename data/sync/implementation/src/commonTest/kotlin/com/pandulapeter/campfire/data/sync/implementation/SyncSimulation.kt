@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
@@ -472,7 +472,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png"), bytes)
         }
 
-        fun namedIn(text: String) = ChordProImages.referencedSources(text)
+        fun namedIn(text: String) = libraryFilesNamedBy(text)
 
         val SETLIST_NAMES = listOf("gig.setlist.json", "Gig.setlist.json", "gig (2).setlist.json", "rehearsal.setlist.json")
     }
