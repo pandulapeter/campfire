@@ -15,10 +15,10 @@ import java.io.File
 /**
  * The place each desktop operating system expects an application to keep the data it owns. The Microsoft Store build,
  * which the launcher tells its package family name, uses its package's own folder instead of `%APPDATA%`, where Windows
- * would put what it writes in a hidden copy of the folder rather than in the one the settings screen shows.
+ * would put what it writes in a hidden copy of the folder that Explorer does not show.
  *
- * The settings screen shows the resulting path, and cannot see this module, so it derives it the same way; keep the
- * two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
+ * The desktop app keeps its single-instance lock and its log beside the library, and cannot see this module, so
+ * `:presentation` derives the same path; keep the two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
  */
 @Single
 internal class DesktopFileStorage : FileStorage by JvmFileStorage(desktopDataDirectory())

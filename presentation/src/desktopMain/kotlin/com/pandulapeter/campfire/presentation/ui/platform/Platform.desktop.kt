@@ -68,7 +68,7 @@ private val isWindows get() = !isMacOs && operatingSystem.contains("win")
  *
  * The Microsoft Store build keeps them in its package's own folder, which it is told the name of by the launcher (see
  * `packageReleaseMsix`): Windows gives a packaged app's writes under `%APPDATA%` to a hidden copy of the folder that
- * Explorer does not show, so the path the "Location" row opened would not be where the library is.
+ * Explorer does not show, where nothing outside the app would find the library.
  *
  * Derived the same way the storage derives it; the two have to agree, so keep this in step with
  * `DesktopFileStorage.kt` in `:data:source:local:implementation`.
