@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.formats.zip.WrappedArchiveException
 import com.pandulapeter.campfire.data.formats.zip.ZipEntry
 import com.pandulapeter.campfire.data.formats.zip.ZipWriter
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -16,8 +17,12 @@ import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.InMemoryFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.staging.LimitedFileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSource
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
@@ -176,6 +181,36 @@ class StreamingArchiveUnpackTest {
 
         assertEquals(staged.size, unpacks.staging.ledger.reservedBy(request.id))
         assertEquals(0, unpacks.staging.ledger.outstanding())
+    }
+
+    @Test
+    fun `an archive past 4 GB written without ZIP64 ends the unpack as wrapped and not as a damaged one`() = runBlocking {
+        val delegate = InMemoryFileStorage()
+        val endRecord = byteArrayOf(0x50, 0x4B, 5, 6) + ByteArray(18)
+        val wrappedSize = 5L shl 30
+        // Every staged archive reads as the end record of a 5 GiB file with no ZIP64 locator before it.
+        val storage = object : FileStorage by delegate {
+            override suspend fun openSource(directory: StorageDirectory, name: String) = object : FileSource {
+                override val size = wrappedSize
+
+                override suspend fun read(position: Long, buffer: ByteArray, offset: Int, length: Int): Int {
+                    val count = minOf(length.toLong(), size - position).toInt().coerceAtLeast(0)
+                    for (index in 0 until count) {
+                        val at = position + index - (size - endRecord.size)
+                        buffer[offset + index] = if (at >= 0) endRecord[at.toInt()] else 0
+                    }
+                    return count
+                }
+
+                override suspend fun close() = Unit
+            }
+        }
+        val unpacks = ArchiveUnpacks(storage)
+        val staged = unpacks.stage(picturesArchive())
+
+        assertFailsWith<WrappedArchiveException> { unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE) }
+
+        assertEquals(listOf(staged.name), unpacks.stagedNames())
     }
 
     /**

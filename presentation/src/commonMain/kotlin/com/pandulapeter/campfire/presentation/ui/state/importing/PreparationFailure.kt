@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.importing
 
+import com.pandulapeter.campfire.data.formats.zip.WrappedArchiveException
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.presentation.ui.messages.Message
@@ -17,7 +18,9 @@ import com.pandulapeter.campfire.presentation.ui.messages.Message
  * What a preparation that threw [exception] tells the user: the one place a thrown failure becomes an [ImportFailure].
  * A device out of room is [ImportFailure.NO_SPACE], with the space needed where staging said how much
  * ([StagingRefusedException.NoSpace]; a write the storage itself refused cannot say); more than one import may stage
- * ([StagingRefusedException.TooLarge]) is [ImportFailure.TOO_LARGE]; anything else is a file that could not be read.
+ * ([StagingRefusedException.TooLarge]) is [ImportFailure.TOO_LARGE]; an archive past 4 GB its tool wrote without ZIP64
+ * ([WrappedArchiveException]) is [ImportFailure.WRAPPED_ARCHIVE], never a damaged one; anything else is a file that
+ * could not be read.
  */
 internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
     val causes = generateSequence<Throwable>(exception) { it.cause.takeIf { cause -> cause !== it } }.take(MAX_CAUSE_DEPTH)
@@ -27,6 +30,7 @@ internal fun preparationFailureOf(exception: Exception): Preparation.Failed {
             neededBytes = causes.firstNotNullOfOrNull { it as? StagingRefusedException.NoSpace }?.neededBytes,
         )
         causes.any { it is StagingRefusedException.TooLarge } -> Preparation.Failed(ImportFailure.TOO_LARGE)
+        causes.any { it is WrappedArchiveException } -> Preparation.Failed(ImportFailure.WRAPPED_ARCHIVE)
         else -> Preparation.Failed(ImportFailure.UNREADABLE)
     }
 }
