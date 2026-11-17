@@ -276,7 +276,7 @@ internal object Inflater {
     }
 
     /** A canonical Huffman code: how many symbols use each bit length, and the symbols themselves in canonical order. */
-    private class Huffman(lengths: IntArray, allowIncomplete: Boolean, what: String) {
+    internal class Huffman(lengths: IntArray, allowIncomplete: Boolean, what: String) {
 
         val count = IntArray(MAX_CODE_LENGTH + 1)
         val symbol: IntArray
@@ -332,38 +332,38 @@ internal object Inflater {
      */
     const val MAX_DECLARED_ENTRY_SIZE = 50 shl 20
 
-    private const val STORED = 0
-    private const val FIXED = 1
-    private const val DYNAMIC = 2
-    private const val MAX_CODE_LENGTH = 15
-    private const val MAX_LITERAL_CODES = 286
-    private const val MAX_DISTANCE_CODES = 30
-    private const val TOO_MANY_LENGTHS = "Dynamic deflate block declares more code lengths than it announced."
+    internal const val STORED = 0
+    internal const val FIXED = 1
+    internal const val DYNAMIC = 2
+    internal const val MAX_CODE_LENGTH = 15
+    internal const val MAX_LITERAL_CODES = 286
+    internal const val MAX_DISTANCE_CODES = 30
+    internal const val TOO_MANY_LENGTHS = "Dynamic deflate block declares more code lengths than it announced."
 
-    private val CODE_LENGTH_ORDER = intArrayOf(16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15)
+    internal val CODE_LENGTH_ORDER = intArrayOf(16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15)
 
-    private val LENGTH_BASE = intArrayOf(
+    internal val LENGTH_BASE = intArrayOf(
         3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
         35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258,
     )
 
-    private val LENGTH_EXTRA = intArrayOf(
+    internal val LENGTH_EXTRA = intArrayOf(
         0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
         3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0,
     )
 
-    private val DISTANCE_BASE = intArrayOf(
+    internal val DISTANCE_BASE = intArrayOf(
         1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
         257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577,
     )
 
-    private val DISTANCE_EXTRA = intArrayOf(
+    internal val DISTANCE_EXTRA = intArrayOf(
         0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
         7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
     )
 
     /** Literal/length lengths of the fixed code: 0-143 are 8 bits, 144-255 are 9, 256-279 are 7 and 280-287 are 8. */
-    private val fixedLengthCode = Huffman(
+    internal val fixedLengthCode = Huffman(
         lengths = IntArray(288) { symbol ->
             when {
                 symbol < 144 -> 8
@@ -377,7 +377,7 @@ internal object Inflater {
     )
 
     /** The fixed distance code: 32 five bit codes, of which 30 and 31 never appear in a valid stream. */
-    private val fixedDistanceCode = Huffman(
+    internal val fixedDistanceCode = Huffman(
         lengths = IntArray(32) { 5 },
         allowIncomplete = false,
         what = "fixed distance",

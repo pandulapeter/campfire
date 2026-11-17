@@ -92,6 +92,12 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   caller's import budget is charged before an entry is read; inflation stops at the declared size. Each entry's
   compressed bytes are charged once, and may not add up to more than the archive holds (zip bombs pointing many entries
   at the same bytes). The buffer starts at no more than 1 MiB whatever the directory claims.
+- **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
+  64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
+  topping up between symbols. `Inflater.inflate(ByteArray)` stays as it is (the PDF reader's, and the reference the
+  fuzz test holds the streaming one to: the same bytes or a `ZipException` from both). Output goes to an `EntrySink`
+  through `EntrySink.receive`, which holds it to the declared size, takes its CRC-32 and SHA-256, yields every 256 KiB,
+  and ends the sink exactly once: `close` with the SHA-256, or `abandon` on any failure or cancellation.
 - An unreadable entry is left out and reported by name (the module's one print); only an unwalkable archive is a
   `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a separator too

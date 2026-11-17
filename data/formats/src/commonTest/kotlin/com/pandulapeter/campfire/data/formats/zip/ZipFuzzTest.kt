@@ -115,6 +115,42 @@ internal class ZipFuzzTest {
         }
     }
 
+    @Test
+    fun `damaged deflate streams inflate alike in memory and streaming`() = runTest {
+        val streams = listOf(DYNAMIC_STREAM.hexToByteArray()) + List(4) { seed ->
+            ByteArrayBuilder().also { Deflater().deflate(data(Random(seed), maxSize = 100_000), it::u8) }.build()
+        }
+        repeat(MUTATIONS) { seed ->
+            val mutator = Mutator(seed)
+            val stream = mutator.mutate(streams[seed % streams.size])
+            val source = ByteArrayZipSource(stream)
+            val maxOutput = mutator.random.nextInt(0, 1_000)
+            val prefix = runCatching { Inflater.inflate(stream, maxOutput = maxOutput) }
+            val streamedPrefix = runCatching { Inflater.inflatePrefix(source, 0, stream.size.toLong(), maxOutput) }
+            assertAlike(prefix, streamedPrefix, "Seed $seed, a prefix of $maxOutput")
+            // The size the stream really inflates to, where it does, so that the whole of it is compared as often as not.
+            val whole = runCatching { Inflater.inflate(stream) }.getOrNull()
+            val declaredSize = if (whole != null && mutator.random.nextBoolean()) whole.size else mutator.random.nextInt(0, 200_000)
+            val inMemory = runCatching { Inflater.inflate(stream, expectedSize = declaredSize) }
+            val sink = RecordingEntrySink()
+            val streamed = runCatching {
+                Inflater.inflate(source, 0, stream.size.toLong(), declaredSize.toLong(), inMemory.getOrNull()?.let(Crc32::of) ?: 0, sink)
+                sink.bytes
+            }
+            assertAlike(inMemory, streamed, "Seed $seed, $declaredSize bytes declared")
+            assertTrue(sink.isAbandoned != (sink.sha256Hex != null), "Seed $seed ended its sink ${if (sink.isAbandoned) "twice" else "never"}")
+        }
+    }
+
+    /** The same bytes, or a [ZipException] from both. */
+    private fun assertAlike(expected: Result<ByteArray>, actual: Result<ByteArray>, message: String) {
+        listOf(expected, actual).forEach { result ->
+            result.exceptionOrNull()?.let { if (it !is ZipException) fail("$message failed with $it", it) }
+        }
+        assertEquals(expected.isSuccess, actual.isSuccess, "$message: ${expected.exceptionOrNull()} / ${actual.exceptionOrNull()}")
+        if (expected.isSuccess) assertContentEquals(expected.getOrThrow(), actual.getOrThrow(), message)
+    }
+
     /** Overwrites the size, offset, and count fields of the end record, the central directory, and the local headers. */
     private fun damageHeaders(mutator: Mutator, archive: ByteArray): ByteArray {
         val bytes = archive.copyOf()

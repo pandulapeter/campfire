@@ -28,6 +28,21 @@ internal object Crc32 {
         }
         return crc.inv().toLong() and 0xFFFFFFFFL
     }
+
+    /** What [update] starts from, before any byte. */
+    const val INITIAL = -1
+
+    /** Continues [crc], [INITIAL] or what an earlier call returned, over [length] bytes of [bytes] from [offset]. */
+    fun update(crc: Int, bytes: ByteArray, offset: Int, length: Int): Int {
+        var value = crc
+        for (index in offset until offset + length) {
+            value = (value ushr 8) xor table[(value xor bytes[index].toInt()) and 0xFF]
+        }
+        return value
+    }
+
+    /** The unsigned CRC-32 that a value [update] returned stands for. */
+    fun finish(crc: Int) = crc.inv().toLong() and 0xFFFFFFFFL
 }
 
 private const val POLYNOMIAL = 0xEDB88320.toInt()
