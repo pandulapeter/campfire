@@ -21,7 +21,7 @@ The web shell (page-side quirks: `app/web/CLAUDE.md`).
 - The media session is cleared from the engine's own playback state, not only from the composition, since a hidden tab's
   composition stops collecting.
 - Drops: a folder is read to the bottom like the desktop's, unknown names peeked at (`fileHead`) and read only as an
-  archive or a text; an unreadable file arrives empty and is reported as skipped. While archives are staged, a picked or
+  archive or a text; an unreadable file arrives empty and is reported as skipped. A picked or
   dropped archive's `File` is wrapped in a `PickedFile` and copied into the staging folder in JavaScript
   (`ReceivedArchive.take`, the storage's `OpfsTake.kt`), never crossing into Wasm; a quota refused on a write removes the
   partial file and ends as `NO_SPACE`. A drop with no file is text, a pasted

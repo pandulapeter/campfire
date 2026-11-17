@@ -27,19 +27,21 @@ platform difference is `normalizedToNfc` (expect/actual).
 `ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside is
 never kept (an unknown type is read only to check for a zip signature or text, flagged `isPlainTextByContent`), and an
 oversized one is reported, not loaded (a text name over its limit is read only to be kept as a zip,
-`ImportLimits.isReadAsText`). While archives are staged (`ImportIntake.stagesArchives`, the one switch, its value
-`STAGES_ARCHIVES`; only tests set it), the platforms peek at a file's head and ask `ImportBudget.take`, whose
+`ImportLimits.isReadAsText`). Archives are staged (`ImportIntake.stagesArchives`, on: `STAGES_ARCHIVES`; only tests
+turn it off, for the in-memory reference): the platforms peek at a file's head and ask `ImportBudget.take`, whose
 `ImportIntake.decide` stages an archive (by name, or a zip by its bytes under any name but a picture's or a document's)
 within `MAX_STAGED_ARCHIVE_SIZE`, costing the selection nothing, and reads everything else as `read` does: the copy is an
-`ImportedFile.receiving` (`ReceivingArchive`) until the preparation awaits it. `ImportLimits` is sized for an Android
-heap. `ImportPlan` is computed before anything is written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
-song.
+`ImportedFile.receiving` (`ReceivingArchive`) until the preparation awaits it. `ImportedFile.isArchive` is the one rule
+for what the preparation unpacks. `ImportLimits`' KDoc holds the reasoning: memory bounds what is held, disk and time
+what is staged. `ImportPlan` is computed before anything is written; in `ImportChoices`, changing the for-all choice
+leaves per-row ones alone. No original file is stored with a song.
 
-Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`), the pictures songs name to 64 MiB (`MAX_IMPORT_IMAGES_SIZE`), and
-their attachments to 50 MiB (`MAX_IMPORT_ATTACHMENTS_SIZE`), each budget apart; a picked or downloaded archive and a
-whole selection may be the first two (`MAX_ARCHIVE_SIZE`, 88 MiB, named in the strings), not grown for attachments,
-since the archive is held beside what it unpacks to on a 192 MB Android heap. A shared link's copy stays at 24 MiB
-(`MAX_SHARED_COPY_SIZE`) of songs and pictures: versions before pictures download no more, and the copy is packed in
+Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`, held in memory); an archive's pictures and attachments are staged
+within `MAX_IMPORT_STAGED_SIZE`. `MAX_IMPORT_IMAGES_SIZE` (64 MiB) bounds only the pictures downloaded by address and
+`MAX_IMPORT_ATTACHMENTS_SIZE` only the in-memory reference unpack; `MAX_ARCHIVE_SIZE` (88 MiB) is what a selection reads
+whole, an archive costing it nothing. An export is flagged as not importable back (`ExportedFile.isTooLargeToImport`)
+past 16 GiB, `MAX_ARCHIVE_ENTRIES`, or `MAX_IMPORT_SIZE` of song text, the strings naming 16 GB. A shared link's copy
+stays at 24 MiB (`MAX_SHARED_COPY_SIZE`) of songs and pictures: versions before pictures download no more, and the copy is packed in
 memory. Its attachments have 50 MiB beside that (`MAX_SHARED_ATTACHMENTS_SIZE`), one that does not fit left out
 (`sharedCopyAttachments`, the one rule for the export and sync). A picture is read only where it was chosen itself
 (`IMAGE_FILE_EXTENSIONS`, within `MAX_PICKED_IMAGE_FILE_SIZE`, 40 MiB, since `:presentation` shrinks one past

@@ -109,7 +109,8 @@ it, as the reference the other is held to.
 - **Two readers that read every archive alike**: `ZipReader.read(ByteArray)` in memory, and `ZipReader.open(ZipSource)`
   with `ZipDirectory.walk`, which never holds an archive or an entry whole unless its `EntrySink` does. The walk is the
   in-memory one decision for decision (same policies asked in the same order, same peeks, charges, and reasons), which
-  `readAlike` and the fuzz test hold it to; keep them alike until the in-memory one is removed. Its own additions:
+  `readAlike` and the fuzz test hold it to; keep them alike until the in-memory one is removed. The import reads every
+  archive through the walk; `read(ByteArray)` is left only to the Word reader and the tests' reference. Its own additions:
   `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES` refused before anything is allocated, the directory kept as
   primitive arrays and name bytes, each local header read once, and every sum of declared numbers through `checkedSum`.
   A `ZipDirectory` says what it cost of both caps (`centralDirectorySize`, `recordCount`), so a caller can carry what

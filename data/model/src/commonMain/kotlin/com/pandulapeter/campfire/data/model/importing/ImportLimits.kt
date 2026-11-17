@@ -12,17 +12,24 @@ package com.pandulapeter.campfire.data.model.importing
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
- * How much an import is willing to read. A song is a few kilobytes of text, and every way into the library reads a
- * file whole, so without a ceiling one wrong file in a selection is an allocation the process does not survive: an
- * Android app has a heap of about 192 MB to itself, and running out of it cannot be caught.
+ * How much an import is willing to read, and where it keeps it. What it holds in memory is bounded by memory: an Android
+ * app has a heap of about 192 MB to itself, and running out of it cannot be caught. What it keeps on disk is bounded by
+ * the disk and by the time one import may take.
  *
- * The numbers are the same on every platform, so that an archive imports the same everywhere. At its worst an import
- * holds what was picked ([MAX_ARCHIVE_SIZE]), the pictures and attachments its songs name ([MAX_IMPORT_IMAGES_SIZE],
- * [MAX_IMPORT_ATTACHMENTS_SIZE]), and the songs it unpacked to with their text, which is two bytes a character as soon as
- * a song steps outside Latin-1: three times [MAX_IMPORT_SIZE]. An archive near its limit is mostly pictures and
- * attachments, which are stored rather than deflated, so its own bytes and theirs are much the same bytes twice, and the
- * songs are the small part of it. The picked archive is let go of once the review has its plan, which keeps the pictures,
- * the attachments, and the songs only.
+ * An archive is never held whole. It is received into the staging folder (`imports/`) as it arrives, within
+ * [MAX_STAGED_ARCHIVE_SIZE], and unpacked from there through its central directory: at most [MAX_ARCHIVE_ENTRIES]
+ * records and [MAX_CENTRAL_DIRECTORY_SIZE] of directories held at once, however its archives nest. The pictures and
+ * attachments its songs name are inflated into staging files, each within its own limit ([MAX_IMAGE_FILE_SIZE],
+ * [MAX_ATTACHMENT_FILE_SIZE]) and all within [MAX_IMPORT_STAGED_SIZE] and the free space less [minFreeSpaceFor], checked
+ * against what the archive declares before anything is inflated. Import moves them into the library rather than writing
+ * bytes, so the disk needs about twice the archive while its copy and what it unpacks to are both there.
+ *
+ * What stays in memory is bounded apart from the archive's size: the song texts, which are two bytes a character as soon
+ * as a song steps outside Latin-1, so three times [MAX_IMPORT_SIZE] at worst; the compact central directories being
+ * walked; one read buffer and one inflate window; the files a selection reads whole because they are no archive
+ * ([MAX_ARCHIVE_SIZE] across a selection); and the pictures a song names by address ([MAX_IMPORT_IMAGES_SIZE]).
+ *
+ * The numbers are the same on every platform, so that an archive imports the same everywhere.
  */
 object ImportLimits {
 
@@ -76,34 +83,31 @@ object ImportLimits {
     const val MAX_IMPORT_SIZE = 24L shl 20
 
     /**
-     * The pictures one import reads for the songs naming them, apart from [MAX_IMPORT_SIZE] so that photos never crowd
-     * songs out of an archive: about twenty phone photos, each within [MAX_IMAGE_FILE_SIZE]. A picture past it is left
-     * out and reported with its song, which still imports and shows the picture as missing. The export's message names
-     * it as 64 MB in every language.
+     * The pictures one import downloads into memory for the songs naming them by address (`IncomingPictureLinks`), apart
+     * from [MAX_IMPORT_SIZE]: about twenty phone photos, each within [MAX_IMAGE_FILE_SIZE]. A picture past it is left out
+     * and reported with its song, which still imports and keeps its directive. An archive's pictures are staged on disk
+     * instead and never count against it; it bounds them only in the in-memory unpack the tests keep as the streaming
+     * one's reference.
      */
     const val MAX_IMPORT_IMAGES_SIZE = 64L shl 20
 
     /**
-     * The files attached to songs that one import reads for the songs naming them, apart from the songs' and the pictures'
-     * budgets: one attachment of [MAX_ATTACHMENT_FILE_SIZE], or several smaller ones. An attachment past it is left out
-     * and reported with its song, which still imports and keeps its attachment line, so that sync can bring the file later.
-     * Not larger, since everything an import reads is held in memory at once (see the class), and a small archive of
-     * documents that deflate well could otherwise unpack to more than the heap. The export's message names it as 50 MB
-     * in every language.
+     * The files attached to songs that the in-memory unpack, kept only as the streaming one's reference in the tests,
+     * reads for the songs naming them: one attachment of [MAX_ATTACHMENT_FILE_SIZE], or several smaller ones. The app
+     * stages an archive's attachments on disk within [MAX_IMPORT_STAGED_SIZE] instead. Also what a shared link's copy
+     * carries ([MAX_SHARED_ATTACHMENTS_SIZE]).
      */
     const val MAX_IMPORT_ATTACHMENTS_SIZE = MAX_ATTACHMENT_FILE_SIZE
 
     /**
-     * One archive as it was picked or downloaded, and everything one selection reads: the songs' budget and the
-     * pictures' together, so that an export of songs with their pictures imports whole. The import's and the export's
-     * messages name it as 88 MB in every language. Versions before pictures refuse an archive over [MAX_IMPORT_SIZE] as
-     * too large, and import a smaller one with its pictures reported as skipped and its image directives kept, and 5.4.0
-     * its attachments that are documents, texts, or ABC tunes as songs it offers in the review.
+     * What one selection reads whole into memory: the files that are no archive (songs, documents, a picture chosen on its
+     * own), each within its own limit, and a download that is no zip. An archive costs it nothing, since it is staged
+     * within [MAX_STAGED_ARCHIVE_SIZE] instead; a file under a text's name read whole is still kept within it where its
+     * bytes turn out to be a zip's. The songs' budget and the pictures' together.
      *
-     * Not grown by [MAX_IMPORT_ATTACHMENTS_SIZE]: the picked archive is held whole beside what it unpacks to, and an archive
-     * of stored recordings unpacks to as many bytes again, so an archive of 88 MB already costs an Android heap of about
-     * 192 MB most of what it has. Attachments mostly fit beside the songs and pictures of a smaller archive; a library whose
-     * export is larger is moved by sync, and its export says it cannot be imported back whole.
+     * Versions up to 5.4.0 held a picked archive whole within it, so a shared link's copy stays within it
+     * ([MAX_SHARED_COPY_SIZE], [MAX_SHARED_ATTACHMENTS_SIZE]); versions before pictures refuse an archive over
+     * [MAX_IMPORT_SIZE] as too large.
      */
     const val MAX_ARCHIVE_SIZE = MAX_IMPORT_SIZE + MAX_IMPORT_IMAGES_SIZE
 
@@ -133,9 +137,11 @@ object ImportLimits {
     const val MAX_CENTRAL_DIRECTORY_SIZE = 32L shl 20
 
     /**
-     * The most entries one archive may declare, checked against the declared count before anything is allocated for it;
-     * the reader walks no more records than were declared. Far more than any library export or backup, while the
-     * compact directory of that many stays a small part of a phone's heap.
+     * The most entries one archive may declare, checked against the declared count before anything is allocated for it,
+     * and the most records one unpack reads across an archive and the archives nested in it; the reader walks no more
+     * records than were declared. About three times the 16-bit count ZIP64 lifts, far more than any library export or
+     * backup, while the compact directory of that many stays a small part of a phone's heap. An export of more says it
+     * cannot be imported back whole (`ExportedFile.isTooLargeToImport`).
      */
     const val MAX_ARCHIVE_ENTRIES = 200_000
 
@@ -157,7 +163,9 @@ object ImportLimits {
 
     /**
      * One archive received into the staging folder (`imports/`), copied there by streaming rather than held in memory:
-     * not a bound on memory but on the time one import may take, the same as [MAX_IMPORT_STAGED_SIZE].
+     * not a bound on memory, nor on the format, which ZIP64 lifts, but on the time one import may take, the same as
+     * [MAX_IMPORT_STAGED_SIZE]. A larger one is refused before it is copied, with a message naming it as 16 GB in every
+     * language, and an export that large says it cannot be imported back.
      */
     const val MAX_STAGED_ARCHIVE_SIZE = 16L shl 30
 
@@ -207,8 +215,9 @@ object ImportLimits {
 /**
  * What one selection - a pick, a drop, the files of an intent - may still read. Every platform reads its files
  * through one of these, so the rule is written once: nothing the import would not look inside is read, nothing over
- * its own limit is, and the selection as a whole stops at [ImportLimits.MAX_ARCHIVE_SIZE], what one archive may be. The
- * import holds what the selection unpacks to its own budgets again.
+ * its own limit is, and what the selection reads whole stops at [ImportLimits.MAX_ARCHIVE_SIZE]; an archive handed to
+ * [take]'s `stage` is received into the staging folder instead and costs it nothing. The import holds what the selection
+ * unpacks to its own budgets again.
  */
 class ImportBudget {
 

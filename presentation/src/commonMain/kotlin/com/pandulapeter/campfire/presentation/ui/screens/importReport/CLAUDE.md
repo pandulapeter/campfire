@@ -34,8 +34,9 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
 - **Loading**: Cancel only while the phase only reads; Close does the same. A phase reporting bytes says them ("Unpacking
   340 MB of 1.2 GB", no total where unknown) instead of its file count (`importProgressLineOf`), at most four times a
   second (`ImportProgressThrottle`, no timer: a held-back value arrives with the next or as its phase ends).
-- **Failed**: one sentence and **Try again** (a failed download is downloaded again; once downloaded, the same bytes are
-  read again). A shared link answering 4xx, or anything but a zip (a page in its place), "no longer works"; only no
+- **Failed**: one sentence and **Try again** (a failed download is downloaded again; once downloaded or received, the
+  same staged copy is read again). An archive past 16 GB (`MAX_STAGED_ARCHIVE_SIZE`, or past `MAX_IMPORT_STAGED_SIZE`
+  unpacked) is too large, its sentence naming 16 GB. A shared link answering 4xx, or anything but a zip (a page in its place), "no longer works"; only no
   answer or a 5xx is unreachable. No space names what the import needs where known (`preparationFailureOf`); a
   ZIP64-less archive past 4 GB has its own sentence, and so does one the platform stopped in the background
   (`ImportWork.interrupt`: Android's `onTimeout`, iOS 26's continued task expiring or stopped). A batch that cannot be

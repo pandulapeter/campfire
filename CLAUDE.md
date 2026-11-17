@@ -36,8 +36,8 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   and, on a first launch, the install referrer over IPC (Play Store app); Android/iOS system backup copies `library/`
   (Android without `library/files/`, whose photos would pass its 25 MB cap; iOS without the attachments there) and
   `preferences.json` — never the sync credentials, the sync index, the shared links mirror and journal, the editor
-  draft and its pictures, the iOS share inbox, `covers/`, or `exports/` (`app/android/src/main/res/xml`; on iOS a
-  device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with
+  draft and its pictures, the iOS share inbox, `covers/`, `exports/`, or `imports/` (`app/android/src/main/res/xml`; on
+  iOS a device-bound Keychain item, `FileStorage.keepOutOfDeviceBackup`, and the share inbox's own exclusion). A launch with
   no preferences document forgets any credentials it finds, since the iOS Keychain outlives an uninstall.
 
 ## Architecture
@@ -93,6 +93,9 @@ preferences/editor-draft.json          the editor's unsaved text, survives proce
 editor-draft-images/<sha256 hex>.<ext> pictures the draft names that no saved song holds yet; moved in by Save
 covers/<sha256 of the address>         cover copies; never exported or synced, deleted once unreferenced
 exports/<name>                         an archive or PDF written before it is saved or shared, emptied on launch (iOS: Caches)
+imports/<name>                         an archive being imported and the pictures and attachments it unpacks to, named by
+                                       session and content, never backed up; another session's emptied on launch (iOS:
+                                       Library/Application Support)
 instance.lock / instance.endpoint      desktop only: single-instance guard
 campfire.log / campfire.log.1          desktop only, here (the other platforms keep it elsewhere, ui/platform)
 ```

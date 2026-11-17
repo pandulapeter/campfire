@@ -73,6 +73,10 @@ Skipped or unreadable files are logged to the injected `Logger`.
 
 ## `staging/` (the import's staging folder, `IMPORTS`)
 
+Every archive an import reads is here first: received by the intake or a download, or staged from memory by
+`ImportWork` where one arrived read whole. `imports/` is in no backup (Android's rules are an allow-list naming none of
+it; iOS marks the folder) and no sync, and is emptied of other sessions' names on launch.
+
 - `ImportStaging` (`@Single`, one per process: its random 16-hex-digit `session`) names every file by session and
   request, never by anything that arrived: `<session>-<request>-<n>.zip` for an archive,
   `<session>-<request>-<sha256>.<ext>` for an unpacked file (written as `<n>.part`, renamed once hashed; a second entry
@@ -148,7 +152,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
   library never looks empty.
 - Documents: 16 MiB limit. `ImportCorpusTest` (desktop) scores the import against the private corpus that
   `campfire.importCorpus` names, writing its report into the corpus's `.runs/`; blank skips it.
-- `ArchivePathParityTest` (desktop) is the gate for the streaming archive import: every archive imported in memory and
+- `ArchivePathParityTest` (desktop) holds the streaming archive import, the only one the app runs, to the in-memory
+  unpack kept as its reference (`unpack(ByteArray)`, which nothing in the app calls): every archive imported in memory and
   staged, each into an empty library of its own over the app's whole data and domain graph (`ImportPathApp`), must give
   the same plan, result, and library files. Its archives: every one the unpack tests hand `ArchiveUnpacks` (recorded by
   running those tests), libraries and backups built there, the real writers' ZIP64 archives, seeded mutants, and under

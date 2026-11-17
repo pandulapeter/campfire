@@ -81,7 +81,7 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission. Only Android 13+
   confirms a copy itself (`isCopyConfirmedBySystem`). iOS alone can say a web address seems to be there without reading
   it (`ClipboardLinkReader.kt`), the one question asked without a tap (the first run's link offer).
-- **Arriving archives** (only while `ImportIntake.stagesArchives`): the intake peeks at each file's head and asks
+- **Arriving archives** (`ImportIntake.stagesArchives`, on; a picker's or test's `receiver = null` reads whole): the intake peeks at each file's head and asks
   `ImportBudget.take`; an archive goes to `ArchiveReceiver.receive`, whose copy into the staging folder is a job on the
   `ApplicationScope` started at once (a grant or a `File` used while valid, a queued batch received while it waits),
   the file handed over as `ImportedFile.receiving`. The platform's `close` lets go of its stream once, also on a

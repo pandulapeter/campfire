@@ -43,7 +43,7 @@
   `requestDragAndDropPermissions`, asked while the drop is answered and released after the read; text items are a pasted
   song. A drag's description can't tell a text file from a text, so a `text/plain`-only drag starts only where
   `isNewSongDropAvailable`.
-- **Archives while they are staged** (`ImportedFiles.android.kt`): each URI is opened once through
+- **Archives are staged** (`ImportedFiles.android.kt`): each URI is opened once through
   `acquireUnstableContentProviderClient(uri).openFile`, never `openInputStream`, whose stable reference takes Campfire
   down with a dying provider; its head decides, and an archive's copy starts at once from that open stream, which reads
   on after the grant (the activity's, or a drop's permissions) is gone. A copy shorter than `OpenableColumns.SIZE` is

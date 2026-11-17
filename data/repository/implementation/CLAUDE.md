@@ -107,8 +107,8 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
 
 ## The import's downloads
 
-- `ImportDownloadRepositoryImpl.download` reads into memory while `ImportIntake.stagesArchives` is off (until the
-  streaming import's switch); on, it streams into `DownloadIntake`, which decides by the first four bytes: a zip's go
+- `ImportDownloadRepositoryImpl.download` streams into `DownloadIntake` (`ImportIntake.stagesArchives`, on; only a
+  test turns it off and reads into memory), which decides by the first four bytes: a zip's go
   to `ImportStagingLocalSource.receiveArchive` within `MAX_STAGED_ARCHIVE_SIZE`, anything else into memory within
   `MAX_ARCHIVE_SIZE` as before, since the import unpacks a staged file as an archive. Any answer but the file, a throw,
   or a cancellation abandons the staged copy (its request with it, under `NonCancellable`).
