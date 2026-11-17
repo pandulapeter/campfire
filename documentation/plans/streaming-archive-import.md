@@ -482,6 +482,8 @@ fake throwing on write past a size) fails cleanly with nothing left behind.
 
 ### 9. Staged content through the plan and the write
 
+**Landed** (f7d23365c…bba7377ee): a received archive stays with its request until the request settles (so Try again reads it again), then `ImportWork.settle` deletes every staged file of the request; one staged file a plan names twice is moved once and copied for the second name. `withImagesKept` measured: 2 GiB moved in about 9 ms on the desktop, about 127 MiB/s into OPFS, so the write lets the lock go after each 256 MiB of staged files moved (songs so far adopted first); an in-memory import is written in one block as before.
+
 `StagedFile`, `IncomingContent`, the `ImportedFile` / `ImportedImage` / `ImportPlan.SongImage` changes,
 `ImageRepository`'s and `LibraryImageWriter`'s overloads with the chunked comparison, `ImageLocalSource.moveStagedFile`,
 and `IncomingImages.planned` / `store` handling both kinds. `PrepareImportUseCaseImpl` routes a staged archive to the
@@ -549,6 +551,8 @@ against every fixture, every fuzz mutant, and the private corpus (by hand, the c
 against the corpus again before the release.
 
 ### 12. Downloads into staging
+
+**Landed** (934d0df5c, 410bac7bf, 9e5ad84fa), behind `ImportIntake.STAGES_ARCHIVES` (`:data:model`), the one switch: only a zip (by its first bytes) is staged; a body longer than its `Content-Length` is accepted within the cap (decoded bodies arrive longer); a body ending in an error is a failure. Ktor 3.6.1's wasmJs engine streams the body (`getReader()`, at most about 1–2 MiB buffered), so no `fetch` of its own.
 
 `ImportDownloadRemoteSource.download` with a sink and a byte progress callback; `ImportDownloadRepositoryImpl` stages
 into `imports/`; `SharedLinkDownload` and `ImportWork.prepare` carry a `StagedFile`, so Try again reads the same
