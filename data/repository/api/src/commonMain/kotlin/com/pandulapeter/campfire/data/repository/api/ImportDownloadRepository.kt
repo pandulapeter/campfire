@@ -13,11 +13,17 @@ import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
- * Downloads a file to import from an address the user opened. Nothing is kept: not the file, not the address, not
- * the answer, so asking again is asking again.
+ * Downloads a file to import from an address the user opened, or a picture a song names by its address. Nothing is
+ * kept: not the file, not the address, not the answer, so asking again is asking again.
  */
 interface ImportDownloadRepository {
 
     /** The file at [url], no larger than [ImportLimits.MAX_ARCHIVE_SIZE], or why there is none; only a cancellation is thrown. */
     suspend fun download(url: String): ImportDownload
+
+    /**
+     * The picture a song names at [url], no larger than [maxSizeBytes], or why there is none; only a cancellation is
+     * thrown. Asked only of public `https` hosts, see `ImportDownloadRemoteSource.downloadPicture`.
+     */
+    suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload
 }

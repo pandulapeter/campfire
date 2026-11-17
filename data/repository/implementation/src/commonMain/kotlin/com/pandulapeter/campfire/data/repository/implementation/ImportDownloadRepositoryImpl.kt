@@ -20,4 +20,6 @@ internal class ImportDownloadRepositoryImpl(
 ) : ImportDownloadRepository {
 
     override suspend fun download(url: String) = importDownloadRemoteSource.download(url = url, maxSizeBytes = ImportLimits.MAX_ARCHIVE_SIZE)
+
+    override suspend fun downloadPicture(url: String, maxSizeBytes: Long) = importDownloadRemoteSource.downloadPicture(url = url, maxSizeBytes = maxSizeBytes)
 }

@@ -21,4 +21,12 @@ interface ImportDownloadRemoteSource {
 
     /** The file at [url], or why there is none; only a cancellation is thrown. Never reads past [maxSizeBytes]. */
     suspend fun download(url: String, maxSizeBytes: Long): ImportDownload
+
+    /**
+     * The picture a song's `{image: src=…}` names by its address, downloaded as [download] would, except that it is asked
+     * only of a public `https` host on every hop (never the local network, since the address comes from a file rather
+     * than from the user's own hand alone) and gives up after a bounded time; any other address is
+     * [ImportDownload.Missing] without a request. Whether the bytes are a picture is the caller's question, by content.
+     */
+    suspend fun downloadPicture(url: String, maxSizeBytes: Long): ImportDownload
 }
