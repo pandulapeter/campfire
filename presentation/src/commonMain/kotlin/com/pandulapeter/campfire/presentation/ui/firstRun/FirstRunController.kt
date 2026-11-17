@@ -162,7 +162,7 @@ internal class FirstRunController(
                 // An unreadable songs or setlists folder stands in empty so that the rest can be shown, and is not an
                 // empty library to plant into.
                 if (library != null && library.isWholeLibrary && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
-                    // Imported here rather than through importQueue, where a file opened with the app is already
+                    // Imported here rather than through the import queue, where a file opened with the app is already
                     // waiting; see demoLibraryDecision. An empty library has no names for it to collide with, so
                     // this never asks anything.
                     readDemoLibrary()?.let { files ->

@@ -13,7 +13,6 @@ import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
@@ -37,7 +36,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
@@ -55,10 +53,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Every import: the queue the batches wait in, the download of a file from an address, the reading and comparing that
- * decides what an import would do, the writing, and what is said about it afterwards; what the import screen shows is
- * [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each other
- * and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
+ * Every import as the screens see it: what is said and shown of the batches [work] queues, reads, and writes (the work
+ * itself belongs to the app, see [ImportWork]), from the review to what it came to afterwards; what the import screen
+ * shows is [ImportReportState]'s. Also the library's deletion, which stays here because deletion and import exclude each
+ * other and both flags and both checks are only correct together, in one class whose state is touched on the main thread.
  *
  * @param openLibraryItem Opens the library's own song or setlist that a batch turned out to be, see [LibraryItemToOpen].
  * @param loadSongText Reads the text of a song just written, which the preview it was imported from becomes the screen of.
@@ -83,19 +81,19 @@ internal class ImportController(
     private val songLookup: Flow<SongLookup>,
     private val launchFileTransfer: (block: suspend () -> Unit) -> Job?,
     private val isLeaving: () -> Boolean,
-    private val useCases: ImportUseCases,
+    private val work: ImportWork,
     private val deleteLibrary: DeleteLibraryUseCase,
 ) {
 
-    /** True while an import is running, which the bar along the top of the window shows (`WorkProgressBar`). */
-    private val _isImporting = MutableStateFlow(false)
+    /** See [ImportWork.isImporting]. */
+    private val _isImporting = work.isImporting
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
     /** True while [deleteLibrary] is deleting, which the import queue waits for, see [deleteLibrary]. */
     private val isDeletingLibrary = MutableStateFlow(false)
 
-    /** The phase of an import the user asked for and how far into it it is, which the import screen shows. */
-    private val _importProgress = MutableStateFlow<ImportProgress?>(null)
+    /** See [ImportWork.progress]. */
+    private val _importProgress = work.progress
     val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
 
     /**
@@ -116,32 +114,8 @@ internal class ImportController(
     private val _isAddingToReview = MutableStateFlow(false)
     val isAddingToReview: StateFlow<Boolean> = _isAddingToReview.asStateFlow()
 
-    /**
-     * The reading and comparing half of the import being run, which [cancelImportPreparation] can end. Touched only on the
-     * main thread, like [isPreparationCancelled]: [import] runs in [scope] and the screen's click calls in there.
-     */
-    private var preparation: Deferred<Preparation>? = null
-
-    /**
-     * Whether the user asked for [preparation] to stop, which a cancellation of the view model itself is told apart from.
-     */
-    private var isPreparationCancelled = false
-
-    /**
-     * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
-     * handed over whenever the system or the user feels like it - a second archive dropped while the first is still
-     * being written, a file opened with the app while a review is up - and an import can only run while
-     * no other one is, so what arrives in the meantime waits here rather than being dropped. What arrives while a review
-     * is on screen joins it instead where it can, see [awaitImportSettled].
-     */
-    private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
-
-    /**
-     * How many batches have been put into [importQueue] and not yet settled, so that What's new can tell a file opened
-     * with the app a moment ago, which no import has taken yet, from a launch with nothing to import.
-     */
-    private val _queuedImportCount = MutableStateFlow(0)
-    val queuedImportCount: StateFlow<Int> = _queuedImportCount.asStateFlow()
+    /** See [ImportWork.queuedImportCount]. */
+    val queuedImportCount: StateFlow<Int> = work.queuedImportCount.asStateFlow()
 
     /**
      * The picker is handed in by the composable that has it, but the work runs here: picking a file takes as long as
@@ -195,7 +169,7 @@ internal class ImportController(
     }
 
     /**
-     * Puts a batch at the end of [importQueue] and returns what completes once it is over: reviewed, the import the
+     * Puts a batch at the end of [ImportWork.queue] and returns what completes once it is over: reviewed, the import the
      * review decided on written, and its result dismissed, or its new song open in the editor, whose draft holds it from
      * then on. An empty batch is not queued at all.
      *
@@ -231,8 +205,7 @@ internal class ImportController(
         if (source.isEmpty) {
             request.settled.complete(Unit)
         } else {
-            _queuedImportCount.update { it + 1 }
-            importQueue.trySend(request)
+            work.enqueue(request)
         }
         return request.settled
     }
@@ -261,7 +234,7 @@ internal class ImportController(
             // Biased towards the first clause, so that a batch arriving as the review is left is held rather than added.
             val next = select<ImportRequest?> {
                 settled.onAwait { null }
-                importQueue.onReceiveCatching { it.getOrNull() }
+                work.queue.onReceiveCatching { it.getOrNull() }
             } ?: break
             // Replace confirms the review as it stands: a batch joining under the dialog would add replacements nobody
             // confirmed, or make the confirmation do nothing while it is read. Checked again after every wait, with
@@ -302,29 +275,28 @@ internal class ImportController(
     private suspend fun addToReview(request: ImportRequest) {
         // At once rather than once the batch is read, so that the progress bar answers what the user just did.
         reportState.bringReviewToFront()
-        isPreparationCancelled = false
-        val deferred = scope.async { prepare(request) }
-        preparation = deferred
+        val pending = work.prepare(request, isReviewed = true)
         _isAddingToReview.value = true
         val outcome = try {
-            deferred.await()
+            pending.outcome.await()
         } catch (exception: CancellationException) {
-            if (isPreparationCancelled && currentCoroutineContext().isActive) return
+            if (work.isPreparationCancelled && currentCoroutineContext().isActive) return
             throw exception
         } catch (exception: Exception) {
             println("Could not read the files to add to the import: ${exception.message}")
             Preparation.Failed(ImportFailure.UNREADABLE)
         } finally {
-            preparation = null
+            // Unlike a batch's own preparation, this one is cancelled with the view model, as the review it joins goes with it.
+            work.release(pending)
             _importProgress.value = null
             _isAddingToReview.value = false
         }
-        if (isPreparationCancelled || reportState.report !is ImportReport.Review) return
+        if (work.isPreparationCancelled || reportState.report !is ImportReport.Review) return
         when (outcome) {
             is Preparation.Failed -> messageSink.sendMessage(Message.ImportFailed)
             is Preparation.Planned -> {
                 request.source = ImportSource.Files(emptyList())
-                val recorded = request.sharedLinkFileId?.let { useCases.getSharedLinkImport(it) }
+                val recorded = request.sharedLinkFileId?.let { work.useCases.getSharedLinkImport(it) }
                 // Read after the last suspension, so that a tick made while the batch was read is kept.
                 val review = reportState.report as? ImportReport.Review ?: return
                 val plan = review.plan.withAdded(outcome.plan.withImageFilesSkipped())
@@ -361,7 +333,7 @@ internal class ImportController(
      *   way (see [startQueue]); null for anything else, where the import has gone its own way.
      */
     suspend fun import(request: ImportRequest): ImportPlan.SongEntry? {
-        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next and
+        // Only ever called by the consumer of the queue, which waits for each import to settle before the next and
         // for any report on screen, and by the first run's demo library before that consumer takes anything, so this
         // holds by construction; it is kept so that a second caller could not start an import over a running one.
         if (request.source.isEmpty || _isImporting.value || activeRequest != null) return null
@@ -382,31 +354,30 @@ internal class ImportController(
      */
     private suspend fun prepare(request: ImportRequest, isReviewed: Boolean): ImportPlan.SongEntry? {
         _isImporting.update { true }
-        isPreparationCancelled = false
-        // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
-        // ends only the preparation and never the queue, and a failure inside it only reaches this through await().
-        val deferred = scope.async { prepare(request) }
-        preparation = deferred
+        return finishPreparation(work.prepare(request = request, isReviewed = isReviewed))
+    }
+
+    /**
+     * Waits for [pending] and hands what it came to on, see [prepare]. A view model cleared meanwhile leaves the
+     * preparation running in [work] with the flags up, and the next one's [startQueue] calls this again on it.
+     */
+    private suspend fun finishPreparation(pending: ImportWork.Pending): ImportPlan.SongEntry? {
+        val request = pending.request
+        val isReviewed = pending.isReviewed
         val outcome = try {
-            deferred.await()
+            pending.outcome.await()
         } catch (exception: CancellationException) {
-            // The user's Cancel cancels only the deferred; the consumer itself still being active is what tells the two apart.
-            if (isPreparationCancelled && currentCoroutineContext().isActive) {
-                onPreparationCancelled(isReviewed)
-                return null
-            }
-            _importProgress.value = null
-            _isImporting.value = false
-            throw exception
+            // The user's Cancel cancels only the outcome; the consumer itself still being active is what tells the two apart.
+            if (!work.isPreparationCancelled || !currentCoroutineContext().isActive) throw exception
+            null
         } catch (exception: Exception) {
             println("Could not read the files to import: ${exception.message}")
             Preparation.Failed(ImportFailure.UNREADABLE)
-        } finally {
-            preparation = null
         }
+        work.release(pending)
         // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
         // main thread, behind a click already queued there): it was still pressed while the screen said "reading", so it wins.
-        if (isPreparationCancelled) {
+        if (work.isPreparationCancelled || outcome == null) {
             onPreparationCancelled(isReviewed)
             return null
         }
@@ -457,7 +428,7 @@ internal class ImportController(
                     // Opening a shared link again is how its recipient updates, and Keep both would leave a numbered copy of
                     // every changed song each time. Only the names this link wrote here before are its to update, though: any
                     // other taken name may be the recipient's own song, which a stranger's link must not start on Replace.
-                    val choices = request.sharedLinkFileId?.let { sharedLinkChoices(plan, useCases.getSharedLinkImport(it)) } ?: ImportChoices()
+                    val choices = request.sharedLinkFileId?.let { sharedLinkChoices(plan, work.useCases.getSharedLinkImport(it)) } ?: ImportChoices()
                     val review = ImportReport.Review(
                         plan = plan,
                         choices = choices,
@@ -484,39 +455,6 @@ internal class ImportController(
         return null
     }
 
-    /** The download, where the batch is an address or a shared link, and the reading and comparing, as one cancellable piece of work. */
-    private suspend fun prepare(request: ImportRequest): Preparation {
-        val files = when (val source = request.source) {
-            is ImportSource.Files -> source.files
-            is ImportSource.Address -> {
-                _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                when (val download = useCases.downloadImportFile(source.url)) {
-                    is ImportDownload.File -> listOf(ImportedFile(name = download.name, bytes = download.bytes)).also {
-                        // A read that fails after this is tried again on the same bytes rather than downloaded again.
-                        request.source = ImportSource.Files(it)
-                    }
-
-                    ImportDownload.TooLarge -> return Preparation.Failed(ImportFailure.TOO_LARGE)
-                    ImportDownload.Missing -> return Preparation.Failed(ImportFailure.NOT_FOUND)
-                    ImportDownload.Unreachable -> return Preparation.Failed(ImportFailure.UNREACHABLE)
-                }
-            }
-
-            is ImportSource.SharedLink -> source.file?.let(::listOf) ?: run {
-                _importProgress.value = ImportProgress(ImportProgress.Phase.DOWNLOADING, fileName = source.name)
-                when (val download = useCases.downloadImportFile(source.link.downloadUrl).toSharedLinkDownload()) {
-                    is SharedLinkDownload.Zip -> listOf(download.file).also {
-                        // The title stays the screen's subtitle, and a read that fails after this reads the same bytes again.
-                        request.source = source.copy(file = download.file)
-                    }
-
-                    is SharedLinkDownload.Failed -> return Preparation.Failed(download.reason)
-                }
-            }
-        }
-        return Preparation.Planned(useCases.prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it })
-    }
-
     /** What a preparation the user cancelled leaves: nothing, the screen it was shown on included. */
     private fun onPreparationCancelled(isReviewed: Boolean) {
         _importProgress.value = null
@@ -529,18 +467,8 @@ internal class ImportController(
         }
     }
 
-    /**
-     * The loading stage's Cancel, offered while the file is still being downloaded, read and compared. Nothing has been
-     * written by then, so the library is exactly as it was and nothing is announced; the queue goes on to its next
-     * batch. Once the plan is being written or reviewed there is no preparation left to cancel, and a late click does
-     * nothing. Cancellation is noticed where the preparation yields, between files and songs, so a single huge document
-     * being extracted is not interrupted until it is read.
-     */
-    fun cancelImportPreparation() {
-        val deferred = preparation ?: return
-        isPreparationCancelled = true
-        deferred.cancel()
-    }
+    /** The loading stage's Cancel, see [ImportWork.cancel]: nothing is announced, and the queue goes on to its next batch. */
+    fun cancelImportPreparation() = work.cancel()
 
     /** The failure stage's Try again: the same address downloaded again, or the same bytes read again. */
     fun retryImport() {
@@ -629,7 +557,7 @@ internal class ImportController(
         preview: ImportReport.Review? = null,
     ) {
         try {
-            val result = useCases.applyImport(
+            val result = work.write(
                 plan = plan,
                 choices = choices,
                 bookkeeping = (if (request.isDemoLibrary) DemoLibrary.bookkeeping else ImportBookkeeping()).copy(sharedLinkParts = sharedLinkParts),
@@ -721,8 +649,11 @@ internal class ImportController(
                 if (request.shouldAnnounceResult) messageSink.sendMessage(Message.ImportFailed)
             }
         } finally {
-            _importProgress.value = null
-            _isImporting.update { false }
+            // A write this view model stopped waiting for lets go of both itself once it ends, see ImportWork.write.
+            if (!work.isWriting) {
+                _importProgress.value = null
+                _isImporting.update { false }
+            }
         }
     }
 
@@ -805,23 +736,27 @@ internal class ImportController(
         }
     }
 
-    init {
-        // What an earlier process left in the staging folder: a crash or a closed tab during an import.
-        scope.launch { useCases.clearImportStaging() }
-    }
-
     /**
-     * Takes the batches of [importQueue] one at a time, once [demoLibraryDecision] has completed, see
-     * `FirstRunController.demoLibraryDecision`.
+     * Takes the batches of [ImportWork.queue] one at a time, once [demoLibraryDecision] has completed, see
+     * `FirstRunController.demoLibraryDecision`. A preparation the last view model left in [work], running or finished
+     * with nobody to show it to, is taken first: its import screen is put up again where it had one, and what it came to
+     * opens its review or preview here. Ahead of the decision, since a first run's own planting may be that preparation.
      */
     fun startQueue(demoLibraryDecision: Deferred<Unit>) = scope.launch {
+        work.preparation?.let { pending ->
+            takeBatch(pending.request) { batches ->
+                if (pending.isReviewed && !work.isPreparationCancelled) {
+                    activeRequest = pending.request
+                    reportState.show(ImportReport.Loading(sourceName = pending.request.source.name, sourceCount = pending.request.source.fileCount))
+                }
+                finishPreparation(pending)?.let { song -> showNewSongEditor(song, pending.request) }
+                awaitImportSettled(joined = batches, held = work.held)
+            }
+        }
         demoLibraryDecision.await()
-        // Batches that arrived during a review they could not join, taken in their order before the queue's next.
-        val held = ArrayDeque<ImportRequest>()
         while (true) {
-            val request = held.removeFirstOrNull() ?: importQueue.receiveCatching().getOrNull() ?: break
-            val batches = mutableListOf(request)
-            try {
+            val request = work.held.removeFirstOrNull() ?: work.queue.receiveCatching().getOrNull() ?: break
+            takeBatch(request) { batches ->
                 // A result reopened from the snackbar's Details is on screen while the queue is idle; a batch taken now
                 // would replace it in place, and leaving the screen would drop the new import with it. A batch that
                 // arrived while the library was being deleted is planned against what the deletion left, not against a
@@ -833,19 +768,26 @@ internal class ImportController(
                     while (isDeletingLibrary.value) isDeletingLibrary.first { !it }
                 } while (reportState.report != null || _isImporting.value)
                 // Checked after the deletion wait rather than before it, so that a batch that waited one out does not
-                // start once the exit has begun. Skipping it still settles it in the finally below.
-                if (isLeaving()) continue
+                // start once the exit has begun. Skipping it still settles it.
+                if (isLeaving()) return@takeBatch
                 import(request)?.let { song -> showNewSongEditor(song, request) }
-                awaitImportSettled(joined = batches, held = held)
-            } finally {
-                // Here rather than in import, so that the count is honest whatever that did: returned after the
-                // preparation was cancelled, failed, or left a review that was answered or abandoned. A batch added to
-                // the review is settled with it, since it is written, or dropped, with the rest.
-                batches.forEach { batch ->
-                    _queuedImportCount.update { it - 1 }
-                    batch.settled.complete(Unit)
-                }
+                awaitImportSettled(joined = batches, held = work.held)
             }
+        }
+    }
+
+    /**
+     * Runs [block] on [request] and the batches that join its review, and settles them all however it ends: here rather
+     * than in import, so that the count is honest whatever that did: returned after the preparation was cancelled,
+     * failed, or left a review that was answered or abandoned. A batch added to the review is settled with it, since it
+     * is written, or dropped, with the rest. One whose preparation outlives this view model is not: the next one takes it.
+     */
+    private suspend fun takeBatch(request: ImportRequest, block: suspend (batches: MutableList<ImportRequest>) -> Unit) {
+        val batches = mutableListOf(request)
+        try {
+            block(batches)
+        } finally {
+            batches.forEach { batch -> if (work.preparation?.request !== batch) work.settle(batch) }
         }
     }
 

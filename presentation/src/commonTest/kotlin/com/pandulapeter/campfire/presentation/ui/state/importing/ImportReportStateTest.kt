@@ -58,6 +58,7 @@ class ImportReportStateTest {
             hasUnsavedEditorText = { false },
             savedStateStore = SavedStateStore(SavedStateHandle(), backgroundScope),
             messageSink = MessageSink(backgroundScope),
+            isImportCarriedOver = false,
         )
     }
 

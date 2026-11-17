@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 
-/** What `ImportController.prepare` came to: a plan to review or write, or why there is none. */
+/** What a preparation came to (`ImportWork.prepare`): a plan to review or write, or why there is none. */
 internal sealed interface Preparation {
     class Planned(val plan: ImportPlan) : Preparation
     class Failed(val reason: ImportFailure) : Preparation

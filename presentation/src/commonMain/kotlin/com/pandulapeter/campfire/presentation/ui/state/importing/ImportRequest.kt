@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import kotlinx.coroutines.CompletableDeferred
 
 /**
- * One batch in the [ImportController]'s queue.
+ * One batch in the import queue ([ImportWork.queue]), as [ImportController] takes it.
  *
  * @param source Emptied once a preparation has succeeded: the plan carries everything the rest of the import needs,
  *   while the request lives for as long as the review does. Kept while a preparation failed, for Try again, and an

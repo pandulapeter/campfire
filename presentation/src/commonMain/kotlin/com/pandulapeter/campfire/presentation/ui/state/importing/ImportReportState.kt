@@ -35,10 +35,12 @@ import kotlinx.coroutines.launch
 /**
  * What the import screen shows and whether it is up: the report from the files being read through the review to the
  * result, its search field, the review's choices, and the screen being put on the back stack once nothing is in its
- * way. The import work itself, which writes the report, is `ImportController`'s.
+ * way. What the report says is `ImportController`'s, over the import's work in [ImportWork].
  *
  * @param updateBackStack Changes the back stack, see `Navigator.updateBackStack`.
  * @param hasUnsavedEditorText Whether the editor holds text that is not written yet, which the import screen waits for.
+ * @param isImportCarriedOver Whether the last view model left an import running in [ImportWork] (an Android activity
+ *   destroyed while the process goes on), which this one takes over rather than calling it interrupted.
  */
 internal class ImportReportState(
     private val scope: CoroutineScope,
@@ -50,6 +52,7 @@ internal class ImportReportState(
     private val hasUnsavedEditorText: () -> Boolean,
     private val savedStateStore: SavedStateStore,
     private val messageSink: MessageSink,
+    private val isImportCarriedOver: Boolean,
 ) {
 
     /**
@@ -255,7 +258,7 @@ internal class ImportReportState(
     private fun startReportingInterruption() {
         val wasImportInterrupted = savedStateStore.restore<Boolean>(SavedStateStore.IMPORT_UNFINISHED_KEY) == true
         scope.launch { importReport.collect { savedStateStore.persist(SavedStateStore.IMPORT_UNFINISHED_KEY, it.isUnfinished) } }
-        if (wasImportInterrupted) messageSink.sendMessage(Message.ImportInterrupted)
+        if (wasImportInterrupted && !isImportCarriedOver) messageSink.sendMessage(Message.ImportInterrupted)
     }
 
     /**

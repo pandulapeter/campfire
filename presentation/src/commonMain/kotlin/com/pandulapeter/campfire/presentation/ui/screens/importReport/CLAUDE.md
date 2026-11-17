@@ -68,4 +68,6 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
 - Leaving in Loading cancels; in Failed or Review drops the import without confirmation (nothing written); while
   Importing lets it finish, reported by a snackbar; leaving a result lets the queue's next batch start.
 - **Never restored**: the plan is too large for saved state. A process ended behind an unwritten import says so; behind
-  a result it says nothing. The web's reload at `/import` says nothing either way.
+  a result it says nothing. The web's reload at `/import` says nothing either way. A view model cleared with the
+  process alive leaves a reading or writing import running (`ui/CLAUDE.md`), so the next one says nothing of it and puts
+  Loading up again; a review or failure that was waiting is dropped and said to be interrupted.

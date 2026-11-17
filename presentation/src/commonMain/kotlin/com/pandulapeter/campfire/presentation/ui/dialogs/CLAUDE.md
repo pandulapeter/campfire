@@ -36,7 +36,7 @@ away and uncovers the one under it as it was (sheet, draft, scroll), never re-op
 
 ### The rest
 
-- Imports run one at a time (`importQueue`); a batch from the OS that comes down to one song opens it once it is in
+- Imports run one at a time (`ImportWork.queue`); a batch from the OS that comes down to one song opens it once it is in
   (over the editor only once everything there is saved).
 - An import's read-only phases offer Cancel; the writing ones are never cancelled. There is no progress dialog: an
   import that cannot put its screen up yet is read under the window's progress bar (`ui/progress`); the demo import

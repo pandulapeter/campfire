@@ -44,9 +44,16 @@ import com.pandulapeter.campfire.presentation.ui.navigation.ImportPreview
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextTitle
 import com.pandulapeter.campfire.presentation.ui.state.SavedStateStore
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
+import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -97,48 +104,19 @@ class ImportControllerQueueTest {
     private lateinit var controller: ImportController
     private lateinit var reportState: ImportReportState
 
-    private fun TestScope.startController() {
-        dialogHost = DialogHost(backgroundScope)
-        messageSink = MessageSink(backgroundScope)
-        reportState = ImportReportState(
-            scope = backgroundScope,
-            dialogHost = dialogHost,
-            backStack = backStack,
-            updateBackStack = { update ->
-                backStack.update()
-                controller.onBackStackChanged()
-            },
-            songTexts = MutableStateFlow(emptyMap()),
-            editorDraft = MutableStateFlow<SongContent?>(null),
-            hasUnsavedEditorText = { false },
-            savedStateStore = SavedStateStore(SavedStateHandle(), backgroundScope),
-            messageSink = messageSink,
-        )
-        controller = ImportController(
-            scope = backgroundScope,
-            dialogHost = dialogHost,
-            messageSink = messageSink,
-            backStack = backStack,
-            reportState = reportState,
-            openLibraryItem = { item ->
-                when (item) {
-                    is LibraryItemToOpen.Song -> openedSongs += item.fileName
-                    is LibraryItemToOpen.Setlist -> openedSetlists += item.fileName
-                }
-            },
-            loadSongText = { loadedSongTexts += it },
-            openNewSongEditor = { song, suggestion ->
-                newSongTexts += song.text
-                newSongSuggestions += suggestion
-                newSongPictures += song.images.map { it.source }
-                backStack.removeAll { it is CampfireDestination.SongEditor }
-                backStack += CampfireDestination.SongEditor.newSong()
-                true
-            },
-            areSongsEnabled = { areSongsEnabled },
-            songLookup = library,
-            launchFileTransfer = { null },
-            isLeaving = { false },
+    private lateinit var work: ImportWork
+
+    /** Held open by a test, so that a preparation or a write is still running when it clears the view model. */
+    private var prepareGate: CompletableDeferred<Unit>? = null
+    private var writeGate: CompletableDeferred<Unit>? = null
+
+    /**
+     * The view model's part of the import, on [viewScope] (cancelled to clear it), over the one [ImportWork] of the app,
+     * built on the first start and kept by the next.
+     */
+    private fun TestScope.startController(viewScope: CoroutineScope = backgroundScope) {
+        if (!::work.isInitialized) work = ImportWork(
+            scope = ApplicationScope(CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext[Job]))),
             useCases = ImportUseCases(
                 downloadImportFile = object : DownloadImportFileUseCase {
                     override suspend fun invoke(url: String) = download.also { downloadedUrls += url }
@@ -148,6 +126,7 @@ class ImportControllerQueueTest {
                         prepareCount++
                         preparedFiles += files
                         onPrepare()
+                        prepareGate?.await()
                         return ImportPlan(songs = nextPlans.removeFirstOrNull() ?: plannedSongs, setlists = plannedSetlists, skippedFileNames = plannedSkipped, imageFiles = plannedImages)
                     }
                 },
@@ -159,6 +138,7 @@ class ImportControllerQueueTest {
                         onProgress: (ImportProgress) -> Unit,
                     ): ImportResult {
                         importCount++
+                        writeGate?.await()
                         if (isImportFailing) error("The disk is full.")
                         // A kept-both conflict lands under a numbered name, as the storage layer writes it.
                         val written = plan.songs.mapIndexed { index, entry ->
@@ -183,11 +163,68 @@ class ImportControllerQueueTest {
                     override suspend fun invoke() = Unit
                 },
             ),
+        )
+        dialogHost = DialogHost(viewScope)
+        messageSink = MessageSink(viewScope)
+        reportState = ImportReportState(
+            scope = viewScope,
+            dialogHost = dialogHost,
+            backStack = backStack,
+            updateBackStack = { update ->
+                backStack.update()
+                controller.onBackStackChanged()
+            },
+            songTexts = MutableStateFlow(emptyMap()),
+            editorDraft = MutableStateFlow<SongContent?>(null),
+            hasUnsavedEditorText = { false },
+            savedStateStore = SavedStateStore(SavedStateHandle(), viewScope),
+            messageSink = messageSink,
+            isImportCarriedOver = work.isImporting.value,
+        )
+        controller = ImportController(
+            scope = viewScope,
+            dialogHost = dialogHost,
+            messageSink = messageSink,
+            backStack = backStack,
+            reportState = reportState,
+            openLibraryItem = { item ->
+                when (item) {
+                    is LibraryItemToOpen.Song -> openedSongs += item.fileName
+                    is LibraryItemToOpen.Setlist -> openedSetlists += item.fileName
+                }
+            },
+            loadSongText = { loadedSongTexts += it },
+            openNewSongEditor = { song, suggestion ->
+                newSongTexts += song.text
+                newSongSuggestions += suggestion
+                newSongPictures += song.images.map { it.source }
+                backStack.removeAll { it is CampfireDestination.SongEditor }
+                backStack += CampfireDestination.SongEditor.newSong()
+                true
+            },
+            areSongsEnabled = { areSongsEnabled },
+            songLookup = library,
+            launchFileTransfer = { null },
+            isLeaving = { false },
+            work = work,
             deleteLibrary = object : DeleteLibraryUseCase {
                 override suspend fun invoke() = Unit
             },
         )
         controller.startQueue(CompletableDeferred(Unit))
+    }
+
+    /**
+     * Clears the view model as Android does when its activity finishes while the process goes on, its screens with it,
+     * and starts the next one over the same [work].
+     */
+    private fun TestScope.clearViewModelAndStartAnother(viewScope: CoroutineScope) {
+        viewScope.cancel()
+        runCurrent()
+        backStack.removeAll { it != CampfireDestination.Songs }
+        startController(CoroutineScope(backgroundScope.coroutineContext + Job()))
+        Snapshot.sendApplyNotifications()
+        runCurrent()
     }
 
     private fun SongLookup.withSongs(fileNames: List<String>) = copy(songsByFileName = songsByFileName + fileNames.associateWith(::song))
@@ -897,6 +934,139 @@ class ImportControllerQueueTest {
         runCurrent()
         assertTrue(newSongPictures.isEmpty())
         assertEquals(listOf("photo.jpg"), assertIs<ImportReport.Review>(reportState.importReport.value).plan.skippedFileNames)
+    }
+
+    @Test
+    fun `a preparation outlives a cleared view model and opens its review in the next one`() = runTest {
+        val gate = CompletableDeferred<Unit>().also { prepareGate = it }
+        val viewScope = CoroutineScope(backgroundScope.coroutineContext + Job())
+        startController(viewScope)
+        val settled = enqueueTwoSongs()
+        settle()
+        assertIs<ImportReport.Loading>(reportState.importReport.value)
+        assertEquals(ImportWorkState.UNPACKING, work.state.value)
+        clearViewModelAndStartAnother(viewScope)
+        assertEquals(ImportWorkState.UNPACKING, work.state.value)
+        assertIs<ImportReport.Loading>(reportState.importReport.value)
+        assertTrue(CampfireDestination.ImportReport in backStack)
+        assertTrue(controller.isImporting.value)
+        assertFalse(settled.isCompleted)
+        assertEquals(1, controller.queuedImportCount.value)
+        gate.complete(Unit)
+        settle()
+        assertEquals(1, prepareCount)
+        assertEquals(ImportWorkState.IDLE, work.state.value)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        controller.confirmImport()
+        settle()
+        assertEquals(1, importCount)
+        leaveImportReport()
+        assertTrue(settled.isCompleted)
+        assertEquals(0, controller.queuedImportCount.value)
+    }
+
+    @Test
+    fun `a preparation that finished while nobody watched opens its review when the next view model starts`() = runTest {
+        val gate = CompletableDeferred<Unit>().also { prepareGate = it }
+        val viewScope = CoroutineScope(backgroundScope.coroutineContext + Job())
+        startController(viewScope)
+        val settled = enqueueTwoSongs()
+        settle()
+        viewScope.cancel()
+        gate.complete(Unit)
+        settle()
+        assertEquals(ImportWorkState.IDLE, work.state.value)
+        assertFalse(settled.isCompleted)
+        backStack.removeAll { it != CampfireDestination.Songs }
+        startController(CoroutineScope(backgroundScope.coroutineContext + Job()))
+        settle()
+        assertEquals(1, prepareCount)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        assertTrue(CampfireDestination.ImportReport in backStack)
+        // Nothing was lost, so nothing is said to have been.
+        assertTrue(messageSink.messageQueue.value.isEmpty())
+        leaveImportReport()
+        assertTrue(settled.isCompleted)
+        assertEquals(0, importCount)
+    }
+
+    @Test
+    fun `a write outlives a cleared view model and keeps the next one's queue waiting until it ends`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        val viewScope = CoroutineScope(backgroundScope.coroutineContext + Job())
+        startController(viewScope)
+        enqueue()
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        val gate = CompletableDeferred<Unit>().also { writeGate = it }
+        controller.confirmImport()
+        settle()
+        assertEquals(ImportWorkState.WRITING, work.state.value)
+        clearViewModelAndStartAnother(viewScope)
+        assertEquals(ImportWorkState.WRITING, work.state.value)
+        assertTrue(controller.isImporting.value)
+        enqueue()
+        settle()
+        assertEquals(1, prepareCount)
+        gate.complete(Unit)
+        settle()
+        assertEquals(1, importCount)
+        assertEquals(2, prepareCount)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+    }
+
+    @Test
+    fun `the work reads downloading, unpacking, idle while the review waits, and writing while it is imported`() = runTest {
+        download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
+        val states = mutableListOf<ImportWorkState>()
+        startController()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { work.state.collect { states += it } }
+        controller.importSharedLink(sharedLink)
+        settle()
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        controller.confirmImport()
+        settle()
+        assertEquals(1, importCount)
+        assertEquals(
+            listOf(
+                ImportWorkState.IDLE,
+                ImportWorkState.DOWNLOADING,
+                ImportWorkState.UNPACKING,
+                ImportWorkState.IDLE,
+                ImportWorkState.WRITING,
+                ImportWorkState.IDLE,
+            ),
+            states,
+        )
+    }
+
+    @Test
+    fun `the work's cancel ends a preparation as the screen's Cancel does`() = runTest {
+        prepareGate = CompletableDeferred()
+        startController()
+        val settled = enqueueTwoSongs()
+        settle()
+        assertEquals(ImportWorkState.UNPACKING, work.state.value)
+        work.cancel()
+        settle()
+        assertEquals(ImportWorkState.IDLE, work.state.value)
+        assertNull(reportState.importReport.value)
+        assertFalse(CampfireDestination.ImportReport in backStack)
+        assertFalse(controller.isImporting.value)
+        assertTrue(settled.isCompleted)
+        assertEquals(0, importCount)
+        assertTrue(messageSink.messageQueue.value.isEmpty())
+    }
+
+    /**
+     * Two song files, which the import screen is put up for while they are read (see [isReportedWhileRead]), planned as
+     * two songs, which it reviews rather than previews.
+     */
+    private fun enqueueTwoSongs(): CompletableDeferred<Unit> {
+        plannedSongs = listOf(songEntry("a.cho"), songEntry("b.cho"))
+        return controller.enqueueImport(
+            ImportSource.Files(listOf(ImportedFile(name = "a.cho", bytes = byteArrayOf(1)), ImportedFile(name = "b.cho", bytes = byteArrayOf(2)))),
+        )
     }
 
     private fun enqueuePaste(suggestion: SharedTextTitle? = null) = controller.enqueueImport(

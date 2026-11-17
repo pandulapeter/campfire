@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.library.GetSharedLinkImportUseCase
 import org.koin.core.annotation.Factory
 
-/** The use cases [ImportController] receives, reads, and writes imports with, which the view model passes on as one. */
+/** The use cases [ImportWork] receives, reads, and writes imports with, which Koin hands it as one. */
 @Factory
 class ImportUseCases(
     internal val downloadImportFile: DownloadImportFileUseCase,

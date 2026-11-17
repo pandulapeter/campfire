@@ -126,8 +126,8 @@ import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportController
-import com.pandulapeter.campfire.presentation.ui.state.importing.ImportUseCases
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportReportState
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportSource
 import com.pandulapeter.campfire.presentation.ui.state.importing.PastedSongController
 import com.pandulapeter.campfire.presentation.ui.state.LibraryState
@@ -180,7 +180,7 @@ class CampfireViewModel(
     private val editSongs: EditSongsUseCase,
     deleteSong: DeleteSongUseCase,
     private val deleteLibrary: DeleteLibraryUseCase,
-    importUseCases: ImportUseCases,
+    importWork: ImportWork,
     private val exportUseCases: ExportUseCases,
     songTextUseCases: SongTextUseCases,
     private val createSetlist: CreateSetlistUseCase,
@@ -494,6 +494,7 @@ class CampfireViewModel(
         hasUnsavedEditorText = { editorSession.hasUnsavedEditorText() },
         savedStateStore = savedStateStore,
         messageSink = messageSink,
+        isImportCarriedOver = importWork.isImporting.value,
     )
 
     internal val importController: ImportController = ImportController(
@@ -509,7 +510,7 @@ class CampfireViewModel(
         songLookup = libraryState.songLookup,
         launchFileTransfer = { exportController.launchFileTransfer(it) },
         isLeaving = { isLeaving },
-        useCases = importUseCases,
+        work = importWork,
         deleteLibrary = deleteLibrary,
     )
 
