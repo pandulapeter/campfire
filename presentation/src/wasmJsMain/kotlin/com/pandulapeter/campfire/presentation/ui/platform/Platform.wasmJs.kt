@@ -27,6 +27,8 @@ internal actual val isCtrlWheelZoomOwnedByApp = false
 
 internal actual val isStartupScreenHeldUntilAppReady = true
 
+internal actual val isImportBoundToPage = true
+
 // The Origin Private File System is not reachable from outside the page.
 internal actual val isLibraryEditableOutsideApp = false
 

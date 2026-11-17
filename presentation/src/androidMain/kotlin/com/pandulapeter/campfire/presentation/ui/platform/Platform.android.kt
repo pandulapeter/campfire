@@ -19,6 +19,8 @@ internal actual val isCtrlWheelZoomOwnedByApp = false
 
 internal actual val isStartupScreenHeldUntilAppReady = true
 
+internal actual val isImportBoundToPage = false
+
 // The files live in the app's private storage, which no file manager will show.
 internal actual val isLibraryEditableOutsideApp = false
 

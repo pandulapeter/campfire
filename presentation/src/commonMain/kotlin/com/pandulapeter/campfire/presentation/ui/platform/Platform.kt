@@ -42,6 +42,13 @@ internal expect val isCtrlWheelZoomOwnedByApp: Boolean
  */
 internal expect val isStartupScreenHeldUntilAppReady: Boolean
 
+/**
+ * Whether an import goes with the page it runs in: true only on the web, where closing the tab ends it, and where the
+ * import screen therefore asks for the tab to be kept open. The other platforms keep the app working once it is left
+ * (a foreground service, a continued processing task, or the desktop's own process asking before it quits).
+ */
+internal expect val isImportBoundToPage: Boolean
+
 /** Whether the library is a folder the user can reach from outside the app, and so edit behind its back. */
 internal expect val isLibraryEditableOutsideApp: Boolean
 

@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">חולצו %1$s מתוך %2$s</string>
     <string name="import_progress_bytes_unpacking_so_far">חולצו %1$s עד עכשיו</string>
     <string name="import_progress_wait">יש להשאיר את Campfire פתוח עד שהייבוא יסתיים.</string>
+    <string name="import_progress_wait_tab">השאירו את הכרטיסייה פתוחה עד שהייבוא יסתיים; סגירתה עוצרת את הייבוא.</string>
     <string name="import_status_title">הייבוא הושלם</string>
     <string name="import_status_stopped">הייבוא נעצר</string>
     <string name="import_status_partial">הייבוא נעצר בעקבות כשל. הקבצים שכבר יובאו נמצאים בספרייה; שאר הקבצים לא עובדו.</string>

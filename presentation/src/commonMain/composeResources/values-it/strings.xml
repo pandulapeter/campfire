@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">%1$s di %2$s estratti</string>
     <string name="import_progress_bytes_unpacking_so_far">%1$s estratti finora</string>
     <string name="import_progress_wait">Tieni Campfire aperto finché l\'importazione non è terminata.</string>
+    <string name="import_progress_wait_tab">Tieni aperta questa scheda finché l\'importazione non è terminata; chiudendola, l\'importazione si interrompe.</string>
     <string name="import_status_title">Importazione completata</string>
     <string name="import_status_stopped">Importazione interrotta</string>
     <string name="import_status_partial">L\'importazione si è interrotta per un errore. I file già importati sono nella tua libreria; i restanti non sono stati elaborati.</string>

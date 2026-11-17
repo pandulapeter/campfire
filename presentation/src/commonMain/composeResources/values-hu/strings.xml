@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">%1$s / %2$s kicsomagolva</string>
     <string name="import_progress_bytes_unpacking_so_far">Eddig %1$s kicsomagolva</string>
     <string name="import_progress_wait">Kérjük, hagyd nyitva a Campfire-t az importálás végéig.</string>
+    <string name="import_progress_wait_tab">Hagyd nyitva ezt a lapot, amíg az importálás befejeződik; ha bezárod, az importálás leáll.</string>
     <string name="import_status_title">Importálás kész</string>
     <string name="import_status_stopped">Importálás megszakadt</string>
     <string name="import_status_partial">Az importálás egy hiba miatt megszakadt. A már importált fájlok a könyvtáradban vannak; a hátralévő fájlok nem lettek feldolgozva.</string>

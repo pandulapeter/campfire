@@ -29,10 +29,15 @@ import com.pandulapeter.campfire.presentation.ui.platform.WebMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.platform.droppedTexts
 import com.pandulapeter.campfire.presentation.ui.platform.sharedLinks
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWorkState
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import org.w3c.dom.events.KeyboardEvent
 import kotlin.js.ExperimentalWasmJsInterop
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -101,9 +106,12 @@ fun CampfireWebApp(
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
     FaviconEffect(viewModel)
-    LaunchedEffect(viewModel) {
-        viewModel.editorSession.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
-            if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
+    val importWork = koinInject<ImportWork>()
+    LaunchedEffect(viewModel, importWork) {
+        combine(viewModel.editorSession.hasUnsavedEditorChanges, importWork.state) { hasUnsavedChanges, workState ->
+            hasUnsavedChanges || workState != ImportWorkState.IDLE
+        }.distinctUntilChanged().collect { isLosingWork ->
+            if (isLosingWork) startWarningBeforeUnload() else stopWarningBeforeUnload()
         }
     }
     DisposableEffect(Unit) {
@@ -140,13 +148,15 @@ private fun openInNewTab(url: String) {
  * Makes the browser ask before the page is left - reloaded, closed, or navigated away from. The browser's Back does
  * not leave it while there is an editor to leave, since the editor has a history entry of its own and going back from
  * it asks the app's own question instead (see BrowserHistoryEffect). The editor only writes when it is told to, so
- * at that moment the page holds the only copy of what was typed.
+ * at that moment the page holds the only copy of what was typed. An import's work goes with the page too: one being
+ * received, downloaded, or unpacked would have to start over, and one being written would stop halfway (its songs so
+ * far in the library, its setlists not), so the browser asks while either is going.
  *
- * The listener exists only while there is unsaved text ([stopWarningBeforeUnload] otherwise): a page with a
- * `beforeunload` listener is one the browser cannot keep in its back/forward cache, and one that always asks is
- * one the browser stops listening to. What the prompt says is the browser's own business - the text a page
- * supplies has not been shown by any of them for years - so there is nothing here to translate. The browser
- * also only asks once the user has interacted with the page, which typing has taken care of.
+ * The listener exists only while there is unsaved text or an import works ([stopWarningBeforeUnload] otherwise): a page
+ * with a `beforeunload` listener is one the browser cannot keep in its back/forward cache, and one that always asks is
+ * one the browser stops listening to. What the prompt says is the browser's own business - the text a page supplies
+ * has not been shown by any of them for years - so there is nothing here to translate. The browser also only asks once
+ * the user has interacted with the page, which typing, or picking or dropping what is imported, has taken care of.
  */
 private fun startWarningBeforeUnload() {
     js(

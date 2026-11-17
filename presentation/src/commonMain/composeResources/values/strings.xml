@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">Unpacking %1$s of %2$s</string>
     <string name="import_progress_bytes_unpacking_so_far">%1$s unpacked so far</string>
     <string name="import_progress_wait">Please keep Campfire open until the import finishes.</string>
+    <string name="import_progress_wait_tab">Keep this tab open until the import finishes; closing it stops the import.</string>
     <string name="import_status_title">Import complete</string>
     <string name="import_status_stopped">Import stopped</string>
     <string name="import_status_partial">The import stopped after a failure. Files already imported are in your library; the remaining files were not processed.</string>

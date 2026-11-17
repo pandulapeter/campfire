@@ -63,9 +63,13 @@ and most dialogs open with a field focused.
 
 ### `beforeunload`
 
-Registered only while `hasUnsavedEditorChanges`, since a page with one is kept out of the back/forward cache. The
-browser's Back is answered by the app's own unsaved changes question instead. iOS browsers don't reliably fire it on tab
-close.
+Registered only while `hasUnsavedEditorChanges` or an import works (`ImportWork.state` not idle, the write included),
+since a page with one is kept out of the back/forward cache. The browser's Back is answered by the app's own unsaved
+changes question instead. iOS browsers don't reliably fire it on tab close. A hidden tab keeps importing: the import
+waits on no frame or timer (its loops yield with `yield()` or awaited I/O; the download's stall limit can only end it
+later in a hidden tab), and the library's Web Lock, held for the page's life (`app/web/CLAUDE.md`), is what keeps
+Chrome's Energy Saver from freezing it; a discard after long hours hidden stays a stated limit. The Loading stage says to
+keep the tab open (`isImportBoundToPage`).
 
 ## Addresses and history
 

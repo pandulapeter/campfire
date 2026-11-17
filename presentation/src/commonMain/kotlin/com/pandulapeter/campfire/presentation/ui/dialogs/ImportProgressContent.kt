@@ -43,7 +43,9 @@ import com.pandulapeter.campfire.presentation.resources.import_progress_reading
 import com.pandulapeter.campfire.presentation.resources.import_progress_receiving
 import com.pandulapeter.campfire.presentation.resources.import_progress_unpacking
 import com.pandulapeter.campfire.presentation.resources.import_progress_wait
+import com.pandulapeter.campfire.presentation.resources.import_progress_wait_tab
 import com.pandulapeter.campfire.presentation.ui.components.formattedSize
+import com.pandulapeter.campfire.presentation.ui.platform.isImportBoundToPage
 
 /**
  * How far an import is, which the import screen shows both while the files are read and while they are written. The
@@ -86,7 +88,7 @@ internal fun ImportProgressContent(
         )
     }
     Text(
-        text = stringResource(Res.string.import_progress_wait),
+        text = stringResource(if (isImportBoundToPage) Res.string.import_progress_wait_tab else Res.string.import_progress_wait),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

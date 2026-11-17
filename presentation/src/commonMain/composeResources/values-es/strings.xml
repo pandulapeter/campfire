@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">Descomprimiendo %1$s de %2$s</string>
     <string name="import_progress_bytes_unpacking_so_far">%1$s descomprimidos hasta ahora</string>
     <string name="import_progress_wait">Mantén Campfire abierto hasta que termine la importación.</string>
+    <string name="import_progress_wait_tab">Mantén esta pestaña abierta hasta que termine la importación; si la cierras, la importación se detiene.</string>
     <string name="import_status_title">Importación completada</string>
     <string name="import_status_stopped">Importación detenida</string>
     <string name="import_status_partial">La importación se detuvo tras un error. Los archivos ya importados están en tu biblioteca; el resto no se procesó.</string>

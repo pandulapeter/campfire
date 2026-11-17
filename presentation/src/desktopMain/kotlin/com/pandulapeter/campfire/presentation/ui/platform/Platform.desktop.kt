@@ -24,6 +24,8 @@ internal actual val isCtrlWheelZoomOwnedByApp = true
 
 internal actual val isStartupScreenHeldUntilAppReady = false
 
+internal actual val isImportBoundToPage = false
+
 // The library is in the platform's application data folder, which the user can open and edit files in.
 internal actual val isLibraryEditableOutsideApp get() = PlatformImpersonation.platform != ImpersonatedPlatform.ANDROID
 

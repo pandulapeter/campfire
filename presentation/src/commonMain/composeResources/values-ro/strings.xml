@@ -47,6 +47,7 @@
     <string name="import_progress_bytes_unpacking">S-au dezarhivat %1$s din %2$s</string>
     <string name="import_progress_bytes_unpacking_so_far">S-au dezarhivat %1$s până acum</string>
     <string name="import_progress_wait">Ține Campfire deschis până se termină importul.</string>
+    <string name="import_progress_wait_tab">Lasă această filă deschisă până se termină importul; dacă o închizi, importul se oprește.</string>
     <string name="import_status_title">Import finalizat</string>
     <string name="import_status_stopped">Import oprit</string>
     <string name="import_status_partial">Importul s-a oprit după o eroare. Fișierele deja importate sunt în bibliotecă; celelalte nu au fost procesate.</string>
