@@ -28,6 +28,9 @@ interface ImageLocalSource {
 
     suspend fun listImageNames(shelf: ImageShelf): List<String>
 
+    /** The size on disk of every file [listImageNames] lists, by name, read from the listing without reading a file. */
+    suspend fun listImageSizes(shelf: ImageShelf): Map<String, Long>
+
     /** Does nothing where the picture is not there. */
     suspend fun deleteImage(shelf: ImageShelf, name: String)
 }

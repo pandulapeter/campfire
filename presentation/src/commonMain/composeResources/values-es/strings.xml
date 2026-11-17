@@ -412,6 +412,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Canciones %1$s</string>
+    <string name="settings_library_size_setlists">Repertorios %1$s</string>
+    <string name="settings_library_size_pictures">Imágenes %1$s</string>
+    <string name="settings_library_size_attachments">Adjuntos %1$s</string>
     <string name="settings_library_cover_art_cache">Caché de portadas</string>
     <string name="settings_library_cover_art_cache_clear">Vaciar caché de portadas</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">Se eliminarán las portadas guardadas en este dispositivo. Cada una se volverá a descargar la próxima vez que se muestre.</string>

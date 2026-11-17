@@ -412,6 +412,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Canzoni %1$s</string>
+    <string name="settings_library_size_setlists">Scalette %1$s</string>
+    <string name="settings_library_size_pictures">Immagini %1$s</string>
+    <string name="settings_library_size_attachments">Allegati %1$s</string>
     <string name="settings_library_cover_art_cache">Cache delle copertine</string>
     <string name="settings_library_cover_art_cache_clear">Svuota cache delle copertine</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">Le copertine salvate su questo dispositivo verranno eliminate. Ognuna verrà scaricata di nuovo la prossima volta che viene mostrata.</string>

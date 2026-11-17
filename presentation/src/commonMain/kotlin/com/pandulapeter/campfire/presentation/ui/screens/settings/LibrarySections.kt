@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_demo_library
@@ -37,11 +39,15 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_cover_a
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_size
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_attachments
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_bytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_gigabytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_kilobytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_megabytes
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_pictures
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_setlists
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_songs
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_best_effort
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_granted
@@ -156,7 +162,7 @@ private fun OnThisDeviceSection(
     AnimatedSettingsRow(value = librarySummary) { summary ->
         DeletableSettingsRow(
             title = stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount),
-            description = stringResource(Res.string.settings_library_size, formattedSize(summary.size)),
+            description = { LibrarySizeDescription(summary) },
             deleteLabel = stringResource(Res.string.settings_library_delete),
             isEnabled = summary.songCount + summary.setlistCount > 0 && !isImporting && !isPerformanceModeEnabled,
             onClick = { showDialog(DialogType.DeleteLibrary) },
@@ -166,7 +172,7 @@ private fun OnThisDeviceSection(
     AnimatedSettingsRow(value = coverArtCacheSize?.takeIf { it > 0 }) { size ->
         DeletableSettingsRow(
             title = stringResource(Res.string.settings_library_cover_art_cache),
-            description = stringResource(Res.string.settings_library_size, formattedSize(size)),
+            description = { Text(stringResource(Res.string.settings_library_size, formattedSize(size))) },
             deleteLabel = stringResource(Res.string.settings_library_cover_art_cache_clear),
             isEnabled = !isPerformanceModeEnabled,
             onClick = { showDialog(DialogType.ClearCoverArtCache) },
@@ -199,6 +205,26 @@ private fun OnThisDeviceSection(
 }
 
 /**
+ * The library's size on disk, and under it what that is made of once more than one part takes up space, the line coming
+ * and going as a row of the section does.
+ */
+@Composable
+private fun LibrarySizeDescription(summary: LibrarySummary) = Column {
+    Text(stringResource(Res.string.settings_library_size, formattedSize(summary.size)))
+    AnimatedSettingsRow(value = sizeBreakdownOf(summary).takeIf { it.isNotEmpty() }) { breakdown ->
+        Text(breakdown.map { (part, size) -> stringResource(part.label, formattedSize(size)) }.joinIsolated(" · "))
+    }
+}
+
+private val LibraryPart.label
+    get() = when (this) {
+        LibraryPart.SONGS -> Res.string.settings_library_size_songs
+        LibraryPart.SETLISTS -> Res.string.settings_library_size_setlists
+        LibraryPart.PICTURES -> Res.string.settings_library_size_pictures
+        LibraryPart.ATTACHMENTS -> Res.string.settings_library_size_attachments
+    }
+
+/**
  * A row that says how much of something is on the device and deletes it when tapped, which the icon at its end says
  * before anybody taps it. The dialog it opens is the confirmation, so the row itself asks nothing.
  *
@@ -207,7 +233,7 @@ private fun OnThisDeviceSection(
 @Composable
 private fun DeletableSettingsRow(
     title: String,
-    description: String,
+    description: @Composable () -> Unit,
     deleteLabel: String,
     isEnabled: Boolean,
     onClick: () -> Unit,
@@ -215,7 +241,7 @@ private fun DeletableSettingsRow(
     modifier = Modifier.clickable(enabled = isEnabled, onClickLabel = deleteLabel, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
-    supportingContent = { Text(description) },
+    supportingContent = description,
     trailingContent = { Icon(painter = painterResource(Res.drawable.ic_delete), contentDescription = deleteLabel) },
 )
 

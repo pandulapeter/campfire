@@ -414,6 +414,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Músicas %1$s</string>
+    <string name="settings_library_size_setlists">Repertórios %1$s</string>
+    <string name="settings_library_size_pictures">Imagens %1$s</string>
+    <string name="settings_library_size_attachments">Anexos %1$s</string>
     <string name="settings_library_cover_art_cache">Cache de capas</string>
     <string name="settings_library_cover_art_cache_clear">Limpar cache de capas</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">As imagens de capa guardadas neste dispositivo serão excluídas. Cada uma é baixada de novo na próxima vez que for exibida.</string>

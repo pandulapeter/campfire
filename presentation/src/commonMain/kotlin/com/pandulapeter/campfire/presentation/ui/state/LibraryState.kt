@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.domain.api.library.ScreenData
 import com.pandulapeter.campfire.domain.api.library.SongFilter
@@ -29,6 +30,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flowOn
@@ -47,6 +49,7 @@ internal class LibraryState(
     songFilter: StateFlow<SongFilter>,
     private val loadScreenData: LoadScreenDataUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
+    libraryFileSizes: StateFlow<LibraryFileSizes?>,
 ) {
 
     /**
@@ -167,22 +170,26 @@ internal class LibraryState(
     val songsByFileName = songLookup.map { it.songsByFileName }.asState(scope, emptyMap())
 
     /**
-     * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
-     * is added up from what the scan read off every file, so it costs no listing of its own and arrives in the same value
-     * as the counts.
+     * Null until the library has actually been read and its files listed, so that the settings screen never flashes a
+     * count of zero, nor a size that grows by its pictures a moment later. The songs' and setlists' sizes are added up
+     * from what the scan read off every file, so they cost no listing of their own and arrive in the same value as the
+     * counts.
      */
-    val librarySummary = screenData
-        .map { state ->
-            // A library with an unreadable part standing in empty is not one to count.
-            state.data?.takeIf { it.isWholeLibrary }?.let { data ->
+    val librarySummary = combine(screenData, libraryFileSizes) { state, fileSizes ->
+        // A library with an unreadable part standing in empty is not one to count.
+        state.data?.takeIf { it.isWholeLibrary }?.let { data ->
+            fileSizes?.let {
                 LibrarySummary(
                     songCount = data.unfilteredSongs.size,
                     setlistCount = data.setlists.size,
-                    size = data.unfilteredSongs.sumOf { it.size } + data.setlists.sumOf { it.size },
+                    songsSize = data.unfilteredSongs.sumOf { it.size },
+                    setlistsSize = data.setlists.sumOf { it.size },
+                    picturesSize = fileSizes.picturesSize,
+                    attachmentsSize = fileSizes.attachmentsSize,
                 )
             }
         }
-        .asState(scope, null)
+    }.asState(scope, null)
 
     /** When the last rescan started or, once it has finished, finished; see [refreshIfStale]. */
     private var lastRescanAt: TimeMark? = null

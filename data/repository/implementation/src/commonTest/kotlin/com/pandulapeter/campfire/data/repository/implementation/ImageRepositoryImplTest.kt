@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
@@ -147,6 +148,20 @@ class ImageRepositoryImplTest {
 
         assertEquals(setOf(kept), local.shelves.getValue(ImageShelf.LIBRARY).keys)
         assertTrue(dropped !in local.shelves.getValue(ImageShelf.LIBRARY))
+    }
+
+    @Test
+    fun `the library's sizes count its pictures, follow every write, and leave the draft's out`() = runTest {
+        val repository = repository()
+        runCurrent()
+        assertEquals(LibraryFileSizes(picturesSize = 0, attachmentsSize = 0), repository.librarySizes.value)
+
+        val name = assertAccepted(repository.withImagesKept { it.addImage(PHOTO) })
+        repository.addDraftImage(OTHER)
+        publish(song("a.cho", name))
+        runCurrent()
+
+        assertEquals(LibraryFileSizes(picturesSize = PHOTO.size.toLong(), attachmentsSize = 0), repository.librarySizes.value)
     }
 
     @Test

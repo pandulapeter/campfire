@@ -416,6 +416,10 @@
     <string name="settings_library_size_megabytes">%1$s Mo</string>
     <string name="settings_library_size_gigabytes">%1$s Go</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Chansons %1$s</string>
+    <string name="settings_library_size_setlists">Setlists %1$s</string>
+    <string name="settings_library_size_pictures">Images %1$s</string>
+    <string name="settings_library_size_attachments">Pièces jointes %1$s</string>
     <string name="settings_library_cover_art_cache">Cache des pochettes</string>
     <string name="settings_library_cover_art_cache_clear">Vider le cache des pochettes</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">Les pochettes conservées sur cet appareil seront supprimées. Chacune sera de nouveau téléchargée la prochaine fois qu\'elle s\'affichera.</string>

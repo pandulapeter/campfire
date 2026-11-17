@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageChangesUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.GetImageUseCase
+import com.pandulapeter.campfire.domain.api.images.GetLibraryFileSizesUseCase
 import com.pandulapeter.campfire.domain.api.images.ReadImageSizeUseCase
 import com.pandulapeter.campfire.domain.api.images.SaveSongImageUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetSongContentInvalidationsUseCase
@@ -28,7 +29,7 @@ import org.koin.core.annotation.Factory
 
 /**
  * The use cases [SongTextStore] keeps its texts in step with the files by, and the ones the pictures those texts name are
- * read and added with, which the view model passes on as one.
+ * read and added with (and the size of all of them listed with), which the view model passes on as one.
  */
 @Factory
 class SongTextUseCases(
@@ -36,6 +37,7 @@ class SongTextUseCases(
     internal val getImageSize: GetImageSizeUseCase,
     internal val getImage: GetImageUseCase,
     internal val getImageChanges: GetImageChangesUseCase,
+    internal val getLibraryFileSizes: GetLibraryFileSizesUseCase,
     internal val saveSongImage: SaveSongImageUseCase,
     internal val readImageSize: ReadImageSizeUseCase,
     internal val examineImage: ExamineImageUseCase,

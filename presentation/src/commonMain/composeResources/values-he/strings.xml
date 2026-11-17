@@ -449,6 +449,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">.</string>
+    <string name="settings_library_size_songs">שירים %1$s</string>
+    <string name="settings_library_size_setlists">סט־ליסטים %1$s</string>
+    <string name="settings_library_size_pictures">תמונות %1$s</string>
+    <string name="settings_library_size_attachments">קבצים מצורפים %1$s</string>
     <string name="settings_library_cover_art_cache">מטמון תמונות העטיפה</string>
     <string name="settings_library_cover_art_cache_clear">ניקוי מטמון תמונות העטיפה</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">תמונות העטיפה שנשמרו במכשיר הזה יימחקו. כל אחת תורד מחדש בפעם הבאה שהיא מוצגת.</string>

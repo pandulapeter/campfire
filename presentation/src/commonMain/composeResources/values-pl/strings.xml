@@ -440,6 +440,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Piosenki %1$s</string>
+    <string name="settings_library_size_setlists">Setlisty %1$s</string>
+    <string name="settings_library_size_pictures">Obrazy %1$s</string>
+    <string name="settings_library_size_attachments">Załączniki %1$s</string>
     <string name="settings_library_cover_art_cache">Pamięć podręczna okładek</string>
     <string name="settings_library_cover_art_cache_clear">Wyczyść pamięć okładek</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">Okładki zapisane na tym urządzeniu zostaną usunięte. Każda zostanie pobrana ponownie, gdy będzie znów wyświetlana.</string>

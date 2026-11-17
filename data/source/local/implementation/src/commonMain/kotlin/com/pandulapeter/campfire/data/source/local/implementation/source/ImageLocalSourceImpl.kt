@@ -42,6 +42,10 @@ internal class ImageLocalSourceImpl(
 
     override suspend fun listImageNames(shelf: ImageShelf) = fileStorage.listNames(shelf.directory).filter(LibraryFiles::isLibraryImageName)
 
+    override suspend fun listImageSizes(shelf: ImageShelf) = fileStorage.list(shelf.directory)
+        .filter { LibraryFiles.isLibraryImageName(it.name) }
+        .associate { it.name to it.size }
+
     override suspend fun deleteImage(shelf: ImageShelf, name: String) {
         if (LibraryFiles.isLibraryImageName(name)) fileStorage.delete(shelf.directory, name)
     }

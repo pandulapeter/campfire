@@ -22,7 +22,8 @@ do the wide layout's pages. A build without sync leaves Sharing out.
   features (`settingsTabs`, tested); `settings/preferences` and `settings/songs` addresses open General and Song.
 - Set up Campfire again leads About's Help.
 - **Library**: On this device last, since its rows can't be undone. Deleting the library wants `DELETE` typed in every
-  language (into a capitalizing field).
+  language (into a capitalizing field). Its row's size is songs, setlists, and `library/files` (listed, never read;
+  pictures by `IMAGE_EXTENSIONS`, the rest attachments), with a line naming the parts once two take up space.
 - **Sharing**: there while disconnected too. Stages crossfade, except the list arriving over "Nothing shared yet".
   Settling into view (not being composed by the pager) reads the account's list once per visit; the mirror shows
   meanwhile and offline, saying so once a read fails. A row being stopped (every row, for Stop sharing everything)

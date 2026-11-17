@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -30,6 +31,12 @@ interface ImageRepository {
      * asks again.
      */
     val changes: StateFlow<Long>
+
+    /**
+     * What the library's files take up on disk, listed again after every [changes]; null until first listed. Never the
+     * draft's, which are not the library's until Save.
+     */
+    val librarySizes: StateFlow<LibraryFileSizes?>
 
     /**
      * The picture called [name], from the library or else the editor's draft, or null where neither holds it or it

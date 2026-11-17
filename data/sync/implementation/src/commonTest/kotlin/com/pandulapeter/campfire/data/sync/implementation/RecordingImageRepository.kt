@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,8 @@ internal class RecordingImageRepository : ImageRepository {
     var changeCount = 0
 
     override val changes: StateFlow<Long> = MutableStateFlow(0L)
+
+    override val librarySizes: StateFlow<LibraryFileSizes?> get() = throw UnsupportedOperationException()
 
     override suspend fun loadImage(name: String): ByteArray? = throw UnsupportedOperationException()
 

@@ -412,6 +412,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">.</string>
+    <string name="settings_library_size_songs">Songs %1$s</string>
+    <string name="settings_library_size_setlists">Setlists %1$s</string>
+    <string name="settings_library_size_pictures">Pictures %1$s</string>
+    <string name="settings_library_size_attachments">Attachments %1$s</string>
     <string name="settings_library_cover_art_cache">Cover art cache</string>
     <string name="settings_library_cover_art_cache_clear">Clear cover art cache</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">The cover images kept on this device will be deleted. Each one is downloaded again the next time it is shown.</string>

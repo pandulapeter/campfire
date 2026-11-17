@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.model.library.ExportFileWriter
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.library.PackedArchive
 import com.pandulapeter.campfire.data.model.setlist.ParsedSetlist
 import com.pandulapeter.campfire.data.model.setlist.Setlist
@@ -251,6 +252,7 @@ internal class FakeExportFileRepository : ExportFileRepository {
 /** An [ImageRepository] whose every member fails the same way, for a test to override only what it expects to be called. */
 internal open class ImageRepositoryStub : ImageRepository {
     override val changes: StateFlow<Long> get() = unexpected()
+    override val librarySizes: StateFlow<LibraryFileSizes?> get() = unexpected()
     override suspend fun loadImage(name: String): ByteArray? = unexpected()
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
@@ -277,6 +279,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
         private set
 
     override val changes: StateFlow<Long> = MutableStateFlow(0L)
+
+    override val librarySizes: StateFlow<LibraryFileSizes?> get() = unexpected()
 
     override suspend fun loadImage(name: String) = library[name]
 

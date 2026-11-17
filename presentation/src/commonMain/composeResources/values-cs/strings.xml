@@ -445,6 +445,10 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_size_songs">Písně %1$s</string>
+    <string name="settings_library_size_setlists">Setlisty %1$s</string>
+    <string name="settings_library_size_pictures">Obrázky %1$s</string>
+    <string name="settings_library_size_attachments">Přílohy %1$s</string>
     <string name="settings_library_cover_art_cache">Mezipaměť obalů</string>
     <string name="settings_library_cover_art_cache_clear">Vymazat mezipaměť obalů</string>
     <string name="settings_library_cover_art_cache_clear_confirmation">Obaly uložené v tomto zařízení budou smazány. Každý se znovu stáhne, až bude příště zobrazen.</string>

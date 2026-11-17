@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.recovering
 import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
@@ -26,6 +28,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -56,6 +59,8 @@ internal class ImageRepositoryImpl(
     private val sizesMutex = Mutex()
     private val _changes = MutableStateFlow(0L)
     override val changes = _changes.asStateFlow()
+    private val _librarySizes = MutableStateFlow<LibraryFileSizes?>(null)
+    override val librarySizes = _librarySizes.asStateFlow()
 
     /** What the editor's open text names, or until it says, what the draft it left behind names. Guarded by [keeping]. */
     private var editorImages = emptySet<String>()
@@ -85,6 +90,7 @@ internal class ImageRepositoryImpl(
                 if (draftNames != null) tidyDraftShelf(keep = draftNames + editorImages)
             }
             launch { songRepository.songs.filterIsInstance<DataState.Idle<*>>().collect { pruneRequests.send(Unit) } }
+            launch { changes.collectLatest { _librarySizes.value = listLibrarySizes() } }
             for (request in pruneRequests) prune()
         }
     }
@@ -202,6 +208,15 @@ internal class ImageRepositoryImpl(
     /** Whether a shelf holds different bytes under [name], which makes the name another picture's. */
     private suspend fun otherBytesUnder(name: String, bytes: ByteArray, vararg shelves: ImageShelf) = shelves.any { shelf ->
         imageLocalSource.readImage(shelf, name)?.contentEquals(bytes) == false
+    }
+
+    /** Zero where the folder cannot be listed, so that a failure leaves Settings showing the songs' size rather than none. */
+    private suspend fun listLibrarySizes(): LibraryFileSizes {
+        val sizes = environment.logger.recovering(describe = { "Could not list the library's files: ${it::class.simpleName}" }, fallback = { emptyMap() }) {
+            imageLocalSource.listImageSizes(ImageShelf.LIBRARY)
+        }
+        val (pictures, attachments) = sizes.entries.partition { LibraryFiles.isLibraryImageName(it.key) }
+        return LibraryFileSizes(picturesSize = pictures.sumOf { it.value }, attachmentsSize = attachments.sumOf { it.value })
     }
 
     /** Must be called under [keeping]. */

@@ -10,12 +10,17 @@
 package com.pandulapeter.campfire.presentation.ui.state
 
 /**
- * The counts the settings screen shows for the library, only once there is a library to count.
- *
- * @param size The bytes the song and setlist files that were counted take up on disk.
+ * The counts the settings screen shows for the library, only once there is a library to count, and the bytes each part
+ * of it takes up on disk: the song and setlist files that were counted, and the pictures and attachments of
+ * `library/files`.
  */
 data class LibrarySummary(
     val songCount: Int,
     val setlistCount: Int,
-    val size: Long,
-)
+    val songsSize: Long,
+    val setlistsSize: Long,
+    val picturesSize: Long,
+    val attachmentsSize: Long,
+) {
+    val size get() = songsSize + setlistsSize + picturesSize + attachmentsSize
+}

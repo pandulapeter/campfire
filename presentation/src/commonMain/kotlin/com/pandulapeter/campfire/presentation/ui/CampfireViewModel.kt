@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.presentation.ui.chrome.toolsItemDestination
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
@@ -259,6 +258,7 @@ class CampfireViewModel(
         songFilter = _songFilter,
         loadScreenData = loadScreenData,
         normalizeSearchText = normalizeSearchText,
+        libraryFileSizes = songTextUseCases.getLibraryFileSizes(),
     )
 
     /** Built before the dialog host and the navigator, whose listeners it is; its lambdas run only on a change. */
