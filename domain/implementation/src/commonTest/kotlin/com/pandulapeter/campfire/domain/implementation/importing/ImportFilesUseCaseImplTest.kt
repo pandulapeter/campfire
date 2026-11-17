@@ -285,6 +285,28 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a backup restored with replace goes back onto the numbered siblings it came from`() = runTest {
+        // Two arrangements under one header, exported and then both edited in the library.
+        val songs = FakeSongRepository(files = mutableMapOf("twice.cho" to "{title: Twice}\nedited one\n", "twice_2.cho" to "{title: Twice}\nedited two\n"))
+        val exported = listOf("{title: Twice}\none\n", "{title: Twice}\ntwo\n")
+        val plan = ImportPlan(
+            songs = ImportPlanner.planSongs(
+                incoming = listOf(
+                    ImportPlanner.IncomingSong(fileName = "twice.cho", text = exported[0], sourceFileName = "twice.cho"),
+                    ImportPlanner.IncomingSong(fileName = "twice.cho", text = exported[1], sourceFileName = "twice_2.cho"),
+                ),
+                libraryFileNames = songs.files.keys.toList(),
+                readLibraryText = songs.files::get,
+            ),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository())
+            .invoke(plan, choosing(ImportConflictResolution.REPLACE))
+
+        assertEquals(mapOf("twice.cho" to exported[0], "twice_2.cho" to exported[1]), songs.files)
+    }
+
+    @Test
     fun `a setlist is written pointing at the song of its own archive where two arrived under one name`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf())
         val setlists = FakeSetlistRepository()

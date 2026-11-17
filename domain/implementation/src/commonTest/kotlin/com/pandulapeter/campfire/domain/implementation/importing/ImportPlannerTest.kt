@@ -365,6 +365,51 @@ internal class ImportPlannerTest {
     }
 
     @Test
+    fun `songs arriving as numbered siblings are each held against the library file they arrived as`() = runTest {
+        // An export of a library holding two arrangements under one header, both edited in the library since.
+        val plan = plan(
+            library = mapOf("x.cho" to C, "x_2.cho" to D),
+            song(text = A, sourceFileName = "x.cho"),
+            song(text = B, sourceFileName = "x_2.cho"),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING, ImportPlan.Status.CONFLICTING), plan.map { it.status })
+        assertEquals(listOf("x.cho", "x_2.cho"), plan.map { it.replacesFileName ?: it.fileName })
+    }
+
+    @Test
+    fun `a song arriving as a numbered sibling it equals is that sibling even where the library holds its text twice`() = runTest {
+        val plan = plan(
+            library = mapOf("x.cho" to A, "x_2.cho" to A),
+            song(text = A, sourceFileName = "x.cho"),
+            song(text = A, sourceFileName = "X_2.cho"),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL, ImportPlan.Status.IDENTICAL), plan.map { it.status })
+        assertEquals(listOf("x.cho", "x_2.cho"), plan.map { it.fileName })
+    }
+
+    @Test
+    fun `a song arriving as a numbered sibling the library does not list is planned against the unnumbered name`() = runTest {
+        val plan = plan(library = mapOf("x.cho" to A), song(text = B, sourceFileName = "x_2.cho"))
+
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.map { it.status })
+        assertEquals(listOf("x.cho"), plan.map { it.replacesFileName ?: it.fileName })
+    }
+
+    @Test
+    fun `a numbered sibling the batch brings back is not asked about for another song arriving as it`() = runTest {
+        val plan = plan(
+            library = mapOf("x.cho" to A, "x_2.cho" to B),
+            song(text = B, sourceFileName = "x_2.cho"),
+            song(text = C, sourceFileName = "x_2.cho"),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL, ImportPlan.Status.NEW), plan.map { it.status })
+        assertFalse(ImportPlan(songs = plan).hasConflicts)
+    }
+
+    @Test
     fun `a song wanting the name a library song arrived under is new in either order`() = runTest {
         val renamed = ImportPlanner.IncomingSong(fileName = "y.cho", text = A, sourceFileName = "x.cho")
         val different = ImportPlanner.IncomingSong(fileName = "x.cho", text = B, sourceFileName = null)
@@ -684,5 +729,6 @@ internal class ImportPlannerTest {
         const val A = "{title: A}\nA\n"
         const val B = "{title: B}\nB\n"
         const val C = "{title: C}\nC\n"
+        const val D = "{title: D}\nD\n"
     }
 }

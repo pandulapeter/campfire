@@ -23,8 +23,10 @@
 - Each song is named by `SongRepository.importFileName` from its own header. The arrival name is only a fallback
   *title* (and a match for a library file of exactly that name with the same text: exports carry library names,
   possibly from an older naming rule).
-- The planner raises one conflict per library name and leaves numbering to the write. Recorded names are the library's
-  own spellings (case / Unicode form), so no setlist points at a name the song list lacks.
+- The planner raises one conflict per library file and leaves numbering to the write. A song arriving as a numbered
+  sibling of its header's name that the library lists (`x_2.cho`) is held against that file, so a backup restored with
+  Replace goes back onto the files it came from; a hand-named loose `x_2.cho` then asks too. Recorded names are the
+  library's own spellings (case / Unicode form), so no setlist points at a name the song list lacks.
 - Songs compare by text, setlists by fields, never by stored document. An undated setlist file is compared without
   date or countdown (parsing gives it today; a replacement keeps the library's), so re-importing the demo setlist finds
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file

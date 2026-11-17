@@ -27,6 +27,12 @@ import kotlinx.coroutines.coroutineScope
  * while an incoming song is always named by its header and so always asks for the un-numbered one. Holding it
  * against that one file alone reports the second arrangement of a song as a conflict with the first on every
  * re-import of an export, and offers to replace the first with it.
+ *
+ * A song that arrives under a numbered sibling of its header's name the library lists (`x_2.cho`, as an export hands
+ * the second arrangement out) is held against that very file instead: a backup restored with Replace goes back onto
+ * the files it came from rather than replacing `x.cho` once and numbering the rest afresh. Each library file is asked
+ * about once. The risk accepted with it: a loose file somebody named `x_2.cho` by hand that differs from the library's
+ * `x_2.cho` asks to replace it, where it would otherwise arrive as one more numbered file.
  */
 internal object ImportPlanner {
 
@@ -111,6 +117,7 @@ internal object ImportPlanner {
         // would be named by today (a letter the table did not know yet, or a file nobody ever renamed) is still the same
         // song when it holds the same text.
         val arrivedAsNames = songs.map { song -> song.sourceFileName?.takeIf { it != song.fileName && it in libraryFileNameSet } }
+        val numberedSiblings = songs.map { song -> song.listedNumberedSibling(familyMembers.getValue(song.fileName)) }
         // Every family's library files read up front and in parallel, rather than one file after another as each family
         // comes up: a backup imported back into a large library has a family for every song of it - and where that
         // library was named by an older rule, an arrived-as file for every song of it too.
@@ -133,15 +140,18 @@ internal object ImportPlanner {
             // Most songs of most imports are the only one of their name, and folding the text of every one of them
             // for a comparison nothing asks for would copy the whole batch once more.
             val comparable = if (!family.hasLibraryTexts && arrivedAs == null) null else formattedComparable(song.text)
-            val libraryFileName = comparable?.let(family::libraryFileNameOf)
-                ?: arrivedAs?.takeIf { fileName ->
-                    arrivedAsComparables.getOrPut(fileName) {
-                        (if (fileName in libraryTexts) libraryTexts[fileName] else readLibraryText(fileName))?.let(::formattedComparable)
-                    } == comparable
-                }
+            suspend fun isSameAs(fileName: String) = arrivedAsComparables.getOrPut(fileName) {
+                (if (fileName in libraryTexts) libraryTexts[fileName] else readLibraryText(fileName))?.let(::formattedComparable)
+            } == comparable
+            // The sibling it arrived as is tried before the family's first file holding its text, which matters where the
+            // library holds that text twice: a setlist of the batch naming the sibling then still points where the library's does.
+            val libraryFileName = numberedSiblings[index]?.takeIf { comparable != null && isSameAs(it) }
+                ?: comparable?.let(family::libraryFileNameOf)
+                ?: arrivedAs?.takeIf { isSameAs(it) }
             LibraryMatch(family = family, comparable = comparable, libraryFileName = libraryFileName)
         }
         val keptLibraryFileNames = libraryMatches.mapNotNullTo(hashSetOf()) { it.libraryFileName }
+        val askedLibraryFileNames = hashSetOf<String>()
         return songs.mapIndexed { index, song ->
             val (family, libraryComparable, libraryFileName) = libraryMatches[index]
             if (libraryFileName != null) {
@@ -154,14 +164,16 @@ internal object ImportPlanner {
                 return@mapIndexed song.toEntry(status = ImportPlan.Status.IDENTICAL, repeatedEntryIndex = repeatedEntryIndex)
             }
             family.plan(index = index, text = song.text)
-            // The question is about the one file the library has under this name, so it is raised once: a second song
-            // wanting the name has nothing left to replace, and goes in numbered. So does every song wanting a name
-            // whose file the batch brings back unchanged, which is not the library's to give up.
-            val isConflicting = family.isNameTaken && family.takenFileName !in keptLibraryFileNames && !family.hasConflict
-            family.hasConflict = family.hasConflict || isConflicting
+            // The question is about one library file - the numbered sibling the song arrived as, else the one under its
+            // name - so it is raised once: a second song wanting that file has nothing left to replace, and goes in
+            // numbered. So does every song wanting a file the batch brings back unchanged, which is not the library's to
+            // give up.
+            val questionedFileName = numberedSiblings[index] ?: family.takenFileName
+            val isConflicting = questionedFileName != null && questionedFileName !in keptLibraryFileNames &&
+                askedLibraryFileNames.add(questionedFileName)
             song.toEntry(
                 status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW,
-                replacesFileName = family.takenFileName?.takeIf { isConflicting && it != song.fileName },
+                replacesFileName = questionedFileName?.takeIf { isConflicting && it != song.fileName },
             )
         }
     }
@@ -361,6 +373,17 @@ internal object ImportPlanner {
         return SongFamily(takenFileName = takenFileName, libraryFileNames = libraryFileNames)
     }
 
+    /**
+     * The library file this song arrived as, where that is a numbered sibling of the name its header gives
+     * (`x_2.cho` for `x.cho`) and [members] - the library files of that name's family - list it under some spelling.
+     */
+    private fun IncomingSong.listedNumberedSibling(members: List<String>): String? {
+        val arrivedAs = sourceFileName ?: return null
+        val arrivedAsKeys = arrivedAs.familyKeys(LibraryFiles.SONG_EXTENSIONS)
+        if (arrivedAsKeys.size < 2 || arrivedAsKeys[1] != fileName.familyKeys(LibraryFiles.SONG_EXTENSIONS).firstOrNull()) return null
+        return members.firstOrNull { it == arrivedAs } ?: members.firstOrNull { it.isSpellingOf(arrivedAs) }
+    }
+
     /** Whether this listed name is [name] as a file system that ignores case and Unicode form would read it. */
     private fun String.isSpellingOf(name: String) = LibraryFiles.isSameLibraryName(this, name)
 
@@ -373,12 +396,9 @@ internal object ImportPlanner {
         /** The library file each comparable text of the family is found in. */
         private val libraryFileNames: Map<String, String>,
     ) {
-        val isNameTaken get() = takenFileName != null
-
         private val plannedSongs = mutableListOf<IndexedValue<String>>()
         private val plannedEntryIndices = mutableMapOf<String, Int>()
         private var foldedSongCount = 0
-        var hasConflict = false
 
         /** Whether the library holds any text in this family, which is what makes folding an incoming song worth it. */
         val hasLibraryTexts get() = libraryFileNames.isNotEmpty()
