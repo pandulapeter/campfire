@@ -141,11 +141,17 @@ class LargeArchiveImportTest {
     }
 
     @Test
-    fun `a library of more files than a zip counts in 16 bits comes back file for file through its export`() = runBlocking {
+    fun `a library past what a zip holds without ZIP64 comes back file for file through its export`() = runBlocking {
+        // More files than a zip counts in 16 bits; by hand, at `campfire.largeArchiveTest`'s size, more bytes than it
+        // counts in 32, carried by a few hundred songs' recordings.
+        val isBySize = largeArchiveSize > ROUND_TRIP_LIBRARY_SIZE
         val source = MeteredFileStorage(File(folder, "source").also { root ->
-            val attachments = if (largeArchiveSize > ROUND_TRIP_LIBRARY_SIZE) largeArchiveSize else 0L
-            val count = ManyEntryArchives.fillLibrary(root, songCount = 3_000, picturesPerSong = 22, attachmentSize = attachments)
-            assertTrue(count > 65_535, "Only $count files in the library")
+            if (isBySize) {
+                ManyEntryArchives.fillLibrary(root, songCount = 300, picturesPerSong = 2, attachmentSize = largeArchiveSize)
+            } else {
+                val count = ManyEntryArchives.fillLibrary(root, songCount = 3_000, picturesPerSong = 22, attachmentSize = 0)
+                assertTrue(count > 65_535, "Only $count files in the library")
+            }
         })
         val export = LargeImportApp(source).use { app -> timed("Exporting") { app.exportLibrary() } }
         assertTrue(isZip64(export), "The export is not ZIP64")
@@ -394,7 +400,7 @@ class LargeArchiveImportTest {
             (if (shift == 0) value else value.dropLast(1)).toLong() shl shift
         }
 
-        /** Past this, the export round trip carries `campfire.largeArchiveTest`'s size of recordings too (by hand). */
+        /** Past this, the export round trip is of a library of `campfire.largeArchiveTest`'s size (by hand). */
         const val ROUND_TRIP_LIBRARY_SIZE = 1L shl 30
         const val CANCELLATIONS = 10
         const val FILLED_DISKS = 6
