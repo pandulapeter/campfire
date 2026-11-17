@@ -9,7 +9,8 @@
 -->
 # Plan: streaming archive import
 
-**Status:** not started. Written against the code on 2026-11-17 (76853db36). `ui/` is
+**Status:** final, ready to implement; the owner's answers (ZIP64 read and written, no fallback, the web's contract
+test in CI) are folded in. Written against the code on 2026-11-17 (76853db36). `ui/` is
 `presentation/src/commonMain/kotlin/com/pandulapeter/campfire/presentation/ui/`, `zip/` is
 `data/formats/src/commonMain/kotlin/com/pandulapeter/campfire/data/formats/zip/`, `local/` is
 `data/source/local/implementation/src/`.
@@ -17,14 +18,15 @@
 **This is critical for the next release. Safety and reliability come first: it has to work right the first time it
 ships, on every platform, with no room for error, and it must not introduce any issue for users.** Every step below is
 judged by that before anything else: a step that cannot be shown safe on every platform does not land, and the plan
-is not done until every platform's release check (step 15) has passed.
+is not done until every platform's release check (step 17) has passed.
 
-A zip archive of any size (a library export, another app's backup, or a shared link's zip) is imported without ever
-being held in memory. The archive is copied into an app-private staging folder as it arrives, read from there through
-its central directory, and every picture and attachment its songs name is inflated straight into a staging file named
-by its content. Only the song texts and per-file metadata stay in memory for the review; Import moves the staged files
-into `library/files` instead of writing bytes. What limits an import afterwards is disk space, the web's storage quota,
-and time, each checked up front and reported cleanly, never an allocation the process does not survive.
+A zip archive of any size (a library export, another app's backup, or a shared link's zip, ZIP64 included) is imported
+without ever being held in memory. The archive is copied into an app-private staging folder as it arrives, read from
+there through its central directory, and every picture and attachment its songs name is inflated straight into a
+staging file named by its content. Only the song texts and per-file metadata stay in memory for the review; Import
+moves the staged files into `library/files` instead of writing bytes. What limits an import afterwards is disk space,
+the web's storage quota, and time, each checked up front and reported cleanly, never an allocation the process does
+not survive.
 
 ## Where it stands
 
@@ -33,9 +35,13 @@ and time, each checked up front and reported cleanly, never an allocation the pr
   192 MB and running out of it cannot be caught. `ImportBudget` reads every picked file whole within those.
 - `ZipReader.read(archive: ByteArray, …)` walks the central directory of an archive in memory; `Inflater.inflate`
   returns each entry as a `ByteArray` (`MAX_DECLARED_ENTRY_SIZE` 50 MiB). The reader's safety checks are the ones to
-  keep: ZIP64 refused, encrypted and unknown methods left out, declared sizes charged before reading, inflation held to
-  the declared size, compressed bytes charged once and never more than the archive holds (overlapping entries), CRC
-  checked, names decoded as UTF-8 or CP437, `EntryPolicy` (`Read`, `Sniff`, `Skip`) decided before inflating.
+  keep (all but the ZIP64 refusal, which step 3 replaces with reading it): ZIP64 refused, encrypted and unknown methods
+  left out, declared sizes charged before reading, inflation held to the declared size, compressed bytes charged once
+  and never more than the archive holds (overlapping entries), CRC checked, names decoded as UTF-8 or CP437,
+  `EntryPolicy` (`Read`, `Sniff`, `Skip`) decided before inflating. `DocxTextExtractor` reads Word documents through it
+  too.
+- `ZipWriter.write` refuses an archive past 4 GiB or 65,534 entries rather than writing ZIP64, so a large library
+  cannot be exported at all today.
 - `ArchiveLocalSourceImpl.unpack` (`local/commonMain/.../source/`) reads the songs, recurses into nested archives up to
   `MAX_DEPTH` 3 (in memory, within the songs' budget), translates SongbookPro backups and other apps' documents, and
   hands `ArchiveSongImages.read` the archive again for two more walks that read the pictures and attachments songs name.
@@ -79,32 +85,52 @@ What must never happen, and what prevents it. Each step names which of these it 
   deletes its own files when it settles (imported, cancelled, failed and dismissed, or replaced by a retry), and an
   abandoned sink deletes its partial file, as an export's does.
 - **Running out of memory.** No code path holds an archive, a nested archive, a picture, or an attachment whole while
-  unpacking. What stays in memory is bounded: the central directory (at most `MAX_CENTRAL_DIRECTORY_SIZE`), one
-  read buffer and one 64 KiB inflate window, the song texts within the unchanged `MAX_IMPORT_SIZE`, and one library file
-  at a time on the web's move. A large-archive test under a 128 MiB heap proves it (step 14).
+  unpacking. What stays in memory is bounded: the central directories being walked (at most
+  `MAX_CENTRAL_DIRECTORY_SIZE` across every one held at once, an outer archive's and the nested ones it is walking, kept
+  compactly: offsets, sizes, and CRCs in primitive arrays, names as the directory's bytes), one read buffer and one
+  64 KiB inflate window, the song texts within the unchanged `MAX_IMPORT_SIZE`, and one library file at a time on the
+  web's move. A large-archive test under a 128 MiB heap proves it, at the entry-count cap too (step 16).
 - **Hangs.** Every loop that reads, inflates, copies, or hashes yields at least every 256 KiB, so cancellation is
   prompt and the web's single thread keeps painting. Progress is determinate in bytes. The reader stays linear in the
   archive's size: the central directory is read once, each entry's data at most once per walk, and the existing
-  `assertTakesTimeInProportion` checks extend to the streaming paths.
+  `assertTakesTimeInProportion` checks extend to the streaming paths, ZIP64 archives included.
 - **A hostile archive escaping paths.** Entry names never become paths: staged files are named by session, request, and
   content hash (`[0-9a-f]` and a known extension), never by an entry's name, and `FileStorage` refuses a separator or
   `..` anyway. Hidden entries are skipped as today.
+- **A hostile archive's 64-bit numbers.** Every size, offset, and count is a `Long` checked before use: a ZIP64 value
+  with its top bit set (negative as a `Long`) is refused, every sum (an offset plus a size, a running total) is added
+  with an overflow-checked helper, every offset must lie within the file and before the structure that follows it, and
+  a count is checked against `MAX_ARCHIVE_ENTRIES` before anything is allocated for it. A malformed ZIP64 record is a
+  corrupt archive, refused like any other.
 - **A hostile archive exhausting disk.** The declared sizes of every entry that will be staged are added up before
   anything is inflated and must fit the disk budget (free space minus `MIN_FREE_SPACE`, at most
   `MAX_IMPORT_STAGED_SIZE`); inflation is held to each declared size as today, so the declared total is a hard bound.
   Overlapping entries stay refused, per-file caps stay (8 MB a picture, 50 MB an attachment), and the copy of the
   picked archive is checked against free space before it starts and as it runs.
-- **A regression for archives that work today.** The in-memory path stays in the code, unchanged, until the last step.
-  A differential test runs every archive the tests build, every fixture, and the private import corpus through both
-  and requires identical results (step 9). For the next release, an archive within the old limits whose streaming
-  preparation fails for any reason but cancellation, a damaged archive, or no space falls back to the in-memory path
-  and logs it, so no user who could import an archive yesterday is worse off (step 13).
+- **A regression for archives that work today.** There is no fallback: once step 15 lands, the streaming path is the
+  only one production runs, so it must be proven equal before then. The in-memory path stays in the code, unchanged,
+  only as the reference for the differential test (step 11), which runs every archive the tests build, every committed
+  fixture, every fuzz mutant of each, and the private import corpus through both and requires identical results. It
+  must pass in full, the corpus included, before the switch lands, and the switch does not ship until the release
+  check (step 17) has passed on every platform. The old path is removed before the release ships (step 18).
 
 ## Decisions
 
 - **An import that downloads or unpacks survives leaving the app, on every platform** (the owner's decision): a
   `dataSync` foreground service on Android as sync has, a continued processing task on iOS 26 and later (background time
-  before it), a quit that asks first on desktop, and a closing tab that warns on the web (step 12).
+  before it), a quit that asks first on desktop, and a closing tab that warns on the web (step 14).
+- **No fallback to the in-memory path** (the owner's decision). The switch (step 15) makes the streaming path the only
+  one in production. What stands in for a fallback is the gate before it: the differential test passing over every
+  fixture, fuzz mutant, and the private corpus before the switch lands, and the release check passing on every platform
+  before the switch ships.
+- **ZIP64 is read, and written when needed** (the owner's decision). The streaming reader reads the ZIP64 end of
+  central directory record and its locator, the extended information extra field (`0x0001`) in local and central
+  headers, and data descriptors with 8-byte sizes, so archives over 4 GB and with more than 65,535 entries import, with
+  every existing check applied to the 64-bit values (step 3). `ZipWriter` writes ZIP64 records only when an export
+  passes 4 GiB or 65,534 entries, so a large library export imports back and every smaller export stays byte-identical
+  to today's (step 4). Split (multi-disk) archives stay refused as corrupt.
+- **The web's storage contract test runs in CI** (the owner's decision): `wasmJsBrowserTest` in headless Chrome is a
+  step of `.github/workflows/tests.yml`, beside the desktop and iOS simulator storage tests (step 6).
 - **Copy first, always, on every platform.** Whatever arrives as an archive (by name, or by its first bytes being a
   zip's, the rule `ImportBudget` follows today) is copied into `imports/` by streaming before it is read: Android a
   content URI's `InputStream`, iOS a security-scoped, coordinated URL read with POSIX `fread` in 1 MiB chunks (never
@@ -120,16 +146,17 @@ What must never happen, and what prevents it. Each step names which of these it 
   while it waits.
 - **Random access through the central directory.** `zip/ZipSource` is "read N bytes at offset X" (`size`,
   `suspend fun read(position, buffer, offset, length)`), with a `ByteArray` implementation (tests, the old path, the
-  in-memory corner cases) and `FileStorage.openSource(directory, name)` behind it. `ZipReader.open(source)` finds the end
-  of central directory in the last 64 KiB + 22 bytes, reads the central directory (refused over
-  `MAX_CENTRAL_DIRECTORY_SIZE`, 16 MiB, which holds 65,535 entries of long names), and keeps every current check.
+  Word reader, the in-memory corner cases) and `FileStorage.openSource(directory, name)` behind it.
+  `ZipReader.open(source)` finds the end of central directory in the last 64 KiB + 22 bytes, then the ZIP64 locator
+  just before it where there is one, reads the central directory (refused over `MAX_CENTRAL_DIRECTORY_SIZE` or
+  `MAX_ARCHIVE_ENTRIES`), and keeps every current check.
 - **The inflater streams with puff's structure intact.** A second entry point inflates from a `ZipSource` range into an
   `EntrySink`, with a 64 KiB output buffer that slides to keep the last 32 KiB of history. `bits()` and `decode()` stay
   plain functions over an input buffer; only the block loops are `suspend`, topping the input up to the longest symbol
   (and the output buffer down) between symbols, so no suspend call is paid per bit. Declared sizes are held as today,
   CRC-32 and SHA-256 are updated per flushed chunk, and a mismatch throws `ZipException` after which the sink abandons its
-  file. `Inflater.inflate(ByteArray)` stays untouched (the PDF reader and the old path use it); a fuzz test requires the
-  two to agree byte for byte or fail alike.
+  file. `Inflater.inflate(ByteArray)` stays untouched (the PDF reader uses it); a fuzz test requires the two to agree
+  byte for byte or fail alike.
 - **Stored entries copy, deflated entries inflate**, both through the same sink, so a 50 MB recording stored in a
   library export costs one buffer.
 - **SHA-256 moves to `:data:model`** (`data/model/.../hashing/Sha256`), gaining an incremental `Sha256.Digest`
@@ -151,13 +178,22 @@ What must never happen, and what prevents it. Each step names which of these it 
   `keepOutOfDeviceBackup` for an attachment as `writeImage` does; the web reads the staged file and writes it with the
   existing atomic `writeBytes` (one file of at most 50 MB at a time, which 84bddce6a made fit a phone's browser), then
   deletes it. A name the library already holds with the same bytes is not moved; the staged copy is deleted.
-- **Nested archives are staged too**, inflated into `imports/` and walked through the same reader, within `MAX_DEPTH`
-  3, counting against the disk budget instead of the songs' budget. A SongbookPro `dataFile.txt` and every song text
-  stay in memory within `MAX_IMPORT_SIZE`.
+- **Nested archives are staged too**, inflated into `imports/` and walked through the same reader (ZIP64 included),
+  within `MAX_DEPTH` 3, counting against the disk budget instead of the songs' budget. A SongbookPro `dataFile.txt` and
+  every song text stay in memory within `MAX_IMPORT_SIZE`.
 - **The limits after this plan** (`ImportLimits`, KDoc rewritten with the new reasoning):
-  - `MAX_STAGED_ARCHIVE_SIZE`: 4 GiB − 1, what a zip without ZIP64 can be (and what `ZipWriter` writes at most), so
-    every Campfire export imports back whole. Larger is refused up front as too large.
-  - `MAX_CENTRAL_DIRECTORY_SIZE`: 16 MiB, above.
+  - `MAX_STAGED_ARCHIVE_SIZE`: 16 GiB, the same bound on time as `MAX_IMPORT_STAGED_SIZE` (the format no longer limits
+    it). Larger is refused up front as too large, and an export that large is flagged as not importable (step 15).
+  - `MAX_CENTRAL_DIRECTORY_SIZE`: 32 MiB, across every central directory held at once (an outer archive's and the
+    nested ones being walked), so nesting cannot multiply it. It holds `MAX_ARCHIVE_ENTRIES` records of names up to
+    about 120 bytes, which every name Campfire writes is.
+  - `MAX_ARCHIVE_ENTRIES`: 200,000 entries in one archive, and across one request's archives and the nested ones in
+    them, about three times the format's old ceiling: far more than any library export or backup the importer serves,
+    while the compact directory of that many stays a small part of a phone's heap (proven in step 16). Checked against
+    the declared count (the 16-bit or the ZIP64 one) before anything is allocated, and again as records are read, since
+    a declared count may lie.
+  - Per entry: a picture 8 MB and an attachment 50 MB as today; a nested archive bounded by the disk budget and
+    `MAX_STAGED_ARCHIVE_SIZE`; a song text within the text limits below.
   - `MAX_IMPORT_SIZE` (24 MiB of songs, setlists, and documents in memory), `MAX_TEXT_FILE_SIZE`,
     `MAX_DOCUMENT_FILE_SIZE`, `MAX_IMAGE_FILE_SIZE` (8 MB a picture), and `MAX_ATTACHMENT_FILE_SIZE` (50 MB) unchanged:
     they bound what is held or examined whole, and single files keep their limits.
@@ -166,17 +202,15 @@ What must never happen, and what prevents it. Each step names which of these it 
     reaches its own low-storage state because of an import; 32 MiB of the origin's quota on the web), and at most
     `MAX_IMPORT_STAGED_SIZE` (16 GiB) to bound the time one import can take. `MAX_IMPORT_IMAGES_SIZE` stays for picture
     links downloaded into memory (`IncomingPictureLinks`).
-  - `MAX_ARCHIVE_SIZE` (88 MB) stays only as the selection-wide budget for files read whole into memory (`ImportBudget`)
-    and, for one release, as the fallback's ceiling.
-  - The 65,535-entry ceiling is the format's; nothing more is needed while the central directory is capped.
+  - `MAX_ARCHIVE_SIZE` (88 MB) stays only as the selection-wide budget for files read whole into memory
+    (`ImportBudget`).
 - **Free space** is asked through a new `FileStorage.availableSpace(directory)`: `File.usableSpace` on the JVM,
   `NSURLVolumeAvailableCapacityForImportantUsageKey` on iOS, `navigator.storage.estimate()` (quota − usage) on the web.
   Checked before the copy (with the size the platform reports; Android may report none, then as it runs), before
   unpacking (declared sizes), and a write that fails anyway is the same clean failure.
 - **A new failure, `NO_SPACE`**, in `ImportFailure`: one sentence naming how much space the import needs, Try again
-  offered. `TOO_LARGE` now names 4 GB. Both in every language.
-- **ZIP64 stays refused**, now with its own sentence ("saved in a format for archives over 4 GB"), so the user learns
-  why rather than reading "unreadable". See the open questions.
+  offered. `TOO_LARGE` now names 16 GB. Both in every language. A malformed ZIP64 record or a split archive is a
+  damaged archive and gets the existing sentence for one; no ZIP64-specific sentence exists.
 - **Progress is determinate in bytes.** `ImportProgress` gains `completedBytes` and `totalBytes`; `RECEIVING` (the copy)
   and `UNPACKING` report them, the Loading stage says "Unpacking 340 MB of 1.2 GB", and `WorkProgressBar` fills for
   those phases as it does for writing. Downloads report bytes against `Content-Length` where the host sends one.
@@ -186,10 +220,11 @@ What must never happen, and what prevents it. Each step names which of these it 
 
 ## Steps
 
-Each step compiles, passes `desktopTest`, `spotlessCheck`, the iOS simulator storage tests, and the UI tests, and is
-committed on its own. **Steps 1–11 change nothing a user sees**: the in-memory path stays what production runs until
-step 13 switches it, so any of them can ship in a release on its own. Each step's "Safety" line names what it must
-prove.
+Each step compiles, passes `desktopTest`, `spotlessCheck`, the iOS simulator storage tests, the web's storage contract
+test (from step 6 on), and the UI tests, and is committed on its own. **Steps 1–13 change nothing a user sees**, except
+that from step 4 on an export past 4 GB or 65,534 entries is written (as ZIP64) where it was refused: the in-memory path
+stays what production runs until step 15 switches it, so any of them can ship in a release on its own. Each step's
+"Safety" line names what it must prove.
 
 ### 1. SHA-256 in `:data:model`, incremental
 
@@ -203,15 +238,87 @@ Safety: sync's fingerprints and content names are unchanged (existing sync tests
 - `zip/ZipSource.kt` and `ByteArrayZipSource`; `ZipReader.open(source): ZipDirectory` and a `suspend` walk with the same
   `EntryPolicy` / `sniffedLimitOf` callbacks, reading entries through `EntrySink`s (`ByteArrayEntrySink` for texts).
   The old `ZipReader.read(ByteArray)` is left exactly as it is.
-- All current checks, plus `MAX_CENTRAL_DIRECTORY_SIZE`, the local header read once per entry through the source, and
-  data descriptors (bit 3) handled as today: the central directory's sizes and CRC are the truth.
+- All current checks, plus `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES`, the directory kept compactly (see
+  the safety section), the local header read once per entry through the source, and data descriptors (bit 3) handled
+  as today: the central directory's sizes and CRC are the truth. Every size and offset is a `Long` from here on, added
+  through one overflow-checked helper, so step 3 only widens where the numbers come from.
 - Tests (`commonTest`): every `ZipReaderTest` case run through both readers with identical results; stored, deflated,
-  data descriptors, UTF-8 and CP437 names, backslash separators, ZIP64 refused, encrypted and unknown methods left out,
-  overlapping entries, declared sizes past the archive, truncated at every byte of a small archive, comment of 65,535
-  bytes, central directory past the cap. `ZipFuzzTest`'s mutants through both: the same entries or the same failure.
+  data descriptors, UTF-8 and CP437 names, backslash separators, ZIP64 refused (until step 3), encrypted and unknown
+  methods left out, overlapping entries, declared sizes past the archive, truncated at every byte of a small archive,
+  comment of 65,535 bytes, central directory past the cap, a declared entry count past the cap refused before
+  allocating. `ZipFuzzTest`'s mutants through both: the same entries or the same failure.
 Safety: no regression in what an archive yields; hostile layouts refused as before.
 
-### 3. The streaming inflater
+### 3. Reading ZIP64
+
+The streaming reader (only; the old `ZipReader.read(ByteArray)` keeps refusing ZIP64, as the differential test's
+reference) reads every ZIP64 structure, with every existing check applied to the 64-bit values:
+
+- **The ZIP64 end of central directory locator and record.** When the end of central directory record has a field at
+  its marker (`0xFFFF` entries, `0xFFFFFFFF` size or offset), or a locator signature sits in the 20 bytes before it,
+  the locator is read: one disk only, its record offset within the file and before the locator. The record is read
+  there: its signature, its declared size (at least the fixed 44 bytes, ending before the locator; the extensible data
+  sector is skipped, never read), disk numbers 0 and entries on this disk equal to the total, and the central
+  directory's offset plus size (overflow-checked) at or before the record. A 32-bit field not at its marker must agree
+  with its 64-bit value, or the archive is corrupt. The entry count is checked against `MAX_ARCHIVE_ENTRIES` and the
+  directory's size against `MAX_CENTRAL_DIRECTORY_SIZE` before anything is allocated.
+- **The extended information extra field (`0x0001`)** in central and local headers: it holds, in the format's fixed
+  order, the uncompressed size, compressed size, local header offset, and disk number, each present only when its
+  32-bit field is at its marker. A marker without its value (the field missing or too short) is corrupt; values for
+  fields not at their marker are ignored, as the format says; a disk number other than 0 is a split archive, refused.
+  Every extra field is walked within the header's declared extra length, each block's length within what is left, as
+  the reader walks them today. A local header's ZIP64 sizes that contradict the central directory's are treated as a
+  contradicting 32-bit local header is today; the central directory stays the truth.
+- **Data descriptors with 8-byte sizes** after an entry with ZIP64 sizes (with or without the optional signature): the
+  overlap accounting charges their real length (24 or 20 bytes instead of 16 or 12), so the next entry's bytes are not
+  mistaken for overlap and a hostile one cannot hide data behind them.
+- **The safety checks at 64 bits.** Values with the top bit set are refused; every offset plus size is overflow-checked
+  and must end within the file (before the central directory for entry data); declared sizes are charged before
+  reading and held during inflation as today, now as `Long`s; compressed bytes are still charged once and never more
+  than the archive holds; per-entry caps (pictures, attachments, texts) apply to the 64-bit sizes unchanged, so ZIP64
+  never widens what one entry may be.
+- Tests (`commonTest`, with the fixtures under `data/formats/src/commonTest/resources`): archives written by real tools,
+  each small enough to commit, or generated in the test where not: Info-ZIP `zip -fz` (ZIP64 forced on small entries),
+  Python's `zipfile` with `force_zip64=True` (entries, and the archive through its ZIP64 end records), macOS Archive
+  Utility and Windows Explorer archives where available (one past 65,535 entries, which they write as ZIP64 at a few
+  MB), each beside the same content zipped without ZIP64, which must read identically. The commands that made them are
+  in the test's KDoc; the generators themselves are never committed. Archives built in the test: over 65,535 entries;
+  offsets and sizes past 4 GiB described by a sparse `ZipSource` (a source that serves the headers and data at their
+  far offsets without the bytes in between, so the over-4-GB layout is read in CI in milliseconds); mismatched 32 and
+  64-bit fields (a 32-bit value not at its marker that disagrees with the record, a marker with no extra field, an
+  extra field too short for its markers, values for fields not at their marker); a locator pointing past the file,
+  into the central directory, or at itself; a ZIP64 record whose size runs into the locator; an entry count of 2^63
+  and of `MAX_ARCHIVE_ENTRIES` + 1; offsets with the top bit set; 8-byte data descriptors with and without their
+  signature. `ZipFuzzTest` gains mutants of every ZIP64 fixture, with the mutator taught the ZIP64 structures so
+  their fields are damaged on purpose: the same rule as today, a `ZipException` or the right entries, never an
+  `Error` or a read past the budget, with `assertTakesTimeInProportion` on each.
+Safety: no archive that reads today reads differently (step 2's parity cases pass untouched); a hostile ZIP64 archive
+is refused at every field.
+
+### 4. `ZipWriter` writes ZIP64 when an export needs it
+
+`ZipWriter.write` writes ZIP64 only when an archive passes what the 32-bit format holds, and never otherwise:
+
+- An entry whose local header offset is past `0xFFFFFFFF` gets the extended information extra field in its central
+  header with that offset (sizes never need it: each entry is a `ByteArray`, and the local header is written after the
+  entry's sizes are known, so no local extra field and no data descriptor are needed). The version needed to extract
+  becomes 45 for that entry only.
+- An archive whose central directory starts or ends past `0xFFFFFFFF`, or holds 65,535 entries or more, ends with a
+  ZIP64 end of central directory record and locator before the end of central directory record, whose fields at their
+  limits are set to their markers. The 65,534-entry and 4 GiB refusals are removed; a name longer than 65,535 bytes is
+  still refused.
+- Tests (`commonTest`): every existing `ZipWriterStreamingTest` and `ZipRoundTripTest` archive is byte-identical to
+  what the writer wrote before this step (their bytes hashed and compared against values recorded from the code at the
+  start of this step); exactly 65,534 entries writes no ZIP64 record, 65,535 does; an archive past 4 GiB written into
+  a counting sink that keeps only the headers (so CI never writes 4 GB), whose ZIP64 records are read back by step 3's
+  reader through a sparse `ZipSource`; small ZIP64 archives produced by the writer read by Python's `zipfile` and
+  Info-ZIP `unzip -t` when the machine has them (skipped, not failed, where not).
+- `data/formats/CLAUDE.md` (`zip/`) changes in this step: ZIP64 read by the streaming reader and written past the
+  format's limits.
+Safety: every export under 4 GB and 65,535 entries stays byte-identical; a large export becomes possible and is read
+back by every ZIP64 reader the tests can reach.
+
+### 5. The streaming inflater
 
 The second `Inflater` entry point described in the decisions, writing to an `EntrySink` with CRC-32 and SHA-256 updated
 per chunk, yielding every 256 KiB. Tests: random and real-world streams (every fixture, `Deflater`'s output, stored
@@ -220,25 +327,27 @@ same bytes as `Inflater.inflate`; malformed streams fail alike; a stream produci
 before the sink closes; cancellation mid-entry abandons the sink; `assertTakesTimeInProportion` on a highly repetitive
 stream. Safety: bounded memory per entry, no behaviour change for the PDF reader (untouched).
 
-### 4. `FileStorage`: a staging folder, random reads, moves, and free space
+### 6. `FileStorage`: a staging folder, random reads, moves, and free space
 
 - `StorageDirectory.IMPORTS` → `imports/`: Android under `filesDir` (never `cacheDir`, which the system may clear while
   the app runs), iOS under `Library/Caches` (excluded from backup by location, cleared by the system only while the app
   is not running), desktop and web beside `exports/`. Not in `app/android/src/main/res/xml`'s backup rules, which are an
   allow-list.
-- `openSource(directory, name): FileSource` (random reads; JVM `FileChannel` positional reads, opened with
-  `StandardOpenOption.READ` only, iOS `pread`, web `getFile()` then `slice(...).arrayBuffer()` across the boundary in
-  `LATIN1_CHUNK_SIZE` chunks as `OpfsBytes.kt` does), `openSink(IMPORTS, …)` (already written for `EXPORTS`),
-  `moveInto(from, name, to, name)` (atomic where the platform can, see the decisions), and `availableSpace(directory)`.
+- `openSource(directory, name): FileSource` (random reads at 64-bit positions; JVM `FileChannel` positional reads,
+  opened with `StandardOpenOption.READ` only, iOS `pread` with a 64-bit `off_t`, web `getFile()` then
+  `slice(...).arrayBuffer()` across the boundary in `LATIN1_CHUNK_SIZE` chunks as `OpfsBytes.kt` does),
+  `openSink(IMPORTS, …)` (already written for `EXPORTS`), `moveInto(from, name, to, name)` (atomic where the platform
+  can, see the decisions), and `availableSpace(directory)`.
 - Contract tests in `FileStorageContractTest`: reads at every offset, a read past the end, a source of a file deleted
   meanwhile, a move over nothing and over an existing file, a move of a missing file, available space positive. Run on
   the desktop and the iOS simulator. The web gets a `wasmJsTest` source set in `:data:source:local:implementation` that
-  runs the same contract test over `OpfsFileStorage` in headless Chrome (`wasmJsBrowserTest`), added to `tests.yml`;
-  `opfs-writer.js` gains a `stage` request (a `File` posted to the worker, written with a sync access handle in slices)
-  with Node tests beside the existing ones.
+  runs the same contract test over `OpfsFileStorage` in headless Chrome (`wasmJsBrowserTest`), added to
+  `.github/workflows/tests.yml` in this step as its own step, so every PR and every run before `publish-all.yml` checks
+  the web's storage as it does the desktop's and iOS's; `opfs-writer.js` gains a `stage` request (a `File` posted to
+  the worker, written with a sync access handle in slices) with Node tests beside the existing ones.
 Safety: the library's directories behave exactly as before (the existing contract tests pass untouched).
 
-### 5. The staging sink and the session
+### 7. The staging sink and the session
 
 `local/commonMain/.../staging/ImportStaging`: names (`<session>-<request>-<n>.zip` for a received archive,
 `<session>-<request>-<sha256>.<ext>` for an unpacked file), a sink that writes, hashes, and counts against a budget and
@@ -247,18 +356,19 @@ runs at launch beside `ClearExportFilesUseCase`. Tests (desktop): a partial file
 cancellation, or a budget overrun; other sessions' files go at launch, this session's stay; disk full (a `FileStorage`
 fake throwing on write past a size) fails cleanly with nothing left behind.
 
-### 6. The streaming unpack, beside the old one
+### 8. The streaming unpack, beside the old one
 
 - `ArchiveLocalSource.unpack(archive: StagedFile, …)` beside the `ByteArray` one: `ArchiveLocalSourceImpl` and
   `ArchiveSongImages` walk a `FileSource` with the new reader, song texts into memory as today, pictures and attachments
   into staging sinks, nested archives staged and walked. The policies (`limitOf`, `sniffedLimitOf`, hidden entries,
   content-named attachments skipped, SongbookPro, other apps' documents) are shared code with the old path, extracted
   verbatim first in a commit of their own so the two cannot drift.
-- The disk budget is checked from declared sizes before the picture and attachment walks start.
+- The disk budget is checked from declared sizes before the picture and attachment walks start; the request-wide
+  `MAX_ARCHIVE_ENTRIES` and the held directories' `MAX_CENTRAL_DIRECTORY_SIZE` are counted across nested archives.
 - Tests: `ArchiveLocalSourceTest` and `ArchiveImagesTest` run against both unpacks (parameterised), with staged bytes
-  equal to the old bytes.
+  equal to the old bytes; nested archives that together pass the entry or directory cap refused cleanly.
 
-### 7. Staged content through the plan and the write
+### 9. Staged content through the plan and the write
 
 `StagedFile`, `IncomingContent`, the `ImportedFile` / `ImportedImage` / `ImportPlan.SongImage` changes,
 `ImageRepository`'s and `LibraryImageWriter`'s overloads with the chunked comparison, `ImageLocalSource.moveStagedFile`,
@@ -267,7 +377,7 @@ new unpack; nothing produces one yet. Tests (`domain/implementation`): `PrepareI
 `ImportFilesUseCaseImplTest`, and `ApplyImportUseCaseImplTest` run their archive cases through both kinds with
 identical plans and libraries; a move failing midway leaves the songs unwritten and the prune finds the moved files.
 
-### 8. Intake: receiving into staging
+### 10. Intake: receiving into staging
 
 - A pure decision in `:data:model` (`ImportIntake.decide(name, size, head)`: read whole within a limit, stage, or leave
   unread), replacing the archive branch of `ImportBudget.read`, tested against every `ImportLimitsTest` case.
@@ -283,21 +393,29 @@ identical plans and libraries; a move failing midway leaves the songs unwritten 
   never loads) and the inbox bound stops counting archives against its 64 MB.
 - Web: the picked or dropped `File` is piped into OPFS in JavaScript, never crossing into Wasm.
 - Behind `IncomingFile` nothing is queued differently: a request with a receiving file shows Loading at once.
-- Not yet switched on: the intake still reads archives whole until step 13, behind one `ImportIntake` constant.
+- Not yet switched on: the intake still reads archives whole until step 15, behind one `ImportIntake` constant.
 
-### 9. The differential test
+### 11. The differential test
 
 `ArchivePathParityTest` (desktop, `:data:source:local:implementation`, with the domain's planner wired over real
-sources): every archive the tests build, the committed fixtures (`upgrade-*`, the backup tests' archives), the fuzz
-mutants of each, and every archive-like file (`.zip`, `.sbpbackup`, `.sbp`, `.osb`, and zips by their bytes) under
-`campfire.importCorpus` when set, run through the in-memory path and the streaming path. Required: identical
-`ImportPlan`s (songs, setlists, every problem, skipped, oversized, and unreadable names, content names) and identical
-library files after Import. The one allowed difference: an archive that hit the old picture, attachment, or nested
-archive budgets may bring more files in the new path, and the test then requires that every other field is identical
-and that each difference is a file the old path reported `TOO_LARGE` for its budget. Runs in CI with the committed set
-and by hand against the corpus before step 13 and before the release.
+sources): every archive the tests build, the committed fixtures (`upgrade-*`, the backup tests' archives, the ZIP64
+fixtures), the fuzz mutants of each, and every archive-like file (`.zip`, `.sbpbackup`, `.sbp`, `.osb`, and zips by
+their bytes) under `campfire.importCorpus` when set, run through the in-memory path and the streaming path. Required:
+identical `ImportPlan`s (songs, setlists, every problem, skipped, oversized, and unreadable names, content names) and
+identical library files after Import. The allowed differences, each checked rather than skipped:
 
-### 10. Downloads into staging
+- An archive that hit the old picture, attachment, or nested archive budgets may bring more files in the new path; the
+  test then requires that every other field is identical and that each difference is a file the old path reported
+  `TOO_LARGE` for its budget.
+- An archive the old reader refused as ZIP64 is read by the new path; its result must equal the new and the old path's
+  result on the same content without ZIP64 (step 3's fixture pairs, and each corpus ZIP64 archive rewritten without it
+  in the test where it fits under 4 GB and 65,535 entries).
+
+Runs in CI with the committed set. **It is the gate for the switch**: step 15 does not land until it passes in full
+against every fixture, every fuzz mutant, and the private corpus (by hand, the corpus being outside git), and it is run
+against the corpus again before the release.
+
+### 12. Downloads into staging
 
 `ImportDownloadRemoteSource.download` with a sink and a byte progress callback; `ImportDownloadRepositoryImpl` stages
 into `imports/`; `SharedLinkDownload` and `ImportController.prepare` carry a `StagedFile`, so Try again reads the same
@@ -306,26 +424,27 @@ chunks, cut short, larger than announced, larger than the cap, cancelled midway,
 check that Ktor's wasmJs engine reads the body as a stream (`body.getReader()`); where it buffers, the download is a
 `fetch` piped into OPFS in a `js()` block instead.
 
-### 11. Progress, Cancel, and the new failures in the UI
+### 13. Progress, Cancel, and the new failures in the UI
 
 `ImportProgress` bytes, `RECEIVING`, the Loading stage's byte text (`ImportProgressContent`, tested), `WorkProgressBar`
-filling for those phases (`workProgress`, tested), `ImportFailure.NO_SPACE` and the ZIP64 and 4 GB sentences in every
+filling for those phases (`workProgress`, tested), `ImportFailure.NO_SPACE` and `TOO_LARGE` naming 16 GB in every
 language (`values`, `-hu`, `-ro`, `-de`, `-es`, `-fr`, `-it`, `-he`, `-pt`, `-pl`, `-cs`), with plurals where counted.
+A malformed ZIP64 record or a split archive reaches the existing damaged-archive sentence; no new one is added for it.
 Cancel during `RECEIVING` and `UNPACKING` deletes the request's staging before the screen leaves. UI tests in
 `:tools:screenshots` (`importReport/ImportReviewTest`, `songDetails/ImportPreviewTest`): determinate progress during a
 staged unpack, Cancel mid-unpack returning to where the user was with `imports/` empty, the no-space failure and its Try
 again, and every existing import UI test passing unchanged.
 
-### 12. Leaving the app never loses an import: a foreground service and its equivalents
+### 14. Leaving the app never loses an import: a foreground service and its equivalents
 
 Every import that downloads (a shared link) or unpacks an archive keeps the app working while that work runs, on every
 platform, the way a sync run already does, so leaving the app never loses an import halfway, whatever its size. Today's
-in-memory path is covered too from this step on, so this is proven before step 13 switches the intake.
+in-memory path is covered too from this step on, so this is proven before step 15 switches the intake.
 
 **Shared by every platform.** The work stays where it is: the preparation and the Import write live in the use cases and
 `ImportController`, and no platform piece imports anything. The domain exposes one import-work state (receiving,
 downloading, unpacking, writing, or idle, with byte progress) that each platform watches, and one cancel that behaves
-exactly as the screen's Cancel, its staging deleted (step 11). The review waiting for the user is not work: nothing is
+exactly as the screen's Cancel, its staging deleted (step 13). The review waiting for the user is not work: nothing is
 held while it sits on screen or in the background. Tests: the state's transitions (domain, `commonTest`), and each
 platform's start/stop decisions as plain logic where they can be, like the sync starters'.
 
@@ -345,7 +464,7 @@ platform's start/stop decisions as plain logic where they can be, like the sync 
   progress and lets the user cancel it, which cancels the import; the task ends when the state reads idle, and its
   expiration cancels the import cleanly. Before iOS 26 (the app supports 15.3) it holds a `beginBackgroundTask` for the
   work as `IosSyncNotifier` does for a run; when iOS ends that time the import is cancelled cleanly and the screen offers
-  Try again on return. Either way the staging is in `Caches` (step 4) and a kill loses only the preparation. Lives in
+  Try again on return. Either way the staging is in `Caches` (step 6) and a kill loses only the preparation. Lives in
   `app/ios` beside `IosSyncNotifier`, which `app/ios/CLAUDE.md` gains a line about.
 - **Desktop: quitting asks first.** The process keeps running in the background by itself, so nothing holds it; but
   closing the window or quitting (including Cmd+Q, through the same kept quit request the editor's unsaved text uses in
@@ -356,42 +475,58 @@ platform's start/stop decisions as plain logic where they can be, like the sync 
   (a hidden tab stops `requestAnimationFrame`) and that the OPFS worker's progress still arrives. A closed tab loses only
   the preparation; the next launch empties the staging.
 - **Safety:** none of these touches the library or staging; a kill with or without them loses only the preparation
-  (staging cleaned at the next launch, step 5), never a library file (the Import write moves files atomically, step 7).
-- **Release check (step 15):** leave the app during a download, an unpack, and an Import write on every platform:
+  (staging cleaned at the next launch, step 7), never a library file (the Import write moves files atomically, step 9).
+- **Release check (step 17):** leave the app during a download, an unpack, and an Import write on every platform:
   Android on the 360 × 640 dp emulator and a device (Cancel from the notification, one alongside a sync); iOS 26 and an
   iOS before 26 (the system's progress and its cancel; the fallback's clean cancel on a long import); desktop quitting
   with Cmd+Q and the window's close; web a hidden tab finishing and a closed tab warning.
 
-### 13. Switch: every archive streams, with a fallback for one release
+### 15. Switch: every archive streams
 
-The intake stages archives and `PrepareImportUseCaseImpl` unpacks staged archives only. For this release, a staged
-archive within the old `MAX_ARCHIVE_SIZE` whose streaming preparation throws anything but a cancellation, a
-`ZipException` the old reader would also throw, or `NO_SPACE` is read into memory and prepared through the old path,
-with one log line naming the exception, so nobody who could import an archive yesterday is worse off. Export's
-`isTooLargeToImport` and `export_too_large_to_import` change to the new limits (an export over 4 GB, or with more song
-text than `MAX_IMPORT_SIZE`), in every language. `ImportLimits`' KDoc, `data/formats/CLAUDE.md` (`zip/`),
-`data/source/local/implementation/CLAUDE.md` (`IMPORTS`, staging), `domain/implementation/.../importing/CLAUDE.md`,
+The intake stages archives and `PrepareImportUseCaseImpl` unpacks staged archives only: from this step on the streaming
+path is the only one production runs, with no fallback to the in-memory one, whose code stays only as the differential
+test's reference (step 18 removes it). **This step lands only once step 11 has passed in full, the private corpus
+included, and it does not ship until step 17 has passed on every platform.** Export's `isTooLargeToImport` and
+`export_too_large_to_import` change to the new limits (an export over 16 GB, with more than `MAX_ARCHIVE_ENTRIES`
+entries, or with more song text than `MAX_IMPORT_SIZE`), in every language; an export past 4 GB or 65,534 entries is
+ZIP64 (step 4) and imports back, so it is no longer flagged for that. `ImportLimits`' KDoc, `data/formats/CLAUDE.md`
+(`zip/`), `data/source/local/implementation/CLAUDE.md` (`IMPORTS`, staging), `domain/implementation/.../importing/CLAUDE.md`,
 `ui/screens/importReport/CLAUDE.md`, `ui/progress/CLAUDE.md`, `app/ios/CLAUDE.md` (share extension limits), and the root
 `CLAUDE.md`'s library layout (`imports/<name>`, emptied on launch) are updated in this step.
 
-### 14. The large-archive test
+### 16. The large-archive test
 
 `LargeArchiveImportTest` (desktop, `:data:source:local:implementation`): an archive generated on the fly into a temp
 folder with `ZipWriter`'s streaming `write` (never committed): thousands of songs naming stored and deflated pictures and
-attachments of pseudo-random bytes from a fixed seed, nested archives, and data descriptors. It is received, unpacked,
-planned, and imported in a JVM capped at 128 MiB of heap (its own Gradle test task, `maxHeapSize`), asserting the
-library's file hashes, an empty `imports/` afterwards, and that peak disk use stayed under twice the archive. CI runs
-a 600 MB archive; `-Pcampfire.largeArchiveTest=4g` runs a 3.9 GB one by hand before the release. A variant cancels at
-random points and one fills a size-limited fake storage, both requiring no leftovers and an untouched library.
+attachments of pseudo-random bytes from a fixed seed, nested archives (one of them ZIP64), and data descriptors. It is
+received, unpacked, planned, and imported in a JVM capped at 128 MiB of heap (its own Gradle test task,
+`maxHeapSize`), asserting the library's file hashes, an empty `imports/` afterwards, and that peak disk use stayed under
+twice the archive. The size is the `campfire.largeArchiveTest` property (default in `gradle.properties`):
 
-### 15. Release check by hand, on every platform
+- **In CI**: a 600 MB archive; a ZIP64 archive of 70,000 small entries (past the 16-bit count, a few MB); one of
+  `MAX_ARCHIVE_ENTRIES` entries, read under the 128 MiB heap to prove the compact directory's bound; one of
+  `MAX_ARCHIVE_ENTRIES` + 1, refused cleanly before allocating.
+- **By hand before the release** (`-Pcampfire.largeArchiveTest=5g`): a 5 GB archive, ZIP64 by size, written by
+  `ZipWriter` and imported back whole.
+- **Export, then import**: a library exported through the export use case and imported into an empty library through
+  the import use cases must come back file for file (songs, setlists, pictures, and attachments by hash). In CI with a
+  library past 65,535 files (so the export is ZIP64 by count); by hand with the 5 GB size, so the export is ZIP64 by
+  size.
+- A variant cancels at random points and one fills a size-limited fake storage, both requiring no leftovers and an
+  untouched library.
+
+### 17. Release check by hand, on every platform
 
 Not done until every line passes on every platform, with the same archives each time: a library export of the owner's
 library with pictures and attachments, a shared link opened from a message, a SongbookPro backup and an OnSong or
-OpenSong archive, a generated > 1 GB archive, a corrupt one (truncated, and one with a damaged entry), a ZIP64 one,
-Cancel during receiving and during unpacking, and an import on a nearly full device. After each: the review matches the
-same archive on the previous release, the library holds what it should, `imports/` is empty after the import and after
-the next launch, and the app stays responsive.
+OpenSong archive, a generated > 1 GB archive, a generated > 4 GB (ZIP64) archive written by `ZipWriter` and one zipped
+past 4 GB by the system's own tool (macOS Archive Utility, Windows Explorer) where the platform can, a library export
+past 4 GB exported and imported back, a small archive with ZIP64 forced (`zip -fz`), a corrupt one (truncated, and one
+with a damaged entry), Cancel during receiving and during unpacking, and an import on a nearly full device. After
+each: the review matches the same archive on the previous release (where the previous release could read it; a ZIP64
+one matches its content zipped without ZIP64), the library holds what it should, `imports/` is empty after the import
+and after the next launch, and the app stays responsive. The switch (step 15) ships only once this has passed on every
+platform.
 
 - **Android**: the small-heap emulator at 360 × 640 dp (Medium_Phone AVD, 720 × 1280 at density 320), picked, opened
   with, shared from Files and Gmail, dropped from another app in split screen; the process killed during receiving and
@@ -400,31 +535,28 @@ the next launch, and the app stays responsive.
   extension, a drop on iPad; the app sent to the background during unpacking.
 - **Desktop**: macOS, Windows, and Linux as available; picked, dropped, opened with while running and cold; on Windows,
   the source file renamed and deleted during the review (it must not be locked).
-- **Every platform**: leaving the app during an import, as step 12 lists.
+- **Every platform**: leaving the app during an import, as step 14 lists.
 - **Web**: Chrome and Safari (Safari 26 and an older one without `createWritable()`), picked and dropped; the tab
   closed during unpacking and reopened; `navigator.storage.estimate()` near its quota.
 
-### 16. Remove the old path (the release after)
+### 18. Remove the old path, before the release ships
 
-Once the release has shipped and step 15 passed on every platform: remove the fallback, `ZipReader.read(ByteArray)`,
-the `ByteArray` unpack, the `ImportIntake` switch, and every test that only fed the old path; the differential test
-becomes the parameterised tests' new-path half. Then delete this plan.
-
-## Open questions for the owner
-
-- **ZIP64**: refuse with a clear sentence (this plan), or read it? Reading adds the extra field and the ZIP64 end
-  records to a reader that must stay small; macOS's Archive Utility and Windows write ZIP64 only past 4 GB or 65,535
-  entries, but some backup tools write it always. Worth a look at whether any app the importer serves does.
-- **The fallback in step 13**: keep it for one release as planned, or ship without it once step 15 passes?
-- **The web test in CI**: headless Chrome through `wasmJsBrowserTest` adds a browser to the CI image's work; fine, or
-  keep the web's contract test by hand?
+Nothing in production runs the in-memory path after step 15, so it stays only as the differential test's reference
+until step 17 has passed on every platform, and is removed then, before the release ships (not the release after):
+`ZipReader.read(ByteArray)`, the `ByteArray` unpack, the `ImportIntake` switch, and every test that only fed the old
+path. `DocxTextExtractor`, the old reader's other caller, moves first, in a commit of its own, to the new reader over a
+`ByteArrayZipSource` (it is already `suspend`), with the Word tests and their fuzz test passing unchanged. The
+differential test becomes the parameterised tests' new-path half. The full test suite and step 16's CI runs pass after
+the removal, and the release is built from that commit. Then delete this plan.
 
 ## Not in this plan
 
 - **Sync's whole-file transfers** (Dropbox uploads and downloads of library files, held in memory one at a time).
 - **Picking or opening a single attachment** (50 MB in memory, `MAX_ATTACHMENT_FILE_SIZE`) and single pictures.
-- **PDF and Word conversion**, which keep `MAX_DOCUMENT_FILE_SIZE` and the in-memory `Inflater.inflate`.
+- **PDF and Word conversion**, which keep `MAX_DOCUMENT_FILE_SIZE` and the in-memory `Inflater.inflate` (a Word
+  document moves to the new zip reader in step 18 but is still read whole, within its limit).
 - **Shared copies** (`SharedCopySync`), still packed in memory within `MAX_SHARED_COPY_SIZE` and
   `MAX_SHARED_ATTACHMENTS_SIZE`.
 - **Larger song budgets**: `MAX_IMPORT_SIZE` stays 24 MiB of text; a library of more songs still imports in parts.
 - **Dropped folders**, walked file by file as today (an archive inside one is staged like any other).
+- **Split (multi-disk) archives and ZIP64's encryption and central directory compression**, refused as damaged.
