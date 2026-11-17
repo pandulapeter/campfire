@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import com.pandulapeter.campfire.data.formats.document.assertTakesTimeInProportion
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -19,8 +20,8 @@ import kotlin.test.assertTrue
 internal class ZipReaderTest {
 
     @Test
-    fun `reads a stored archive`() {
-        val read = ZipReader.read(storedArchive())
+    fun `reads a stored archive`() = runTest {
+        val read = readAlike(storedArchive())
 
         assertEquals(listOf("sub/nested.txt", "hello.txt"), read.entries.map { it.name })
         assertEquals("nested", read.entries[0].bytes.decodeToString())
@@ -29,143 +30,143 @@ internal class ZipReaderTest {
     }
 
     @Test
-    fun `skips directory entries`() {
+    fun `skips directory entries`() = runTest {
         // The archive holds three central directory records; the "sub/" directory must not become an entry.
         assertEquals(3, storedArchive().u16(EOCD_OFFSET + 10))
-        assertEquals(2, ZipReader.read(storedArchive()).entries.size)
+        assertEquals(2, readAlike(storedArchive()).entries.size)
     }
 
     @Test
-    fun `rejects a truncated archive`() {
+    fun `rejects a truncated archive`() = runTest {
         val archive = storedArchive()
 
         // Without the end of central directory record the archive is not recognisable at all.
-        assertFailsWith<ZipException> { ZipReader.read(archive.copyOfRange(0, archive.size - 10)) }
+        assertFailsWith<ZipException> { readAlike(archive.copyOfRange(0, archive.size - 10)) }
         // The central directory is intact but the entry data it points at is gone.
-        assertFailsWith<ZipException> { ZipReader.read(archive.copyOfRange(EOCD_OFFSET, archive.size)) }
+        assertFailsWith<ZipException> { readAlike(archive.copyOfRange(EOCD_OFFSET, archive.size)) }
     }
 
     @Test
-    fun `rejects an empty input`() {
-        assertFailsWith<ZipException> { ZipReader.read(ByteArray(0)) }
+    fun `rejects an empty input`() = runTest {
+        assertFailsWith<ZipException> { readAlike(ByteArray(0)) }
     }
 
     @Test
-    fun `leaves out an entry with an unsupported compression method`() {
+    fun `leaves out an entry with an unsupported compression method`() = runTest {
         val archive = storedArchive()
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 10] = 99
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 11] = 0
 
-        val read = ZipReader.read(archive)
+        val read = readAlike(archive)
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun `leaves out an entry with a bad checksum`() {
+    fun `leaves out an entry with a bad checksum`() = runTest {
         val archive = storedArchive()
         archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
 
-        val read = ZipReader.read(archive)
+        val read = readAlike(archive)
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun `leaves out an encrypted entry`() {
+    fun `leaves out an encrypted entry`() = runTest {
         val archive = storedArchive()
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 8] = 1
 
-        val read = ZipReader.read(archive)
+        val read = readAlike(archive)
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun `leaves out an entry declaring more than it could ever inflate to`() {
+    fun `leaves out an entry declaring more than it could ever inflate to`() = runTest {
         assertEquals(
             listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.TOO_LARGE)),
-            ZipReader.read(deflatedArchive(declaredSize = 2L shl 30)).unread,
+            readAlike(deflatedArchive(declaredSize = 2L shl 30)).unread,
         )
         // Past the archive limit the entry limit still stands, before a buffer of the declared size is allocated.
         assertEquals(
             listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)),
-            ZipReader.read(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE).unread,
+            readAlike(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE).unread,
         )
     }
 
     @Test
-    fun `leaves out a declared size the stream does not produce without allocating it`() {
-        val read = ZipReader.read(deflatedArchive(declaredSize = 16L shl 20))
+    fun `leaves out a declared size the stream does not produce without allocating it`() = runTest {
+        val read = readAlike(deflatedArchive(declaredSize = 16L shl 20))
 
         assertEquals(emptyList(), read.entries)
         assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun `stops reading at the total limit`() {
+    fun `stops reading at the total limit`() = runTest {
         // The two stored entries hold 6 and 9 bytes.
-        assertEquals(2, ZipReader.read(storedArchive(), maxTotalSize = 15).entries.size)
+        assertEquals(2, readAlike(storedArchive(), maxTotalSize = 15).entries.size)
 
-        val read = ZipReader.read(storedArchive(), maxTotalSize = 14)
+        val read = readAlike(storedArchive(), maxTotalSize = 14)
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
     }
 
     @Test
-    fun `does not read what the caller does not want`() {
+    fun `does not read what the caller does not want`() = runTest {
         // The checksum no longer matches, so reading the entry would leave it out as unreadable instead.
         val archive = storedArchive()
         archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
 
-        val read = ZipReader.read(archive, limitOf = { name, _ -> if (name == "hello.txt") EntryPolicy.Skip else EntryPolicy.Read(Long.MAX_VALUE) })
+        val read = readAlike(archive, limitOf = { name, _ -> if (name == "hello.txt") EntryPolicy.Skip else EntryPolicy.Read(Long.MAX_VALUE) })
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.NOT_WANTED)), read.unread)
     }
 
     @Test
-    fun `leaves out an entry over its own limit`() {
-        val read = ZipReader.read(storedArchive(), limitOf = { _, _ -> EntryPolicy.Read(8) })
+    fun `leaves out an entry over its own limit`() = runTest {
+        val read = readAlike(storedArchive(), limitOf = { _, _ -> EntryPolicy.Read(8) })
 
         assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
         assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
     }
 
     @Test
-    fun `leaves out an entry whose end overflows an int`() {
+    fun `leaves out an entry whose end overflows an int`() = runTest {
         val archive = deflatedArchive(declaredSize = Int.MAX_VALUE.toLong(), compressedSize = Int.MAX_VALUE.toLong(), method = 0)
 
-        val read = ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE)
+        val read = readAlike(archive, maxTotalSize = Long.MAX_VALUE)
 
         assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
         assertFailsWith<ZipException> { Inflater.inflate(archive, offset = 1, length = Int.MAX_VALUE) }
     }
 
     @Test
-    fun `stops an entry that inflates past what it declared at that size`() {
+    fun `stops an entry that inflates past what it declared at that size`() = runTest {
         val exception = assertFailsWith<ZipException> { Inflater.inflate(helloStream(), expectedSize = 3) }
 
         assertTrue(exception.message.orEmpty().contains("3 bytes"), exception.message)
     }
 
     @Test
-    fun `reads entries sharing their data once`() {
+    fun `reads entries sharing their data once`() = runTest {
         val content = ByteArray(1000) { 'a'.code.toByte() }
         val stream = byteArrayOf(0x01, 0xE8.toByte(), 0x03, 0x17, 0xFC.toByte()) + content
 
-        val read = ZipReader.read(overlappingArchive(stream, count = 3, declaredSize = 1000, crc = Crc32.of(content)))
+        val read = readAlike(overlappingArchive(stream, count = 3, declaredSize = 1000, crc = Crc32.of(content)))
 
         assertEquals(1, read.entries.size)
         assertEquals(List(2) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
     }
 
     @Test
-    fun `charges a damaged entry what it declared`() {
+    fun `charges a damaged entry what it declared`() = runTest {
         val stream = helloStream()
         val archive = archive(
             streams = listOf(stream, stream),
@@ -175,7 +176,7 @@ internal class ZipReaderTest {
             ),
         )
 
-        val read = ZipReader.read(archive, maxTotalSize = 9)
+        val read = readAlike(archive, maxTotalSize = 9)
 
         assertEquals(emptyList(), read.entries)
         assertEquals(
@@ -188,24 +189,24 @@ internal class ZipReaderTest {
     }
 
     @Test
-    fun `costs at most the archive for many records lying about one stream`() {
+    fun `costs at most the archive for many records lying about one stream`() = runTest {
         // Sixteen stored blocks of 65,535 bytes: a stream that inflates to a mebibyte, named by every record.
         val block = ByteArray(65535) { 'a'.code.toByte() }
         val stream = (0 until 16).fold(ByteArray(0)) { stream, index ->
             stream + byteArrayOf(if (index == 15) 0x01 else 0x00, 0xFF.toByte(), 0xFF.toByte(), 0x00, 0x00) + block
         }
 
-        val read = ZipReader.read(overlappingArchive(stream, count = 200, declaredSize = 10, crc = 0), maxTotalSize = Long.MAX_VALUE)
+        val read = readAlike(overlappingArchive(stream, count = 200, declaredSize = 10, crc = 0), maxTotalSize = Long.MAX_VALUE)
 
         assertEquals(emptyList(), read.entries)
         assertEquals(List(200) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
     }
 
     @Test
-    fun `a sniffed and rejected entry costs no budget`() {
+    fun `a sniffed and rejected entry costs no budget`() = runTest {
         val prefixes = mutableListOf<String>()
 
-        val read = ZipReader.read(
+        val read = readAlike(
             archive = deflatedArchive(declaredSize = 8L shl 20),
             limitOf = { _, _ -> EntryPolicy.Sniff },
             sniffedLimitOf = { _, prefix ->
@@ -214,7 +215,8 @@ internal class ZipReaderTest {
             },
         )
 
-        assertEquals(listOf("hello"), prefixes)
+        // Once by each of the two readers.
+        assertEquals(listOf("hello", "hello"), prefixes)
         assertEquals(0, read.chargedSize)
         assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.NOT_WANTED)), read.unread)
     }
@@ -224,7 +226,7 @@ internal class ZipReaderTest {
         val content = ByteArray(5000) { 'a'.code.toByte() }
         val archive = ZipWriter.write(listOf(ZipEntry("backup", content)))
 
-        val read = ZipReader.read(archive, limitOf = { _, _ -> EntryPolicy.Sniff }, sniffedLimitOf = { _, _ -> Long.MAX_VALUE })
+        val read = readAlike(archive, limitOf = { _, _ -> EntryPolicy.Sniff }, sniffedLimitOf = { _, _ -> Long.MAX_VALUE })
 
         assertContentEquals(content, read.entries.single().bytes)
         assertEquals(content.size.toLong(), read.chargedSize)
@@ -232,7 +234,7 @@ internal class ZipReaderTest {
     }
 
     @Test
-    fun `a central directory pointing every entry at one blob peeks it once per its compressed size`() {
+    fun `a central directory pointing every entry at one blob peeks it once per its compressed size`() = runTest {
         // Sixteen stored blocks of 65,535 bytes, a mebibyte of stream named by every record the format allows.
         val block = ByteArray(65535) { 'a'.code.toByte() }
         val stream = (0 until 16).fold(ByteArray(0)) { stream, index ->
@@ -241,7 +243,7 @@ internal class ZipReaderTest {
         val archive = overlappingArchive(stream, count = 65534, declaredSize = 16L * 65535, crc = 0)
         var peeks = 0
 
-        val read = ZipReader.read(
+        val read = readAlike(
             archive = archive,
             limitOf = { _, _ -> EntryPolicy.Sniff },
             sniffedLimitOf = { _, _ ->
@@ -251,10 +253,27 @@ internal class ZipReaderTest {
         )
 
         val peekable = archive.size / stream.size
-        assertEquals(peekable, peeks)
+        // As often by each of the two readers.
+        assertEquals(2 * peekable, peeks)
         assertEquals(List(peekable) { UnreadZipEntry.Reason.NOT_WANTED }, read.unread.take(peekable).map { it.reason })
         assertTrue(read.unread.drop(peekable).all { it.reason == UnreadZipEntry.Reason.UNREADABLE })
         assertEquals(65534, read.unread.size)
+    }
+
+    @Test
+    fun `a source's walk of records all pointing at one blob takes time in proportion to their count`() = runTest {
+        val block = ByteArray(65535) { 'a'.code.toByte() }
+        val stream = (0 until 16).fold(ByteArray(0)) { stream, index ->
+            stream + byteArrayOf(if (index == 15) 0x01 else 0x00, 0xFF.toByte(), 0xFF.toByte(), 0x00, 0x00) + block
+        }
+
+        assertTakesTimeInProportion(
+            wholeSize = 65534,
+            inputOf = { count -> overlappingArchive(stream, count = count, declaredSize = 16L * 65535, crc = 0) },
+            read = { archive ->
+                ZipReader.read(ByteArrayZipSource(archive), limitOf = { _, _ -> EntryPolicy.Sniff }, sniffedLimitOf = { _, _ -> Long.MAX_VALUE })
+            },
+        )
     }
 
     /** One local header holding [stream], and [count] central directory records that all point at it. */

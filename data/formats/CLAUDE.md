@@ -92,14 +92,21 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   caller's import budget is charged before an entry is read; inflation stops at the declared size. Each entry's
   compressed bytes are charged once, and may not add up to more than the archive holds (zip bombs pointing many entries
   at the same bytes). The buffer starts at no more than 1 MiB whatever the directory claims.
+- **Two readers that read every archive alike**: `ZipReader.read(ByteArray)` in memory, and `ZipReader.open(ZipSource)`
+  with `ZipDirectory.walk`, which never holds an archive or an entry whole unless its `EntrySink` does. The walk is the
+  in-memory one decision for decision (same policies asked in the same order, same peeks, charges, and reasons), which
+  `readAlike` and the fuzz test hold it to; keep them alike until the in-memory one is removed. Its own additions:
+  `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES` refused before anything is allocated, the directory kept as
+  primitive arrays and name bytes, each local header read once, and every sum of declared numbers through `checkedSum`.
+  `ByteArrayEntrySink` refuses an entry over 50 MiB for memory's sake, stored ones too.
 - **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
   64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
   topping up between symbols. `Inflater.inflate(ByteArray)` stays as it is (the PDF reader's, and the reference the
   fuzz test holds the streaming one to: the same bytes or a `ZipException` from both). Output goes to an `EntrySink`
   through `EntrySink.receive`, which holds it to the declared size, takes its CRC-32 and SHA-256, yields every 256 KiB,
   and ends the sink exactly once: `close` with the SHA-256, or `abandon` on any failure or cancellation.
-- An unreadable entry is left out and reported by name (the module's one print); only an unwalkable archive is a
-  `ZipException`.
+- An unreadable entry is left out and reported by name (the module's one print, in each reader); only an unwalkable
+  archive is a `ZipException`.
 - Entry names are UTF-8 where flagged or valid (macOS does not flag), else code page 437. A backslash is a separator too
   (Windows PowerShell 5.1).
 

@@ -87,6 +87,44 @@ internal class ZipFuzzTest {
     }
 
     @Test
+    fun `generated and damaged archives read alike in memory and streaming`() = runTest {
+        val archives = List(8) { seed ->
+            val random = Random(seed)
+            val entries = List(random.nextInt(1, 8)) { entry(random, it, maxSize = 4_000) }
+            ZipWriter.write(if (seed % 4 == 3) entries + ZipEntry("nested.zip", ZipWriter.write(entries)) else entries)
+        }
+        repeat(MUTATIONS) { seed ->
+            val mutator = Mutator(seed)
+            val original = archives[seed % archives.size]
+            val archive = when (seed % 5) {
+                0 -> original
+                1, 2 -> damageHeaders(mutator, original)
+                else -> mutator.mutate(original)
+            }
+            val budget = mutator.random.nextLong(0, 20_000)
+            // Each reader gets callbacks of its own drawing the same answers, since both ask the same questions in order.
+            val inMemory = runCatching { Policies(seed).let { ZipReader.read(archive, budget, it::limitOf, it::sniffedLimitOf) } }
+            val streamed = runCatching {
+                Policies(seed).let { ZipReader.read(ByteArrayZipSource(archive), budget, it::limitOf, it::sniffedLimitOf) }
+            }
+            assertAlike(inMemory, streamed, "Seed $seed")
+        }
+    }
+
+    /** The answers a fuzzed read gets about its entries, drawn from [seed]. */
+    private class Policies(seed: Int) {
+        private val random = Random(seed)
+
+        fun limitOf(name: String, declaredSize: Long) = when (random.nextInt(4)) {
+            0 -> EntryPolicy.Skip
+            1 -> EntryPolicy.Sniff
+            else -> EntryPolicy.Read(random.nextLong(0, 10_000))
+        }
+
+        fun sniffedLimitOf(name: String, prefix: ByteArray) = if (random.nextBoolean()) null else random.nextLong(0, 10_000)
+    }
+
+    @Test
     fun `damaged deflate streams inflate or are refused`() = runTest {
         val streams = listOf(DYNAMIC_STREAM.hexToByteArray()) + List(4) { seed ->
             ByteArrayBuilder().also { Deflater().deflate(data(Random(seed), maxSize = 4_000), it::u8) }.build()

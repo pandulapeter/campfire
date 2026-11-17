@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 
 /**
  * Reads archives produced by `java.util.zip.ZipOutputStream`: DEFLATED entries, a sub-directory and the data
- * descriptors the JVM writes because it streams entries without knowing their size up front.
+ * descriptors the JVM writes because it streams entries without knowing their size up front, by both readers alike.
  */
 internal class ZipReaderJvmTest {
 
@@ -49,7 +49,7 @@ internal class ZipReaderJvmTest {
         // The JVM streams entry sizes in a trailing data descriptor, so the local headers carry zeroes.
         assertTrue(archive.u16(4 + 2) and 0x0008 != 0, "Expected the JVM to use data descriptors.")
 
-        val read = ZipReader.read(archive).entries
+        val read = runBlocking { readAlike(archive) }.entries
 
         assertEquals(contents.keys.toList(), read.map { it.name })
         read.forEach { entry ->
@@ -69,7 +69,7 @@ internal class ZipReaderJvmTest {
 
         // Written without the UTF-8 flag, which is what makes the name code page 437 rather than UTF-8.
         assertEquals(0, archive.u16(4 + 2) and 0x0800)
-        assertEquals(listOf("Tükörfúrógép.cho"), ZipReader.read(archive).entries.map { it.name })
+        assertEquals(listOf("Tükörfúrógép.cho"), runBlocking { readAlike(archive) }.entries.map { it.name })
     }
 
     @Test
@@ -83,7 +83,7 @@ internal class ZipReaderJvmTest {
             }
         }.toByteArray()
 
-        val read = ZipReader.read(archive).entries
+        val read = runBlocking { readAlike(archive) }.entries
 
         assertEquals(1, read.size)
         assertContentEquals(contents.getValue("hello.cho"), read[0].bytes)

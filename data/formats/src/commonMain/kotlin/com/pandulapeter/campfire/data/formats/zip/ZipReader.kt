@@ -13,10 +13,41 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
  * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE. A ZIP64 archive is rejected with a
- * [ZipException]; a ZIP64, encrypted or otherwise compressed entry is left out and reported; the app only ever deals
- * with small archives of text files.
+ * [ZipException]; a ZIP64, encrypted or otherwise compressed entry is left out and reported.
+ *
+ * Two readers that read every archive alike: [read] of an archive in memory, and [open] and [ZipDirectory.walk] of a
+ * [ZipSource], which never hold an archive or an entry whole unless an [EntrySink] does.
  */
 object ZipReader {
+
+    /**
+     * Reads the central directory of [source], refusing with a [ZipException] what [read] refuses, a directory declared
+     * larger than [maxCentralDirectorySize] or whose records add up to more, and more than [maxEntries] declared
+     * entries; the last two are checked before anything is allocated for them.
+     */
+    suspend fun open(
+        source: ZipSource,
+        maxCentralDirectorySize: Long = ImportLimits.MAX_CENTRAL_DIRECTORY_SIZE,
+        maxEntries: Int = ImportLimits.MAX_ARCHIVE_ENTRIES,
+    ): ZipDirectory = readZipDirectory(source, maxCentralDirectorySize, maxEntries)
+
+    /**
+     * [read] of an archive read through [source]: [open], then [ZipDirectory.walk] with every entry read into memory,
+     * which the budget bounds, and none larger than [Inflater.MAX_DECLARED_ENTRY_SIZE] ([ByteArrayEntrySink]).
+     */
+    suspend fun read(
+        source: ZipSource,
+        maxTotalSize: Long = ImportLimits.MAX_IMPORT_SIZE,
+        limitOf: (name: String, declaredSize: Long) -> EntryPolicy = { _, _ -> EntryPolicy.Read(Long.MAX_VALUE) },
+        sniffedLimitOf: (name: String, prefix: ByteArray) -> Long? = { _, _ -> null },
+    ): ZipContent {
+        val sinks = mutableListOf<Pair<String, ByteArrayEntrySink>>()
+        val walk = open(source).walk(maxTotalSize, limitOf, sniffedLimitOf) { name, declaredSize ->
+            ByteArrayEntrySink(declaredSize).also { sinks += name to it }
+        }
+        val entries = sinks.filter { (_, sink) -> sink.isClosed }.map { (name, sink) -> ZipEntry(name, sink.bytes()) }
+        return ZipContent(entries = entries, unread = walk.unread, chargedSize = walk.chargedSize)
+    }
 
     /**
      * The file entries of [archive], directories skipped. Names are returned as stored, sub-directories included,
@@ -240,7 +271,7 @@ object ZipReader {
      * specifies for a name without the bit and what the DOS-era Windows tools wrote: the accented letters of Western
      * and most Central European names come out right, instead of as a row of replacement characters.
      */
-    private fun ByteArray.entryName(offset: Int, length: Int, flags: Int): String {
+    internal fun ByteArray.entryName(offset: Int, length: Int, flags: Int): String {
         if (length < 0 || offset < 0 || offset + length > size) {
             throw ZipException("Truncated archive: a $length byte name at offset $offset is outside the $size byte input.")
         }
@@ -258,12 +289,12 @@ object ZipReader {
         }
     }
 
-    private const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
-    private const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L
-    private const val LOCAL_HEADER_SIGNATURE = 0x04034B50L
-    private const val METHOD_STORED = 0
-    private const val METHOD_DEFLATE = 8
-    private const val MAX_COMMENT_LENGTH = 65535
+    internal const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
+    internal const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L
+    internal const val LOCAL_HEADER_SIGNATURE = 0x04034B50L
+    internal const val METHOD_STORED = 0
+    internal const val METHOD_DEFLATE = 8
+    internal const val MAX_COMMENT_LENGTH = 65535
     private const val FLAG_UTF8_NAME = 0x0800
 
     /** 0x80-0xFF in IBM code page 437, the character set a zip entry name is in when it does not say otherwise. */

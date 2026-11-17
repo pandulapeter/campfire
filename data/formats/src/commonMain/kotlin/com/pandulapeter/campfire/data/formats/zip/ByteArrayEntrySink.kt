@@ -27,7 +27,10 @@ class ByteArrayEntrySink(declaredSize: Long) : EntrySink {
     }
 
     private val builder = ByteArrayBuilder(minOf(declaredSize, Inflater.INITIAL_CAPACITY_LIMIT.toLong()).toInt())
-    private var isClosed = false
+
+    /** Whether the entry was read whole and checked, so that [bytes] holds it. */
+    var isClosed = false
+        private set
 
     override suspend fun write(bytes: ByteArray, offset: Int, length: Int) = builder.bytes(bytes, offset, length)
 

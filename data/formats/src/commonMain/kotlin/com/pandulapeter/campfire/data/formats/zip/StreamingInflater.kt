@@ -37,9 +37,11 @@ import kotlinx.coroutines.yield
  * @throws ZipException when the data is malformed, or produces more or fewer bytes than declared, or another CRC-32.
  */
 internal suspend fun Inflater.inflate(source: ZipSource, offset: Long, length: Long, declaredSize: Long, crc: Long, sink: EntrySink) =
-    sink.receive(declaredSize, crc) { writer ->
-        StreamingInflate(source, offset, length, maxOutput = -1, outputLimit = declaredSize, output = writer::write).inflate()
-    }
+    sink.receive(declaredSize, crc) { writer -> inflate(source, offset, length, writer) }
+
+/** [inflate] into an entry already being received, for the zip reader, which reads the local header inside it. */
+internal suspend fun Inflater.inflate(source: ZipSource, offset: Long, length: Long, writer: EntryWriter) =
+    StreamingInflate(source, offset, length, maxOutput = -1, outputLimit = writer.declaredSize, output = writer::write).inflate()
 
 /**
  * The first [maxOutput] bytes the [length] bytes of raw DEFLATE data at [offset] of [source] inflate to, or all of them

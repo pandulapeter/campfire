@@ -52,7 +52,7 @@ internal suspend fun EntrySink.receive(declaredSize: Long, crc: Long, write: sus
  * with its CRC-32 and SHA-256 taken from the same slices. It yields every [YIELD_INTERVAL] bytes, so that a large entry
  * can be cancelled and the web's one thread keeps painting.
  */
-internal class EntryWriter(private val sink: EntrySink, private val declaredSize: Long) {
+internal class EntryWriter(private val sink: EntrySink, val declaredSize: Long) {
 
     private var runningCrc = Crc32.INITIAL
     private val digest = Sha256.Digest()

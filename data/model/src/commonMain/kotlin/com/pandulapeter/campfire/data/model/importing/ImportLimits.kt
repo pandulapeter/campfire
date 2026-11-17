@@ -125,6 +125,21 @@ object ImportLimits {
     const val MAX_SHARED_ATTACHMENTS_SIZE = MAX_IMPORT_ATTACHMENTS_SIZE
 
     /**
+     * The most of an archive's central directory the streaming zip reader holds, as it declares it and as its records
+     * are walked: a record is 46 bytes with its name and extra fields, so this holds [MAX_ARCHIVE_ENTRIES] records
+     * averaging 120 bytes of name and extras, which other tools' timestamps and a song's folder and name leave room
+     * for. Checked before the directory is read.
+     */
+    const val MAX_CENTRAL_DIRECTORY_SIZE = 32L shl 20
+
+    /**
+     * The most entries one archive may declare, checked against the declared count before anything is allocated for it;
+     * the reader walks no more records than were declared. Far more than any library export or backup, while the
+     * compact directory of that many stays a small part of a phone's heap.
+     */
+    const val MAX_ARCHIVE_ENTRIES = 200_000
+
+    /**
      * How many levels of folders a dropped folder is opened to, its own being the first: a library exported as folders is
      * two deep, and a home directory dropped by accident is not read to the bottom.
      */

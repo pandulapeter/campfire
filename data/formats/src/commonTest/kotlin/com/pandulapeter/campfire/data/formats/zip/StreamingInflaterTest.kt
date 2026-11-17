@@ -61,7 +61,7 @@ internal class StreamingInflaterTest {
     }
 
     @Test
-    fun `back references of 32,768 bytes reach across the window's slide`() = runTest {
+    fun `back references of 32768 bytes reach across the window's slide`() = runTest {
         val literals = Random(5).nextBytes(70_000)
         val stream = storedStream(literals, final = false) + farBackReferences(count = 300)
         val expected = Inflater.inflate(stream)
@@ -86,7 +86,7 @@ internal class StreamingInflaterTest {
     }
 
     @Test
-    fun `a stream producing more or fewer bytes than declared, or another checksum, abandons its sink`() = runTest {
+    fun `a stream producing more or fewer bytes than declared or another checksum abandons its sink`() = runTest {
         val data = Random(6).nextBytes(100_000)
         val stream = deflate(data)
         val cases = listOf(
