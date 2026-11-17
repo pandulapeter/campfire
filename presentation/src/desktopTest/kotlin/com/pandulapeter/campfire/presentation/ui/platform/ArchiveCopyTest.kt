@@ -218,6 +218,22 @@ class ArchiveCopyTest {
     }
 
     @Test
+    fun `a head is read whole across short reads and only as far as a short stream goes`() {
+        val content = bytes(2000)
+        // A stream that hands over a few bytes a read, as a pipe does.
+        val trickling = object : InputStream() {
+            private val input = ByteArrayInputStream(content)
+
+            override fun read() = input.read()
+
+            override fun read(b: ByteArray, off: Int, len: Int) = input.read(b, off, minOf(len, 7))
+        }
+
+        assertContentEquals(content.copyOf(512), trickling.readHead())
+        assertContentEquals(content.copyOf(100), ByteArrayInputStream(content, 0, 100).readHead())
+    }
+
+    @Test
     fun `the desktop intake stages an archive and reads a song whole`() = runBlocking<Unit> {
         val folder = Files.createTempDirectory("campfire-intake").toFile().apply { deleteOnExit() }
         val archiveBytes = byteArrayOf(0x50, 0x4B, 3, 4) + bytes(5000)

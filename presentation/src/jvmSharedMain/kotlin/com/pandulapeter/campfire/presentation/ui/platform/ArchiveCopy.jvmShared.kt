@@ -44,9 +44,18 @@ internal suspend fun InputStream.copyInto(archive: ReceivedArchive, expectedSize
 
 /**
  * The first [ImportLimits.SNIFF_LENGTH] bytes of the stream, fewer only where it is shorter, which is what
- * `ImportIntake.decide` is asked with.
+ * `ImportIntake.decide` is asked with. Read by hand rather than with `readNBytes(Int)`, which Android's `InputStream` does not have.
  */
-internal fun InputStream.readHead(): ByteArray = readNBytes(ImportLimits.SNIFF_LENGTH)
+internal fun InputStream.readHead(): ByteArray {
+    val head = ByteArray(ImportLimits.SNIFF_LENGTH)
+    var filled = 0
+    while (filled < head.size) {
+        val count = read(head, filled, head.size - filled)
+        if (count < 0) break
+        filled += count
+    }
+    return if (filled == head.size) head else head.copyOf(filled)
+}
 
 /**
  * [name], [size] bytes long where the platform says, opened once as [input] and its [head] already read: received into
