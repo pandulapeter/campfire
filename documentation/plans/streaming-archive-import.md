@@ -318,6 +318,8 @@ Safety: no regression in what an archive yields; hostile layouts refused as befo
 
 ### 3. Reading ZIP64
 
+**Landed** (98a09be84, 553eb133b, 2374e887b): a wrapped archive is the public `WrappedArchiveException` (a `ZipException`, now public with an internal constructor). Safer readings taken: a marker without its value leaves that entry out rather than refusing the archive; the split-archive and entry-data-before-the-directory checks apply on the ZIP64 path only; a locator beside no marker is used only when its records are valid. Today's `ditto` writes ZIP64 past 4 GB, so the wrapped and Explorer layouts are built from this description, not real files.
+
 The streaming reader (only; the old `ZipReader.read(ByteArray)` keeps refusing ZIP64, as the differential test's
 reference) reads every ZIP64 structure, with every existing check applied to the 64-bit values:
 
@@ -381,6 +383,8 @@ Safety: no archive that reads today reads differently (step 2's parity cases pas
 is refused at every field.
 
 ### 4. `ZipWriter` writes ZIP64 when an export needs it
+
+**Landed** (fcd85245e, f7694e8d9, e5946dda1): the ZIP64 records are also written when only the end record would cross `0xFFFFFFFF`, so step 3's reader never takes the writer's own archive for a wrapped one.
 
 `ZipWriter.write` writes ZIP64 only when an archive passes what the 32-bit format holds, and never otherwise:
 
@@ -454,6 +458,8 @@ cancellation, or a budget overrun; other sessions' files go at launch, this sess
 fake throwing on write past a size) fails cleanly with nothing left behind.
 
 ### 8. The streaming unpack, beside the old one
+
+**Landed** (6b44f33ec, 697b94afa, 7fae7edac, eff46ccfe): `ArchiveLocalSource.unpack(archive: StagedFile, maxSize)`; `IncomingContent`, `ImportedImage.content`, and `ImportedFile.staged` pulled forward from step 9. At `MAX_DEPTH` a nested archive is read in memory as today; a staging refusal, out of space, a storage failure, and cancellation end the unpack, which deletes what it staged.
 
 - `ArchiveLocalSource.unpack(archive: StagedFile, …)` beside the `ByteArray` one: `ArchiveLocalSourceImpl` and
   `ArchiveSongImages` walk a `FileSource` with the new reader, song texts into memory as today, pictures and attachments
