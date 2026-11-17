@@ -91,7 +91,8 @@ it, as the reference the other is held to.
   The tests lower the limits through `write`'s internal overload, never production's.
 - **The writer streams into a `ZipSink`** (a file for an export, a buffer for the in-memory `write`, which is the same
   bytes): each entry is read (name and bytes, or null to leave it out), deflated, and written before the next is read, its header after its CRC and
-  sizes are known (no data descriptors), so it holds one entry and the central directory's offsets, never the archive.
+  sizes are known (no data descriptors), so it holds one entry and the central directory's names and offsets, never the
+  archive, nor the directory itself, which goes out 64 KiB at a time.
   An entry over 1 MiB is first tried on its first 64 KiB: one that does not shrink by 3% is stored undeflated, one that
   does is deflated into a buffer of its own size, given up on once no smaller (`LargeFileMemoryTest`, in a 128 MB JVM,
   is the proof); entries up to 1 MiB come out bit for bit as before. Data reaches the sink in slices of at most 1 MiB.

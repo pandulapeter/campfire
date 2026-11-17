@@ -60,6 +60,30 @@ internal class ZipWriterStreamingTest {
     }
 
     @Test
+    fun `a central directory of many long names reaches the sink in slices rather than whole`() = runTest {
+        val many = List(MANY_ENTRIES) { ZipEntry("Music/" + "Artist and album and a track title ".repeat(6) + "$it.mp3", byteArrayOf(it.toByte())) }
+        val written = ByteArrayBuilder()
+        var largestWrite = 0
+
+        ZipWriter.write(
+            entries = many.map { entry -> { entry } },
+            sink = object : ZipSink {
+                override val position get() = written.size.toLong()
+
+                override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
+                    largestWrite = maxOf(largestWrite, length)
+                    written.bytes(bytes, offset, length)
+                }
+            },
+        )
+
+        val archive = written.build()
+        assertContentEquals(ZipWriter.write(many), archive)
+        assertEquals(many.map { it.name }, ZipReader.read(archive).entries.map { it.name })
+        assertTrue(largestWrite < MANY_ENTRIES * 100, "A write of $largestWrite bytes, of a directory of about ${MANY_ENTRIES * 250}")
+    }
+
+    @Test
     fun `the streaming writer tells how many entries it wrote and what they add up to unpacked`() = runTest {
         val summary = ZipWriter.write(entries = entries.map { entry -> { entry } }, sink = ChunkSink())
 
@@ -93,6 +117,10 @@ internal class ZipWriterStreamingTest {
     }
 
     /** Keeps each write as a chunk of its own, the way a file sink sees them, rather than one growing buffer. */
+    private companion object {
+        const val MANY_ENTRIES = 4_000
+    }
+
     private class ChunkSink : ZipSink {
 
         private val chunks = mutableListOf<ByteArray>()

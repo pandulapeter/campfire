@@ -34,8 +34,8 @@ object ZipWriter {
     /**
      * Writes the archive of [entries] to [sink] as it goes: each entry is read (called once, when it is its turn),
      * deflated, and written whole before the next is read, its CRC and sizes known before its header, so no data
-     * descriptor is needed and what stays in memory is one entry and, for the central directory, each entry's offset,
-     * CRC, and sizes. One past 4 GiB or of 65,535 entries or more is written as ZIP64. Yields (and so checks for
+     * descriptor is needed and what stays in memory is one entry and, for the central directory, each entry's name,
+     * offset, CRC, and sizes; the directory itself is written as it is built, 64 KiB at a time. One past 4 GiB or of 65,535 entries or more is written as ZIP64. Yields (and so checks for
      * cancellation) between entries and every 256 KB of deflating.
      *
      * An entry read as null is left out, nothing of it written: a file that turned out to be missing or unreadable. Its
@@ -133,8 +133,14 @@ object ZipWriter {
                 header.u16(ZIP64_EXTRA_SIZE - 4)
                 header.u64(offsets[index])
             }
+            // Written as it fills rather than held whole: the directory of as many entries as an import takes is tens of
+            // megabytes, which a phone's heap would hold about twice over while the buffer doubles.
+            if (header.size >= CENTRAL_DIRECTORY_SLICE_SIZE) {
+                header.writeTo(sink)
+                header.clear()
+            }
         }
-        val centralDirectorySize = header.size.toLong()
+        val centralDirectorySize = sink.position - centralDirectoryOffset + header.size
         val centralDirectoryEnd = centralDirectoryOffset + centralDirectorySize
         // An archive longer than 0xFFFFFFFF bytes without a locator reads as one some tool wrapped past 4 GiB, so an end
         // record alone crossing the limit takes the ZIP64 records too.
@@ -214,6 +220,7 @@ object ZipWriter {
     private const val OFFSET_MARKER = 0xFFFFFFFFL
     private const val MAX_NAME_SIZE = 0xFFFF
     private const val LARGE_ENTRY_SIZE = 1024 * 1024
+    private const val CENTRAL_DIRECTORY_SLICE_SIZE = 64 * 1024
     private const val TRIAL_SIZE = 64 * 1024
     private const val MIN_TRIAL_SAVING = 3
 }
