@@ -665,6 +665,13 @@ and each platform's start/stop decisions as plain logic where they can be, like 
 
 ### 15. Switch: every archive streams
 
+**Landed** (eb189662d, d94b03404, 2da5c3d16); **not to ship before step 17 passes**. Beyond the intakes, `ImportWork`
+stages any archive still arriving as bytes (a zip under a picture's name, an unreadable iOS head, a download named
+`.zip`) before preparing it, so production never reaches the in-memory unpack. An export is flagged past 16 GiB,
+`MAX_ARCHIVE_ENTRIES`, 24 MiB of song text, or `MAX_IMPORT_STAGED_SIZE` of files. iOS starts Koin before an "Open with"
+or the share inbox can need it. Parity with the corpus passed again; an Android emulator import left `imports/` empty.
+The website (its own repository) was not checked for the old 88 MB figure.
+
 The intake stages archives and `PrepareImportUseCaseImpl` unpacks staged archives only: from this step on the streaming
 path is the only one production runs, with no fallback to the in-memory one, whose code stays only as the differential
 test's reference (step 18 removes it). **This step lands only once step 11 has passed in full, the private corpus
