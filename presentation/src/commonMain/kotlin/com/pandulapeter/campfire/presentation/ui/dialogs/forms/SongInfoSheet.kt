@@ -88,7 +88,7 @@ internal fun SongInfoSheet(
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
     val editing = rememberSongInfoEditing(songMetadataEditing = songMetadataEditing, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName, target = dialog.target)
-    val attachments = rememberSongInfoAttachments(songAttachmentEditing)
+    val attachments = rememberSongInfoAttachments(songAttachmentEditing, isEnabled = userPreferences?.isAttachmentsEnabled != false)
     val overrides = songPlayingOverrides(playingOverrides = playingOverrides, userPreferencesFlow = preferencesController.userPreferences, song = song, setlistFileName = setlistFileName)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),

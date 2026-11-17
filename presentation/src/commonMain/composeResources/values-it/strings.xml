@@ -476,6 +476,7 @@
     <string name="settings_cover_art_description">Mostra accanto a una canzone la copertina dell\'album che indica, scaricandola una volta e tenendone una copia su questo dispositivo</string>
     <string name="settings_picture_links">Immagini dai link</string>
     <string name="settings_picture_links_description">Scarica le immagini che una canzone importata indica con un indirizzo web, tenendone una copia nella canzone</string>
+    <string name="settings_attachments_description">Allega file alle canzoni, come un PDF dello spartito o una registrazione, e li apre dalla canzone</string>
     <string name="settings_group_song_page">Pagina della canzone</string>
     <string name="preferences_page_song">Canzone</string>
     <string name="settings_group_diagrams">Diagrammi</string>

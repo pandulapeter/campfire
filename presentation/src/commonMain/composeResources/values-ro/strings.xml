@@ -516,6 +516,7 @@
     <string name="settings_cover_art_description">Arată lângă cântec coperta de album pe care o indică, descărcând-o o singură dată și păstrând o copie pe acest dispozitiv</string>
     <string name="settings_picture_links">Imagini din linkuri</string>
     <string name="settings_picture_links_description">Descarcă imaginile pe care un cântec importat le indică printr-o adresă web, păstrând o copie în cântec</string>
+    <string name="settings_attachments_description">Atașează fișiere la cântece, de exemplu un PDF cu partitura sau o înregistrare, și le deschide din cântec</string>
     <string name="settings_group_song_page">Pagina cântecului</string>
     <string name="preferences_page_song">Cântec</string>
     <string name="settings_group_diagrams">Diagrame</string>

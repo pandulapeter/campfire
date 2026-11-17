@@ -222,6 +222,8 @@ internal class PreferencesController(
 
     fun setPictureLinkDownloadEnabled(value: Boolean) = changeUserPreferences { copy(isPictureLinkDownloadEnabled = value) }
 
+    fun setAttachmentsEnabled(value: Boolean) = changeUserPreferences { copy(isAttachmentsEnabled = value) }
+
     fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
 
     /** Picking a layout also answers the question the first song opened asks about it. */

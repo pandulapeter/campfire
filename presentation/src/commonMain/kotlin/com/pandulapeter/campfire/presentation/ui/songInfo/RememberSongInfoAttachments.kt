@@ -19,14 +19,16 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.SongAttachmentEd
 
 /**
  * What the About the song sheet shows of a song's attachments: which this device holds, and opening one with the app the
- * system picks, under the name its row shows (`SongAttachmentEditing.open`).
+ * system picks, under the name its row shows (`SongAttachmentEditing.open`). Null while [isEnabled] is false (the
+ * Features switch), which leaves their group out.
  */
 @Composable
-internal fun rememberSongInfoAttachments(songAttachmentEditing: SongAttachmentEditing): SongInfoAttachments {
+internal fun rememberSongInfoAttachments(songAttachmentEditing: SongAttachmentEditing, isEnabled: Boolean): SongInfoAttachments? {
     val fileSizes by songAttachmentEditing.fileSizes.collectAsStateWithLifecycle()
     val opener = rememberFileOpener()
     val kindLabels = AttachmentKind.entries.associateWith { attachmentKindLabel(it) }
-    return remember(songAttachmentEditing, fileSizes, opener, kindLabels) {
+    return remember(songAttachmentEditing, fileSizes, opener, kindLabels, isEnabled) {
+        if (!isEnabled) return@remember null
         SongInfoAttachments(fileSizes = fileSizes) { attachment ->
             val name = attachment.name?.takeIf { it.isNotBlank() } ?: kindLabels.getValue(AttachmentKind.of(attachment.source))
             songAttachmentEditing.open(attachment = attachment, name = name, opener = opener)

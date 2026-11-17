@@ -109,6 +109,11 @@ data class UserPreferences(
      * anything by an import; the editor's From a link and a missing picture's Download, which the user presses, stay.
      */
     val isPictureLinkDownloadEnabled: Boolean = true,
+    /**
+     * Whether songs show and take attachments: the About the song sheet's Attachments group and the editor's Attach
+     * button. Off only hides them; the files a song names are still kept, synced, exported, and imported.
+     */
+    val isAttachmentsEnabled: Boolean = true,
     /** How the song details screen lays a song out. Never exported or synced: it is how one reader reads. */
     val songLayout: SongLayout = SongLayout.PAGES,
     /** Whether a [songLayout] was picked in Preferences or confirmed in the question the first song opened asks. */

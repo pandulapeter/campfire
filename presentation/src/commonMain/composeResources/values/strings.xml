@@ -476,6 +476,7 @@
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_picture_links">Pictures from links</string>
     <string name="settings_picture_links_description">Download the pictures an imported song names by a web address, keeping a copy in the song</string>
+    <string name="settings_attachments_description">Attach files to songs, such as a PDF of the sheet music or a recording, and open them from the song</string>
     <string name="settings_group_song_page">Song page</string>
     <string name="preferences_page_song">Song</string>
     <string name="settings_group_diagrams">Diagrams</string>

@@ -511,6 +511,7 @@
     <string name="settings_cover_art_description">Zobrazovat vedle písně obal alba, který uvádí, jednou stažený a uložený v tomto zařízení</string>
     <string name="settings_picture_links">Obrázky z odkazů</string>
     <string name="settings_picture_links_description">Stahovat obrázky, které importovaná píseň uvádí webovou adresou, a ukládat jejich kopii v písni</string>
+    <string name="settings_attachments_description">Přikládat k písním soubory, například PDF s notami nebo nahrávku, a otevírat je přímo z písně</string>
     <string name="settings_group_song_page">Stránka písně</string>
     <string name="preferences_page_song">Píseň</string>
     <string name="settings_group_diagrams">Diagramy</string>

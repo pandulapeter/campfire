@@ -506,6 +506,7 @@
     <string name="settings_cover_art_description">Pokazuj obok piosenki wskazaną w niej okładkę albumu, pobraną raz i przechowywaną na tym urządzeniu</string>
     <string name="settings_picture_links">Obrazy z linków</string>
     <string name="settings_picture_links_description">Pobieraj obrazy, które importowana piosenka wskazuje adresem internetowym, i przechowuj ich kopię w piosence</string>
+    <string name="settings_attachments_description">Załączaj pliki do piosenek, na przykład PDF z nutami lub nagranie, i otwieraj je z poziomu piosenki</string>
     <string name="settings_group_song_page">Strona piosenki</string>
     <string name="preferences_page_song">Piosenka</string>
     <string name="settings_group_diagrams">Diagramy</string>

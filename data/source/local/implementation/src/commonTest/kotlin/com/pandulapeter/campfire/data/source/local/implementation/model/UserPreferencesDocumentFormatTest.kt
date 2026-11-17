@@ -39,6 +39,7 @@ internal class UserPreferencesDocumentFormatTest {
             isCoverArtEnabled = false,
             isSongDetailsLookupEnabled = false,
             isPictureLinkDownloadEnabled = false,
+            isAttachmentsEnabled = false,
             shouldNumberSections = false,
             language = "hu",
             accidentals = "flats",

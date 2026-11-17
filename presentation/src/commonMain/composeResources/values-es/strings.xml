@@ -476,6 +476,7 @@
     <string name="settings_cover_art_description">Muestra junto a cada canción la portada del álbum que indica, descargándola una vez y guardando una copia en este dispositivo</string>
     <string name="settings_picture_links">Imágenes desde enlaces</string>
     <string name="settings_picture_links_description">Descarga las imágenes que una canción importada indica con una dirección web y guarda una copia en la canción</string>
+    <string name="settings_attachments_description">Adjunta archivos a las canciones, como un PDF de la partitura o una grabación, y los abre desde la canción</string>
     <string name="settings_group_song_page">Página de la canción</string>
     <string name="preferences_page_song">Canción</string>
     <string name="settings_group_diagrams">Diagramas</string>

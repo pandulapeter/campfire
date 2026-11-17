@@ -39,7 +39,8 @@ internal fun rememberSongInfoEditing(
     val latestSong by rememberUpdatedState(song)
     val userPreferences by userPreferencesFlow.collectAsStateWithLifecycle()
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
-    return remember(songMetadataEditing, setlistFileName, target, isCoverArtEnabled) {
+    val isAttachmentsEnabled = userPreferences?.isAttachmentsEnabled != false
+    return remember(songMetadataEditing, setlistFileName, target, isCoverArtEnabled, isAttachmentsEnabled) {
         SongInfoEditing(
             onEditCoverArt = if (isCoverArtEnabled) {
                 { songMetadataEditing.showSongCoverArtDialog(song = latestSong, target = target) }
@@ -49,7 +50,9 @@ internal fun rememberSongInfoEditing(
             onEditTags = { songMetadataEditing.showSongTagsDialog(song = latestSong, target = target) },
             onEditLanguages = { songMetadataEditing.showSongLanguagesDialog(song = latestSong, target = target) },
             onEditLinks = { songMetadataEditing.showSongLinksDialog(song = latestSong, target = target) },
-            onEditAttachments = { songMetadataEditing.showSongAttachmentsDialog(song = latestSong, target = target) },
+            onEditAttachments = if (isAttachmentsEnabled) {
+                { songMetadataEditing.showSongAttachmentsDialog(song = latestSong, target = target) }
+            } else null,
         )
     }
 }

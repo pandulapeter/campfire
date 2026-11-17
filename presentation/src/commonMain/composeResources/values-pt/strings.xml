@@ -478,6 +478,7 @@
     <string name="settings_cover_art_description">Mostra a capa do álbum indicada pela música ao lado dela, baixando-a uma vez e guardando uma cópia neste dispositivo</string>
     <string name="settings_picture_links">Imagens de links</string>
     <string name="settings_picture_links_description">Baixa as imagens que uma música importada indica por um endereço da web, guardando uma cópia na música</string>
+    <string name="settings_attachments_description">Anexa ficheiros às músicas, como um PDF da partitura ou uma gravação, e abre-os a partir da música</string>
     <string name="settings_group_song_page">Página da música</string>
     <string name="preferences_page_song">Música</string>
     <string name="settings_group_diagrams">Diagramas</string>

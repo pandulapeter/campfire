@@ -23,7 +23,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings_chord_library_description
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art
 import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
+import com.pandulapeter.campfire.presentation.resources.settings_attachments_description
 import com.pandulapeter.campfire.presentation.resources.settings_everything_off
+import com.pandulapeter.campfire.presentation.resources.song_details_info_attachments
 import com.pandulapeter.campfire.presentation.resources.settings_group_online
 import com.pandulapeter.campfire.presentation.resources.settings_group_playing
 import com.pandulapeter.campfire.presentation.resources.settings_metronome_description
@@ -98,6 +100,14 @@ private fun PlayingSection(
         isChecked = userPreferences?.areSetlistsEnabled != false,
         isEnabled = userPreferences?.areSongsEnabled != false,
         onCheckedChange = preferencesController::setSetlistsEnabled,
+    )
+    // Off, only the sheet's group and the editor's button go: the files songs name still travel with them.
+    SwitchListItem(
+        title = stringResource(Res.string.song_details_info_attachments),
+        description = stringResource(Res.string.settings_attachments_description),
+        isChecked = userPreferences?.isAttachmentsEnabled != false,
+        isEnabled = userPreferences?.areSongsEnabled != false,
+        onCheckedChange = preferencesController::setAttachmentsEnabled,
     )
     SwitchListItem(
         title = stringResource(Res.string.metronome),

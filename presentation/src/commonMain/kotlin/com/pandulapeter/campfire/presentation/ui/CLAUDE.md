@@ -137,9 +137,10 @@ neither named nor reset. How a disabled feature leaves the chrome and the back s
 Features (Settings → Features):
 
 - **Songs** (`areSongsEnabled`, Settings only, never the onboarding): takes the Songs and Setlists tabs, every song and
-  editor screen, and paste (a dropped text too); disables the Setlists, Online song details, Cover art, and Pictures
-  from links rows. Imports still happen, always through the review and under a warning atop it (as do setlists with
-  Setlists off, `ImportFeatureWarning`), but no preview or editor starts (`ImportController`'s `areSongsEnabled`).
+  editor screen, and paste (a dropped text too); disables the Setlists, Attachments, Online song details, Cover art,
+  and Pictures from links rows. Imports still happen, always through the review and under a warning atop it (as do
+  setlists with Setlists off, `ImportFeatureWarning`), but no preview or editor starts (`ImportController`'s
+  `areSongsEnabled`).
 - **Random picks** (`isRandomPicksEnabled`, disabled with the songs off): also answers the question under them.
 - **Metronome**: its tab, the click button and panel, the M key, and tempo and time wherever a song is read.
 - **Tuner**: its tab and the sheet's entry, and with them every way to ask for the microphone.
@@ -147,6 +148,8 @@ Features (Settings → Features):
 - **Scales** (`areScalesEnabled`): the Scales tab and the scale sheet, and with them the scale suggestions.
 - **Setlists**: their tab and every way into one; files still travel through import, export, and sync. Off with the
   songs too (`FeatureSwitches.areSetlistsEnabled`).
+- **Attachments** (`isAttachmentsEnabled`, after Setlists, disabled with the songs off): About the song's Attachments
+  group (the editor card's too) and the editor's Attach button; the files songs name still sync, export, and import.
 - **Online song details** (`isSongDetailsLookupEnabled`): the lookup button. **Cover art** (`isCoverArtEnabled`):
   fetching, drawing, and search. **Pictures from links** (`isPictureLinkDownloadEnabled`): an import's downloads of the
   pictures its songs name by address; From a link and a missing picture's Download stay.

@@ -113,7 +113,8 @@ internal fun SongEditorScreen(
     val isPerformanceModeEnabled by viewModel.preferencesController.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     val imageMenuState = rememberOverflowMenuState()
-    val imagePick = remember(isPerformanceModeEnabled, destination.fileName, filePicker) {
+    val isAttachmentsEnabled = viewModel.userPreferences.collectAsStateWithLifecycle().value?.isAttachmentsEnabled != false
+    val imagePick = remember(isPerformanceModeEnabled, isAttachmentsEnabled, destination.fileName, filePicker) {
         if (isPerformanceModeEnabled) {
             null
         } else {
@@ -124,7 +125,7 @@ internal fun SongEditorScreen(
                     viewModel.editorSession.images.pickImages(destination.fileName) { filePicker.pickPictures(source, isMultiple = true) }
                 },
                 onLink = { viewModel.dialogHost.showDialog(DialogType.PictureLink(destination.fileName)) },
-                onAttach = { viewModel.editorSession.images.attach(destination.fileName, filePicker::pickAttachment) },
+                onAttach = if (isAttachmentsEnabled) ({ viewModel.editorSession.images.attach(destination.fileName, filePicker::pickAttachment) }) else null,
             )
         }
     }

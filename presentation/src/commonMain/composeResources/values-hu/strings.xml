@@ -476,6 +476,7 @@
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_picture_links">Képek linkekről</string>
     <string name="settings_picture_links_description">Az importált dalokban webcímmel megadott képek letöltése, egy másolatukat a dalban tárolva</string>
+    <string name="settings_attachments_description">Fájlok csatolása a dalokhoz, például a kotta PDF-je vagy egy felvétel, és megnyitásuk a dalból</string>
     <string name="settings_group_song_page">Daloldal</string>
     <string name="preferences_page_song">Dal</string>
     <string name="settings_group_diagrams">Ábrák</string>

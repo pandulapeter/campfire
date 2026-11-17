@@ -515,6 +515,7 @@
     <string name="settings_cover_art_description">הצגת עטיפת האלבום ששיר מציין לצידו, בהורדה חד־פעמית ושמירת עותק במכשיר הזה</string>
     <string name="settings_picture_links">תמונות מקישורים</string>
     <string name="settings_picture_links_description">הורדת התמונות ששיר מיובא מציין בכתובת אינטרנט, ושמירת עותק שלהן בשיר</string>
+    <string name="settings_attachments_description">צירוף קבצים לשירים, כמו PDF של התווים או הקלטה, ופתיחתם מתוך השיר</string>
     <string name="settings_group_song_page">עמוד השיר</string>
     <string name="preferences_page_song">שיר</string>
     <string name="settings_group_diagrams">דיאגרמות</string>
