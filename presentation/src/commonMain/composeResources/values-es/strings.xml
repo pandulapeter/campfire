@@ -1401,6 +1401,10 @@
     <string name="share_not_shared_setlist">Cualquiera con el enlace puede abrir este repertorio y sus canciones directamente en Campfire, o en un navegador sin instalar nada. El enlace sigue tus cambios: al volver a abrirlo se obtiene la última versión, mientras que las copias ya importadas se quedan como están.</string>
     <string name="share_shared_on">Compartido el %1$s</string>
     <string name="share_too_large_to_update">La última versión es demasiado grande para compartirla; el enlace ofrece la última que cabía.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d adjunto queda fuera del enlace: demasiado grande para compartir</item>
+        <item quantity="other">%1$d adjuntos quedan fuera del enlace: demasiado grandes para compartir</item>
+    </plurals>
     <string name="share_scope_missing">Vuelve a conectar Dropbox para permitir que Campfire cree enlaces.</string>
     <string name="share_authorization">Dropbox ya no acepta la conexión. Vuelve a conectarlo para crear enlaces.</string>
     <string name="share_too_large">Demasiado grande para compartirlo como enlace (más de %1$d MB).</string>

@@ -78,6 +78,7 @@ internal class SharedLinksRepositoryImpl(
         fileName: String,
         title: String,
         copy: ByteArray,
+        leftOutAttachmentCount: Int,
     ): CreateShareResult {
         val folder = connectedFolder() ?: return CreateShareResult.Failed(SharingFailure.NOT_CONNECTED)
         // A stop by name or of everything, and a rename that names no share, are resolved against the list when applied,
@@ -109,6 +110,7 @@ internal class SharedLinksRepositoryImpl(
                 fileId = fileId,
                 rlkey = rlkey,
                 sharedAt = environment.clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
+                leftOutAttachments = leftOutAttachmentCount,
             )
             if (entry.toShare() == null) {
                 environment.logger.log("The service answered a link whose parts make no Campfire link.")

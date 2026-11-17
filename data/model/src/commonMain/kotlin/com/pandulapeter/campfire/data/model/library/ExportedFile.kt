@@ -29,6 +29,8 @@ data class ExportedFile(
      * which an import reads within a budget of its own.
      */
     val unpackedAttachmentSize: Long = 0,
+    /** How many attachments its songs name were left out for their size, as a shared link's copy leaves them. */
+    val leftOutAttachmentCount: Int = 0,
 ) {
 
     constructor(name: String, mimeType: String, bytes: ByteArray) : this(name = name, mimeType = mimeType, content = ExportedContent.Bytes(bytes))
@@ -46,8 +48,17 @@ data class ExportedFile(
                 unpackedAttachmentSize > ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
             )
 
-    /** Whether the archive is larger, packed or unpacked, than a shared link's copy may be ([ImportLimits.MAX_SHARED_COPY_SIZE]). */
-    val isTooLargeToShare get() = mimeType == ZIP_MIME_TYPE && maxOf(content.size, unpackedSize) > ImportLimits.MAX_SHARED_COPY_SIZE
+    /**
+     * Whether the archive is larger than a shared link's copy may be: its songs and pictures unpacked past
+     * [ImportLimits.MAX_SHARED_COPY_SIZE], its attachments past [ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE], or the archive
+     * itself past both together.
+     */
+    val isTooLargeToShare
+        get() = mimeType == ZIP_MIME_TYPE && (
+            unpackedSize - unpackedAttachmentSize > ImportLimits.MAX_SHARED_COPY_SIZE ||
+                unpackedAttachmentSize > ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE ||
+                content.size > ImportLimits.MAX_SHARED_COPY_SIZE + ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE
+            )
 
     companion object {
         const val TEXT_MIME_TYPE = "text/plain"

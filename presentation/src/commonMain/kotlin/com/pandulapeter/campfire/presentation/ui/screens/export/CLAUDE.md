@@ -49,7 +49,8 @@ exported (Settings' Export library as zip). The code keeps the export names. The
 
 - States (`linkExportStateOf`, tested): the connection first (Connect Dropbox saying the whole library syncs; Cancel
   while connecting), then a share the account lists (`ui/share/`; one whose copy is gone says so and offers Create link,
-  which replaces it), then how the last Create link went. A failure is shown by what can be done: Connect again (missing
+  which replaces it), then how the last Create link went. A share whose copy left attachments out for their size says
+  how many under the link, never refused for them. A failure is shown by what can be done: Connect again (missing
   scope, refused authorization), Try again (network, anything unforeseen), or nothing. Create link is not held for a
   sync run.
 - A creation runs in the view model's scope, one per item (another item's does not hold this one), forgotten when the

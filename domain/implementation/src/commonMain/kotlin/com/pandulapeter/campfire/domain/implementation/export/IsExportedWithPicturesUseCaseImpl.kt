@@ -18,5 +18,5 @@ internal class IsExportedWithPicturesUseCaseImpl(
     private val imageRepository: ImageRepository,
 ) : IsExportedWithPicturesUseCase {
 
-    override suspend operator fun invoke(text: String) = ExportedImages.of(imageRepository).isNamedBy(text)
+    override suspend operator fun invoke(text: String) = ExportedImages.of(imageRepository, isSharedCopy = false).isNamedBy(text)
 }

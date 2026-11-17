@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.presentation.resources.share_too_large_to_updat
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.share.QrCode
 import com.pandulapeter.campfire.presentation.ui.share.QrCodeImage
+import com.pandulapeter.campfire.presentation.ui.share.leftOutAttachmentsText
 import com.pandulapeter.campfire.presentation.ui.share.sharedOnText
 import com.pandulapeter.campfire.presentation.ui.sync.connectionFailedMessage
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
@@ -216,6 +217,15 @@ private fun SharedLinkContent(
             text = sharedOnText(day),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    leftOutAttachmentsText(state.share)?.let { text ->
+        Text(
+            text = text,
+            modifier = Modifier.widthIn(max = MAX_TEXT_WIDTH),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
     if (state.isTooLarge) {

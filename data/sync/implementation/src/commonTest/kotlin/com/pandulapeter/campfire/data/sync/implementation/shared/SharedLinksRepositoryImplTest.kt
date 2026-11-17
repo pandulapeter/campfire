@@ -60,13 +60,24 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy, leftOutAttachmentCount = 0)).share
 
         assertContentEquals(copy, provider.sharedFiles.getValue(share.shareId).first)
         assertEquals("id-${share.shareId}", share.link.fileId)
         assertEquals(share.link, ShareLinks.parse(share.link.landingUrl))
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
         assertEquals(listOf(share), repository.shares.first())
+    }
+
+    @Test
+    fun `a share whose copy left attachments out says how many in the list`() = runTest {
+        val provider = FakeSyncProvider()
+        val repository = repository(provider)
+
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 2)).share
+
+        assertEquals(2, share.leftOutAttachmentCount)
+        assertEquals(2, registry(provider).links.single().leftOutAttachments)
     }
 
     @Test
@@ -78,7 +89,7 @@ class SharedLinksRepositoryImplTest {
             if (provider.documents[name] == null) provider.writeDocumentElsewhere(name, encode(other))
         }
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy, leftOutAttachmentCount = 0)).share
 
         assertEquals(other.shareId, share.shareId)
         assertEquals(listOf(other.shareId), registry(provider).links.map { it.shareId })
@@ -94,7 +105,7 @@ class SharedLinksRepositoryImplTest {
             if (provider.documents[name] == null) provider.writeDocumentElsewhere(name, encode(other))
         }
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy, leftOutAttachmentCount = 0)).share
 
         assertEquals(listOf(other.shareId, share.shareId), registry(provider).links.map { it.shareId })
         assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
@@ -104,7 +115,7 @@ class SharedLinksRepositoryImplTest {
     fun `a link only the account's own people can open is not shared, and its copy is deleted`() = runTest {
         val provider = FakeSyncProvider().apply { onCreateSharedLink = { SharedLinkResult.NotPublic } }
 
-        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
 
         assertEquals(CreateShareResult.Failed(SharingFailure.NOT_PUBLIC), result)
         assertTrue(provider.sharedFiles.isEmpty())
@@ -117,7 +128,7 @@ class SharedLinksRepositoryImplTest {
             onCreateSharedLink = { throw SyncScopeMissingException("missing_scope", requiredScope = "sharing.write") }
         }
 
-        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
 
         assertEquals(CreateShareResult.Failed(SharingFailure.SCOPE_MISSING), result)
         assertTrue(provider.sharedFiles.isEmpty())
@@ -127,7 +138,7 @@ class SharedLinksRepositoryImplTest {
     fun `a list written before its answer was lost keeps the copy and answers the share`() = runTest {
         val provider = FakeSyncProvider().apply { onDocumentWritten = { throw SyncNetworkException("answer lost") } }
 
-        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
 
         assertEquals(setOf(share.shareId), provider.sharedFiles.keys)
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
@@ -141,7 +152,7 @@ class SharedLinksRepositoryImplTest {
             throw SyncNetworkException("answer lost")
         }
 
-        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
 
         assertEquals(CreateShareResult.Failed(SharingFailure.NETWORK), result)
         assertEquals(1, provider.sharedFiles.size)
@@ -154,7 +165,7 @@ class SharedLinksRepositoryImplTest {
             .copy(state = SharedLinksEntry.STATE_ORPHANED, copyMissing = true)
         provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(dead))
 
-        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
 
         assertTrue(share.shareId != dead.shareId)
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
@@ -165,7 +176,7 @@ class SharedLinksRepositoryImplTest {
     fun `a network failure between the upload and the list deletes the copy`() = runTest {
         val provider = FakeSyncProvider().apply { onUploadDocument = { throw SyncNetworkException("offline") } }
 
-        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+        val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
 
         assertEquals(CreateShareResult.Failed(SharingFailure.NETWORK), result)
         assertTrue(provider.sharedFiles.isEmpty())
@@ -179,7 +190,7 @@ class SharedLinksRepositoryImplTest {
         val repository = repository(provider)
 
         assertEquals(SharingFailure.NEWER_VERSION, repository.refresh())
-        assertEquals(CreateShareResult.Failed(SharingFailure.NEWER_VERSION), repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy))
+        assertEquals(CreateShareResult.Failed(SharingFailure.NEWER_VERSION), repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0))
         assertContentEquals(newer, provider.documents.getValue(SharedLinksFormat.NAME).first)
         assertTrue(provider.sharedFiles.isEmpty())
     }
@@ -189,7 +200,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         provider.writeDocumentElsewhere(SharedLinksFormat.NAME, "{ not json".encodeToByteArray())
 
-        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
 
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
     }
@@ -221,7 +232,7 @@ class SharedLinksRepositoryImplTest {
 
         assertNull(repository.refresh())
         assertEquals(emptyList(), repository.shares.first())
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
 
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
     }
@@ -230,7 +241,7 @@ class SharedLinksRepositoryImplTest {
     fun `nothing is shared while no account is connected`() = runTest {
         val provider = FakeSyncProvider()
 
-        val result = repository(provider, stateHolder = SyncStateHolder(Logger.Standard)).share(SharedLinkKind.SONG, "song.cho", "Song", copy)
+        val result = repository(provider, stateHolder = SyncStateHolder(Logger.Standard)).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
 
         assertEquals(CreateShareResult.Failed(SharingFailure.NOT_CONNECTED), result)
         assertTrue(provider.sharedFiles.isEmpty())
@@ -240,8 +251,8 @@ class SharedLinksRepositoryImplTest {
     fun `stopping a share deletes its copy and its entry, and keeps the others`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
-        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy)).share
-        val stopped = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "stopped.cho", "Stopped", copy)).share
+        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy, leftOutAttachmentCount = 0)).share
+        val stopped = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "stopped.cho", "Stopped", copy, leftOutAttachmentCount = 0)).share
 
         assertNull(repository.stopSharing(stopped.shareId))
 
@@ -261,7 +272,7 @@ class SharedLinksRepositoryImplTest {
         failures.forEach { (exception, failure) ->
             val provider = FakeSyncProvider()
             val repository = repository(provider)
-            val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+            val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
             provider.onDeleteSharedFile = { throw exception }
 
             assertEquals(failure, repository.stopSharing(share.shareId))
@@ -283,8 +294,8 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy)).share
-        val stopped = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "stopped.cho", "Stopped", copy)).share
+        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy, leftOutAttachmentCount = 0)).share
+        val stopped = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "stopped.cho", "Stopped", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
 
         assertNull(repository.stopSharing(stopped.shareId))
@@ -294,7 +305,7 @@ class SharedLinksRepositoryImplTest {
         assertEquals(listOf(SharedLinksJournal.Entry.Stop(stopped.shareId)), SharedLinksJournal(localSource, testEnvironment()).load())
 
         provider.onUploadDocument = {}
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "new.cho", "New", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "new.cho", "New", copy, leftOutAttachmentCount = 0))
 
         assertTrue(stopped.shareId !in registry(provider).links.map { it.shareId })
         assertEquals(emptyList(), SharedLinksJournal(localSource, testEnvironment()).load())
@@ -303,7 +314,7 @@ class SharedLinksRepositoryImplTest {
     @Test
     fun `a stop whose list cannot be edited nor its journal written says why`() = runTest {
         val provider = FakeSyncProvider()
-        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
         val unreadable = FakeSharedLinksLocalSource(onLoadJournal = { throw IllegalStateException("unreadable") })
 
@@ -317,8 +328,8 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy)).share
-        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy)).share
+        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy, leftOutAttachmentCount = 0)).share
+        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncAuthorizationException("expired") }
 
         assertNull(repository.stopSharingEverythingNow())
@@ -335,8 +346,8 @@ class SharedLinksRepositoryImplTest {
     fun `stopping everything deletes every copy, unlisted ones included, and empties the list`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy))
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy, leftOutAttachmentCount = 0))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy, leftOutAttachmentCount = 0))
         provider.sharedFiles["bbbbbbbbbbbbbbbb"] = copy to "left-behind"
 
         assertNull(repository.stopSharingEverythingNow())
@@ -350,8 +361,8 @@ class SharedLinksRepositoryImplTest {
     fun `stopping everything keeps listing the shares whose copies could not be deleted`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
-        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy)).share
-        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy)).share
+        val first = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy, leftOutAttachmentCount = 0)).share
+        val second = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "two.cho", "Two", copy, leftOutAttachmentCount = 0)).share
         provider.onDeleteSharedFile = { shareId -> if (shareId == second.shareId) throw SyncNetworkException("offline") }
 
         assertEquals(SharingFailure.NETWORK, repository.stopSharingEverythingNow())
@@ -378,7 +389,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         provider.writeDocumentElsewhere(SharedLinksFormat.NAME, encode(sharedEntry(shareId = "abc.def", kind = SharedLinkKind.SONG, fileName = "odd.cho")))
         val repository = repository(provider)
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy, leftOutAttachmentCount = 0))
 
         assertNull(repository.stopSharingEverythingNow())
 
@@ -435,7 +446,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig", copy, leftOutAttachmentCount = 0)).share
 
         repository.followRename(SharedLinkKind.SETLIST, "gig.setlist.json", "summer_gig.setlist.json")
         runCurrent()
@@ -450,7 +461,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
 
         repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
@@ -482,7 +493,7 @@ class SharedLinksRepositoryImplTest {
 
         val refreshing = launch { repository.refresh() }
         runCurrent()
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0))
         release.complete(Unit)
         refreshing.join()
 
@@ -518,7 +529,7 @@ class SharedLinksRepositoryImplTest {
         val release = CompletableDeferred<Unit>()
         provider.onUploadDocument = { release.await() }
 
-        val sharing = launch { repository.share(SharedLinkKind.SONG, "a.cho", "A", copy) }
+        val sharing = launch { repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0) }
         runCurrent()
         mirror.clear()
         release.complete(Unit)
@@ -532,7 +543,7 @@ class SharedLinksRepositoryImplTest {
     fun `a pending rename moves the share in the list before the list is told`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
-        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
 
         repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
@@ -547,13 +558,13 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val renamed = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val renamed = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
         repository.followRename(SharedLinkKind.SONG, "a.cho", "b.cho")
         runCurrent()
         provider.onUploadDocument = {}
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
 
         assertTrue(share.shareId != renamed.shareId)
         assertEquals(
@@ -567,13 +578,13 @@ class SharedLinksRepositoryImplTest {
     fun `sharing an item deleted and recreated while offline makes a new link`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
-        val deleted = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val deleted = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
         provider.onUploadDocument = { throw SyncNetworkException("offline") }
         repository.stopSharingDeleted(SharedLinkKind.SONG, "a.cho")
         runCurrent()
         provider.onUploadDocument = {}
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
 
         assertTrue(share.shareId != deleted.shareId)
         assertEquals(listOf(share.shareId), registry(provider).links.map { it.shareId })
@@ -595,7 +606,7 @@ class SharedLinksRepositoryImplTest {
         )
         provider.onUploadDocument = {}
 
-        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)).share
+        val share = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)).share
         repository.followRename(SharedLinkKind.SONG, "other.cho", "another.cho")
         runCurrent()
 
@@ -610,7 +621,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy)
+        repository.share(SharedLinkKind.SONG, "a.cho", "A", copy, leftOutAttachmentCount = 0)
 
         repository.followRename(SharedLinkKind.SONG, "other.cho", "renamed.cho")
         repository.followRename(SharedLinkKind.SETLIST, "a.setlist.json", "renamed.setlist.json")
@@ -699,8 +710,8 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
-        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy)).share
-        repository.share(SharedLinkKind.SONG, "deleted.cho", "Deleted", copy)
+        val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy, leftOutAttachmentCount = 0)).share
+        repository.share(SharedLinkKind.SONG, "deleted.cho", "Deleted", copy, leftOutAttachmentCount = 0)
 
         repository.stopSharingDeleted(SharedLinkKind.SONG, "deleted.cho")
         runCurrent()
@@ -715,7 +726,7 @@ class SharedLinksRepositoryImplTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val shared = listOf("a.cho", "b.cho").map { fileName ->
-            assertIs<CreateShareResult.Shared>(repository(provider, localSource = localSource).share(SharedLinkKind.SONG, fileName, fileName, copy)).share
+            assertIs<CreateShareResult.Shared>(repository(provider, localSource = localSource).share(SharedLinkKind.SONG, fileName, fileName, copy, leftOutAttachmentCount = 0)).share
         }
 
         repository(provider, stateHolder = SyncStateHolder(Logger.Standard), localSource = localSource).stopSharingEverything()
@@ -788,7 +799,7 @@ class SharedLinksRepositoryImplTest {
         assertTrue(repository.hasPendingStops.first())
 
         provider.onDownloadDocument = {}
-        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "other.cho", "Other", copy))
+        assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "other.cho", "Other", copy, leftOutAttachmentCount = 0))
         assertFalse(repository.hasPendingStops.first())
     }
 

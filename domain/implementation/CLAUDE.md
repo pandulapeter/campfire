@@ -52,4 +52,5 @@ A failure a use case notes but does not throw goes to the injected `Logger`. `im
 - `CreateShareLinkUseCaseImpl` answers an existing share of the item (never one whose copy is gone,
   `ShareState.COPY_MISSING`, which the new share replaces), builds the copy undated (the same files make the same bytes
   on every device), and refuses one over what every version opening a link downloads (`ExportedFile.isTooLargeToShare`:
-  `ImportLimits.MAX_SHARED_COPY_SIZE`, packed or unpacked, pictures included).
+  `ImportLimits.MAX_SHARED_COPY_SIZE` of songs and pictures, packed or unpacked); attachments past their own budget are
+  left out of the copy rather than refusing it, and the share records how many.

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.song.SongContent
@@ -30,21 +31,21 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `a single song is named by its header`() = runTest {
-        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false, isDated = true, rewrite = asStored)
+        val exported = useCase(mapOf("old_title" to "new_title.cho"), "old_title.cho" to "{title: New title}\n").invoke(listOf("old_title.cho"), isArchive = false, isSharedCopy = false, rewrite = asStored)
 
         assertEquals("new_title.cho", assertNotNull(exported).name)
     }
 
     @Test
     fun `the stored extension is kept`() = runTest {
-        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false, isDated = true, rewrite = asStored)
+        val exported = useCase(mapOf("song" to "song.cho"), "song.crd" to "{title: Song}\n").invoke(listOf("song.crd"), isArchive = false, isSharedCopy = false, rewrite = asStored)
 
         assertEquals("song.crd", assertNotNull(exported).name)
     }
 
     @Test
     fun `several songs keep their library names inside the archive`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false, isDated = true, rewrite = asStored)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b_2.cho" to "{title: B}\n").invoke(listOf("a.cho", "b_2.cho"), isArchive = false, isSharedCopy = false, rewrite = asStored)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho", "b_2.cho"), archive.packed.keys)
@@ -52,14 +53,14 @@ class ExportSongsUseCaseImplTest {
 
     @Test
     fun `an archive of songs knows what an import unpacks it to`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: Bee}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = true, rewrite = asStored)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: Bee}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isSharedCopy = false, rewrite = asStored)
 
         assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(exported).unpackedSize)
     }
 
     @Test
     fun `songs asked for as an archive are zipped even when one is left`() = runTest {
-        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isDated = true, rewrite = asStored)
+        val exported = useCase(emptyMap(), "a.cho" to "{title: A}\n").invoke(listOf("a.cho", "gone.cho"), isArchive = true, isSharedCopy = false, rewrite = asStored)
 
         assertEquals("campfire_songs.zip", assertNotNull(exported).name)
         assertEquals(setOf("a.cho"), archive.packed.keys)
@@ -68,10 +69,10 @@ class ExportSongsUseCaseImplTest {
     @Test
     fun `each song goes out as the rewrite answers it, whether alone or zipped`() = runTest {
         val rewrite = { fileName: String, text: String -> if (fileName == "a.cho") "$text{capo: 2}\n" else text }
-        val single = useCase(mapOf("a" to "a.cho"), "a.cho" to "{title: A}\n").invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = rewrite)
+        val single = useCase(mapOf("a" to "a.cho"), "a.cho" to "{title: A}\n").invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false, rewrite = rewrite)
         assertEquals("{title: A}\n{capo: 2}\n", (assertNotNull(single).content as ExportedContent.Bytes).bytes.decodeToString())
 
-        useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: B}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = true, rewrite = rewrite)
+        useCase(emptyMap(), "a.cho" to "{title: A}\n", "b.cho" to "{title: B}\n").invoke(listOf("a.cho", "b.cho"), isArchive = true, isSharedCopy = false, rewrite = rewrite)
         assertEquals("{title: A}\n{capo: 2}\n", archive.packed.getValue("a.cho").decodeToString())
         assertEquals("{title: B}\n", archive.packed.getValue("b.cho").decodeToString())
     }
@@ -82,7 +83,7 @@ class ExportSongsUseCaseImplTest {
         val name = images.store(picture)
         val text = "{title: A}\n{image: src=$name}\n{image: src=gone.png}\n"
 
-        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false, rewrite = asStored))
 
         assertEquals("a.zip", exported.name)
         assertEquals(ExportedFile.ZIP_MIME_TYPE, exported.mimeType)
@@ -96,7 +97,7 @@ class ExportSongsUseCaseImplTest {
         images.store(FakeImageRepository.picture(1))
         val text = "{title: A}\n{image: src=gone.png}\n{image: src=0123456789abcdef.png}\n"
 
-        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false, rewrite = asStored))
 
         assertEquals("a.cho", exported.name)
         assertEquals(ExportedFile.TEXT_MIME_TYPE, exported.mimeType)
@@ -112,7 +113,7 @@ class ExportSongsUseCaseImplTest {
             emptyMap(),
             "a.cho" to "{title: A}\n{image: src=${names[1]}}\n{image: src=${names[0]}}",
             "b.cho" to "{title: B}\n{image: src=${names[1]}}",
-        ).invoke(listOf("a.cho", "b.cho"), isArchive = true, isDated = false, rewrite = asStored)
+        ).invoke(listOf("a.cho", "b.cho"), isArchive = true, isSharedCopy = true, rewrite = asStored)
 
         assertEquals(listOf("a.cho", "b.cho") + names.map { "images/$it" }, archive.packed.keys.toList())
         assertEquals(false, "images/$unused" in archive.packed)
@@ -126,12 +127,27 @@ class ExportSongsUseCaseImplTest {
         images.library["0123456789abcdef.mp3"] = recording
         val text = "{title: A}\n{image: src=$pictureName}\n{meta: attachment 0123456789abcdef.mp3 Take.mp3}\n"
 
-        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isDated = true, rewrite = asStored))
+        val exported = assertNotNull(useCase(mapOf("a" to "a.cho"), "a.cho" to text).invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false, rewrite = asStored))
 
         assertEquals("a.zip", exported.name)
         assertEquals(setOf("a.cho", "images/$pictureName", "images/0123456789abcdef.mp3"), archive.packed.keys)
         assertEquals(picture.size.toLong(), exported.unpackedImageSize)
         assertEquals(recording.size.toLong(), exported.unpackedAttachmentSize)
+    }
+
+    @Test
+    fun `a shared copy leaves out the attachments past its budget and counts them while a saved file carries every one`() = runTest {
+        images.library["0123456789abcdef.mp4"] = ByteArray((ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())
+        images.library["fedcba9876543210.pdf"] = ByteArray(100)
+        val text = "{title: A}\n{meta: attachment 0123456789abcdef.mp4 Video}\n{meta: attachment fedcba9876543210.pdf Sheet}\n"
+
+        val shared = assertNotNull(useCase(emptyMap(), "a.cho" to text).invoke(listOf("a.cho"), isArchive = true, isSharedCopy = true, rewrite = asStored))
+        assertEquals(setOf("a.cho", "images/fedcba9876543210.pdf"), archive.packed.keys)
+        assertEquals(1, shared.leftOutAttachmentCount)
+
+        val saved = assertNotNull(useCase(emptyMap(), "a.cho" to text).invoke(listOf("a.cho"), isArchive = true, isSharedCopy = false, rewrite = asStored))
+        assertEquals(setOf("a.cho", "images/0123456789abcdef.mp4", "images/fedcba9876543210.pdf"), archive.packed.keys)
+        assertEquals(0, saved.leftOutAttachmentCount)
     }
 
     private val asStored = { _: String, text: String -> text }

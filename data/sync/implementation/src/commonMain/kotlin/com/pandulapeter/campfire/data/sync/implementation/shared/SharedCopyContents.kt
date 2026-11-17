@@ -27,6 +27,12 @@ internal interface SharedCopyContents {
     /** Every library file the song [bytes] names, its pictures and its attachments, as the export reads them. */
     fun libraryFileNamesOf(bytes: ByteArray): Set<String>
 
+    /** The pictures the song [bytes] shows, which a copy carries whatever else names them. */
+    fun pictureNamesOf(bytes: ByteArray): Set<String>
+
+    /** The files the song [bytes] attaches, in the order it names them, which a copy carries as far as they fit. */
+    fun attachmentNamesOf(bytes: ByteArray): List<String>
+
     /** [files] packed undated, so that the same files make the same bytes on every device and at any time. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray
 }

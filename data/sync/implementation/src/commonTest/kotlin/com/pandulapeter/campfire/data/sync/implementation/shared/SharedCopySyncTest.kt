@@ -377,6 +377,47 @@ class SharedCopySyncTest {
         assertTrue(reads.none { key -> pictures.any { it.first == key } })
     }
 
+    @Test
+    fun `a shared song gaining an attachment rebuilds its copy with the attachment`() = runTest {
+        val sheet = attachment("sheet")
+        val device = Device(library() + (sheet.first to sheet.second))
+        cloud.share(SONG)
+        device.sync(cloud)
+        val revision = cloud.sharedFiles.getValue(SONG.shareId).second
+
+        device.library.files[song(1)] = "One\n{meta: attachment ${sheet.first.name} Sheet.pdf}".encodeToByteArray()
+        device.sync(cloud)
+
+        assertTrue("[images/${sheet.first.name}]\nsheet" in cloud.copyOf(SONG.shareId))
+        assertFalse(revision == cloud.sharedFiles.getValue(SONG.shareId).second)
+        assertEquals(0, cloud.entryOf(SONG.shareId).leftOutAttachments)
+    }
+
+    @Test
+    fun `attachments fill their own budget in the order the songs name them and what does not fit is left out and counted`() = runTest {
+        // Each within what a run moves today, together all but the last 2 MiB of the budget.
+        val chunk = ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE.toInt() / 25 * 4
+        val large = (1..6).map { index -> attachment(index.toString().repeat(chunk)) }
+        val small = attachment("b".repeat(chunk / 2))
+        val tiny = attachment("c")
+        val all = large + small + tiny
+        val text = "One\n" + all.joinToString("\n") { "{meta: attachment ${it.first.name} File}" }
+        val device = Device(library() + all.associate { it } + (song(1) to text.encodeToByteArray()))
+        cloud.share(SONG)
+
+        device.sync(cloud)
+
+        val copy = cloud.copyOf(SONG.shareId)
+        assertEquals(SharedLinksEntry.STATE_OK, cloud.entryOf(SONG.shareId).state)
+        assertTrue(large.all { "[images/${it.first.name}]" in copy })
+        assertFalse("[images/${small.first.name}]" in copy)
+        assertTrue("[images/${tiny.first.name}]" in copy)
+        assertEquals(1, cloud.entryOf(SONG.shareId).leftOutAttachments)
+        val packs = device.sharedContents.packCount
+        device.sync(cloud)
+        assertEquals(packs, device.sharedContents.packCount)
+    }
+
     /** A device with [library] whose setlist is shared, after the run that built its first copy. */
     private suspend fun sharedDevice() = Device(library()).also {
         cloud.share(SETLIST)
@@ -398,6 +439,12 @@ class SharedCopySyncTest {
             val bytes = content.encodeToByteArray()
             return SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png") to bytes
         }
+        /** A file attached to a song of the library, named by its content as sync requires, and its bytes. */
+        fun attachment(content: String): Pair<SyncKey, ByteArray> {
+            val bytes = content.encodeToByteArray()
+            return SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".pdf") to bytes
+        }
+
         val ONE = "One".encodeToByteArray()
         val TWO = "Two".encodeToByteArray()
     }

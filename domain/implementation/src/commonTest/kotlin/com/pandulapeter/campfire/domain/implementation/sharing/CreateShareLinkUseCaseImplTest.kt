@@ -55,14 +55,14 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
-    fun `a setlist is shared whole, as an undated copy`() = runTest {
+    fun `a setlist is shared whole, as a shared copy`() = runTest {
         val repository = FakeSharedLinksRepository()
         var request: Pair<String, Boolean>? = null
 
-        useCase(repository, setlist = { name, isDated -> zip(1).also { request = name to isDated } })
+        useCase(repository, setlist = { name, isSharedCopy -> zip(1).also { request = name to isSharedCopy } })
             .invoke(SharedLinkKind.SETLIST, "gig.setlist.json", "Gig")
 
-        assertEquals("gig.setlist.json" to false, request)
+        assertEquals("gig.setlist.json" to true, request)
         assertContentEquals(ByteArray(1), repository.shared)
     }
 
@@ -76,14 +76,14 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
-    fun `a song is shared as an undated zip`() = runTest {
+    fun `a song is shared as a shared copy's zip`() = runTest {
         val repository = FakeSharedLinksRepository()
         var request: Triple<List<String>, Boolean, Boolean>? = null
 
-        useCase(repository, songs = { names, isArchive, isDated -> zip(1).also { request = Triple(names, isArchive, isDated) } })
+        useCase(repository, songs = { names, isArchive, isSharedCopy -> zip(1).also { request = Triple(names, isArchive, isSharedCopy) } })
             .invoke(SharedLinkKind.SONG, "song.cho", "Song")
 
-        assertEquals(Triple(listOf("song.cho"), true, false), request)
+        assertEquals(Triple(listOf("song.cho"), true, true), request)
     }
 
     @Test
@@ -109,6 +109,15 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
+    fun `a copy that left attachments out for their size is shared, saying how many`() = runTest {
+        val repository = FakeSharedLinksRepository()
+
+        useCase(repository, songs = { _, _, _ -> zip(1).copy(leftOutAttachmentCount = 2) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")
+
+        assertEquals(2, repository.leftOutAttachmentCount)
+    }
+
+    @Test
     fun `an item no longer in the library is missing`() = runTest {
         val result = useCase(FakeSharedLinksRepository(), songs = { _, _, _ -> null }).invoke(SharedLinkKind.SONG, "gone.cho", "Gone")
 
@@ -131,15 +140,15 @@ class CreateShareLinkUseCaseImplTest {
     ) = CreateShareLinkUseCaseImpl(
         sharedLinksRepository = repository,
         exportSetlist = object : ExportSetlistUseCase {
-            override suspend fun invoke(setlistFileName: String, isDated: Boolean) = setlist(setlistFileName, isDated)
+            override suspend fun invoke(setlistFileName: String, isSharedCopy: Boolean) = setlist(setlistFileName, isSharedCopy)
         },
         exportSongs = object : ExportSongsUseCase {
             override suspend fun invoke(
                 fileNames: List<String>,
                 isArchive: Boolean,
-                isDated: Boolean,
+                isSharedCopy: Boolean,
                 rewrite: (fileName: String, text: String) -> String,
-            ) = songs(fileNames, isArchive, isDated)
+            ) = songs(fileNames, isArchive, isSharedCopy)
         },
         exportFileRepository = exportFiles,
         logger = {},
@@ -173,11 +182,13 @@ class CreateShareLinkUseCaseImplTest {
 
         override val shares = MutableStateFlow(emptyList<Share>())
         var shared: ByteArray? = null
+        var leftOutAttachmentCount: Int? = null
 
         override suspend fun refresh() = refreshFailure.also { if (it == null) shares.value = afterRefresh }
 
-        override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray): CreateShareResult {
+        override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray, leftOutAttachmentCount: Int): CreateShareResult {
             shared = copy
+            this.leftOutAttachmentCount = leftOutAttachmentCount
             return CreateShareResult.Failed(SharingFailure.UNKNOWN)
         }
     }

@@ -21,6 +21,7 @@ import kotlinx.datetime.LocalDate
  * @param link The link people are given. It carries [title], which may differ from the title in a link handed out
  *   before a rename; both open the same copy.
  * @param sharedAt The day it was shared, for display only; null where the list does not say.
+ * @param leftOutAttachmentCount How many attachments its songs name the copy leaves out, for their size.
  */
 data class Share(
     val shareId: String,
@@ -30,4 +31,5 @@ data class Share(
     val link: SharedLink.Readable,
     val sharedAt: LocalDate?,
     val state: ShareState,
+    val leftOutAttachmentCount: Int = 0,
 )

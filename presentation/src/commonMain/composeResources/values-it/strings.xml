@@ -1401,6 +1401,10 @@
     <string name="share_not_shared_setlist">Chiunque abbia il link può aprire questa scaletta e le sue canzoni direttamente in Campfire, o in un browser senza installare nulla. Il link segue le tue modifiche: aprirlo di nuovo porta l\'ultima versione, mentre le copie già importate restano come sono.</string>
     <string name="share_shared_on">Condiviso il %1$s</string>
     <string name="share_too_large_to_update">L\'ultima versione è troppo grande da condividere; il link porta all\'ultima che ci stava.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d allegato è escluso dal link: troppo grande da condividere</item>
+        <item quantity="other">%1$d allegati sono esclusi dal link: troppo grandi da condividere</item>
+    </plurals>
     <string name="share_scope_missing">Connetti di nuovo Dropbox per permettere a Campfire di creare link.</string>
     <string name="share_authorization">Dropbox non accetta più la connessione. Connettiti di nuovo per creare link.</string>
     <string name="share_too_large">Troppo grande da condividere come link (oltre %1$d MB).</string>

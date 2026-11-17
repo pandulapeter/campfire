@@ -74,6 +74,13 @@
   but only while the index holds any picture. A copy holds at most `ImportLimits.MAX_SHARED_COPY_SIZE` (24 MiB, what
   versions before pictures download, and packed in memory here): pictures are read one at a time up to it, and one past
   it is `tooLarge` without packing, fingerprinted by what it was to hold so the next run reads nothing again.
+- **Attachments** (files its songs attach and none shows) go under `images/` too, the fingerprint naming them as it
+  names pictures, so attaching a file republishes the copy. They have a budget of their own beside the 24 MiB
+  (`MAX_SHARED_ATTACHMENTS_SIZE`, 50 MiB, what an import reads), filled in the order the songs name them by
+  `sharedCopyAttachments` (`:data:model`), the one rule the share's first copy (the export) follows too: one that does
+  not fit is left out, never refusing the share, and the next tried. The entry records how many (`leftOutAttachments`,
+  an unknown member to older versions), which the export screen and Settings → Sharing say; the fingerprint names the
+  left-out ones as well, so an unchanged copy is not rebuilt for them.
 - Never stopped by inference: an item missing from the library makes the entry `orphaned`; back under its name, `ok`. A
   copy missing from a listing as new as the registry read makes it `orphaned` and `copyMissing` for good (a deleted
   file's link never comes back; a member, not a state, so older versions do not show it as working), whatever the

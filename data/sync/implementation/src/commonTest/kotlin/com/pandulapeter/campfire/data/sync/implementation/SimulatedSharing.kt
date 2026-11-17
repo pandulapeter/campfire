@@ -39,6 +39,7 @@ internal class SimulatedSharing(private val cloud: FakeSyncProvider) {
             fileName = key.name,
             title = bytes.decodeToString().lines().first(),
             copy = device.sharedContents.pack(mapOf(key.name to bytes)),
+            leftOutAttachmentCount = 0,
         )
         observe()
         return if (result is CreateShareResult.Shared) "shared as ${result.share.shareId}" else "not shared: $result"

@@ -62,7 +62,7 @@ internal class ExportLibraryUseCaseImpl(
         val setlistFileSizes = setlistRepository.loadSetlistFileSizes()
         if (songFileSizes.isEmpty() && setlistFileSizes.isEmpty()) return@withContext null
         val skipped = mutableListOf<String>()
-        val images = ExportedImages.of(imageRepository)
+        val images = ExportedImages.of(imageRepository, isSharedCopy = false)
         val songNames = songFileSizes.keys.sorted()
         val batch = mutableMapOf<String, SongContent?>()
         val songs = songNames.mapIndexed { index, fileName ->

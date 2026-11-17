@@ -1454,6 +1454,11 @@
     <string name="share_not_shared_setlist">כל מי שיש לו את הקישור יכול לפתוח את הסט־ליסט ואת השירים שבו ישירות ב-Campfire, או בדפדפן בלי להתקין כלום. הקישור עוקב אחרי השינויים שלכם: פתיחה חוזרת מביאה את הגרסה העדכנית, ועותקים שכבר יובאו נשארים כמו שהם.</string>
     <string name="share_shared_on">שותף בתאריך %1$s</string>
     <string name="share_too_large_to_update">הגרסה העדכנית גדולה מדי לשיתוף; הקישור מביא את הגרסה האחרונה שנכנסה במגבלה.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">קובץ מצורף אחד לא נכלל בקישור: גדול מדי לשיתוף</item>
+        <item quantity="two">שני קבצים מצורפים לא נכללו בקישור: גדולים מדי לשיתוף</item>
+        <item quantity="other">%1$d קבצים מצורפים לא נכללו בקישור: גדולים מדי לשיתוף</item>
+    </plurals>
     <string name="share_scope_missing">חברו את Dropbox מחדש כדי לאפשר ל-Campfire ליצור קישורים.</string>
     <string name="share_authorization">Dropbox כבר לא מקבל את החיבור. חברו מחדש כדי ליצור קישורים.</string>
     <string name="share_too_large">גדול מדי לשיתוף כקישור (יותר מ-%1$d MB).</string>

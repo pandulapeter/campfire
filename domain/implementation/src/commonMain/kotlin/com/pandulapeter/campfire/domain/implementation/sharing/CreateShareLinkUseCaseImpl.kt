@@ -48,8 +48,8 @@ internal class CreateShareLinkUseCaseImpl(
         // Undated, so that the same files make the same bytes on every device, and a run that builds the copy again
         // from unchanged files finds nothing to upload.
         val copy = when (kind) {
-            SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, isDated = false)
-            SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isDated = false) { _, text -> text }
+            SharedLinkKind.SETLIST -> exportSetlist(setlistFileName = fileName, isSharedCopy = true)
+            SharedLinkKind.SONG -> exportSongs(fileNames = listOf(fileName), isArchive = true, isSharedCopy = true) { _, text -> text }
         } ?: return CreateShareResult.Missing
         // Read back whole for the upload, which is one request: the import's limit below keeps it small.
         val bytes = try {
@@ -64,6 +64,6 @@ internal class CreateShareLinkUseCaseImpl(
         } finally {
             exportFileRepository.discard(copy)
         } ?: return CreateShareResult.Failed(SharingFailure.UNKNOWN)
-        return sharedLinksRepository.share(kind = kind, fileName = fileName, title = title, copy = bytes)
+        return sharedLinksRepository.share(kind = kind, fileName = fileName, title = title, copy = bytes, leftOutAttachmentCount = copy.leftOutAttachmentCount)
     }
 }

@@ -35,14 +35,14 @@ internal class ExportSetlistUseCaseImpl(
      * the songs it names go in next to it. A song whose file is missing is left out rather than failing the export:
      * the setlist still names it, and importing it somewhere the song does exist will find it again.
      */
-    override suspend operator fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile? {
+    override suspend operator fun invoke(setlistFileName: String, isSharedCopy: Boolean): ExportedFile? {
         val setlist = setlistRepository.loadSetlistsIfNeeded().orEmpty().firstOrNull { it.fileName == setlistFileName } ?: return null
         val document = setlistRepository.loadSetlistDocument(setlistFileName) ?: return null
         // The entries keep their library names, accents and all: the setlist document points at its songs by file
         // name, and an import follows those names to wherever the songs land.
         // A song the setlist names twice goes in once, as an archive cannot hold two entries of one name.
         val written = mutableSetOf(setlistFileName)
-        val images = ExportedImages.of(imageRepository)
+        val images = ExportedImages.of(imageRepository, isSharedCopy)
         val songs = setlist.entries.map { entry ->
             suspend {
                 songContentRepository.loadSongContent(entry.songFileName, useCache = false)
@@ -58,7 +58,7 @@ internal class ExportSetlistUseCaseImpl(
             name = exportFileName(base = setlist.title, extension = LibraryFiles.ARCHIVE_EXTENSION),
             entries = listOf<suspend () -> ArchiveEntry?>({ ArchiveEntry(name = setlistFileName, bytes = document.encodeToByteArray()) }) + songs,
             images = images,
-            isDated = isDated,
+            isDated = !isSharedCopy,
         )
     }
 }

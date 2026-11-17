@@ -1444,6 +1444,11 @@
     <string name="share_not_shared_setlist">Każdy, kto ma link, może otworzyć tę setlistę i jej piosenki prosto w Campfire albo w przeglądarce, bez instalowania czegokolwiek. Link podąża za twoimi zmianami: ponowne otwarcie daje najnowszą wersję, a już zaimportowane kopie pozostają bez zmian.</string>
     <string name="share_shared_on">Udostępniono %1$s</string>
     <string name="share_too_large_to_update">Najnowsza wersja jest za duża, by ją udostępnić; link prowadzi do ostatniej, która się zmieściła.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d załącznik pominięto w linku: za duży, by go udostępnić</item>
+        <item quantity="few">%1$d załączniki pominięto w linku: za duże, by je udostępnić</item>
+        <item quantity="other">%1$d załączników pominięto w linku: za duże, by je udostępnić</item>
+    </plurals>
     <string name="share_scope_missing">Połącz ponownie z Dropbox, aby Campfire mógł tworzyć linki.</string>
     <string name="share_authorization">Dropbox nie akceptuje już połączenia. Połącz ponownie, aby tworzyć linki.</string>
     <string name="share_too_large">Za duże, by udostępnić jako link (ponad %1$d MB).</string>

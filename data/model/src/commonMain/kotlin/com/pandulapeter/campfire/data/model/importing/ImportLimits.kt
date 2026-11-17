@@ -99,12 +99,21 @@ object ImportLimits {
     const val MAX_ARCHIVE_SIZE = MAX_IMPORT_SIZE + MAX_IMPORT_IMAGES_SIZE
 
     /**
-     * One shared link's copy, packed and unpacked, pictures included. Kept at what every version that opens links
-     * downloads ([MAX_IMPORT_SIZE] before pictures), so that a link opens everywhere, and because a copy is packed in
-     * memory during a sync run, its files and the archive at once, where a phone has the least to spare. The share
-     * screen names it in MB through this constant.
+     * One shared link's copy, packed and unpacked, pictures included and attachments apart
+     * ([MAX_SHARED_ATTACHMENTS_SIZE]). Kept at what every version that opens links downloads ([MAX_IMPORT_SIZE] before
+     * pictures), so that a link without attachments opens everywhere, and because a copy is packed in memory during a sync
+     * run, its files and the archive at once, where a phone has the least to spare. The share screen names it in MB
+     * through this constant.
      */
     const val MAX_SHARED_COPY_SIZE = MAX_IMPORT_SIZE
+
+    /**
+     * The attachments one shared link's copy carries beside [MAX_SHARED_COPY_SIZE], filled in the order its songs name
+     * them; one that does not fit is left out of the copy, never refusing the share. What one import reads
+     * ([MAX_IMPORT_ATTACHMENTS_SIZE]), so that whoever opens the link gets every attachment in it, and the copy stays
+     * within [MAX_ARCHIVE_SIZE]. Not larger: the copy and its files are held in memory together while a run packs it.
+     */
+    const val MAX_SHARED_ATTACHMENTS_SIZE = MAX_IMPORT_ATTACHMENTS_SIZE
 
     /**
      * How many levels of folders a dropped folder is opened to, its own being the first: a library exported as folders is

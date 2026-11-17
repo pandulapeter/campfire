@@ -30,7 +30,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a setlist is named by its title`() = runTest {
-        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", isDated = true)
+        val exported = useCase(testSetlist(fileName = "summer_2.setlist.json", title = "Summer set")).invoke("summer_2.setlist.json", isSharedCopy = false)
 
         assertEquals("summer_set.zip", assertNotNull(exported).name)
         assertEquals(setOf("summer_2.setlist.json"), archive.packed.keys)
@@ -38,7 +38,7 @@ class ExportSetlistUseCaseImplTest {
 
     @Test
     fun `a blank title is still a name`() = runTest {
-        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", isDated = true)
+        val exported = useCase(testSetlist(fileName = "gig.setlist.json", title = "")).invoke("gig.setlist.json", isSharedCopy = false)
 
         assertEquals("untitled.zip", assertNotNull(exported).name)
     }
@@ -47,7 +47,7 @@ class ExportSetlistUseCaseImplTest {
     fun `every song the setlist names goes in beside it, a missing one left out`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
 
-        useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isDated = true)
+        useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isSharedCopy = false)
 
         assertEquals(setOf("gig.setlist.json", "a.cho", "c.cho"), archive.packed.keys)
     }
@@ -56,7 +56,7 @@ class ExportSetlistUseCaseImplTest {
     fun `the archive knows what an import unpacks it to`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho"))
 
-        val exported = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho")).invoke("gig.setlist.json", isDated = true)
+        val exported = useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho")).invoke("gig.setlist.json", isSharedCopy = false)
 
         assertEquals(archive.packed.values.sumOf { it.size.toLong() }, assertNotNull(exported).unpackedSize)
     }
@@ -70,7 +70,7 @@ class ExportSetlistUseCaseImplTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))
         val texts = mapOf("a.cho" to "{title: A}\n{image: src=$name}", "b.cho" to "{title: B}\n{image: src=$name}")
 
-        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isDated = true)
+        val exported = useCase(FakeSetlistRepository(setlist), readable = texts.keys, texts = texts).invoke("gig.setlist.json", isSharedCopy = false)
 
         assertEquals(listOf("gig.setlist.json", "a.cho", "b.cho", "images/$name"), archive.packed.keys.toList())
         assertEquals(picture.size.toLong(), assertNotNull(exported).unpackedImageSize)

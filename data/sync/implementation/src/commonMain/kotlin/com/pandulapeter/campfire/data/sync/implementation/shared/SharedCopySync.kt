@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.model.library.sharedCopyAttachments
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
@@ -236,31 +237,46 @@ internal class SharedCopySync(
                 }
                 name to bytes?.let(::localContentHash)
             }
-            // Then the pictures under images/, in the order of their names, as the export puts them, read one at a time
-            // and no further than the limit: a setlist of photos may name more than a phone has room for.
-            val intended = filesNamedBy(if (kind == SharedLinkKind.SONG) listOf(itemBytes) else songTexts)
-            val included = mutableListOf<String>()
+            // Then the pictures and attachments under images/, in the order of their names, as the export puts them. The
+            // pictures are read one at a time and no further than the limit: a setlist of photos may name more than a
+            // phone has room for. The attachments (files no song of the copy shows) are read in the order the songs name
+            // them, as far as their own budget goes, each one past it left out and let go of at once, as the export picks
+            // them (sharedCopyAttachments).
+            val texts = if (kind == SharedLinkKind.SONG) listOf(itemBytes) else songTexts
+            val intended = filesNamedBy(texts)
+            val shown = texts.flatMapTo(hashSetOf()) { contents.pictureNamesOf(it) }
+            val attachments = texts.flatMap { contents.attachmentNamesOf(it) }.filter { it in intended && it !in shown }
+            val read = mutableMapOf<String, ByteArray>()
             var size = files.values.sumOf { it.size.toLong() }
             for (name in intended) {
+                if (name in attachments) continue
                 if (size > ImportLimits.MAX_SHARED_COPY_SIZE) break
-                val bytes = libraryFileLocalSource.readLibraryFile(LibraryFileKind.FILE, index.localNameOf(name, LibraryFileKind.FILE)) ?: continue
-                files[IMAGES_FOLDER + name] = bytes
-                included += name
+                val bytes = readFile(name) ?: continue
+                read[name] = bytes
                 size += bytes.size
             }
             val isTooLarge = size > ImportLimits.MAX_SHARED_COPY_SIZE
+            val leftOut = if (isTooLarge) {
+                emptySet()
+            } else {
+                sharedCopyAttachments(names = attachments, onLeftOut = { read.remove(it) }) { name ->
+                    readFile(name)?.also { read[name] = it }?.size?.toLong()
+                }.leftOut
+            }
+            intended.forEach { name -> read[name]?.let { files[IMAGES_FOLDER + name] = it } }
             // A copy too large is judged by what it was to hold, so that the next run finds nothing changed and reads no
-            // picture again; one that fits by what it holds, so that a picture it could not read is tried again.
+            // picture again; one that fits by what it holds and what it left out for its size, so that a file it could
+            // not read is tried again.
             val inputs = sharedCopyFingerprint(
                 kind = kind,
                 fileName = entry.fileName,
                 hash = localContentHash(itemBytes),
                 songs = songs,
-                images = if (isTooLarge) intended else included,
+                images = if (isTooLarge) intended else intended.filter { it in read || it in leftOut },
             )
             val copy = if (isTooLarge) null else contents.pack(files)
             // What every version opening a link downloads, and what the copy and its files may hold in memory here at once.
-            if (copy == null || copy.size > ImportLimits.MAX_SHARED_COPY_SIZE) {
+            if (copy == null || copy.size > ImportLimits.MAX_SHARED_COPY_SIZE + ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE) {
                 // The file is left as it is, so the last version that fit keeps being served.
                 changes.update(entry.shareId) {
                     it.copy(state = SharedLinksEntry.STATE_TOO_LARGE, built = SharedCopyBuild(inputs = inputs, build = buildNumber))
@@ -283,6 +299,7 @@ internal class SharedCopySync(
                     state = SharedLinksEntry.STATE_OK,
                     built = SharedCopyBuild(inputs = inputs, build = buildNumber, hash = hash),
                     title = title?.takeIf { it.isNotBlank() } ?: current.title,
+                    leftOutAttachments = leftOut.size,
                 )
             }
         }
@@ -304,6 +321,9 @@ internal class SharedCopySync(
         private suspend fun filesNamedBy(songs: List<ByteArray>) = songs.flatMap { contents.libraryFileNamesOf(it) }.toSet()
             .filter { LibraryFiles.isLibraryFileName(it) && index.find(LibraryFileKind.FILE, it) != null }
             .sorted()
+
+        private suspend fun readFile(name: String) =
+            libraryFileLocalSource.readLibraryFile(LibraryFileKind.FILE, index.localNameOf(name, LibraryFileKind.FILE))
 
         private fun orphan(entry: SharedLinksEntry) {
             if (entry.state != SharedLinksEntry.STATE_ORPHANED) changes.update(entry.shareId) { it.copy(state = SharedLinksEntry.STATE_ORPHANED) }

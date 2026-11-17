@@ -9,9 +9,11 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
+import com.pandulapeter.campfire.data.model.library.sharedCopyAttachments
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 
 /**
@@ -26,16 +28,25 @@ import com.pandulapeter.campfire.data.repository.api.ImageRepository
  * Older versions skip `images/` unread, keeping the songs' directives as they are.
  *
  * The files attached to songs go there too, under their content names, so an import needs no other folder. One a song
- * shows as a picture counts as a picture, whatever else names it, as the import reads it.
+ * shows as a picture counts as a picture, whatever else names it, as the import reads it. A shared link's copy
+ * ([isSharedCopy]) carries only the attachments [sharedCopyAttachments] picks, decided when the first entry of the
+ * folder is reached, by which time every song has been written, and counts the rest ([leftOutAttachmentCount]).
  */
 internal class ExportedImages private constructor(
     private val imageRepository: ImageRepository,
     private val libraryImageNames: List<String>,
+    private val isSharedCopy: Boolean,
 ) {
 
     private val held = libraryImageNames.toHashSet()
     private val named = mutableSetOf<String>()
     private val shown = mutableSetOf<String>()
+    private val attached = linkedSetOf<String>()
+    private var carried: Set<String>? = null
+
+    /** How many attachments the songs name that a shared link's copy leaves out for their size. */
+    var leftOutAttachmentCount = 0
+        private set
 
     /** What the pictures written so far add up to, which an import reads within a budget of its own. */
     var size = 0L
@@ -49,6 +60,7 @@ internal class ExportedImages private constructor(
     fun named(text: String) = text.also {
         named += libraryFilesNamedBy(it)
         shown += ChordProImages.referencedSources(it)
+        attached += ChordProAttachments.referencedSources(it)
     }
 
     /** Whether [text] names a file the library holds, which makes a song exported alone an archive. */
@@ -57,7 +69,7 @@ internal class ExportedImages private constructor(
     /** The archive entries of the pictures, to come after every song's. */
     val entries: List<suspend () -> ArchiveEntry?> = libraryImageNames.map { name ->
         suspend {
-            if (name !in named) {
+            if (name !in named || (name !in shown && name !in carriedAttachments())) {
                 null
             } else {
                 imageRepository.loadImage(name)?.let { bytes ->
@@ -68,11 +80,24 @@ internal class ExportedImages private constructor(
         }
     }
 
+    /** The attachments the archive carries: every one the library holds, or for a shared copy those that fit. */
+    private suspend fun carriedAttachments(): Set<String> = carried ?: run {
+        val candidates = attached.filter { it in held && it !in shown }
+        if (!isSharedCopy) {
+            candidates.toSet()
+        } else {
+            val sizes = imageRepository.loadLibraryFileSizes()
+            sharedCopyAttachments(names = candidates, sizeOf = sizes::get).also { leftOutAttachmentCount = it.leftOut.size }.carried
+        }
+    }.also { carried = it }
+
     companion object {
 
         /** The folder an archive keeps its pictures in. */
         const val FOLDER = "images/"
 
-        suspend fun of(imageRepository: ImageRepository) = ExportedImages(imageRepository, imageRepository.loadLibraryImageNames())
+        /** @param isSharedCopy Whether the archive is a shared link's copy, which leaves out the attachments that do not fit. */
+        suspend fun of(imageRepository: ImageRepository, isSharedCopy: Boolean) =
+            ExportedImages(imageRepository, imageRepository.loadLibraryImageNames(), isSharedCopy)
     }
 }

@@ -56,7 +56,17 @@ internal class ExportedFileTest {
 
         assertFalse(archive(size = 1_000L, unpackedSize = limit, unpackedImageSize = limit - 1_000).isTooLargeToShare)
         assertTrue(archive(size = 1_000L, unpackedSize = limit + 1, unpackedImageSize = limit).isTooLargeToShare)
-        assertTrue(archive(size = limit + 1, unpackedSize = 1_000L).isTooLargeToShare)
+        assertTrue(archive(size = limit + 1, unpackedSize = limit + 1).isTooLargeToShare)
+    }
+
+    @Test
+    fun `a shared copy's attachments have a budget of their own beside its songs and pictures`() {
+        val limit = ImportLimits.MAX_SHARED_COPY_SIZE
+        val attachments = ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE
+
+        assertFalse(archive(size = limit + attachments, unpackedSize = limit + attachments, unpackedAttachmentSize = attachments).isTooLargeToShare)
+        assertTrue(archive(size = 1_000L, unpackedSize = limit + attachments + 1, unpackedAttachmentSize = attachments + 1).isTooLargeToShare)
+        assertTrue(archive(size = limit + attachments + 1, unpackedSize = 1_000L).isTooLargeToShare)
     }
 
     @Test

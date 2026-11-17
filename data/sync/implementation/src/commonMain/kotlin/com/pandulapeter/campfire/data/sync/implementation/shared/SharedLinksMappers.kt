@@ -39,5 +39,6 @@ internal fun SharedLinksEntry.toShare(): Share? {
             state == SharedLinksEntry.STATE_TOO_LARGE -> ShareState.TOO_LARGE
             else -> ShareState.OK
         },
+        leftOutAttachmentCount = leftOutAttachments.coerceAtLeast(0),
     )
 }

@@ -43,6 +43,8 @@ internal data class SharedLinksDocument(
  * [STATE_ORPHANED]. A member rather than a state of its own: a version without it reads an unknown state as ok, and
  * would show the dead link as working, while it keeps an unknown member and writes `orphaned` itself. Never cleared,
  * since a copy put back by hand does not bring a deleted file's link back; sharing the item again replaces the entry.
+ * @param leftOutAttachments How many attachments its songs name the copy last built leaves out for their size
+ * (`ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE`); a version without it keeps it as an unknown member.
  */
 @Serializable
 internal data class SharedLinksEntry(
@@ -56,6 +58,7 @@ internal data class SharedLinksEntry(
     val state: String = STATE_OK,
     val built: SharedCopyBuild? = null,
     val copyMissing: Boolean = false,
+    val leftOutAttachments: Int = 0,
     @Transient val unknownFields: Map<String, JsonElement> = emptyMap(),
 ) {
 

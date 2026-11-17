@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
+import com.pandulapeter.campfire.chordpro.edit.ChordProImages
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
@@ -41,9 +43,13 @@ internal class FakeSharedCopyContents : SharedCopyContents {
     /** A song's pictures are named as ChordPro names them, on any line after its title. */
     override fun libraryFileNamesOf(bytes: ByteArray) = libraryFilesNamedBy(bytes.decodeToString())
 
+    override fun pictureNamesOf(bytes: ByteArray) = ChordProImages.referencedSources(bytes.decodeToString())
+
+    override fun attachmentNamesOf(bytes: ByteArray) = ChordProAttachments.referencedSources(bytes.decodeToString()).toList()
+
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packCount++
-        if (isOversized) return ByteArray((ImportLimits.MAX_SHARED_COPY_SIZE + 1).toInt())
+        if (isOversized) return ByteArray((ImportLimits.MAX_SHARED_COPY_SIZE + ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())
         if (isCompressing) return files.keys.joinToString(separator = "\n").encodeToByteArray()
         return files.entries.joinToString(separator = "\n") { (name, bytes) -> "[$name]\n${bytes.decodeToString()}" }.encodeToByteArray()
     }

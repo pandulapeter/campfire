@@ -39,6 +39,8 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
 
+    override suspend fun loadLibraryFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
+
     override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake = throw UnsupportedOperationException()
 
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()

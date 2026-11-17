@@ -51,7 +51,8 @@ interface SharedLinksRepository {
      * links. The renames and stops this device has not told the list yet go first, and a share fails while they cannot.
      * A share of the item whose copy is gone ([ShareState.COPY_MISSING]) is replaced by this one, never answered.
      * Whatever fails after the upload deletes the copy again, as far as it can, except a copy the account's list may
-     * name: a failure that leaves unclear whether the list was written keeps it.
+     * name: a failure that leaves unclear whether the list was written keeps it. [leftOutAttachmentCount] is how many
+     * attachments the copy left out for their size, which the share then says until a sync run builds the copy again.
      *
      * Never throws but cancellation. Answers [CreateShareResult.Shared] or [CreateShareResult.Failed] only.
      */
@@ -60,6 +61,7 @@ interface SharedLinksRepository {
         fileName: String,
         title: String,
         copy: ByteArray,
+        leftOutAttachmentCount: Int,
     ): CreateShareResult
 
     /**

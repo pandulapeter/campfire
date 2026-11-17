@@ -153,7 +153,7 @@ internal open class SharedLinksRepositoryStub : SharedLinksRepository {
     override val shares: Flow<List<Share>> get() = unexpected()
     override val hasPendingStops: Flow<Boolean> get() = unexpected()
     override suspend fun refresh(): SharingFailure? = unexpected()
-    override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray): CreateShareResult = unexpected()
+    override suspend fun share(kind: SharedLinkKind, fileName: String, title: String, copy: ByteArray, leftOutAttachmentCount: Int): CreateShareResult = unexpected()
     override suspend fun stopSharing(shareId: String): SharingFailure? = unexpected()
     override suspend fun followRename(kind: SharedLinkKind, fileName: String, newFileName: String): Unit = unexpected()
     override suspend fun stopSharingDeleted(kind: SharedLinkKind, fileName: String): Unit = unexpected()
@@ -268,6 +268,8 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
 
+    override suspend fun loadLibraryFileSizes(): Map<String, Long> = unexpected()
+
     override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
@@ -301,6 +303,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
 
     override suspend fun loadLibraryImageNames() = library.keys.sorted()
+
+    override suspend fun loadLibraryFileSizes() = library.mapValues { it.value.size.toLong() }
 
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = when {
         bytes.size > ImportLimits.MAX_IMAGE_FILE_SIZE -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)

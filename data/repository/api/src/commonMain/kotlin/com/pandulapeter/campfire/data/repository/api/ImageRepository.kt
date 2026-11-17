@@ -59,6 +59,9 @@ interface ImageRepository {
     /** The names of the library's files, pictures and attachments (never the draft's), sorted: what an export may carry. */
     suspend fun loadLibraryImageNames(): List<String>
 
+    /** The size of each of the library's files, by name, from a listing that reads none of them. */
+    suspend fun loadLibraryFileSizes(): Map<String, Long>
+
     /**
      * What [LibraryImageWriter.addImage] would answer for [bytes] now, with nothing written: the name the library would
      * keep it under, or why it would refuse it. What an import plans with before anything is written; the write may

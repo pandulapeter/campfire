@@ -1449,6 +1449,11 @@
     <string name="share_not_shared_setlist">Kdokoli s odkazem může tento setlist i jeho písně otevřít přímo v Campfire nebo v prohlížeči bez nutnosti cokoli instalovat. Odkaz sleduje tvoje změny: po dalším otevření ukáže nejnovější verzi, zatímco už importované kopie zůstanou, jak jsou.</string>
     <string name="share_shared_on">Sdíleno %1$s</string>
     <string name="share_too_large_to_update">Nejnovější verze je na sdílení příliš velká; odkaz vede na poslední, která se vešla.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d příloha v odkazu chybí: je příliš velká na sdílení</item>
+        <item quantity="few">%1$d přílohy v odkazu chybí: jsou příliš velké na sdílení</item>
+        <item quantity="other">%1$d příloh v odkazu chybí: jsou příliš velké na sdílení</item>
+    </plurals>
     <string name="share_scope_missing">Připoj Dropbox znovu, aby Campfire mohl vytvářet odkazy.</string>
     <string name="share_authorization">Dropbox už připojení nepřijímá. Připoj ho znovu, abys mohl vytvářet odkazy.</string>
     <string name="share_too_large">Na sdílení odkazem je to příliš velké (přes %1$d MB).</string>

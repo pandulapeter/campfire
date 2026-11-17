@@ -301,7 +301,7 @@ class ExportControllerTest {
                     override suspend fun invoke(
                         fileNames: List<String>,
                         isArchive: Boolean,
-                        isDated: Boolean,
+                        isSharedCopy: Boolean,
                         rewrite: (fileName: String, text: String) -> String,
                     ): ExportedFile {
                         requests += "songs $fileNames archive: $isArchive"
@@ -309,7 +309,7 @@ class ExportControllerTest {
                     }
                 },
                 exportSetlist = object : ExportSetlistUseCase {
-                    override suspend fun invoke(setlistFileName: String, isDated: Boolean): ExportedFile {
+                    override suspend fun invoke(setlistFileName: String, isSharedCopy: Boolean): ExportedFile {
                         setlistExportGate?.await()
                         requests += "setlist $setlistFileName"
                         return zip("gig.zip", size = 1)

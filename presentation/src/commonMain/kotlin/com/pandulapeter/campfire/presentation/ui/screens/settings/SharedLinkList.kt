@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.share.Share
 import com.pandulapeter.campfire.data.model.share.ShareState
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
+import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
@@ -55,6 +56,7 @@ import com.pandulapeter.campfire.presentation.resources.share_stopping
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.menu.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.settingsPage.AnimatedSettingsRow
+import com.pandulapeter.campfire.presentation.ui.share.leftOutAttachmentsText
 import com.pandulapeter.campfire.presentation.ui.share.sharedOnText
 import org.jetbrains.compose.resources.painterResource
 
@@ -186,13 +188,16 @@ private fun StoppingIndicator() {
 /** Whether the link still leads to a copy of something in the library, so that it is worth copying or showing. */
 private val Share.isWorthHandingOut get() = state != ShareState.ORPHANED && state != ShareState.COPY_MISSING
 
-/** The line under a share's title: what keeps it from following its item, else the day it was shared. */
+/**
+ * The line under a share's title: what keeps it from following its item, else the day it was shared and how many
+ * attachments its copy leaves out.
+ */
 @Composable
 private fun sharedLinkStatus(share: Share) = when (share.state) {
     ShareState.ORPHANED -> stringResource(Res.string.settings_sharing_orphaned)
     ShareState.TOO_LARGE -> stringResource(Res.string.settings_sharing_too_large)
     ShareState.COPY_MISSING -> stringResource(Res.string.settings_sharing_copy_missing)
-    ShareState.OK -> share.sharedAt?.let { sharedOnText(it) }
+    ShareState.OK -> listOfNotNull(share.sharedAt?.let { sharedOnText(it) }, leftOutAttachmentsText(share)).takeIf { it.isNotEmpty() }?.joinIsolated(" · ")
 }
 
 /** What [SharedLinkList] drew last. Not a state, since it is only ever written while the list is drawn from it. */

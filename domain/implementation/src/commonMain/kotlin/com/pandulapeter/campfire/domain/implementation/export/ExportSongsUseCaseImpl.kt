@@ -33,14 +33,14 @@ internal class ExportSongsUseCaseImpl(
     override suspend operator fun invoke(
         fileNames: List<String>,
         isArchive: Boolean,
-        isDated: Boolean,
+        isSharedCopy: Boolean,
         rewrite: (fileName: String, text: String) -> String,
     ): ExportedFile? {
         // Read from the files rather than from the cache, which may hold a version a file has left behind since.
         // One song leaves as itself, named by its own header: a zip around a single text file would only be something
         // to unpack again. Not where a zip is what the caller's screen showed and the user picked, which is what saving
         // has to give them however many of the songs are left.
-        val images = ExportedImages.of(imageRepository)
+        val images = ExportedImages.of(imageRepository, isSharedCopy)
         if (fileNames.size == 1 && !isArchive) {
             val content = songContentRepository.loadSongContent(fileNames.single(), useCache = false) ?: return null
             val name = songRepository.songExportFileName(content)
@@ -54,7 +54,7 @@ internal class ExportSongsUseCaseImpl(
                     name = name.substringBeforeLast('.') + LibraryFiles.ARCHIVE_EXTENSION,
                     entries = listOf { ArchiveEntry(name = name, bytes = images.named(text).encodeToByteArray()) },
                     images = images,
-                    isDated = isDated,
+                    isDated = !isSharedCopy,
                 )
             }
             return ExportedFile(name = name, mimeType = ExportedFile.TEXT_MIME_TYPE, bytes = text.encodeToByteArray())
@@ -71,7 +71,7 @@ internal class ExportSongsUseCaseImpl(
                 }
             },
             images = images,
-            isDated = isDated,
+            isDated = !isSharedCopy,
         )
     }
 

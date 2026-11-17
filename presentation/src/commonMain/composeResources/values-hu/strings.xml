@@ -1400,6 +1400,10 @@
     <string name="share_not_shared_setlist">Bárki, akinél ott a link, egyből megnyithatja ezt a listát és a dalait a Campfire-ben, vagy telepítés nélkül a böngészőben. A link követi a változtatásaidat: újra megnyitva a legfrissebb változatot adja, a már importált példányok viszont nem változnak.</string>
     <string name="share_shared_on">Megosztva: %1$s</string>
     <string name="share_too_large_to_update">A legújabb változat túl nagy a megosztáshoz; a link a legutóbbi, még beleférő változatot adja.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d csatolmány kimarad a linkből: túl nagy a megosztáshoz</item>
+        <item quantity="other">%1$d csatolmány kimarad a linkből: túl nagyok a megosztáshoz</item>
+    </plurals>
     <string name="share_scope_missing">Csatlakoztasd újra a Dropboxot, hogy a Campfire linkeket készíthessen.</string>
     <string name="share_authorization">A Dropbox már nem fogadja el a kapcsolatot. Csatlakoztasd újra a linkek készítéséhez.</string>
     <string name="share_too_large">Túl nagy ahhoz, hogy linkként oszd meg (több mint %1$d MB).</string>

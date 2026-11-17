@@ -1457,6 +1457,11 @@
     <string name="share_not_shared_setlist">Oricine are linkul poate deschide această listă și cântecele ei direct în Campfire sau într-un browser, fără nimic de instalat. Linkul urmează modificările tale: deschis din nou, aduce cea mai recentă versiune, iar copiile deja importate rămân neschimbate.</string>
     <string name="share_shared_on">Partajat pe %1$s</string>
     <string name="share_too_large_to_update">Cea mai recentă versiune este prea mare pentru partajare; linkul oferă ultima versiune care a încăput.</string>
+    <plurals name="share_attachments_left_out">
+        <item quantity="one">%1$d atașament lipsește din link: prea mare pentru a fi distribuit</item>
+        <item quantity="few">%1$d atașamente lipsesc din link: prea mari pentru a fi distribuite</item>
+        <item quantity="other">%1$d de atașamente lipsesc din link: prea mari pentru a fi distribuite</item>
+    </plurals>
     <string name="share_scope_missing">Conectează din nou Dropbox ca să-i permiți lui Campfire să creeze linkuri.</string>
     <string name="share_authorization">Dropbox nu mai acceptă conexiunea. Conectează-te din nou pentru a crea linkuri.</string>
     <string name="share_too_large">Prea mare pentru a fi partajat ca link (peste %1$d MB).</string>

@@ -114,6 +114,8 @@ internal class ImageRepositoryImpl(
 
     override suspend fun loadLibraryImageNames() = imageLocalSource.listImageNames(ImageShelf.LIBRARY).sorted()
 
+    override suspend fun loadLibraryFileSizes() = imageLocalSource.listImageSizes(ImageShelf.LIBRARY)
+
     override suspend fun libraryNameOf(bytes: ByteArray) = nameFor(bytes, withContext(environment.computation) { LibraryImages.examine(bytes) })
 
     override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String) = nameFor(bytes, LibraryImages.examineAttachment(bytes, extension))
