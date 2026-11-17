@@ -13,7 +13,7 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
-- Song attachments
+- Song attachments: documentation/plans/song-attachments.md
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
