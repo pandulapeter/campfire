@@ -101,7 +101,7 @@ internal class ImageTransfers(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        logger.log("Kept the pictures this run would have deleted: the songs could not be read (${exception.message}).")
+        logger.log("Kept the files this run would have deleted: the songs could not be read (${exception.message}).")
         null
     }
 
@@ -117,7 +117,7 @@ internal class ImageTransfers(
         val downloaded = pass.downloadWithinLimit(key)
         if (!isIntact(key, downloaded.bytes)) {
             pass.run.provider.contentHashOf(downloaded.bytes)?.let { hash -> damagedInFolderLock.withLock { damagedInFolder[key.name] = hash } }
-            return failed(key, "the cloud folder's copy is not the picture its name says")
+            return failed(key, "the cloud folder's copy is not the file its name says")
         }
         val isWritten = libraryFileLock.withLock {
             // Anything intact under this name is this very picture, written meanwhile by an import or a Save. Only a file
@@ -173,7 +173,7 @@ internal class ImageTransfers(
         // Deleted between the listing and now, which the next run will see as a deletion and handle properly.
         val bytes = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return SyncEngine.OperationOutcome()
         if (isIntact(key, bytes)) return upload(pass, key, bytes, operation.expectedRevision)
-        val remote = pass.remoteFiles[key] ?: return failed(key, "this device's copy is not the picture its name says")
+        val remote = pass.remoteFiles[key] ?: return failed(key, "this device's copy is not the file its name says")
         return bringDown(pass, key, remote.revision)
     }
 
