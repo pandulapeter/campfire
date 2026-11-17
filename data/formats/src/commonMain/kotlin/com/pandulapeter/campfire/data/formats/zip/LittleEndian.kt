@@ -30,6 +30,15 @@ internal fun ByteArray.u32(offset: Int): Long {
             ((this[offset + 3].toLong() and 0xFF) shl 24)
 }
 
+/**
+ * Reads the little-endian 64 bit integer at [offset]. A value with its top bit set comes back negative, which is how a
+ * ZIP64 field the archive set past what a [Long] holds is told apart and refused.
+ */
+internal fun ByteArray.u64(offset: Int): Long {
+    requireBytes(offset, 8)
+    return u32(offset) or (u32(offset + 4) shl 32)
+}
+
 private fun ByteArray.requireBytes(offset: Int, count: Int) {
     if (offset < 0 || offset > size - count) {
         throw ZipException("Truncated archive: $count byte(s) at offset $offset are outside the $size byte input.")

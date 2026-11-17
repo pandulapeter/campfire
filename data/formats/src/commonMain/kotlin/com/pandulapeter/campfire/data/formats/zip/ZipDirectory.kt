@@ -23,6 +23,8 @@ class ZipDirectory internal constructor(
     val centralDirectorySize: Long,
     /** How many records the central directory holds, directories included. */
     val recordCount: Int,
+    /** Where every entry's local header and data must end: the file's end, or the central directory's start for ZIP64. */
+    internal val entryDataEnd: Long,
     private val names: ByteArray,
     private val nameStarts: IntArray,
     internal val flags: IntArray,
@@ -47,7 +49,7 @@ class ZipDirectory internal constructor(
      * the same reasons. Each entry to be read is written into the sink [sinkOf] gives for it once its size has been
      * charged, which ends closed (it was read whole and checked) or abandoned (it was not, and is among the unread ones
      * as [UnreadZipEntry.Reason.UNREADABLE]). A stored entry is copied and a deflated one inflated, through a buffer
-     * of their own whatever their size.
+     * of their own whatever their size: an entry of any 64-bit size is read, as long as [limitOf] allows it.
      *
      * Only an archive that cannot be walked at all throws a [ZipException]; whatever [sinkOf], a sink, or the source
      * throws other than that is not a damaged entry, and ends the walk.
@@ -63,5 +65,18 @@ class ZipDirectory internal constructor(
         limitOf: (name: String, declaredSize: Long) -> EntryPolicy = { _, _ -> EntryPolicy.Read(Long.MAX_VALUE) },
         sniffedLimitOf: (name: String, prefix: ByteArray) -> Long? = { _, _ -> null },
         sinkOf: suspend (name: String, declaredSize: Long) -> EntrySink,
-    ): ZipWalkResult = ZipWalk(this, maxTotalSize, limitOf, sniffedLimitOf, sinkOf).walk()
+    ): ZipWalkResult = ZipWalk(
+        directory = this,
+        maxTotalSize = maxTotalSize,
+        maxEntrySize = Long.MAX_VALUE,
+        limitOf = limitOf,
+        sniffedLimitOf = sniffedLimitOf,
+        sinkOf = sinkOf,
+    ).walk()
 }
+
+/**
+ * Set in [ZipDirectory.flags] for an entry with a size or offset at its ZIP64 marker whose value could not be had, which
+ * is left out as unreadable. Above the 16 bits of the format's own flags.
+ */
+internal const val FLAG_UNRESOLVED_ZIP64 = 1 shl 16

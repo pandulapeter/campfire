@@ -18,10 +18,16 @@ import kotlinx.coroutines.yield
 /**
  * One [ZipDirectory.walk]: [ZipReader.read]'s walk of an archive in memory, decision for decision, over a [ZipSource]
  * and into [EntrySink]s. Every sum of declared numbers goes through [checkedSum].
+ *
+ * An entry declaring more than [maxEntrySize] (compressed or not) is left out as one that cannot be read, or not wanted
+ * where it was to be sniffed: the in-memory reader cannot hold an entry of 2 GiB or more, and [ZipReader.read] of a
+ * source, which holds every entry in memory too, passes that so that both read every archive alike. A walk into sinks
+ * passes no limit, so that an entry of any 64-bit size streams through.
  */
 internal class ZipWalk(
     private val directory: ZipDirectory,
     private val maxTotalSize: Long,
+    private val maxEntrySize: Long,
     private val limitOf: (name: String, declaredSize: Long) -> EntryPolicy,
     private val sniffedLimitOf: (name: String, prefix: ByteArray) -> Long?,
     private val sinkOf: suspend (name: String, declaredSize: Long) -> EntrySink,
@@ -75,9 +81,7 @@ internal class ZipWalk(
         }
     }
 
-    private fun isUnsupported(index: Int) = directory.flags[index] and 0x0001 != 0 ||
-        directory.compressedSizes[index] == MARKER || directory.uncompressedSizes[index] == MARKER ||
-        directory.localHeaderOffsets[index] == MARKER
+    private fun isUnsupported(index: Int) = directory.flags[index] and (FLAG_ENCRYPTED or FLAG_UNRESOLVED_ZIP64) != 0
 
     private fun isTooLarge(index: Int, limit: Long): Boolean {
         val declaredSize = directory.uncompressedSizes[index]
@@ -155,19 +159,20 @@ internal class ZipWalk(
     }
 
     /**
-     * Where the entry's data starts, after its local header. The local header's sizes are never read: they are zero
-     * whenever a data descriptor follows the data, so the central directory stays the source of truth.
+     * Where the entry's data starts, after its local header. The local header's sizes and extra fields (ZIP64's
+     * included) are never read, only skipped: the sizes are zero whenever a data descriptor follows the data, and
+     * writers disagree on what a local header's ZIP64 field holds, so the central directory stays the source of truth.
+     * Data descriptors are never read either, so their width (12 to 24 bytes) never matters.
      */
     private suspend fun dataOffsetOf(index: Int): Long {
         if (dataOffsetIndex == index) return dataOffset
         val localHeaderOffset = directory.localHeaderOffsets[index]
         val compressedSize = directory.compressedSizes[index]
-        // The in-memory reader cannot hold an entry of 2 GiB or more, and leaves it out however it is to be read; this
-        // one does the same, so that both read every archive alike.
-        if (compressedSize > Int.MAX_VALUE || directory.uncompressedSizes[index] > Int.MAX_VALUE) {
-            throw ZipException("An entry of 2 GiB or more is not read.")
+        if (compressedSize > maxEntrySize || directory.uncompressedSizes[index] > maxEntrySize) {
+            throw ZipException("An entry of more than $maxEntrySize bytes is not read into memory.")
         }
-        if (checkedSum(localHeaderOffset, LOCAL_HEADER_SIZE.toLong()) > source.size) {
+        val end = directory.entryDataEnd
+        if (checkedSum(localHeaderOffset, LOCAL_HEADER_SIZE.toLong()) > end) {
             throw ZipException("Missing local header at offset $localHeaderOffset.")
         }
         val header = ByteArray(LOCAL_HEADER_SIZE)
@@ -176,8 +181,8 @@ internal class ZipWalk(
             throw ZipException("Missing local header at offset $localHeaderOffset.")
         }
         val offset = localHeaderOffset + LOCAL_HEADER_SIZE + header.u16(26) + header.u16(28)
-        if (checkedSum(offset, compressedSize) > source.size) {
-            throw ZipException("The entry's data reaches past the end of the ${source.size} byte archive.")
+        if (checkedSum(offset, compressedSize) > end) {
+            throw ZipException("The entry's data reaches past offset $end of the ${source.size} byte archive.")
         }
         dataOffsetIndex = index
         dataOffset = offset
@@ -185,7 +190,7 @@ internal class ZipWalk(
     }
 
     private companion object {
-        const val MARKER = 0xFFFFFFFFL
+        const val FLAG_ENCRYPTED = 0x0001
         const val LOCAL_HEADER_SIZE = 30
         const val COPY_BUFFER_SIZE = 64 * 1024
         const val ENTRIES_PER_YIELD = 1024

@@ -12,18 +12,24 @@ package com.pandulapeter.campfire.data.formats.zip
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 
 /**
- * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE. A ZIP64 archive is rejected with a
- * [ZipException]; a ZIP64, encrypted or otherwise compressed entry is left out and reported.
+ * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE; an encrypted or otherwise
+ * compressed entry is left out and reported.
  *
- * Two readers that read every archive alike: [read] of an archive in memory, and [open] and [ZipDirectory.walk] of a
- * [ZipSource], which never hold an archive or an entry whole unless an [EntrySink] does.
+ * Two readers that read every archive without ZIP64 alike: [read] of an archive in memory, and [open] and
+ * [ZipDirectory.walk] of a [ZipSource], which never hold an archive or an entry whole unless an [EntrySink] does. Only
+ * the second reads ZIP64 (archives past 4 GiB or 65,535 entries, and entries past 4 GiB); the first refuses a ZIP64
+ * archive with a [ZipException] and leaves a ZIP64 entry out, as the reference the second is held to.
  */
 object ZipReader {
 
     /**
-     * Reads the central directory of [source], refusing with a [ZipException] what [read] refuses, a directory declared
-     * larger than [maxCentralDirectorySize] or whose records add up to more, and more than [maxEntries] declared
-     * entries; the last two are checked before anything is allocated for them.
+     * Reads the central directory of [source], ZIP64 included, refusing with a [ZipException] what [read] refuses (ZIP64
+     * aside), a damaged or split ZIP64 archive, a directory declared larger than [maxCentralDirectorySize] or whose
+     * records add up to more, and more than [maxEntries] declared entries; the last two are checked before anything is
+     * allocated for them, against the 64-bit values where the archive has them.
+     *
+     * @throws WrappedArchiveException (a [ZipException]) for an archive past 4 GiB written without ZIP64, which a caller
+     * tells apart from a damaged one.
      */
     suspend fun open(
         source: ZipSource,
@@ -33,7 +39,8 @@ object ZipReader {
 
     /**
      * [read] of an archive read through [source]: [open], then [ZipDirectory.walk] with every entry read into memory,
-     * which the budget bounds, and none larger than [Inflater.MAX_DECLARED_ENTRY_SIZE] ([ByteArrayEntrySink]).
+     * which the budget bounds, and none larger than [Inflater.MAX_DECLARED_ENTRY_SIZE] ([ByteArrayEntrySink]). An entry
+     * of 2 GiB or more is left out however it is to be read, as [read] of an array leaves it out.
      */
     suspend fun read(
         source: ZipSource,
@@ -42,9 +49,14 @@ object ZipReader {
         sniffedLimitOf: (name: String, prefix: ByteArray) -> Long? = { _, _ -> null },
     ): ZipContent {
         val sinks = mutableListOf<Pair<String, ByteArrayEntrySink>>()
-        val walk = open(source).walk(maxTotalSize, limitOf, sniffedLimitOf) { name, declaredSize ->
-            ByteArrayEntrySink(declaredSize).also { sinks += name to it }
-        }
+        val walk = ZipWalk(
+            directory = open(source),
+            maxTotalSize = maxTotalSize,
+            maxEntrySize = Int.MAX_VALUE.toLong(),
+            limitOf = limitOf,
+            sniffedLimitOf = sniffedLimitOf,
+            sinkOf = { name, declaredSize -> ByteArrayEntrySink(declaredSize).also { sinks += name to it } },
+        ).walk()
         val entries = sinks.filter { (_, sink) -> sink.isClosed }.map { (name, sink) -> ZipEntry(name, sink.bytes()) }
         return ZipContent(entries = entries, unread = walk.unread, chargedSize = walk.chargedSize)
     }

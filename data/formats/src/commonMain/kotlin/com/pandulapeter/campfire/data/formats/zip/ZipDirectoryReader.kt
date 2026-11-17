@@ -16,11 +16,14 @@ import kotlinx.coroutines.yield
 
 /**
  * Reads the central directory of [source] into a [ZipDirectory], refusing what [ZipReader.read] refuses of an archive
- * in memory, at the same records: it walks as many records as the end record declares, from where it says the
- * directory starts, each one only having to lie within the file (not within the directory's declared size, which the
- * in-memory reader does not hold records to either). On top of that, the directory is refused past
+ * in memory, at the same records, ZIP64 aside: it walks as many records as the end records declare, from where they say
+ * the directory starts, each one only having to lie within the file (not within the directory's declared size, which
+ * the in-memory reader does not hold records to either). On top of that, the directory is refused past
  * [maxCentralDirectorySize] (as declared, and as its records are walked) and past [maxEntries] declared entries, both
  * before anything is allocated for them.
+ *
+ * ZIP64 is read as [centralDirectoryBounds] and [zip64Values] say. A record whose marked value cannot be had is kept
+ * with [FLAG_UNRESOLVED_ZIP64], so the walk leaves it out as the in-memory reader leaves out every marked entry.
  */
 internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize: Long, maxEntries: Int): ZipDirectory {
     val size = source.size
@@ -32,24 +35,22 @@ internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize
     source.read(size - tailLength, tail, 0, tailLength)
     val endRecord = (tailLength - END_RECORD_SIZE downTo 0).firstOrNull { tail.u32(it) == END_OF_CENTRAL_DIRECTORY_SIGNATURE }
         ?: throw ZipException("Not a zip file: no end of central directory record found.")
-    val totalEntries = tail.u16(endRecord + 10)
-    val centralDirectorySize = tail.u32(endRecord + 12)
-    val centralDirectoryOffset = tail.u32(endRecord + 16)
-    if (totalEntries == 0xFFFF || centralDirectorySize == 0xFFFFFFFFL || centralDirectoryOffset == 0xFFFFFFFFL) {
-        throw ZipException("ZIP64 archives are not supported.")
-    }
-    if (checkedSum(centralDirectoryOffset, centralDirectorySize) > size) {
+    val bounds = centralDirectoryBounds(source, tail, size - tailLength, endRecord)
+    val centralDirectorySize = bounds.size
+    if (checkedSum(bounds.offset, centralDirectorySize) > size) {
         throw ZipException("The central directory reaches past the end of the $size byte archive.")
     }
     if (centralDirectorySize > maxCentralDirectorySize) {
         throw ZipException("The central directory of $centralDirectorySize bytes is larger than $maxCentralDirectorySize.")
     }
-    if (totalEntries > maxEntries) {
-        throw ZipException("The archive declares $totalEntries entries, more than $maxEntries.")
+    if (bounds.entryCount > maxEntries) {
+        throw ZipException("The archive declares ${bounds.entryCount} entries, more than $maxEntries.")
     }
+    // No more records are walked than the archive declares, so the count just checked also bounds what is allocated.
+    val totalEntries = bounds.entryCount.toInt()
     val records = SequentialReader(source)
     val builder = DirectoryBuilder(minOf(totalEntries, INITIAL_RECORD_CAPACITY))
-    var position = centralDirectoryOffset
+    var position = bounds.offset
     var walked = 0L
     repeat(totalEntries) {
         val header = records.bytesAt(position, RECORD_HEADER_SIZE, "a central directory header")
@@ -59,28 +60,48 @@ internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize
         }
         val flags = header.u16(at + 8)
         val nameLength = header.u16(at + 28)
-        val recordLength = RECORD_HEADER_SIZE.toLong() + nameLength + header.u16(at + 30) + header.u16(at + 32)
+        val extraLength = header.u16(at + 30)
+        val recordLength = RECORD_HEADER_SIZE.toLong() + nameLength + extraLength + header.u16(at + 32)
         walked = checkedSum(walked, recordLength)
         if (walked > maxCentralDirectorySize) {
             throw ZipException("The central directory's records add up to more than $maxCentralDirectorySize bytes.")
         }
         val method = header.u16(at + 10)
         val crc = header.u32(at + 16)
-        val compressedSize = header.u32(at + 20)
-        val uncompressedSize = header.u32(at + 24)
-        val localHeaderOffset = header.u32(at + 42)
+        var compressedSize = header.u32(at + 20)
+        var uncompressedSize = header.u32(at + 24)
+        var localHeaderOffset = header.u32(at + 42)
+        val isZip64 = compressedSize == ZIP64_MARKER || uncompressedSize == ZIP64_MARKER || localHeaderOffset == ZIP64_MARKER
         val namePosition = position + RECORD_HEADER_SIZE
-        val name = records.bytesAt(namePosition, nameLength, "a $nameLength byte name")
+        // The extra field is read, with the name in the same slice, only where a value lives in it and it lies within the
+        // file: the in-memory reader never reads it, and an archive whose last extra field is cut short reads as it did.
+        val readsExtra = isZip64 && checkedSum(namePosition, nameLength.toLong() + extraLength) <= size
+        val name = records.bytesAt(namePosition, if (readsExtra) nameLength + extraLength else nameLength, "a $nameLength byte name")
         val nameAt = records.offsetOf(namePosition)
+        var entryFlags = flags
+        if (isZip64) {
+            val values = if (readsExtra) {
+                zip64Values(name, nameAt + nameLength, extraLength, uncompressedSize, compressedSize, localHeaderOffset)
+            } else {
+                null
+            }
+            if (values == null) {
+                entryFlags = entryFlags or FLAG_UNRESOLVED_ZIP64
+            } else {
+                uncompressedSize = values[0]
+                compressedSize = values[1]
+                localHeaderOffset = values[2]
+            }
+        }
         // A backslash is a separator too: Windows PowerShell 5.1 writes the platform's own, against the format. Either
         // byte ends a name in every encoding a name is read in, so a directory is told apart before decoding.
         val lastByte = if (nameLength == 0) -1 else name[nameAt + nameLength - 1].toInt()
         if (lastByte != '/'.code && lastByte != '\\'.code) {
-            builder.add(name, nameAt, nameLength, flags, method, crc, compressedSize, uncompressedSize, localHeaderOffset)
+            builder.add(name, nameAt, nameLength, entryFlags, method, crc, compressedSize, uncompressedSize, localHeaderOffset)
         }
         position = checkedSum(position, recordLength)
     }
-    return builder.build(source, centralDirectorySize = walked, recordCount = totalEntries)
+    return builder.build(source, bounds.entryDataEnd, centralDirectorySize = walked, recordCount = totalEntries)
 }
 
 /**
@@ -152,8 +173,9 @@ private class DirectoryBuilder(initialCapacity: Int) {
         count++
     }
 
-    fun build(source: ZipSource, centralDirectorySize: Long, recordCount: Int) = ZipDirectory(
+    fun build(source: ZipSource, entryDataEnd: Long, centralDirectorySize: Long, recordCount: Int) = ZipDirectory(
         source = source,
+        entryDataEnd = entryDataEnd,
         centralDirectorySize = centralDirectorySize,
         recordCount = recordCount,
         names = names.build(),
@@ -181,8 +203,8 @@ private class DirectoryBuilder(initialCapacity: Int) {
 private const val END_RECORD_SIZE = 22
 private const val RECORD_HEADER_SIZE = 46
 
-/** A record header and the longest name the format allows, with room to spare. */
-private const val BUFFER_SIZE = 128 * 1024
+/** A record header with the longest name and extra field the format allows, with room to spare. */
+private const val BUFFER_SIZE = 192 * 1024
 
 /** Records are allocated for as they arrive past this many, whatever the end record declares. */
 private const val INITIAL_RECORD_CAPACITY = 1024

@@ -73,8 +73,9 @@ Documents are read locally, never rendered, uploaded, or kept.
 
 ## `zip/`
 
-Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`); ZIP64
-archives are rejected, ZIP64, encrypted, or otherwise compressed entries left out.
+Exists because no multiplatform zip library covers wasmJs. Reads STORED and DEFLATE (`Inflater` follows `puff.c`);
+encrypted or otherwise compressed entries are left out. Only the streaming reader reads ZIP64; the in-memory one refuses
+it, as the reference the other is held to.
 
 - **`ZipWriter` deflates each entry where that makes it smaller, else stores it** (decided by trying, never by name),
   with `Deflater`'s fixed Huffman codes. Every Campfire version reads both. The output depends on the entries alone,
@@ -101,6 +102,17 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   A `ZipDirectory` says what it cost of both caps (`centralDirectorySize`, `recordCount`), so a caller can carry what
   is left of them across nested archives.
   `ByteArrayEntrySink` refuses an entry over 50 MiB for memory's sake, stored ones too.
+- **ZIP64 follows what real writers write** (`RealWriterArchives`' KDoc says what each wrote). The ZIP64 record's
+  values win over stale 32-bit ones; only the end record's own disk fields are checked (Explorer and OneDrive write wrong
+  ones in the others). An end record needing ZIP64 without a record is damaged; one needing none reads as it always did
+  however broken its ZIP64 record, so no archive the in-memory reader reads reads differently. A central header's marker
+  without its `0x0001` value leaves the entry out, as every marked entry was; local headers' ZIP64 fields and data
+  descriptors are never read. A ZIP64 entry's data ends before the central directory. A 64-bit value with its top bit
+  set is refused, and per-entry caps and the budget apply to 64-bit sizes unchanged.
+- **A file past 4 GiB with no ZIP64 locator is `WrappedArchiveException`**, a public `ZipException` a caller tells apart
+  from a damaged archive: its tool wrapped every size and offset around, so it is refused, never recovered.
+- `ZipDirectory.walk` reads an entry of any 64-bit size into its sink; `ZipReader.read(source)`, which holds entries in
+  memory, leaves out one of 2 GiB or more, as the in-memory reader does.
 - **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
   64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
   topping up between symbols. `Inflater.inflate(ByteArray)` stays as it is (the PDF reader's, and the reference the
@@ -128,4 +140,5 @@ import corpus as a converter change (`chordpro/convert/CLAUDE.md`).
 The `*FuzzTest`s damage valid documents and archives from fixed seeds (`zip/Mutator`): a reader may refuse one only with
 an `Exception` (a `ZipException` for the zip reader), never an `Error`, nor read past its budget; raise the counts to
 explore, never in a commit. A hang a hostile layout causes is tested against a sixty-fourth of its own input
-(`assertTakesTimeInProportion`, the inputs built before the clock starts), never a fixed time.
+(`assertTakesTimeInProportion`, the inputs built before the clock starts), never a fixed time. Archives past 4 GiB are
+read through `SparseZipSource` (headers at their offsets, zeroes between), so CI never writes gigabytes.
