@@ -295,13 +295,25 @@ class ImportStagingTest {
     }
 
     @Test
-    fun `the web keeps its own margin of its quota`() = runTest {
-        val storage = LimitedFileStorage(capacity = ImportLimits.MIN_FREE_QUOTA + MIB, isSpaceAQuota = true)
+    fun `the web keeps its own margin of its quota and charges a file twice its size`() = runTest {
+        val storage = LimitedFileStorage(capacity = ImportLimits.MIN_FREE_QUOTA + 2 * MIB, isSpaceAQuota = true)
         val staging = ImportStaging(storage, Logger.Standard)
         val request = staging.newRequest()
 
         assertFailsWith<StagingRefusedException.NoSpace> { staging.reserve(request, MIB + 1) }
         staging.reserve(request, MIB)
+    }
+
+    @Test
+    fun `a whole staged file on the web keeps the capacity it may hold reserved until it is deleted`() = runTest {
+        val storage = LimitedFileStorage(capacity = 10 * MIB + ImportLimits.MIN_FREE_QUOTA, isSpaceAQuota = true)
+        val staging = ImportStaging(storage, Logger.Standard)
+        val request = staging.newRequest()
+        val file = staging.openArchive(request, announcedSize = MIB).apply { writeAll(bytes(MIB.toInt())) }.finish()
+
+        assertEquals(MIB, staging.ledger.outstanding())
+        staging.deleteFile(request, file)
+        assertEquals(0, staging.ledger.outstanding())
     }
 
     @Test

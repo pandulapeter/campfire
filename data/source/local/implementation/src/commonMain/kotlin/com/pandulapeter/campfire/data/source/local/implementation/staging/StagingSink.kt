@@ -40,12 +40,15 @@ internal class StagingSink(
     private val isUnpacked get() = extension != null
     private var isOpen = true
 
+    /** Whether the file was put in place whole by [take], so that there is no [fileSink] left to close. */
+    private var isTaken = false
+
     /** How many bytes have been written so far. */
     var position = 0L
         private set
 
     suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
-        check(isOpen) { "The staged file is closed." }
+        check(isOpen && !isTaken) { "The staged file is closed." }
         try {
             check(staging.isLive(request)) { "The request was deleted." }
             val end = position + length
@@ -62,13 +65,39 @@ internal class StagingSink(
     }
 
     /**
+     * Fills the file, still empty, from [file], a platform's own handle of a file from outside (see
+     * `FileStorage.takeInto`), [size] bytes long, given room for that before anything is copied. The empty file the sink
+     * opened is let go of first, and the storage puts the whole file at its name. A received archive's only; its size is
+     * read back from the storage, so that the ledger counts what is on disk.
+     */
+    suspend fun take(file: Any, size: Long, onProgress: (Long) -> Unit) {
+        check(isOpen && !isTaken && position == 0L) { "Only an empty staged file can take a file whole." }
+        try {
+            check(staging.isLive(request)) { "The request was deleted." }
+            if (!isUnpacked && size > ImportLimits.MAX_STAGED_ARCHIVE_SIZE) throw StagingRefusedException.TooLarge(ImportLimits.MAX_STAGED_ARCHIVE_SIZE)
+            if (size > reserved) grow(size - reserved)
+            isTaken = true
+            fileSink.abandon()
+            staging.takeInto(name = name, file = file, onProgress = onProgress)
+            val taken = staging.sizeOf(name)
+            if (!isUnpacked && taken > ImportLimits.MAX_STAGED_ARCHIVE_SIZE) throw StagingRefusedException.TooLarge(ImportLimits.MAX_STAGED_ARCHIVE_SIZE)
+            if (taken > reserved) grow(taken - reserved)
+            position = taken
+            staging.ledger.onWritten(request.id, taken)
+        } catch (exception: Throwable) {
+            discard()
+            throw exception
+        }
+    }
+
+    /**
      * Closes the file and hands it out under its final name, giving back the room it was given and did not use. One that
      * cannot be closed or named is deleted, and the failure thrown.
      */
     suspend fun finish(): StagedFile {
         check(isOpen) { "The staged file is closed." }
         try {
-            fileSink.close()
+            if (!isTaken) fileSink.close()
             isOpen = false
             staging.ledger.giveBack(request.id, reserved = reserved - position, written = 0, isUnpacked = isUnpacked)
             reserved = position
@@ -107,7 +136,7 @@ internal class StagingSink(
         val wasOpen = isOpen
         isOpen = false
         // A sink already closed has nothing left to abandon but its file, which only the staging can still delete.
-        if (wasOpen) runCatching { fileSink.abandon() }
+        if (wasOpen && !isTaken) runCatching { fileSink.abandon() }
         staging.deleteQuietly(name)
         staging.ledger.giveBack(request.id, reserved = reserved, written = position, isUnpacked = isUnpacked)
         reserved = 0

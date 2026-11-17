@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
@@ -191,12 +192,12 @@ class ImportDownloadRepositoryImplTest {
 
         override suspend fun deleteRequestsOf(files: Collection<StagedFile>): Unit = throw NotImplementedError("Not expected to be called by this test.")
 
-        override suspend fun receiveArchive(announcedSize: Long?): ImportStagingLocalSource.ReceivedArchive {
+        override suspend fun receiveArchive(announcedSize: Long?): ReceivedArchive {
             if (announcedSize != null && announcedSize > room) throw StagingRefusedException.NoSpace(announcedSize)
             announcedSizes += announcedSize
             val name = "session-${++count}-1.zip"
             files[name] = ByteArray(0)
-            return object : ImportStagingLocalSource.ReceivedArchive {
+            return object : ReceivedArchive {
                 private var isFinished = false
 
                 override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
@@ -207,6 +208,9 @@ class ImportDownloadRepositoryImplTest {
                     }
                     files[name] = written
                 }
+
+                override suspend fun take(file: Any, size: Long, onProgress: (Long) -> Unit) =
+                    throw NotImplementedError("Not expected to be called by this test.")
 
                 override suspend fun finish(): StagedFile {
                     isFinished = true

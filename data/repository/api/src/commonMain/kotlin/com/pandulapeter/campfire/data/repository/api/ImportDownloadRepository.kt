@@ -22,7 +22,7 @@ interface ImportDownloadRepository {
 
     /**
      * The file at [url], or why there is none. Read into memory within [ImportLimits.MAX_ARCHIVE_SIZE]; or, where
-     * [ImportIntake.STAGES_ARCHIVES] is on, a zip by its first bytes received into the staging folder within
+     * [ImportIntake.stagesArchives] is on, a zip by its first bytes received into the staging folder within
      * [ImportLimits.MAX_STAGED_ARCHIVE_SIZE] (`ImportDownload.File.staged`, in a request of its own), reporting the
      * bytes received and the length the host declared to [onProgress] as they arrive, and anything else read into memory
      * as before. Only a cancellation is thrown, and, staging, `StagingRefusedException` or the storage's failure where the

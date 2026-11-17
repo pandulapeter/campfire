@@ -222,6 +222,17 @@ interface FileStorage {
     suspend fun copyInto(from: StorageDirectory, fromName: String, to: StorageDirectory, toName: String)
 
     /**
+     * Puts [file], a platform's own handle of a file from outside the app's folders, at [name] in [directory] (only
+     * [StorageDirectory.IMPORTS]), replacing a file there, without its bytes passing through Kotlin: the web copies a
+     * `File` in JavaScript, a slice at a time, telling [onProgress] the bytes copied so far; iOS moves a file the app owns
+     * by its path, a rename within the volume. A copy that fails leaves nothing at [name]. Throws
+     * `UnsupportedOperationException` where the platform takes no such handle (Android and the desktop, which copy a
+     * stream through `FileSink`s), and [LibraryStorageException] where the copy or the move fails.
+     */
+    suspend fun takeInto(directory: StorageDirectory, name: String, file: Any, onProgress: (copiedBytes: Long) -> Unit): Unit =
+        throw UnsupportedOperationException("This storage does not take a platform's file handle.")
+
+    /**
      * About how many bytes may still be written into [directory]: the volume's free space for the app, the origin's quota
      * left on the web. Only an early answer, imprecise on purpose in Safari; a write that runs out of space anyway fails
      * as any other write does.

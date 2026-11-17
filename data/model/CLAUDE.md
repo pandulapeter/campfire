@@ -27,8 +27,12 @@ platform difference is `normalizedToNfc` (expect/actual).
 `ImportBudget` is the one class every platform reads incoming files through: a file the import would not look inside is
 never kept (an unknown type is read only to check for a zip signature or text, flagged `isPlainTextByContent`), and an
 oversized one is reported, not loaded (a text name over its limit is read only to be kept as a zip,
-`ImportLimits.isReadAsText`). `ImportLimits` is sized for an Android heap. `ImportPlan` is computed before anything is
-written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
+`ImportLimits.isReadAsText`). While archives are staged (`ImportIntake.stagesArchives`, the one switch, its value
+`STAGES_ARCHIVES`; only tests set it), the platforms peek at a file's head and ask `ImportBudget.take`, whose
+`ImportIntake.decide` stages an archive (by name, or a zip by its bytes under any name but a picture's or a document's)
+within `MAX_STAGED_ARCHIVE_SIZE`, costing the selection nothing, and reads everything else as `read` does: the copy is an
+`ImportedFile.receiving` (`ReceivingArchive`) until the preparation awaits it. `ImportLimits` is sized for an Android
+heap. `ImportPlan` is computed before anything is written; in `ImportChoices`, changing the for-all choice leaves per-row ones alone. No original file is stored with a
 song.
 
 Limits: songs unpack to 24 MiB (`MAX_IMPORT_SIZE`), the pictures songs name to 64 MiB (`MAX_IMPORT_IMAGES_SIZE`), and

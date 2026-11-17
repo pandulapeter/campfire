@@ -89,12 +89,15 @@ Skipped or unreadable files are logged to the injected `Logger`.
   files 64 KiB at a time (`FileSource.holdsBytes`, `holdsSameBytesAs`).
 - `StagingSink`: room in the ledger before every write, SHA-256 over exactly the bytes written. A write that fails, a
   cancellation, the budget running out, or `abandon` delete the partial file and give its room back before the failure
-  reaches the caller; a `StagedFile` exists only for a sink that closed cleanly.
+  reaches the caller; a `StagedFile` exists only for a sink that closed cleanly. A received archive may instead `take` a
+  platform's own file whole (`FileStorage.takeInto`: the web's `File`, copied in JavaScript; an iOS path, moved), its
+  room taken first and its size read back for the ledger.
 - `StagingLedger` is the one app-wide disk budget: a reservation fits where `availableSpace` less
   `ImportLimits.minFreeSpaceFor` (`FileStorage.isSpaceAQuota` on the web) holds it beside what every request reserved
   and has not written yet (written bytes are already gone from the free space). Reservations are measured one at a
-  time. `StagingRefusedException.NoSpace` carries `OutOfSpaceException` as its cause; `TooLarge` is a passed
-  `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
+  time. On the web each staged byte is charged twice (`isSpaceAQuota`): browsers grow a file's capacity by doubling, so
+  a write may be refused with up to half the quota left. `StagingRefusedException.NoSpace` carries
+  `OutOfSpaceException` as its cause; `TooLarge` is a passed `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
 - `StreamingArchiveUnpack` (`source/`) is the in-memory unpack's walk over the staged file: song texts into memory
   within the songs' budget; nested archives above the last level staged (not charged to it), walked, deleted; the
   pictures and attachments songs name reserved from declared sizes, then staged, what no file took given back once the

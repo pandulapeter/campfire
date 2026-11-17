@@ -25,13 +25,13 @@ internal class ImportDownloadRepositoryImpl(
     private val importStagingLocalSource: ImportStagingLocalSource,
 ) : ImportDownloadRepository {
 
-    override suspend fun download(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit) = if (ImportIntake.STAGES_ARCHIVES) {
+    override suspend fun download(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit) = if (ImportIntake.stagesArchives) {
         downloadIntoStaging(url = url, onProgress = onProgress)
     } else {
         importDownloadRemoteSource.download(url = url, maxSizeBytes = ImportLimits.MAX_ARCHIVE_SIZE)
     }
 
-    /** The staged path of [download], whatever [ImportIntake.STAGES_ARCHIVES] says. */
+    /** The staged path of [download], whatever [ImportIntake.stagesArchives] says. */
     internal suspend fun downloadIntoStaging(url: String, onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit): ImportDownload {
         val intake = DownloadIntake(importStagingLocalSource)
         try {

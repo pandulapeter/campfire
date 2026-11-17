@@ -21,6 +21,8 @@ internal class ImportStagingRepositoryImpl(
 
     override suspend fun deleteOtherSessions() = importStagingLocalSource.deleteOtherSessions()
 
+    override suspend fun receiveArchive(announcedSize: Long?) = importStagingLocalSource.receiveArchive(announcedSize)
+
     override suspend fun isIntact(file: StagedFile) = importStagingLocalSource.isIntact(file)
 
     override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStagingLocalSource.deleteRequestsOf(files)

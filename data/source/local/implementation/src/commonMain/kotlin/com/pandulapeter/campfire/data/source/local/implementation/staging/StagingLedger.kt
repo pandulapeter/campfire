@@ -25,13 +25,19 @@ import kotlinx.coroutines.sync.withLock
  * byte already reserved and not yet written. Bytes already written are not counted again: the free space the storage
  * reports has already lost them. Reservations are made one at a time, each asking the storage afresh, so no two are
  * measured against the same free space.
+ *
+ * Where the space is a quota ([FileStorage.isSpaceAQuota], the web), a file is charged twice its size: the browsers grow
+ * a file's capacity by doubling, so a write may be refused with up to half of what is left still free, and an early
+ * answer that counted bytes alone would promise room the engine then refuses. What is written is counted as it is, so a
+ * whole file keeps the other half reserved, the capacity it may hold, until it is deleted.
  */
 internal class StagingLedger(private val fileStorage: FileStorage) {
 
     /**
      * What one request holds: [pool], reserved up front and not yet taken by a file; [reserved], everything it holds
      * ([pool] included); [written], the part of [reserved] already on disk; [unpacked], what its unpacked files hold,
-     * written or not, which [ImportLimits.MAX_IMPORT_STAGED_SIZE] bounds.
+     * written or not, which [ImportLimits.MAX_IMPORT_STAGED_SIZE] bounds. [pool] and [reserved] are charged bytes (see
+     * the class), [written] and [unpacked] bytes as they are.
      */
     private class Account {
         var pool = 0L
@@ -51,9 +57,10 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
     suspend fun reserve(request: Long, bytes: Long) = mutex.withLock {
         requireReservable(bytes)
         val account = accounts.getOrPut(request, ::Account)
-        checkFits(account, bytes)
-        account.reserved += bytes
-        account.pool += bytes
+        val charged = chargeOf(bytes)
+        checkFits(account, charged)
+        account.reserved += charged
+        account.pool += charged
     }
 
     /**
@@ -67,8 +74,9 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
         if (isUnpacked && account.unpacked + bytes > ImportLimits.MAX_IMPORT_STAGED_SIZE) {
             throw StagingRefusedException.TooLarge(ImportLimits.MAX_IMPORT_STAGED_SIZE)
         }
-        val pooled = minOf(account.pool, bytes)
-        val fresh = bytes - pooled
+        val charged = chargeOf(bytes)
+        val pooled = minOf(account.pool, charged)
+        val fresh = charged - pooled
         if (fresh > 0) checkFits(account, fresh)
         account.pool -= pooled
         account.reserved += fresh
@@ -87,7 +95,7 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
      */
     suspend fun giveBack(request: Long, reserved: Long, written: Long, isUnpacked: Boolean) = mutex.withLock {
         val account = accounts[request] ?: return@withLock
-        account.reserved = (account.reserved - reserved).coerceAtLeast(account.pool)
+        account.reserved = (account.reserved - chargeOf(reserved)).coerceAtLeast(account.pool)
         account.written = (account.written - written).coerceIn(0, account.reserved)
         if (isUnpacked) account.unpacked = (account.unpacked - reserved).coerceAtLeast(0)
     }
@@ -111,7 +119,7 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
     /** What every request together has reserved and not yet written: what the free space must still make room for. */
     suspend fun outstanding() = mutex.withLock { accounts.values.sumOf { it.reserved - it.written } }
 
-    /** Everything [request] holds, written or not. */
+    /** Everything [request] holds, written or not, as charged (see the class). */
     suspend fun reservedBy(request: Long) = mutex.withLock { accounts[request]?.reserved ?: 0L }
 
     /**
@@ -123,6 +131,9 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
         if (bytes > MAX_RESERVATION) throw StagingRefusedException.TooLarge(MAX_RESERVATION)
     }
 
+    /** What [bytes] of a file cost the ledger, see the class. */
+    private fun chargeOf(bytes: Long) = if (fileStorage.isSpaceAQuota) bytes * QUOTA_CHARGE else bytes
+
     private suspend fun checkFits(account: Account, bytes: Long) {
         val needed = account.reserved - account.written + bytes
         val margin = ImportLimits.minFreeSpaceFor(neededBytes = account.reserved + bytes, isQuota = fileStorage.isSpaceAQuota)
@@ -131,5 +142,8 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
         if (available - margin - others < needed) throw StagingRefusedException.NoSpace(neededBytes = account.reserved + bytes + margin)
     }
 }
+
+/** How many bytes of a quota one byte of a staged file is charged, see [StagingLedger]. */
+private const val QUOTA_CHARGE = 2L
 
 private const val MAX_RESERVATION = ImportLimits.MAX_STAGED_ARCHIVE_SIZE + ImportLimits.MAX_IMPORT_STAGED_SIZE

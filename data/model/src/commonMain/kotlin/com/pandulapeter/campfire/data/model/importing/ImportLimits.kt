@@ -238,6 +238,27 @@ class ImportBudget {
     }
 
     /**
+     * [read] for a platform that has peeked at the file's first bytes ([head]) while archives are staged
+     * ([ImportIntake.stagesArchives]): an archive is handed to [stage] instead of being read, costing the selection
+     * nothing, and anything else is read whole as [read] reads it, or left unread where [ImportIntake.decide] says so.
+     *
+     * @param readBytes As for [read], the bytes of the whole file, [head] included.
+     * @param stage Starts receiving the file into the staging folder and hands it over as such; null for a file that
+     *   cannot be read.
+     */
+    inline fun take(
+        name: String,
+        size: Long?,
+        head: ByteArray,
+        readBytes: (limit: Long) -> ByteArray?,
+        stage: () -> ImportedFile?,
+    ): ImportedFile? = when (val decision = ImportIntake.decide(name = name, size = size, head = head)) {
+        ImportIntake.Decision.Stage -> stage()
+        is ImportIntake.Decision.LeaveUnread -> ImportedFile.unread(name, isTooLarge = decision.isTooLarge)
+        is ImportIntake.Decision.ReadWhole -> read(name = name, size = size, readBytes = readBytes)
+    }
+
+    /**
      * A file whose name the import does not know is read as an archive would be, since another app's library backup is
      * often a zip archive under a name of its own, and kept where its bytes say it is one. One whose bytes read as text
      * within [ImportLimits.MAX_TEXT_FILE_SIZE] is kept too, flagged [ImportedFile.isPlainTextByContent], since a chord

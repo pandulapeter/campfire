@@ -283,6 +283,13 @@ internal class ImportStaging(
 
     internal fun isLive(request: StagingRequest) = request.id in liveRequests
 
+    /** Puts a platform's own file at [name], for [StagingSink.take]. */
+    internal suspend fun takeInto(name: String, file: Any, onProgress: (Long) -> Unit) =
+        fileStorage.takeInto(directory = StorageDirectory.IMPORTS, name = name, file = file, onProgress = onProgress)
+
+    /** How large the staged file [name] is on disk; a file that is not there throws. */
+    internal suspend fun sizeOf(name: String) = checkNotNull(fileStorage.info(StorageDirectory.IMPORTS, name)) { "\"$name\" is not there." }.size
+
     private suspend fun requireLive(request: StagingRequest) = files.withLock { requireLiveLocked(request) }
 
     private fun requireLiveLocked(request: StagingRequest) = check(request.id in liveRequests) { "The request was deleted." }

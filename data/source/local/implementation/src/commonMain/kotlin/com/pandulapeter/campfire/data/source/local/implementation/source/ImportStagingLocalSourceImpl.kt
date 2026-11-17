@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
@@ -29,25 +30,29 @@ internal class ImportStagingLocalSourceImpl(
 
     override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStaging.deleteRequestsOf(files)
 
-    override suspend fun receiveArchive(announcedSize: Long?): ImportStagingLocalSource.ReceivedArchive {
+    override suspend fun receiveArchive(announcedSize: Long?): ReceivedArchive {
         val request = importStaging.newRequest()
         val sink = endingRequestOnFailure(request) { importStaging.openArchive(request, announcedSize) }
-        return ReceivedArchive(request = request, sink = sink)
+        return StagedArchive(request = request, sink = sink)
     }
 
     /**
      * A received archive is its request's only file, so whatever ends the sink without a file ends the request too,
      * giving back all it reserved, rather than leaving an empty request for the next launch.
      */
-    private inner class ReceivedArchive(
+    private inner class StagedArchive(
         private val request: StagingRequest,
         private val sink: StagingSink,
-    ) : ImportStagingLocalSource.ReceivedArchive {
+    ) : ReceivedArchive {
 
         private var isFinished = false
 
         override suspend fun write(bytes: ByteArray, offset: Int, length: Int) = endingRequestOnFailure(request) {
             sink.write(bytes, offset, length)
+        }
+
+        override suspend fun take(file: Any, size: Long, onProgress: (receivedBytes: Long) -> Unit) = endingRequestOnFailure(request) {
+            sink.take(file = file, size = size, onProgress = onProgress)
         }
 
         override suspend fun finish(): StagedFile = endingRequestOnFailure(request) { sink.finish() }.also { isFinished = true }

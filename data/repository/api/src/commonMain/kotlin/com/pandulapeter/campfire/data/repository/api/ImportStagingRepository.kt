@@ -9,12 +9,15 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 
 /** The folder imports stage into; see `ImportStagingLocalSource`, which this only passes through. */
 interface ImportStagingRepository {
 
     suspend fun deleteOtherSessions()
+
+    suspend fun receiveArchive(announcedSize: Long?): ReceivedArchive
 
     suspend fun isIntact(file: StagedFile): Boolean
 

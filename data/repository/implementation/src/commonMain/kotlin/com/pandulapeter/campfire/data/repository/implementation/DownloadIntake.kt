@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 
@@ -29,7 +30,7 @@ internal class DownloadIntake(private val staging: ImportStagingLocalSource) {
 
     private var announcedSize: Long? = null
     private var head = ByteArray(0)
-    private var received: ImportStagingLocalSource.ReceivedArchive? = null
+    private var received: ReceivedArchive? = null
     private var inMemory: MutableList<ByteArray>? = null
     private var inMemorySize = 0L
 

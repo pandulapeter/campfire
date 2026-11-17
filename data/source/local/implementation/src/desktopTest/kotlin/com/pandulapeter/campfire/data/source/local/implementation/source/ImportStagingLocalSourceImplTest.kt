@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.ReceivedArchive
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
@@ -76,7 +77,7 @@ class ImportStagingLocalSourceImplTest {
         assertEquals(0, staging.ledger.outstanding())
     }
 
-    private suspend fun ImportStagingLocalSource.ReceivedArchive.writeInChunks(content: ByteArray) {
+    private suspend fun ReceivedArchive.writeInChunks(content: ByteArray) {
         var offset = 0
         while (offset < content.size) {
             val length = minOf(CHUNK, content.size - offset)

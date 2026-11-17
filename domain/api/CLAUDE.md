@@ -36,4 +36,5 @@ Naming: `Get*` (observe or read), `Load*` (trigger a read), `Save*` / `Create*` 
   both.
 - Import application stops on a write failure and returns a partial `ImportResult` rather than losing what was
   written; cancellation still throws, and so does a staged file gone before the first write
-  (`StagedFileMissingException`, nothing written). `DeleteImportStagingUseCase` is the end of a settled import's staging. The `ImportProgress` observer may run on the worker dispatcher.
+  (`StagedFileMissingException`, nothing written). `ReceiveImportArchiveUseCase` opens an arriving archive's staged file (the intake's), and
+  `DeleteImportStagingUseCase` is the end of a settled import's staging. The `ImportProgress` observer may run on the worker dispatcher.

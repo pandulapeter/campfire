@@ -52,6 +52,7 @@ Plain suspend functions over `:data:model` types: no flows, no platform types.
   `SyncCredentialsLocalSource`, `SyncIndexLocalSource` (also the forget-credentials-owed note), `SharedLinksLocalSource`
   (mirror and journal, opaque, null only when missing), `EditorDraftLocalSource`, and
   `ImportStagingLocalSource` (the launch's cleanup of earlier sessions' staged files; `receiveArchive`, a download's
-  archive written in a request of its own, which anything but `finish` deletes with its request; whether a staged file
+  or an arriving file's archive (`:data:model`'s `ReceivedArchive`, written front to back or taken whole from a
+  platform's own file handle) in a request of its own, which anything but `finish` deletes with its request; whether a staged file
   is still whole; and a settled import's requests deleted). `ImageLocalSource.moveStagedFile` is the one way a staged
   file reaches the library: moved, never written over a file of its name, never read whole but on the web.

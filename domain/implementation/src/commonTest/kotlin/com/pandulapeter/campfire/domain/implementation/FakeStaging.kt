@@ -77,6 +77,8 @@ internal open class FakeStaging : ImportStagingRepository {
 
     override suspend fun deleteOtherSessions() = throw NotImplementedError("Not expected to be called by this test.")
 
+    override suspend fun receiveArchive(announcedSize: Long?) = throw NotImplementedError("Not expected to be called by this test.")
+
     override suspend fun isIntact(file: StagedFile) = bytesOf(file) != null
 
     override suspend fun deleteRequestsOf(files: Collection<StagedFile>) {
