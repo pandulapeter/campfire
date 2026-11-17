@@ -59,7 +59,7 @@ Skipped or unreadable files are logged to the injected `Logger`.
   reads at 64-bit positions (JVM `FileChannel` opened `READ` only, iOS `pread`, the web slices of one `File` snapshot);
   a move is a rename (JVM `ATOMIC_MOVE`, iOS `rename`, every directory on one volume), on the web a read, a `writeBytes`,
   and a delete; a copy is the system's into a temporary name renamed over the target, so it is never held whole but on
-  the web, and carries no backup mark. `IMPORTS` holds what an import receives; iOS marks its folder out of the backup. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
+  the web, and carries no backup mark. `IMPORTS` holds what an import receives (see `staging/`); iOS marks its folder out of the backup. Kotlin/Native refuses a comma in a test name, which `check_test_names.py` checks.
 - **Names**: `canHoldFileName` refuses a path or nothing (`/`, `\`, `.`, `..`) everywhere, and on Windows `? : * " < >
   |`, a trailing space or dot, or a control character. Refused, never mapped: a mapping that failed to reverse would
   send a second copy of the song to every device. Windows device names (`con.cho`) are stored with a leading underscore
@@ -70,6 +70,23 @@ Skipped or unreadable files are logged to the injected `Logger`.
   the Java heap, cached per thread for good.
   Move and delete retry three times on a Windows `AccessDeniedException` (anti-virus), and the app's own moves and
   deletions of one name take turns, since Windows refuses a replace while another of the same name is under way.
+
+## `staging/` (the import's staging folder, `IMPORTS`)
+
+- `ImportStaging` (`@Single`, one per process: its random 16-hex-digit `session`) names every file by session and
+  request, never by anything that arrived: `<session>-<request>-<n>.zip` for an archive, `<session>-<request>-<sha256>.<ext>`
+  for an unpacked file (written as `<n>.part`, renamed once hashed; a second entry of the same content is not kept
+  twice), the extension one of `ATTACHMENT_EXTENSIONS`. `deleteOtherSessions` (on launch)
+  deletes every name without this session's prefix, so it never races a cold start's own file; `deleteRequest` a
+  request's, partial ones included, and marks it dead so a sink still open fails and deletes its own file.
+- `StagingSink`: room in the ledger before every write, SHA-256 over exactly the bytes written. A write that fails, a
+  cancellation, the budget running out, or `abandon` delete the partial file and give its room back before the failure
+  reaches the caller; a `StagedFile` exists only for a sink that closed cleanly.
+- `StagingLedger` is the one app-wide disk budget: a reservation fits where `availableSpace` less
+  `ImportLimits.minFreeSpaceFor` (`FileStorage.isSpaceAQuota` on the web) holds it beside what every request reserved
+  and has not written yet (written bytes are already gone from the free space). Reservations are measured one at a
+  time. `StagingRefusedException.NoSpace` carries `OutOfSpaceException` as its cause; `TooLarge` is a passed
+  `MAX_STAGED_ARCHIVE_SIZE` or `MAX_IMPORT_STAGED_SIZE`.
 
 ## `SecretStore` (sync credentials only)
 

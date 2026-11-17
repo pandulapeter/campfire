@@ -44,6 +44,10 @@ it, within `MAX_IMAGE_FILE_SIZE`.
 A file attached to a song is at most 50 MiB (`MAX_ATTACHMENT_FILE_SIZE`), never re-encoded; one the user picks to attach
 is held to the decimal 50 MB the messages name (`MAX_PICKED_ATTACHMENT_SIZE`), the pickers only, so nothing a library
 holds is refused anywhere.
+What an import stages on disk (`imports/`) is bounded by time and disk, not memory: a received archive by
+`MAX_STAGED_ARCHIVE_SIZE` and what one import unpacks by `MAX_IMPORT_STAGED_SIZE` (16 GiB each), and both by the free
+space less `minFreeSpaceFor` (a quarter of what the import needs, at most 512 MiB; 32 MiB of the web's quota).
+`StagedFile` exists only for a file closed whole; a refusal is a `StagingRefusedException`.
 
 ## Other
 

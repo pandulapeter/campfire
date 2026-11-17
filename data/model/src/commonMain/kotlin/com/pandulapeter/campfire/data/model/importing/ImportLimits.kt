@@ -141,6 +141,34 @@ object ImportLimits {
     const val SNIFF_LENGTH = 512
 
     /**
+     * One archive received into the staging folder (`imports/`), copied there by streaming rather than held in memory:
+     * not a bound on memory but on the time one import may take, the same as [MAX_IMPORT_STAGED_SIZE].
+     */
+    const val MAX_STAGED_ARCHIVE_SIZE = 16L shl 30
+
+    /**
+     * What one import may unpack into the staging folder (its pictures and attachments, each within its own limit): a
+     * bound on the time one import may take, since nothing staged is held in memory. Disk space is the other bound, see
+     * [minFreeSpaceFor].
+     */
+    const val MAX_IMPORT_STAGED_SIZE = 16L shl 30
+
+    /** The most [minFreeSpaceFor] keeps free on a device's own volume. */
+    const val MAX_MIN_FREE_SPACE = 512L shl 20
+
+    /** What [minFreeSpaceFor] keeps free of the web's storage quota, whatever the import needs. */
+    const val MIN_FREE_QUOTA = 32L shl 20
+
+    /**
+     * How much space staging leaves free while an import that needs [neededBytes] writes into it. On a device's own volume
+     * a quarter of what the import needs, at most [MAX_MIN_FREE_SPACE]: a large import never takes the system down to its
+     * own low-storage state, and a small one is not refused on a phone with a few hundred MB free. On the web
+     * ([isQuota]), whose figure is the origin's quota rather than the disk's, [MIN_FREE_QUOTA], so that the library's own
+     * writes still fit beside the import.
+     */
+    fun minFreeSpaceFor(neededBytes: Long, isQuota: Boolean) = if (isQuota) MIN_FREE_QUOTA else minOf(neededBytes.coerceAtLeast(0) / 4, MAX_MIN_FREE_SPACE)
+
+    /**
      * How many bytes of a file called [name] an import reads, which is none for a file it would not look inside.
      * Asked before the file is opened wherever the name is known first, which is everywhere. A name it does not know at
      * all is a question for [ImportBudget], which reads such a file to see whether it is an archive under another name,

@@ -229,6 +229,12 @@ interface FileStorage {
     suspend fun availableSpace(directory: StorageDirectory): Long
 
     /**
+     * Whether [availableSpace] is what is left of a quota the storage was granted (the web's origin quota) rather than
+     * a volume's free space, which decides how much of it an import leaves free (`ImportLimits.minFreeSpaceFor`).
+     */
+    val isSpaceAQuota: Boolean get() = false
+
+    /**
      * Where the file is as the platform names it, for handing it to the system (a share sheet, a save dialog): an
      * absolute path, on the web the path from the root of the origin private file system.
      */

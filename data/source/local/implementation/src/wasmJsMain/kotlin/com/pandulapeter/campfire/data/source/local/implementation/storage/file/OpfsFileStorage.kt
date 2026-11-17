@@ -249,6 +249,8 @@ internal class OpfsFileStorage(private val rootSegments: List<String>) : FileSto
         failingAsStorage(directory.displayName) { storageSpaceLeft().await<JsNumber>().toDouble().toLong() }
     }
 
+    override val isSpaceAQuota get() = true
+
     override fun pathOf(directory: StorageDirectory, name: String): String {
         requireValidFileName(name)
         return directory.displayName + "/" + name
