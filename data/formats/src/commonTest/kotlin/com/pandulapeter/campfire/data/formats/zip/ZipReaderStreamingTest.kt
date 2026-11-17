@@ -44,7 +44,7 @@ internal class ZipReaderStreamingTest {
     }
 
     @Test
-    fun `refuses a ZIP64 archive alike`() = runTest {
+    fun `refuses an end record at its ZIP64 markers without a ZIP64 record alike`() = runTest {
         val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "a".encodeToByteArray())))
         val endRecord = archive.size - 22
         for ((field, width) in listOf(10 to 2, 12 to 4, 16 to 4)) {

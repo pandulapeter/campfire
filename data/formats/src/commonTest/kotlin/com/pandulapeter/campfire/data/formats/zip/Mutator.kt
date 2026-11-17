@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.formats.zip
 
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import kotlin.random.Random
 
 /**
@@ -32,6 +33,26 @@ internal class Mutator(seed: Int) {
         if (offset < 0 || offset + width > bytes.size) return
         val value = hostileValue(bytes.size)
         for (index in 0 until width) bytes[offset + index] = (value ushr (8 * index)).toByte()
+    }
+
+    /**
+     * Overwrites the little-endian 64-bit field at [offset] with a value a ZIP64 reader is least prepared for: its top
+     * bit set, just past 32 bits, near the file's [size], or near a [Long]'s end, so that a sum with it overflows.
+     */
+    fun overwriteLongField(bytes: ByteArray, offset: Int) {
+        if (offset < 0 || offset + 8 > bytes.size) return
+        val value = when (random.nextInt(9)) {
+            0 -> 0L
+            1 -> -1L
+            2 -> Long.MIN_VALUE + random.nextLong(0, 0x100000000L)
+            3 -> Long.MAX_VALUE - random.nextLong(0, 64)
+            4 -> 0xFFFFFFFFL + random.nextInt(-2, 3)
+            5 -> bytes.size.toLong() + random.nextInt(-64, 65)
+            6 -> random.nextLong(0, bytes.size + 1L)
+            7 -> ImportLimits.MAX_ARCHIVE_ENTRIES + 1L
+            else -> random.nextLong()
+        }
+        for (index in 0 until 8) bytes[offset + index] = (value ushr (8 * index)).toByte()
     }
 
     private fun mutateOnce(input: ByteArray): ByteArray {
