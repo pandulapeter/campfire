@@ -99,7 +99,7 @@ internal class SyncRunScheduler(
                 syncJob.load()?.join()
                 if (scheduledRun.compareAndSet(scheduled, null)) {
                     environment.logger.log("Sync: starting the run asked for by ${scheduled.reason.description}")
-                    startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
+                    startRun(SyncDeletionPolicy.ASK, isAutomatic = true, isFollowUp = scheduled.isFollowUp)
                 }
             }
         }
@@ -131,7 +131,7 @@ internal class SyncRunScheduler(
      */
     fun schedule(after: Duration = AUTOMATIC_RUN_DELAY, reason: RunReason) {
         if (stateHolder.value !is SyncState.Connected) return
-        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + after, isRetry = false, reason = reason)
+        scheduledRun.value = ScheduledRun(dueAt = environment.timeSource.markNow() + after, isRetry = false, reason = reason, isFollowUp = false)
     }
 
     /**
@@ -166,7 +166,7 @@ internal class SyncRunScheduler(
             // Started here rather than left to the debounce, which would start it on another thread a moment later:
             // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
             // it still is in front - which is what the progress this returns is for.
-            scheduledRun.compareAndSet(scheduled, null) -> if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
+            scheduledRun.compareAndSet(scheduled, null) -> if (startRun(SyncDeletionPolicy.ASK, isAutomatic = true, isFollowUp = scheduled.isFollowUp)) {
                 environment.logger.log("Sync: leaving the front, starting the run asked for by ${scheduled.reason.description} for the keep-alive")
             } else {
                 // A run started on another thread in between, and the one asked for now follows it.
@@ -190,14 +190,16 @@ internal class SyncRunScheduler(
      *
      * @param isAutomatic Whether nobody asked for this run - the one [schedule] waits to start. It is
      *   written into the index's marker, see [SyncIndexDocument.isAutomaticRunInProgress].
+     * @param isFollowUp Whether this is the run another one asked for once it was done, which asks for none itself, so
+     *   that two devices changing songs in turn never keep each other's runs going.
      */
-    private fun startRun(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean = false): Boolean {
+    private fun startRun(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean = false, isFollowUp: Boolean = false): Boolean {
         val current = syncJob.load()
         if (current?.isActive == true) return false
         // Lazy, so that a run that lost the race below is dropped before it has done anything.
         val run = scope.launch(start = CoroutineStart.LAZY) {
-            runner.run(deletionPolicy, isAutomatic)
-            afterRun()
+            val asksForFollowUp = runner.run(deletionPolicy, isAutomatic)
+            afterRun(asksForFollowUp = asksForFollowUp && !isFollowUp)
         }
         if (!syncJob.compareAndSet(current, run)) {
             run.cancel()
@@ -228,18 +230,28 @@ internal class SyncRunScheduler(
      * so the outcome read here is that run's. A run Stop or Disconnect ended can still have recorded a network failure,
      * since a provider's exception can win over the cancellation that caused it, so a job no longer active arms nothing.
      * A disconnect leaves the state not Connected, which reads as nothing to retry.
+     *
+     * A completed run that left something for one more to finish ([asksForFollowUp]) has that run follow it after
+     * [AUTOMATIC_RUN_DELAY], unless a change already asked for one, which then carries it.
      */
-    private suspend fun afterRun() {
+    private suspend fun afterRun(asksForFollowUp: Boolean) {
         if (!currentCoroutineContext().isActive) return
         val outcome = (stateHolder.value as? SyncState.Connected)?.lastOutcome
         if (outcome != SyncOutcome.Failure(SyncFailureReason.NETWORK)) {
             networkFailureCount.store(0)
+            val followUp = ScheduledRun(
+                dueAt = environment.timeSource.markNow() + AUTOMATIC_RUN_DELAY,
+                isRetry = false,
+                reason = RunReason.FOLLOW_UP,
+                isFollowUp = true,
+            )
+            if (asksForFollowUp && scheduledRun.compareAndSet(null, followUp)) environment.logger.log("Sync: one more run follows to finish what this one left")
             return
         }
         val count = networkFailureCount.incrementAndFetch()
         val wait = NETWORK_RETRY_DELAYS[minOf(count, NETWORK_RETRY_DELAYS.size) - 1]
         // Never over a waiting run: a change made during this one asked for an earlier start, and that run is the retry.
-        if (scheduledRun.compareAndSet(null, ScheduledRun(dueAt = environment.timeSource.markNow() + wait, isRetry = true, reason = RunReason.RETRY))) {
+        if (scheduledRun.compareAndSet(null, ScheduledRun(dueAt = environment.timeSource.markNow() + wait, isRetry = true, reason = RunReason.RETRY, isFollowUp = false))) {
             environment.logger.log("Sync: the network failed $count runs in a row, trying again in ${wait.inWholeMinutes} min or once back online")
         }
     }
@@ -259,10 +271,10 @@ internal class SyncRunScheduler(
     }
 
     /**
-     * An automatic run waiting to start, whether it only retries one the network failed rather than carries a change, and
-     * what asked for it.
+     * An automatic run waiting to start, whether it only retries one the network failed rather than carries a change, what
+     * asked for it, and whether it is the one a completed run asked for to finish its work (see [startRun]).
      */
-    private data class ScheduledRun(val dueAt: ComparableTimeMark, val isRetry: Boolean, val reason: RunReason)
+    private data class ScheduledRun(val dueAt: ComparableTimeMark, val isRetry: Boolean, val reason: RunReason, val isFollowUp: Boolean)
 
     /** What asked for an automatic run, as the log names it. */
     enum class RunReason(val description: String) {
@@ -272,6 +284,7 @@ internal class SyncRunScheduler(
         OTHER_DEVICE("another device's change"),
         FEED_LOST("the change feed failing"),
         RETRY("a retry"),
+        FOLLOW_UP("the run before it"),
     }
 
     internal companion object {

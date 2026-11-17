@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.sync.implementation.RunCounter
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
 import com.pandulapeter.campfire.data.sync.implementation.index.indexKey
+import com.pandulapeter.campfire.data.sync.implementation.run.localImageHash
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.encoded
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -36,6 +37,7 @@ import com.pandulapeter.campfire.data.sync.implementation.song
 import com.pandulapeter.campfire.data.sync.implementation.synchronize
 import com.pandulapeter.campfire.data.sync.implementation.testEnvironment
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.sync.SyncFailureReason
 import com.pandulapeter.campfire.data.model.sync.SyncOutcome
@@ -57,6 +59,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.hours
@@ -318,6 +322,51 @@ class SyncRunSchedulerTest {
         assertIs<SyncOutcome.Success>(world.lastOutcome)
     }
 
+    @Test
+    fun `a run that deleted a song is followed by one more, which deletes the pictures only it named`() = runTest {
+        val world = world(files = FOLDER, localFiles = FOLDER - song(1) - PHOTO, index = FOLDER.syncedIndex())
+
+        world.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        runCurrent()
+        assertEquals(1, world.runs.count)
+        assertTrue(PHOTO in world.provider.files)
+        advanceTimeBy(AUTOMATIC_RUN_DELAY + MARGIN)
+        assertEquals(2, world.runs.count)
+        assertFalse(PHOTO in world.provider.files)
+        advanceTimeBy(20_000)
+
+        assertEquals(2, world.runs.count)
+    }
+
+    @Test
+    fun `the run another one asked for asks for none itself`() = runTest {
+        val world = world(files = FOLDER, localFiles = FOLDER - song(1) - PHOTO, index = FOLDER.syncedIndex())
+        // Another device deletes the second song and its picture while the follow-up lists the folder, which keeps both
+        // pictures' deletions waiting once more.
+        world.provider.onList = {
+            if (world.runs.count == 2 && song(2) in world.provider.files) {
+                world.provider.files -= song(2)
+                world.provider.files -= SECOND_PHOTO
+            }
+        }
+
+        world.scheduler.synchronize(SyncDeletionPolicy.ASK)
+        advanceTimeBy(20_000)
+
+        assertEquals(2, world.runs.count)
+        assertTrue(PHOTO in world.provider.files)
+    }
+
+    private fun Map<SyncKey, ByteArray>.syncedIndex() = SyncIndexDocument.of(
+        providerId = SyncProviderId.DROPBOX.id,
+        accountId = TEST_ACCOUNT.indexKey(),
+        lastSyncedAt = 1,
+        syncedPreferences = null,
+        index = mapValues { (key, bytes) ->
+            SyncIndexEntry(localHash = if (key.kind == LibraryFileKind.FILE) localImageHash(bytes.size.toLong()) else localContentHash(bytes), remoteRevision = "r1")
+        },
+    ).encoded()
+
     private fun FakeSyncProvider.failListingOnce() {
         onList = {
             onList = {}
@@ -395,5 +444,18 @@ class SyncRunSchedulerTest {
     private companion object {
         /** Room on either side of a due time for a run's own steps, well inside the shortest delay. */
         val MARGIN = 1.seconds
+
+        val PHOTO_BYTES = "photo".encodeToByteArray()
+        val PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(PHOTO_BYTES).take(16) + ".png")
+        val SECOND_PHOTO_BYTES = "another photo".encodeToByteArray()
+        val SECOND_PHOTO = SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(SECOND_PHOTO_BYTES).take(16) + ".png")
+
+        /** Two songs naming a picture each, and three naming none, so that deleting one is no question. */
+        val FOLDER = (3..5).associate { song(it) to "Song $it".encodeToByteArray() } + mapOf(
+            song(1) to "{image: src=${PHOTO.name}}".encodeToByteArray(),
+            PHOTO to PHOTO_BYTES,
+            song(2) to "{image: src=${SECOND_PHOTO.name}}".encodeToByteArray(),
+            SECOND_PHOTO to SECOND_PHOTO_BYTES,
+        )
     }
 }

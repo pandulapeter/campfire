@@ -94,8 +94,11 @@ internal class SyncRunner(
      * The whole of a run, including the two index writes that open it: everything from the moment the progress is
      * put on screen has to be inside the try, because the only way off any other path is with the progress still
      * showing and no way left to stop or restart it. Stopping a run during those opening writes did exactly that.
+     *
+     * Answers whether the run completed asking for one more ([SyncEngine.Result.Completed.asksForFollowUp]).
      */
-    suspend fun run(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean) {
+    suspend fun run(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean): Boolean {
+        var asksForFollowUp = false
         // No check for the lock being taken: a run asked for while the previous one is still clearing up waits for
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
         // Two runs at once are prevented by syncJob in startRun().
@@ -211,6 +214,7 @@ internal class SyncRunner(
                                 lastOutcome = SyncOutcome.Success(summary),
                             )
                         }
+                        asksForFollowUp = result.asksForFollowUp
                     }
                 }
             } catch (exception: CancellationException) {
@@ -251,6 +255,7 @@ internal class SyncRunner(
                 environment.logger.log("Sync: run ended (${describe((stateHolder.value as? SyncState.Connected)?.lastOutcome)})")
             }
         }
+        return asksForFollowUp
     }
 
     /**

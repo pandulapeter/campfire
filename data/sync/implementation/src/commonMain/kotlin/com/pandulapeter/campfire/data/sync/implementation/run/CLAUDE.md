@@ -54,7 +54,8 @@
   - **A reference beats a deletion** (`SyncPlanner.withImagesKept`): a picture a song here names is uploaded or
     downloaded again instead of deleted. A pass that brings a song down, deletes one on either side, or follows an
     unreadable song deletes no picture on either side; the next run does (an older version's edit may beat a song's
-    deletion in the folder, and it never puts a picture back). The deletion guard counts songs and setlists only.
+    deletion in the folder, and it never puts a picture back), which the run that held them back asks for
+    (`SyncPlan.holdsDeletionsBack`, see `scheduling/`). The deletion guard counts songs and setlists only.
   - A pass's local picture deletions run as one batch inside `ImageRepository.withImagesKept` and `LibraryFileLock`,
     after reading what every song names *now*, plus what the editor's unsaved text names (`LibraryImageWriter.heldNames`):
     either sends the picture back up instead.

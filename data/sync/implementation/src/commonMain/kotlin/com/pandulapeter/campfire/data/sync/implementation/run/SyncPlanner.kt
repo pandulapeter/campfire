@@ -40,34 +40,45 @@ import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
  */
 internal object SyncPlanner {
 
-    /**
-     * @param imageReferences The pictures each song of this device names, null where some song could not be read.
-     */
+    /** The operations of [planned], for a caller that needs nothing else of the plan. */
     fun plan(
         local: List<LocalFileState>,
         remote: List<RemoteFileState>,
         index: Map<SyncKey, SyncIndexEntry>,
         imageReferences: Map<SyncKey, Set<String>>? = emptyMap(),
-    ): List<SyncOperation> {
+    ): List<SyncOperation> = planned(local, remote, index, imageReferences).operations
+
+    /**
+     * @param imageReferences The pictures each song of this device names, null where some song could not be read.
+     */
+    fun planned(
+        local: List<LocalFileState>,
+        remote: List<RemoteFileState>,
+        index: Map<SyncKey, SyncIndexEntry>,
+        imageReferences: Map<SyncKey, Set<String>>?,
+    ): SyncPlan {
         val localByKey = local.associateBy { it.key }
         val remoteByKey = remote.associateBy { it.key }
-        val operations = (localByKey.keys + remoteByKey.keys + index.keys).mapNotNull { key ->
+        val kept = (localByKey.keys + remoteByKey.keys + index.keys).mapNotNull { key ->
             operationFor(key = key, local = localByKey[key], remote = remoteByKey[key], indexEntry = index[key])
         }.withImagesKept(imageReferences)
+        val operations = kept.operations
         // Renames only: a picture has none, and its index hash is its size, which two pictures may share.
         val deletedRemotely = operations.filterIsInstance<SyncOperation.DeleteRemote>()
             .filter { it.key.kind != LibraryFileKind.FILE }
             .mapNotNull { operation -> index[operation.key]?.let { operation.key.kind to it.localHash } }
             .toSet()
-        if (deletedRemotely.isEmpty()) return operations
-        return operations.map { operation ->
-            val hash = localByKey[operation.key]?.hash
-            if (operation is SyncOperation.DeleteLocal && (operation.key.kind to hash) in deletedRemotely) {
-                SyncOperation.Upload(operation.key, expectedRevision = null)
-            } else {
-                operation
-            }
-        }
+        if (deletedRemotely.isEmpty()) return kept
+        return kept.copy(
+            operations = operations.map { operation ->
+                val hash = localByKey[operation.key]?.hash
+                if (operation is SyncOperation.DeleteLocal && (operation.key.kind to hash) in deletedRemotely) {
+                    SyncOperation.Upload(operation.key, expectedRevision = null)
+                } else {
+                    operation
+                }
+            },
+        )
     }
 
     /**
@@ -81,9 +92,11 @@ internal object SyncPlanner {
      * delete, and one deleted here may still be kept by an edit made during the run. So such a pass deletes no picture
      * at all, on either side, and neither does one where a song could not be read ([imageReferences] null): the
      * deletions wait for a run that knows every song it will hold. A song this pass deletes here does not keep its
-     * pictures either, which would only send them back up for the next run to delete again.
+     * pictures either, which would only send them back up for the next run to delete again. A plan whose deletions wait
+     * only for the songs to settle says so ([SyncPlan.holdsDeletionsBack]); one waiting for an unreadable song does not,
+     * since the next run would wait as well.
      */
-    private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?): List<SyncOperation> {
+    private fun List<SyncOperation>.withImagesKept(imageReferences: Map<SyncKey, Set<String>>?): SyncPlan {
         val songOperations = filter { it.key.kind == LibraryFileKind.SONG }
         // A song deleted from the folder counts too: another device's edit may beat that deletion, and bring the song back
         // naming a picture deleted beside it (a device of a version without pictures, which never puts one back).
@@ -91,7 +104,8 @@ internal object SyncPlanner {
         val leaving = songOperations.filterIsInstance<SyncOperation.DeleteLocal>().mapTo(mutableSetOf()) { it.key }
         val kept = imageReferences?.filterKeys { it !in leaving }?.values?.flatten()?.toSet()
         val mayDelete = kept != null && !isSongSetChanging
-        return mapNotNull { operation ->
+        var holdsDeletionsBack = false
+        val operations = mapNotNull { operation ->
             val key = operation.key
             val isKept = kept?.contains(key.name) == true
             when {
@@ -99,16 +113,17 @@ internal object SyncPlanner {
                 operation is SyncOperation.DeleteLocal -> when {
                     isKept -> SyncOperation.Upload(key, expectedRevision = null)
                     mayDelete -> operation
-                    else -> null
+                    else -> null.also { holdsDeletionsBack = kept != null }
                 }
                 operation is SyncOperation.DeleteRemote -> when {
                     isKept -> SyncOperation.Download(key, operation.revision)
                     mayDelete -> operation
-                    else -> null
+                    else -> null.also { holdsDeletionsBack = kept != null }
                 }
                 else -> operation
             }
         }
+        return SyncPlan(operations = operations, holdsDeletionsBack = holdsDeletionsBack)
     }
 
     private fun operationFor(

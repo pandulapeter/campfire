@@ -113,6 +113,7 @@ internal class SyncEngine(
         var cursor: String? = null
         var documentRevisions = emptyMap<String, String>()
         var sharedFiles = emptyList<RemoteSharedFile>()
+        var asksForFollowUp = false
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -149,7 +150,9 @@ internal class SyncEngine(
             // which no number of runs will change. Split off before the names are folded, so that such a name is never
             // matched onto a local one either.
             if (pass == 0) summary = summary.plus(SyncSummary(failed = prepared.unstorable))
-            val plan = SyncPlanner.plan(local = local, remote = remote, index = planningIndex, imageReferences = localListing.imageReferences)
+            val planned = SyncPlanner.planned(local = local, remote = remote, index = planningIndex, imageReferences = localListing.imageReferences)
+            val plan = planned.operations
+            if (planned.holdsDeletionsBack) asksForFollowUp = true
             logger.log("Sync: pass ${pass + 1}, ${remote.size} files in the folder and ${local.size} here: ${plan.describedForLog()}")
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) {
@@ -192,6 +195,7 @@ internal class SyncEngine(
             cursor = cursor,
             documentRevisions = documentRevisions,
             sharedFiles = sharedFiles,
+            asksForFollowUp = asksForFollowUp,
             index = SyncIndexDocument.of(
                 providerId = provider.id.id,
                 accountId = accountId,
@@ -344,12 +348,15 @@ internal class SyncEngine(
          *   this run's, and so in [index], or one the run did not see.
          * @param documentRevisions The folder-level documents' revisions, as the run's last listing named them.
          * @param sharedFiles The shared copies, as the run's last listing named them, for the shared-copy step.
+         * @param asksForFollowUp Whether the run left something for one more run to finish, which nothing else would
+         *   start: pictures no song names any more, kept while the songs were changing ([SyncPlan.holdsDeletionsBack]).
          */
         data class Completed(
             val summary: SyncSummary,
             val cursor: String?,
             val documentRevisions: Map<String, String>,
             val sharedFiles: List<RemoteSharedFile>,
+            val asksForFollowUp: Boolean,
             val index: SyncIndexDocument,
         ) : Result
 
