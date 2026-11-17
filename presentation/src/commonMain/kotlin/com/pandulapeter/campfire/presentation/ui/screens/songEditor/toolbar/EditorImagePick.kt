@@ -15,19 +15,23 @@ import com.pandulapeter.campfire.presentation.ui.platform.PictureSource
 /**
  * What the editor's Image button does: asks in a menu hanging from it ([menuState]) where from, then picks pictures, or
  * asks for one's address, whose directives arrive at the caret once they are kept as draft pictures
- * (`EditorImages.pickImages`, `EditorImages.downloadImage`).
+ * (`EditorImages.pickImages`, `EditorImages.downloadImage`). It also holds the Attach button's pick ([onAttach]), the
+ * other button that keeps a file on the draft shelf, which goes where the Image button goes (not in read only mode).
  *
  * @param canPickPhotos Whether the menu offers Photos, the platform having a photo library apart from its files.
  * @param menuState Held by the screen rather than the button, since Ctrl / Cmd + Shift + I opens the same menu
  *   ([onShortcut]) from wherever the focus is.
  * @param onPick Picks from the source handed.
  * @param onLink Asks for the address of a picture to download.
+ * @param onAttach Picks a file to attach to the song (`EditorImages.attach`); null where attachments are switched off,
+ *   which leaves the Attach button out.
  */
 internal class EditorImagePick(
     val canPickPhotos: Boolean,
     val menuState: OverflowMenuState,
     val onPick: (PictureSource) -> Unit,
     val onLink: () -> Unit,
+    val onAttach: (() -> Unit)?,
 ) {
 
     /**

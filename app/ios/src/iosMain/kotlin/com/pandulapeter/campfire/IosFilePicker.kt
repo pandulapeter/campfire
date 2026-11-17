@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.pickedAttachment
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
@@ -61,6 +62,7 @@ import platform.UniformTypeIdentifiers.UTTypeData
 import platform.UniformTypeIdentifiers.UTTypeGIF
 import platform.UniformTypeIdentifiers.UTTypeHEIC
 import platform.UniformTypeIdentifiers.UTTypeHEIF
+import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.UniformTypeIdentifiers.UTTypeJPEG
 import platform.UniformTypeIdentifiers.UTTypePNG
 import platform.UniformTypeIdentifiers.UTTypeWebP
@@ -144,6 +146,24 @@ internal class IosFilePicker(
                     if (url.isTemporaryCopy()) url.deleteTemporaryFile()
                 }
             }
+        }
+    }
+
+    /**
+     * Any one file, as a copy the app owns (so no coordinated read), its bytes mapped rather than loaded until they are
+     * known to fit. The copy is deleted once read.
+     */
+    @OptIn(ExperimentalForeignApi::class)
+    override suspend fun pickAttachment(): ImportedFile? {
+        val url = suspendCancellableCoroutine<List<NSURL>> { continuation ->
+            val controller = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeItem), asCopy = true)
+            presentDocumentPicker(controller) { urls -> continuation.resume(urls) }
+        }.firstOrNull() ?: return null
+        return withContext(Dispatchers.IO) {
+            // Mapped, so its length is known before anything is copied into the heap.
+            val data = NSData.dataWithContentsOfURL(url, options = NSDataReadingMappedIfSafe, error = null)
+            pickedAttachment(name = url.lastPathComponent.orEmpty(), size = data?.length?.toLong()) { data?.toByteArray() }
+                .also { if (url.isTemporaryCopy()) url.deleteTemporaryFile() }
         }
     }
 

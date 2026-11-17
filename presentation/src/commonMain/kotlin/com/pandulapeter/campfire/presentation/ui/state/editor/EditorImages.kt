@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.Message
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
@@ -49,6 +50,7 @@ import kotlinx.coroutines.withContext
  *
  * @param pictureFitter What a picture is made to fit with before it is kept.
  * @param linkDownloader What a picture asked for by its address is downloaded with, see [downloadImage].
+ * @param attachmentIntake What a file picked by the Attach button is kept with, see [attach].
  * @param computation Where the names a text holds are read, away from the main thread: a long song is read on every
  *   pause in the typing.
  */
@@ -58,6 +60,7 @@ internal class EditorImages(
     private val addDraftImage: AddDraftImageUseCase,
     private val pictureFitter: PictureFitter,
     private val linkDownloader: PictureLinkDownloader,
+    private val attachmentIntake: AttachmentIntake,
     private val holdEditorImages: HoldEditorImagesUseCase,
     private val clearDraftImages: ClearDraftImagesUseCase,
     private val computation: CoroutineDispatcher,
@@ -72,6 +75,10 @@ internal class EditorImages(
      */
     private val _insertions = Channel<EditorImageInsertion>(Channel.BUFFERED)
     val insertions = _insertions.receiveAsFlow()
+
+    /** Attachments kept for an open editor, for it to add to its text's header, as [insertions] are inserted. */
+    private val _attachmentInsertions = Channel<EditorAttachmentInsertion>(Channel.BUFFERED)
+    val attachmentInsertions = _attachmentInsertions.receiveAsFlow()
 
     /**
      * Holds from the library's pruning every file the editor's text names, its pictures and its attachments, a beat after
@@ -101,6 +108,20 @@ internal class EditorImages(
             if (files.isEmpty()) return@launch
             val names = keep(files) { generation == pickedFor }
             if (names.isNotEmpty()) _insertions.send(EditorImageInsertion(fileName = fileName, names = names))
+        }
+    }
+
+    /**
+     * The Attach button: [pickAttachment] asks the user for a file, which is kept on the draft shelf and added to the
+     * editor of [fileName] as an attachment named as it was picked; one refused is said why. Runs in [scope], as
+     * [pickImages] does, and takes its turn with the pictures ([mutex]), a pick the editor closed under dropped.
+     */
+    fun attach(fileName: String, pickAttachment: suspend () -> ImportedFile?) {
+        scope.launch {
+            val pickedFor = generation
+            val file = pickAttachment() ?: return@launch
+            val attachment = mutex.withLock { if (generation == pickedFor) attachmentIntake.keep(file) else null } ?: return@launch
+            _attachmentInsertions.send(EditorAttachmentInsertion(fileName = fileName, attachment = attachment))
         }
     }
 

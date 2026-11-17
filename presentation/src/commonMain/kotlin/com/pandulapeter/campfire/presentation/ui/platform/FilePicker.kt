@@ -39,6 +39,13 @@ interface FilePicker {
     suspend fun pickImages(): List<ImportedFile> = pickFiles()
 
     /**
+     * Opens the system picker for one file of any type, to be attached to a song, read within
+     * `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` (see [pickedAttachment]) rather than within the import's budget, which would
+     * hand a recording back unread. Null when the user picked nothing.
+     */
+    suspend fun pickAttachment(): ImportedFile? = null
+
+    /**
      * Opens the system's photo library for one picture, or for several where [isMultiple], in the order they were
      * picked, each named with a picture's extension (`pictureFileName`) since the library's photos often have no name of
      * their own. Only asked where [canPickPhotos]; elsewhere it is [pickImages]. A photo that cannot be had (one kept only

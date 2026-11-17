@@ -1011,6 +1011,7 @@
     <string name="song_editor_insert_tag">Štítek</string>
     <string name="song_editor_insert_language">Jazyk</string>
     <string name="song_editor_insert_link">Odkaz</string>
+    <string name="song_editor_insert_attachment">Přiložit</string>
     <string name="song_editor_insert_chord_shape">Hmat akordu</string>
     <string name="song_editor_insert_chord_color">Barva akordů</string>
     <string name="song_editor_insert_text_color">Barva textu</string>
@@ -1245,6 +1246,8 @@
     <string name="song_image_refused_too_many_pixels">Tento obrázek má přes 25 megapixelů, víc, než může píseň zobrazit.</string>
     <string name="song_image_refused_not_image">Tento soubor není obrázek.</string>
     <string name="song_image_refused_too_large_to_read">Tento obrázek je větší než 40 MB, víc, než Campfire dokáže načíst.</string>
+    <string name="song_attachment_refused_too_large">Tento soubor je větší než 50 MB, což je nejvíc, co může píseň nést. Přidej místo něj odkaz.</string>
+    <string name="song_attachment_refused_format">Soubory tohoto typu nejde přiložit. Píseň přijímá dokumenty, nahrávky, videa, obrázky a soubory s notovým zápisem.</string>
     <string name="song_image_shrunk">Tento obrázek byl pro píseň příliš velký, a tak byla přidána jeho menší kopie.</string>
     <string name="song_image_converted">Tento druh obrázku nejde zobrazit na každém zařízení, a tak byla přidána jeho kopie, kterou jde zobrazit všude.</string>
 

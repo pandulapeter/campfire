@@ -32,6 +32,8 @@ import org.jetbrains.compose.resources.DrawableResource
  *   in place of the two halves; null for every other entry.
  * @param imagePick What the Image button, which writes nothing at once, does instead: picks pictures, which arrive at the
  *   caret later (`EditorImageButton`). Null for every other button.
+ * @param action What a button that writes nothing itself does instead (the Attach button, whose line arrives once the
+ *   file picked is kept); null for every button that writes.
  */
 internal data class EditorInsertion(
     val label: String,
@@ -46,6 +48,7 @@ internal data class EditorInsertion(
     val icon: DrawableResource? = null,
     val chordShapeInstrument: ChordInstrument? = null,
     val imagePick: EditorImagePick? = null,
+    val action: (() -> Unit)? = null,
 ) {
 
     companion object {
@@ -76,6 +79,15 @@ internal data class EditorInsertion(
             suffix = "",
             isOwnLine = true,
             imagePick = imagePick,
+        )
+
+        /** A button that writes nothing itself and does [action] instead. */
+        fun action(label: String, action: () -> Unit) = EditorInsertion(
+            label = label,
+            prefix = "",
+            suffix = "",
+            isOwnLine = true,
+            action = action,
         )
 
         /** A button that writes nothing itself and asks which of [choices] to write instead. */

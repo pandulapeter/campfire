@@ -119,6 +119,12 @@ sealed interface Message {
     /** A picture the user added that was over `ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE`, so it was not even read. */
     data object ImageTooLargeToRead : Message
 
+    /**
+     * A file the user picked to attach to a song, which was not kept for [reason]: only [ImageRefusal.TOO_LARGE] (over
+     * `ImportLimits.MAX_ATTACHMENT_FILE_SIZE`) and [ImageRefusal.UNSUPPORTED_FORMAT] (a type no song takes) are said.
+     */
+    data class AttachmentNotAdded(val reason: ImageRefusal) : Message
+
     /** A picture the user added was too large for a song, and a smaller copy of it was kept instead. */
     data object ImageShrunk : Message
 

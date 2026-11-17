@@ -27,6 +27,10 @@ The editor's Shortcuts rows and its control row.
   platform (Photos where there is a photo library, Files, From a link); its pictures' directives go after the line the
   caret is on (above it at a line's start) once they are kept, never splitting a line. From a link asks for an `https`
   address in a sheet (`PictureLinkSheet`) and downloads it under the progress bar, kept as a picked picture is.
+- **Attach** sits after Link (Tag, Language, Link, Attach), only where Image is (not read only mode) and the Attachments
+  switch is on. It picks one file of any type (`FilePicker.pickAttachment`), keeps it on the draft shelf
+  (`EditorImages.attach`, through `AttachmentIntake`), and adds `{meta: attachment <file> <picked name>}` to the header
+  once kept, through `ChordProAttachments.setAttachments` (where Link writes, one undo step); a refusal is a snackbar.
 - Deliberately absent: `{new_song}` (one song per editor), `{new_page}` / `{column_break}` (Campfire flows sections into
   columns itself). `{transpose}` is offered only as **Key change**, at the caret, never in the header: one at the top
   would silently shift every chord away from what the file spells.

@@ -66,6 +66,7 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     val openImages = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onPicturesPicked)
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia(), picker::onPhotoPicked)
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(), picker::onPicturesPicked)
+    val openAttachment = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument(), picker::onAttachmentPicked)
     // The contract bakes the type in, so there is one launcher per type the app can hand out. A song leaves as the .cho
     // file it is, and .cho maps to no MIME type, so a storage provider asked for text/plain appends .txt to the name (it
     // keeps a name's extension only where the extension maps to the type asked for). The generic binary type is the
@@ -81,12 +82,13 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     )
     // Declared after the launchers, so that it is disposed before they unregister: a launcher is never left in the
     // singleton once it can no longer launch, and a finished Activity is not kept reachable through it.
-    DisposableEffect(picker, open, openImages, pickPhoto, pickPhotos, createText, createArchive) {
+    DisposableEffect(picker, open, openImages, pickPhoto, pickPhotos, openAttachment, createText, createArchive) {
         val launchers = AndroidFilePicker.Launchers(
             open = open,
             openImages = openImages,
             pickPhoto = pickPhoto,
             pickPhotos = pickPhotos,
+            openAttachment = openAttachment,
             createText = createText,
             createArchive = createArchive,
         )
@@ -124,6 +126,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         val openImages: ActivityResultLauncher<Array<String>>,
         val pickPhoto: ActivityResultLauncher<PickVisualMediaRequest>,
         val pickPhotos: ActivityResultLauncher<PickVisualMediaRequest>,
+        val openAttachment: ActivityResultLauncher<Array<String>>,
         val createText: ActivityResultLauncher<String>,
         val createArchive: ActivityResultLauncher<String>,
     )
@@ -174,18 +177,45 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
      */
     override val canPickPhotos get() = ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)
 
+    /**
+     * The documents UI for any one file. One picked for a view model that did not live to read it is let go of: it was
+     * picked for a song's sheet or the editor, and an import of it would be a new song nobody asked for.
+     */
+    override suspend fun pickAttachment(): ImportedFile? {
+        val uri = pickUris { it.openAttachment.launch(arrayOf(ANY_MIME_TYPE)) }.firstOrNull() ?: return null
+        return withContext(Dispatchers.IO) {
+            val (name, size) = try {
+                uri.nameAndSize(context)
+            } catch (exception: Exception) {
+                uri.fallbackName to null
+            }
+            pickedAttachment(name = name, size = size) { limit ->
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit.toInt() + 1) }
+                } catch (exception: Exception) {
+                    println("Could not read \"$uri\": ${exception.message}")
+                    null
+                }
+            }
+        }
+    }
+
     private suspend fun pick(launch: (Launchers) -> Unit): List<ImportedFile> {
+        val uris = pickUris(launch)
+        return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
+    }
+
+    private suspend fun pickUris(launch: (Launchers) -> Unit): List<Uri> {
         // The view model runs one pick at a time, so a continuation still waiting here is one whose answer is never
         // coming; it is let go as a last resort rather than left hanging.
         pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
         // Between two Activities there is no launcher until the next one has composed, so it is waited for.
         val currentLaunchers = launchers.filterNotNull().first()
-        val uris = suspendCancellableCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             pickContinuation = continuation
             continuation.invokeOnCancellation { pickContinuation = null }
             launch(currentLaunchers)
         }
-        return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
@@ -292,6 +322,12 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
             continuation != null -> continuation.resume(uris)
             uris.isNotEmpty() -> scope.launch { _orphanedPictures.send(uris.toImportedFiles(context)) }
         }
+    }
+
+    fun onAttachmentPicked(uri: Uri?) {
+        val continuation = pickContinuation?.takeIf { it.isActive }
+        pickContinuation = null
+        if (continuation != null) continuation.resume(listOfNotNull(uri)) else if (uri != null) println("Let go of an attachment picked for a view model that is gone.")
     }
 
     fun onSaveLocationPicked(uri: Uri?) {

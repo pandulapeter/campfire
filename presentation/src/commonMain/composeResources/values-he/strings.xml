@@ -1014,6 +1014,7 @@
     <string name="song_editor_insert_tag">תגית</string>
     <string name="song_editor_insert_language">שפה</string>
     <string name="song_editor_insert_link">קישור</string>
+    <string name="song_editor_insert_attachment">צירוף</string>
     <string name="song_editor_insert_chord_shape">צורת אקורד</string>
     <string name="song_editor_insert_chord_color">צבע אקורדים</string>
     <string name="song_editor_insert_text_color">צבע טקסט</string>
@@ -1247,6 +1248,8 @@
     <string name="song_image_refused_too_many_pixels">בתמונה הזאת יותר מ־25 מגה־פיקסל, יותר ממה ששיר יכול להציג.</string>
     <string name="song_image_refused_not_image">הקובץ הזה אינו תמונה.</string>
     <string name="song_image_refused_too_large_to_read">התמונה הזאת גדולה מ־40 MB, יותר ממה ש־Campfire יכול לקרוא.</string>
+    <string name="song_attachment_refused_too_large">הקובץ הזה גדול מ־50 MB, המרב ששיר יכול לשאת. כדאי להוסיף במקומו קישור אליו.</string>
+    <string name="song_attachment_refused_format">אי אפשר לצרף קבצים מהסוג הזה. שיר מקבל מסמכים, הקלטות, סרטונים, תמונות וקובצי תווים.</string>
     <string name="song_image_shrunk">התמונה הזאת הייתה גדולה מדי לשיר, ולכן נוסף עותק קטן יותר שלה.</string>
     <string name="song_image_converted">לא ניתן להציג סוג תמונה זה בכל מכשיר, ולכן נוסף עותק שלה שניתן להציג בכל מקום.</string>
 

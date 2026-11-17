@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.state.editor
 
+import com.pandulapeter.campfire.domain.api.images.AddDraftAttachmentUseCase
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.DownloadPictureUseCase
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.domain.api.songs.DraftSongFromTextUseCase
 import com.pandulapeter.campfire.domain.api.songs.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.songs.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
+import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
@@ -29,8 +31,8 @@ import kotlinx.coroutines.Dispatchers
 import org.koin.core.annotation.Factory
 
 /**
- * The use cases [EditorSession] keeps its draft, makes new songs from texts, and handles the pictures the editor's text
- * names with, which the view model passes on as one.
+ * The use cases [EditorSession] keeps its draft, makes new songs from texts, and handles the pictures and attachments
+ * the editor's text names with, which the view model passes on as one.
  */
 @Factory
 class EditorUseCases(
@@ -44,6 +46,7 @@ class EditorUseCases(
     internal val clearDraftImages: ClearDraftImagesUseCase,
     internal val saveWithDraftImages: SaveWithDraftImagesUseCase,
     internal val downloadPicture: DownloadPictureUseCase,
+    internal val addDraftAttachment: AddDraftAttachmentUseCase,
 ) {
 
     /**
@@ -56,6 +59,7 @@ class EditorUseCases(
         addDraftImage = addDraftImage,
         pictureFitter = PictureFitter(examine = examineImage::invoke, reencode = ::reencodePicture, work = pictureWork),
         linkDownloader = PictureLinkDownloader(download = downloadPicture::invoke, work = pictureWork, messageSink = messageSink),
+        attachmentIntake = AttachmentIntake(addDraftAttachment = addDraftAttachment::invoke, messageSink = messageSink, work = pictureWork),
         holdEditorImages = holdEditorImages,
         clearDraftImages = clearDraftImages,
         computation = Dispatchers.Default,

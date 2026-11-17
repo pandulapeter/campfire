@@ -39,6 +39,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_format_itali
 import com.pandulapeter.campfire.presentation.resources.song_editor_format_underline
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_annotation
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_attachment
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_artist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord
@@ -148,7 +149,7 @@ internal fun EditorToolbar(
         verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
     ) {
         EditorToolbarRow(
-            groups = metadataInsertions() + lineKindInsertions(tabStaff, sheetMusicHeader, imagePick),
+            groups = metadataInsertions(imagePick?.onAttach) + lineKindInsertions(tabStaff, sheetMusicHeader, imagePick),
             contentPadding = contentPadding,
             onInsert = onInsert,
         )
@@ -186,8 +187,11 @@ private fun EditorToolbarRow(
             if (index > 0) EditorToolbarDivider()
             group.forEach { insertion ->
                 val imagePick = insertion.imagePick
+                val action = insertion.action
                 if (imagePick != null) {
                     EditorImageButton(label = insertion.label, imagePick = imagePick)
+                } else if (action != null) {
+                    EditorToolbarButton(label = insertion.label, onClick = action)
                 } else if (insertion.choices.isEmpty()) {
                     EditorToolbarButton(
                         label = insertion.label,
@@ -298,12 +302,13 @@ private fun colorInsertions(directive: String) = listOf(
  * a key change written as one; that is what the key change is for.
  *
  * The tags, the languages and the links of a song, which can be added again and again, are a group of their own after
- * them, and the row ends in the [lineKindInsertions].
+ * them, with the Attach button ([onAttach], left out where it is null) after the links, which it writes beside once the
+ * file it picks is kept; the row ends in the [lineKindInsertions].
  * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
  * at one of them.
  */
 @Composable
-private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
+private fun metadataInsertions(onAttach: (() -> Unit)?): List<List<EditorInsertion>> = listOf(
     listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_title), name = "title"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_artist), name = "artist"),
@@ -327,10 +332,11 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tempo), name = "tempo"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_time), name = "time"),
     ),
-    listOf(
+    listOfNotNull(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tag), name = "tag"),
         EditorInsertion.meta(stringResource(Res.string.song_editor_insert_language), key = "language"),
         EditorInsertion.meta(stringResource(Res.string.song_editor_insert_link), key = "link"),
+        onAttach?.let { EditorInsertion.action(stringResource(Res.string.song_editor_insert_attachment), action = it) },
     ),
 )
 

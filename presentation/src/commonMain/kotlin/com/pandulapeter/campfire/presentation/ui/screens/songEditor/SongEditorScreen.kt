@@ -124,6 +124,7 @@ internal fun SongEditorScreen(
                     viewModel.editorSession.images.pickImages(destination.fileName) { filePicker.pickPictures(source, isMultiple = true) }
                 },
                 onLink = { viewModel.dialogHost.showDialog(DialogType.PictureLink(destination.fileName)) },
+                onAttach = { viewModel.editorSession.images.attach(destination.fileName, filePicker::pickAttachment) },
             )
         }
     }

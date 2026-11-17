@@ -76,6 +76,10 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   `ClipboardText.Refused`; the web's points at Ctrl / Cmd + V, whose `paste` event needs no permission. Only Android 13+
   confirms a copy itself (`isCopyConfirmedBySystem`). iOS alone can say a web address seems to be there without reading
   it (`ClipboardLinkReader.kt`), the one question asked without a tap (the first run's link offer).
+- **Attachments** are picked with `pickAttachment`: one file of any type, read within 50 MB rather than the import's
+  budget (`pickedAttachment`: a type no song takes is handed back unread, one too large unread and `isTooLarge`, its size
+  asked first where the platform says it). Android's `OpenDocument` launcher of its own, whose orphaned result is let
+  go of; iOS's document picker for `UTTypeItem` (a copy, mapped, then deleted); the desktop's dialog; the web's input.
 - **Opening a file** (`FileOpener`, `rememberFileOpener`): a song's attachment, copied into `exports/` under its shown
   name first (`ExportAttachmentUseCase`), so the opening app shows that name and never writes into the library. Android:
   `ACTION_VIEW` on a `FileProvider` address in `cacheDir/shared` (the copy moved there), no app a `false`. iOS: Quick

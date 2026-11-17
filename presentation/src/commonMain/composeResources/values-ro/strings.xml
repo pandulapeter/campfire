@@ -1016,6 +1016,7 @@
     <string name="song_editor_insert_tag">Etichetă</string>
     <string name="song_editor_insert_language">Limbă</string>
     <string name="song_editor_insert_link">Link</string>
+    <string name="song_editor_insert_attachment">Atașează</string>
     <string name="song_editor_insert_chord_shape">Poziție de acord</string>
     <string name="song_editor_insert_chord_color">Culoarea acordurilor</string>
     <string name="song_editor_insert_text_color">Culoarea textului</string>
@@ -1250,6 +1251,8 @@
     <string name="song_image_refused_too_many_pixels">Această imagine are peste 25 de megapixeli, mai mult decât poate afișa un cântec.</string>
     <string name="song_image_refused_not_image">Acest fișier nu este o imagine.</string>
     <string name="song_image_refused_too_large_to_read">Această imagine are peste 40 MB, mai mult decât poate citi Campfire.</string>
+    <string name="song_attachment_refused_too_large">Acest fișier are peste 50 MB, cel mult cât poate purta un cântec. Adaugă în schimb un link către el.</string>
+    <string name="song_attachment_refused_format">Fișierele de acest tip nu pot fi atașate. Un cântec acceptă documente, înregistrări, videoclipuri, imagini și fișiere de notație muzicală.</string>
     <string name="song_image_shrunk">Această imagine era prea mare pentru un cântec, așa că a fost adăugată o copie mai mică.</string>
     <string name="song_image_converted">Acest tip de imagine nu poate fi afișat pe toate dispozitivele, așa că a fost adăugată o copie care poate fi afișată.</string>
 

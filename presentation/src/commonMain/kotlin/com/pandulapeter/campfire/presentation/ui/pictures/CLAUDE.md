@@ -41,6 +41,10 @@ The pictures a song names (`{image: src=…}`), for the song view and the PDF.
   it (`PictureLinkDownloader`, part of `PictureWork`) and stores it as Add image does. What brings no picture is a
   snackbar: nothing there, a page rather than a picture, or no answer, which on the web is also a site refusing other
   pages its pictures, so that one suggests saving the picture and adding the file.
+- **A file the user attaches** (the editor's Attach, the Attachments sheet's Add file) goes through `AttachmentIntake`:
+  refused with a snackbar where it is over 50 MB (a link suggested) or of a type no song takes (`isAttachmentFileName`),
+  else kept on the draft shelf as it is, never re-encoded, its reading and hashing part of `PictureWork`. The draft shelf
+  holds such files beside pictures and lets go of them the same way.
 - **A picture the user adds** (the editor's Image button, one opened, shared, or dropped alone, Add image) goes through
   `PictureFitter` first, never one an archive or sync brings: kept as it is where the library takes it (never
   re-encoded); refused as too large (bytes or pixels, the read going up to 40 MB) or as HEIC or AVIF (never SVG, never no

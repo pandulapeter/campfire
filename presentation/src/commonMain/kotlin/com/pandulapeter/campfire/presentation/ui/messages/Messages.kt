@@ -79,6 +79,8 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_untitled
+import com.pandulapeter.campfire.presentation.resources.song_attachment_refused_format
+import com.pandulapeter.campfire.presentation.resources.song_attachment_refused_too_large
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_format
 import com.pandulapeter.campfire.presentation.resources.song_image_refused_not_image
 import com.pandulapeter.campfire.presentation.resources.song_image_converted
@@ -213,6 +215,9 @@ private fun messageText(current: Message?): String? =
             }
         )
         Message.ImageTooLargeToRead -> stringResource(Res.string.song_image_refused_too_large_to_read)
+        is Message.AttachmentNotAdded -> stringResource(
+            if (current.reason == ImageRefusal.TOO_LARGE) Res.string.song_attachment_refused_too_large else Res.string.song_attachment_refused_format
+        )
         Message.ImageShrunk -> stringResource(Res.string.song_image_shrunk)
         Message.ImageConverted -> stringResource(Res.string.song_image_converted)
         Message.PictureLinkMissing -> stringResource(Res.string.picture_link_missing)

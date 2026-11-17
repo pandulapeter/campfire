@@ -58,6 +58,26 @@ internal object WebFilePicker : FilePicker {
         return openFileInput(accept = accept).await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty()
     }
 
+    /** The first file picked, its size known before it is read, so one too large is never copied into the page. */
+    override suspend fun pickAttachment(): ImportedFile? {
+        val file = openFileInput(accept = "").await<JsArray<JsAny>?>()?.takeIf { it.length > 0 }?.get(0) ?: return null
+        val (name, size) = try {
+            fileName(file).toString() to fileSize(file).toLong()
+        } catch (_: Throwable) {
+            return null
+        }
+        return pickedAttachment(name = name, size = size) {
+            try {
+                fileBytes(file).await<Int8Array?>()?.toByteArray()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Throwable) {
+                println("Could not read \"$name\": ${exception.message}")
+                null
+            }
+        }
+    }
+
     /**
      * A download rather than a dialog: the browser decides where it lands, and there is no way to hear whether the
      * user kept it, so this is optimistic by necessity.

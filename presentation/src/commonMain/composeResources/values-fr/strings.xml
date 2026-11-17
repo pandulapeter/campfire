@@ -978,6 +978,7 @@
     <string name="song_editor_insert_tag">Étiquette</string>
     <string name="song_editor_insert_language">Langue</string>
     <string name="song_editor_insert_link">Lien</string>
+    <string name="song_editor_insert_attachment">Joindre</string>
     <string name="song_editor_insert_chord_shape">Doigté d\'accord</string>
     <string name="song_editor_insert_chord_color">Couleur des accords</string>
     <string name="song_editor_insert_text_color">Couleur du texte</string>
@@ -1209,6 +1210,8 @@
     <string name="song_image_refused_too_many_pixels">Cette image dépasse 25 mégapixels, plus qu\'une chanson ne peut afficher.</string>
     <string name="song_image_refused_not_image">Ce fichier n\'est pas une image.</string>
     <string name="song_image_refused_too_large_to_read">Cette image dépasse 40 Mo, plus que Campfire ne peut lire.</string>
+    <string name="song_attachment_refused_too_large">Ce fichier dépasse 50 Mo, le maximum qu\'une chanson peut emporter. Ajoutez plutôt un lien vers lui.</string>
+    <string name="song_attachment_refused_format">Les fichiers de ce type ne peuvent pas être joints. Une chanson accepte les documents, les enregistrements, les vidéos, les images et les fichiers de notation musicale.</string>
     <string name="song_image_shrunk">Cette image était trop grande pour une chanson, une copie plus petite a donc été ajoutée.</string>
     <string name="song_image_converted">Ce type d\'image ne s\'affiche pas sur tous les appareils, une copie qui s\'affiche partout a donc été ajoutée.</string>
 

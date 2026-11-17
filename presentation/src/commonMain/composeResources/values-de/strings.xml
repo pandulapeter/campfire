@@ -973,6 +973,7 @@
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Sprache</string>
     <string name="song_editor_insert_link">Link</string>
+    <string name="song_editor_insert_attachment">Anhängen</string>
     <string name="song_editor_insert_chord_shape">Griffbild</string>
     <string name="song_editor_insert_chord_color">Akkordfarbe</string>
     <string name="song_editor_insert_text_color">Textfarbe</string>
@@ -1204,6 +1205,8 @@
     <string name="song_image_refused_too_many_pixels">Dieses Bild hat mehr als 25 Megapixel, mehr als ein Song anzeigen kann.</string>
     <string name="song_image_refused_not_image">Diese Datei ist kein Bild.</string>
     <string name="song_image_refused_too_large_to_read">Dieses Bild ist größer als 40 MB, mehr als Campfire lesen kann.</string>
+    <string name="song_attachment_refused_too_large">Diese Datei ist größer als 50 MB, das Höchste, was ein Song mitnehmen kann. Füge stattdessen einen Link darauf hinzu.</string>
+    <string name="song_attachment_refused_format">Dateien dieser Art können nicht angehängt werden. Ein Song nimmt Dokumente, Aufnahmen, Videos, Bilder und Notendateien an.</string>
     <string name="song_image_shrunk">Dieses Bild war zu groß für einen Song, deshalb wurde eine kleinere Kopie hinzugefügt.</string>
     <string name="song_image_converted">Diese Art von Bild kann nicht auf jedem Gerät angezeigt werden, deshalb wurde eine Kopie hinzugefügt, die überall angezeigt werden kann.</string>
 

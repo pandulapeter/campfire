@@ -63,6 +63,25 @@ internal object DesktopFilePicker : FilePicker {
         return withContext(Dispatchers.IO) { files.map { it.absolutePath }.readAsImportedFiles() }
     }
 
+    override suspend fun pickAttachment(): ImportedFile? {
+        val file = withContext(Dispatchers.Main) {
+            FileDialog(null as Frame?, DIALOG_TITLE, FileDialog.LOAD).run {
+                isVisible = true
+                this.files.orEmpty().firstOrNull()
+            }
+        } ?: return null
+        return withContext(Dispatchers.IO) {
+            pickedAttachment(name = file.name, size = file.length()) {
+                try {
+                    file.readBytes()
+                } catch (exception: Exception) {
+                    println("Could not read \"${file.path}\": ${exception.message}")
+                    null
+                }
+            }
+        }
+    }
+
     override suspend fun saveFile(file: ExportedFile): Boolean {
         val chosen = withContext(Dispatchers.Main) {
             FileDialog(null as Frame?, DIALOG_TITLE, FileDialog.SAVE).run {

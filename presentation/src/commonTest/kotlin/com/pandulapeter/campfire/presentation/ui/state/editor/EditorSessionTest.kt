@@ -57,6 +57,9 @@ import com.pandulapeter.campfire.presentation.ui.state.songText.InferredSongKeys
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongImageAdding
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongTextStore
 import kotlinx.coroutines.Dispatchers
+import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
+import com.pandulapeter.campfire.domain.api.images.AddDraftAttachmentUseCase
+import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -142,6 +145,10 @@ class EditorSessionTest {
             downloadPicture = object : DownloadPictureUseCase {
                 override suspend fun invoke(url: String) = linkedPictures[url] ?: PictureDownload.Unreachable
             },
+            addDraftAttachment = object : AddDraftAttachmentUseCase {
+                override suspend fun invoke(bytes: ByteArray, extension: String): ImageIntake =
+                    ImageIntake.Accepted("draft-${bytes.first()}.$extension").also { draftImages += it.name }
+            },
         )
 
         /** Shrinks a picture to its last byte alone, as the platform's re-encoder would to a smaller copy. */
@@ -196,6 +203,7 @@ class EditorSessionTest {
                     addDraftImage = useCases.addDraftImage,
                     pictureFitter = pictureFitter,
                     linkDownloader = PictureLinkDownloader(download = useCases.downloadPicture::invoke, work = PictureWork(), messageSink = messageSink),
+                    attachmentIntake = AttachmentIntake(addDraftAttachment = useCases.addDraftAttachment::invoke, messageSink = messageSink, work = PictureWork()),
                     holdEditorImages = useCases.holdEditorImages,
                     clearDraftImages = useCases.clearDraftImages,
                     computation = Dispatchers.Unconfined,
@@ -519,6 +527,37 @@ class EditorSessionTest {
         assertTrue(insertions.isEmpty())
         assertEquals(
             listOf<Message>(Message.ImageNotAdded(ImageRefusal.UNSUPPORTED_FORMAT), Message.ImageTooLargeToRead),
+            fixture.messages,
+        )
+    }
+
+    @Test
+    fun `an attached file is kept on the draft shelf under its own extension and named as it was picked`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorAttachmentInsertion>()
+        backgroundScope.launch { fixture.session.images.attachmentInsertions.collect { insertions += it } }
+        fixture.session.images.attach("a.cho") { ImportedFile(name = "Rehearsal take.M4A", bytes = byteArrayOf(7)) }
+        runCurrent()
+        assertEquals(listOf(ChordProAttachment(source = "draft-7.m4a", name = "Rehearsal take.M4A")), insertions.map { it.attachment })
+        assertEquals(setOf("draft-7.m4a"), draftImages)
+    }
+
+    @Test
+    fun `a file too large or of a type no song takes is said why and attaches nothing`() = runTest {
+        files["a.cho"] = "{title: A}"
+        val fixture = fixture()
+        fixture.openEditor("a.cho")
+        val insertions = mutableListOf<EditorAttachmentInsertion>()
+        backgroundScope.launch { fixture.session.images.attachmentInsertions.collect { insertions += it } }
+        fixture.session.images.attach("a.cho") { ImportedFile.unread("concert.mp4", isTooLarge = true) }
+        fixture.session.images.attach("a.cho") { ImportedFile.unread("setup.exe") }
+        runCurrent()
+        assertTrue(insertions.isEmpty())
+        assertTrue(draftImages.isEmpty())
+        assertEquals(
+            listOf<Message>(Message.AttachmentNotAdded(ImageRefusal.TOO_LARGE), Message.AttachmentNotAdded(ImageRefusal.UNSUPPORTED_FORMAT)),
             fixture.messages,
         )
     }
