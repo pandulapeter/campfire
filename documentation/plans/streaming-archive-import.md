@@ -17,7 +17,7 @@
 **This is critical for the next release. Safety and reliability come first: it has to work right the first time it
 ships, on every platform, with no room for error, and it must not introduce any issue for users.** Every step below is
 judged by that before anything else: a step that cannot be shown safe on every platform does not land, and the plan
-is not done until every platform's release check (step 14) has passed.
+is not done until every platform's release check (step 15) has passed.
 
 A zip archive of any size (a library export, another app's backup, or a shared link's zip) is imported without ever
 being held in memory. The archive is copied into an app-private staging folder as it arrives, read from there through
@@ -81,7 +81,7 @@ What must never happen, and what prevents it. Each step names which of these it 
 - **Running out of memory.** No code path holds an archive, a nested archive, a picture, or an attachment whole while
   unpacking. What stays in memory is bounded: the central directory (at most `MAX_CENTRAL_DIRECTORY_SIZE`), one
   read buffer and one 64 KiB inflate window, the song texts within the unchanged `MAX_IMPORT_SIZE`, and one library file
-  at a time on the web's move. A large-archive test under a 128 MiB heap proves it (step 13).
+  at a time on the web's move. A large-archive test under a 128 MiB heap proves it (step 14).
 - **Hangs.** Every loop that reads, inflates, copies, or hashes yields at least every 256 KiB, so cancellation is
   prompt and the web's single thread keeps painting. Progress is determinate in bytes. The reader stays linear in the
   archive's size: the central directory is read once, each entry's data at most once per walk, and the existing
@@ -98,10 +98,13 @@ What must never happen, and what prevents it. Each step names which of these it 
   A differential test runs every archive the tests build, every fixture, and the private import corpus through both
   and requires identical results (step 9). For the next release, an archive within the old limits whose streaming
   preparation fails for any reason but cancellation, a damaged archive, or no space falls back to the in-memory path
-  and logs it, so no user who could import an archive yesterday is worse off (step 12).
+  and logs it, so no user who could import an archive yesterday is worse off (step 13).
 
 ## Decisions
 
+- **An import that downloads or unpacks survives leaving the app, on every platform** (the owner's decision): a
+  `dataSync` foreground service on Android as sync has, a continued processing task on iOS 26 and later (background time
+  before it), a quit that asks first on desktop, and a closing tab that warns on the web (step 12).
 - **Copy first, always, on every platform.** Whatever arrives as an archive (by name, or by its first bytes being a
   zip's, the rule `ImportBudget` follows today) is copied into `imports/` by streaming before it is read: Android a
   content URI's `InputStream`, iOS a security-scoped, coordinated URL read with POSIX `fread` in 1 MiB chunks (never
@@ -185,7 +188,7 @@ What must never happen, and what prevents it. Each step names which of these it 
 
 Each step compiles, passes `desktopTest`, `spotlessCheck`, the iOS simulator storage tests, and the UI tests, and is
 committed on its own. **Steps 1–11 change nothing a user sees**: the in-memory path stays what production runs until
-step 12 switches it, so any of them can ship in a release on its own. Each step's "Safety" line names what it must
+step 13 switches it, so any of them can ship in a release on its own. Each step's "Safety" line names what it must
 prove.
 
 ### 1. SHA-256 in `:data:model`, incremental
@@ -280,7 +283,7 @@ identical plans and libraries; a move failing midway leaves the songs unwritten 
   never loads) and the inbox bound stops counting archives against its 64 MB.
 - Web: the picked or dropped `File` is piped into OPFS in JavaScript, never crossing into Wasm.
 - Behind `IncomingFile` nothing is queued differently: a request with a receiving file shows Loading at once.
-- Not yet switched on: the intake still reads archives whole until step 12, behind one `ImportIntake` constant.
+- Not yet switched on: the intake still reads archives whole until step 13, behind one `ImportIntake` constant.
 
 ### 9. The differential test
 
@@ -292,7 +295,7 @@ mutants of each, and every archive-like file (`.zip`, `.sbpbackup`, `.sbp`, `.os
 library files after Import. The one allowed difference: an archive that hit the old picture, attachment, or nested
 archive budgets may bring more files in the new path, and the test then requires that every other field is identical
 and that each difference is a file the old path reported `TOO_LARGE` for its budget. Runs in CI with the committed set
-and by hand against the corpus before step 12 and before the release.
+and by hand against the corpus before step 13 and before the release.
 
 ### 10. Downloads into staging
 
@@ -313,7 +316,53 @@ Cancel during `RECEIVING` and `UNPACKING` deletes the request's staging before t
 staged unpack, Cancel mid-unpack returning to where the user was with `imports/` empty, the no-space failure and its Try
 again, and every existing import UI test passing unchanged.
 
-### 12. Switch: every archive streams, with a fallback for one release
+### 12. Leaving the app never loses an import: a foreground service and its equivalents
+
+Every import that downloads (a shared link) or unpacks an archive keeps the app working while that work runs, on every
+platform, the way a sync run already does, so leaving the app never loses an import halfway, whatever its size. Today's
+in-memory path is covered too from this step on, so this is proven before step 13 switches the intake.
+
+**Shared by every platform.** The work stays where it is: the preparation and the Import write live in the use cases and
+`ImportController`, and no platform piece imports anything. The domain exposes one import-work state (receiving,
+downloading, unpacking, writing, or idle, with byte progress) that each platform watches, and one cancel that behaves
+exactly as the screen's Cancel, its staging deleted (step 11). The review waiting for the user is not work: nothing is
+held while it sits on screen or in the background. Tests: the state's transitions (domain, `commonTest`), and each
+platform's start/stop decisions as plain logic where they can be, like the sync starters'.
+
+- **Android: a `dataSync` foreground service**, exactly as `CampfireSyncService` (`app/android/CLAUDE.md`).
+  `CampfireImportService` beside it does no importing; it only keeps the process alive, watches the import-work state,
+  and stops itself, after `startForeground`, once that reads idle, with the same short grace as sync so a download
+  followed by its unpack keeps one notification. Started and stopped by an `ImportServiceStarter` as `SyncServiceStarter`
+  does (`onPause`, not on rotation; at once for work starting after that; stopped in `onResume`). The notification names
+  the phase and its byte progress (at most twice a second, as `SyncNotificationScheduler`), with a Cancel action; its
+  strings arrive in the intent, in every language. Android 15 gives `dataSync` six hours a day across both services:
+  `onTimeout` cancels the import (the screen showing why, with Try again) and stops the service. An import and a sync run
+  at once never block each other and keep a notification each. The manifest already declares
+  `FOREGROUND_SERVICE_DATA_SYNC`; the Play Console's `dataSync` declaration gains the import as a use.
+- **iOS: a continued processing task, with background time as the fallback.** On iOS 26 and later the import, which
+  always starts from a user's action in front, submits a `BGContinuedProcessingTaskRequest` (identifier in the Info
+  plist's `BGTaskSchedulerPermittedIdentifiers`) and reports the byte progress to it, so the system shows its own
+  progress and lets the user cancel it, which cancels the import; the task ends when the state reads idle, and its
+  expiration cancels the import cleanly. Before iOS 26 (the app supports 15.3) it holds a `beginBackgroundTask` for the
+  work as `IosSyncNotifier` does for a run; when iOS ends that time the import is cancelled cleanly and the screen offers
+  Try again on return. Either way the staging is in `Caches` (step 4) and a kill loses only the preparation. Lives in
+  `app/ios` beside `IosSyncNotifier`, which `app/ios/CLAUDE.md` gains a line about.
+- **Desktop: quitting asks first.** The process keeps running in the background by itself, so nothing holds it; but
+  closing the window or quitting (including Cmd+Q, through the same kept quit request the editor's unsaved text uses in
+  `CampfireDesktopApplication.kt`) while an import works asks whether to stop it, and stopping cancels it cleanly before
+  the app exits. A logout or shutdown that asked is answered once the cancel has deleted the staging.
+- **Web: closing the tab warns.** While an import works, `beforeunload` warns as it does for the editor's unsaved text
+  (`CampfireWebApp.kt`); a hidden tab must keep importing, so check that nothing in the import waits on the frame clock
+  (a hidden tab stops `requestAnimationFrame`) and that the OPFS worker's progress still arrives. A closed tab loses only
+  the preparation; the next launch empties the staging.
+- **Safety:** none of these touches the library or staging; a kill with or without them loses only the preparation
+  (staging cleaned at the next launch, step 5), never a library file (the Import write moves files atomically, step 7).
+- **Release check (step 15):** leave the app during a download, an unpack, and an Import write on every platform:
+  Android on the 360 × 640 dp emulator and a device (Cancel from the notification, one alongside a sync); iOS 26 and an
+  iOS before 26 (the system's progress and its cancel; the fallback's clean cancel on a long import); desktop quitting
+  with Cmd+Q and the window's close; web a hidden tab finishing and a closed tab warning.
+
+### 13. Switch: every archive streams, with a fallback for one release
 
 The intake stages archives and `PrepareImportUseCaseImpl` unpacks staged archives only. For this release, a staged
 archive within the old `MAX_ARCHIVE_SIZE` whose streaming preparation throws anything but a cancellation, a
@@ -325,7 +374,7 @@ text than `MAX_IMPORT_SIZE`), in every language. `ImportLimits`' KDoc, `data/for
 `ui/screens/importReport/CLAUDE.md`, `ui/progress/CLAUDE.md`, `app/ios/CLAUDE.md` (share extension limits), and the root
 `CLAUDE.md`'s library layout (`imports/<name>`, emptied on launch) are updated in this step.
 
-### 13. The large-archive test
+### 14. The large-archive test
 
 `LargeArchiveImportTest` (desktop, `:data:source:local:implementation`): an archive generated on the fly into a temp
 folder with `ZipWriter`'s streaming `write` (never committed): thousands of songs naming stored and deflated pictures and
@@ -335,7 +384,7 @@ library's file hashes, an empty `imports/` afterwards, and that peak disk use st
 a 600 MB archive; `-Pcampfire.largeArchiveTest=4g` runs a 3.9 GB one by hand before the release. A variant cancels at
 random points and one fills a size-limited fake storage, both requiring no leftovers and an untouched library.
 
-### 14. Release check by hand, on every platform
+### 15. Release check by hand, on every platform
 
 Not done until every line passes on every platform, with the same archives each time: a library export of the owner's
 library with pictures and attachments, a shared link opened from a message, a SongbookPro backup and an OnSong or
@@ -351,12 +400,13 @@ the next launch, and the app stays responsive.
   extension, a drop on iPad; the app sent to the background during unpacking.
 - **Desktop**: macOS, Windows, and Linux as available; picked, dropped, opened with while running and cold; on Windows,
   the source file renamed and deleted during the review (it must not be locked).
+- **Every platform**: leaving the app during an import, as step 12 lists.
 - **Web**: Chrome and Safari (Safari 26 and an older one without `createWritable()`), picked and dropped; the tab
   closed during unpacking and reopened; `navigator.storage.estimate()` near its quota.
 
-### 15. Remove the old path (the release after)
+### 16. Remove the old path (the release after)
 
-Once the release has shipped and step 14 passed on every platform: remove the fallback, `ZipReader.read(ByteArray)`,
+Once the release has shipped and step 15 passed on every platform: remove the fallback, `ZipReader.read(ByteArray)`,
 the `ByteArray` unpack, the `ImportIntake` switch, and every test that only fed the old path; the differential test
 becomes the parameterised tests' new-path half. Then delete this plan.
 
@@ -365,9 +415,7 @@ becomes the parameterised tests' new-path half. Then delete this plan.
 - **ZIP64**: refuse with a clear sentence (this plan), or read it? Reading adds the extra field and the ZIP64 end
   records to a reader that must stay small; macOS's Archive Utility and Windows write ZIP64 only past 4 GB or 65,535
   entries, but some backup tools write it always. Worth a look at whether any app the importer serves does.
-- **Android imports over 1 GB**: an in-process import as today (a process the system kills in the background loses the
-  preparation, never the library), or a foreground service with a notification while receiving and unpacking?
-- **The fallback in step 12**: keep it for one release as planned, or ship without it once step 14 passes?
+- **The fallback in step 13**: keep it for one release as planned, or ship without it once step 15 passes?
 - **The web test in CI**: headless Chrome through `wasmJsBrowserTest` adds a browser to the CI image's work; fine, or
   keep the web's contract test by hand?
 
