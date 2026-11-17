@@ -578,7 +578,7 @@ again, and every existing import UI test passing unchanged.
 
 ### 14. Leaving the app never loses an import: a foreground service and its equivalents
 
-**First commit landed** (28ce45130): the holder is `ui/state/importing/ImportWork` over an `ApplicationScope`, with `state` (`ImportWorkState`) and `cancel()`; it runs the launch's staging cleanup once per process. The platform parts below remain.
+**Landed** (28ce45130, 5e0f93519…c7da6510e): the holder, then every platform. `ImportWork.interrupt()` and `ImportFailure.INTERRUPTED` tell a platform's cut-off from Cancel; Android's `onTimeout` and the iOS 26 continued task's expiry interrupt, while iOS background time running out only ends the task, so the import pauses and resumes on return as today's does (`ImportKeepAlive`). The iOS 26 task is submitted when the app resigns active. Left for step 17 on devices: the iOS 26 system progress and its stop, the pause on a device (the simulator never suspends an app with the audio background mode), Android 15's timeout. Holder commit: the holder is `ui/state/importing/ImportWork` over an `ApplicationScope`, with `state` (`ImportWorkState`) and `cancel()`; it runs the launch's staging cleanup once per process. The platform parts below remain.
 
 Every import that downloads (a shared link) or unpacks an archive keeps the app working while that work runs, on every
 platform, the way a sync run already does, so leaving the app never loses an import halfway, whatever its size. Today's
