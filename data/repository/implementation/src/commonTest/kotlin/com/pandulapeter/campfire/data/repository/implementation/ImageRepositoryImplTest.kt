@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.repository.api.EditorDraftRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.testEnvironment
 import com.pandulapeter.campfire.data.source.local.api.ImageShelf
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent

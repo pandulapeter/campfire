@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 
 /** The rules a picture or an attachment is taken into the library by, the same for every way it arrives. */
 internal object LibraryImages {

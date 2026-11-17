@@ -56,8 +56,8 @@ A second sync provider must be one new class, not an engine change; the rules ar
 
 ## Hashing
 
-`Sha256` is hand-written (avoids a dependency on four targets). `localContentHash` decides whether a file changed; it is
-never compared with a service hash and is never a timestamp.
+`Sha256` (in `:data:model`, which the local side also needs) is hand-written (avoids a dependency on four targets).
+`localContentHash` decides whether a file changed; it is never compared with a service hash and is never a timestamp.
 
 ## Cover art, import download, and catalogue searches
 

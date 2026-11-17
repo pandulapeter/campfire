@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.RepositoryE
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.NonCancellable

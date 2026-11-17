@@ -11,7 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.remote.implementation.crypto
 
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi

@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CatalogueSearchException
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.catalogue.CoverArtSearchRemoteSources
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtDownload
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async

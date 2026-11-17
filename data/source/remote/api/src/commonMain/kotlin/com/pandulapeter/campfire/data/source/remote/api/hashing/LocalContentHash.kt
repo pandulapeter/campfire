@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.remote.api.hashing
 
+import com.pandulapeter.campfire.data.model.hashing.Sha256
+
 /**
  * The fingerprint the sync index remembers for every local file, and the only thing that decides whether a file has
  * changed since the last run.

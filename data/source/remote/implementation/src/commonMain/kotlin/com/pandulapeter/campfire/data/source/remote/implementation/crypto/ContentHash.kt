@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.crypto
 
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256.toHex
+import com.pandulapeter.campfire.data.model.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256.toHex
 
 /**
  * Dropbox's own hash of a file: SHA-256 of each 4 MB block, concatenated, hashed again. It is only ever compared

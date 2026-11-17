@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
-import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.redirectParameters
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
