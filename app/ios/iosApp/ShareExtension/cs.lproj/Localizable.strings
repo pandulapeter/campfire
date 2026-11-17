@@ -19,5 +19,7 @@
 "share_too_large_detail" = "Campfire importuje najednou až 24 MB, 16 MB na jeden dokument a 8 MB na jeden textový soubor nebo soubor písně.";
 "share_inbox_full" = "Některá sdílení ještě čekají.";
 "share_inbox_full_detail" = "Nejdřív otevři Campfire a dokonči je.";
+"share_no_space" = "V tomto zařízení na to není dost volného místa.";
+"share_no_space_detail" = "Uvolni trochu místa a pak to sdílej znovu.";
 "share_failed" = "Pro Campfire se to nepodařilo uložit.";
 "share_done" = "Hotovo";

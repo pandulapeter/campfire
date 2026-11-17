@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
 import platform.Foundation.NSFileManager
@@ -22,6 +23,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
@@ -68,6 +70,32 @@ class IosFileStorageContractTest : FileStorageContractTest() {
         assertFalse(isExcludedFromBackup(StorageDirectory.FILES, "picture.png"))
         assertTrue(isExcludedFromBackup(StorageDirectory.FILES, "attachment.pdf"))
         assertEquals(emptyList(), storage.listNames(StorageDirectory.IMPORTS))
+    }
+
+    @Test
+    fun `a file the app owns is taken into the imports by a move over whatever had its name`() = runTest {
+        val storage = newStorage()
+        val bytes = byteArrayOf(4, 5, 6, 7)
+        storage.writeBytes(StorageDirectory.EXPORTS, "outside.zip", bytes)
+        storage.writeBytes(StorageDirectory.IMPORTS, "archive.zip", byteArrayOf(1))
+        val outside = "${directoryPath(StorageDirectory.EXPORTS)}/outside.zip"
+        val progress = mutableListOf<Long>()
+
+        storage.takeInto(StorageDirectory.IMPORTS, "archive.zip", outside, progress::add)
+
+        assertContentEquals(bytes, storage.readBytes(StorageDirectory.IMPORTS, "archive.zip"))
+        assertFalse(fileManager.fileExistsAtPath(outside))
+        assertEquals(listOf(bytes.size.toLong()), progress)
+    }
+
+    @Test
+    fun `a file that is not there is not taken`() = runTest {
+        val storage = newStorage()
+
+        assertFailsWith<LibraryStorageException> {
+            storage.takeInto(StorageDirectory.IMPORTS, "archive.zip", "$root/missing.zip") { }
+        }
+        assertFalse(storage.exists(StorageDirectory.IMPORTS, "archive.zip"))
     }
 
     private fun isExcludedFromBackup(directory: StorageDirectory, name: String) =

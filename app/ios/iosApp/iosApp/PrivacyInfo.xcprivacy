@@ -25,7 +25,8 @@
 	     code reads NSFileModificationDate for the files of the library, and skia and ICU call stat and fstat on
 	     their own files in the bundle (C617.1); the import reads the size of files the user picked or opened in place
 	     (3B52.1). The runtime's monotonic clock reads mach_absolute_time, which every elapsed time in the app is
-	     measured with, the metronome's included (35F9.1). The framework is static, so what Compose, skiko and the Kotlin runtime call is the app's to declare.
+	     measured with, the metronome's included (35F9.1). The import asks the volume's free space before it stages an
+	     archive, to refuse one there is no room for (E174.1). The framework is static, so what Compose, skiko and the Kotlin runtime call is the app's to declare.
 	     Check it again after a Kotlin, Compose or skiko update, see app/ios/CLAUDE.md.
 	-->
 	<key>NSPrivacyAccessedAPITypes</key>
@@ -45,6 +46,14 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>35F9.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
 			</array>
 		</dict>
 	</array>

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.InboxShare
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
 import com.pandulapeter.campfire.presentation.ui.platform.SharedTextPayload
 import com.pandulapeter.campfire.presentation.ui.platform.decodeShareInboxManifest
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -96,9 +97,12 @@ private suspend fun importShare(folderPath: String) {
     }
     if (manifest.isFromNewerVersion) return
     val budget = ImportBudget()
+    // An archive the extension copied is moved on into the staging folder, the share's own copy, which is the app's.
+    // Its folder still goes only once the share is taken, so a process ended before that offers the rest of it again.
+    val receiver = archiveReceiverWhileStaging()
     val files = manifest.files.mapNotNull { path ->
         val url = urlInShare(folderPath, path) ?: return@mapNotNull null
-        url.readImportedFile(budget) ?: ImportedFile.unread(url.lastPathComponent.orEmpty())
+        url.readImportedFile(budget, receiver = receiver, isOwnedCopy = true) ?: ImportedFile.unread(url.lastPathComponent.orEmpty())
     }
     val texts = manifest.texts.mapNotNull { path ->
         urlInShare(folderPath, path)?.readImportedFile(budget)?.takeIf { it.bytes.isNotEmpty() }?.bytes?.decodeToString()

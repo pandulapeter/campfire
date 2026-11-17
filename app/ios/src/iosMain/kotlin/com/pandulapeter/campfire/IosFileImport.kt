@@ -11,9 +11,13 @@ package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.share.SharedLink
 import com.pandulapeter.campfire.data.model.share.ShareLinks
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.fileSizeAt
+import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +28,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSLock
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 
@@ -76,12 +81,62 @@ fun openUrl(url: NSURL) {
     // Only a file is read as one: NSData would download any other address, on the queue every later import waits on,
     // and from outside the one module that may go online.
     if (!url.fileURL) return
+    val name = url.lastPathComponent.orEmpty()
+    val receiver = archiveReceiverWhileStaging()
+    val inboxPath = url.takeIf { it.isInboxCopy() }?.URLByResolvingSymlinksInPath?.path
+    val close: () -> Unit = { inboxPath?.let(receivingInboxCopies::remove) }
+    inboxPath?.let(receivingInboxCopies::add)
+    if (receiver != null && LibraryFiles.isArchiveFileName(name)) {
+        // An archive by its name is queued at once, its copy in its batch's own job, so that the import screen comes up
+        // while it is received and nothing opened after it waits behind a file iCloud may still have to download.
+        val file = receiver.receiveUrl(url = url, name = name, size = url.attributedSize(), isOwnedCopy = inboxPath != null, close = close)
+        if (pendingImports.trySend(listOf(file)).isFailure) inboxScope.launch { pendingImports.send(listOf(file)) }
+        return
+    }
     inboxScope.launch {
-        val file = url.readImportedFile(ImportBudget())
-        pendingImports.send(listOf(file ?: ImportedFile.unread(url.lastPathComponent.orEmpty())))
-        if (file != null && url.isInboxCopy()) {
-            NSFileManager.defaultManager.removeItemAtURL(url, error = null)
+        val file = url.readImportedFile(ImportBudget(), receiver = receiver, isOwnedCopy = inboxPath != null, close = close)
+        pendingImports.send(listOf(file ?: ImportedFile.unread(name)))
+        if (file?.receiving == null) {
+            close()
+            if (file != null && inboxPath != null) NSFileManager.defaultManager.removeItemAtURL(url, error = null)
         }
+    }
+}
+
+/**
+ * The `Documents/Inbox` copies being received into the import's staging folder, which [cleanImportInbox] leaves for
+ * the receiver to move: the receiver's job runs beside the inbox's queue, not on it.
+ */
+private val receivingInboxCopies = LockedPaths()
+
+/** A set of paths touched from the inbox's queue and from a receiver's job alike. */
+private class LockedPaths {
+    private val paths = mutableSetOf<String>()
+    private val lock = NSLock()
+
+    fun add(path: String) = locked { paths += path }
+
+    fun remove(path: String) = locked { paths -= path }
+
+    operator fun contains(path: String) = locked { path in paths }
+
+    private fun <T> locked(block: () -> T): T {
+        lock.lock()
+        return try {
+            block()
+        } finally {
+            lock.unlock()
+        }
+    }
+}
+
+/** What the file system says the size of the file is, read inside its security-scoped access; null where it says nothing. */
+private fun NSURL.attributedSize(): Long? {
+    val isAccessible = startAccessingSecurityScopedResource()
+    return try {
+        path?.let(::fileSizeAt)
+    } finally {
+        if (isAccessible) stopAccessingSecurityScopedResource()
     }
 }
 
@@ -101,6 +156,7 @@ fun cleanImportInbox() {
         val inboxPath = inboxPath() ?: return@launch
         fileManager.contentsOfDirectoryAtPath(inboxPath, error = null)
             ?.filterIsInstance<String>()
+            ?.filterNot { "$inboxPath/$it" in receivingInboxCopies }
             ?.forEach { fileManager.removeItemAtPath("$inboxPath/$it", error = null) }
     }
 }

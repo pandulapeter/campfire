@@ -20,5 +20,7 @@
 "share_too_large_detail" = "Campfire מייבא עד 24 MB בכל פעם, 16 MB למסמך אחד ו־8 MB לקובץ טקסט או שיר אחד.";
 "share_inbox_full" = "כמה שיתופים עדיין ממתינים.";
 "share_inbox_full_detail" = "פתחו את Campfire כדי לסיים אותם קודם.";
+"share_no_space" = "אין במכשיר הזה מספיק מקום פנוי לכך.";
+"share_no_space_detail" = "פנו מעט מקום ושתפו שוב.";
 "share_failed" = "לא ניתן היה לשמור את זה עבור Campfire.";
 "share_done" = "סיום";

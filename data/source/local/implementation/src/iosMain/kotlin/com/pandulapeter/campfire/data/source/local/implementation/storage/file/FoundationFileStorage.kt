@@ -174,6 +174,30 @@ internal class FoundationFileStorage(
     }
 
     /**
+     * [file] is the path of a file the app owns (a `Documents/Inbox` copy, a picker's copy, the share extension's copy in
+     * the App Group's inbox), moved rather than copied: a rename, the app's container and its group's being on one
+     * volume, else the system's move, which copies across volumes and removes the original. The move happens at once, so
+     * [onProgress] hears only its end.
+     */
+    override suspend fun takeInto(directory: StorageDirectory, name: String, file: Any, onProgress: (copiedBytes: Long) -> Unit) =
+        withContext(Dispatchers.IO) {
+            requireValidFileName(name)
+            val source = file as? String ?: throw UnsupportedOperationException("Only a file's path can be taken into iOS's storage.")
+            val target = filePath(directory, name)
+            createDirectory(directory)
+            if (rename(source, target) != 0) {
+                remove(target)
+                memScoped {
+                    val error = alloc<ObjCObjectVar<NSError?>>()
+                    if (!fileManager.moveItemAtPath(source, toPath = target, error = error.ptr)) {
+                        throw LibraryStorageException("Could not move \"$source\": ${error.value?.localizedDescription}", error.value.asStorageCause())
+                    }
+                }
+            }
+            onProgress(fileManager.attributesOfItemAtPath(target, error = null)?.get(NSFileSize).let { it as? NSNumber }?.longLongValue ?: 0L)
+        }
+
+    /**
      * Copied by the system under a name of its own beside the target and renamed over it, so a failure never truncates
      * the target, as [writeBytes]'s `atomically` does not either.
      */

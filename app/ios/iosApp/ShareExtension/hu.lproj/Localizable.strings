@@ -20,5 +20,7 @@
 "share_too_large_detail" = "A Campfire egyszerre legfeljebb 24 MB-ot importál, egy dokumentumból 16 MB-ot, egy szövegből vagy dalfájlból 8 MB-ot.";
 "share_inbox_full" = "Néhány megosztás még várakozik.";
 "share_inbox_full_detail" = "Előbb nyisd meg a Campfire-t, hogy befejezze őket.";
+"share_no_space" = "Nincs elég szabad hely ehhez az eszközön.";
+"share_no_space_detail" = "Szabadíts fel egy kis helyet, aztán oszd meg újra.";
 "share_failed" = "Ezt nem sikerült elmenteni a Campfire számára.";
 "share_done" = "Kész";

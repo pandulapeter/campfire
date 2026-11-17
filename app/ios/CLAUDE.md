@@ -53,7 +53,16 @@ extension (`iosApp/ShareExtension/`, Swift only).
   file opened in place is the user's original. Originals are read through an `NSFileCoordinator`, which downloads an
   iCloud file and waits for a writer.
 - `cleanImportInbox()` runs when the scene goes to the background, **not at start**: a cold start's file is already in
-  the inbox before it is handed over, so it couldn't be told from a leftover.
+  the inbox before it is handed over, so it couldn't be told from a leftover. It passes over an inbox copy still being
+  received (below).
+- **Archives while they are staged** (`ImportIntake.stagesArchives`; `ArchiveReceiving.ios.kt` in `:presentation`):
+  `openUrl` queues an archive by its name at once, its copy in its batch's job rather than on the inbox's queue (an
+  iCloud file not downloaded yet would hold up every later open); anything else is read there as before, its head
+  deciding (a renamed backup is received too). A copy the app owns (`Documents/Inbox`, the picker's `asCopy` file, the
+  share inbox's file, a drop's file renamed out of its provider's hands in the handler) is moved into the staging
+  folder, never deleted by its reader; one of the user's own is copied with `fread` a MiB at a time inside the
+  coordinated read and the security-scoped access. The share inbox's folder still goes once the share is taken, so a
+  share offered again after the process ended has lost its moved archive (reported unreadable).
 
 ## Share extension
 
@@ -75,8 +84,10 @@ extension (`iosApp/ShareExtension/`, Swift only).
 - Files beat text in one share. A Campfire share link (by `isCampfireLink`, a hand copy of `ShareLinks`' regex), as a
   text or a URL attachment beside one-line texts, is written as the share's one text; any other page's address is
   refused with a sentence. The extension mirrors `ImportLimits` before copying and bounds the inbox at 20 shares and
-  64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values, so its own
-  `PrivacyInfo.xcprivacy` declares no required-reason API.
+  64 MB. It copies rather than loads (about 120 MB of memory), and reads sizes as URL resource values (no file timestamp
+  API). `ShareLimits.stagesArchives` mirrors `ImportIntake.STAGES_ARCHIVES` (keep the two in step): on, an archive may
+  be `MAX_STAGED_ARCHIVE_SIZE`, counts against neither a share's bounds nor the inbox's, and is copied only where the
+  volume's free space holds it beside `minFreeSpaceFor`'s margin, else `share_no_space` (the disk space API, E174.1).
 - `ShareInbox/` is excluded from device backup (by the extension, and again by the app). Its strings are its own
   `Localizable.strings`, in the system's language.
 - An extension cannot size or replace the sharing app's sheet, so a saved share closes it by itself after two seconds;
@@ -106,7 +117,8 @@ extension (`iosApp/ShareExtension/`, Swift only).
 ## `PrivacyInfo.xcprivacy`
 
 No tracking or collected data; required-reason APIs: file timestamps (C617.1 for the library and skia/ICU `stat`;
-3B52.1 for picked files) and boot time (`mach_absolute_time`, 35F9.1). The framework is static, so Compose's, skiko's,
+3B52.1 for picked files), boot time (`mach_absolute_time`, 35F9.1), and disk space (the import staging's free space,
+E174.1). The framework is static, so Compose's, skiko's,
 and the Kotlin runtime's calls are the app's to declare. After updating any of them, run `nm -u` on a Release
 `Campfire` executable to spot a new category (NSUserDefaults is the likely one).
 

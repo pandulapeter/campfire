@@ -20,5 +20,7 @@
 "share_too_large_detail" = "Campfire importe jusqu’à 24 Mo à la fois, 16 Mo par document et 8 Mo par fichier texte ou chanson.";
 "share_inbox_full" = "Des partages sont encore en attente.";
 "share_inbox_full_detail" = "Ouvre d’abord Campfire pour les terminer.";
+"share_no_space" = "Cet appareil n’a pas assez d’espace libre pour cela.";
+"share_no_space_detail" = "Libère un peu d’espace, puis partage-le à nouveau.";
 "share_failed" = "Impossible d’enregistrer pour Campfire.";
 "share_done" = "OK";

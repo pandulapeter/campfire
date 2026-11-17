@@ -20,5 +20,7 @@
 "share_too_large_detail" = "Campfire importă cel mult 24 MB odată, 16 MB dintr-un document și 8 MB dintr-un fișier text sau de cântec.";
 "share_inbox_full" = "Unele partajări încă așteaptă.";
 "share_inbox_full_detail" = "Deschide întâi Campfire ca să le termine.";
+"share_no_space" = "Pe acest dispozitiv nu este destul spațiu liber pentru asta.";
+"share_no_space_detail" = "Eliberează puțin spațiu, apoi trimite-l din nou.";
 "share_failed" = "Nu s-a putut salva pentru Campfire.";
 "share_done" = "Gata";

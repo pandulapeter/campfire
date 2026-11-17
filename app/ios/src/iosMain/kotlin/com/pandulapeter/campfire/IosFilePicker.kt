@@ -13,7 +13,11 @@ import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.presentation.ui.platform.ArchiveReceiver
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.readHeadAt
+import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import com.pandulapeter.campfire.presentation.ui.platform.pickedAttachment
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -94,7 +98,7 @@ internal class IosFilePicker(
 
     // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs out in the
     // picker. What is not a song is skipped by the import and reported afterwards.
-    override suspend fun pickFiles() = pick(listOf(UTTypeData, UTTypeZIP))
+    override suspend fun pickFiles() = pick(listOf(UTTypeData, UTTypeZIP), isImport = true)
 
     // HEIC and HEIF too, what the camera saves, which the editor converts.
     override suspend fun pickImages() = pick(listOf(UTTypePNG, UTTypeJPEG, UTTypeGIF, UTTypeWebP, UTTypeHEIC, UTTypeHEIF))
@@ -130,7 +134,7 @@ internal class IosFilePicker(
         return withContext(Dispatchers.IO) { results.readPhotos() }
     }
 
-    private suspend fun pick(contentTypes: List<UTType>): List<ImportedFile> {
+    private suspend fun pick(contentTypes: List<UTType>, isImport: Boolean = false): List<ImportedFile> {
         val urls = suspendCancellableCoroutine<List<NSURL>> { continuation ->
             val controller = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes, asCopy = true)
             controller.allowsMultipleSelection = true
@@ -138,12 +142,15 @@ internal class IosFilePicker(
         }
         return withContext(Dispatchers.IO) {
             val budget = ImportBudget()
+            val receiver = if (isImport) archiveReceiverWhileStaging() else null
             urls.mapNotNull { url ->
-                url.readImportedFile(budget).also {
+                val isCopy = url.isTemporaryCopy()
+                url.readImportedFile(budget, receiver = receiver, isOwnedCopy = isCopy).also {
                     // The picker was asked for copies, so this file is the app's own and nobody else's. Deleted
                     // whether it could be read or not: nothing will come back for it. A file opened in place is
-                    // never one of these - that path is IosFileImport's, and it makes the same distinction.
-                    if (url.isTemporaryCopy()) url.deleteTemporaryFile()
+                    // never one of these - that path is IosFileImport's, and it makes the same distinction. An
+                    // archive being received is moved into the staging folder instead, which deletes what it leaves.
+                    if (isCopy && it?.receiving == null) url.deleteTemporaryFile()
                 }
             }
         }
@@ -302,9 +309,20 @@ internal class IosFilePicker(
  * second; an uncoordinated one simply answers nothing, and the user is told their song was skipped. Blocking for
  * as long as that takes, so not for the main thread - doubly so, since a coordinated read asked for on the main
  * thread can deadlock against a file presenter that answers on it.
+ *
+ * With a [receiver] (while archives are staged), the file's first bytes are read first, and an archive is handed to it
+ * (`receiveUrl`), its copy or move starting in the receiver's job once this read is done; [isOwnedCopy] says the file is
+ * the app's own copy, moved rather than copied, and the caller then leaves it for the receiver to take; [close] runs once
+ * the receiver has.
  */
 @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
-internal fun NSURL.readImportedFile(budget: ImportBudget, name: String = lastPathComponent.orEmpty()): ImportedFile? {
+internal fun NSURL.readImportedFile(
+    budget: ImportBudget,
+    name: String = lastPathComponent.orEmpty(),
+    receiver: ArchiveReceiver? = null,
+    isOwnedCopy: Boolean = false,
+    close: () -> Unit = {},
+): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
         var file: ImportedFile? = null
@@ -320,15 +338,19 @@ internal fun NSURL.readImportedFile(budget: ImportBudget, name: String = lastPat
                 // is only the app's for as long as the block runs.
                 val url = coordinated ?: this@readImportedFile
                 val size = url.path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
-                file = budget.read(name = name, size = size?.longLongValue) { limit ->
-                    // Mapped rather than loaded, so that a file whose attributes said nothing still gives its
-                    // length away before any of it is copied into the heap. Longer than the limit, it only has to
-                    // say so, which the budget takes one byte past the limit to mean.
-                    val data = NSData.dataWithContentsOfURL(url, options = NSDataReadingMappedIfSafe, error = null)
-                    if (data == null) {
-                        println("Could not read \"$url\".")
-                    }
-                    data?.let { if (it.length.toLong() > limit) ByteArray(limit.toInt() + 1) else it.toByteArray() }
+                file = if (receiver != null) {
+                    budget.take(
+                        name = name,
+                        size = size?.longLongValue,
+                        head = url.path?.let(::readHeadAt) ?: ByteArray(0),
+                        readBytes = { limit -> url.readMapped(limit) },
+                        // From the URL as it was handed over, not the coordinator's, which is the app's only in here.
+                        stage = {
+                            receiver.receiveUrl(url = this@readImportedFile, name = name, size = size?.longLongValue, isOwnedCopy = isOwnedCopy, close = close)
+                        },
+                    )
+                } else {
+                    budget.read(name = name, size = size?.longLongValue) { limit -> url.readMapped(limit) }
                 }
             }
             // A coordination that was refused - a file that could not be downloaded, a writer that never finished -
@@ -341,6 +363,20 @@ internal fun NSURL.readImportedFile(budget: ImportBudget, name: String = lastPat
             stopAccessingSecurityScopedResource()
         }
     }
+}
+
+/**
+ * Mapped rather than loaded, so that a file whose attributes said nothing still gives its length away before any of it
+ * is copied into the heap. Longer than [limit], it only has to say so, which the budget takes one byte past the limit to
+ * mean.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun NSURL.readMapped(limit: Long): ByteArray? {
+    val data = NSData.dataWithContentsOfURL(this, options = NSDataReadingMappedIfSafe, error = null)
+    if (data == null) {
+        println("Could not read \"$this\".")
+    }
+    return data?.let { if (it.length.toLong() > limit) ByteArray(limit.toInt() + 1) else it.toByteArray() }
 }
 
 /**

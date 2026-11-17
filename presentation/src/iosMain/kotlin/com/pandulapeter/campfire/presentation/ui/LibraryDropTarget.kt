@@ -19,6 +19,10 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.presentation.ui.platform.ArchiveReceiver
+import com.pandulapeter.campfire.presentation.ui.platform.archiveReceiverWhileStaging
+import com.pandulapeter.campfire.presentation.ui.platform.readHeadAt
+import com.pandulapeter.campfire.presentation.ui.platform.receiveUrl
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -34,11 +38,14 @@ import platform.Foundation.NSItemProvider
 import platform.Foundation.NSLock
 import platform.Foundation.NSNumber
 import platform.Foundation.NSString
+import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSURL
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.UniformTypeIdentifiers.UTType
 import platform.posix.memcpy
+import kotlin.uuid.Uuid
 
 /**
  * Files dragged onto the app - from Files or another app beside it on an iPad, or from one in the background on an
@@ -68,7 +75,8 @@ internal fun Modifier.libraryDropTarget(viewModel: CampfireViewModel): Modifier 
                 // An item provider is only asked while the drop is being answered, so every load starts here; one
                 // budget across them keeps the drop within what a pick may read, whichever finishes first.
                 val budget = LockedImportBudget()
-                val files = fileProviders.map { it.loadFile(budget) }
+                val receiver = archiveReceiverWhileStaging()
+                val files = fileProviders.map { it.loadFile(budget, receiver) }
                 scope.launch { viewModel.importController.importFiles(files.awaitAll()) }
                 return true
             }
@@ -104,9 +112,13 @@ private fun NSItemProvider.loadText(): CompletableDeferred<String?> {
 /**
  * The provider's copy of the file exists only until its completion handler returns, so it is read there, on whatever
  * queue the provider answers on. One that cannot be read arrives empty, which the import reports as skipped.
+ *
+ * With a [receiver] (while archives are staged), an archive is moved out of the provider's hands inside the handler (a
+ * rename into the temporary directory, which the app then owns) and received from there, moved again into the staging
+ * folder; nothing of it is copied.
  */
 @OptIn(ExperimentalForeignApi::class)
-private fun NSItemProvider.loadFile(budget: LockedImportBudget): CompletableDeferred<ImportedFile> {
+private fun NSItemProvider.loadFile(budget: LockedImportBudget, receiver: ArchiveReceiver?): CompletableDeferred<ImportedFile> {
     val file = CompletableDeferred<ImportedFile>()
     val typeIdentifier = registeredTypeIdentifiers.filterIsInstance<String>().firstOrNull()
     val name = fileNameOf(suggestedName, typeIdentifier)
@@ -117,11 +129,19 @@ private fun NSItemProvider.loadFile(budget: LockedImportBudget): CompletableDefe
     loadFileRepresentationForTypeIdentifier(typeIdentifier) { url, error ->
         error?.let { println("Could not read \"$name\": ${it.localizedDescription}") }
         val size = url?.path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
-        val read = url?.let {
-            budget.read(name = name, size = size?.longLongValue) { limit ->
-                // Mapped rather than loaded, so that a file over the limit says so before any of it is copied.
-                NSData.dataWithContentsOfURL(url, options = NSDataReadingMappedIfSafe, error = null)
-                    ?.let { data -> if (data.length.toLong() > limit) ByteArray(limit.toInt() + 1) else data.toByteArray() }
+        val path = url?.path
+        // Mapped rather than loaded, so that a file over the limit says so before any of it is copied.
+        val readBytes = { limit: Long ->
+            url?.let { NSData.dataWithContentsOfURL(it, options = NSDataReadingMappedIfSafe, error = null) }
+                ?.let { data -> if (data.length.toLong() > limit) ByteArray(limit.toInt() + 1) else data.toByteArray() }
+        }
+        val read = when {
+            path == null -> null
+            receiver == null -> budget.read(name = name, size = size?.longLongValue, readBytes = readBytes)
+            else -> budget.take(name = name, size = size?.longLongValue, head = readHeadAt(path) ?: ByteArray(0), readBytes = readBytes) {
+                movedOutOfProvider(path)?.let { kept ->
+                    receiver.receiveUrl(url = NSURL.fileURLWithPath(kept), name = name, size = size?.longLongValue, isOwnedCopy = true)
+                }
             }
         }
         file.complete(read ?: ImportedFile.unread(name))
@@ -139,16 +159,32 @@ private fun fileNameOf(suggestedName: String?, typeIdentifier: String?): String 
     return if (name.endsWith(".$extension", ignoreCase = true)) name else "$name.$extension"
 }
 
+/** The provider's file at [path] renamed into the temporary directory, the app's from then on; null where it cannot be. */
+@OptIn(ExperimentalForeignApi::class)
+private fun movedOutOfProvider(path: String): String? {
+    val kept = "${NSTemporaryDirectory().trimEnd('/')}/campfire-drop-${Uuid.random()}"
+    return kept.takeIf { NSFileManager.defaultManager.moveItemAtPath(path, toPath = it, error = null) }
+}
+
 /** Item providers answer on queues of their own, side by side, and an [ImportBudget] is not to be read from two at once. */
 private class LockedImportBudget {
 
     private val budget = ImportBudget()
     private val lock = NSLock()
 
-    fun read(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? {
+    fun read(name: String, size: Long?, readBytes: (limit: Long) -> ByteArray?): ImportedFile? = locked {
+        budget.read(name = name, size = size, readBytes = readBytes)
+    }
+
+    /** See [ImportBudget.take]. */
+    fun take(name: String, size: Long?, head: ByteArray, readBytes: (limit: Long) -> ByteArray?, stage: () -> ImportedFile?): ImportedFile? = locked {
+        budget.take(name = name, size = size, head = head, readBytes = readBytes, stage = stage)
+    }
+
+    private fun <T> locked(block: () -> T): T {
         lock.lock()
         return try {
-            budget.read(name = name, size = size, readBytes = readBytes)
+            block()
         } finally {
             lock.unlock()
         }

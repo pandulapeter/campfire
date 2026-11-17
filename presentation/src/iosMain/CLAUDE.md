@@ -25,4 +25,6 @@
   names; F3, which has none here, left out); the overlay is `:app:ios`'s.
 - **Drops** (iPad and iPhone): an item offering `public.utf8-plain-text` is a text, anything else a file, named by
   `suggestedName` plus its type's extension. Every load starts inside the drop, since a provider answers only then; each
-  file is read in its completion handler, as long as the provider's copy lives, under one locked `ImportBudget`.
+  file is read in its completion handler, as long as the provider's copy lives, under one locked `ImportBudget`; while
+  archives are staged, an archive is renamed out of the provider's hands there instead and received
+  (`ui/platform/ArchiveReceiving.ios.kt`).

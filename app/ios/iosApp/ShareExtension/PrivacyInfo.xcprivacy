@@ -13,7 +13,8 @@
 <dict>
 	<!-- The share extension tracks and collects nothing, and sends nothing anywhere: it copies what it is given into
 	     the App Group's container. File sizes are read as URL resource values, not with attributesOfItem, so it uses
-	     no required-reason API. -->
+	     no file timestamp API. It asks the volume's free space before copying an archive the app moves on into its
+	     import staging folder, to refuse one there is no room for (E174.1). -->
 	<key>NSPrivacyTracking</key>
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
@@ -21,6 +22,15 @@
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<key>NSPrivacyAccessedAPITypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

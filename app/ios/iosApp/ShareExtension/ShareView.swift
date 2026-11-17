@@ -60,6 +60,7 @@ private extension ShareOutcome {
         case .unsupported: return NSLocalizedString("share_unsupported", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full", comment: "")
+        case .noSpace: return NSLocalizedString("share_no_space", comment: "")
         case .failed: return NSLocalizedString("share_failed", comment: "")
         }
     }
@@ -71,6 +72,7 @@ private extension ShareOutcome {
         case .unsupported: return NSLocalizedString("share_unsupported_detail", comment: "")
         case .tooLarge: return NSLocalizedString("share_too_large_detail", comment: "")
         case .inboxFull: return NSLocalizedString("share_inbox_full_detail", comment: "")
+        case .noSpace: return NSLocalizedString("share_no_space_detail", comment: "")
         case .failed: return nil
         }
     }

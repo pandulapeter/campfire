@@ -17,6 +17,7 @@ enum ShareOutcome {
     case unsupported
     case tooLarge
     case inboxFull
+    case noSpace
     case failed
 }
 
@@ -110,10 +111,11 @@ struct ShareInboxWriter {
             try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
             for (index, (provider, type)) in files.enumerated() {
                 switch await copyFile(provider, typeIdentifier: type, to: folder, index: index, remaining: remaining) {
-                case let .copied(path, size):
+                case let .copied(path, counted):
                     filePaths.append(path)
-                    remaining -= size
+                    remaining -= counted
                 case .tooLarge: return .tooLarge
+                case .noSpace: return .noSpace
                 case .failed: return .failed
                 }
             }
@@ -137,8 +139,11 @@ struct ShareInboxWriter {
     }
 
     private enum Copy {
-        case copied(path: String, size: Int64)
+        /// [counted] is what the file takes of the share's bounds: nothing for an archive the app moves on into its
+        /// staging folder, which is bounded by the device's free space instead.
+        case copied(path: String, counted: Int64)
         case tooLarge
+        case noSpace
         case failed
     }
 
@@ -153,14 +158,20 @@ struct ShareInboxWriter {
                     return continuation.resume(returning: .failed)
                 }
                 let name = Self.fileName(suggestedName: suggestedName, url: url, typeIdentifier: typeIdentifier)
-                guard size <= ShareLimits.maxSize(ofFileNamed: name), size <= remaining else {
+                let isStaged = ShareLimits.isStagedArchive(name)
+                guard size <= ShareLimits.maxSize(ofFileNamed: name), isStaged || size <= remaining else {
                     return continuation.resume(returning: .tooLarge)
+                }
+                // The one copy of an archive an extension cannot avoid (the app moves it on), so checked against the
+                // device's free space first, leaving it the margin the app's own staging keeps.
+                if isStaged, !Self.hasRoom(for: size, at: folder) {
+                    return continuation.resume(returning: .noSpace)
                 }
                 let path = "files/\(index)/\(name)"
                 do {
                     try FileManager.default.createDirectory(at: folder.appendingPathComponent("files/\(index)", isDirectory: true), withIntermediateDirectories: true)
                     try FileManager.default.copyItem(at: url, to: folder.appendingPathComponent(path))
-                    continuation.resume(returning: .copied(path: path, size: size))
+                    continuation.resume(returning: .copied(path: path, counted: isStaged ? 0 : size))
                 } catch {
                     continuation.resume(returning: .failed)
                 }
@@ -271,12 +282,23 @@ struct ShareInboxWriter {
         items.lazy.compactMap { $0.attributedTitle?.string.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
     }
 
+    /// Whether the volume of [url] has room for [size] bytes beside what `ImportLimits.minFreeSpaceFor` keeps free, by
+    /// the capacity for important use, the figure the app's staging asks too (a disk space API with a declared reason).
+    private static func hasRoom(for size: Int64, at url: URL) -> Bool {
+        guard let available = (try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?.volumeAvailableCapacityForImportantUsage else {
+            return false
+        }
+        return available - ShareLimits.minFreeSpace(for: size) >= size
+    }
+
     /// The shares the app has not imported yet, counted towards the inbox's bounds; a `.partial` one is not a share.
+    /// An archive the app moves on into its staging folder is not counted, as it is not counted towards a share's.
     private static func waitingShares(in inbox: URL) -> (count: Int, bytes: Int64) {
         let fileManager = FileManager.default
         let shares = ((try? fileManager.contentsOfDirectory(at: inbox, includingPropertiesForKeys: nil)) ?? []).filter { !$0.lastPathComponent.hasSuffix(partialSuffix) }
         let bytes = shares.reduce(Int64(0)) { total, share in
-            let files = fileManager.enumerator(at: share, includingPropertiesForKeys: [.fileSizeKey])?.compactMap { $0 as? URL } ?? []
+            let files = (fileManager.enumerator(at: share, includingPropertiesForKeys: [.fileSizeKey])?.compactMap { $0 as? URL } ?? [])
+                .filter { !ShareLimits.isStagedArchive($0.lastPathComponent) }
             return total + files.reduce(Int64(0)) { $0 + Int64((try? $1.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0) }
         }
         return (shares.count, bytes)
@@ -322,7 +344,12 @@ private enum ShareLimits {
 
     static let maxTextSize: Int64 = 8 << 20
     static let maxDocumentSize: Int64 = 16 << 20
-    static let maxArchiveSize: Int64 = 24 << 20
+    /// `ImportIntake.STAGES_ARCHIVES` in `:data:model`, which the extension cannot read: keep the two in step. Off, the
+    /// app reads an archive whole, so the extension holds one to what it reads; on, the app moves an archive on into its
+    /// staging folder, so one is bounded by `MAX_STAGED_ARCHIVE_SIZE` and the device's free space, not by the share's
+    /// bounds or the inbox's.
+    static let stagesArchives = false
+    static let maxArchiveSize: Int64 = stagesArchives ? 16 << 30 : 24 << 20
     /// `ImportLimits.MAX_PICKED_IMAGE_FILE_SIZE`: a photo the app shrinks into a song's picture once it has it.
     static let maxPictureSize: Int64 = 40 << 20
     /// What one share copies, all its files together: as much as its largest file may be, so that one picture fits.
@@ -360,6 +387,15 @@ private enum ShareLimits {
 
     static func isImportable(_ name: String) -> Bool {
         (songExtensions + documentExtensions + archiveExtensions + pictureExtensions).contains(fileExtension(of: name))
+    }
+
+    static func isStagedArchive(_ name: String) -> Bool {
+        stagesArchives && archiveExtensions.contains(fileExtension(of: name))
+    }
+
+    /// `ImportLimits.minFreeSpaceFor` on a device: a quarter of what is needed, at most 512 MiB.
+    static func minFreeSpace(for needed: Int64) -> Int64 {
+        min(needed / 4, 512 << 20)
     }
 
     static func maxSize(ofFileNamed name: String) -> Int64 {
