@@ -75,7 +75,7 @@ class LargeFileMemoryTest {
     fun `a 50 MiB draft file is hashed and copied into the library`() = runBlocking {
         val name = "0123456789abcdef.mp3"
         storage.writeNoise(StorageDirectory.DRAFT_IMAGES, name, seed = 3)
-        val source = ImageLocalSourceImpl(storage)
+        val source = ImageLocalSourceImpl(storage, ImportStaging(storage, Logger.Standard))
 
         val hash = source.hashImage(ImageShelf.DRAFT, name)
         source.copyImage(from = ImageShelf.DRAFT, name = name, to = ImageShelf.LIBRARY, toName = name)

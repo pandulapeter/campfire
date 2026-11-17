@@ -45,7 +45,8 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
 
     override suspend fun listNames(directory: StorageDirectory) = files.filterKeys { it.first == directory }.values.map { it.name }.also { listCalls++ }
 
-    override suspend fun info(directory: StorageDirectory, name: String): StoredFileInfo? = TODO()
+    override suspend fun info(directory: StorageDirectory, name: String) =
+        files[key(directory, name)]?.let { StoredFileInfo(name = it.name, size = it.bytes.size.toLong(), lastModified = 0) }
 
     override suspend fun exists(directory: StorageDirectory, name: String) = (key(directory, name) in files).also { existsCalls++ }
 
@@ -111,5 +112,10 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
     override suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) {
         val key = key(directory, name)
         files[key] = checkNotNull(files[key]) { "$name is not there to be marked." }.let { StoredFile(it.name, it.bytes, isKeptOutOfDeviceBackup = true) }
+    }
+
+    override suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) {
+        val key = key(directory, name)
+        files[key] = checkNotNull(files[key]) { "$name is not there to be marked." }.let { StoredFile(it.name, it.bytes, isKeptOutOfDeviceBackup = false) }
     }
 }

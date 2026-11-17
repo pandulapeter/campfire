@@ -63,4 +63,8 @@ internal class ImportStagingLocalSourceImpl(
         importStaging.deleteRequest(request)
         throw throwable
     }
+
+    override suspend fun isIntact(file: StagedFile) = importStaging.isIntact(file)
+
+    override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStaging.deleteRequestsOf(files)
 }

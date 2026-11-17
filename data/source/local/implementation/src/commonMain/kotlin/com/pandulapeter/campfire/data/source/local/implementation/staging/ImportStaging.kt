@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
@@ -59,6 +61,13 @@ internal class ImportStaging(
 
     /** The unpacked files each live request holds, by name, so that a second entry of the same content is not staged twice. */
     private val unpackedFiles = mutableMapOf<Long, MutableMap<String, StagedFile>>()
+
+    /**
+     * Where each unpacked file [moveOut] took out of the folder is now, by its staged name: a plan names one file under
+     * the staged name however many songs bring it (as a picture of one, attached to another, under another extension),
+     * and every one after the first finds the bytes where the first put them.
+     */
+    private val movedFiles = mutableMapOf<String, StagedLocation>()
 
     /** A new request, whose files stay until [deleteRequest] or the next launch. */
     suspend fun newRequest(): StagingRequest = files.withLock {
@@ -138,13 +147,69 @@ internal class ImportStaging(
         if (extension == null || sha256Hex == null) return@withLock StagedFile(name = sink.name, size = size, sha256Hex = null)
         val name = prefixOf(sink.request) + sha256Hex + extension
         val held = unpackedFiles.getOrPut(sink.request.id, ::mutableMapOf)
-        held[name]?.let { existing ->
+        // Only while the file it holds is still there whole: a file deleted behind the app's back would otherwise be what a
+        // second unpack of the same archive (Try again) planned with.
+        held[name]?.takeIf { fileStorage.info(StorageDirectory.IMPORTS, it.name)?.size == it.size }?.let { existing ->
             fileStorage.delete(StorageDirectory.IMPORTS, sink.name)
             ledger.giveBack(sink.request.id, reserved = size, written = size, isUnpacked = true)
             return@withLock existing
         }
         fileStorage.moveInto(StorageDirectory.IMPORTS, sink.name, StorageDirectory.IMPORTS, name)
+        movedFiles -= name
         StagedFile(name = name, size = size, sha256Hex = sha256Hex).also { held[name] = it }
+    }
+
+    /**
+     * Where [file] is now: in the folder, or where [moveOut] put it; null for a name this session did not stage. Not proof
+     * that it is still there ([isIntact] is).
+     */
+    suspend fun locate(file: StagedFile): StagedLocation? = files.withLock { locateLocked(file) }
+
+    private fun locateLocked(file: StagedFile) = movedFiles[file.name]
+        ?: StagedLocation(StorageDirectory.IMPORTS, file.name).takeIf { file.name.startsWith("$session-") }
+
+    /** Whether [file] is still where [locate] says, whole: of the size it was staged with. */
+    suspend fun isIntact(file: StagedFile): Boolean {
+        val location = locate(file) ?: return false
+        return fileStorage.info(location.directory, location.name)?.size == file.size
+    }
+
+    /** [file] opened for reads where [locate] says it is, or null where it is not there or not of its size. */
+    suspend fun openSource(file: StagedFile): FileSource? {
+        val location = locate(file) ?: return null
+        val source = fileStorage.openSource(location.directory, location.name) ?: return null
+        if (source.size == file.size) return source
+        source.close()
+        return null
+    }
+
+    /**
+     * Puts the unpacked [file] into [to] as [toName], where an import keeps it, and gives its room back: a rename, atomic
+     * and without reading it on every platform but the web, which writes it whole (see [FileStorage.moveInto]). Nothing
+     * is written over a file there already, which the caller found to hold the same bytes (a name is its content): the
+     * staged copy is deleted instead. A file an earlier call moved is copied from where that put it, never moved again.
+     * Throws `LibraryStorageException` where the file is gone, having moved nothing.
+     */
+    suspend fun moveOut(file: StagedFile, to: StorageDirectory, toName: String) = files.withLock {
+        val location = checkNotNull(locateLocked(file)) { "\"${file.name}\" is not a staged file of this session." }
+        if (location == StagedLocation(to, toName)) return@withLock
+        val isTargetThere = fileStorage.exists(to, toName)
+        if (location.directory != StorageDirectory.IMPORTS) {
+            if (!isTargetThere) fileStorage.copyInto(from = location.directory, fromName = location.name, to = to, toName = toName)
+            return@withLock
+        }
+        if (isTargetThere) {
+            if (fileStorage.info(StorageDirectory.IMPORTS, file.name) == null) throw LibraryStorageException("The staged file \"${file.name}\" is gone.")
+            fileStorage.delete(StorageDirectory.IMPORTS, file.name)
+        } else {
+            fileStorage.moveInto(from = StorageDirectory.IMPORTS, fromName = file.name, to = to, toName = toName)
+        }
+        movedFiles[file.name] = StagedLocation(to, toName)
+        val request = file.name.removePrefix("$session-").substringBefore('-', "").toLongOrNull()
+        if (request != null) {
+            unpackedFiles[request]?.remove(file.name)
+            ledger.giveBack(request, reserved = file.size, written = file.size, isUnpacked = true)
+        }
     }
 
     /**
@@ -173,9 +238,22 @@ internal class ImportStaging(
             liveRequests -= request.id
             unpackedFiles -= request.id
             val prefix = prefixOf(request)
+            movedFiles.keys.removeAll { it.startsWith(prefix) }
             listQuietly().filter { it.startsWith(prefix) }.forEach { deleteQuietly(it) }
             ledger.close(request.id)
         }
+    }
+
+    /**
+     * [deleteRequest] for every live request that staged one of [files]: an import whose plan named them has settled.
+     * Files of another session or of a request already deleted are passed over. Never throws, and finishes even when
+     * cancelled.
+     */
+    suspend fun deleteRequestsOf(files: Collection<StagedFile>) = withContext(NonCancellable) {
+        val requests = this@ImportStaging.files.withLock {
+            files.mapNotNullTo(mutableSetOf()) { file -> requestIdOf(file)?.takeIf { it in liveRequests }?.let(::StagingRequest) }
+        }
+        requests.forEach { deleteRequest(it) }
     }
 
     /**
@@ -192,10 +270,13 @@ internal class ImportStaging(
      * received it, so that settling the request removes both. Throws for a file of another session or a deleted request.
      */
     suspend fun requestOf(file: StagedFile): StagingRequest = files.withLock {
-        val id = file.name.takeIf { it.startsWith("$session-") }?.removePrefix("$session-")?.substringBefore('-', "")?.toLongOrNull()
+        val id = requestIdOf(file)
         check(id != null && id in liveRequests) { "\"${file.name}\" is not a staged file of a live request." }
         StagingRequest(id)
     }
+
+    private fun requestIdOf(file: StagedFile) =
+        file.name.takeIf { it.startsWith("$session-") }?.removePrefix("$session-")?.substringBefore('-', "")?.toLongOrNull()
 
     /** The unpacked files [request] holds now, which a later sink of the same content is handed instead of a new one. */
     suspend fun unpackedNamesOf(request: StagingRequest): Set<String> = files.withLock { unpackedFiles[request.id]?.keys?.toSet().orEmpty() }
@@ -230,6 +311,9 @@ internal class ImportStaging(
 
 /** One import's share of the staging folder, see [ImportStaging.newRequest]. */
 internal data class StagingRequest(val id: Long)
+
+/** Where a staged file is: in the staging folder under its own name, or where `ImportStaging.moveOut` put it. */
+internal data class StagedLocation(val directory: StorageDirectory, val name: String)
 
 private const val SESSION_DIGITS = 16
 private const val ARCHIVE_EXTENSION = ".zip"

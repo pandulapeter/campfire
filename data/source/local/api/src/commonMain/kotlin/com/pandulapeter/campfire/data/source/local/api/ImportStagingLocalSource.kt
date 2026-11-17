@@ -45,4 +45,16 @@ interface ImportStagingLocalSource {
         /** Deletes what was written and the request; does nothing once finished. Never throws, and finishes even when cancelled. */
         suspend fun abandon()
     }
+
+     * Whether [file] is still where the staging keeps it (or where an import moved it), of the size it was staged with:
+     * what an import asks of every staged file its plan names before it writes anything.
+     */
+    suspend fun isIntact(file: StagedFile): Boolean
+
+    /**
+     * Deletes everything the requests that staged [files] hold, partial files included, and gives their room back: the
+     * import those requests belong to has settled (imported, cancelled, failed and dismissed). Files of another session or
+     * of a request already deleted are passed over. Never throws but cancellation, and finishes even then.
+     */
+    suspend fun deleteRequestsOf(files: Collection<StagedFile>)
 }

@@ -79,7 +79,14 @@ Skipped or unreadable files are logged to the injected `Logger`.
   of the same content is not kept twice), the extension one of `ATTACHMENT_EXTENSIONS` or `.bin`. `deleteOtherSessions` (on
   launch: `ClearImportStagingUseCase`, from `ImportWork`'s `init`, once per process) deletes every name without this
   session's prefix, so it never races a cold start's own file; `deleteRequest` a request's, partial ones included, and marks it
-  dead so a sink still open fails and deletes its own file.
+  dead so a sink still open fails and deletes its own file; `deleteRequestsOf` the requests a settled import's files
+  came from. A held unpacked file a second unpack finds gone is staged anew, never handed out again.
+- `moveOut` (`ImageLocalSourceImpl.moveStagedFile`) puts an unpacked file into the library by `moveInto` (a rename; on
+  the web the atomic `writeBytes`), never over a file of that name (one there holds the same bytes, so the staged copy
+  is deleted), and gives its room back; where it went is remembered (`locate`) until its request is deleted, so the next
+  name a plan brings it under is copied from there. A picture moved into the library is put back into the iOS backup
+  (`keepInDeviceBackup`, a rename keeping the mark), an attachment kept out. `holdsContent` compares sizes, then the two
+  files 64 KiB at a time (`FileSource.holdsBytes`, `holdsSameBytesAs`).
 - `StagingSink`: room in the ledger before every write, SHA-256 over exactly the bytes written. A write that fails, a
   cancellation, the budget running out, or `abandon` delete the partial file and give its room back before the failure
   reaches the caller; a `StagedFile` exists only for a sink that closed cleanly.

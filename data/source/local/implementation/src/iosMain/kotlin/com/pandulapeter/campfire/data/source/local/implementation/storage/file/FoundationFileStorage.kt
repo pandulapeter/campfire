@@ -222,6 +222,14 @@ internal class FoundationFileStorage(
         }
     }
 
+    /** Cleared as [keepOutOfDeviceBackup] sets it; one that cannot be cleared costs the file's place in a backup and is logged. */
+    override suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
+        val path = filePath(directory, name)
+        if (fileManager.fileExistsAtPath(path) && !NSURL.fileURLWithPath(path).setResourceValue(false, NSURLIsExcludedFromBackupKey, null)) {
+            logger.log("Could not put \"$name\" back into the device backup.")
+        }
+    }
+
     /**
      * `dataWithContentsOfFile` answers nil for a file that is not there and for one it could not read alike, and only
      * the first of those may come back as null: a file reported as missing is a deletion as far as sync is concerned.

@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.api
 
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
+
 /**
  * The files songs keep, the pictures they show and the files attached to them, by name, on one of two shelves: the
  * library's (`library/files`), which syncs, exports, and holds only what a saved song names, and the editor draft's,
@@ -39,6 +42,29 @@ interface ImageLocalSource {
 
     /** Creates the picture or overwrites it, which only ever writes the same bytes again: a picture's name is its content. */
     suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray)
+
+    /**
+     * Whether the shelf's [name] holds exactly [content]: false where it is not there or of another size, else the two
+     * compared a slice at a time, neither ever read whole. A staged [content] that is gone throws `LibraryStorageException`.
+     */
+    suspend fun holdsContent(shelf: ImageShelf, name: String, content: IncomingContent): Boolean
+
+    /**
+     * The first [length] bytes of a staged file (all of it where it is shorter), where it is now (see [moveStagedFile]);
+     * null where it is gone or no longer of its size.
+     */
+    suspend fun readStagedHead(staged: StagedFile, length: Int): ByteArray?
+
+    /**
+     * Puts a file the import staged into the shelf as [name], its content name. A rename where the platform has one
+     * (atomic, the file never read), on the web the file written whole with the atomic write of [writeImage], then the
+     * staged copy deleted; never written in place. A name the shelf already holds, which the caller found to hold the
+     * same bytes, is left as it is and the staged copy deleted. A staged file one call put on a shelf is copied from there
+     * by the next, which a file a plan brings under two names needs. Kept out of the device backup as [writeImage] keeps
+     * a file it writes, and a library picture put back into it, since the staging folder is out of it. A staged file that
+     * is gone throws `LibraryStorageException`, having written nothing.
+     */
+    suspend fun moveStagedFile(staged: StagedFile, shelf: ImageShelf, name: String)
 
     suspend fun listImageNames(shelf: ImageShelf): List<String>
 

@@ -12,9 +12,18 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.test.runTest
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSURL
+import platform.Foundation.NSURLIsExcludedFromBackupKey
 import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 
 /**
@@ -40,6 +49,30 @@ class IosFileStorageContractTest : FileStorageContractTest() {
     override fun tearDown() {
         fileManager.removeItemAtPath(root, null)
     }
+
+    @Test
+    fun `a staged file moved into the library is put back into the device backup or kept out of it`() = runTest {
+        val storage = newStorage()
+        val bytes = byteArrayOf(1, 2, 3)
+        storage.writeBytes(StorageDirectory.IMPORTS, "picture.png", bytes)
+        storage.writeBytes(StorageDirectory.IMPORTS, "attachment.pdf", bytes)
+        storage.keepOutOfDeviceBackup(StorageDirectory.IMPORTS, "picture.png")
+        storage.keepOutOfDeviceBackup(StorageDirectory.IMPORTS, "attachment.pdf")
+
+        storage.moveInto(StorageDirectory.IMPORTS, "picture.png", StorageDirectory.FILES, "picture.png")
+        storage.moveInto(StorageDirectory.IMPORTS, "attachment.pdf", StorageDirectory.FILES, "attachment.pdf")
+        storage.keepInDeviceBackup(StorageDirectory.FILES, "picture.png")
+        storage.keepOutOfDeviceBackup(StorageDirectory.FILES, "attachment.pdf")
+
+        assertContentEquals(bytes, storage.readBytes(StorageDirectory.FILES, "picture.png"))
+        assertFalse(isExcludedFromBackup(StorageDirectory.FILES, "picture.png"))
+        assertTrue(isExcludedFromBackup(StorageDirectory.FILES, "attachment.pdf"))
+        assertEquals(emptyList(), storage.listNames(StorageDirectory.IMPORTS))
+    }
+
+    private fun isExcludedFromBackup(directory: StorageDirectory, name: String) =
+        (NSURL.fileURLWithPath("${directoryPath(directory)}/$name").resourceValuesForKeys(listOf(NSURLIsExcludedFromBackupKey), null)
+            ?.get(NSURLIsExcludedFromBackupKey) as? NSNumber)?.boolValue == true
 
     private fun directoryPath(directory: StorageDirectory) = "$root/${directory.pathSegments.joinToString("/")}"
 }

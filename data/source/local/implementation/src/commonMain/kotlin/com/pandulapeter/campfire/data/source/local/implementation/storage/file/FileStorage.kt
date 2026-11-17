@@ -252,6 +252,13 @@ interface FileStorage {
     suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = Unit
 
     /**
+     * Undoes [keepOutOfDeviceBackup] for a file that a move brought out of a folder kept out of the backup into one whose
+     * files belong in it (a staged picture moved into the library), since a rename keeps a mark the file carries. Only
+     * iOS acts on it, as there.
+     */
+    suspend fun keepInDeviceBackup(directory: StorageDirectory, name: String) = Unit
+
+    /**
      * Whether a file called [name] can exist in this storage at all. No storage takes a path or nothing for a name
      * ([isValidFileName]: a `/` or `\` anywhere in it, `.`, `..`), and Windows also refuses `? : * " < > |`, which are
      * legal on iOS, macOS, Linux, Android and OPFS. Asked rather than attempted because the attempt is an

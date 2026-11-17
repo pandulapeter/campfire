@@ -93,6 +93,55 @@ class ImportStagingTest {
     }
 
     @Test
+    fun `the same content unpacked again after its staged file vanished is staged anew`() = runTest {
+        val storage = LimitedFileStorage(capacity = 10 * MIB)
+        val staging = ImportStaging(storage, Logger.Standard)
+        val request = staging.newRequest()
+        val content = bytes(CHUNK)
+        val first = staging.openUnpacked(request, ".mp3", announcedSize = null).apply { writeAll(content) }.finish()
+        storage.delete(StorageDirectory.IMPORTS, first.name)
+
+        val second = staging.openUnpacked(request, ".mp3", announcedSize = null).apply { writeAll(content) }.finish()
+
+        assertTrue(staging.isIntact(second))
+        assertContentEquals(content, storage.readBytes(StorageDirectory.IMPORTS, second.name))
+    }
+
+    @Test
+    fun `a file moved out of the staging gives its room back and is found where it went`() = runTest {
+        val storage = LimitedFileStorage(capacity = 10 * MIB)
+        val staging = ImportStaging(storage, Logger.Standard)
+        val request = staging.newRequest()
+        val archive = staging.openArchive(request, announcedSize = null).apply { writeAll(bytes(CHUNK, seed = 2)) }.finish()
+        val staged = staging.openUnpacked(request, ".pdf", announcedSize = null).apply { writeAll(bytes(CHUNK)) }.finish()
+
+        staging.moveOut(staged, StorageDirectory.FILES, "moved.pdf")
+
+        assertEquals(listOf(archive.name), storage.stagedNames())
+        assertEquals(StagedLocation(StorageDirectory.FILES, "moved.pdf"), staging.locate(staged))
+        assertTrue(staging.isIntact(staged))
+        assertEquals(archive.size, staging.ledger.reservedBy(request.id))
+    }
+
+    @Test
+    fun `the requests that staged a settled import's files are deleted and no other`() = runTest {
+        val storage = LimitedFileStorage(capacity = 10 * MIB)
+        val staging = ImportStaging(storage, Logger.Standard)
+        val settled = staging.newRequest()
+        val other = staging.newRequest()
+        val archive = staging.openArchive(settled, announcedSize = null).apply { writeAll(bytes(CHUNK, seed = 2)) }.finish()
+        val staged = staging.openUnpacked(settled, ".pdf", announcedSize = null).apply { writeAll(bytes(CHUNK)) }.finish()
+        val kept = staging.openUnpacked(other, ".pdf", announcedSize = null).apply { writeAll(bytes(CHUNK, seed = 3)) }.finish()
+
+        staging.deleteRequestsOf(listOf(staged))
+        staging.deleteRequestsOf(listOf(staged, archive))
+
+        assertEquals(listOf(kept.name), storage.stagedNames())
+        assertEquals(0, staging.ledger.reservedBy(settled.id))
+        assertEquals(CHUNK.toLong(), staging.ledger.reservedBy(other.id))
+    }
+
+    @Test
     fun `a failed write leaves no partial file`() = runTest {
         val storage = LimitedFileStorage(capacity = 10 * MIB)
         val staging = ImportStaging(storage, Logger.Standard)

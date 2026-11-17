@@ -54,3 +54,51 @@ internal suspend fun FileSource.sha256Hex(): String {
     }
     return digest.finishToHex()
 }
+
+/**
+ * Whether the source holds exactly [bytes], compared [COMPARE_CHUNK_SIZE] at a time, so that a file as large as an
+ * attachment is never read whole beside the array it is compared with.
+ */
+internal suspend fun FileSource.holdsBytes(bytes: ByteArray): Boolean {
+    if (size != bytes.size.toLong()) return false
+    val buffer = ByteArray(minOf(COMPARE_CHUNK_SIZE.toLong(), size).toInt())
+    var position = 0
+    while (position < bytes.size) {
+        val length = minOf(buffer.size, bytes.size - position)
+        if (readFully(position.toLong(), buffer, length) != length) throw LibraryStorageException("The file ended before the size it was opened with.")
+        for (index in 0 until length) if (buffer[index] != bytes[position + index]) return false
+        position += length
+    }
+    return true
+}
+
+/** Whether the two sources hold the same bytes, compared [COMPARE_CHUNK_SIZE] at a time, neither ever read whole. */
+internal suspend fun FileSource.holdsSameBytesAs(other: FileSource): Boolean {
+    if (size != other.size) return false
+    val buffer = ByteArray(minOf(COMPARE_CHUNK_SIZE.toLong(), size).toInt())
+    val otherBuffer = ByteArray(buffer.size)
+    var position = 0L
+    while (position < size) {
+        val length = minOf(buffer.size.toLong(), size - position).toInt()
+        if (readFully(position, buffer, length) != length || other.readFully(position, otherBuffer, length) != length) {
+            throw LibraryStorageException("The file ended before the size it was opened with.")
+        }
+        for (index in 0 until length) if (buffer[index] != otherBuffer[index]) return false
+        position += length
+    }
+    return true
+}
+
+/** Reads [length] bytes from [position] into the start of [buffer], fewer only where the file ends first. */
+private suspend fun FileSource.readFully(position: Long, buffer: ByteArray, length: Int): Int {
+    var read = 0
+    while (read < length) {
+        val count = read(position + read, buffer, read, length - read)
+        if (count <= 0) break
+        read += count
+    }
+    return read
+}
+
+/** How much of each file a comparison holds at once. */
+private const val COMPARE_CHUNK_SIZE = 64 * 1024

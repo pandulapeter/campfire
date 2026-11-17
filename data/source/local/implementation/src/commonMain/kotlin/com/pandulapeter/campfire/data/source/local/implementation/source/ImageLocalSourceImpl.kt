@@ -9,11 +9,17 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.ImageLocalSource
 import com.pandulapeter.campfire.data.source.local.api.ImageShelf
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.staging.ImportStaging
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.holdsBytes
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.holdsSameBytesAs
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.sha256Hex
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.use
 import org.koin.core.annotation.Single
@@ -21,6 +27,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class ImageLocalSourceImpl(
     private val fileStorage: FileStorage,
+    private val importStaging: ImportStaging,
 ) : ImageLocalSource {
 
     override suspend fun readImage(shelf: ImageShelf, name: String) = if (LibraryFiles.isLibraryFileName(name)) {
@@ -59,6 +66,43 @@ internal class ImageLocalSourceImpl(
 
     private suspend fun keepOutOfDeviceBackupIfDue(shelf: ImageShelf, name: String) {
         if (shelf == ImageShelf.DRAFT || isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(shelf.directory, name)
+    }
+
+    override suspend fun holdsContent(shelf: ImageShelf, name: String, content: IncomingContent): Boolean {
+        if (!LibraryFiles.isLibraryFileName(name) || fileStorage.info(shelf.directory, name)?.size != content.size) return false
+        val held = fileStorage.openSource(shelf.directory, name) ?: return false
+        return held.use {
+            when (content) {
+                is IncomingContent.Bytes -> held.holdsBytes(content.bytes)
+                is IncomingContent.Staged -> (importStaging.openSource(content.file) ?: throw LibraryStorageException("The staged file \"${content.file.name}\" is gone."))
+                    .use { staged -> held.holdsSameBytesAs(staged) }
+            }
+        }
+    }
+
+    override suspend fun readStagedHead(staged: StagedFile, length: Int): ByteArray? = importStaging.openSource(staged)?.use { source ->
+        val head = ByteArray(minOf(length.toLong(), source.size).toInt())
+        var read = 0
+        while (read < head.size) {
+            val count = source.read(read.toLong(), head, read, head.size - read)
+            if (count <= 0) throw LibraryStorageException("The staged file \"${staged.name}\" ended before its size.")
+            read += count
+        }
+        head
+    }
+
+    /**
+     * The backup mark is set or cleared whether the file was moved, copied, or already there: a rename keeps the mark the
+     * staged file carried, and a picture belongs in the backup however it reached the library.
+     */
+    override suspend fun moveStagedFile(staged: StagedFile, shelf: ImageShelf, name: String) {
+        require(LibraryFiles.isLibraryFileName(name)) { "Not a library file's name: \"$name\"." }
+        importStaging.moveOut(staged, shelf.directory, name)
+        if (shelf == ImageShelf.LIBRARY && !isLibraryFileKeptOutOfDeviceBackup(name)) {
+            fileStorage.keepInDeviceBackup(shelf.directory, name)
+        } else {
+            keepOutOfDeviceBackupIfDue(shelf, name)
+        }
     }
 
     override suspend fun listImageNames(shelf: ImageShelf) = fileStorage.listNames(shelf.directory).filter(LibraryFiles::isLibraryFileName)
