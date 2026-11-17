@@ -25,6 +25,10 @@ Only these, all in `:data:source:remote:implementation`, the only module that ma
   network), then kept on the device; an address that answers with no cover is remembered as such.
 - **Cover search and song details lookup**: MusicBrainz and the iTunes Search API, only from the sheet the user opens
   for them; the "Cover art" and "Online song details" switches in Settings → Features remove them.
+- **Picture links**: a picture a song names by its `https` address (public hosts only, never the local network) is
+  downloaded once and kept as a library file, never drawn from the web: the address the user gives the editor's From a
+  link, a missing picture's Download, and an import's songs as its review opens (the "Pictures from links" switch in
+  Settings → Features removes the import's). Sync never downloads one.
 - **Shared links**: sharing a song or setlist publishes a copy as a public link in the Dropbox connected for Sync,
   kept current by sync runs; opening one downloads that zip from `dl.dropboxusercontent.com`, needing no account and
   keeping nothing beyond the import.
@@ -170,8 +174,9 @@ One line each; the detail is in the file named (`ui/` = `presentation/src/common
 - Pictures (`{image: src=…}`) are library files named by their content (PNG, JPEG, GIF, WebP, at most 8 MB; one the
   user adds that is too large or HEIC is re-encoded on the device, one within the limits never), kept while a song
   names one; a missing one draws a placeholder that can add it; the editor's Image button and a picture opened alone
-  keep it as a draft picture until Save: `ui/songView`, `ui/screens/songEditor`, `ui/pictures`,
-  `data/repository/implementation`, `chordpro`.
+  keep it as a draft picture until Save; one named by its `https` address is downloaded into the library, never drawn
+  from the web (From a link, Download, and an import's automatic downloads): `ui/songView`, `ui/screens/songEditor`,
+  `ui/pictures`, `data/repository/implementation`, `domain/implementation`, `chordpro`.
 - Transposition, capo, and tempo are overridden per setlist or per device; only the time signature is written: `ui`.
 - Every capo, the file's or one put on, keeps the shapes and raises the pitch; keys, cards, and scales name what sounds,
   a song's chords the shapes above the capo or what sounds (Preferences' Chord names with a capo; the keyboard always

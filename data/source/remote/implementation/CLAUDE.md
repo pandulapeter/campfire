@@ -140,6 +140,10 @@ Shared by every provider; service specifics come from its `SyncHttpErrorMapper`.
   repository's download slots.
 - Import: declared length over the ceiling → `TooLarge` before the body; otherwise read one byte past it. 408, 429, 5xx,
   transport failure, refused CORS, or a short body → `Unreachable`; other refusals or an empty body → `Missing`.
+- Picture (`downloadPicture`): the import's rules, plus the cover's host guard on every hop (a refused one is `Missing`)
+  and at most two minutes, the ceiling the caller's (40 MB for the user's own, 8 MB for an import's). No content type is
+  trusted: the domain tells a picture by its bytes. On the web a host without CORS headers is `Unreachable`, which the
+  UI cannot tell from no answer.
 
 ## Catalogues
 
