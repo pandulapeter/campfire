@@ -27,7 +27,7 @@ class PdfPictureRowsTest {
     }
 
     @Test
-    fun `a song of text keeps its logo, its cover, and its rows of chord diagram pictures`() = runTest {
+    fun `a song of text keeps its logo and its cover and its rows of chord diagram pictures`() = runTest {
         val lyrics = (0 until 16).joinToString(" ") { row -> "BT /F1 10 Tf 50 ${600 - row * 14} Td (Line $row of the song) Tj ET" }
         val diagrams = (0 until 3).joinToString(" ") { row ->
             (0 until 6).joinToString(" ") { column -> "q 40 0 0 50 ${50 + column * 60} ${300 - row * 70} cm /Chord Do Q" }

@@ -68,7 +68,7 @@ internal class ImageInfoTest {
     }
 
     @Test
-    fun `large segments, padding, and a table before the frame header are walked past`() {
+    fun `large segments and padding and a table before the frame header are walked past`() {
         val segments = segment(0xE0, TestImages.ascii("JFIF") + ByteArray(10)) + exif(orientation = 6, isLittleEndian = false) +
             segment(0xE2, ByteArray(40_000) { it.toByte() }) + bytes(0xFF, 0xFF, 0xFF) + segment(0xC4, ByteArray(30) { 0xC0.toByte() })
         assertEquals(ImageInfo(ImageFormat.JPEG, 600, 800), ImageInfo.of(TestImages.jpeg(800, 600, segments = segments).bytes))
@@ -104,7 +104,7 @@ internal class ImageInfoTest {
     }
 
     @Test
-    fun `a header cut short anywhere is refused, and one cut after it is read`() {
+    fun `a header cut short anywhere is refused and one cut after it is read`() {
         for (image in validImages()) {
             val full = ImageInfo.of(image.bytes)
             for (length in 0..image.bytes.size) {

@@ -24,7 +24,7 @@ class PdfBidiTest {
     private fun column(right: Double, direction: WritingDirection = WritingDirection.RIGHT_TO_LEFT) = PdfBidi.Column(0.0, right, direction)
 
     @Test
-    fun `a Hebrew line drawn from the left reads from the right, each character where its glyph is`() {
+    fun `a Hebrew line drawn from the left reads from the right with each character where its glyph is`() {
         val spans = glyphs("םולש")
         val line = PdfBidi.readingOrder(spans, column(24.0)).single()
 
@@ -33,7 +33,7 @@ class PdfBidiTest {
     }
 
     @Test
-    fun `a Latin word and a number keep their order, and a bracket named by its glyph or by its character pairs up`() {
+    fun `a Latin word and a number keep their order and a bracket named by its glyph or by its character pairs up`() {
         assertEquals("יחד (Psalm 133)", PdfBidi.readingOrder(glyphs("(Psalm 133) דחי"), column(90.0)).single().text)
         assertEquals("יחד (Psalm 133)", PdfBidi.readingOrder(glyphs(")Psalm 133( דחי"), column(90.0)).single().text)
     }
@@ -65,7 +65,7 @@ class PdfBidiTest {
     }
 
     @Test
-    fun `a line written in reading order under ActualText, or holding nothing read from the right, is left as it is`() {
+    fun `a line written in reading order under ActualText or holding nothing read from the right is left as it is`() {
         val actual = listOf(ChordSheet.Span("שלום", 0.0, 24.0, 10.0, pieces = glyphs("שלום").reversed()))
         val latin = glyphs("Am   G")
 

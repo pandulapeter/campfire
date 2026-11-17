@@ -7,13 +7,15 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Fails on a backticked function name with a comma in the tests of a module whose tests run on the iOS simulator.
+Fails on a backticked function name with a comma in the tests of a module whose tests are compiled for iOS: the file
+storage contract run on the simulator, and `:data:formats`, whose readers' common tests are run on the simulator by
+hand when a reader changes.
 Kotlin/Native refuses a comma in a name ("Name contains illegal characters"), which the JVM accepts, so a test named
 that way passes `desktopTest` and stops the module's whole iOS test task from compiling, in CI only, since that task
 takes minutes to link. The other characters Kotlin/Native refuses the JVM refuses too, so `desktopTest` finds them.
 
 Only the modules in `IOS_TESTED` are checked: the other modules' tests are never compiled for iOS, and many of their
-names have commas. With paths it checks those files, without them every tracked Kotlin file of those modules' common
+names have commas. A module whose tests start being compiled for iOS is added here in the same change. With paths it checks those files, without them every tracked Kotlin file of those modules' common
 and iOS tests; exits 1 on any finding.
 """
 
@@ -22,7 +24,7 @@ import re
 import subprocess
 import sys
 
-IOS_TESTED = ["data/source/local/implementation"]
+IOS_TESTED = ["data/formats", "data/source/local/implementation"]
 TEST_SOURCE_SETS = ["commonTest", "iosTest"]
 NAME = re.compile(r"\bfun\s+`([^`\n]*,[^`\n]*)`")
 

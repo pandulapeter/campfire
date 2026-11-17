@@ -443,7 +443,7 @@ class PdfTextExtractorTest {
     }
 
     @Test
-    fun `lines carry their baselines growing down the page, and the blank line between paragraphs none`() = runTest {
+    fun `lines carry their baselines growing down the page and the blank line between paragraphs none`() = runTest {
         val content = "BT /F1 10 Tf 1 0 0 1 50 700 Tm (Am) Tj 1 0 0 1 50 687 Tm (Hello world) Tj 1 0 0 1 50 600 Tm (Goodbye) Tj ET"
         val lines = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
         assertEquals(listOf("Am", "Hello world", "", "Goodbye"), lines.map { it.spans.joinToString("") { span -> span.text } })

@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 internal class ImageFormatsTest {
 
     @Test
-    fun `HEIC, HEIF, and AVIF pictures are refused images`() {
+    fun `HEIC and HEIF and AVIF pictures are refused images`() {
         for (picture in listOf(ftyp("heic", "mif1", "heic"), ftyp("mif1", "mif1", "miaf"), ftyp("avif", "avif", "mif1", "miaf"), ftyp("isom", "avis"))) {
             assertTrue(ImageFormats.isRefusedImage(picture), picture.decodeToString())
             assertNull(ImageInfo.of(picture))
@@ -78,7 +78,7 @@ internal class ImageFormatsTest {
     }
 
     @Test
-    fun `HEIC, HEIF, and AVIF pictures are HEIF but an SVG is not`() {
+    fun `HEIC and HEIF and AVIF pictures are HEIF but an SVG is not`() {
         assertTrue(ImageFormats.isHeif(ftyp("heic", "mif1", "heic")))
         assertTrue(ImageFormats.isHeif(ftyp("avif", "avif", "mif1", "miaf")))
         assertFalse(ImageFormats.isHeif(ascii("<svg>")))

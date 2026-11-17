@@ -33,7 +33,7 @@ class PdfParagraphsTest {
     }
 
     @Test
-    fun `the longer step from a lyric to the next chord row is no stanza break, a gap beyond it is`() = runTest {
+    fun `the longer step from a lyric to the next chord row is no stanza break but a gap beyond it is`() = runTest {
         val pair = listOf(13.0 to "G C", 11.0 to "Lyric line")
         val stanza = listOf(19.0 to "G C", 11.0 to "Lyric line") + pair + pair
         assertEquals(

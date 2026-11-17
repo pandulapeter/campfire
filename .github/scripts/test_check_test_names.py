@@ -8,7 +8,7 @@
 
 import unittest
 
-from check_test_names import findings
+from check_test_names import IOS_TESTED, findings
 
 
 def lines(source):
@@ -25,6 +25,12 @@ class FindingsTest(unittest.TestCase):
 
     def test_commas_outside_a_function_name_are_accepted(self):
         self.assertEqual([], lines('val text = "a, b"\n/** Reads `a, b`. */\nfun read(a: Int, b: Int) = a + b'))
+
+
+class ModulesTest(unittest.TestCase):
+
+    def test_the_formats_module_is_checked_since_its_common_tests_are_compiled_for_ios(self):
+        self.assertIn("data/formats", IOS_TESTED)
 
 
 if __name__ == "__main__":
