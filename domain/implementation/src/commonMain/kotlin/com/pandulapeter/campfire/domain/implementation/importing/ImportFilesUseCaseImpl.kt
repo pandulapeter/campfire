@@ -17,12 +17,15 @@ import com.pandulapeter.campfire.data.model.importing.ImportEntryKey
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.normalizedToNfc
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.setlist.Setlist
 import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
+import com.pandulapeter.campfire.data.repository.api.ImportStagingRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -41,6 +44,7 @@ internal class ImportFilesUseCaseImpl(
     private val setlistRepository: SetlistRepository,
     private val logger: Logger,
     private val imageRepository: ImageRepository,
+    private val importStagingRepository: ImportStagingRepository,
 ) : ImportFilesUseCase {
 
     /**
@@ -50,6 +54,9 @@ internal class ImportFilesUseCaseImpl(
      * All of it inside one [ImageRepository.withImagesKept], each song's pictures stored just before the song, and the
      * songs adopted before the block ends: the library's pictures are pruned to what its songs name, and a prune between
      * a picture and the song naming it would delete the picture.
+     *
+     * Every staged file the plan names is asked for first, inside the block (so that nothing the block holds off can take
+     * one in between), and one gone or no longer of its size throws [StagedFileMissingException] with nothing written.
      */
     override suspend operator fun invoke(
         plan: ImportPlan,
@@ -58,6 +65,7 @@ internal class ImportFilesUseCaseImpl(
     ): ImportResult {
         val run = ImportRun(plan = plan, choices = choices, onProgress = onProgress)
         imageRepository.withImagesKept { writer ->
+            requireStagedFiles(plan)
             try {
                 run.writeSongs(writer)
                 run.writeSetlists()
@@ -80,6 +88,14 @@ internal class ImportFilesUseCaseImpl(
             }
         }
         return run.result()
+    }
+
+    private suspend fun requireStagedFiles(plan: ImportPlan) {
+        plan.songs.asSequence()
+            .flatMap { it.images }
+            .mapNotNull { (it.content as? IncomingContent.Staged)?.file }
+            .distinct()
+            .forEach { file -> if (!importStagingRepository.isIntact(file)) throw StagedFileMissingException(file.name) }
     }
 
     /** One import being written: what has been written, left out and reached so far, which the result is made of. */

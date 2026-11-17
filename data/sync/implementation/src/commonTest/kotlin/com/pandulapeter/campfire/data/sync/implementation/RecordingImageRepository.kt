@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation
 
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
@@ -37,11 +38,11 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun loadLibraryImageNames(): List<String> = throw UnsupportedOperationException()
 
-    override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
+    override suspend fun libraryNameOf(content: IncomingContent): ImageIntake = throw UnsupportedOperationException()
 
     override suspend fun loadLibraryFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
 
-    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake = throw UnsupportedOperationException()
+    override suspend fun libraryNameOfAttachment(content: IncomingContent, extension: String): ImageIntake = throw UnsupportedOperationException()
 
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
 
@@ -57,9 +58,9 @@ internal class RecordingImageRepository : ImageRepository {
         object : LibraryImageWriter {
             override val heldNames: Set<String> = emptySet()
 
-            override suspend fun addImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
+            override suspend fun addImage(content: IncomingContent): ImageIntake = throw UnsupportedOperationException()
 
-            override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = throw UnsupportedOperationException()
+            override suspend fun addAttachment(content: IncomingContent, extension: String): ImageIntake = throw UnsupportedOperationException()
 
             override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = throw UnsupportedOperationException()
         },

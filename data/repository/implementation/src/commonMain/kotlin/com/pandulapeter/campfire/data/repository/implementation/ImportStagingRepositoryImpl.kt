@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.repository.api.ImportStagingRepository
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import org.koin.core.annotation.Single
@@ -19,4 +20,8 @@ internal class ImportStagingRepositoryImpl(
 ) : ImportStagingRepository {
 
     override suspend fun deleteOtherSessions() = importStagingLocalSource.deleteOtherSessions()
+
+    override suspend fun isIntact(file: StagedFile) = importStagingLocalSource.isIntact(file)
+
+    override suspend fun deleteRequestsOf(files: Collection<StagedFile>) = importStagingLocalSource.deleteRequestsOf(files)
 }

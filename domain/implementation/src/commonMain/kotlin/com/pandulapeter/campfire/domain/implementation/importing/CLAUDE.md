@@ -31,7 +31,10 @@
   it unchanged. Setlist entries compare as they will be written, resolved first among songs of the same picked file
   (`SongEntry.origin`), since names are unique only within an archive.
 - Archives share one size budget for songs, another for the pictures songs name, and a third for their attachments.
-  An archive that cannot be unpacked is skipped, unless for lack of space (`isOutOfSpace`), which ends the preparation.
+  An archive that cannot be unpacked is skipped, unless for lack of space (`isOutOfSpace`) or past 4 GB without ZIP64
+  (`WrappedArchiveException`), which end the preparation. A staged archive (`ImportedFile.staged`) goes to the streaming
+  unpack, its pictures and attachments staged within the disk budget rather than the in-memory ones, which then bound
+  only the picture links; the received archive stays with its request for Try again.
 - **Pictures** (`IncomingImages`): a song's `src` values are rewritten to the library names of the pictures it brings
   when it is planned, so the review, the duplicate check, and the write all see the text the song will have; that is
   the one change an import makes to a song's text. A picture missing, too large, or refused leaves its directive as it
@@ -59,7 +62,10 @@
   re-planned on the names songs actually got (`ImportPlanner.replanSetlists`), and an identical song whose library file
   sync deleted meanwhile is written after all. A replacement is not re-checked: the user confirmed it by name.
 - Everything is written inside one `ImageRepository.withImagesKept`, each song's pictures just before it and the songs
-  adopted before the block ends, so no prune falls between a picture and its song. A picture whose planned name a
+  adopted before the block ends, so no prune falls between a picture and its song. Inside it, before anything is
+  written, every staged file the plan names must still be there whole (`ImportStagingRepository.isIntact`), else
+  `StagedFileMissingException` with nothing written. A staged file is moved in by the first song bringing it; a move that
+  fails is a write failure like any other, the files moved before it left for the prune. A picture whose planned name a
   different one took meanwhile is stored under a longer one, which the written text names. An identical song stores its
   pictures too: a library restored without them (Android's backup leaves them out) gets them back.
 - Songs before setlists. A disregarded duplicate maps to the library copy; a renamed collision (`x_2.cho`) makes the

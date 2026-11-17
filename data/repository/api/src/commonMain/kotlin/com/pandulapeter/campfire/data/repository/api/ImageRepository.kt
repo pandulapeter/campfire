@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import kotlinx.coroutines.flow.StateFlow
 
@@ -63,17 +64,29 @@ interface ImageRepository {
     suspend fun loadLibraryFileSizes(): Map<String, Long>
 
     /**
-     * What [LibraryImageWriter.addImage] would answer for [bytes] now, with nothing written: the name the library would
+     * What [LibraryImageWriter.addImage] would answer for [content] now, with nothing written: the name the library would
      * keep it under, or why it would refuse it. What an import plans with before anything is written; the write may
      * still come out under a longer name, should a different picture have taken this one in between.
+     *
+     * A picture is judged by its first `ImageInfo.MAX_HEADER_BYTES` and its size alone, so a staged one
+     * (`IncomingContent.Staged`) is never read whole, and named by the hash its staging took. Comparing it with a library
+     * file under the same name reads both a slice at a time. A staged file that is gone throws
+     * `StagedFileMissingException`.
      */
-    suspend fun libraryNameOf(bytes: ByteArray): ImageIntake
+    suspend fun libraryNameOf(content: IncomingContent): ImageIntake
+
+    /** [libraryNameOf] of a picture in memory. */
+    suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = libraryNameOf(IncomingContent.Bytes(bytes))
 
     /**
-     * What [LibraryImageWriter.addAttachment] would answer for [bytes] arriving with [extension] now, with nothing written,
-     * as [libraryNameOf] answers for a picture.
+     * What [LibraryImageWriter.addAttachment] would answer for [content] arriving with [extension] now, with nothing
+     * written, as [libraryNameOf] answers for a picture: judged by its size and [extension] alone.
      */
-    suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake
+    suspend fun libraryNameOfAttachment(content: IncomingContent, extension: String): ImageIntake
+
+    /** [libraryNameOfAttachment] of a file in memory. */
+    suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake =
+        libraryNameOfAttachment(IncomingContent.Bytes(bytes), extension)
 
     /**
      * Keeps [bytes] for the editor's unsaved text, outside the library, under the name its `{image}` directive is to
@@ -121,11 +134,25 @@ interface ImageRepository {
 /** The writes of the library's pictures, only ever made inside [ImageRepository.withImagesKept]. */
 interface LibraryImageWriter {
 
-    /** Stores [bytes] in the library under its content name, refused as [ImageRepository.addDraftImage] refuses. */
-    suspend fun addImage(bytes: ByteArray): ImageIntake
+    /**
+     * Stores [content] in the library under its content name, refused as [ImageRepository.addDraftImage] refuses. A staged
+     * file is moved in (`ImageLocalSource.moveStagedFile`), never written over a library file, and copied from where it
+     * went by a later call naming it under another name. A staged file that is gone throws (`StagedFileMissingException`,
+     * or the storage's failure where it went between the look and the move), having written nothing.
+     */
+    suspend fun addImage(content: IncomingContent): ImageIntake
 
-    /** Stores [bytes] in the library as an attachment, named and refused as [ImageRepository.addDraftAttachment] says. */
-    suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake
+    /** [addImage] of a picture in memory. */
+    suspend fun addImage(bytes: ByteArray): ImageIntake = addImage(IncomingContent.Bytes(bytes))
+
+    /**
+     * Stores [content] in the library as an attachment, named and refused as [ImageRepository.addDraftAttachment] says,
+     * a staged one moved in as [addImage] moves one.
+     */
+    suspend fun addAttachment(content: IncomingContent, extension: String): ImageIntake
+
+    /** [addAttachment] of a file in memory. */
+    suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = addAttachment(IncomingContent.Bytes(bytes), extension)
 
     /**
      * Moves the draft's pictures and attachments among [names] into the library, and answers the ones that had to take another name

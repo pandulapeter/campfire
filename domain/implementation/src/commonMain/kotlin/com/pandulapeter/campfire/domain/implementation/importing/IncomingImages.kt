@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
-import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 
@@ -31,22 +30,18 @@ internal object IncomingImages {
     /**
      * Each of [images] by the file its directive names, as the library would take it: under which name, or why not. An
      * attachment is judged by its size and the extension of the file its line names, which is the one it arrived with.
+     * Content in memory and content in the staging folder are planned alike, the staged kind never read whole.
      */
     suspend fun planned(images: List<ImportedImage>, imageRepository: ImageRepository): Map<String, ImportPlan.SongImage> =
         images.associate { image ->
-            val bytes = when (val content = image.content) {
-                null -> null
-                is IncomingContent.Bytes -> content.bytes
-                // Nothing unpacks into the staging folder for an import to plan yet: the in-memory unpack is the only one run.
-                is IncomingContent.Staged -> error("A staged file is not planned from memory.")
-            }
-            val intake = bytes?.let {
+            val content = image.content
+            val intake = content?.let {
                 if (image.isAttachment) imageRepository.libraryNameOfAttachment(it, image.source.substringAfterLast('.', "")) else imageRepository.libraryNameOf(it)
             }
             image.source to when (intake) {
-                null -> ImportPlan.SongImage(image.source, name = null, bytes = null, problem = image.problem ?: ImportedImage.Problem.MISSING, isAttachment = image.isAttachment)
-                is ImageIntake.Accepted -> ImportPlan.SongImage(image.source, name = intake.name, bytes = bytes, problem = null, isAttachment = image.isAttachment)
-                is ImageIntake.Refused -> ImportPlan.SongImage(image.source, name = null, bytes = null, problem = intake.reason.problem, isAttachment = image.isAttachment)
+                null -> ImportPlan.SongImage(image.source, name = null, content = null, problem = image.problem ?: ImportedImage.Problem.MISSING, isAttachment = image.isAttachment)
+                is ImageIntake.Accepted -> ImportPlan.SongImage(image.source, name = intake.name, content = content, problem = null, isAttachment = image.isAttachment)
+                is ImageIntake.Refused -> ImportPlan.SongImage(image.source, name = null, content = null, problem = intake.reason.problem, isAttachment = image.isAttachment)
             }
         }
 
@@ -71,17 +66,18 @@ internal object IncomingImages {
      * Stores the pictures and attachments [entry] brings through [writer], each one once per [stored] (an import's
      * pictures are often shared by its songs, and comparing a picture with the library's copy reads that copy), and
      * answers [entry]'s text as it is to be written: as planned, unless a file had to take another name since (a different
-     * file took the planned one meanwhile), which the text then names instead.
+     * file took the planned one meanwhile), which the text then names instead. A staged file is moved into the library
+     * by the first song bringing it; one brought again under another name is copied from there by the writer.
      */
     suspend fun store(entry: ImportPlan.SongEntry, writer: LibraryImageWriter, stored: MutableMap<String, ImageIntake>): String {
         val renamed = mutableMapOf<String, String>()
         val renamedAttachments = mutableMapOf<String, String>()
         entry.images.forEach { image ->
             val name = image.name ?: return@forEach
-            val bytes = image.bytes ?: return@forEach
+            val content = image.content ?: return@forEach
             val renames = if (image.isAttachment) renamedAttachments else renamed
             val intake = stored.getOrPut(if (image.isAttachment) ATTACHMENT_KEY + name else name) {
-                if (image.isAttachment) writer.addAttachment(bytes, name.substringAfterLast('.')) else writer.addImage(bytes)
+                if (image.isAttachment) writer.addAttachment(content, name.substringAfterLast('.')) else writer.addImage(content)
             }
             when (intake) {
                 is ImageIntake.Accepted -> if (intake.name != name) renames[name] = intake.name

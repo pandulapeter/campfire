@@ -13,8 +13,12 @@ import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.data.formats.zip.WrappedArchiveException
+import com.pandulapeter.campfire.domain.implementation.ArchiveKind
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
 import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
+import com.pandulapeter.campfire.domain.implementation.FakeStaging
+import com.pandulapeter.campfire.domain.implementation.wrappedArchiveException
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
@@ -34,6 +38,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
@@ -63,23 +68,55 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `an archive that cannot be unpacked is skipped and the rest is still planned`() = runTest {
-        val archive = FakeArchiveRepository { _, _ -> throw IllegalStateException("Not a zip archive.") }
+        ArchiveKind.entries.forEach { kind ->
+            val staging = FakeStaging()
+            val archive = FakeArchiveRepository(staging = staging) { _, _ -> throw IllegalStateException("Not a zip archive.") }
 
-        val plan = prepare(archive = archive)(listOf(ImportedFile("broken.zip", byteArrayOf(1)), song("song.cho")))
+            val plan = prepare(archive = archive)(listOf(staging.arrived(ImportedFile("broken.zip", byteArrayOf(1)), kind), song("song.cho")))
 
-        assertEquals(listOf("broken.zip"), plan.skippedFileNames)
-        assertEquals(listOf("song.cho"), plan.songs.map { it.sourceFileName })
+            assertEquals(listOf("broken.zip"), plan.skippedFileNames)
+            assertEquals(listOf("song.cho"), plan.songs.map { it.sourceFileName })
+        }
     }
 
     @Test
     fun `an archive refused for space ends the whole preparation rather than being skipped`() = runTest {
-        val archive = FakeArchiveRepository { _, _ -> throw StagingRefusedException.NoSpace(neededBytes = 2_000_000_000) }
+        ArchiveKind.entries.forEach { kind ->
+            val staging = FakeStaging()
+            val archive = FakeArchiveRepository(staging = staging) { _, _ -> throw StagingRefusedException.NoSpace(neededBytes = 2_000_000_000) }
 
-        val failure = assertFailsWith<StagingRefusedException.NoSpace> {
-            prepare(archive = archive)(listOf(ImportedFile("library.zip", byteArrayOf(1)), song("song.cho")))
+            val failure = assertFailsWith<StagingRefusedException.NoSpace> {
+                prepare(archive = archive)(listOf(staging.arrived(ImportedFile("library.zip", byteArrayOf(1)), kind), song("song.cho")))
+            }
+
+            assertEquals(2_000_000_000, failure.neededBytes)
+        }
+    }
+
+    @Test
+    fun `an archive past 4 GB that its tool wrapped around ends the whole preparation rather than being skipped`() = runTest {
+        val staging = FakeStaging()
+        val wrapped = wrappedArchiveException()
+        val archive = FakeArchiveRepository(staging = staging) { _, _ -> throw wrapped }
+
+        val failure = assertFailsWith<WrappedArchiveException> {
+            prepare(archive = archive)(listOf(staging.arrived(ImportedFile("library.zip", byteArrayOf(1)), ArchiveKind.STAGED), song("song.cho")))
         }
 
-        assertEquals(2_000_000_000, failure.neededBytes)
+        assertSame(wrapped, failure)
+    }
+
+    @Test
+    fun `a staged archive is unpacked from the staging and never read as the bytes the file carries`() = runTest {
+        val staging = FakeStaging()
+        val unpacked = mutableListOf<List<Byte>>()
+        val archive = FakeArchiveRepository(staging = staging) { bytes, _ -> listOf(song("one.cho")).also { unpacked += bytes.toList() } }
+
+        val plan = prepare(archive = archive)(listOf(staging.arrived(ImportedFile("backup.zip", byteArrayOf(7, 8)), ArchiveKind.STAGED)))
+
+        assertEquals(listOf(listOf<Byte>(7, 8)), unpacked)
+        assertEquals(listOf("one.cho"), plan.songs.map { it.sourceFileName })
+        assertEquals(listOf("backup.zip"), plan.sourceNames)
     }
 
     @Test
@@ -110,22 +147,28 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `every song carries the title and artist of its header and the plan the names of the picked files`() = runTest {
-        val archive = FakeArchiveRepository { _, _ ->
-            listOf(
-                ImportedFile("one.cho", "{title: One}\n{artist: Band}\n".encodeToByteArray()),
-                ImportedFile("two.cho", "{title: Two}\n{subtitle: Live}\n".encodeToByteArray()),
+        val plans = ArchiveKind.entries.map { kind ->
+            val staging = FakeStaging()
+            val archive = FakeArchiveRepository(staging = staging) { _, _ ->
+                listOf(
+                    ImportedFile("one.cho", "{title: One}\n{artist: Band}\n".encodeToByteArray()),
+                    ImportedFile("two.cho", "{title: Two}\n{subtitle: Live}\n".encodeToByteArray()),
+                )
+            }
+
+            val plan = prepare(archive = archive)(
+                listOf(staging.arrived(ImportedFile("backup.zip", byteArrayOf(1)), kind), ImportedFile("Untitled.cho", "[C]la la\n".encodeToByteArray())),
             )
+
+            assertEquals(listOf("backup.zip", "Untitled.cho"), plan.sourceNames)
+            assertEquals(
+                listOf(Triple("one.cho", "One", "Band"), Triple("two.cho", "Two (Live)", ""), Triple("Untitled.cho", "Untitled", "")),
+                plan.songs.map { Triple(it.sourceFileName, it.title, it.artist) },
+            )
+            plan
         }
 
-        val plan = prepare(archive = archive)(
-            listOf(ImportedFile("backup.zip", byteArrayOf(1)), ImportedFile("Untitled.cho", "[C]la la\n".encodeToByteArray())),
-        )
-
-        assertEquals(listOf("backup.zip", "Untitled.cho"), plan.sourceNames)
-        assertEquals(
-            listOf(Triple("one.cho", "One", "Band"), Triple("two.cho", "Two (Live)", ""), Triple("Untitled.cho", "Untitled", "")),
-            plan.songs.map { Triple(it.sourceFileName, it.title, it.artist) },
-        )
+        assertEquals(plans.first(), plans.last())
     }
 
     @Test
@@ -150,13 +193,16 @@ class PrepareImportUseCaseImplTest {
 
     @Test
     fun `a bytes-only archive of a licence text is reported as one file`() = runTest {
-        val licence = "Permission is hereby granted, free of charge, to any person obtaining a copy.\n"
-        val archive = FakeArchiveRepository { _, _ -> listOf(ImportedFile("LICENSE.txt", licence.encodeToByteArray())) }
+        ArchiveKind.entries.forEach { kind ->
+            val staging = FakeStaging()
+            val licence = "Permission is hereby granted, free of charge, to any person obtaining a copy.\n"
+            val archive = FakeArchiveRepository(staging = staging) { _, _ -> listOf(ImportedFile("LICENSE.txt", licence.encodeToByteArray())) }
 
-        val plan = prepare(archive = archive)(listOf(ImportedFile("book.epub", byteArrayOf(0x50, 0x4B, 3, 4, 0))))
+            val plan = prepare(archive = archive)(listOf(staging.arrived(ImportedFile("book.epub", byteArrayOf(0x50, 0x4B, 3, 4, 0)), kind)))
 
-        assertEquals(listOf("book.epub"), plan.skippedFileNames)
-        assertTrue(plan.songs.isEmpty())
+            assertEquals(listOf("book.epub"), plan.skippedFileNames)
+            assertTrue(plan.songs.isEmpty())
+        }
     }
 
     @Test

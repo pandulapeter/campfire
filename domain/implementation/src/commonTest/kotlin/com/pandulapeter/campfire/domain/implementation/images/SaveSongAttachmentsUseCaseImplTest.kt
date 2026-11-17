@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.images
 
 import com.pandulapeter.campfire.chordpro.model.ChordProAttachment
 import com.pandulapeter.campfire.data.model.image.ImageIntake
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.domain.api.images.SaveSongAttachmentsResult
@@ -32,8 +33,8 @@ class SaveSongAttachmentsUseCaseImplTest {
             return block(object : LibraryImageWriter {
                 override val heldNames: Set<String> = emptySet()
 
-                override suspend fun addImage(bytes: ByteArray): ImageIntake = error("Not expected.")
-                override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = error("Not expected.")
+                override suspend fun addImage(content: IncomingContent): ImageIntake = error("Not expected.")
+                override suspend fun addAttachment(content: IncomingContent, extension: String): ImageIntake = error("Not expected.")
                 override suspend fun moveDraftImages(names: Set<String>) = renamed.also { moved += names }
             }).also { isKept = false }
         }

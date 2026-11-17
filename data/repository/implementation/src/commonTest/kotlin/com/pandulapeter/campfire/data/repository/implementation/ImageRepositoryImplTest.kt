@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.song.Song
@@ -31,6 +33,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ImageRepositoryImplTest {
@@ -400,6 +403,66 @@ class ImageRepositoryImplTest {
 
         assertEquals(Sha256.hashToHex(DOCUMENT).take(17) + ".pdf", name)
         assertTrue(local.comparingReads.isEmpty())
+    }
+
+    @Test
+    fun `a staged picture is named from its head as one in memory is and moved into the library`() = runTest {
+        val repository = repository()
+        val staged = local.stage(PHOTO, ".png")
+
+        val planned = repository.libraryNameOf(IncomingContent.Staged(staged))
+        val stored = repository.withImagesKept { writer ->
+            // Looked at inside the block, since a song naming the picture is what keeps it from the next prune.
+            writer.addImage(IncomingContent.Staged(staged)).also {
+                assertContentEquals(PHOTO, local.shelves.getValue(ImageShelf.LIBRARY)[NAME])
+                assertEquals(ImageSize(width = 40, height = 30), repository.loadImageSize(NAME))
+            }
+        }
+
+        assertEquals(ImageIntake.Accepted(NAME), planned)
+        assertEquals(planned, stored)
+        assertTrue(local.staged.isEmpty())
+    }
+
+    @Test
+    fun `a staged file is refused as one in memory is and nothing is moved`() = runTest {
+        val repository = repository()
+        val text = local.stage("{title: x}".encodeToByteArray())
+        val large = local.stage(PHOTO + ByteArray(ImportLimits.MAX_IMAGE_FILE_SIZE.toInt()), ".png")
+        val program = local.stage(DOCUMENT, ".exe")
+
+        assertEquals(ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE), repository.withImagesKept { it.addImage(IncomingContent.Staged(text)) })
+        assertEquals(ImageIntake.Refused(ImageRefusal.TOO_LARGE), repository.libraryNameOf(IncomingContent.Staged(large)))
+        assertEquals(ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT), repository.withImagesKept { it.addAttachment(IncomingContent.Staged(program), "exe") })
+        assertTrue(local.shelves.values.all { it.isEmpty() })
+        assertEquals(3, local.staged.size)
+    }
+
+    @Test
+    fun `a staged file the library holds under its name is not written over and other bytes there take the next name`() = runTest {
+        val repository = repository()
+        local.shelves.getValue(ImageShelf.LIBRARY)[NAME] = PHOTO.copyOf()
+        val same = local.stage(PHOTO, ".png")
+        val sameSizeOther = DOCUMENT.copyOf().also { it[it.lastIndex] = 'x'.code.toByte() }
+        local.shelves.getValue(ImageShelf.LIBRARY)[Sha256.hashToHex(DOCUMENT).take(16) + ".pdf"] = sameSizeOther
+        val document = local.stage(DOCUMENT, ".pdf")
+        publish(song("a.cho", NAME, Sha256.hashToHex(DOCUMENT).take(16) + ".pdf", Sha256.hashToHex(DOCUMENT).take(17) + ".pdf"))
+
+        assertEquals(NAME, assertAccepted(repository.withImagesKept { it.addImage(IncomingContent.Staged(same)) }))
+        val attached = assertAccepted(repository.withImagesKept { it.addAttachment(IncomingContent.Staged(document), "pdf") })
+
+        assertEquals(Sha256.hashToHex(DOCUMENT).take(17) + ".pdf", attached)
+        assertContentEquals(sameSizeOther, local.shelves.getValue(ImageShelf.LIBRARY)[Sha256.hashToHex(DOCUMENT).take(16) + ".pdf"])
+        assertContentEquals(DOCUMENT, local.shelves.getValue(ImageShelf.LIBRARY)[attached])
+    }
+
+    @Test
+    fun `a staged picture that is gone fails its planning`() = runTest {
+        val repository = repository()
+        val staged = local.stage(PHOTO, ".png")
+        local.staged.clear()
+
+        assertFailsWith<StagedFileMissingException> { repository.libraryNameOf(IncomingContent.Staged(staged)) }
     }
 
     private fun TestScope.repository(

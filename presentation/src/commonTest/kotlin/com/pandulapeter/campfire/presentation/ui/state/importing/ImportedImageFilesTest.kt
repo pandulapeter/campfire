@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -25,7 +26,7 @@ class ImportedImageFilesTest {
         val song = ImportPlan(imageFiles = pictures).pictureSong()!!
         assertEquals("Chart page 1", song.title)
         assertEquals(listOf("Chart page 1.jpg", "page 2.png"), song.images.map { it.source })
-        assertEquals(listOf(1.toByte(), 2.toByte()), song.images.map { it.bytes!!.single() })
+        assertEquals(listOf(1.toByte(), 2.toByte()), song.images.map { (it.content as IncomingContent.Bytes).bytes.single() })
         assertEquals(ImportPlan.Status.NEW, song.status)
     }
 
@@ -41,7 +42,7 @@ class ImportedImageFilesTest {
     fun `a picture too large to read comes along unbrought, after the pictures that were read`() {
         val song = ImportPlan(imageFiles = pictures, oversizedFileNames = listOf("huge.webp")).pictureSong()!!
         assertEquals(listOf("Chart page 1.jpg", "page 2.png", "huge.webp"), song.images.map { it.source })
-        assertNull(song.images.last().bytes)
+        assertNull(song.images.last().content)
         assertEquals(ImportedImage.Problem.TOO_LARGE, song.images.last().problem)
     }
 

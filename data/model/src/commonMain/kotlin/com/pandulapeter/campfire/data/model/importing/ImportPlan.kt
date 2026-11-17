@@ -91,19 +91,20 @@ data class ImportPlan(
 
     /**
      * A picture an incoming song names, or with [isAttachment] a file attached to it: brought under [name], the library's
-     * name for [bytes], which the song's directive now names; or not brought, for [problem], its directive left naming
-     * [source], so the song shows it as missing.
+     * name for [content], which the song's directive now names; or not brought, for [problem], its directive left naming
+     * [source], so the song shows it as missing. [content] is in memory or a file of the staging folder, which Import
+     * moves into the library.
      */
     class SongImage(
         /** The file the directive named as it arrived. */
         val source: String,
         val name: String?,
-        val bytes: ByteArray?,
+        val content: IncomingContent?,
         val problem: ImportedImage.Problem?,
         val isAttachment: Boolean = false,
     ) {
 
-        /** A name is the file's content, so the bytes need no comparing. */
+        /** A name is the file's content, so the content needs no comparing. */
         override fun equals(other: Any?) = this === other || (
             other is SongImage && source == other.source && name == other.name && problem == other.problem && isAttachment == other.isAttachment
             )

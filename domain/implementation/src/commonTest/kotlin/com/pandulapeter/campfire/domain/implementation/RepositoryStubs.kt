@@ -18,6 +18,8 @@ import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportFileWriter
@@ -184,10 +186,12 @@ internal class RecordingSharedLinksRepository(
 
 /**
  * Keeps the files of the last archive it packed, and unpacks every archive into what [unpack] answers - nothing,
- * unless a test says otherwise.
+ * unless a test says otherwise. An archive in [staging] is unpacked from its bytes there into the same files, with
+ * their pictures and attachments staged rather than in memory, as the streaming unpack hands them over.
  */
 internal class FakeArchiveRepository(
     private val songsIn: suspend (file: ImportedFile) -> List<ImportedFile>? = { null },
+    private val staging: FakeStaging = FakeStaging(),
     private val unpack: suspend (archive: ByteArray, maxSize: Long) -> List<ImportedFile> = { _, _ -> emptyList() },
 ) : ArchiveRepository {
 
@@ -203,6 +207,17 @@ internal class FakeArchiveRepository(
             files = files,
             imageSize = pictures.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
             attachmentSize = attachments.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
+        )
+    }
+
+    override suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive {
+        val bytes = checkNotNull(staging.bytesOf(archive)) { "The staged archive is gone." }
+        val files = staging.staged(unpack.invoke(bytes, maxSize))
+        val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
+        return UnpackedArchive(
+            files = files,
+            imageSize = pictures.mapNotNull { it.content?.size }.sum(),
+            attachmentSize = attachments.mapNotNull { it.content?.size }.sum(),
         )
     }
 
@@ -277,11 +292,11 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun loadImageSize(name: String): ImageSize? = unexpected()
     override suspend fun readImageSize(bytes: ByteArray): ImageSize? = unexpected()
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
-    override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
+    override suspend fun libraryNameOf(content: IncomingContent): ImageIntake = unexpected()
 
     override suspend fun loadLibraryFileSizes(): Map<String, Long> = unexpected()
 
-    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
+    override suspend fun libraryNameOfAttachment(content: IncomingContent, extension: String): ImageIntake = unexpected()
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
@@ -296,9 +311,12 @@ internal open class ImageRepositoryStub : ImageRepository {
  * The library's pictures in memory, named as the real repository names them in shape: [PNG] bytes are a picture, named by
  * a hash of their content and `.png`; [HEIC] bytes a picture of a format the library refuses; anything else no picture.
  * A test that puts other bytes under a name in [library] makes it taken, and the picture then takes one digit more, as a
- * SHA-256 prefix would.
+ * SHA-256 prefix would. A staged file is read from [staging] and moved out of it when written.
  */
-internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = mutableMapOf()) : ImageRepository {
+internal class FakeImageRepository(
+    val library: MutableMap<String, ByteArray> = mutableMapOf(),
+    val staging: FakeStaging = FakeStaging(),
+) : ImageRepository {
 
     /** Every picture [LibraryImageWriter.addImage] was handed, in order, and whether it ran inside [withImagesKept]. */
     val added = mutableListOf<String>()
@@ -318,6 +336,15 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
     override suspend fun loadLibraryImageNames() = library.keys.sorted()
 
     override suspend fun loadLibraryFileSizes() = library.mapValues { it.value.size.toLong() }
+
+    override suspend fun libraryNameOf(content: IncomingContent) = libraryNameOf(bytesOf(content))
+
+    override suspend fun libraryNameOfAttachment(content: IncomingContent, extension: String) = libraryNameOfAttachment(bytesOf(content), extension)
+
+    private fun bytesOf(content: IncomingContent) = when (content) {
+        is IncomingContent.Bytes -> content.bytes
+        is IncomingContent.Staged -> staging.bytesOf(content.file) ?: throw StagedFileMissingException(content.file.name)
+    }
 
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = when {
         bytes.size > ImportLimits.MAX_IMAGE_FILE_SIZE -> ImageIntake.Refused(ImageRefusal.TOO_LARGE)
@@ -359,20 +386,19 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
             block(object : LibraryImageWriter {
                 override val heldNames: Set<String> = emptySet()
 
-                override suspend fun addImage(bytes: ByteArray) = libraryNameOf(bytes).also { intake ->
-                    check(isKeeping)
-                    if (intake is ImageIntake.Accepted) {
-                        added += intake.name
-                        library[intake.name] = bytes
-                    }
-                }
+                override suspend fun addImage(content: IncomingContent) = libraryNameOf(content).also { intake -> store(intake, content) }
 
-                override suspend fun addAttachment(bytes: ByteArray, extension: String) = libraryNameOfAttachment(bytes, extension).also { intake ->
+                override suspend fun addAttachment(content: IncomingContent, extension: String) =
+                    libraryNameOfAttachment(content, extension).also { intake -> store(intake, content) }
+
+                private fun store(intake: ImageIntake, content: IncomingContent) {
                     check(isKeeping)
-                    if (intake is ImageIntake.Accepted) {
-                        added += intake.name
-                        library[intake.name] = bytes
+                    if (intake !is ImageIntake.Accepted) return
+                    library[intake.name] = when (content) {
+                        is IncomingContent.Bytes -> content.bytes
+                        is IncomingContent.Staged -> staging.moveOut(content.file)
                     }
+                    added += intake.name
                 }
 
                 override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = unexpected()

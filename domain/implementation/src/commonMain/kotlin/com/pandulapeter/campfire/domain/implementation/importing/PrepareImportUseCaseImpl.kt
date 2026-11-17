@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.chordpro.convert.ChordSheetConverter
 import com.pandulapeter.campfire.chordpro.convert.ChordSheetStructure
 import com.pandulapeter.campfire.chordpro.edit.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.model.displayTitle
+import com.pandulapeter.campfire.data.formats.zip.WrappedArchiveException
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
@@ -126,7 +127,8 @@ internal class PrepareImportUseCaseImpl(
             // way over, and the songs in them are worth looking for. Only a document is taken at its name's word, since
             // a Word file is a zip archive of its parts.
             val isArchiveByName = LibraryFiles.isArchiveFileName(file.name)
-            val isArchive = isArchiveByName || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
+            val staged = file.staged
+            val isArchive = staged != null || isArchiveByName || (!LibraryFiles.isDocumentFileName(file.name) && LibraryFiles.isZipArchive(file.bytes))
             when {
                 !isArchive -> {
                     // Another app's export that is no archive (a JSON document of songs) is the songs it holds, before a
@@ -135,16 +137,24 @@ internal class PrepareImportUseCaseImpl(
                     val songs = if (LibraryFiles.isHiddenFileName(file.name)) null else archiveRepository.songsIn(file)
                     if (songs == null) sort(file = file, origin = null) else songs.forEach { sort(file = it, origin = index) }
                 }
-                file.isTooLarge || file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE -> triage.oversizedFileNames += file.name
+                file.isTooLarge || (staged == null && file.bytes.size > ImportLimits.MAX_ARCHIVE_SIZE) -> triage.oversizedFileNames += file.name
                 else -> try {
-                    val unpacked = archiveRepository.unpack(
-                        archive = file.bytes,
-                        maxSize = remaining,
-                        maxImageSize = remainingImages,
-                        maxAttachmentSize = remainingAttachments,
-                    )
-                    remainingImages -= unpacked.imageSize
-                    remainingAttachments -= unpacked.attachmentSize
+                    val unpacked = if (staged != null) {
+                        // Its pictures and attachments are staged on disk, within the staging's budget rather than the
+                        // in-memory ones, which go on bounding only what is held in memory (the picture links). The
+                        // received archive stays the request's, for Try again, until the request settles.
+                        archiveRepository.unpack(archive = staged, maxSize = remaining)
+                    } else {
+                        archiveRepository.unpack(
+                            archive = file.bytes,
+                            maxSize = remaining,
+                            maxImageSize = remainingImages,
+                            maxAttachmentSize = remainingAttachments,
+                        ).also {
+                            remainingImages -= it.imageSize
+                            remainingAttachments -= it.attachmentSize
+                        }
+                    }
                     val entries = unpacked.files
                     // Everyday document formats are zip archives too (an OpenDocument, a spreadsheet, an e-book), and
                     // their parts are not what anybody picked: one recognised by its bytes alone that holds nothing an
@@ -158,8 +168,10 @@ internal class PrepareImportUseCaseImpl(
                     throw exception
                 } catch (exception: Exception) {
                     // A device without room for what the archive unpacks into is no fault of this file, and a later one
-                    // would only run into it again: the whole import ends, saying so rather than skipping files.
-                    if (exception.isOutOfSpace()) throw exception
+                    // would only run into it again: the whole import ends, saying so rather than skipping files. An
+                    // archive past 4 GB that its tool wrapped around has a sentence of its own, which skipping it
+                    // would never say.
+                    if (exception.isOutOfSpace() || exception is WrappedArchiveException) throw exception
                     logger.log("Could not unpack \"${file.name}\": ${exception.message}")
                     triage.skippedFileNames += file.name
                 }

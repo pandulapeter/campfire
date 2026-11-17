@@ -24,12 +24,19 @@ internal object LibraryImages {
     class Examined(val refusal: ImageRefusal?, val extension: String, val size: ImageSize?)
 
     /** Judged by the bytes alone, never by the name a picture arrived with. */
-    fun examine(bytes: ByteArray): Examined {
-        if (bytes.size > ImportLimits.MAX_IMAGE_FILE_SIZE) return Examined(ImageRefusal.TOO_LARGE, "", null)
-        val info = ImageInfo.of(bytes) ?: return Examined(
+    fun examine(bytes: ByteArray) = examine(head = bytes, size = bytes.size.toLong())
+
+    /**
+     * [examine] of a picture of [size] bytes from its [head], its first [ImageInfo.MAX_HEADER_BYTES] (or all of it), which
+     * is everything a picture's header is read from: a staged picture is judged without being read whole, exactly as it
+     * would be in memory.
+     */
+    fun examine(head: ByteArray, size: Long): Examined {
+        if (size > ImportLimits.MAX_IMAGE_FILE_SIZE) return Examined(ImageRefusal.TOO_LARGE, "", null)
+        val info = ImageInfo.of(head) ?: return Examined(
             refusal = when {
-                ImageInfo.isOverPixelLimit(bytes) -> ImageRefusal.TOO_MANY_PIXELS
-                ImageFormats.isRefusedImage(bytes) -> ImageRefusal.UNSUPPORTED_FORMAT
+                ImageInfo.isOverPixelLimit(head) -> ImageRefusal.TOO_MANY_PIXELS
+                ImageFormats.isRefusedImage(head) -> ImageRefusal.UNSUPPORTED_FORMAT
                 else -> ImageRefusal.NOT_AN_IMAGE
             },
             extension = "",
@@ -38,14 +45,17 @@ internal object LibraryImages {
         return Examined(refusal = null, extension = info.format.extension, size = ImageSize(width = info.width, height = info.height))
     }
 
+    /** [examineAttachment] of a file in memory. */
+    fun examineAttachment(bytes: ByteArray, extension: String) = examineAttachment(size = bytes.size.toLong(), extension = extension)
+
     /**
-     * Judged by its size and the [extension] it arrived with alone, lowercased (with or without its dot): an attachment
+     * Judged by its [size] and the [extension] it arrived with alone, lowercased (with or without its dot): an attachment
      * may be anything of [LibraryFiles.ATTACHMENT_EXTENSIONS], so its bytes say nothing a header could check.
      */
-    fun examineAttachment(bytes: ByteArray, extension: String): Examined {
+    fun examineAttachment(size: Long, extension: String): Examined {
         val named = extension.lowercase().let { if (it.startsWith('.')) it else ".$it" }
         return when {
-            bytes.size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE -> Examined(ImageRefusal.TOO_LARGE, "", null)
+            size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE -> Examined(ImageRefusal.TOO_LARGE, "", null)
             named !in LibraryFiles.ATTACHMENT_EXTENSIONS -> Examined(ImageRefusal.UNSUPPORTED_FORMAT, "", null)
             else -> Examined(refusal = null, extension = named, size = null)
         }

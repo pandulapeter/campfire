@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.state.importing
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 
 /**
@@ -41,8 +42,8 @@ internal fun ImportPlan.pictureSong(): ImportPlan.SongEntry? {
         status = ImportPlan.Status.NEW,
         sourceFileName = first.name,
         title = first.baseName,
-        images = imageFiles.map { ImportPlan.SongImage(source = it.name, name = null, bytes = it.bytes, problem = null) } +
-            oversizedFileNames.map { ImportPlan.SongImage(source = it, name = null, bytes = null, problem = ImportedImage.Problem.TOO_LARGE) },
+        images = imageFiles.map { ImportPlan.SongImage(source = it.name, name = null, content = IncomingContent.Bytes(it.bytes), problem = null) } +
+            oversizedFileNames.map { ImportPlan.SongImage(source = it, name = null, content = null, problem = ImportedImage.Problem.TOO_LARGE) },
     )
 }
 

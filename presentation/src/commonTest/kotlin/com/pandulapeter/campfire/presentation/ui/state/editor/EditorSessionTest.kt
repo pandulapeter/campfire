@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.domain.api.images.DownloadPictureUseCase
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ExamineImageUseCase
@@ -630,7 +631,7 @@ class EditorSessionTest {
             text = text,
             status = ImportPlan.Status.NEW,
             sourceFileName = "Pasted.txt",
-            images = listOf(ImportPlan.SongImage(source = "https://example.com/chart.png", name = "draft-3.png", bytes = byteArrayOf(3), problem = null)),
+            images = listOf(ImportPlan.SongImage(source = "https://example.com/chart.png", name = "draft-3.png", content = IncomingContent.Bytes(byteArrayOf(3)), problem = null)),
         )
         assertTrue(fixture.session.openNewSongEditor(song, null))
         assertEquals(text, fixture.session.editorDraft.value?.text)
@@ -654,7 +655,7 @@ class EditorSessionTest {
             status = ImportPlan.Status.NEW,
             sourceFileName = "photo.webp",
             title = "photo",
-            images = listOf(ImportPlan.SongImage(source = "photo.webp", name = null, bytes = null, problem = ImportedImage.Problem.TOO_LARGE)),
+            images = listOf(ImportPlan.SongImage(source = "photo.webp", name = null, content = null, problem = ImportedImage.Problem.TOO_LARGE)),
         )
         assertFalse(fixture.session.openNewSongEditor(song, null))
         assertEquals(listOf<Message>(Message.ImageTooLargeToRead), fixture.messages)
@@ -684,7 +685,7 @@ class EditorSessionTest {
         status = ImportPlan.Status.NEW,
         sourceFileName = "page 1.jpg",
         title = "page 1",
-        images = pictures.mapIndexed { index, bytes -> ImportPlan.SongImage(source = "page ${index + 1}.jpg", name = null, bytes = bytes, problem = null) },
+        images = pictures.mapIndexed { index, bytes -> ImportPlan.SongImage(source = "page ${index + 1}.jpg", name = null, content = IncomingContent.Bytes(bytes), problem = null) },
     )
 
     /** A pasted [text], as the import hands it over. */

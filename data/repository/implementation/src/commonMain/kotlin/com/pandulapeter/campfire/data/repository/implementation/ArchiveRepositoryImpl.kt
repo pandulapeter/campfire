@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
@@ -23,6 +24,8 @@ internal class ArchiveRepositoryImpl(
 
     override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long) =
         archiveLocalSource.unpack(archive = archive, maxSize = maxSize, maxImageSize = maxImageSize, maxAttachmentSize = maxAttachmentSize)
+
+    override suspend fun unpack(archive: StagedFile, maxSize: Long) = archiveLocalSource.unpack(archive = archive, maxSize = maxSize)
 
     override suspend fun songsIn(file: ImportedFile) = archiveLocalSource.songsIn(file)
 

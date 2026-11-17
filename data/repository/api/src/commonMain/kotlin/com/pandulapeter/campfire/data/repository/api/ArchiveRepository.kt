@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
@@ -23,6 +24,9 @@ interface ArchiveRepository {
 
     /** See `ArchiveLocalSource.unpack`. */
     suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive
+
+    /** See `ArchiveLocalSource.unpack`, the one reading an archive in the staging folder. */
+    suspend fun unpack(archive: StagedFile, maxSize: Long): UnpackedArchive
 
     /** See `ArchiveLocalSource.songsIn`. */
     suspend fun songsIn(file: ImportedFile): List<ImportedFile>?

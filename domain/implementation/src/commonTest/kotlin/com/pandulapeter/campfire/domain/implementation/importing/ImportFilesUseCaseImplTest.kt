@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.importing
 
+import com.pandulapeter.campfire.domain.implementation.ArchiveKind
 import com.pandulapeter.campfire.domain.implementation.FakeArchiveRepository
+import com.pandulapeter.campfire.domain.implementation.FakeStaging
 import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.export.ExportSongsUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.FakeImportDownloadRepository
@@ -33,6 +35,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
@@ -70,7 +73,7 @@ class ImportFilesUseCaseImplTest {
             val plan = prepare(songs, archive = archive)(listOf(ImportedFile(source, raw.encodeToByteArray())))
             assertEquals(expected, plan.songs.single().text)
             assertFalse(plan.songs.single().isConverted)
-            ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+            ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
             assertEquals(expected, songs.files["song.cho"])
         }
     }
@@ -111,7 +114,7 @@ class ImportFilesUseCaseImplTest {
         val plan = prepare(listOf(plain))
         assertEquals("[Am]Hello [C]world\n", plan.songs.single().text)
         assertTrue(plan.songs.single().isConverted)
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
         assertEquals(ImportPlan.Status.IDENTICAL, prepare(listOf(plain)).songs.single().status)
         val chordPro = ImportedFile("sheet.cho", "Am     C\nHello world".encodeToByteArray())
@@ -138,7 +141,7 @@ class ImportFilesUseCaseImplTest {
         assertEquals("original.PDF", plan.songs.single().sourceFileName)
         assertEquals(listOf("scan.pdf", "old.doc"), plan.unreadableDocumentFileNames)
         assertTrue(plan.skippedFileNames.isEmpty())
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         assertEquals(listOf("title.cho"), result.convertedSongFileNames)
         assertEquals(plan.unreadableDocumentFileNames, result.unreadableDocumentFileNames)
         assertEquals(listOf("oversized.pdf"), prepare(songs, source)(listOf(ImportedFile.unread("oversized.pdf", isTooLarge = true))).oversizedFileNames)
@@ -154,7 +157,7 @@ class ImportFilesUseCaseImplTest {
         val plan = prepare(songs, archive = archive)(listOf(ImportedFile("archive.zip", byteArrayOf(1))))
         assertTrue(plan.hasConflicts)
         assertEquals(listOf("scan.docx"), plan.unreadableDocumentFileNames)
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, plan.leavingOutConflicts())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, plan.leavingOutConflicts())
         assertTrue(result.convertedSongFileNames.isEmpty())
     }
 
@@ -209,10 +212,10 @@ class ImportFilesUseCaseImplTest {
         val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old words\n"))
         val plain = ImportedFile("sheet.txt", "Am     C\nHello world".encodeToByteArray())
         val prepare = prepare(songs)
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
         assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
         assertEquals("[Am]Hello [C]world\n", songs.files["sheet.cho"])
-        val repeated = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
+        val repeated = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(prepare(listOf(plain)), choosing(ImportConflictResolution.REPLACE))
         assertEquals(listOf("sheet.cho"), repeated.duplicateFileNames)
         assertTrue(repeated.convertedSongFileNames.isEmpty())
     }
@@ -232,7 +235,7 @@ class ImportFilesUseCaseImplTest {
         val plan = prepare(songs, documents)(listOf(ImportedFile("songbook.pdf", byteArrayOf(1))))
         assertEquals(listOf("first.cho", "second.cho"), plan.songs.map { it.fileName })
         assertTrue(plan.songs.all { it.sourceFileName == null && it.isConverted })
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         assertEquals(listOf("first.cho", "second.cho"), result.convertedSongFileNames)
     }
 
@@ -279,7 +282,7 @@ class ImportFilesUseCaseImplTest {
             val plan = ImportPlan(songs = songEntries, setlists = setlistEntries)
             assertFalse(plan.hasConflicts)
 
-            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository()).invoke(plan, choosing(resolution))
+            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choosing(resolution))
 
             assertEquals(mapOf("foo.cho" to A, "foo_2.cho" to B), songs.files, "$resolution")
             assertEquals(listOf("foo.cho", "foo_2.cho"), setlists.files.values.single().entries.map { it.songFileName }, "$resolution")
@@ -302,7 +305,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository())
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, choosing(ImportConflictResolution.REPLACE))
 
         assertEquals(mapOf("twice.cho" to exported[0], "twice_2.cho" to exported[1]), songs.files)
@@ -328,7 +331,7 @@ class ImportFilesUseCaseImplTest {
             songFileNames = ImportPlanner.plannedSongFileNames(songEntries),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository()).invoke(ImportPlan(songs = songEntries, setlists = setlistEntries), ImportChoices())
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(ImportPlan(songs = songEntries, setlists = setlistEntries), ImportChoices())
 
         assertEquals(
             mapOf("one" to listOf("a-song.cho"), "two" to listOf("b-song.cho")),
@@ -351,13 +354,13 @@ class ImportFilesUseCaseImplTest {
             ),
         )
         val skipped = FakeSongRepository(files = mutableMapOf("x.cho" to A))
-        val skippedResult = ImportFilesUseCaseImpl(skipped, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan(), plan().leavingOutConflicts())
+        val skippedResult = ImportFilesUseCaseImpl(skipped, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan(), plan().leavingOutConflicts())
         assertEquals(listOf("first.cho"), skippedResult.leftOutFileNames)
         assertTrue(skippedResult.duplicateFileNames.isEmpty())
         assertEquals(mapOf("x.cho" to A), skipped.files)
 
         val kept = FakeSongRepository(files = mutableMapOf("x.cho" to A))
-        val keptResult = ImportFilesUseCaseImpl(kept, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan(), ImportChoices())
+        val keptResult = ImportFilesUseCaseImpl(kept, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan(), ImportChoices())
         assertEquals(listOf("x_2.cho"), keptResult.importedSongFileNames)
         assertTrue(keptResult.duplicateFileNames.isEmpty())
         assertTrue(keptResult.leftOutFileNames.isEmpty())
@@ -373,7 +376,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
 
         assertEquals(listOf("x.cho"), result.duplicateFileNames)
     }
@@ -388,7 +391,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
 
         assertEquals(listOf("set.setlist.json"), result.duplicateFileNames)
         assertEquals(listOf("set.setlist.json"), setlists.files.keys.toList())
@@ -404,7 +407,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(mutableMapOf()), setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
 
         assertEquals(listOf("set.setlist.json"), result.importedSetlistFileNames)
         assertEquals(emptyList(), result.duplicateFileNames)
@@ -414,7 +417,7 @@ class ImportFilesUseCaseImplTest {
     fun `the songs written or already there that come without files they name are reported with what they lack`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf("kept.cho" to A))
         fun missing(source: String, isAttachment: Boolean = false) =
-            ImportPlan.SongImage(source = source, name = null, bytes = null, problem = ImportedImage.Problem.MISSING, isAttachment = isAttachment)
+            ImportPlan.SongImage(source = source, name = null, content = null, problem = ImportedImage.Problem.MISSING, isAttachment = isAttachment)
         val plan = ImportPlan(
             songs = listOf(
                 ImportPlan.SongEntry(
@@ -443,7 +446,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
 
         assertEquals(
             listOf(
@@ -473,7 +476,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository()).invoke(plan, plan.leavingOutConflicts())
+        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, plan.leavingOutConflicts())
 
         assertEquals(listOf("Beatles-Yesterday.cho"), setlists.files.values.single().entries.map { it.songFileName })
         assertEquals(listOf("beatles-yesterday.cho"), result.leftOutFileNames)
@@ -487,14 +490,14 @@ class ImportFilesUseCaseImplTest {
             songs = listOf(ImportPlan.SongEntry(fileName = "song_2.cho", text = text, status = ImportPlan.Status.IDENTICAL, sourceFileName = "song_2.cho")),
         )
         val gone = FakeSongRepository(files = mutableMapOf())
-        val goneResult = ImportFilesUseCaseImpl(gone, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan(), plan().leavingOutConflicts())
+        val goneResult = ImportFilesUseCaseImpl(gone, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan(), plan().leavingOutConflicts())
         assertEquals(listOf("song.cho" to false), gone.importCalls)
         assertEquals(listOf("song.cho"), goneResult.importedSongFileNames)
         assertTrue(goneResult.duplicateFileNames.isEmpty())
 
         for (libraryName in listOf("song_2.cho", "Song_2.cho")) {
             val there = FakeSongRepository(files = mutableMapOf(libraryName to text))
-            val thereResult = ImportFilesUseCaseImpl(there, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan(), plan().leavingOutConflicts())
+            val thereResult = ImportFilesUseCaseImpl(there, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan(), plan().leavingOutConflicts())
             assertTrue(there.importCalls.isEmpty(), libraryName)
             assertEquals(listOf("song_2.cho"), thereResult.duplicateFileNames, libraryName)
         }
@@ -510,7 +513,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository()).invoke(plan, choosing(ImportConflictResolution.REPLACE))
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choosing(ImportConflictResolution.REPLACE))
 
         assertEquals(mapOf("foo.cho" to A, "foo_2.cho" to B), songs.files)
     }
@@ -526,7 +529,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, imageRepository = FakeImageRepository())
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, imageRepository = FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, ImportChoices(tags = listOf("Christmas", "Choir")))
 
         assertEquals("{title: New}\n{tag: christmas}\n{tag: Choir}\n", songs.files["new.cho"])
@@ -556,7 +559,7 @@ class ImportFilesUseCaseImplTest {
         expectedCalls.forEach { (resolution, expectedCall) ->
             val songs = FakeSongRepository(files = mutableMapOf("Wonderwall.cho" to A))
 
-            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository()).invoke(plan, choosing(resolution))
+            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choosing(resolution))
 
             assertEquals(listOf(expectedCall), songs.importCalls, "$resolution")
         }
@@ -578,7 +581,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository()).invoke(plan, choosing(ImportConflictResolution.REPLACE))
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choosing(ImportConflictResolution.REPLACE))
 
         assertEquals(listOf("foo.cho", "bar.cho"), songs.adopted)
         assertEquals(listOf("set.setlist.json"), setlists.adopted)
@@ -596,7 +599,7 @@ class ImportFilesUseCaseImplTest {
             setlists = emptyList(),
         )
 
-        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
 
         val (first, second) = songs.takenNamesPerCall.map { checkNotNull(it) }
         assertTrue(LibraryFiles.identityKey("Song.cho") in first)
@@ -622,7 +625,7 @@ class ImportFilesUseCaseImplTest {
             val plan = ImportPlan(
                 setlists = ImportPlanner.planSetlists(incoming = incoming, librarySetlists = listOf(library), songFileNames = emptyMap()),
             )
-            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository()).invoke(plan, choosing(resolution))
+            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists, logger = Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choosing(resolution))
         }
 
         assertEquals(planned, importing(incoming(listOf("b.cho")), ImportConflictResolution.REPLACE).files.getValue("gig.setlist.json").date)
@@ -653,7 +656,7 @@ class ImportFilesUseCaseImplTest {
                 ),
             )
             assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.setlists.map { it.status })
-            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists, logger = Logger.Standard, imageRepository = FakeImageRepository())
+            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists, logger = Logger.Standard, imageRepository = FakeImageRepository(), importStagingRepository = FakeStaging())
                 .invoke(plan, choosing(ImportConflictResolution.REPLACE))
             setlists.files.getValue(library.fileName)
         }
@@ -675,7 +678,7 @@ class ImportFilesUseCaseImplTest {
             },
         )
 
-        val result = ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, imageRepository = FakeImageRepository())
+        val result = ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository(), logger = Logger.Standard, imageRepository = FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, ImportChoices())
 
         assertTrue(result.isFailed)
@@ -696,7 +699,7 @@ class ImportFilesUseCaseImplTest {
             },
             setlists = listOf(ImportPlan.SetlistEntry("set.setlist.json", setlist(listOf("source1.txt")), ImportPlan.Status.NEW, "source.json")),
         )
-        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         assertTrue(result.isFailed)
         assertEquals(listOf("1.cho"), result.importedSongFileNames)
         assertEquals(listOf("1.cho"), result.convertedSongFileNames)
@@ -714,7 +717,7 @@ class ImportFilesUseCaseImplTest {
             ImportPlan.SongEntry("duplicate.cho", A, ImportPlan.Status.IDENTICAL, null),
             ImportPlan.SongEntry("conflict.cho", A, ImportPlan.Status.CONFLICTING, null),
         ))
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, plan.leavingOutConflicts(), onProgress = events::add)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, plan.leavingOutConflicts(), onProgress = events::add)
         val importing = events.filter { it.phase == ImportProgress.Phase.IMPORTING }
         assertEquals(listOf(0, 1, 2, 3), importing.map { it.completed })
         assertTrue(importing.all { it.total == 3 })
@@ -755,7 +758,7 @@ class ImportFilesUseCaseImplTest {
                 ImportPlan.SetlistEntry(incoming.fileName, incoming, ImportPlan.Status.NEW, "source$index.json")
             },
         )
-        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+        val result = ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         assertTrue(result.isFailed)
         assertEquals(listOf("song.cho"), result.importedSongFileNames)
         assertEquals(listOf("set1.setlist.json"), result.importedSetlistFileNames)
@@ -772,7 +775,7 @@ class ImportFilesUseCaseImplTest {
             ImportPlan.SongEntry(it, A, ImportPlan.Status.NEW, null)
         })
         assertFailsWith<CancellationException> {
-            ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices())
+            ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices())
         }
         assertEquals(listOf("one.cho"), songs.adopted)
     }
@@ -787,7 +790,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository())
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
 
         assertEquals(mapOf("b.cho" to B), songs.files)
@@ -807,7 +810,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(FakeSongRepository(files = mutableMapOf()), setlists, Logger.Standard, FakeImageRepository())
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(files = mutableMapOf()), setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
 
         assertEquals(listOf("title.cho"), result.leftOutFileNames)
@@ -830,7 +833,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository()).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
+        ImportFilesUseCaseImpl(songs, setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
 
         assertTrue(songs.files.isEmpty())
         assertEquals(listOf("Foo.cho"), setlists.files.values.single().entries.map { it.songFileName })
@@ -847,7 +850,7 @@ class ImportFilesUseCaseImplTest {
         )
         val choices = ImportChoices(conflictResolutions = mapOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0) to ImportConflictResolution.REPLACE))
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository()).invoke(plan, choices)
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging()).invoke(plan, choices)
 
         assertEquals(mapOf("a.cho" to B, "b.cho" to A, "b_2.cho" to B), songs.files)
     }
@@ -867,7 +870,7 @@ class ImportFilesUseCaseImplTest {
             ),
         )
 
-        val result = ImportFilesUseCaseImpl(FakeSongRepository(files = mutableMapOf()), setlists, Logger.Standard, FakeImageRepository())
+        val result = ImportFilesUseCaseImpl(FakeSongRepository(files = mutableMapOf()), setlists, Logger.Standard, FakeImageRepository(), importStagingRepository = FakeStaging())
             .invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SETLIST, 0))))
 
         assertEquals(listOf("set.setlist.json"), setlists.files.keys.toList())
@@ -876,10 +879,14 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song names the pictures it brings by their library names, which is the one change to its text`() = runTest {
+        ArchiveKind.entries.forEach { kind -> songNamesThePicturesItBrings(kind) }
+    }
+
+    private suspend fun songNamesThePicturesItBrings(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
-        val archive = FakeArchiveRepository { _, _ ->
+        val archive = FakeArchiveRepository(staging = images.staging) { _, _ ->
             listOf(
                 ImportedFile(
                     name = "a.cho",
@@ -894,7 +901,7 @@ class ImportFilesUseCaseImplTest {
             )
         }
 
-        val plan = prepare(songs, archive = archive, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
         val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
         val entry = plan.songs.single()
 
@@ -906,7 +913,7 @@ class ImportFilesUseCaseImplTest {
         assertEquals(entry.text.replace(name, "chart.png"), ChordProPrettifier.prettify("{title: A}\n{image: src=chart.png}\n{image: src=gone.png}\n{image: src=photo.heic}\n{image: src=notes.png}\n"))
         assertTrue(images.library.isEmpty())
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
 
         assertEquals(listOf(name), images.added)
         assertEquals(entry.text, songs.files.getValue("a.cho"))
@@ -929,7 +936,7 @@ class ImportFilesUseCaseImplTest {
         assertEquals(setOf(name, GONE_LINK, PAGE_LINK), ChordProImages.referencedSources(entry.text))
         assertTrue(images.library.isEmpty())
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
 
         assertEquals(listOf(name), images.added)
         assertEquals(entry.text, songs.files.getValue("a.cho"))
@@ -962,6 +969,10 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song identical but for what the archive called its pictures is already there, and brings back a picture the library lost`() = runTest {
+        ArchiveKind.entries.forEach { kind -> identicalSongBringsBackItsPicture(kind) }
+    }
+
+    private suspend fun identicalSongBringsBackItsPicture(kind: ArchiveKind) {
         val chart = FakeImageRepository.picture(1)
         val images = FakeImageRepository()
         val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
@@ -971,10 +982,11 @@ class ImportFilesUseCaseImplTest {
         val renamed = ImportedFile("b.cho", "{title: A}\n{image: src=\"My chart.png\"}\n".encodeToByteArray(), images = listOf(ImportedImage("My chart.png", IncomingContent.Bytes(chart), null)))
 
         listOf(asExported, renamed).forEach { file ->
-            val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+            val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
+            val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
             assertEquals(ImportPlan.Status.IDENTICAL, plan.songs.single().status)
 
-            val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+            val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
 
             assertEquals(listOf("a.cho"), result.duplicateFileNames)
             assertEquals(mapOf("a.cho" to library), songs.files)
@@ -985,15 +997,20 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a picture whose planned name another picture took meanwhile is named by the name it was stored under`() = runTest {
+        ArchiveKind.entries.forEach { kind -> pictureNamedByTheNameItWasStoredUnder(kind) }
+    }
+
+    private suspend fun pictureNamedByTheNameItWasStoredUnder(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
         val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(chart), null)))
-        val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+        val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
         val planned = plan.songs.single().images.single().name!!
         images.library[planned] = FakeImageRepository.picture(2)
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
 
         val stored = images.added.single()
         assertEquals(planned.length + 1, stored.length)
@@ -1002,6 +1019,10 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song exported with its pictures imports into another library with its pictures under the same names and its text unchanged`() = runTest {
+        ArchiveKind.entries.forEach { kind -> exportedSongImportsWithItsPictures(kind) }
+    }
+
+    private suspend fun exportedSongImportsWithItsPictures(kind: ArchiveKind) {
         val source = FakeImageRepository()
         val name = source.store(FakeImageRepository.picture(1))
         val text = ChordProPrettifier.prettify("{title: A}\n{image: src=$name}\n")
@@ -1026,8 +1047,9 @@ class ImportFilesUseCaseImplTest {
         val songs = FakeSongRepository(mutableMapOf())
         val target = FakeImageRepository()
 
-        val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(exported) }, images = target)(listOf(ImportedFile("a.zip", byteArrayOf(1))))
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, target).invoke(plan, ImportChoices())
+        val unpacking = FakeArchiveRepository(staging = target.staging) { _, _ -> listOf(exported) }
+        val plan = prepare(songs, archive = unpacking, images = target)(listOf(target.staging.arrived(ImportedFile("a.zip", byteArrayOf(1)), kind)))
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, target, importStagingRepository = target.staging).invoke(plan, ImportChoices())
 
         assertEquals(text, songs.files.getValue("a.cho"))
         assertEquals(source.library.keys, target.library.keys)
@@ -1036,11 +1058,15 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song brings the files attached to it under their library names, and names those it cannot bring as they arrived`() = runTest {
+        ArchiveKind.entries.forEach { kind -> songBringsItsAttachments(kind) }
+    }
+
+    private suspend fun songBringsItsAttachments(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val sheet = "%PDF sheet".encodeToByteArray()
         val text = "{title: A}\n{meta: attachment sheet.pdf Sheet.pdf}\n{meta: attachment gone.mp3 Take}\n{meta: attachment run.exe Tool}\n"
-        val archive = FakeArchiveRepository { _, _ ->
+        val archive = FakeArchiveRepository(staging = images.staging) { _, _ ->
             listOf(
                 ImportedFile(
                     name = "a.cho",
@@ -1054,7 +1080,7 @@ class ImportFilesUseCaseImplTest {
             )
         }
 
-        val plan = prepare(songs, archive = archive, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
         val name = (images.libraryNameOfAttachment(sheet, "pdf") as ImageIntake.Accepted).name
         val entry = plan.songs.single()
 
@@ -1065,7 +1091,7 @@ class ImportFilesUseCaseImplTest {
         assertTrue(entry.images.all { it.isAttachment })
         assertEquals(setOf(name, "gone.mp3", "run.exe"), ChordProAttachments.referencedSources(entry.text))
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices())
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
 
         assertEquals(listOf(name), images.added)
         assertTrue(images.library.getValue(name).contentEquals(sheet))
@@ -1090,15 +1116,85 @@ class ImportFilesUseCaseImplTest {
 
     @Test
     fun `a song left out of the import leaves its pictures out too`() = runTest {
+        ArchiveKind.entries.forEach { kind -> songLeftOutLeavesItsPicturesOut(kind) }
+    }
+
+    private suspend fun songLeftOutLeavesItsPicturesOut(kind: ArchiveKind) {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(FakeImageRepository.picture(1)), null)))
-        val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
+        val archive = FakeArchiveRepository(staging = images.staging) { _, _ -> listOf(file) }
+        val plan = prepare(songs, archive = archive, images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
 
-        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
+        ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
 
         assertTrue(images.added.isEmpty())
         assertTrue(songs.files.isEmpty())
+    }
+
+    @Test
+    fun `an archive comes to the same plan and the same library whether its files arrive in memory or staged`() = runTest {
+        val outcomes = ArchiveKind.entries.map { kind ->
+            val songs = FakeSongRepository(mutableMapOf("b.cho" to "{title: B}\n"))
+            val images = FakeImageRepository()
+            val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), kind)))
+            val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, plan.leavingOutConflicts())
+            assertTrue(images.staging.files.keys.none { it.endsWith(".png") || it.endsWith(".pdf") }, "Left in the staging: ${images.staging.files.keys}")
+            listOf(plan, result, songs.files, images.library.mapValues { it.value.toList() }, images.added)
+        }
+
+        assertEquals(outcomes.first(), outcomes.last())
+    }
+
+    @Test
+    fun `a move failing midway leaves its song unwritten and what it moved before to the prune`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val images = FakeImageRepository()
+        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), ArchiveKind.STAGED)))
+        val moved = mutableListOf<String>()
+        images.staging.beforeMove = { file -> if (moved.size == 1) throw IllegalStateException("The disk went away.") else moved += file.name }
+
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
+
+        assertTrue(result.isFailed)
+        assertEquals(emptyMap(), songs.files)
+        val written = images.added.single()
+        // Named by no song the library holds, which is what the prune deletes once the kept block ends.
+        assertTrue(images.library.containsKey(written))
+        assertTrue(songs.files.values.none { written in it })
+    }
+
+    @Test
+    fun `a staged file gone between the plan and the write fails the import before anything is written`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val images = FakeImageRepository()
+        val plan = prepare(songs, archive = picturesArchive(images), images = images)(listOf(images.staging.arrived(ImportedFile("songs.zip", byteArrayOf(1)), ArchiveKind.STAGED)))
+        images.staging.files.keys.removeAll { it.endsWith(".pdf") }
+
+        assertFailsWith<StagedFileMissingException> {
+            ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = images.staging).invoke(plan, ImportChoices())
+        }
+
+        assertEquals(emptyMap(), songs.files)
+        assertTrue(songs.adopted.isEmpty())
+        assertTrue(images.library.isEmpty())
+    }
+
+    /** An archive of a song naming two pictures and an attachment, and a song of the library brought again with one of them. */
+    private fun picturesArchive(images: FakeImageRepository) = FakeArchiveRepository(staging = images.staging) { _, _ ->
+        val chart = ImportedImage("chart.png", IncomingContent.Bytes(FakeImageRepository.picture(1)), null)
+        listOf(
+            ImportedFile(
+                name = "a.cho",
+                bytes = "{title: A}\n{image: src=chart.png}\n{image: src=photo.png}\n{meta: attachment sheet.pdf Sheet}\n".encodeToByteArray(),
+                images = listOf(
+                    chart,
+                    ImportedImage("photo.png", IncomingContent.Bytes(FakeImageRepository.picture(2)), null),
+                    ImportedImage("sheet.pdf", IncomingContent.Bytes("%PDF sheet".encodeToByteArray()), null, isAttachment = true),
+                ),
+            ),
+            ImportedFile(name = "b.cho", bytes = "{title: B}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(chart)),
+        )
     }
 
     @Test

@@ -10,10 +10,14 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
+import com.pandulapeter.campfire.data.formats.image.ImageInfo
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.recovering
@@ -119,25 +123,48 @@ internal class ImageRepositoryImpl(
 
     override suspend fun loadLibraryFileSizes() = imageLocalSource.listImageSizes(ImageShelf.LIBRARY)
 
-    override suspend fun libraryNameOf(bytes: ByteArray) = nameFor(bytes) { LibraryImages.examine(bytes) }
+    override suspend fun libraryNameOf(content: IncomingContent) = nameFor(content) { examinePicture(content) }
 
-    override suspend fun libraryNameOfAttachment(bytes: ByteArray, extension: String) = nameFor(bytes) { LibraryImages.examineAttachment(bytes, extension) }
+    override suspend fun libraryNameOfAttachment(content: IncomingContent, extension: String) =
+        nameFor(content) { LibraryImages.examineAttachment(content.size, extension) }
 
-    private suspend fun nameFor(bytes: ByteArray, examine: () -> LibraryImages.Examined): ImageIntake = withContext(environment.computation) {
+    private suspend fun nameFor(content: IncomingContent, examine: suspend () -> LibraryImages.Examined): ImageIntake = withContext(environment.computation) {
         val examined = examine()
         examined.refusal?.let { return@withContext ImageIntake.Refused(it) }
-        LibraryImages.contentNames(bytes, examined.extension).firstOrNull { name -> !otherBytesUnder(name, bytes, ImageShelf.LIBRARY) }
+        contentNamesOf(content, examined.extension)?.firstOrNull { name -> !otherBytesUnder(name, content, ImageShelf.LIBRARY) }
             ?.let { ImageIntake.Accepted(it) }
             ?: ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
+    }
+
+    /** [LibraryImages.examine] of [content], a staged picture from its head and size alone, never read whole. */
+    private suspend fun examinePicture(content: IncomingContent) = when (content) {
+        is IncomingContent.Bytes -> LibraryImages.examine(content.bytes)
+        is IncomingContent.Staged -> if (content.size > ImportLimits.MAX_IMAGE_FILE_SIZE) {
+            LibraryImages.examine(head = ByteArray(0), size = content.size)
+        } else {
+            val head = imageLocalSource.readStagedHead(content.file, ImageInfo.MAX_HEADER_BYTES) ?: throw StagedFileMissingException(content.file.name)
+            LibraryImages.examine(head = head, size = content.size)
+        }
+    }
+
+    /**
+     * The names [content] may take ([LibraryImages.contentNames]): a staged file's from the SHA-256 its staging took over
+     * exactly the bytes it wrote, so it is never read whole for it. Null for a staged file with no hash (an archive), which
+     * is nothing a song shows or attaches.
+     */
+    private suspend fun contentNamesOf(content: IncomingContent, extension: String) = when (content) {
+        is IncomingContent.Bytes -> LibraryImages.contentNames(content.bytes, extension)
+        is IncomingContent.Staged -> content.file.sha256Hex?.let { LibraryImages.contentNamesOf(it, extension) }
     }
 
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = addDraft(bytes) { LibraryImages.examine(bytes) }
 
     override suspend fun addDraftAttachment(bytes: ByteArray, extension: String) = addDraft(bytes) { LibraryImages.examineAttachment(bytes, extension) }
 
-    private suspend fun addDraft(bytes: ByteArray, examine: () -> LibraryImages.Examined): ImageIntake = withContext(NonCancellable) {
+    private suspend fun addDraft(bytes: ByteArray, examine: suspend () -> LibraryImages.Examined): ImageIntake = withContext(NonCancellable) {
+        val content = IncomingContent.Bytes(bytes)
         keeping.withLock {
-            store(bytes, shelf = ImageShelf.DRAFT, examine = examine, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY, ImageShelf.DRAFT) })
+            store(content, shelf = ImageShelf.DRAFT, examine = examine, isTaken = { name -> otherBytesUnder(name, content, ImageShelf.LIBRARY, ImageShelf.DRAFT) })
                 .also { intake -> if (intake is ImageIntake.Accepted) draftImagesWrittenHere += intake.name }
         }
     }
@@ -183,12 +210,13 @@ internal class ImageRepositoryImpl(
         /** Read only inside [withImagesKept], under [keeping], which guards [editorImages]. */
         override val heldNames get() = editorImages
 
-        override suspend fun addImage(bytes: ByteArray): ImageIntake = addToLibrary(bytes) { LibraryImages.examine(bytes) }
+        override suspend fun addImage(content: IncomingContent): ImageIntake = addToLibrary(content) { examinePicture(content) }
 
-        override suspend fun addAttachment(bytes: ByteArray, extension: String) = addToLibrary(bytes) { LibraryImages.examineAttachment(bytes, extension) }
+        override suspend fun addAttachment(content: IncomingContent, extension: String) =
+            addToLibrary(content) { LibraryImages.examineAttachment(content.size, extension) }
 
-        private suspend fun addToLibrary(bytes: ByteArray, examine: () -> LibraryImages.Examined) = withContext(NonCancellable) {
-            store(bytes, shelf = ImageShelf.LIBRARY, examine = examine, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY) })
+        private suspend fun addToLibrary(content: IncomingContent, examine: suspend () -> LibraryImages.Examined) = withContext(NonCancellable) {
+            store(content, shelf = ImageShelf.LIBRARY, examine = examine, isTaken = { name -> otherBytesUnder(name, content, ImageShelf.LIBRARY) })
         }
 
         override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = withContext(NonCancellable) {
@@ -248,22 +276,38 @@ internal class ImageRepositoryImpl(
      * the editor and the Attachments sheet call this from the main thread, which a 50 MB attachment would hold for
      * seconds, long enough that the work bar waiting to appear could not either.
      */
-    private suspend fun store(bytes: ByteArray, shelf: ImageShelf, examine: () -> LibraryImages.Examined, isTaken: suspend (String) -> Boolean): ImageIntake {
+    private suspend fun store(
+        content: IncomingContent,
+        shelf: ImageShelf,
+        examine: suspend () -> LibraryImages.Examined,
+        isTaken: suspend (String) -> Boolean,
+    ): ImageIntake {
         val (examined, name) = withContext(environment.computation) {
             val examined = examine()
             if (examined.refusal != null) return@withContext examined to null
             // Every name taken by another picture would take 49 pictures sharing a SHA-256 prefix of 64 digits.
-            examined to LibraryImages.contentNames(bytes, examined.extension).firstOrNull { !isTaken(it) }
+            examined to contentNamesOf(content, examined.extension)?.firstOrNull { !isTaken(it) }
         }
         examined.refusal?.let { return ImageIntake.Refused(it) }
         if (name == null) return ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
-        if (!imageLocalSource.hasImage(shelf, name)) {
-            imageLocalSource.writeImage(shelf, name, bytes)
-            if (shelf == ImageShelf.LIBRARY) mayHaveStrays = true
-            _changes.update { it + 1 }
+        when (content) {
+            is IncomingContent.Bytes -> if (!imageLocalSource.hasImage(shelf, name)) {
+                imageLocalSource.writeImage(shelf, name, content.bytes)
+                onStored(shelf)
+            }
+            // Never over a file of the name, which holds the same bytes (isTaken said so): its staged copy goes instead.
+            is IncomingContent.Staged -> {
+                imageLocalSource.moveStagedFile(content.file, shelf, name)
+                onStored(shelf)
+            }
         }
         examined.size?.let { size -> sizesMutex.withLock { sizes[name] = size } }
         return ImageIntake.Accepted(name)
+    }
+
+    private fun onStored(shelf: ImageShelf) {
+        if (shelf == ImageShelf.LIBRARY) mayHaveStrays = true
+        _changes.update { it + 1 }
     }
 
     private suspend fun Sequence<String>.firstOrNull(predicate: suspend (String) -> Boolean): String? {
@@ -273,12 +317,12 @@ internal class ImageRepositoryImpl(
 
     /**
      * Whether a shelf holds different bytes under [name], which makes the name another picture's. A file of another size is
-     * that without being read.
+     * that without being read; one of the same size is compared with [content] a slice at a time, neither read whole.
      */
-    private suspend fun otherBytesUnder(name: String, bytes: ByteArray, vararg shelves: ImageShelf) = shelves.any { shelf ->
+    private suspend fun otherBytesUnder(name: String, content: IncomingContent, vararg shelves: ImageShelf) = shelves.any { shelf ->
         when (imageLocalSource.imageSize(shelf, name)) {
             null -> false
-            bytes.size.toLong() -> imageLocalSource.readImage(shelf, name)?.contentEquals(bytes) == false
+            content.size -> !imageLocalSource.holdsContent(shelf, name, content)
             else -> true
         }
     }

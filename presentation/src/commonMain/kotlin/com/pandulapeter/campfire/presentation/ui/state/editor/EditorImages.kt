@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.domain.api.images.AddDraftImageUseCase
 import com.pandulapeter.campfire.domain.api.images.ClearDraftImagesUseCase
 import com.pandulapeter.campfire.domain.api.images.HoldEditorImagesUseCase
@@ -234,7 +235,7 @@ internal class EditorImages(
      * downloaded and its text already names by their library names) as draft pictures, for the editor opened on it.
      */
     suspend fun keepBrought(pictures: List<ImportPlan.SongImage>) {
-        val brought = pictures.mapNotNull { picture -> picture.bytes?.takeIf { picture.name != null }?.let { ImportedFile(name = picture.source, bytes = it) } }
+        val brought = pictures.mapNotNull { picture -> (picture.content as? IncomingContent.Bytes)?.bytes?.takeIf { picture.name != null }?.let { ImportedFile(name = picture.source, bytes = it) } }
         if (brought.isNotEmpty()) keep(brought)
     }
 
@@ -243,7 +244,7 @@ internal class EditorImages(
      * where every one was refused (said in a snackbar), one left unread for its size among them.
      */
     suspend fun pictureSongText(pictures: List<ImportPlan.SongImage>): String? =
-        keep(pictures.map { it.bytes?.let { bytes -> ImportedFile(name = it.source, bytes = bytes) } ?: ImportedFile.unread(it.source, isTooLarge = true) })
+        keep(pictures.map { (it.content as? IncomingContent.Bytes)?.bytes?.let { bytes -> ImportedFile(name = it.source, bytes = bytes) } ?: ImportedFile.unread(it.source, isTooLarge = true) })
             .takeIf { it.isNotEmpty() }
             ?.joinToString("\n", transform = ChordProImages::directive)
 
