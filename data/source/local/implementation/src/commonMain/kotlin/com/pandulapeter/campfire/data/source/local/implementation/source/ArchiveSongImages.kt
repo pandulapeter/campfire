@@ -51,35 +51,77 @@ internal object ArchiveSongImages {
      * [maxAttachmentSize] bytes. [isHidden] tells the entries no song can mean, which the first walk left out unreported.
      */
     fun read(archive: ByteArray, content: ZipContent, maxSize: Long, maxAttachmentSize: Long, isHidden: (String) -> Boolean): Found {
-        val texts = content.entries.map { entry ->
-            if (isHidden(entry.name) || LibraryFiles.SONG_EXTENSIONS.none { entry.name.endsWith(it, ignoreCase = true) }) null else entry.bytes.decodeLibraryText()
+        val wanted = wanted(content.entries.map { it.name to it.bytes }, content.unread.map { it.name }, isHidden)
+            ?: return Found(content.entries.map { emptyList() }, emptySet(), 0, 0)
+        val walks = listOfNotNull(
+            walk(archive, wanted.pictures, maxSize, isAttachment = false),
+            walk(archive, wanted.attachments, maxAttachmentSize, isAttachment = true),
+        )
+        return found(
+            wanted = wanted,
+            bytesByName = wanted.readFirst + walks.flatMap { it.content.entries }.associate { it.name to it.bytes },
+            unreadByName = walks.flatMap { walk -> walk.content.unread.filter { it.name in walk.wanted } }.associate { it.name to it.reason },
+            chargedSize = walks.firstOrNull { !it.isAttachment }?.content?.chargedSize ?: 0,
+            chargedAttachmentSize = walks.firstOrNull { it.isAttachment }?.content?.chargedSize ?: 0,
+        )
+    }
+
+    /**
+     * What the songs of an archive's first walk name, and where in the archive each of those files is: by entry of
+     * [entries] (each entry's name, and its bytes where it was read into memory), the entry each picture's and each
+     * attachment's source resolves to, and the entries a further walk is to read for them. [unreadNames] are the entries
+     * the first walk did not read, which a song may name all the same. Null where no song names anything.
+     */
+    class Wanted(
+        val resolvedPictures: List<Map<String, String?>>,
+        val resolvedAttachments: List<Map<String, String?>>,
+        val readFirst: Map<String, ByteArray>,
+        val pictures: Set<String>,
+        val attachments: Set<String>,
+    )
+
+    /** See [Wanted]. */
+    fun wanted(entries: List<Pair<String, ByteArray?>>, unreadNames: List<String>, isHidden: (String) -> Boolean): Wanted? {
+        val texts = entries.map { (name, bytes) ->
+            if (isHidden(name) || LibraryFiles.SONG_EXTENSIONS.none { name.endsWith(it, ignoreCase = true) }) null else bytes?.decodeLibraryText()
         }
         val pictureSources = texts.map { text -> text?.let(ChordProImages::referencedSources).orEmpty().toList() }
         val attachmentSources = texts.map { text -> text?.let(ChordProAttachments::referencedSources).orEmpty().toList() }
-        if (pictureSources.all { it.isEmpty() } && attachmentSources.all { it.isEmpty() }) {
-            return Found(content.entries.map { emptyList() }, emptySet(), 0, 0)
-        }
-        val paths = ArchiveImagePaths((content.entries.map { it.name } + content.unread.map { it.name }).filterNot(isHidden))
-        val resolvedPictures = content.entries.mapIndexed { index, entry -> pictureSources[index].associateWith { paths.resolve(entry.name, it) } }
-        val resolvedAttachments = content.entries.mapIndexed { index, entry -> attachmentSources[index].associateWith { paths.resolve(entry.name, it) } }
-        val readFirst = content.entries.associate { it.name to it.bytes }
+        if (pictureSources.all { it.isEmpty() } && attachmentSources.all { it.isEmpty() }) return null
+        val paths = ArchiveImagePaths((entries.map { it.first } + unreadNames).filterNot(isHidden))
+        val resolvedPictures = entries.mapIndexed { index, (name, _) -> pictureSources[index].associateWith { paths.resolve(name, it) } }
+        val resolvedAttachments = entries.mapIndexed { index, (name, _) -> attachmentSources[index].associateWith { paths.resolve(name, it) } }
+        val readFirst = entries.mapNotNull { (name, bytes) -> bytes?.let { name to it } }.toMap()
         val wantedPictures = resolvedPictures.flatMap { it.values }.filterNotNull().filterNot(readFirst::containsKey).toSet()
         val wantedAttachments = resolvedAttachments.flatMap { it.values }.filterNotNull().filterNot { it in readFirst || it in wantedPictures }.toSet()
-        val walks = listOfNotNull(
-            walk(archive, wantedPictures, maxSize, isAttachment = false),
-            walk(archive, wantedAttachments, maxAttachmentSize, isAttachment = true),
-        )
-        val bytesByName = readFirst + walks.flatMap { it.content.entries }.associate { it.name to it.bytes }
-        val unreadByName = walks.flatMap { walk -> walk.content.unread.filter { it.name in walk.wanted } }.associate { it.name to it.reason }
-        val images = content.entries.indices.map { index ->
-            resolvedPictures[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = false) } +
-                resolvedAttachments[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = true) }
+        return Wanted(resolvedPictures, resolvedAttachments, readFirst, wantedPictures, wantedAttachments)
+    }
+
+    /** What a walk reading the files of [wanted] asks of each entry: only those, each within its kind's own limit. */
+    fun policyOf(wanted: Set<String>, isAttachment: Boolean): (String, Long) -> EntryPolicy = { name, _ ->
+        if (name in wanted) EntryPolicy.Read(if (isAttachment) ImportLimits.MAX_ATTACHMENT_FILE_SIZE else ImportLimits.MAX_IMAGE_FILE_SIZE) else EntryPolicy.Skip
+    }
+
+    /**
+     * Each entry's pictures and attachments, out of the files [wanted] names that were read ([bytesByName], the first
+     * walk's among them) or why not ([unreadByName]), with what reading them cost.
+     */
+    fun found(
+        wanted: Wanted,
+        bytesByName: Map<String, ByteArray>,
+        unreadByName: Map<String, UnreadZipEntry.Reason>,
+        chargedSize: Long,
+        chargedAttachmentSize: Long,
+    ): Found {
+        val images = wanted.resolvedPictures.indices.map { index ->
+            wanted.resolvedPictures[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = false) } +
+                wanted.resolvedAttachments[index].map { (source, name) -> found(source, name, bytesByName, unreadByName, isAttachment = true) }
         }
         return Found(
             imagesByEntry = images,
-            takenEntryNames = (resolvedPictures + resolvedAttachments).flatMap { it.values }.filterNotNull().toSet(),
-            chargedSize = walks.firstOrNull { !it.isAttachment }?.content?.chargedSize ?: 0,
-            chargedAttachmentSize = walks.firstOrNull { it.isAttachment }?.content?.chargedSize ?: 0,
+            takenEntryNames = (wanted.resolvedPictures + wanted.resolvedAttachments).flatMap { it.values }.filterNotNull().toSet(),
+            chargedSize = chargedSize,
+            chargedAttachmentSize = chargedAttachmentSize,
         )
     }
 
@@ -115,13 +157,7 @@ internal object ArchiveSongImages {
         null
     } else {
         Walk(
-            content = ZipReader.read(
-                archive = archive,
-                maxTotalSize = maxSize,
-                limitOf = { name, _ ->
-                    if (name in wanted) EntryPolicy.Read(if (isAttachment) ImportLimits.MAX_ATTACHMENT_FILE_SIZE else ImportLimits.MAX_IMAGE_FILE_SIZE) else EntryPolicy.Skip
-                },
-            ),
+            content = ZipReader.read(archive = archive, maxTotalSize = maxSize, limitOf = policyOf(wanted, isAttachment)),
             wanted = wanted,
             isAttachment = isAttachment,
         )
