@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.presentation.ui.platform.BackgroundNotificationScheduler
+import com.pandulapeter.campfire.presentation.ui.platform.ImportKeepAlive
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotification
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotifier
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
@@ -32,19 +33,9 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Keeps an import working while the app is not in front, the way [IosSyncNotifier] keeps a sync run: the work belongs
  * to the app ([ImportWork]), and this only asks iOS for the time it needs, following the work's state itself, since
- * Compose stops with the scene.
- *
- * On iOS 26 and later ([continuedTasks] is there) a continued processing task is submitted as the app is left while
- * the import works, and ended as the app comes back or the work goes idle: the system shows its progress and lets the
- * user stop it, which interrupts the import as the task's expiry does ([ImportWork.interrupt]: its staging deleted, and
- * Try again on the user's return). Leaving rather than starting is when, so that the many imports that end in a moment
- * in front (a pasted song) never put the system's progress up. A submit the system refuses, and every iOS before 26,
- * falls back on background time (`beginBackgroundTask`) as sync does: a few tens of seconds, whose expiry interrupts the
- * import too, the task ended in the handler itself, since an app that keeps one past its time is killed while one that
- * ends it is only suspended, with a write still running resuming on return.
- *
- * The Import write is never interrupted (`ImportWork.interrupt` leaves it alone): an expiry during it only lets the app
- * be suspended, and the write carries on when it comes back.
+ * Compose stops with the scene. What is asked for and when, and what an expiry does, is [ImportKeepAlive]'s to decide:
+ * a continued processing task on iOS 26 and later ([continuedTasks] is there), whose expiry or stop interrupts the
+ * import, else background time, whose expiry only lets the app be suspended with the import paused until it is back.
  */
 class IosImportKeeper(
     private val work: ImportWork,
@@ -54,21 +45,30 @@ class IosImportKeeper(
     private val scope = MainScope()
     private var words: ImportNotification? = null
     private var backgroundTask: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
-    private var hasContinuedTask = false
-
-    /**
-     * Set when the system ended the time it gave (or the user stopped the continued task) and cleared on the return to
-     * the front, so that a write still running, which nothing interrupts, does not ask for more time it would not get,
-     * or submit a task the user has just stopped.
-     */
-    private var isOutOfTime = false
     private var shownState = ImportWorkState.IDLE
-    private val scheduler = BackgroundNotificationScheduler(
+    private val keepAlive: ImportKeepAlive = ImportKeepAlive(
+        hasContinuedTasks = continuedTasks != null,
+        actions = object : ImportKeepAlive.Actions {
+            override fun submitContinuedTask() = submit()
+            override fun finishContinuedTask() {
+                scheduler.cancelUpdate()
+                continuedTasks?.finish()
+            }
+
+            override fun beginBackgroundTime() = beginBackgroundTask()
+            override fun endBackgroundTime() = endBackgroundTask()
+            override fun interruptImport() {
+                scheduler.cancelUpdate()
+                work.interrupt()
+            }
+        },
+    )
+    private val scheduler: BackgroundNotificationScheduler = BackgroundNotificationScheduler(
         scope = scope,
         updateInterval = 1.seconds,
         handoverGrace = 2.seconds,
         postUpdate = ::updateContinuedTask,
-        release = ::release,
+        release = keepAlive::release,
         isRunGoing = { work.state.value != ImportWorkState.IDLE },
     )
 
@@ -78,29 +78,22 @@ class IosImportKeeper(
             name = UIApplicationWillResignActiveNotification,
             `object` = null,
             queue = NSOperationQueue.mainQueue,
-        ) { _ -> holdWhileLeaving() }
+        ) { _ -> keepAlive.onLeaving(isWorking = work.state.value != ImportWorkState.IDLE) }
         NSNotificationCenter.defaultCenter.addObserverForName(
             name = UIApplicationDidBecomeActiveNotification,
             `object` = null,
             queue = NSOperationQueue.mainQueue,
-        ) { _ ->
-            isOutOfTime = false
-            endContinuedTask()
-        }
+        ) { _ -> keepAlive.onActive() }
         scope.launch {
             combine(work.state, work.currentProgress) { state, _ -> state }.collect { state ->
                 if (state == ImportWorkState.IDLE) {
-                    if (hasContinuedTask || backgroundTask != UIBackgroundTaskInvalid) scheduler.scheduleRelease()
+                    if (keepAlive.isHolding) scheduler.scheduleRelease()
                 } else {
                     scheduler.cancelRelease()
                     val isNewPhase = state != shownState
                     shownState = state
-                    when {
-                        continuedTasks == null -> beginBackgroundTask()
-                        // Work that starts once the app is out of sight: a queued batch taken up after the one before.
-                        UIApplication.sharedApplication.applicationState != UIApplicationState.UIApplicationStateActive -> holdWhileLeaving()
-                    }
-                    if (hasContinuedTask) scheduler.requestUpdate(immediately = isNewPhase)
+                    keepAlive.onWorking(isAppActive = UIApplication.sharedApplication.applicationState == UIApplicationState.UIApplicationStateActive)
+                    if (keepAlive.hasContinuedTask) scheduler.requestUpdate(immediately = isNewPhase)
                 }
             }
         }
@@ -110,47 +103,20 @@ class IosImportKeeper(
         words = notification
     }
 
-    /** Asks for the time an import going on needs as the app is left, see the note on the class. */
-    private fun holdWhileLeaving() {
+    private fun submit(): Boolean {
+        val words = words ?: return false
         val state = work.state.value
-        if (state == ImportWorkState.IDLE || isOutOfTime || hasContinuedTask || backgroundTask != UIBackgroundTaskInvalid) return
-        val words = words
-        val isSubmitted = continuedTasks != null && words != null && continuedTasks.submit(
+        val isSubmitted = continuedTasks?.submit(
             title = words.title,
             subtitle = words.textOf(state, work.currentProgress.value) ?: words.title,
-            onExpired = ::onContinuedTaskExpired,
-        )
-        if (isSubmitted) {
-            hasContinuedTask = true
-            updateContinuedTask()
-        } else {
-            beginBackgroundTask()
-        }
-    }
-
-    /**
-     * Back in front the import screen shows the work, so the system's progress goes, as Android's notification does; it
-     * is submitted again, under a fresh identifier, should the user leave before the work ends. Background time is kept,
-     * as sync keeps it: it only counts while the app is out of sight.
-     */
-    private fun endContinuedTask() {
-        if (!hasContinuedTask) return
-        hasContinuedTask = false
-        scheduler.cancelUpdate()
-        continuedTasks?.finish()
-    }
-
-    /** The system or the user ended the task: the import stops cleanly rather than with the process. */
-    private fun onContinuedTaskExpired() {
-        if (!hasContinuedTask) return
-        hasContinuedTask = false
-        isOutOfTime = true
-        scheduler.cancelUpdate()
-        work.interrupt()
+            onExpired = keepAlive::onContinuedTaskExpired,
+        ) == true
+        if (isSubmitted) scope.launch { updateContinuedTask() }
+        return isSubmitted
     }
 
     private fun updateContinuedTask() {
-        if (!hasContinuedTask) return
+        if (!keepAlive.hasContinuedTask) return
         val words = words ?: return
         val state = work.state.value.takeIf { it != ImportWorkState.IDLE } ?: shownState
         val progress = work.currentProgress.value
@@ -162,15 +128,13 @@ class IosImportKeeper(
     }
 
     /**
-     * The expiration handler is not optional, and ends the task itself, synchronously: one still held when iOS says the
-     * time is up gets the app killed. It only asks the import to stop, never waits for it.
+     * The expiration handler is not optional, and gives the time back itself, synchronously: an app still holding it
+     * when iOS says the time is up is killed, while one that gives it back is only suspended, its import paused.
      */
     private fun beginBackgroundTask() {
-        if (backgroundTask != UIBackgroundTaskInvalid || isOutOfTime) return
+        if (backgroundTask != UIBackgroundTaskInvalid) return
         backgroundTask = UIApplication.sharedApplication.beginBackgroundTaskWithName("import") {
-            isOutOfTime = true
-            work.interrupt()
-            endBackgroundTask()
+            keepAlive.onBackgroundTimeExpired()
         }
     }
 
@@ -178,11 +142,5 @@ class IosImportKeeper(
         if (backgroundTask == UIBackgroundTaskInvalid) return
         UIApplication.sharedApplication.endBackgroundTask(backgroundTask)
         backgroundTask = UIBackgroundTaskInvalid
-    }
-
-    /** What keeps the app working, given back once no work has been going for the scheduler's grace. */
-    private fun release() {
-        endContinuedTask()
-        endBackgroundTask()
     }
 }

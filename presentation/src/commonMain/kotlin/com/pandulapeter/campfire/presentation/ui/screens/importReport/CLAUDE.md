@@ -37,7 +37,7 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
   read again). A shared link answering 4xx, or anything but a zip (a page in its place), "no longer works"; only no
   answer or a 5xx is unreachable. No space names what the import needs where known (`preparationFailureOf`); a
   ZIP64-less archive past 4 GB has its own sentence, and so does one the platform stopped in the background
-  (`ImportWork.interrupt`: Android's `onTimeout`, iOS's expiries).
+  (`ImportWork.interrupt`: Android's `onTimeout`, iOS 26's continued task expiring or stopped).
 - **Review** (sections tested): every entry starts ticked. A song's row opens the preview of the songs listed (the
   search's matches while it narrows them) at its own; its box ticks it alone, from the row's whole height up to where
   the text begins, never the preview. A group's heading counts it and is only a heading, ending in a **Select all** /

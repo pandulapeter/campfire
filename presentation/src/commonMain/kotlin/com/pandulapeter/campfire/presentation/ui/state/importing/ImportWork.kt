@@ -186,10 +186,12 @@ class ImportWork(
     }
 
     /**
-     * Ends a preparation because the platform will not keep the app working any longer (Android's daily allowance for a
-     * data sync service, iOS's background time or its continued task expiring), rather than because the user asked: the
-     * staging is deleted as by [cancel], but the import ends in [ImportFailure.INTERRUPTED], which the import screen shows
-     * with Try again on the user's return. Like [cancel], nothing once the write has started.
+     * Ends a preparation because the platform stopped what kept the app working in the background (Android's daily
+     * allowance for a data sync service, iOS 26's continued task expiring or stopped in the system's progress), rather
+     * than through the import screen: the staging is deleted as by [cancel], but the import ends in
+     * [ImportFailure.INTERRUPTED], which the import screen shows with Try again on the user's return. Like [cancel],
+     * nothing once the write has started. iOS's plain background time running out is no reason: the app is only
+     * suspended, the import paused until it is back (`ImportKeepAlive`).
      */
     fun interrupt() {
         preparationInterruption?.complete(Unit)

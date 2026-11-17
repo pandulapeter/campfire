@@ -121,9 +121,10 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
 - `IosImportKeeper.kt` follows `ImportWork` likewise. iOS 26+: a continued processing task (`ContinuedImportTasks.swift`,
   behind `#available` in `ContentView.swift`) submitted on resign active while the import works, ended on return or when
   idle; a fresh `<bundle>.import.<UUID>` registered just before each submit (the plist's one `.import.*` entry; one
-  registered twice, or submitted unregistered, ends the app). Expiry, the user's stop, or background time running out
-  calls `ImportWork.interrupt`, the task ended in the handler; a refused submit (always, on the simulator) and iOS
-  before 26 hold a `beginBackgroundTask` instead.
+  registered twice, or submitted unregistered, ends the app); its expiry or the user's stop calls `ImportWork.interrupt`.
+  A refused submit (always, on the simulator) and iOS before 26 hold a `beginBackgroundTask` instead, whose expiry only
+  ends it, synchronously: the app is suspended with the import paused, and it goes on back in front (decisions:
+  `ImportKeepAlive`, tested).
 - `IosMetronomeNotifier.kt` only draws Now Playing and answers remote commands (pause, stop, and toggle all stop: no
   paused state); the audio session, background audio, and interruptions belong to `:libs:metronome:implementation`.
 

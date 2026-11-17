@@ -51,7 +51,8 @@ Web: `createImageBitmap` and a canvas, outside the Wasm heap; HEIC only in Safar
   start in it.
 - `ImportNotifier` hands the shells an import's words the same way (`ImportNotification`, resolved by
   `ui/ImportNotificationEffect.kt`); the shells watch `ImportWork` themselves and render the text with
-  `state/importing/ImportNotificationText.kt`.
+  `state/importing/ImportNotificationText.kt`. `ImportKeepAlive` (tested) is what the iOS shell asks for: only a
+  continued task's expiry interrupts the import; background time running out lets the app be suspended, import paused.
 - `BeatHaptics.kt`: web vibration only where `navigator.vibrate` can vibrate; on Android felt while composed, not only
   resumed. Every heard click is felt, at three strengths (`BeatTap`).
 
