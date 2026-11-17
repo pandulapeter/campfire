@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalIosFileOpener
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.ImportNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.LocalImportNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.MetronomeNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.theme.appIconColor
@@ -54,6 +56,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   and carries on when this composition goes.
  * @param syncNotifier Holds a background task and shows the notification while a sync run lasts. UIKit again, so it
  *   comes from the app module too.
+ * @param importNotifier Takes the words of an import's continued processing task, which the app module submits and
+ *   ends itself as the import works (`IosImportKeeper`).
  * @param metronomeNotifier Shows a playing click in Now Playing and answers the lock screen's controls, for the same
  *   reason.
  * @param onUiModeChanged Called with the theme preference whenever it changes, so that the app module can hand it to
@@ -79,6 +83,7 @@ fun CampfireIosApp(
     shareLinks: Flow<SharedLink> = emptyFlow(),
     inboxShares: Flow<InboxShare> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
+    importNotifier: ImportNotifier = ImportNotifier { },
     metronomeNotifier: MetronomeNotifier = MetronomeNotifier { },
     onUiModeChanged: (UserPreferences.UiMode?) -> Unit = {},
     onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
@@ -87,6 +92,7 @@ fun CampfireIosApp(
     LocalFilePicker provides filePicker,
     LocalIosFileOpener provides fileOpener,
     LocalSyncNotifier provides syncNotifier,
+    LocalImportNotifier provides importNotifier,
     LocalMetronomeNotifier provides metronomeNotifier,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()

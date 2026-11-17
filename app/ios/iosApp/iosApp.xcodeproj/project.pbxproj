@@ -19,6 +19,7 @@
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		6B5BC2822D29658700759926 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6B5BC2812D29658700759926 /* LaunchScreen.storyboard */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
+		A1C0FFEE2F00000100000001 /* ContinuedImportTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE2F00000100000002 /* ContinuedImportTasks.swift */; };
 		C4F1000A2E80000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C4F1000A2E80000000000002 /* PrivacyInfo.xcprivacy */; };
 		C4F1000A2E80000000000003 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C4F1000A2E80000000000004 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
@@ -75,6 +76,7 @@
 		6B5BC2812D29658700759926 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Campfire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Campfire.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1C0FFEE2F00000100000002 /* ContinuedImportTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinuedImportTasks.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		C4F1000A2E80000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 			children = (
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
+				A1C0FFEE2F00000100000002 /* ContinuedImportTasks.swift */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
@@ -370,6 +373,7 @@
 			files = (
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
+				A1C0FFEE2F00000100000001 /* ContinuedImportTasks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

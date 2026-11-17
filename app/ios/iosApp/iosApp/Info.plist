@@ -67,6 +67,14 @@
 	<true/>
 	<!-- A playing metronome carries on with the screen locked. The audio session is active only while a click plays
 	     (see IosAudioOutput.kt in :libs:metronome:implementation), which is what App Review checks this mode against. -->
+	<!--
+	  An import kept working once the app is left, on iOS 26 and later: one continued processing task per leaving, each under
+	  a fresh identifier this pattern covers (ContinuedImportTasks.swift).
+	-->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER).import.*</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

@@ -110,7 +110,7 @@ No tracking or collected data; required-reason APIs: file timestamps (C617.1 for
 and the Kotlin runtime's calls are the app's to declare. After updating any of them, run `nm -u` on a Release
 `Campfire` executable to spot a new category (NSUserDefaults is the likely one).
 
-## Sync and metronome in the background
+## Sync, imports, and the metronome in the background
 
 - `IosSyncNotifier.kt`, one per process, follows `GetSyncStateUseCase` itself (Compose stops collecting once the scene
   leaves the foreground): it holds a `beginBackgroundTask` for the run, ended 2 s after it, kept by a chained run. A
@@ -118,6 +118,12 @@ and the Kotlin runtime's calls are the app's to declare. After updating any of t
   is found by the index's "a run was going" marker.
 - A local notification is posted only while in the background (iOS silences foreground ones), at most once a second,
   taken down on return. Permission is asked when a run starts, in front.
+- `IosImportKeeper.kt` follows `ImportWork` likewise. iOS 26+: a continued processing task (`ContinuedImportTasks.swift`,
+  behind `#available` in `ContentView.swift`) submitted on resign active while the import works, ended on return or when
+  idle; a fresh `<bundle>.import.<UUID>` registered just before each submit (the plist's one `.import.*` entry; one
+  registered twice, or submitted unregistered, ends the app). Expiry, the user's stop, or background time running out
+  calls `ImportWork.interrupt`, the task ended in the handler; a refused submit (always, on the simulator) and iOS
+  before 26 hold a `beginBackgroundTask` instead.
 - `IosMetronomeNotifier.kt` only draws Now Playing and answers remote commands (pause, stop, and toggle all stop: no
   paused state); the audio session, background audio, and interruptions belong to `:libs:metronome:implementation`.
 

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.domain.api.sync.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.sync.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
 import com.pandulapeter.campfire.presentation.ui.platform.installProcessLog
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import kotlinx.cinterop.BetaInteropApi
 import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSMutableCharacterSet
@@ -49,20 +50,33 @@ private val syncNotifier by lazy {
     )
 }
 
+/** What Swift hands over on iOS 26 and later, set by the first [CampfireViewController] before [importKeeper] is built. */
+private var processContinuedImportTasks: ContinuedImportTasks? = null
+
+/** One per process, like the work it follows. Created after Koin, which the work comes from. */
+private val importKeeper by lazy { IosImportKeeper(work = KoinPlatform.getKoin().get<ImportWork>(), continuedTasks = processContinuedImportTasks) }
+
 /** One per process, like the click it follows. Created after Koin, which the engine comes from. */
 private val metronomeNotifier by lazy { IosMetronomeNotifier(KoinPlatform.getKoin().get<Metronome>()) }
 
 /**
  * Entry point called from Swift. Returns the view controller hosting the shared Compose UI.
  *
+ * @param continuedImportTasks iOS 26's continued processing tasks for an import, which only Swift can reach on a system
+ *   that may be as old as 15.3; null before 26, where an import falls back on background time ([IosImportKeeper]).
  * @param onKeyCommandsChanged Told the app's shortcuts for the Command-hold overlay whenever they change
  *   ([listedKeyCommands]), for the Swift controller around this one to list.
  */
 @Suppress("unused", "FunctionName")
-fun CampfireViewController(onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit): UIViewController {
+fun CampfireViewController(
+    continuedImportTasks: ContinuedImportTasks?,
+    onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit,
+): UIViewController {
     // Before anything else of the app's, so that the log has the start of its own process too.
     installProcessLog()
     koinApplication
+    if (processContinuedImportTasks == null) processContinuedImportTasks = continuedImportTasks
+    importKeeper
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null
     val filePicker = IosFilePicker { requireNotNull(controller) }
@@ -76,6 +90,7 @@ fun CampfireViewController(onKeyCommandsChanged: (List<UIKeyCommand>) -> Unit): 
             shareLinks = shareLinksToImport,
             inboxShares = inboxSharesToImport,
             syncNotifier = syncNotifier,
+            importNotifier = importKeeper,
             metronomeNotifier = metronomeNotifier,
             onUiModeChanged = ::applyInterfaceStyle,
             onAppIconChanged = ::applyAppIcon,

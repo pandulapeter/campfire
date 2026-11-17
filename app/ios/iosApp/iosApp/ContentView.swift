@@ -33,7 +33,13 @@ final class ShortcutListingController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let content = CampfireViewControllerKt.CampfireViewController { [weak self] commands in
+        let continuedImportTasks: ContinuedImportTasks?
+        if #available(iOS 26.0, *) {
+            continuedImportTasks = ContinuedImportTaskScheduler()
+        } else {
+            continuedImportTasks = nil
+        }
+        let content = CampfireViewControllerKt.CampfireViewController(continuedImportTasks: continuedImportTasks) { [weak self] commands in
             self?.listedCommands = commands
         }
         addChild(content)
