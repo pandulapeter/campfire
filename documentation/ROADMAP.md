@@ -13,9 +13,16 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Fixes for pictures, attachments, and their sync — first, before anything else ships**: large attachments no
+  longer run an Android phone out of memory on Save and export, messages show over open sheets, the import report
+  matches its review, a file lost to an older version's edit is restored from the cloud folder's history, and every
+  smaller finding of the stability check of 2026-11-17.
+  Plan: [attachments-release-fixes.md](plans/attachments-release-fixes.md)
 - **Streaming archive import — critical for the next release**: archives of any size imported without holding them
-  in memory, safety and reliability first, checked by hand on every platform before it ships.
+  in memory, safety and reliability first, checked by hand on every platform before it ships. Starts once the fixes
+  above have landed (they carry out its first storage steps).
   Plan: [streaming-archive-import.md](plans/streaming-archive-import.md)
+- Hebrew import issues (https://www.tab4u.com/, https://negina.co.il/ )
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
