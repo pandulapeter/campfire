@@ -320,11 +320,16 @@ internal class StreamingArchiveUnpack(
 
         private fun sniffedLimitOf(name: String, prefix: ByteArray): Long? {
             val limit = ArchiveEntryPolicy.sniffedLimitOf(name, prefix) ?: return null
-            return if (stagesArchives && LibraryFiles.isZipArchive(prefix)) {
-                isArchive = true
-                ImportLimits.MAX_STAGED_ARCHIVE_SIZE
-            } else {
-                minOf(limit, maxSize - textCharged)
+            return when {
+                stagesArchives && LibraryFiles.isZipArchive(prefix) -> {
+                    isArchive = true
+                    ImportLimits.MAX_STAGED_ARCHIVE_SIZE
+                }
+                // Held in memory, as the in-memory unpack holds every entry, whose reader cannot even peek at one declaring
+                // 2 GiB or more and leaves it out as not wanted: reported as too large here, the same entry would be
+                // listed under another heading of the import's report on each path.
+                declaredSizes[index - 1] > Int.MAX_VALUE -> null
+                else -> minOf(limit, maxSize - textCharged)
             }
         }
 

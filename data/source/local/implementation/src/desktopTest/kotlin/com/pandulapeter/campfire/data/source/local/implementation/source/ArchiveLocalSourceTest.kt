@@ -280,6 +280,17 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `a text or an unknown entry declaring 2 GiB or more is left out unread and not reported too large`() = runBlocking {
+        val sheet = "G         D\nDown by the river light\n".encodeToByteArray()
+        val archive = ZipWriter.write(listOf(ZipEntry("a.cho", "{title: A}".encodeToByteArray()), ZipEntry("notes.txt", sheet), ZipEntry("x.songsheet", sheet)))
+        listOf("notes.txt", "x.songsheet").forEach { archive.declareUncompressedSize(it, 0x80000000L) }
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf(ImportedFile.unread("notes.txt"), ImportedFile.unread("x.songsheet")), files.drop(1))
+    }
+
+    @Test
     fun `reads a SongbookPro backup inside an archive as its songs and sets, without its bookkeeping`() = runBlocking {
         val data = """1.0
             {"songs": [{"Id": 1, "name": "A", "content": "[C]La"}],
@@ -404,4 +415,18 @@ class ArchiveLocalSourceTest {
 
     /** The files alone, with the whole picture and attachment budgets: these tests are about the songs. */
     private suspend fun ArchiveLocalSourceImpl.unpack(archive: ByteArray, maxSize: Long) = unpacks.both(archive = archive, maxSize = maxSize).files
+
+    /** Sets the uncompressed size the central directory declares for the entry [name] of this archive to [declared]. */
+    private fun ByteArray.declareUncompressedSize(name: String, declared: Long) {
+        fun u16(at: Int) = (this[at].toInt() and 0xFF) or ((this[at + 1].toInt() and 0xFF) shl 8)
+        val end = size - 22
+        var position = u16(end + 16) or (u16(end + 18) shl 16)
+        repeat(u16(end + 10)) {
+            val nameLength = u16(position + 28)
+            if (decodeToString(position + 46, position + 46 + nameLength) == name) {
+                for (byte in 0 until 4) this[position + 24 + byte] = (declared ushr (8 * byte)).toByte()
+            }
+            position += 46 + nameLength + u16(position + 30) + u16(position + 32)
+        }
+    }
 }

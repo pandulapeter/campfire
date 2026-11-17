@@ -99,7 +99,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
   within the songs' budget; nested archives above the last level staged (not charged to it), walked, deleted; the
   pictures and attachments songs name reserved from declared sizes, then staged, what no file took given back once the
   walks end (`releaseUnused`), however they end. A text-named entry that turns out a
-  zip is unpacked from memory, as there. A song naming an archive gets it re-read as its file. Records read and
+  zip is unpacked from memory, as there, and one held in memory declaring 2 GiB or more is not wanted, as the in-memory
+  reader cannot peek at it. A song naming an archive gets it re-read as its file. Records read and
   directories held count across nested archives (`ZipDirectory.recordCount`, `centralDirectorySize`); one past either
   is reported unread. Any other failure deletes what the unpack staged, never what the request held before.
 
