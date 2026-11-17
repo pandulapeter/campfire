@@ -31,12 +31,12 @@ class OrphanedPicturesPlaceTest {
     }
 
     @Test
-    fun `a picture goes into the missing picture it was picked for, on any page of the song screen on top holding its song`() {
+    fun `a picture goes into the missing picture it was picked for - on any page of the song screen on top holding its song`() {
         assertEquals(OrphanedPicturesPlace.MissingImage(pick), orphanedPicturesPlace(top = setlistPages, missingImagePick = pick, isReadOnly = false))
     }
 
     @Test
-    fun `a picture with no pick under way, or picked for a song the screen on top does not hold, is let go`() {
+    fun `a picture with no pick under way or picked for a song the screen on top does not hold or is let go`() {
         assertEquals(OrphanedPicturesPlace.Nowhere, orphanedPicturesPlace(top = setlistPages, missingImagePick = null, isReadOnly = false))
         assertEquals(
             OrphanedPicturesPlace.Nowhere,
@@ -47,7 +47,7 @@ class OrphanedPicturesPlaceTest {
     }
 
     @Test
-    fun `an import preview takes no picture, even one naming a file of its own`() {
+    fun `an import preview takes no picture - even one naming a file of its own`() {
         val preview = setlistPages.copy(importPreview = ImportPreview(songIndices = listOf(0), planSongCount = 1, isReviewPager = false, reviewId = "review"))
         assertEquals(OrphanedPicturesPlace.Nowhere, orphanedPicturesPlace(top = preview, missingImagePick = pick, isReadOnly = false))
     }
@@ -74,7 +74,7 @@ class OrphanedPicturesPlaceTest {
     ) = orphanedAttachmentPlace(top = top, openDialogs = openDialogs, isReadOnly = isReadOnly, areAttachmentsEnabled = areAttachmentsEnabled)
 
     @Test
-    fun `an attachment goes into the topmost Attachments sheet, over the editor too`() {
+    fun `an attachment goes into the topmost Attachments sheet - over the editor too`() {
         val file = SongEditTarget.File("b.cho")
         val draft = SongEditTarget.EditorDraft("a.cho")
         assertEquals(OrphanedAttachmentPlace.Sheet(file), attachmentPlace(top = songDetails, openDialogs = listOf(DialogType.SongInfo(song, file), attachmentsSheet(file))))
@@ -82,7 +82,7 @@ class OrphanedPicturesPlaceTest {
     }
 
     @Test
-    fun `an attachment with no Attachments sheet open goes into the editor on top, and nowhere else`() {
+    fun `an attachment with no Attachments sheet open goes into the editor on top and nowhere else`() {
         assertEquals(OrphanedAttachmentPlace.Editor("a.cho"), attachmentPlace(top = CampfireDestination.SongEditor("a.cho")))
         assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = songDetails))
         assertEquals(OrphanedAttachmentPlace.Nowhere, attachmentPlace(top = null))

@@ -17,7 +17,7 @@ import kotlinx.coroutines.test.runTest
 class CreateSongFromTextUseCaseImplTest {
 
     @Test
-    fun `the text is written exactly as it is, named by its title, subtitle and artist`() = runTest {
+    fun `the text is written exactly as it is - named by its title - subtitle and artist`() = runTest {
         val repository = RecordingSongRepository()
         val text = "{title: Title}\n{subtitle: Live}\n{artist: Artist}\n{capo: 2}\n[Am]Hello  [C]world"
         CreateSongFromTextUseCaseImpl(repository)(text)

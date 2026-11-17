@@ -47,7 +47,7 @@ class SectionMeasurementsTest {
     }
 
     @Test
-    fun `a section as tall at every width past its widest line is measured once for all of them, and at its widest`() {
+    fun `a section as tall at every width past its widest line is measured once for all of them and at its widest`() {
         val section = Section(maxWidth = 100)
         val measurements = SectionMeasurements(listOf(SectionSizes()), booleanArrayOf(true))
         listOf(120, 150, 300).forEach { assertEquals(100, measurements.height(0, it, section)) }

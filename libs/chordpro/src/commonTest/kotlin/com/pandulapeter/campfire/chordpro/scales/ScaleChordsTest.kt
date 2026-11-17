@@ -43,7 +43,7 @@ class ScaleChordsTest {
     }
 
     @Test
-    fun `a chord is numbered by the scale's own degree, not by the step its semitones make`() {
+    fun `a chord is numbered by the scale's own degree not by the step its semitones make`() {
         assertEquals("bV", ScaleChords.triads(scale("locrian"), "C")[4].numeral)
         assertEquals("#iv°", ScaleChords.triads(scale("lydian"), "C")[3].numeral)
         assertEquals("#ii°", ScaleChords.triads(scale("lydian_sharp_2"), "C")[1].numeral)

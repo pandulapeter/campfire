@@ -203,7 +203,7 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
-    fun `the shared links' registry, written by the run's own step or a share elsewhere, brings no run`() = runTest {
+    fun `the shared links' registry - written by the run's own step or a share elsewhere - brings no run`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
         // A copy the run's step builds again and records after its listing, which the feed then reports.
         world.provider.share(sharedEntry(shareId = "songshare0000001", kind = SharedLinkKind.SONG, fileName = song(1).name))
@@ -303,7 +303,7 @@ class SyncRemoteWatcherTest {
     }
 
     @Test
-    fun `a poll lost soon after it was sent is asked again after a moment, and less often while it keeps failing`() = runTest {
+    fun `a poll lost soon after it was sent is asked again after a moment and less often while it keeps failing`() = runTest {
         val world = world(localFiles = mapOf(song(1) to ONE))
         val refused: suspend () -> Boolean = {
             delay(10.seconds)

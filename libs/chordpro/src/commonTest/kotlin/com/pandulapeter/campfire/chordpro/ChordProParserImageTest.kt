@@ -38,7 +38,7 @@ class ChordProParserImageTest {
     }
 
     @Test
-    fun `values are read in double quotes, single quotes, or none`() {
+    fun `values are read in double quotes or single quotes or none`() {
         val image = image("src=\"my score.png\" title='The first page' align=right")
 
         assertEquals("my score.png", image.src)
@@ -82,14 +82,14 @@ class ChordProParserImageTest {
     }
 
     @Test
-    fun `an unreadable, non-positive, or two-way scale is no scale`() {
+    fun `an unreadable or non-positive or two-way scale is no scale`() {
         listOf("0", "-1", "big", "0.5,0.8", "").forEach { written ->
             assertNull(image("src=a.png scale=\"$written\"").scale, written)
         }
     }
 
     @Test
-    fun `alignment comes from align, else from the deprecated center`() {
+    fun `alignment comes from align - else from the deprecated center`() {
         assertEquals(ImageAlignment.LEFT, image("src=a.png align=Left").alignment)
         assertEquals(ImageAlignment.CENTER, image("src=a.png center").alignment)
         assertEquals(ImageAlignment.CENTER, image("src=a.png center=1").alignment)
@@ -100,7 +100,7 @@ class ChordProParserImageTest {
     }
 
     @Test
-    fun `every attribute is kept with its key lowercased, the first of a repeated one winning`() {
+    fun `every attribute is kept with its key lowercased - the first of a repeated one winning`() {
         val image = image("SRC=a.png X=10 y=20% border spread=5 href=\"https://example.com\" anchor=page trbl=tb x=99")
 
         assertEquals(
@@ -160,7 +160,7 @@ class ChordProParserImageTest {
     }
 
     @Test
-    fun `an image cuts the section it stands in, like a break`() {
+    fun `an image cuts the section it stands in - like a break`() {
         val blocks = ChordProParser.parse("{start_of_verse}\n[C]One\n{image: src=a.png}\n[G]Two\n{end_of_verse}").blocks
 
         assertEquals(3, blocks.size)

@@ -46,7 +46,7 @@ class PictureDownloadTest {
     }
 
     @Test
-    fun `a picture over the ceiling is too large, declared or not`() = runTest {
+    fun `a picture over the ceiling is too large - declared or not`() = runTest {
         val declared = source { _ ->
             respond(ByteReadChannel(ByteArray(4)), HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, (MAX + 1).toString()))
         }.downloadPicture(URL, MAX)
@@ -57,7 +57,7 @@ class PictureDownloadTest {
     }
 
     @Test
-    fun `nothing at the address is missing, and the host's own trouble or a failed transfer is unreachable`() = runTest {
+    fun `nothing at the address is missing and the host's own trouble or a failed transfer is unreachable`() = runTest {
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.downloadPicture(URL, MAX))
         assertEquals(ImportDownload.Unreachable, source { _ -> respondError(HttpStatusCode.ServiceUnavailable) }.downloadPicture(URL, MAX))
         assertEquals(ImportDownload.Unreachable, source { _ -> throw IllegalStateException("No route to host") }.downloadPicture(URL, MAX))

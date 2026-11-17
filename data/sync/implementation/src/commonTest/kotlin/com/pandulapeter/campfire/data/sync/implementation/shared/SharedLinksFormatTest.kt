@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 class SharedLinksFormatTest {
 
     @Test
-    fun `an edit keeps the members a later version added, at the top and in each entry`() {
+    fun `an edit keeps the members a later version added - at the top and in each entry`() {
         val text = """
             { "version": 1, "owner": "later", "links": [ {
                 "shareId": "aaaaaaaaaaaaaaaa", "kind": "song", "fileName": "a.cho", "title": "A", "fileId": "f",
@@ -62,7 +62,7 @@ class SharedLinksFormatTest {
     }
 
     @Test
-    fun `a copy marked missing reads back as such, beside a member a later version added`() {
+    fun `a copy marked missing reads back as such - beside a member a later version added`() {
         val text = """
             { "links": [ {
                 "shareId": "aaaaaaaaaaaaaaaa", "kind": "song", "fileName": "a.cho", "title": "A", "fileId": "f",
@@ -100,7 +100,7 @@ class SharedLinksFormatTest {
     }
 
     @Test
-    fun `the shares are the readable entries, most recently shared first`() {
+    fun `the shares are the readable entries - most recently shared first`() {
         fun entry(shareId: String, sharedAt: String?, state: String = SharedLinksEntry.STATE_OK) = SharedLinksEntry(
             shareId = shareId,
             kind = "song",

@@ -79,7 +79,7 @@ class ScaleExceptionsTest {
         assertEquals(Triple("G", "E", "phrygian"), group("E F E F E F G F E", key = "E").exceptions.single { it.chordName == "G" }.first)
 
     @Test
-    fun `a borrowed chord of a major song is its parallel natural minor's, never a harmonic minor on the key`() {
+    fun `a borrowed chord of a major song is its parallel natural minor's never a harmonic minor on the key`() {
         assertEquals(listOf(Triple("Ab", "C", "natural_minor")), group("C Am F Ab G C", key = "C").exceptions.map { it.first })
         assertEquals(listOf(Triple("Fm7", "F", "dorian")), group("Cmaj7 Am7 Fm7 Cmaj7", key = "C").exceptions.map { it.first })
     }
@@ -116,7 +116,7 @@ class ScaleExceptionsTest {
     }
 
     @Test
-    fun `every chord a home leaves out is an exception, the most played first`() =
+    fun `every chord a home leaves out is an exception - the most played first`() =
         assertEquals(listOf("E7", "A7"), group("C E7 Am F G C E7 Am A7 Dm G7 C").exceptions.map { it.chordName })
 
     @Test
@@ -135,7 +135,7 @@ class ScaleExceptionsTest {
     }
 
     @Test
-    fun `an exception offers seven-note scales holding the chord, the common ones first, or a passing chord's diminished scale`() {
+    fun `an exception offers seven-note scales holding the chord or the common ones first or a passing chord's diminished scale`() {
         val exception = group("C A7 Dm G7").exceptions.single()
         assertTrue(exception.scales.none { it.id == "minor_pentatonic" || it.id == "blues" })
         val borrowed = group("C Am F Fm C").exceptions.single().scales

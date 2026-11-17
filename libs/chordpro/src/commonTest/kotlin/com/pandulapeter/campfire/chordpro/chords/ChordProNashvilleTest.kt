@@ -100,7 +100,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `a song with no key is counted from the key its chords suggest, which it still does not name`() {
+    fun `a song with no key is counted from the key its chords suggest which it still does not name`() {
         val noKey = ChordProTransposer.transpose(ChordProParser.parse("[G]a [C]b [D]c\n{transpose: 2}\n[G]d"), 0)
         val song = ChordProNotation.toNotation(noKey, ChordNotation.ROMAN, fallbackKey = "G")
 
@@ -116,7 +116,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `the key stays in letters, and so does the key a modulation names`() {
+    fun `the key stays in letters and so does the key a modulation names`() {
         val song = shown("{key: G}\n[G]a [C]b\n{transpose: 2}\n{key: A}\n[G]c [C]d")
 
         assertEquals("G", song.metadata.key)
@@ -139,7 +139,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `grids, comments and the chord rows of tabs are numbered`() {
+    fun `grids - comments and the chord rows of tabs are numbered`() {
         val song = shown("{key: C}\n{start_of_grid}\n| C . F . |\n{end_of_grid}\n{start_of_tab}\nC    G\ne|--0----3--|\n{end_of_tab}\n{c: Intro: [G] [Am]}")
         val lines = song.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
 
@@ -196,7 +196,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `a row of numbers over a staff travels with its columns, and a lyric line of I does not`() {
+    fun `a row of numbers over a staff travels with its columns and a lyric line of I does not`() {
         assertTrue(ChordProChordNames.isDisplayedChordName("6-"))
         assertTrue(ChordProChordNames.isDisplayedChordName("Sol"))
         assertTrue(ChordProChordNames.isDisplayedChordName("IV"))
@@ -278,7 +278,7 @@ class ChordProNashvilleTest {
         ChordProNotation.romanNumeralChord(numeral, key, isOnKeyScale, isCaseQuality)
 
     @Test
-    fun `a numeral is read back into the chord it names in a key, spelled as the key spells`() {
+    fun `a numeral is read back into the chord it names in a key - spelled as the key spells`() {
         listOf("C", "Dm", "G7", "Bb", "D7", "G/B", "Bdim", "Bm7b5", "C+", "Fmaj7", "Ebsus4", "(G)").forEach { name ->
             assertEquals(name, chord(ChordProNotation.romanNumeral(name, "C")!!), name)
         }
@@ -300,7 +300,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `numerals in small letters throughout name their qualities in words, and a written minor is minor once`() {
+    fun `numerals in small letters throughout name their qualities in words and a written minor is minor once`() {
         assertEquals(listOf("C", "F", "G", "Am", "Dm7"), listOf("i", "iv", "v", "vim", "iim7").map { chord(it, isCaseQuality = false) })
         assertEquals(listOf("Am", "Dm7", "Am"), listOf("vim", "iim7", "vi-").map { chord(it) })
     }
@@ -312,18 +312,18 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `diminished, half-diminished, and augmented numerals are read by their signs and words`() {
+    fun `diminished and half-diminished and augmented numerals are read by their signs and words`() {
         assertEquals(listOf("Bdim", "Bdim", "Bm7b5", "Bm7b5", "E+", "Eaug"), listOf("vii\u00b0", "viio", "vii\u00f87", "vii\u2300", "III+", "IIIaug").map { chord(it) })
     }
 
     @Test
-    fun `an extension is kept, a numeral after a dominant's slash is the step it is applied to, and any other the bass`() {
+    fun `an extension is kept and a numeral after a dominant's slash is the step it is applied to and any other the bass`() {
         assertEquals(listOf("G7", "Fmaj7", "Dm7", "D7", "E", "C/E", "F/G", "G/B"), listOf("V7", "IVmaj7", "ii7", "V7/V", "V/vi", "I/iii", "IV/V", "V/7").map { chord(it) })
         assertEquals("C#dim", chord("vii\u00b0/V", "G"))
     }
 
     @Test
-    fun `a minor key's third, sixth and seventh are the minor scale's only where the sheet counts on the key's scale`() {
+    fun `a minor key's third - sixth and seventh are the minor scale's only where the sheet counts on the key's scale`() {
         assertEquals("F", chord("III", "Dm", isOnKeyScale = true))
         assertEquals("Bb", chord("VI", "Dm", isOnKeyScale = true))
         assertEquals("C", chord("VII", "D minor", isOnKeyScale = true))
@@ -334,7 +334,7 @@ class ChordProNashvilleTest {
     }
 
     @Test
-    fun `no chord is read from a word, a number, or against a key that is no note`() {
+    fun `no chord is read from a word or a number or against a key that is no note`() {
         listOf("Verse", "Iv", "IIII", "5", "b7", "x2", "Ix", "mix", "I.").forEach { assertNull(chord(it), it) }
         assertNull(chord("IV", "unknown"))
     }

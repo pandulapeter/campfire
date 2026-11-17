@@ -40,14 +40,14 @@ class RememberSharedLinkImportUseCaseImplTest {
     }
 
     @Test
-    fun `a name written again under another spelling is kept once, as last written`() = runTest {
+    fun `a name written again under another spelling is kept once as last written`() = runTest {
         useCase(linkFileId = "link", songFileNames = listOf("Riverlight.cho"), setlistFileNames = emptyList())
         useCase(linkFileId = "link", songFileNames = listOf("riverlight.cho"), setlistFileNames = emptyList())
         assertEquals(listOf("songs/riverlight.cho"), repository.current.sharedLinkImports.getValue("link"))
     }
 
     @Test
-    fun `the oldest link is forgotten past the limit, and one imported again is the newest`() = runTest {
+    fun `the oldest link is forgotten past the limit and one imported again is the newest`() = runTest {
         repeat(MAX_SHARED_LINK_IMPORTS) { useCase(linkFileId = "link$it", songFileNames = listOf("a.cho"), setlistFileNames = emptyList()) }
         useCase(linkFileId = "link0", songFileNames = listOf("b.cho"), setlistFileNames = emptyList())
         useCase(linkFileId = "another", songFileNames = listOf("a.cho"), setlistFileNames = emptyList())

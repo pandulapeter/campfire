@@ -47,7 +47,7 @@ import kotlin.test.assertTrue
 class StreamedImportDownloadTest {
 
     @Test
-    fun `a body streamed in chunks reaches the sink whole and in order, with its progress against the declared length`() = runTest {
+    fun `a body streamed in chunks reaches the sink whole and in order - with its progress against the declared length`() = runTest {
         val content = Random(1).nextBytes(3 * CHUNK + 123)
         val sink = RecordingSink()
         val download = source { _ ->
@@ -85,7 +85,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `a body that breaks off with an error is unreachable, even without a declared length`() = runTest {
+    fun `a body that breaks off with an error is unreachable - even without a declared length`() = runTest {
         val sink = RecordingSink()
         val download = source { _ ->
             val channel = ByteChannel()
@@ -102,7 +102,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `a body larger than its declared length is read on within the ceiling, as a decoded body is`() = runTest {
+    fun `a body larger than its declared length is read on within the ceiling as a decoded body is`() = runTest {
         val content = Random(3).nextBytes(3 * CHUNK)
         val sink = RecordingSink()
         val download = source { _ ->
@@ -126,7 +126,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `a body over the ceiling is too large, declared before the body or found in it`() = runTest {
+    fun `a body over the ceiling is too large - declared before the body or found in it`() = runTest {
         val declaredSink = RecordingSink()
         val declared = source { _ ->
             respond(chunked(ByteArray(CHUNK)), HttpStatusCode.OK, headersOf(HttpHeaders.ContentLength, (MAX + 1).toString()))
@@ -151,7 +151,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `a download cancelled midway is cancelled, not answered`() = runTest {
+    fun `a download cancelled midway is cancelled not answered`() = runTest {
         val firstChunk = CompletableDeferred<Unit>()
         val sink = RecordingSink(onWrite = { firstChunk.complete(Unit) })
         val source = source { _ ->
@@ -197,7 +197,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `a slow body that keeps arriving has no total time limit, not even the browser's`() = runTest {
+    fun `a slow body that keeps arriving has no total time limit not even the browser's`() = runTest {
         val content = Random(4).nextBytes(30 * 1024)
         val sink = RecordingSink()
         val download = source { _ -> respond(chunked(content, chunkSize = 1024, pauseMillis = 50_000), HttpStatusCode.OK) }.stream(sink)
@@ -208,7 +208,7 @@ class StreamedImportDownloadTest {
     }
 
     @Test
-    fun `what the sink throws is thrown on, not taken for the network`() = runTest {
+    fun `what the sink throws is thrown on not taken for the network`() = runTest {
         val refusal = IllegalStateException("No room")
         val source = source { _ -> respond(chunked(ByteArray(2 * CHUNK)), HttpStatusCode.OK) }
 

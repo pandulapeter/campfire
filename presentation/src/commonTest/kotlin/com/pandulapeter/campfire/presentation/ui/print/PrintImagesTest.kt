@@ -36,7 +36,7 @@ internal class PrintImagesTest {
         imageSizes = imageSizes,
     )
 
-    @Test fun `a photo prints fitted to its column and to a page, never cut, between the lines around it`() = runTest {
+    @Test fun `a photo prints fitted to its column and to a page never cut - between the lines around it`() = runTest {
         val settings = PrintSettings()
         val document = layout("{title: Pictures}\nAbove\n\n{image: src=tall.jpg}\n\nUnder", mapOf("tall.jpg" to SongImageSize.Known(1200, 3000)), settings)
         val (pageIndex, image) = document.pages.withIndex().firstNotNullOf { (index, page) -> page.images.singleOrNull()?.let { index to it } }
@@ -50,7 +50,7 @@ internal class PrintImagesTest {
         assertTrue(under.index > pageIndex || under.value.texts.first { it.text == "Under" }.y > image.y + image.height)
     }
 
-    @Test fun `a missing picture prints its sentence, which stays out of the text layer`() = runTest {
+    @Test fun `a missing picture prints its sentence which stays out of the text layer`() = runTest {
         val document = layout("{title: Pictures}\n{image: src=gone.jpg}", emptyMap())
         val sentence = document.pages.flatMap { it.texts }.single { it.text == "Image not found: gone.jpg" }
         assertFalse(sentence.isSelectable)

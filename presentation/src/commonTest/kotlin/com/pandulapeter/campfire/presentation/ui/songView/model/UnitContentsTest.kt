@@ -52,7 +52,7 @@ class UnitContentsTest {
     private val tune = AbcTune(TUNE, 0)
 
     @Test
-    fun `only the chunks of a tune carry what it draws, and a tune drawn as text carries that`() {
+    fun `only the chunks of a tune carry what it draws and a tune drawn as text carries that`() {
         val contents = unitContentsOf(units, sections, emptySet(), notationsOf(null))
         // The tune's slots, each a chunk of its own, after the verse's lines.
         val tuneUnits = contents.indices.filter { contents[it].notation != null }
@@ -64,7 +64,7 @@ class UnitContentsTest {
     }
 
     @Test
-    fun `the same rendering gives equal contents, and a new one changes only the tune's chunks`() {
+    fun `the same rendering gives equal contents and a new one changes only the tune's chunks`() {
         val rendering = rendering()
         val before = unitContentsOf(units, sections, emptySet(), notationsOf(rendering))
         assertEquals(before, unitContentsOf(units, sections, emptySet(), notationsOf(rendering)))

@@ -61,7 +61,7 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `a language is written after the ones the song already declares, whichever spelling they use`() {
+    fun `a language is written after the ones the song already declares - whichever spelling they use`() {
         val text = "{title: T}\n{meta: lang hu}\n{capo: 2}\n\nThe first line"
 
         assertEquals(
@@ -130,7 +130,7 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `every spelling of a declared directive is found, wherever it stands`() {
+    fun `every spelling of a declared directive is found - wherever it stands`() {
         assertEquals("{t: T}\n{st: S}" to (12..13), "{t: T}\n{st: S}".write("subtitle"))
         assertEquals("{meta: key G}" to (11..12), "{meta: key G}".write("key"))
         assertEquals("[C]A line\n{year: 1970}" to (17..21), "[C]A line\n{year: 1970}".write("year"))
@@ -161,7 +161,7 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `a repeatable directive is written again, with the selection as its value`() {
+    fun `a repeatable directive is written again - with the selection as its value`() {
         assertEquals("{tag: Folk}\n{tag: Slow}\nSlow" to (18..22), "{tag: Folk}\nSlow".write("tag", value = "Slow"))
     }
 
@@ -177,7 +177,7 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `the tags, the languages, the links, and the attachments of a song are the repeatable directives`() {
+    fun `the tags and the languages and the links and the attachments of a song are the repeatable directives`() {
         assertEquals(setOf("tag", "language", "link", "attachment"), ChordProHeader.repeatableMetadata)
     }
 
@@ -295,7 +295,7 @@ class ChordProHeaderTest {
     }
 
     @Test
-    fun `a chord definition goes after the last one of the header, or at its end`() {
+    fun `a chord definition goes after the last one of the header or at its end`() {
         val line = "{define: G frets 3 2 0 0 0 3}"
         val bare = "{title: X}\n{artist: Y}\n{tag: Z}\n\n[G]la"
         val first = ChordProHeader.insertDefinition(bare, line)

@@ -33,7 +33,7 @@ class DeleteLibraryUseCaseImplTest {
     private var savedPreferences: UserPreferences? = null
 
     @Test
-    fun `stops the run going before deleting, notes every share stopped, and starts one with the deletions allowed after`() = runTest {
+    fun `stops the run going before deleting and notes every share stopped and starts one with the deletions allowed after`() = runTest {
         useCase().invoke()
 
         assertEquals(

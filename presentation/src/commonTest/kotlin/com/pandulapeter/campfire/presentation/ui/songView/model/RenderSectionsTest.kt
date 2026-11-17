@@ -91,7 +91,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `a picture between sections is a unit of its own, sized as it was read`() {
+    fun `a picture between sections is a unit of its own - sized as it was read`() {
         val sizes = mapOf("a.jpg" to SongImageSize.Known(400, 300), "gone.jpg" to SongImageSize.Missing)
         assertEquals(
             listOf("Versszak: lines", "image a.jpg Known(width=400, height=300)", "image gone.jpg Missing", "image unread.jpg null", "Refrén: lines"),
@@ -100,17 +100,17 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `a picture inside a section cuts it, the rest headed by its toggle alone`() {
+    fun `a picture inside a section cuts it - the rest headed by its toggle alone`() {
         assertEquals(listOf("Versszak: lines", "image a.jpg null", ": lines"), shape("{sov}\nOne\n{image: a.jpg}\nTwo\n{eov}"))
     }
 
     @Test
-    fun `a song that is only a picture, lyrics only too, keeps it`() {
+    fun `a song that is only a picture - lyrics only too - keeps it`() {
         assertEquals(listOf("image chart.png null"), shape("{title: Chart}\n{image: chart.png}", shouldShowChords = false))
     }
 
     @Test
-    fun `a comment is shown without its markup, the formatting kept beside it, after the transposition moved its chords`() {
+    fun `a comment is shown without its markup - the formatting kept beside it - after the transposition moved its chords`() {
         val comment = prepareSongLyrics(
             song = ChordProTransposer.transpose(ChordProParser.parse("{c: <b>Slower</b> from [Am]here}"), 2),
             shouldShowChords = true,
@@ -168,7 +168,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `a key change is named where it stands, between two sections or inside one`() {
+    fun `a key change is named where it stands - between two sections or inside one`() {
         assertEquals(
             listOf("Verse: lines, key A, lines", "key Bb", "Refrén: lines"),
             shape("{key: G}\n{sov: Verse}\n[G]la\n{transpose: 2}\n[G]la\n{eov}\n{transpose: 3}\n{soc}\n[G]la\n{eoc}", isTransposed = true),
@@ -184,7 +184,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `a key change says nothing in a song that declares no key, and nothing without the chords`() {
+    fun `a key change says nothing in a song that declares no key and nothing without the chords`() {
         assertEquals(listOf("Verse: lines"), shape("{sov: Verse}\n[G]la\n{transpose: 2}\n[G]la\n{eov}", isTransposed = true))
         assertEquals(
             listOf("Verse: lines"),
@@ -266,7 +266,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `an abc, a LilyPond, or an SVG block is headed by its kind unless labelled, and dropped whole in lyrics-only mode`() {
+    fun `an abc and a LilyPond or an SVG block is headed by its kind unless labelled and dropped whole in lyrics-only mode`() {
         val text = "{sov}\n[G]la\n{eov}\n\n{start_of_abc}\nX:1\nK:G\n|:GABc:|\n{end_of_abc}\n\n{start_of_ly: Melody}\nc4 d e\n{end_of_ly}\n\n" +
             "{start_of_svg}\n<svg/>\n{end_of_svg}\n\n{start_of_textblock}\nwords\n{end_of_textblock}"
 
@@ -318,7 +318,7 @@ class RenderSectionsTest {
         .distinct()
 
     @Test
-    fun `a section the file leaves unnamed is still headed, a paragraph by its fold toggle alone`() {
+    fun `a section the file leaves unnamed is still headed - a paragraph by its fold toggle alone`() {
         assertEquals(
             listOf("Versszak: lines", ": lines", "Tab: lines", "Refrén: lines"),
             shape("{sov}\nla\n{eov}\n\nloose\n\n{sot}\ne|-0-|\n{eot}\n\n{soc}\nla\n{eoc}"),
@@ -326,7 +326,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `the kinds of section the editor writes are headed in the app's language, and any other kind as the file names it`() {
+    fun `the kinds of section the editor writes are headed in the app's language and any other kind as the file names it`() {
         assertEquals(
             listOf("Bevezető: lines", "Pre-refrén: lines", "Szóló: lines", "Levezetés: lines", "Interlude: lines", "Szóló 2: lines"),
             shape("{start_of_intro}\nla\n{end_of_intro}\n{start_of_pre-chorus}\nla\n{end_of_pre-chorus}\n{start_of_solo}\nla\n{end_of_solo}\n" +
@@ -457,7 +457,7 @@ class RenderSectionsTest {
     }
 
     @Test
-    fun `a song with chords has the instrument pill at the top of its first section, with diagrams or without`() {
+    fun `a song with chords has the instrument pill at the top of its first section - with diagrams or without`() {
         val model = prepareSongLyrics(ChordProParser.parse("{sov}\n[G]la [C]la\n{eov}"), shouldShowChords = true, labels = labels)
         assertTrue(model.hasChords)
         val sections = withMetadataSection(model.sections, model.song.metadata, shouldShowChords = true, isSongInfoShown = false, hasPlayingControls = true)

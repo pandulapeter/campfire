@@ -33,7 +33,7 @@ class WrittenModulationsTest {
     private val chorus = section("chorus", "D Bm G A C G D Bm G A C G D")
 
     @Test
-    fun `a last chorus written out a whole step up is read as the transpose it stands for, the outro with it`() {
+    fun `a last chorus written out a whole step up is read as the transpose it stands for - the outro with it`() {
         val written = shown(chorus, chorus, section("chorus", "E C#m A B D A E C#m A B D A E"), section("outro", "C#m A B D A E"), key = "D")
         val directed = shown(chorus, chorus, "{transpose: 2}", chorus, section("outro", "Bm G A C G D"), key = "D")
         assertEquals(listOf(listOf("D", "major", "C", "true"), listOf("E", "major", "D", "false")), written)
@@ -64,7 +64,7 @@ class WrittenModulationsTest {
     }
 
     @Test
-    fun `a chorus copied in the home key again returns there, and what follows stays home`() {
+    fun `a chorus copied in the home key again returns there and what follows stays home`() {
         val home = section("chorus", "F G Em Am F G C")
         val song = parse(
             section("verse", "C Am Dm G"),
@@ -83,7 +83,7 @@ class WrittenModulationsTest {
     }
 
     @Test
-    fun `a file of nothing but recalls of a short chorus, some of them transposed, is read in linear time`() {
+    fun `a file of nothing but recalls of a short chorus - some of them transposed - is read in linear time`() {
         val recalls = "{chorus}\n".repeat(50_000)
         val song = parse(section("chorus", "C G"), recalls, "{transpose: 2}", recalls)
         val start = TimeSource.Monotonic.markNow()

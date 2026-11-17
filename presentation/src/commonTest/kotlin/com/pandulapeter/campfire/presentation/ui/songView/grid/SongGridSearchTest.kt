@@ -69,7 +69,7 @@ class SongGridSearchTest {
     }
 
     @Test
-    fun `a song too long for one row is cut like a magazine, in no more pages than with its sections whole`() {
+    fun `a song too long for one row is cut like a magazine - in no more pages than with its sections whole`() {
         val sections = List(7) { List(3) { List(3) { 300 } } }
         val cut = search(sections, spec(availableHeight = 800)).decide(settledWidth = 1_200).grid
         val whole = search(sections, spec(availableHeight = 800, canCutSections = false)).decide(settledWidth = 1_200).grid

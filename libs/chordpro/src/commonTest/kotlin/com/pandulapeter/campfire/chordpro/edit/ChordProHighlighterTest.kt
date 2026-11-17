@@ -53,7 +53,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `the chords of a comment or a label are coloured as chords, and nothing else in it`() {
+    fun `the chords of a comment or a label are coloured as chords and nothing else in it`() {
         assertEquals(
             listOf(
                 TokenType.DIRECTIVE_NAME to "{c:",
@@ -114,7 +114,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `the chord symbols of an abc tune are chords, and its annotations, comments, fields and text blocks are not`() {
+    fun `the chord symbols of an abc tune are chords and its annotations and comments and fields and text blocks are not`() {
         val text = "{start_of_abc}\nX:1\nK:C\n\"^Chorus\"\"Am\"A2 \"^softly\"B \"G7\"c|[CEG] % \"C\"\n%\"D\"\nw: \"E\"\n" +
             "%%begintext\n\"F\" said\n%%endtext\n\"Dm\"d\n{end_of_abc}\n\"C\""
         assertEquals(
@@ -213,7 +213,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `the marks of a chord row are annotations, and the words of a sung line are not`() {
+    fun `the marks of a chord row are annotations and the words of a sung line are not`() {
         assertEquals(
             listOf(TokenType.CHORD to "[G]", TokenType.ANNOTATION to "|", TokenType.CHORD to "[C]", TokenType.ANNOTATION to "x4"),
             spans("[G] | [C] x4"),
@@ -226,7 +226,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `the beat dots, bar line, and count of a dotted chord row are annotations`() {
+    fun `the beat dots and bar line and count of a dotted chord row are annotations`() {
         val dots = List(3) { TokenType.ANNOTATION to "." }
 
         assertEquals(
@@ -260,7 +260,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `hash lines are comments, wherever they are indented to`() {
+    fun `hash lines are comments - wherever they are indented to`() {
         assertEquals(listOf(TokenType.COMMENT to "  # not sung [Am]"), spans("  # not sung [Am]"))
     }
 
@@ -292,7 +292,7 @@ class ChordProHighlighterTest {
     }
 
     @Test
-    fun `the chord cells of a grid are chords, and its margins, bars and beats are not`() {
+    fun `the chord cells of a grid are chords and its margins and bars and beats are not`() {
         val text = "{start_of_grid}\nA |: Am . C~G | / % :| x2\n{end_of_grid}\nAm"
         assertEquals(
             listOf(

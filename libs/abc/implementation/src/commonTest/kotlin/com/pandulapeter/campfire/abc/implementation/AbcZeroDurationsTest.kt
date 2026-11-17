@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class AbcZeroDurationsTest {
 
     @Test
-    fun `every length divided by zero is found, of a note, a rest, a chord, and a grace note`() {
+    fun `every length divided by zero is found and of a note and a rest and a chord and a grace note`() {
         val tune = "X:1\nK:C\nC/0 z//00 [CE]/0 {c/0}D|\n"
         assertEquals(listOf(2 to 1, 2 to 5, 2 to 14, 2 to 19), zeroDurationsIn(tune).map { it.line to it.column })
     }
@@ -26,7 +26,7 @@ class AbcZeroDurationsTest {
     }
 
     @Test
-    fun `fields, comments, quotes, decorations, inline fields, and text blocks hold no durations`() {
+    fun `fields and comments and quotes and decorations and inline fields and text blocks hold no durations`() {
         val tune = "X:1\nL:1/0\nQ:1/0=100\nK:C\nw: 1/0\n% C/0\n\"C/0\"C !1/0!D [Q:1/0]E F % G/0\n%%begintext\nC/0\n%%endtext\n"
         assertEquals(emptyList(), zeroDurationsIn(tune))
     }

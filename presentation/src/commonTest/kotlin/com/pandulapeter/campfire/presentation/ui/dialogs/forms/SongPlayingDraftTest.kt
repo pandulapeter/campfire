@@ -21,7 +21,7 @@ class SongPlayingDraftTest {
     }
 
     @Test
-    fun `values inside their ranges can be saved, including both ends`() {
+    fun `values inside their ranges can be saved - including both ends`() {
         assertTrue(isValidSongPlayingDraft(capo = "0", tempo = "30"))
         assertTrue(isValidSongPlayingDraft(capo = "12", tempo = "300"))
     }

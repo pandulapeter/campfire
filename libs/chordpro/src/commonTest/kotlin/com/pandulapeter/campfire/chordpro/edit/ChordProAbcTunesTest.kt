@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class ChordProAbcTunesTest {
 
     @Test
-    fun `a tune is the lines of its block, cut at a blank line or a directive`() {
+    fun `a tune is the lines of its block - cut at a blank line or a directive`() {
         val text = "{title: T}\n{start_of_abc}\nX:1\nK:C\n\nX:2\n{c: between}\nK:D\n{end_of_abc}\nLyrics\n{start_of_abc}\nX:3\n{end_of_abc}\n"
         assertEquals(listOf("X:1\nK:C", "X:2", "K:D", "X:3"), ChordProAbcTunes.of(text).map { it.text })
     }
@@ -28,7 +28,7 @@ class ChordProAbcTunesTest {
     }
 
     @Test
-    fun `a position without a column is the whole line, and one past a line or the tune the token before it`() {
+    fun `a position without a column is the whole line and one past a line or the tune the token before it`() {
         val text = "{start_of_abc}\nX:1\n  K:Hbogus  \nC D|\n{end_of_abc}"
         val tune = ChordProAbcTunes.of(text).single()
         assertEquals("K:Hbogus", text.substring(tune.rangeAt(line = 1, column = null)!!))

@@ -53,7 +53,7 @@ class ToolInstrumentLinesTest {
     }
 
     @Test
-    fun `beside the pill the controls are centred in the line, which keeps its height`() {
+    fun `beside the pill the controls are centred in the line which keeps its height`() {
         assertEquals(ToolLinePlaces(pillMaxWidth = 336 - 263 - 8, trailingY = 2, height = 56), places(0f))
     }
 
@@ -96,7 +96,7 @@ class ToolInstrumentLinesTest {
     }
 
     @Test
-    fun `controls after the pill stand a gap after it beside it and at the line's start under it, travelling between`() {
+    fun `controls after the pill stand a gap after it beside it and at the line's start under it - travelling between`() {
         fun x(progress: Float) = toolLineTrailingX(progress, lineWidth = 336, pillWidth = 120, gap = 8, trailingWidth = 150, isAfterPill = true)
         assertEquals(128, x(0f))
         assertEquals(64, x(0.5f))

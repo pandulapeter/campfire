@@ -67,7 +67,7 @@ class SongSelectionTest {
     }
 
     @Test
-    fun `the selection is listed in the order the songs are sorted in, whatever order it was ticked in`() {
+    fun `the selection is listed in the order the songs are sorted in - whatever order it was ticked in`() {
         val sorted = listOf(song("c"), song("a"), song("b"))
 
         assertEquals(listOf("c.cho", "a.cho"), setOf("a.cho", "c.cho").inListOrder(sorted))

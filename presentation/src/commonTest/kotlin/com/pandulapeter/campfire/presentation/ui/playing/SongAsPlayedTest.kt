@@ -54,7 +54,7 @@ class SongAsPlayedTest {
     }
 
     @Test
-    fun `a transposition moves the chords and the key, the capo staying`() =
+    fun `a transposition moves the chords and the key - the capo staying`() =
         assertEquals("{title: Song}\n{key: A}\n{capo: 2}\n[A]One [D]two\n", asPlayed(playback(transposition = 2)))
 
     @Test
@@ -62,7 +62,7 @@ class SongAsPlayedTest {
         assertEquals("{title: Song}\n{key: G}\n{capo: 4}\n[G]One [C]two\n", asPlayed(playback(capo = 4)))
 
     @Test
-    fun `a capo that keeps the key is written over the shapes it is played with, so the file still sounds in A`() {
+    fun `a capo that keeps the key is written over the shapes it is played with so the file still sounds in A`() {
         assertEquals("{title: Song}\n{key: F}\n{capo: 4}\n[F]One [Bb]two\n", asPlayed(playback(capo = 4, capoKeepsKey = true)))
         // Taken off, the A is played open and the file names no capo.
         assertEquals("{title: Song}\n{key: A}\n[A]One [D]two\n", asPlayed(playback(capo = 0, capoKeepsKey = true)))
@@ -76,14 +76,14 @@ class SongAsPlayedTest {
     }
 
     @Test
-    fun `a keyboard player who keeps the key moves the chords by the transposition alone, the file's capo staying`() {
+    fun `a keyboard player who keeps the key moves the chords by the transposition alone - the file's capo staying`() {
         val asPlayed = assertNotNull(songAsPlayedOf(playback(transposition = 2, capo = 4, capoKeepsKey = true), keyboard))
         assertNull(asPlayed.capo)
         assertEquals("{title: Song}\n{key: A}\n{capo: 2}\n[A]One [D]two\n", asPlayed.applyTo(capoChart))
     }
 
     @Test
-    fun `a tempo alone is written, the chords keeping their spelling`() {
+    fun `a tempo alone is written - the chords keeping their spelling`() {
         val flats = guitar.copy(chordSpelling = guitar.chordSpelling.copy(accidentals = UserPreferences.Accidentals.FLATS))
         val written = assertNotNull(songAsPlayedOf(playback(bpm = 96), flats)).applyTo("{title: Song}\n{capo: 2}\n[A#]One\n")
         assertTrue("{tempo: 96}" in written, written)
@@ -100,7 +100,7 @@ class SongAsPlayedTest {
     private fun atTempo(bpm: Int, text: String) = assertNotNull(songAsPlayedOf(playback(bpm = bpm), guitar)).applyTo(text)
 
     @Test
-    fun `a later tempo is scaled with the one played, as the page plays it`() = assertEquals(
+    fun `a later tempo is scaled with the one played as the page plays it`() = assertEquals(
         "{title: Song}\n{tempo: 110}\n[G]One\n{tempo: 55}\n[C]two\n",
         atTempo(110, "{title: Song}\n{tempo: 120}\n[G]One\n{tempo: 60}\n[C]two\n"),
     )

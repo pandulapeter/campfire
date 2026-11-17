@@ -33,14 +33,14 @@ class SongScaleSuggestionsTest {
     private val ScaleGroup.moments get() = exceptions.map { Triple(it.chordName, it.rootName, it.scales.first().id) }
 
     @Test
-    fun `a dominant blues changes scale over the IV and the V, whose thirds the minor pentatonic leaves out`() {
+    fun `a dominant blues changes scale over the IV and the V - whose thirds the minor pentatonic leaves out`() {
         val blues = suggestions("Verse" to "E7 E7 E7 E7 A7 A7 E7 E7 B7 A7 E7 B7", key = "E").single()
         assertEquals("E" to "minor_pentatonic", blues.rootName to blues.scales.first().id)
         assertEquals(listOf(Triple("A7", "A", "mixolydian"), Triple("B7", "B", "mixolydian")), blues.moments)
     }
 
     @Test
-    fun `a dominant the home scale holds the third of, and a rock riff, keep the home scale throughout`() {
+    fun `a dominant the home scale holds the third of and a rock riff and keep the home scale throughout`() {
         assertTrue(suggestions("Verse" to "C Am F G7 C Am F G7").single().exceptions.isEmpty())
         assertTrue(suggestions("Verse" to "E G A E G A E D").single().exceptions.isEmpty())
     }
@@ -53,7 +53,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a modulated solo is shown though its own exceptions, held at home, outrank it`() {
+    fun `a modulated solo is shown though its own exceptions - held at home - outrank it`() {
         val verse = "G F C D G F C D G F C D G F C D"
         val chorus = "G F C D G F C D G F C D Em A F G"
         val song = suggestions(
@@ -71,7 +71,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a song gets at most three moments, however many keys it visits`() {
+    fun `a song gets at most three moments - however many keys it visits`() {
         val song = suggestions(
             "Verse" to "C F G C C F G C C F G C C F G C",
             "Bridge" to "D G A D",
@@ -84,7 +84,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a part in the relative minor needs no scale of its own, and its chords outside the key go with the home`() {
+    fun `a part in the relative minor needs no scale of its own and its chords outside the key go with the home`() {
         val song = suggestions("Verse" to "C F G C", "Chorus" to "Am Dm E7 Am")
         assertEquals(listOf(listOf("Verse")), song.map { it.labels })
         assertEquals(listOf(Triple("E7", "A", "harmonic_minor")), song.single().moments)
@@ -103,7 +103,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a borrowed flat seventh closing every chorus is a moment of the major key, not a rock riff`() {
+    fun `a borrowed flat seventh closing every chorus is a moment of the major key not a rock riff`() {
         val song = suggestions(
             "Verse" to "A Asus2 G A C#m D Bm A D A Bm E",
             "Chorus" to "A D E E7 A A D E E7 A A D E E7 G",
@@ -118,7 +118,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a bridge that hardly plays the home's root is a moment on its own centre, in the scale holding most of it`() {
+    fun `a bridge that hardly plays the home's root is a moment on its own centre - in the scale holding most of it`() {
         val song = suggestions(
             "Verse" to "A D E A A D E A A D E A",
             "Chorus" to "A E F#m D A E F#m D A E D A",
@@ -194,7 +194,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a verse written out a minor third up is shown in its key, ahead of the home's chords played more often`() {
+    fun `a verse written out a minor third up is shown in its key - ahead of the home's chords played more often`() {
         val verse = "F Fmaj7 F7 Bb Bbm F G/F Gm/F F"
         val chorus = "Gm7 C Am Dm7 Gm7 C F D"
         val song = suggestions(
@@ -210,7 +210,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a part both in another key and on a centre of its own is one moment, on its centre`() {
+    fun `a part both in another key and on a centre of its own is one moment - on its centre`() {
         val verse = "E E E E E C#m B E C#m B E C#m A B E C#m B E C#m A B"
         val chorus = "E G# F#m C#m B E G# F#m C#m B"
         val song = suggestions(
@@ -227,7 +227,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `chords one scale on one root serves are one moment, named by each`() {
+    fun `chords one scale on one root serves are one moment - named by each`() {
         val verse = "Bm F#7 A E G D Em F#"
         val song = suggestions("Intro" to verse, "Verse" to verse, "Chorus" to "G D F#7 Bm G D Em F#", "Verse" to verse, key = "Bm").first()
         val overFifth = song.exceptions.single { it.rootName == "B" && it.scales.first().id == "harmonic_minor" }
@@ -236,7 +236,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `chords whose scales are one set of notes are one moment, named by the parent key`() {
+    fun `chords whose scales are one set of notes are one moment - named by the parent key`() {
         val inC = suggestions("Verse" to "C F#m7b5 D7 G7 C F#m7b5 D7 G7", key = "C").single()
         assertEquals(listOf(Triple("F#m7b5", "G", "major")), inC.moments)
         assertEquals(listOf("D7"), inC.exceptions.single().otherChordNames)
@@ -260,7 +260,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a riff of power chords with a chorus of triads is one home, groups with one answer joined`() {
+    fun `a riff of power chords with a chorus of triads is one home - groups with one answer joined`() {
         val riff = "A5 C5 A5 D5 A5 C5 A5 A5 C5 A5 D5 A5 C5 A5"
         val song = suggestions(
             "Intro" to riff,
@@ -276,7 +276,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a riff of power chords is one home, though its parts would each fit a different mode`() {
+    fun `a riff of power chords is one home - though its parts would each fit a different mode`() {
         val song = suggestions(
             "Intro" to "E5 G5 E5 A5 E5 D5 E5 E5 G5 E5 A5 E5 D5 E5",
             "Verse" to "D5 E5 D5 E5 D5 E5 D5 E5 D5 E5 D5 E5 D5 E5",
@@ -291,7 +291,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `a Mixolydian verse ending on the major V is one with the others, the V its moment`() {
+    fun `a Mixolydian verse ending on the major V is one with the others - the V its moment`() {
         val verse = "A D G D G D G D G D A A A D G D G D G D G D A A"
         val ending = "A D G D G D G D G D A A A D G D G D G D G D E E"
         val song = suggestions(
@@ -308,7 +308,7 @@ class SongScaleSuggestionsTest {
     }
 
     @Test
-    fun `the home is the group playing the most chords, shown first`() {
+    fun `the home is the group playing the most chords - shown first`() {
         val song = suggestions("Intro" to "D G A D", "Verse" to "C F G C C F G C")
         assertEquals(listOf(listOf("Verse"), listOf("Intro")), song.map { it.labels })
     }

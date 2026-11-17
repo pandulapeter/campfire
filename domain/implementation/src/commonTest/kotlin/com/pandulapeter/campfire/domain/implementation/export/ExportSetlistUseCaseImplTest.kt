@@ -45,7 +45,7 @@ class ExportSetlistUseCaseImplTest {
     }
 
     @Test
-    fun `every song the setlist names goes in beside it, a missing one left out`() = runTest {
+    fun `every song the setlist names goes in beside it - a missing one left out`() = runTest {
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho", "c.cho"))
 
         useCase(FakeSetlistRepository(setlist), readable = setOf("a.cho", "c.cho")).invoke("gig.setlist.json", isSharedCopy = false)
@@ -78,7 +78,7 @@ class ExportSetlistUseCaseImplTest {
     }
 
     @Test
-    fun `a shared copy's songs keep no line for an attachment it leaves out, whichever song names it`() = runTest {
+    fun `a shared copy's songs keep no line for an attachment it leaves out - whichever song names it`() = runTest {
         images.library["0123456789abcdef.mp4"] = ByteArray((ImportLimits.MAX_SHARED_ATTACHMENTS_SIZE + 1).toInt())
         images.library["fedcba9876543210.pdf"] = ByteArray(100)
         val setlist = testSetlist(fileName = "gig.setlist.json", title = "Gig", entries = listOf("a.cho", "b.cho"))

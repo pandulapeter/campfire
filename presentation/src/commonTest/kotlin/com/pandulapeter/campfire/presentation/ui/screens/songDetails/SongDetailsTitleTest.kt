@@ -60,7 +60,7 @@ class SongDetailsTitleTest {
     }
 
     @Test
-    fun `a song whose file names no key is named by the key its chords were found in, moved as a written one`() {
+    fun `a song whose file names no key is named by the key its chords were found in - moved as a written one`() {
         val unkeyed = song.copy(key = null)
         val capoed = PlayingOverridesSnapshot(capos = SongOverrides<Int>().with(SongPlace("song.cho", null), 2))
         val transposed = PlayingOverridesSnapshot(transpositions = Transpositions(SongOverrides<Int>().with(SongPlace("song.cho", null), 2)))

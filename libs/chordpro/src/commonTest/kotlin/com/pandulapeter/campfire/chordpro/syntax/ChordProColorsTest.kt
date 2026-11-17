@@ -28,7 +28,7 @@ class ChordProColorsTest {
     }
 
     @Test
-    fun `an empty value, the foreground, and what is no colour name none`() {
+    fun `an empty value and the foreground and what is no colour name none`() {
         listOf(null, "", "foreground", "#12345", "#ggg", "reddish").forEach { assertNull(ChordProColors.parse(it), it) }
     }
 }

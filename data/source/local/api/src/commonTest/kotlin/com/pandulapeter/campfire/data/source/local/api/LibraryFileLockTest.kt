@@ -45,7 +45,7 @@ internal class LibraryFileLockTest {
     }
 
     @Test
-    fun `another lock is taken inside this one, and this one still refuses inside it`() = runTest(timeout = TIMEOUT) {
+    fun `another lock is taken inside this one and this one still refuses inside it`() = runTest(timeout = TIMEOUT) {
         val other = LibraryFileLock()
 
         assertEquals(1, lock.withLock { other.withLock { 1 } })

@@ -55,7 +55,7 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
-    fun `a setlist is shared whole, as a shared copy`() = runTest {
+    fun `a setlist is shared whole as a shared copy`() = runTest {
         val repository = FakeSharedLinksRepository()
         var request: Pair<String, Boolean>? = null
 
@@ -109,7 +109,7 @@ class CreateShareLinkUseCaseImplTest {
     }
 
     @Test
-    fun `a copy that left attachments out for their size is shared, saying how many`() = runTest {
+    fun `a copy that left attachments out for their size is shared - saying how many`() = runTest {
         val repository = FakeSharedLinksRepository()
 
         useCase(repository, songs = { _, _, _ -> zip(1).copy(leftOutAttachmentCount = 2) }).invoke(SharedLinkKind.SONG, "song.cho", "Song")

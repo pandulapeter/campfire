@@ -28,7 +28,7 @@ class PictureWorkTest {
     private val work = PictureWork()
 
     @Test
-    fun `work that takes a while is shown once it has run a moment, and no longer once it ends`() = runTest {
+    fun `work that takes a while is shown once it has run a moment and no longer once it ends`() = runTest {
         val shown = collectShown()
         val done = CompletableDeferred<Unit>()
         launch { work.track { done.await() } }

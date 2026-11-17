@@ -66,7 +66,7 @@ class NotationPlayedLinesTest {
     private fun staff(vararg xs: Float, y: Float = 40f) = xs.map { NotationBarStroke(x = it, y = y) }
 
     @Test
-    fun `a brace, clefs, signatures, and repeat dots are not music`() {
+    fun `a brace and clefs and signatures and repeat dots are not music`() {
         listOf(0xE000, 0xE050, 0xE084, 0xE262, 0xE043).forEach { assertFalse(isMusicGlyph(it), it.toString(16)) }
         listOf(0xE0A4, 0xE4E5).forEach { assertTrue(isMusicGlyph(it), it.toString(16)) }
     }

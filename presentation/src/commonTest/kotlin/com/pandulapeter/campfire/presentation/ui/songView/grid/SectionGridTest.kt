@@ -157,7 +157,7 @@ class SectionGridTest {
     }
 
     @Test
-    fun `the columns of a page share a top, each spread as far as its own room allows`() {
+    fun `the columns of a page share a top - each spread as far as its own room allows`() {
         val grid = SectionGrid(rows = IntArray(5), columns = intArrayOf(0, 0, 1, 1, 1), columnCounts = intArrayOf(2))
         val arrangement = grid.arrange(
             heights = IntArray(5) { 100 },

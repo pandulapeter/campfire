@@ -40,14 +40,14 @@ class ChordProParserRowMarksTest {
     }
 
     @Test
-    fun `every form of a repeat count is a mark, kept as written`() {
+    fun `every form of a repeat count is a mark - kept as written`() {
         listOf("x4", "X4", "4x", "4X", "×4", "4×", "(x4)", "(4x)", "(×4)").forEach { count ->
             assertEquals(listOf(chord(0, "G"), chord(1, "C"), mark(2, count)), line("[G] [C] $count").chords, count)
         }
     }
 
     @Test
-    fun `bar lines, repeat signs, and a no chord written as text are marks between the chords`() {
+    fun `bar lines and repeat signs and a no chord written as text are marks between the chords`() {
         val line = line("[Am] | [F] | % %% |: :| :|: || / - N.C. NC x2")
 
         assertTrue(line.text.isBlank())
@@ -142,7 +142,7 @@ class ChordProParserRowMarksTest {
     }
 
     @Test
-    fun `a sung line, a lone count, a backing line, and a word with a chord inside keep their text`() {
+    fun `a sung line and a lone count and a backing line and a word with a chord inside keep their text`() {
         listOf(
             "[G]Row, row, [C]row x2",
             "x4",

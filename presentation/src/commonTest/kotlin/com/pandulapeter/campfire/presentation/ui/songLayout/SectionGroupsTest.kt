@@ -34,7 +34,7 @@ class SectionGroupsTest {
     )
 
     @Test
-    fun `a section is grouped with its opening comments, its cuts, its continuations and its ending comment`() {
+    fun `a section is grouped with its opening comments - its cuts - its continuations and its ending comment`() {
         val blocks = listOf(
             comment("Softly", CommentPlacement.START_OF_SECTION),
             section("One"),

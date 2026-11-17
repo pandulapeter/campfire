@@ -116,7 +116,7 @@ class ChordProSplitterTest {
     }
 
     @Test
-    fun `any end directive closes a delegated environment, as the parser reads it`() {
+    fun `any end directive closes a delegated environment as the parser reads it`() {
         assertEquals(
             listOf("{start_of_abc}\nX\n{end_of_verse}", "{title: B}\n[C]b"),
             ChordProSplitter.split("{start_of_abc}\nX\n{end_of_verse}\n{ns}\n{title: B}\n[C]b"),
@@ -124,7 +124,7 @@ class ChordProSplitterTest {
     }
 
     @Test
-    fun `a start directive with a value inside a delegated environment moves it on, as the parser reads it`() {
+    fun `a start directive with a value inside a delegated environment moves it on as the parser reads it`() {
         assertEquals(
             listOf("{start_of_abc}\nX\n{start_of_verse: V}\na", "{title: B}\n[C]b"),
             ChordProSplitter.split("{start_of_abc}\nX\n{start_of_verse: V}\na\n{ns}\n{title: B}\n[C]b"),

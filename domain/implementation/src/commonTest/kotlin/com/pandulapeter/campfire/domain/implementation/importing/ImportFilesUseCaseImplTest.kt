@@ -165,7 +165,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a file of an unknown type is unpacked by its content, and a document is never`() = runTest {
+    fun `a file of an unknown type is unpacked by its content and a document is never`() = runTest {
         val unpacked = mutableListOf<Int>()
         val archive = FakeArchiveRepository { bytes, _ ->
             unpacked += bytes.size
@@ -859,7 +859,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a left-out conflicting setlist is not written, even where the songs made it a conflict`() = runTest {
+    fun `a left-out conflicting setlist is not written - even where the songs made it a conflict`() = runTest {
         val setlists = FakeSetlistRepository()
         setlists.files["set.setlist.json"] = setlist(entries = listOf("a.cho"))
         val plan = ImportPlan(
@@ -881,7 +881,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a song names the pictures it brings by their library names, which is the one change to its text`() = runTest {
+    fun `a song names the pictures it brings by their library names which is the one change to its text`() = runTest {
         ArchiveKind.entries.forEach { kind -> songNamesThePicturesItBrings(kind) }
     }
 
@@ -923,7 +923,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a pasted song brings the pictures it names by their addresses, written on Import under their library names`() = runTest {
+    fun `a pasted song brings the pictures it names by their addresses - written on Import under their library names`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
@@ -946,7 +946,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `with the Features switch off, no address a song names is asked`() = runTest {
+    fun `with the Features switch off - no address a song names is asked`() = runTest {
         val downloads = FakeImportDownloadRepository(mapOf(CHART_LINK to FakeImageRepository.picture(1)))
         val images = FakeImageRepository()
         val text = "{title: A}\n{image: src=$CHART_LINK}\n"
@@ -971,7 +971,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a song identical but for what the archive called its pictures is already there, and brings back a picture the library lost`() = runTest {
+    fun `a song identical but for what the archive called its pictures is already there and brings back a picture the library lost`() = runTest {
         ArchiveKind.entries.forEach { kind -> identicalSongBringsBackItsPicture(kind) }
     }
 
@@ -1060,7 +1060,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a song brings the files attached to it under their library names, and names those it cannot bring as they arrived`() = runTest {
+    fun `a song brings the files attached to it under their library names and names those it cannot bring as they arrived`() = runTest {
         ArchiveKind.entries.forEach { kind -> songBringsItsAttachments(kind) }
     }
 
@@ -1102,7 +1102,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `the archives of one import share one attachment budget, apart from the pictures' budget`() = runTest {
+    fun `the archives of one import share one attachment budget - apart from the pictures' budget`() = runTest {
         val budgets = mutableListOf<Pair<Long, Long>>()
         val archive = object : ArchiveRepository by FakeArchiveRepository() {
             override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
@@ -1184,7 +1184,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a large staged import lets go of the kept pictures between shares, with the songs written so far adopted first`() = runTest {
+    fun `a large staged import lets go of the kept pictures between shares - with the songs written so far adopted first`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val adoptedAtEachRelease = mutableListOf<List<String>>()
         val images = object : ImageRepositoryStub() {
@@ -1241,7 +1241,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `a picture chosen on its own is handed over as one, and a file only named like one is skipped`() = runTest {
+    fun `a picture chosen on its own is handed over as one and a file only named like one is skipped`() = runTest {
         val photo = ImportedFile("Photo.png", FakeImageRepository.picture(1))
         val heic = ImportedFile("scan.heic", FakeImageRepository.HEIC)
         val fake = ImportedFile("notes.png", "{title: B}".encodeToByteArray())
@@ -1263,7 +1263,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
-    fun `the archives of one import share one picture budget, apart from the songs' budget`() = runTest {
+    fun `the archives of one import share one picture budget - apart from the songs' budget`() = runTest {
         val budgets = mutableListOf<Pair<Long, Long>>()
         val picture = FakeImageRepository.picture(1)
         val archive = object : ArchiveRepository by FakeArchiveRepository() {

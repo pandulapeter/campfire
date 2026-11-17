@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class ProcessLogWriterTest {
 
     @Test
-    fun `every line is stamped once, however it is written`() {
+    fun `every line is stamped once - however it is written`() {
         val store = MemoryStore()
         val writer = writer(store)
 
@@ -28,7 +28,7 @@ class ProcessLogWriterTest {
     }
 
     @Test
-    fun `every finished line is flushed once, and an unfinished one only once it ends`() {
+    fun `every finished line is flushed once and an unfinished one only once it ends`() {
         val store = MemoryStore()
         val writer = writer(store)
 
@@ -41,7 +41,7 @@ class ProcessLogWriterTest {
     }
 
     @Test
-    fun `a full file is rotated at the start of a line, keeping the one before`() {
+    fun `a full file is rotated at the start of a line - keeping the one before`() {
         val store = MemoryStore()
         val writer = writer(store, maxBytes = 20)
 

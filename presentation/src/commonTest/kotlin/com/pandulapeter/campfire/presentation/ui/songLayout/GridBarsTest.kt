@@ -162,7 +162,7 @@ class GridBarsTest {
     }
 
     @Test
-    fun `a trailing count follows the last bar, or starts a row where it does not fit`() {
+    fun `a trailing count follows the last bar or starts a row where it does not fit`() {
         val layout = layout("| C . | D . | x2")
         val unbroken = layout.placeLine(0, Float.POSITIVE_INFINITY)
         assertEquals(0, unbroken.trailing?.row)

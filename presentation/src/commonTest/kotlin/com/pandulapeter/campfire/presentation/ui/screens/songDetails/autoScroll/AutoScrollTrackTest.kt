@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 internal class AutoScrollTrackTest {
 
     @Test
-    fun `a line moves at its own height per line time, however tall it is drawn`() {
+    fun `a line moves at its own height per line time - however tall it is drawn`() {
         val track = trackOf(tops = listOf(0, 100, 300), bottoms = listOf(100, 300, 400), playedLines = listOf(1, 1, 1))!!
         assertEquals(25f, track.speedAt(position = 50f, secondsPerLine = 4.0))
         assertEquals(50f, track.speedAt(position = 150f, secondsPerLine = 4.0))
@@ -48,7 +48,7 @@ internal class AutoScrollTrackTest {
     }
 
     @Test
-    fun `a stretch is timed by the speed of every chunk it crosses, past either end at the speed of the end's chunk`() {
+    fun `a stretch is timed by the speed of every chunk it crosses - past either end at the speed of the end's chunk`() {
         val track = trackOf(tops = listOf(0, 100, 300), bottoms = listOf(100, 300, 400), playedLines = listOf(1, 1, 1))!!
         // 50 pixels at 25 a second, then 100 at 50 a second.
         assertEquals(4.0, track.secondsBetween(from = 50f, to = 200f, secondsPerLine = 4.0))
@@ -65,7 +65,7 @@ internal class AutoScrollTrackTest {
     }
 
     @Test
-    fun `a song's own duration is shared out over its lines, and without one two bars a line are played at its tempo`() {
+    fun `a song's own duration is shared out over its lines and without one two bars a line are played at its tempo`() {
         assertEquals(5.0, ownSecondsPerLine(duration = 3.minutes, lineCount = 36, bpm = 120, beatsPerBar = 4))
         assertEquals(4.0, ownSecondsPerLine(duration = null, lineCount = 36, bpm = 120, beatsPerBar = 4))
         assertEquals(6.0, ownSecondsPerLine(duration = null, lineCount = 36, bpm = 60, beatsPerBar = 3))
@@ -78,7 +78,7 @@ internal class AutoScrollTrackTest {
     }
 
     @Test
-    fun `the slider's ends are the range's, its middle the song's own pace, and a speed near that snaps to it`() {
+    fun `the slider's ends are the range's and its middle the song's own pace and a speed near that snaps to it`() {
         assertEquals(SongLayout.AUTO_SCROLL_SPEED_RANGE.first, autoScrollSpeedAt(0f))
         assertEquals(SongLayout.AUTO_SCROLL_SPEED_RANGE.last, autoScrollSpeedAt(1f))
         assertEquals(SongLayout.DEFAULT_AUTO_SCROLL_SPEED, autoScrollSpeedAt(0.5f))

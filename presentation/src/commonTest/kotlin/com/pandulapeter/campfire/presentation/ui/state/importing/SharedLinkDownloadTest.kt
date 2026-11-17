@@ -31,7 +31,7 @@ class SharedLinkDownloadTest {
     }
 
     @Test
-    fun `a refusal is a link that no longer works, and only no answer is worth trying again`() {
+    fun `a refusal is a link that no longer works and only no answer is worth trying again`() {
         assertEquals(ImportFailure.LINK_GONE, ImportDownload.Missing.reason())
         assertEquals(ImportFailure.LINK_UNREACHABLE, ImportDownload.Unreachable.reason())
         assertEquals(ImportFailure.TOO_LARGE, ImportDownload.TooLarge.reason())

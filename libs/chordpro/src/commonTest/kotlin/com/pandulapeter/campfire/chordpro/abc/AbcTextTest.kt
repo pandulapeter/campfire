@@ -21,7 +21,7 @@ class AbcTextTest {
     }
 
     @Test
-    fun `comments, blank lines, and a file header before the tune are read past`() {
+    fun `comments and blank lines and a file header before the tune are read past`() {
         val text = "﻿% A small collection\n\n%%scale 0.8\nC:Campfire Players\n\nX:1\nT:Hearth\nK:D\nDEFA|"
 
         assertTrue(AbcText.isAbc(text))

@@ -42,7 +42,7 @@ class ShareLinksTest {
     }
 
     @Test
-    fun `a link reads back from the web app, the scheme, and the bare payload`() {
+    fun `a link reads back from the web app and the scheme and the bare payload`() {
         assertEquals(link, ShareLinks.parse("https://campfire-songbook.com/app/#${link.payload}"))
         assertEquals(link, ShareLinks.parse("campfire://s/${link.payload}"))
         assertEquals(link, ShareLinks.parse(link.payload))
@@ -102,7 +102,7 @@ class ShareLinksTest {
     }
 
     @Test
-    fun `control characters in a title become spaces, and format characters other than the joiners go`() {
+    fun `control characters in a title become spaces and format characters other than the joiners go`() {
         fun titleOf(encoded: String) = (ShareLinks.parse("1.song.k3jq7abcdz2m5x6y.f.r.$encoded") as SharedLink.Readable).title
         assertEquals("one two", titleOf("one%0Atwo"))
         assertEquals("tab here", titleOf("tab%09here"))
@@ -132,7 +132,7 @@ class ShareLinksTest {
     }
 
     @Test
-    fun `every address the link claims bring in is told from a file, a broken link included`() {
+    fun `every address the link claims bring in is told from a file - a broken link included`() {
         listOf(
             link.landingUrl,
             "https://campfire-songbook.com/s/",

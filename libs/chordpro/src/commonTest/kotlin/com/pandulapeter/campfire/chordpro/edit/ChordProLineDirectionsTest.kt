@@ -25,7 +25,7 @@ class ChordProLineDirectionsTest {
     private fun directionAt(text: String, snippet: String) = ChordProLineDirections.directionOfLineAt(text, text.indexOf(snippet) + 1)
 
     @Test
-    fun `the directives, source comments, tabs, grids, and tunes of a hebrew song are left to right`() {
+    fun `the directives and source comments and tabs and grids and tunes of a hebrew song are left to right`() {
         listOf("{title", "{meta", "# ", "{start_of_verse}", "{end_of_verse}", "e|---", "| Am", "X:1", "{end_of_abc}").forEach {
             assertEquals(LEFT_TO_RIGHT, directionAt(hebrewSong, it), it)
         }

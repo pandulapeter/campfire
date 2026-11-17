@@ -25,7 +25,7 @@ import kotlin.time.measureTimedValue
 class ChordProMarkupTest {
 
     @Test
-    fun `bold, italic, and underline tags format the text they enclose`() {
+    fun `bold and italic and underline tags format the text they enclose`() {
         val line = lyrics("a <b>bold</b>, <I>italic</I>, <strong><em>both</em></strong> and <u>under</u>")
 
         assertEquals("a bold, italic, both and under", line.text)

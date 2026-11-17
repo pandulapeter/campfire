@@ -50,7 +50,7 @@ class LibraryFilePredicatesTest {
     }
 
     @Test
-    fun `a name with no collision suffix, or nothing in front of one, has no family`() {
+    fun `a name with no collision suffix or nothing in front of one or has no family`() {
         assertNull(LibraryFiles.withoutCollisionSuffix("artist-title"))
         assertNull(LibraryFiles.withoutCollisionSuffix("_2"))
         assertNull(LibraryFiles.withoutCollisionSuffix("title_"))
@@ -58,7 +58,7 @@ class LibraryFilePredicatesTest {
     }
 
     @Test
-    fun `a library file is named by its content and an allowed extension, a picture's name being an attachment's too`() {
+    fun `a library file is named by its content and an allowed extension - a picture's name being an attachment's too`() {
         val digits = "3fa9c2e81b7d4f06"
 
         assertTrue(LibraryFiles.isLibraryAttachmentName("$digits.pdf"))

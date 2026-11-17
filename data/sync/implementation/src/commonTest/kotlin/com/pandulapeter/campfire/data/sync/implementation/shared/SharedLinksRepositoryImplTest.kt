@@ -56,7 +56,7 @@ class SharedLinksRepositoryImplTest {
     private val copy = "zip".encodeToByteArray()
 
     @Test
-    fun `sharing uploads the copy, links it, and adds it to the list and the mirror`() = runTest {
+    fun `sharing uploads the copy and links it and adds it to the list and the mirror`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
 
@@ -112,7 +112,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a link only the account's own people can open is not shared, and its copy is deleted`() = runTest {
+    fun `a link only the account's own people can open is not shared and its copy is deleted`() = runTest {
         val provider = FakeSyncProvider().apply { onCreateSharedLink = { SharedLinkResult.NotPublic } }
 
         val result = repository(provider).share(SharedLinkKind.SONG, "song.cho", "Song", copy, leftOutAttachmentCount = 0)
@@ -123,7 +123,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a connection without permission to make links says so, and leaves no copy behind`() = runTest {
+    fun `a connection without permission to make links says so and leaves no copy behind`() = runTest {
         val provider = FakeSyncProvider().apply {
             onCreateSharedLink = { throw SyncScopeMissingException("missing_scope", requiredScope = "sharing.write") }
         }
@@ -248,7 +248,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `stopping a share deletes its copy and its entry, and keeps the others`() = runTest {
+    fun `stopping a share deletes its copy and its entry and keeps the others`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
         val kept = assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "kept.cho", "Kept", copy, leftOutAttachmentCount = 0)).share
@@ -290,7 +290,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a stop whose list cannot be edited after its copy went is stopped, and the next share removes its entry`() = runTest {
+    fun `a stop whose list cannot be edited after its copy went is stopped and the next share removes its entry`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
@@ -343,7 +343,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `stopping everything deletes every copy, unlisted ones included, and empties the list`() = runTest {
+    fun `stopping everything deletes every copy and unlisted ones included and empties the list`() = runTest {
         val provider = FakeSyncProvider()
         val repository = repository(provider)
         assertIs<CreateShareResult.Shared>(repository.share(SharedLinkKind.SONG, "one.cho", "One", copy, leftOutAttachmentCount = 0))
@@ -442,7 +442,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a rename of a shared item is noted and reaches the list at once, and its link stays`() = runTest {
+    fun `a rename of a shared item is noted and reaches the list at once and its link stays`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
@@ -457,7 +457,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `renames made while the list cannot be told are kept, and a second one follows the first`() = runTest {
+    fun `renames made while the list cannot be told are kept and a second one follows the first`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
@@ -706,7 +706,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a deleted shared item stops being shared, its copy before its entry`() = runTest {
+    fun `a deleted shared item stops being shared - its copy before its entry`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val repository = repository(provider, localSource = localSource)
@@ -722,7 +722,7 @@ class SharedLinksRepositoryImplTest {
     }
 
     @Test
-    fun `a deleted library stops every share, and while disconnected leaves the stops to the next run`() = runTest {
+    fun `a deleted library stops every share and while disconnected leaves the stops to the next run`() = runTest {
         val provider = FakeSyncProvider()
         val localSource = FakeSharedLinksLocalSource()
         val shared = listOf("a.cho", "b.cho").map { fileName ->

@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 class SvgXmlTest {
 
     @Test
-    fun `elements, attributes, and text are read with their entities resolved`() {
+    fun `elements and attributes and text are read with their entities resolved`() {
         val root = parseSvgXml("""<?xml version="1.0"?><!-- a comment --><svg a='1' b="x &amp; y"><text>&lt;&#x266F;&#9837;</text><g/></svg>""")!!
         assertEquals("svg", root.name)
         assertEquals(mapOf("a" to "1", "b" to "x & y"), root.attributes)

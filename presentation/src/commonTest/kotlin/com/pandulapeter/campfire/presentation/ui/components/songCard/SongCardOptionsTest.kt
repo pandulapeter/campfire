@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class SongCardOptionsTest {
 
     @Test
-    fun `preferences not read yet show the chords and the tempo, but no cover`() {
+    fun `preferences not read yet show the chords and the tempo but no cover`() {
         val options = SongCardOptions.forSongs(userPreferences = null)
 
         assertTrue(options.shouldShowChords)

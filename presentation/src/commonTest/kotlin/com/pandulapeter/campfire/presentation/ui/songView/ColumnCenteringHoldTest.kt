@@ -32,7 +32,7 @@ class ColumnCenteringHoldTest {
     }
 
     @Test
-    fun `equal keys are not a change, even in new instances`() {
+    fun `equal keys are not a change - even in new instances`() {
         val watch = FoldKeyWatch()
         watch.hasChanged(listOf(setOf("verse#1"), null))
         assertFalse(watch.hasChanged(listOf(mutableSetOf("verse#1"), null)))

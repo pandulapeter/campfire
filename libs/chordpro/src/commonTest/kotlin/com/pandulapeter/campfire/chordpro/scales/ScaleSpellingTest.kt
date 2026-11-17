@@ -44,7 +44,7 @@ class ScaleSpellingTest {
     }
 
     @Test
-    fun `every scale in every key spells one name per note, each the note it is`() {
+    fun `every scale in every key spells one name per note - each the note it is`() {
         val roots = listOf("C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B")
         Scales.all.forEach { scale ->
             roots.forEach { root ->

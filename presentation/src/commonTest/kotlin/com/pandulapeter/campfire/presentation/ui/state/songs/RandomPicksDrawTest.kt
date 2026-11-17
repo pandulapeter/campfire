@@ -40,7 +40,7 @@ class RandomPicksDrawTest {
     }
 
     @Test
-    fun `a launch within the hour of the stored draw shows the same picks, and one after it draws new ones`() {
+    fun `a launch within the hour of the stored draw shows the same picks and one after it draws new ones`() {
         val first = draw.seed.value
         clock += 59.minutes
         assertEquals(first, launch(Random(seed = 7)).seed.value)
@@ -78,7 +78,7 @@ class RandomPicksDrawTest {
     }
 
     @Test
-    fun `opening the list within the hour keeps the picks, and after it draws new ones`() {
+    fun `opening the list within the hour keeps the picks and after it draws new ones`() {
         val first = draw.seed.value
         clock += 59.minutes
         draw.catchUp()
@@ -109,7 +109,7 @@ class RandomPicksDrawTest {
     }
 
     @Test
-    fun `a return after seconds keeps the picks, and one after five minutes draws new ones`() {
+    fun `a return after seconds keeps the picks and one after five minutes draws new ones`() {
         val first = draw.seed.value
         clock += 1.hours
         draw.onAppStopped()

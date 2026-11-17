@@ -51,7 +51,7 @@ class DropboxAuthorizationTest {
     }
 
     @Test
-    fun `echoes the state it generated, so that an unexpected redirect can be told apart`() {
+    fun `echoes the state it generated so that an unexpected redirect can be told apart`() {
         val request = provider().buildAuthorizationRequest(REDIRECT_URI)
         assertEquals(expected = request.state, actual = redirectParameters(request.authorizationUrl)["state"])
     }

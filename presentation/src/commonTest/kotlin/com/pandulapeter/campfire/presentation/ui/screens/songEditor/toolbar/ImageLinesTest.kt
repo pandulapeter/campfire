@@ -20,12 +20,12 @@ class ImageLinesTest {
     }
 
     @Test
-    fun `a picture at the start of a line goes above it, the caret after its directive`() {
+    fun `a picture at the start of a line goes above it - the caret after its directive`() {
         assertEquals("[G]One\n{image: src=a.png}\n[C]Two" to 25, inserted("[G]One\n[C]Two", 7, "a.png"))
     }
 
     @Test
-    fun `a picture inside a line goes below it, never splitting it`() {
+    fun `a picture inside a line goes below it never splitting it`() {
         assertEquals("[G]One\n{image: src=a.png}\n[C]Two" to 25, inserted("[G]One\n[C]Two", 3, "a.png"))
         assertEquals("[G]One\n{image: src=a.png}" to 25, inserted("[G]One", 6, "a.png"))
     }
@@ -37,7 +37,7 @@ class ImageLinesTest {
     }
 
     @Test
-    fun `several pictures are a line each, in order`() {
+    fun `several pictures are a line each - in order`() {
         assertEquals("{image: src=a.png}\n{image: src=b.jpg}\nx" to 37, inserted("x", 0, "a.png", "b.jpg"))
     }
 

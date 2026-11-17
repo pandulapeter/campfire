@@ -91,7 +91,7 @@ class ChordProNotationTest {
     }
 
     @Test
-    fun `every chord a shown song draws gets its signs, and only those`() {
+    fun `every chord a shown song draws gets its signs and only those`() {
         val song = ChordProParser.parse(
             "{key: Bb}\n{define: Eb base-fret 1 frets x 1 1 3 4 3}\n{comment: Intro [Bb] [F#]}\n[Bb]Tab #1 [Eb]\n" +
                 "{start_of_grid}\n| Bb . F# . |\n{end_of_grid}\n{start_of_tab}\nBb      F#\nEb|--1----2--|\n e|--1----2--|\n{end_of_tab}",
@@ -230,7 +230,7 @@ class ChordProNotationTest {
     }
 
     @Test
-    fun `the names of a staff are converted with the chords above it, and back`() {
+    fun `the names of a staff are converted with the chords above it and back`() {
         val text = "{sot}\n  Bb    B\ne|--0--1--|\nB|--1--2--|\n{eot}"
         val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
 
@@ -239,7 +239,7 @@ class ChordProNotationTest {
     }
 
     @Test
-    fun `a staff renamed in Latin keeps its bar in one column, and the chords over their notes`() {
+    fun `a staff renamed in Latin keeps its bar in one column and the chords over their notes`() {
         val text = "{sot}\n  Am     E7\ne|-0-----0-|\nB|-1-----0-|\nG|-2-----1-|\nD|-2-----0-|\nA|-0-----2-|\nE|-------0-|\n{eot}"
         val latin = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.LATIN)
 
@@ -292,7 +292,7 @@ class ChordProNotationTest {
     }
 
     @Test
-    fun `a file's H string beside a B one is saved through German as two B strings, never a B flat`() {
+    fun `a file's H string beside a B one is saved through German as two B strings never a B flat`() {
         val text = "{sot}\nH|--0--|\nB|--1--|\n{eot}"
         val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
 
@@ -443,7 +443,7 @@ class ChordProNotationTest {
     }
 
     @Test
-    fun `a typed chord's standard name is the one a file stores, whatever notation it was typed in`() {
+    fun `a typed chord's standard name is the one a file stores - whatever notation it was typed in`() {
         assertEquals("Bb/D", ChordProNotation.standardName("B/D", ChordNotation.GERMAN))
         assertEquals("B7/F#", ChordProNotation.standardName("H7/F#", ChordNotation.GERMAN))
         assertEquals("D/F#", ChordProNotation.standardName("Re/Fa#", ChordNotation.LATIN))

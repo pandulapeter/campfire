@@ -17,19 +17,19 @@ import kotlin.test.assertTrue
 internal class ExportedFileTest {
 
     @Test
-    fun `an archive is too large to import by what it unpacks to, however small it is compressed`() {
+    fun `an archive is too large to import by what it unpacks to - however small it is compressed`() {
         assertTrue(archive(size = 1_000L, unpackedSize = ImportLimits.MAX_IMPORT_SIZE + 1).isTooLargeToImport)
         assertFalse(archive(size = 1_000L, unpackedSize = ImportLimits.MAX_IMPORT_SIZE).isTooLargeToImport)
     }
 
     @Test
-    fun `an archive is too large to import by its own size too, which may hold the songs' budget and the pictures'`() {
+    fun `an archive is too large to import by its own size too which may hold the songs' budget and the pictures'`() {
         assertTrue(archive(size = ImportLimits.MAX_ARCHIVE_SIZE + 1, unpackedSize = 1_000).isTooLargeToImport)
         assertFalse(archive(size = ImportLimits.MAX_ARCHIVE_SIZE, unpackedSize = 1_000).isTooLargeToImport)
     }
 
     @Test
-    fun `pictures are judged by their own budget, never by the songs'`() {
+    fun `pictures are judged by their own budget never by the songs'`() {
         val songs = ImportLimits.MAX_IMPORT_SIZE
         val pictures = ImportLimits.MAX_IMPORT_IMAGES_SIZE
 
@@ -39,7 +39,7 @@ internal class ExportedFileTest {
     }
 
     @Test
-    fun `attachments are judged by their own budget, never by the songs' or the pictures'`() {
+    fun `attachments are judged by their own budget never by the songs' or the pictures'`() {
         val songs = ImportLimits.MAX_IMPORT_SIZE
         val pictures = ImportLimits.MAX_IMPORT_IMAGES_SIZE
         val attachments = ImportLimits.MAX_IMPORT_ATTACHMENTS_SIZE
@@ -51,7 +51,7 @@ internal class ExportedFileTest {
     }
 
     @Test
-    fun `a shared copy may be no larger than every version opening a link downloads, pictures included`() {
+    fun `a shared copy may be no larger than every version opening a link downloads - pictures included`() {
         val limit = ImportLimits.MAX_SHARED_COPY_SIZE
 
         assertFalse(archive(size = 1_000L, unpackedSize = limit, unpackedImageSize = limit - 1_000).isTooLargeToShare)

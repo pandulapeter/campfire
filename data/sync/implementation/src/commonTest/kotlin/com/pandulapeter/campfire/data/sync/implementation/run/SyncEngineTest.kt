@@ -184,7 +184,7 @@ class SyncEngineTest {
     }
 
     @Test
-    fun `an index written for another account is disregarded, files and synced preferences alike`() = runTest {
+    fun `an index written for another account is disregarded - files and synced preferences alike`() = runTest {
         val library = librarySongs(3)
         val local = FakeLibraryFileLocalSource(files = library)
         val provider = FakeSyncProvider()

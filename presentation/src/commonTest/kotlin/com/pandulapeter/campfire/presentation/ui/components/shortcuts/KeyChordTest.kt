@@ -44,7 +44,7 @@ class KeyChordTest {
     )
 
     @Test
-    fun `a chord is written with the modifiers' names and plus signs, in the language's words`() {
+    fun `a chord is written with the modifiers' names and plus signs - in the language's words`() {
         assertEquals("Ctrl+S", KeyShortcut.SAVE.chord.label(isApple = false, names = english))
         assertEquals("Strg+S", KeyShortcut.SAVE.chord.label(isApple = false, names = german))
         assertEquals("Ctrl++", KeyShortcut.ZOOM_IN.chord.label(isApple = false, names = english))
@@ -53,7 +53,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `on an Apple keyboard a chord is written in symbols, Shift before Command`() {
+    fun `on an Apple keyboard a chord is written in symbols - Shift before Command`() {
         assertEquals("⌘S", KeyShortcut.SAVE.chord.label(isApple = true, names = english))
         val redo = KeyChord.command(Key.Z, "Z", shift = KeyChord.Shift.REQUIRED)
         assertEquals("⇧⌘Z", redo.label(isApple = true, names = english))
@@ -62,7 +62,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `Ctrl or Cmd + Shift + I inserts a picture beside Italic, everywhere but the web, whose developer tools own it`() {
+    fun `Ctrl or Cmd + Shift + I inserts a picture beside Italic - everywhere but the web - whose developer tools own it`() {
         assertTrue(KeyShortcut.INSERT_IMAGE.chord.matches(Key.I, isCtrlOrMeta = true, isShift = true, isAlt = false))
         assertFalse(KeyShortcut.INSERT_IMAGE.chord.matches(Key.I, isCtrlOrMeta = true, isShift = false, isAlt = false))
         assertTrue(ShortcutPlatforms.NOT_WEB == KeyShortcut.INSERT_IMAGE.platforms)
@@ -70,7 +70,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `Shift is ignored, refused, or required as the chord says, and Alt is always refused`() {
+    fun `Shift is ignored and refused or required as the chord says and Alt is always refused`() {
         assertTrue(KeyShortcut.SAVE.chord.matches(Key.S, isCtrlOrMeta = true, isShift = true, isAlt = false))
         assertFalse(KeyShortcut.ITALIC.chord.matches(Key.I, isCtrlOrMeta = true, isShift = true, isAlt = false))
         assertTrue(KeyShortcut.ITALIC.chord.matches(Key.I, isCtrlOrMeta = true, isShift = false, isAlt = false))
@@ -82,7 +82,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `no two shortcuts heard in one place share their keys, Shift telling apart only the ones that look at it`() {
+    fun `no two shortcuts heard in one place share their keys - Shift telling apart only the ones that look at it`() {
         KeyShortcut.entries.forEach { first ->
             KeyShortcut.entries.filter { second ->
                 second.ordinal > first.ordinal &&
@@ -101,7 +101,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `undo, redo, and the editor search's steps are told apart by Shift`() {
+    fun `undo and redo and the editor search's steps are told apart by Shift`() {
         assertTrue(KeyShortcut.UNDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = false, isAlt = false))
         assertFalse(KeyShortcut.UNDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = true, isAlt = false))
         assertTrue(KeyShortcut.REDO.chord.matches(Key.Z, isCtrlOrMeta = true, isShift = true, isAlt = false))
@@ -120,7 +120,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `every key the table names can be written, and the question mark is written as the character it types`() {
+    fun `every key the table names can be written and the question mark is written as the character it types`() {
         KeyShortcut.entries.forEach { shortcut ->
             assertTrue(shortcut.chord.label(isApple = false, names = english).isNotEmpty(), shortcut.name)
         }
@@ -132,7 +132,7 @@ class KeyChordTest {
     }
 
     @Test
-    fun `the question mark needs Shift, and Ctrl or Cmd with slash opens the sheet from either slash`() {
+    fun `the question mark needs Shift and Ctrl or Cmd with slash opens the sheet from either slash`() {
         assertTrue(KeyShortcut.SHORTCUTS_QUESTION_MARK.chord.matches(Key.Slash, isCtrlOrMeta = false, isShift = true, isAlt = false))
         assertFalse(KeyShortcut.SHORTCUTS_QUESTION_MARK.chord.matches(Key.Slash, isCtrlOrMeta = false, isShift = false, isAlt = false))
         assertTrue(KeyShortcut.SHORTCUTS.chord.matches(Key.NumPadDivide, isCtrlOrMeta = true, isShift = false, isAlt = false))

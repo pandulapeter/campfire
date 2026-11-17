@@ -44,7 +44,7 @@ class StripFlowTest {
     }
 
     @Test
-    fun `every column is filled to the screen, a section running on into the next one`() {
+    fun `every column is filled to the screen - a section running on into the next one`() {
         val strip = assertNotNull(strip(maxColumnHeight = 65))
         assertEquals(2, strip.columnCount)
         // The second section is cut, its first half under the first section and the rest over the third.

@@ -71,7 +71,7 @@ class SetlistsControllerTest {
     }
 
     @Test
-    fun `a duplicate copies the setlist's songs as the library has them, not as the sheet saw them`() = runTest {
+    fun `a duplicate copies the setlist's songs as the library has them not as the sheet saw them`() = runTest {
         val controller = controller()
         val offered = played.copy(entries = listOf(Setlist.Entry(songFileName = "old.cho")))
         controller.duplicateSetlist(offered, title = "Encore", description = "Again", date = LocalDate(2026, 5, 1), isCountdownShown = false)
@@ -113,7 +113,7 @@ class SetlistsControllerTest {
     }
 
     @Test
-    fun `the listed setlists carry the query they were narrowed by, not the text of a closed search`() = runTest {
+    fun `the listed setlists carry the query they were narrowed by not the text of a closed search`() = runTest {
         val controller = controller()
         // The listing is combined on another thread, so a query typed before the setlists are read would narrow the empty
         // listing the state starts with.

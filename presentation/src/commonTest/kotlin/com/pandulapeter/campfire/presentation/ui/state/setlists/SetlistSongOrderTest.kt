@@ -21,7 +21,7 @@ class SetlistSongOrderTest {
     private val c = Setlist.Entry(songFileName = "c.cho", capo = 3)
 
     @Test
-    fun `a dragged order is written with every entry keeping its own transposition, tempo and capo`() {
+    fun `a dragged order is written with every entry keeping its own transposition - tempo and capo`() {
         assertEquals(listOf(c, a, b), setlist(a, b, c).withSongOrder(names(c, a, b)).entries)
     }
 

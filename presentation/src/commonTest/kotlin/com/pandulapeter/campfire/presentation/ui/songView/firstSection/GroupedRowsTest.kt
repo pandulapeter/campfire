@@ -40,7 +40,7 @@ class GroupedRowsTest {
     }
 
     @Test
-    fun `a group too wide for any line flows its items, and the next group starts under it`() {
+    fun `a group too wide for any line flows its items and the next group starts under it`() {
         // The second group would fit after the capo, but starts a line of its own.
         assertEquals(
             listOf(listOf(item(0, 0)), listOf(item(0, 1)), listOf(item(1, 0), item(1, 1))),

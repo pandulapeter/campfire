@@ -22,7 +22,7 @@ class PictureLinksTest {
     }
 
     @Test
-    fun `a library name, a plain http address, or a bare scheme is not a link`() {
+    fun `a library name or a plain http address or a bare scheme is not a link`() {
         assertFalse(PictureLinks.isLink("0f1e2d.png"))
         assertFalse(PictureLinks.isLink("http://example.com/chart.png"))
         assertFalse(PictureLinks.isLink("https://"))

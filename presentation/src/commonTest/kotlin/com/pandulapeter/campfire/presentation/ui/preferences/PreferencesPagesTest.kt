@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 class PreferencesPagesTest {
 
     @Test
-    fun `song details shows every page, general first`() = assertEquals(
+    fun `song details shows every page - general first`() = assertEquals(
         listOf(PreferencesPage.GENERAL, PreferencesPage.SONG, PreferencesPage.CHORDS, PreferencesPage.METRONOME),
         preferencesPages(context = PreferencesContext.SONG_DETAILS, userPreferences = testPreferences()),
     )
@@ -27,7 +27,7 @@ class PreferencesPagesTest {
     }
 
     @Test
-    fun `a page whose feature is switched off is left out, the general and the chords pages always staying`() {
+    fun `a page whose feature is switched off is left out - the general and the chords pages always staying`() {
         val everythingOff = testPreferences().copy(areSongsEnabled = false, isMetronomeEnabled = false)
         PreferencesContext.entries.forEach { context ->
             assertEquals(listOf(PreferencesPage.GENERAL, PreferencesPage.CHORDS), preferencesPages(context = context, userPreferences = everythingOff))

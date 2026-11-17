@@ -40,7 +40,7 @@ class CoverArtResultsContentTest {
     }
 
     @Test
-    fun `an unfinished search with nothing to show is loading, or busy once only waiting catalogues are left`() {
+    fun `an unfinished search with nothing to show is loading or busy once only waiting catalogues are left`() {
         val loading = CoverArtSearchResults(
             candidates = emptyList(),
             pending = setOf(Catalogue.MUSIC_BRAINZ, Catalogue.ITUNES),
@@ -54,7 +54,7 @@ class CoverArtResultsContentTest {
     }
 
     @Test
-    fun `a search with a tile left shows the grid, and no search shows the hint`() {
+    fun `a search with a tile left shows the grid and no search shows the hint`() {
         assertEquals(ResultsContent.GRID, resultsContentOf(complete(A, B), shownCandidates = listOf(A), unreachableKeys = setOf(B.key)))
         assertEquals(ResultsContent.HINT, resultsContentOf(null, shownCandidates = emptyList(), unreachableKeys = emptySet()))
     }

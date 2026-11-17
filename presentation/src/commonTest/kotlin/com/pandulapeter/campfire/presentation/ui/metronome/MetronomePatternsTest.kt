@@ -101,7 +101,7 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun `a song's own accents win over the ones drawn for its signature, and only for that song`() {
+    fun `a song's own accents win over the ones drawn for its signature and only for that song`() {
         val own = mapOf("a.cho" to mapOf("7/8" to listOf("accent", "normal", "normal", "accent", "normal", "accent", "normal")))
         val songs = mapOf("a.cho" to song, "b.cho" to song.copy(fileName = "b.cho"))::get
         assertEquals(BeatLevel.ACCENT, metronomePatternOf(MetronomeContext.Song("a.cho", null), settings, songs, Tempos(), own).beatLevels[3])
@@ -109,7 +109,7 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun `a song's accents for another signature, or of the wrong length, fall back on the signature's`() {
+    fun `a song's accents for another signature or of the wrong length or fall back on the signature's`() {
         val own = mapOf("a.cho" to mapOf("7/8" to listOf("muted"), "3/4" to listOf("muted", "muted", "muted")))
         val pattern = metronomePatternOf(MetronomeContext.Song("a.cho", null), settings, mapOf("a.cho" to song)::get, Tempos(), own)
         assertEquals(settings.beatLevelsOf(TimeSignature(7, 8)), pattern.beatLevels)
@@ -123,7 +123,7 @@ class MetronomePatternsTest {
     }
 
     @Test
-    fun `accents tapped for a song are kept for it, and taken off once they are the signature's again`() {
+    fun `accents tapped for a song are kept for it and taken off once they are the signature's again`() {
         val waltz = TimeSignature(3, 4)
         val tapped = listOf(BeatLevel.ACCENT, BeatLevel.MUTED, BeatLevel.MUTED)
         val other = mapOf("b.cho" to mapOf("4/4" to listOf("accent", "normal", "accent", "normal")))

@@ -65,7 +65,7 @@ class PitchTest {
     }
 
     @Test
-    fun `paired strings are listened for with their partners, and chromatic tuning has no strings`() {
+    fun `paired strings are listened for with their partners and chromatic tuning has no strings`() {
         val sixString = TunerConfig(referencePitch = 440, tuning = InstrumentTuning.GUITAR)
         val twelveString = sixString.copy(courses = StringCourses.TWELVE_STRING)
         val octaveG = Pitch.frequencyOf(67, 440)

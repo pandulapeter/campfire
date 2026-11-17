@@ -21,7 +21,7 @@ class ClipboardLinkOfferTest {
     }
 
     @Test
-    fun `an onboarding left from its last page, where the card was, offers nothing more`() {
+    fun `an onboarding left from its last page where the card was - offers nothing more`() {
         assertFalse(isClipboardLinkOfferedAgain(isOffered = true, isLeftFromLastPage = true))
     }
 

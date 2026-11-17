@@ -33,7 +33,7 @@ class ChecklistOrderTest {
     }
 
     @Test
-    fun `a row both held and added appears once, in the held part`() =
+    fun `a row both held and added appears once - in the held part`() =
         assertEquals(listOf("b", "d"), ChecklistOrder(heldKeys = setOf("b"), addedKeys = listOf("b", "d")).selectedGroup(rows) { it })
 
     @Test

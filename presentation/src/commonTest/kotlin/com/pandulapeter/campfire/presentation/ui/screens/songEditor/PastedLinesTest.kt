@@ -75,7 +75,7 @@ class PastedLinesTest {
     }
 
     @Test
-    fun `a pasted chord sheet is converted and the song prettified, the caret after the paste`() {
+    fun `a pasted chord sheet is converted and the song prettified - the caret after the paste`() {
         val paste = "Chorus:\nG       D\nSing it loud\n"
         val text = "{title: Song}\n[C]Hello\n" + paste
         val (formatted, caret) = assertNotNull(formattedAfterPaste(text, PastedLines(start = text.length - paste.length, text = paste)))

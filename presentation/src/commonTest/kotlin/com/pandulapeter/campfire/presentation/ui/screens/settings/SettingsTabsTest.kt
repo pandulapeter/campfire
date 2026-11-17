@@ -18,7 +18,7 @@ import kotlin.test.assertFalse
 class SettingsTabsTest {
 
     @Test
-    fun `a build with sync and every feature on has every tab, general first`() =
+    fun `a build with sync and every feature on has every tab - general first`() =
         assertEquals(SettingsTab.entries, settingsTabs(hasSync = true, userPreferences = testPreferences()))
 
     @Test

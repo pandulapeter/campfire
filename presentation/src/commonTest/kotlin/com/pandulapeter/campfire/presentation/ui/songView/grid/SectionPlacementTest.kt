@@ -77,7 +77,7 @@ class SectionPlacementTest {
     }
 
     @Test
-    fun `a card narrower than its cell sits at the cell's start, mirrored in a right to left layout`() {
+    fun `a card narrower than its cell sits at the cell's start - mirrored in a right to left layout`() {
         val units = songUnitsOf(listOf(listOf(listOf(100)), listOf(listOf(100))), cardSections = setOf(0))
         val cellWidths = arrayOf(intArrayOf(300, 300))
         val unitWidths = intArrayOf(200, 300)
@@ -90,7 +90,7 @@ class SectionPlacementTest {
     }
 
     @Test
-    fun `a row of fewer columns starts where the fullest row does, mirrored in a right to left layout`() {
+    fun `a row of fewer columns starts where the fullest row does - mirrored in a right to left layout`() {
         val grid = SectionGrid(rows = intArrayOf(0, 0, 0, 1), columns = intArrayOf(0, 1, 2, 0), columnCounts = intArrayOf(3, 1))
         val slotWidths = arrayOf(intArrayOf(300, 300, 300), intArrayOf(300))
         val ltr = cellStarts(grid, slotWidths)
@@ -123,7 +123,7 @@ class SectionPlacementTest {
     }
 
     @Test
-    fun `a right-to-left song starts from the right column, and keeps out of the buttons on the screen's own end edge`() {
+    fun `a right-to-left song starts from the right column and keeps out of the buttons on the screen's own end edge`() {
         val ltr = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400))).single()
         val rtl = cellStarts(oneRowOfTwo, arrayOf(intArrayOf(400, 400)), layoutDirection = LayoutDirection.Rtl).single()
         assertEquals(ltr.reversed(), rtl.toList())
@@ -140,7 +140,7 @@ class SectionPlacementTest {
     }
 
     @Test
-    fun `the pages of a single column share one start edge, and a pair of narrow sections splits it in the middle`() {
+    fun `the pages of a single column share one start edge and a pair of narrow sections splits it in the middle`() {
         val grid = SectionGrid(
             rows = intArrayOf(0, 1, 2, 2),
             columns = intArrayOf(0, 0, 0, 1),
@@ -154,7 +154,7 @@ class SectionPlacementTest {
     }
 
     @Test
-    fun `a card cut across two columns is two cards, each padded at the cut`() {
+    fun `a card cut across two columns is two cards - each padded at the cut`() {
         val units = songUnitsOf(listOf(listOf(listOf(100), listOf(100))), cardSections = setOf(0))
         val positions = arrayOf(IntOffset(0, 0), IntOffset(500, 0))
         val cards = cardBoundsOf(oneRowOfTwo, units, positions, unitHeights = intArrayOf(100, 100), unitWidths = intArrayOf(200, 200), piecePadding = intArrayOf(10))

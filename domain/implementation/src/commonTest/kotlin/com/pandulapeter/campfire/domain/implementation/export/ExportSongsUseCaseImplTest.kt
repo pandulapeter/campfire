@@ -67,7 +67,7 @@ class ExportSongsUseCaseImplTest {
     }
 
     @Test
-    fun `each song goes out as the rewrite answers it, whether alone or zipped`() = runTest {
+    fun `each song goes out as the rewrite answers it - whether alone or zipped`() = runTest {
         val rewrite = { fileName: String, text: String -> if (fileName == "a.cho") "$text{capo: 2}\n" else text }
         val single = useCase(mapOf("a" to "a.cho"), "a.cho" to "{title: A}\n").invoke(listOf("a.cho"), isArchive = false, isSharedCopy = false, rewrite = rewrite)
         assertEquals("{title: A}\n{capo: 2}\n", (assertNotNull(single).content as ExportedContent.Bytes).bytes.decodeToString())
@@ -78,7 +78,7 @@ class ExportSongsUseCaseImplTest {
     }
 
     @Test
-    fun `a song showing a picture the library holds leaves as a zip named after it, holding the song and the picture`() = runTest {
+    fun `a song showing a picture the library holds leaves as a zip named after it - holding the song and the picture`() = runTest {
         val picture = FakeImageRepository.picture(1)
         val name = images.store(picture)
         val text = "{title: A}\n{image: src=$name}\n{image: src=gone.png}\n"
@@ -105,7 +105,7 @@ class ExportSongsUseCaseImplTest {
     }
 
     @Test
-    fun `songs zipped together carry each picture once, after the songs and in the order of their names`() = runTest {
+    fun `songs zipped together carry each picture once - after the songs and in the order of their names`() = runTest {
         val names = listOf(images.store(FakeImageRepository.picture(1)), images.store(FakeImageRepository.picture(2))).sorted()
         val unused = images.store(FakeImageRepository.picture(3))
 
@@ -120,7 +120,7 @@ class ExportSongsUseCaseImplTest {
     }
 
     @Test
-    fun `a song's attachment goes under images beside its pictures, counted apart from them`() = runTest {
+    fun `a song's attachment goes under images beside its pictures - counted apart from them`() = runTest {
         val picture = FakeImageRepository.picture(1)
         val pictureName = images.store(picture)
         val recording = ByteArray(300) { 7 }

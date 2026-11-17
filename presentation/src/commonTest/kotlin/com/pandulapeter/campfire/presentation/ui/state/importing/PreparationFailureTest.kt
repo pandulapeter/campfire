@@ -24,7 +24,7 @@ import kotlin.test.assertNull
 class PreparationFailureTest {
 
     @Test
-    fun `staging refused for space is no space, naming what the import needs`() {
+    fun `staging refused for space is no space - naming what the import needs`() {
         val failure = preparationFailureOf(StagingRefusedException.NoSpace(neededBytes = 1_500_000_000))
         assertEquals(ImportFailure.NO_SPACE, failure.reason)
         assertEquals(1_500_000_000, failure.neededBytes)
@@ -38,7 +38,7 @@ class PreparationFailureTest {
     }
 
     @Test
-    fun `a write the storage refused for space is no space, of an amount it cannot say`() {
+    fun `a write the storage refused for space is no space - of an amount it cannot say`() {
         val failure = preparationFailureOf(IllegalStateException("Could not write.", OutOfSpaceException()))
         assertEquals(ImportFailure.NO_SPACE, failure.reason)
         assertNull(failure.neededBytes)

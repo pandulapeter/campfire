@@ -26,7 +26,7 @@ class PercentEncodingTest {
     )
 
     @Test
-    fun `a segment is encoded as encodeURIComponent encodes it, the tilde included`() =
+    fun `a segment is encoded as encodeURIComponent encodes it - the tilde included`() =
         vectors.forEach { (decoded, encoded) -> assertEquals(encoded, encodePathSegment(decoded)) }
 
     @Test

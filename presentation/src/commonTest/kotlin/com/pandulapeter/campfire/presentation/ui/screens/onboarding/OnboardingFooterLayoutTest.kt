@@ -22,7 +22,7 @@ class OnboardingFooterLayoutTest {
     }
 
     @Test
-    fun `a wide end slot moves the dots toward the start, leaving exactly the gap to it`() {
+    fun `a wide end slot moves the dots toward the start - leaving exactly the gap to it`() {
         val start = onboardingDotsStart(width = 400, dotsWidth = 112, startSlotWidth = 60, endSlotWidth = 180, gap = 4)
         assertEquals(400 - 180 - 4, start + 112)
         assertTrue(start >= 60 + 4)

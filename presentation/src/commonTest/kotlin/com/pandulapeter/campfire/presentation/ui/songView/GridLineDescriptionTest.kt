@@ -29,7 +29,7 @@ class GridLineDescriptionTest {
     )
 
     @Test
-    fun `a grid line is read as chords and beats, not bar characters`() {
+    fun `a grid line is read as chords and beats not bar characters`() {
         assertEquals(
             "Intro; C, 4 beats; Dm, 2 beats, Am, 2 beats; held, 4 beats; repeat bar; x2",
             described("Intro |: C . . . | Dm . Am . | | % :| x2"),

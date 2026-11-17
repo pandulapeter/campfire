@@ -40,7 +40,7 @@ class SaveWithDraftImagesUseCaseImplTest {
     }
 
     @Test
-    fun `a text naming no picture is saved as it is, without holding the pruning`() = runTest {
+    fun `a text naming no picture is saved as it is - without holding the pruning`() = runTest {
         // The stub fails every call it does not expect, withImagesKept included.
         val text = "{title: Song}\n[G]Hello\n"
         val saved = SaveWithDraftImagesUseCaseImpl(ImageRepositoryStub())(text) { it }
@@ -64,7 +64,7 @@ class SaveWithDraftImagesUseCaseImplTest {
     }
 
     @Test
-    fun `the attachments a text names move with its pictures, and one renamed in the library is saved under that name`() = runTest {
+    fun `the attachments a text names move with its pictures and one renamed in the library is saved under that name`() = runTest {
         val library = Library(renamed = mapOf("3fa9c2e81b7d4f06.pdf" to "3fa9c2e81b7d4f067.pdf"))
         val text = "{title: Chart}\n{image: src=a.png}\n{meta: attachment 3fa9c2e81b7d4f06.pdf Sheet music.pdf}\n"
 

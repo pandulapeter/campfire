@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class PlayingToolPlacesTest {
 
     @Test
-    fun `the tuner follows the key and the capo, and the metronome the tempo and the time signature`() {
+    fun `the tuner follows the key and the capo and the metronome the tempo and the time signature`() {
         assertEquals(PlayingToolPlaces(tuner = AFTER_CHORD_VALUES, metronome = AFTER_CLICK_VALUES), places(hasChordValues = true, hasClickValues = true))
     }
 

@@ -23,7 +23,7 @@ import kotlin.test.fail
 internal class LibraryNamePropertyTest {
 
     @Test
-    fun `a normalized name is composed, capped, and survives being normalized again`() = forEachGenerated { base ->
+    fun `a normalized name is composed and capped and survives being normalized again`() = forEachGenerated { base ->
         val once = LibraryFiles.normalizedName(base)
         val twice = LibraryFiles.normalizedName(once)
         assertEquals(once, twice, "Not idempotent for ${base.escaped()}: ${once.escaped()} became ${twice.escaped()}")

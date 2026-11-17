@@ -283,7 +283,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a stored draft is handed to an editor the restored stack has for its file, and kept`() = runTest {
+    fun `a stored draft is handed to an editor the restored stack has for its file and kept`() = runTest {
         files["a.cho"] = "[C]One"
         storedDraft = SongContent(fileName = "a.cho", text = "[C]Two")
         backStack += CampfireDestination.SongEditor(fileName = "a.cho")
@@ -341,7 +341,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a new song opens its editor alone, with a placeholder title, unsaved, and its draft on disk at once`() = runTest {
+    fun `a new song opens its editor alone and with a placeholder title and unsaved and its draft on disk at once`() = runTest {
         val fixture = fixture()
         fixture.session.openNewSongEditor("[G]Hello", null)
         val editor = backStack.last() as CampfireDestination.SongEditor
@@ -384,7 +384,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a new song's first save writes it, and its editor goes on over the song's details screen`() = runTest {
+    fun `a new song's first save writes it and its editor goes on over the song's details screen`() = runTest {
         val fixture = fixture()
         fixture.session.openNewSongEditor("[G]Hello", null)
         val entryKey = (backStack.last() as CampfireDestination.SongEditor).entryKey
@@ -429,7 +429,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a stored draft of a new song reopens its editor alone, with no word of a missing file`() = runTest {
+    fun `a stored draft of a new song reopens its editor alone - with no word of a missing file`() = runTest {
         storedDraft = SongContent(fileName = CampfireDestination.SongEditor.NEW_SONG_FILE_NAME, text = "{title: Song}\n[G]Hello")
         val fixture = fixture()
         fixture.session.startRecovery()
@@ -440,7 +440,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a picked picture is kept as a draft picture and inserted, and Save moves it into the library before the draft shelf is emptied`() = runTest {
+    fun `a picked picture is kept as a draft picture and inserted and Save moves it into the library before the draft shelf is emptied`() = runTest {
         files["a.cho"] = "{title: A}"
         val fixture = fixture()
         // Where the holding starts following the editor, once no stored draft is left to reopen.
@@ -486,7 +486,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a picture from a link is kept as a draft picture and inserted, and one that does not arrive is said why`() = runTest {
+    fun `a picture from a link is kept as a draft picture and inserted and one that does not arrive is said why`() = runTest {
         files["a.cho"] = "{title: A}"
         linkedPictures["https://example.com/chart.png"] = PictureDownload.Picture(byteArrayOf(7))
         val fixture = fixture()
@@ -502,7 +502,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `the address of a picture that does not arrive is kept for a retry, and forgotten once one arrives`() = runTest {
+    fun `the address of a picture that does not arrive is kept for a retry and forgotten once one arrives`() = runTest {
         files["a.cho"] = "{title: A}"
         val fixture = fixture()
         fixture.openEditor("a.cho")
@@ -565,7 +565,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a picture too large for a song is kept as a smaller copy, which a snackbar says`() = runTest {
+    fun `a picture too large for a song is kept as a smaller copy which a snackbar says`() = runTest {
         files["a.cho"] = "{title: A}"
         val fixture = fixture()
         fixture.openEditor("a.cho")
@@ -608,7 +608,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `pictures that arrived alone open a new song titled by the first one, showing each one kept`() = runTest {
+    fun `pictures that arrived alone open a new song titled by the first one - showing each one kept`() = runTest {
         val fixture = fixture()
         val isOpened = fixture.session.openNewSongEditor(pictureSong(byteArrayOf(1), byteArrayOf(HEIC), byteArrayOf(2)), null)
         assertTrue(isOpened)
@@ -623,7 +623,7 @@ class EditorSessionTest {
     }
 
     @Test
-    fun `a pasted text that brings pictures from its links opens as it is, its pictures kept as draft pictures`() = runTest {
+    fun `a pasted text that brings pictures from its links opens as it is - its pictures kept as draft pictures`() = runTest {
         val fixture = fixture()
         val text = "{title: A}\n{artist: B}\n{image: src=draft-3.png}\n{image: src=https://example.com/gone.png}"
         val song = ImportPlan.SongEntry(

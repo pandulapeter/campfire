@@ -23,7 +23,7 @@ class SharedItemsTest {
     private val shares = listOf(share(SharedLinkKind.SETLIST, "gig.setlist.json"), share(SharedLinkKind.SONG, "song.cho"))
 
     @Test
-    fun `an item is shared under any case of its name, and only as its own kind`() {
+    fun `an item is shared under any case of its name and only as its own kind`() {
         assertTrue(shares.isShared(SharedLinkKind.SETLIST, "Gig.setlist.json"))
         assertTrue(shares.isShared(SharedLinkKind.SONG, "song.cho"))
         assertFalse(shares.isShared(SharedLinkKind.SETLIST, "song.cho"))

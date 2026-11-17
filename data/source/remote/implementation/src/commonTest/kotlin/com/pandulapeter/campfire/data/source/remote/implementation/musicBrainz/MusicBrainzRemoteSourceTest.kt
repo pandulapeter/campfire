@@ -47,7 +47,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class MusicBrainzRemoteSourceTest {
 
     @Test
-    fun `the user agent names the app, its version and where to reach its maintainers`() {
+    fun `the user agent names the app - its version and where to reach its maintainers`() {
         assertEquals("Campfire/4.5.0 ( https://github.com/pandulapeter/campfire )", userAgent("4.5.0"))
     }
 
@@ -143,7 +143,7 @@ class MusicBrainzRemoteSourceTest {
     }
 
     @Test
-    fun `a refusal is waited out for as long as it asks, and reported as busy`() = runTest {
+    fun `a refusal is waited out for as long as it asks and reported as busy`() = runTest {
         val starts = mutableListOf<Long>()
         var busyCount = 0
         val source = source { _ ->
@@ -174,7 +174,7 @@ class MusicBrainzRemoteSourceTest {
     }
 
     @Test
-    fun `a refusal that says nothing is waited out for longer each time, and then given up on`() = runTest {
+    fun `a refusal that says nothing is waited out for longer each time and then given up on`() = runTest {
         val starts = mutableListOf<Long>()
         val source = source { _ ->
             starts += currentTime

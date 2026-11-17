@@ -95,7 +95,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `a modulation carries the key the song declares, wherever the file names it`() {
+    fun `a modulation carries the key the song declares - wherever the file names it`() {
         listOf(
             "{key: G}\n[G]a\n{transpose: 2}\n[G]b" to "G",
             "[G]a\n{transpose: 2}\n[G]b\n{key: G}" to "G",
@@ -108,7 +108,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `a transpose in the header is the whole song's, the last one winning`() {
+    fun `a transpose in the header is the whole song's - the last one winning`() {
         listOf(
             "{transpose: 2}\n{transpose: 3}\n[C]a" to 3,
             "{transpose: 2}\n{transpose}\n[C]a" to 0,
@@ -579,7 +579,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `pasted lyrics are cut into a paragraph per block, whatever spaces their blank lines hold`() {
+    fun `pasted lyrics are cut into a paragraph per block - whatever spaces their blank lines hold`() {
         val blocks = ChordProParser.parse("one\r\ntwo\r\n \u00a0\t\r\nthree\r\nfour\r\n\r\n\r\nfive").blocks
 
         assertEquals(
@@ -961,7 +961,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `summarize reports chords in lyrics, grids and tabs, but not in preformatted text`() {
+    fun `summarize reports chords in lyrics - grids and tabs but not in preformatted text`() {
         assertTrue(ChordProParser.summarize("[Am]a").hasChords)
         assertTrue(ChordProParser.parse("[Am]a").hasChords)
         assertTrue(ChordProParser.summarize("{sog}\n| Am . . . |\n{eog}").hasChords)
@@ -1039,12 +1039,12 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `tags that differ only in case are one tag, the first spelling winning`() {
+    fun `tags that differ only in case are one tag - the first spelling winning`() {
         assertEquals(listOf("Demo"), ChordProParser.parseMetadata("{tag: Demo}\n{tag: DEMO}\n{tag: demo}").tags)
     }
 
     @Test
-    fun `a dotted capital I and a plain i are the same tag, as equals ignoring case says`() {
+    fun `a dotted capital I and a plain i are the same tag as equals ignoring case says`() {
         assertEquals(listOf("İstanbul"), ChordProParser.parseMetadata("{tag: İstanbul}\n{tag: istanbul}").tags)
     }
 
@@ -1214,7 +1214,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `a song is played at the tempo and time signature it starts in, and with its first capo`() {
+    fun `a song is played at the tempo and time signature it starts in and with its first capo`() {
         val text = "{title: T}\n{time: 4/4}\n{tempo: 90}\n{capo: 1}\n[C]la\n{time: 3/4}\n{tempo: 140}\n{capo: 3}\n[G]la"
 
         listOf(ChordProParser.parse(text).metadata, ChordProParser.summarize(text).metadata, ChordProParser.parseMetadata(text)).forEach {
@@ -1306,7 +1306,7 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `an abc block inside a verse is a run of the verse, which goes on after it`() {
+    fun `an abc block inside a verse is a run of the verse which goes on after it`() {
         val blocks = ChordProParser.parse("{start_of_verse: Intro}\n[C]la\n{start_of_abc}\nX:1\nCDEF|\n{end_of_abc}\n[G]li\n{end_of_verse}\n[D]lo").blocks
 
         assertEquals(2, blocks.size)

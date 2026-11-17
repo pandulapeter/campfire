@@ -25,7 +25,7 @@ class SharedTextNameTest {
     }
 
     @Test
-    fun `a subject's title keeps its case and single spaces, and an artist only after the page kind's by`() {
+    fun `a subject's title keeps its case and single spaces and an artist only after the page kind's by`() {
         assertEquals(
             SharedTextTitle(title = "Riverlight", artist = "The Invented Band"),
             sharedTextTitle("Riverlight   Chords by The Invented Band @ Ultimate-Guitar.Com"),
@@ -43,7 +43,7 @@ class SharedTextNameTest {
     }
 
     @Test
-    fun `a page word inside a title is the title's own, and one ending a part of it is the page's`() {
+    fun `a page word inside a title is the title's own and one ending a part of it is the page's`() {
         assertEquals(
             SharedTextTitle(title = "The Lost Chord", artist = "The Invented Band"),
             sharedTextTitle("The Lost Chord Chords by The Invented Band @ Ultimate-Guitar.Com"),
@@ -72,7 +72,7 @@ class SharedTextNameTest {
     }
 
     @Test
-    fun `a name is the one the library would write, and stays it when normalized again`() {
+    fun `a name is the one the library would write and stays it when normalized again`() {
         listOf("evil‮\ttxt", "a​ \n b", "Ég a napmelegtől", "Ода к радости", "x".repeat(300)).forEach { text ->
             val name = text.cleanedForFileName()
             assertEquals(LibraryFiles.normalizedName(text), name)

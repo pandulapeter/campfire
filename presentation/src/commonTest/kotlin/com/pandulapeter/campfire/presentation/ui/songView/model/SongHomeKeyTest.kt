@@ -60,7 +60,7 @@ class SongHomeKeyTest {
     }
 
     @Test
-    fun `a home's key is its root, minor where its scale has only the minor third`() {
+    fun `a home's key is its root - minor where its scale has only the minor third`() {
         assertEquals("D", homeKeyOf(listOf(home("D", "major"))))
         assertEquals("D", homeKeyOf(listOf(home("D", "mixolydian"))))
         assertEquals("Dm", homeKeyOf(listOf(home("D", "dorian"))))
@@ -75,7 +75,7 @@ class SongHomeKeyTest {
     }
 
     @Test
-    fun `each diagram names its step of the key the chords are found in, with no key written and the scales off`() {
+    fun `each diagram names its step of the key the chords are found in - with no key written and the scales off`() {
         val major = model("[C]la [Dm]la [G7]la [C]la [F]la [Bb]la [C]la")
         assertEquals(listOf("I", "ii", "V7", "IV", "♭VII"), major.chords.map { it.degree })
         assertEquals(emptyList(), major.scaleGroups)
@@ -97,7 +97,7 @@ class SongHomeKeyTest {
     }
 
     @Test
-    fun `a capo chart sounds and is numbered in its sounding key, whatever capo it is played at`() {
+    fun `a capo chart sounds and is numbered in its sounding key - whatever capo it is played at`() {
         val text = "{key: G}\n{capo: 5}\n[D]la [G]la [A]la [D]la [G]la [A7]la [D]la"
         // Sounding: the file's capo counted into the chords, as the page reads it, its key read as its chords'.
         val sounding = SongKeys.withKeyOfChords(ChordProParser.parse(text)).let { ChordProTransposer.transpose(it, 5) }
@@ -132,7 +132,7 @@ class SongHomeKeyTest {
     }
 
     @Test
-    fun `chords first played in another key follow the home key's, even those played after the key returns`() {
+    fun `chords first played in another key follow the home key's - even those played after the key returns`() {
         val home = "{start_of_verse}\n[C]la [F]la [G]la [Am]la [C]la\n{end_of_verse}"
         val raised = "{start_of_verse}\n[D]la [G]la [A]la [Bm]la [D]la\n{end_of_verse}"
         val song = model("{key: C}\n$home\n$home\n$raised\n$home\n{start_of_outro}\n[F]la [Dm]la [G]la [C]la\n{end_of_outro}", showsDegrees = false)
@@ -141,7 +141,7 @@ class SongHomeKeyTest {
     }
 
     @Test
-    fun `a numbering names no degree, nor does a switched off label`() {
+    fun `a numbering names no degree nor does a switched off label`() {
         val text = "{key: C}\n[C]la [F]la [G]la [C]la"
         assertEquals(listOf(null, null, null), model(text, notation = ChordNotation.ROMAN).chords.map { it.degree })
         assertEquals(listOf(null, null, null), model(text, showsDegrees = false).chords.map { it.degree })

@@ -35,14 +35,14 @@ class InstallReferrerLinkTest {
     }
 
     @Test
-    fun `Play's own, a campaign's, and an empty referrer are no link`() {
+    fun `Play's own and a campaign's and an empty referrer are no link`() {
         assertNull(installReferrerLink("utm_source=google-play&utm_medium=organic"))
         assertNull(installReferrerLink("utm_source=newsletter&utm_campaign=autumn"))
         assertNull(installReferrerLink(""))
     }
 
     @Test
-    fun `a payload the grammar does not read, or another parameter holding one, is no link`() {
+    fun `a payload the grammar does not read or another parameter holding one or is no link`() {
         assertNull(installReferrerLink("campfire_link=1.setlist.short.fileid.rlkey.Title"))
         assertNull(installReferrerLink("campfire_link=https://example.com/s/#$PAYLOAD"))
         assertNull(installReferrerLink("link=$PAYLOAD"))

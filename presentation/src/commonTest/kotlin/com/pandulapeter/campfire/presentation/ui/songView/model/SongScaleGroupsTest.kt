@@ -68,7 +68,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a kind held whole by a group is named once, and the rest by their own headings`() {
+    fun `a kind held whole by a group is named once and the rest by their own headings`() {
         val groups = groups("{key: C}\n" + verse + chorus + modulated + verse + elsewhere)
         assertEquals(listOf("Verse, Chorus", "Bridge", "Solo", "Outro"), groups.map { it.label })
         assertTrue(groups.none { it.isHome })
@@ -82,13 +82,13 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a group names its sections in the order the song plays them, a kind once at its first`() {
+    fun `a group names its sections in the order the song plays them - a kind once at its first`() {
         val groups = groups("{key: C}\n" + chorus + verse + modulated + verse + elsewhere)
         assertEquals(listOf("Chorus, Verse", "Bridge", "Solo", "Outro"), groups.map { it.label })
     }
 
     @Test
-    fun `a lone heading keeps its number, and a number without a space before it is the heading's own`() {
+    fun `a lone heading keeps its number and a number without a space before it is the heading's own`() {
         val take = "{start_of_verse: Take 5}\n[C]One [F]two\n{end_of_verse}\n"
         val twice = "{start_of_chorus: Chorus x2}\n[C]One [F]two\n{end_of_chorus}\n"
         assertEquals(listOf("Take 5, Chorus x2", "Bridge", "Solo", "Outro"), groups("{key: C}\n" + take + twice + modulated + elsewhere).map { it.label })
@@ -121,7 +121,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a chord worth its own scale is named in the reader's notation, with its scales capped`() {
+    fun `a chord worth its own scale is named in the reader's notation - with its scales capped`() {
         val german = songScaleGroupsOf(ChordProParser.parse("{start_of_verse}\n[C]One [Am]two [Bb]three [F]four [G]five\n{end_of_verse}"), labels, ChordNotation.GERMAN)
         assertEquals(listOf("B"), german.single().exceptions.map { it.chordNames.single() })
         val crowded = groups("[C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x [C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x")
@@ -130,7 +130,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `under a capo whose shapes the page names, a chord is named by its shape and its scales still sound`() {
+    fun `under a capo whose shapes the page names - a chord is named by its shape and its scales still sound`() {
         val shapes = ChordProParser.parse("[C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x [C]x [A7]x [Dm]x [G]x [C]x [E7]x [Am]x [G]x")
         val sounding = ChordProTransposer.transpose(shapes, 2)
         val exceptions = songScaleGroupsOf(sounding, labels, ChordNotation.STANDARD, namedSong = shapes, nameCapo = 2).single().exceptions
@@ -200,7 +200,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a part no scale holds is named, and so is the rest of the song`() {
+    fun `a part no scale holds is named and so is the rest of the song`() {
         val bridge = "{start_of_bridge}\n[C]x [F#]x [Bb]x [E]x [Ab]x [D]x\n{end_of_bridge}\n"
         val groups = groups("{key: C}\n" + verse + chorus + bridge + chorus)
         assertEquals(listOf("Verse, Chorus", "Bridge"), groups.map { it.label })
@@ -232,7 +232,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `the scales section stands after the chords, else after the metadata, else first`() {
+    fun `the scales section stands after the chords - else after the metadata - else first`() {
         val group = SongScaleGroup(label = null, rootName = "C", scales = emptyList(), exceptions = emptyList(), joinsSeveral = false, hasUnnamed = false, opening = null, isHome = false)
         val scales = RenderSection.Scales(listOf(group), isFolded = false)
         val sections = emptyList<RenderSection>()

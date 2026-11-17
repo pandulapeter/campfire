@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 class SongSortingTest {
 
     @Test
-    fun `titles that start with no letter share one section, before the letters`() {
+    fun `titles that start with no letter share one section - before the letters`() {
         val sections = sections(SortingMode.BY_TITLE, song("Yesterday"), song("😀 Smile"), song("¿Quién será?"), song("1999"), song("Hey Jude"))
 
         assertEquals(listOf(SongSection.Header.Symbols, SongSection.Header.Letter('H'), SongSection.Header.Letter('Y')), sections.map { it.header })

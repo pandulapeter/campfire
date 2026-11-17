@@ -25,7 +25,7 @@ class SongTextDirectionTest {
     }
 
     @Test
-    fun `a song mostly of Hebrew lyrics reads from the right, its Latin lines and chord rows included`() {
+    fun `a song mostly of Hebrew lyrics reads from the right - its Latin lines and chord rows included`() {
         val song = "{title: Shir}\n[Am]שָׁלוֹם עֲלֵיכֶם מַלְאֲכֵי\nOK [C]yes\n[G] [D]\nהַשָּׁרֵת מַלְאֲכֵי עֶלְיוֹן"
         assertEquals(WritingDirection.RIGHT_TO_LEFT, directionOf(song))
     }
@@ -51,7 +51,7 @@ class SongTextDirectionTest {
     }
 
     @Test
-    fun `marks, digits, and punctuation cast no vote, and a tie reads from the left`() {
+    fun `marks and digits and punctuation cast no vote and a tie reads from the left`() {
         assertEquals(WritingDirection.LEFT_TO_RIGHT, directionOf("[G]1, 2, 3!\n[C]..."))
         assertEquals(WritingDirection.LEFT_TO_RIGHT, directionOf("ab\nשל"))
         assertEquals(WritingDirection.LEFT_TO_RIGHT, directionOf("[G] [C] [D]"))
@@ -69,7 +69,7 @@ class SongTextDirectionTest {
     }
 
     @Test
-    fun `the right-to-left languages are CLDR's, retired codes folded`() {
+    fun `the right-to-left languages are CLDR's - retired codes folded`() {
         listOf("ar", "arc", "ckb", "dv", "fa", "he", "iw", "ji", "ks", "ps", "sd", "syr", "ug", "ur", "yi").forEach {
             assertTrue(RightToLeftLanguages.contains(it), it)
         }

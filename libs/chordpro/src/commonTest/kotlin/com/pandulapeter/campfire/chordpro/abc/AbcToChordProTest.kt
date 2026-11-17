@@ -26,7 +26,7 @@ class AbcToChordProTest {
     private fun keyOf(field: String) = metadataOf("X:1\nT:Tune\nK:$field\nGABc|").key
 
     @Test
-    fun `the titles, the composer, and the rhythm become the title, subtitle, artist, and tags`() {
+    fun `the titles and the composer and the rhythm become the title and subtitle and artist and tags`() {
         val song = AbcToChordPro.convert("X:7\nT:The Lantern Reel\nT:Lantern\nT:Third Name\nC:Campfire Players\nC:arr. Somebody\nR:reel\nK:G\nGABc|")
         val metadata = ChordProParser.parse(song.text).metadata
 
@@ -53,7 +53,7 @@ class AbcToChordProTest {
     }
 
     @Test
-    fun `a key becomes the key its chords are in, a minor-like mode the tonic's minor`() {
+    fun `a key becomes the key its chords are in - a minor-like mode the tonic's minor`() {
         assertEquals("G", keyOf("G"))
         assertEquals("Bb", keyOf("Bb"))
         assertEquals("F#m", keyOf("F#m"))
@@ -71,7 +71,7 @@ class AbcToChordProTest {
     }
 
     @Test
-    fun `clefs and explicit accidentals are dropped from the key, and some keys give none`() {
+    fun `clefs and explicit accidentals are dropped from the key and some keys give none`() {
         assertEquals("G", keyOf("G clef=bass"))
         assertEquals("D", keyOf("D exp ^f ^c"))
         assertNull(keyOf("none"))
@@ -85,7 +85,7 @@ class AbcToChordProTest {
     }
 
     @Test
-    fun `the meter becomes the time, a compound one as its total`() {
+    fun `the meter becomes the time - a compound one as its total`() {
         assertEquals("6/8", metadataOf("X:1\nT:Tune\nM:6/8\nK:G\nG|").time)
         assertEquals("C", metadataOf("X:1\nT:Tune\nM:C\nK:G\nG|").time)
         assertEquals("C|", metadataOf("X:1\nT:Tune\nM:C|\nK:G\nG|").time)
@@ -103,7 +103,7 @@ class AbcToChordProTest {
     }
 
     @Test
-    fun `words after the tune become verses, a blank W line starting the next`() {
+    fun `words after the tune become verses - a blank W line starting the next`() {
         val tune = "X:1\nT:Tune\nK:G\n\"G\"GABc|\nw:la la la la\nW:First line of one\nW:Second line of one\nW:\nW:First line of [two]\n+: and more"
         val verses = ChordProParser.parse(AbcToChordPro.convert(tune).text).blocks
             .filterIsInstance<ChordProBlock.Section>()

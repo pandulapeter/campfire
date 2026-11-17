@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 class InstrumentsTest {
 
     @Test
-    fun `every tuning the tuner knows is offered under one instrument, or the guitar's under the twelve-string's too`() {
+    fun `every tuning the tuner knows is offered under one instrument or the guitar's under the twelve-string's too`() {
         val offered = Instrument.entries.filterNot { it.isTwelveString }.flatMap { it.tunings }
         assertEquals(InstrumentTuning.entries.toSet(), offered.toSet())
         assertEquals(offered.size, offered.toSet().size)
@@ -33,7 +33,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `every instrument with tunings is strung in its standard tuning first, which has the instrument's own id`() {
+    fun `every instrument with tunings is strung in its standard tuning first which has the instrument's own id`() {
         Instrument.entries.filter { it.tunings.isNotEmpty() && !it.isTwelveString }.forEach { assertEquals(it.id, it.tunings.first().id) }
         assertEquals(emptyList(), Instrument.KEYBOARD.tunings)
         assertEquals(emptyList(), Instrument.OTHER.tunings)
@@ -48,7 +48,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `every tuning of an instrument with shapes is a tuning the diagrams know, of the same id and strings`() {
+    fun `every tuning of an instrument with shapes is a tuning the diagrams know - of the same id and strings`() {
         Instrument.entries.forEach { instrument ->
             val chordInstrument = instrument.chordInstrument ?: return@forEach
             instrument.tunings.forEach { tuning ->
@@ -70,7 +70,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `the tuning picked for an instrument is read, and standard where none, an unknown one, or another instrument's is`() {
+    fun `the tuning picked for an instrument is read and standard where none and an unknown one or another instrument's is`() {
         val preferences = testPreferences().copy(
             tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "theremin", "banjo" to "guitar_open_g"),
         )
@@ -82,7 +82,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `picking a tuning tunes the instrument picked, keeps the other instruments' tunings, and leaves no entry for standard`() {
+    fun `picking a tuning tunes the instrument picked and keeps the other instruments' tunings and leaves no entry for standard`() {
         val preferences = testPreferences().copy(instrument = Instrument.GUITAR, tunings = mapOf("ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d"))
         val dropped = preferences.withTuning(InstrumentTuning.GUITAR_DROP_D)
         assertEquals(mapOf("ukulele" to "ukulele_baritone", "banjo" to "banjo_open_d", "guitar" to "guitar_drop_d"), dropped.tunings)
@@ -100,7 +100,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `the mandolin and the twelve-string guitar are listened to by their pairs, every other instrument by its strings`() {
+    fun `the mandolin and the twelve-string guitar are listened to by their pairs - every other instrument by its strings`() {
         assertEquals(StringCourses.UNISON_PAIRS, Instrument.MANDOLIN.courses)
         assertEquals(StringCourses.TWELVE_STRING, Instrument.GUITAR_TWELVE_STRING.courses)
         Instrument.entries.filterNot { it == Instrument.MANDOLIN || it.isTwelveString }.forEach { assertEquals(StringCourses.SINGLE, it.courses, it.id) }
@@ -117,7 +117,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `the diagrams are drawn in the instrument's tuning, the keyboard's own for the keyboard, and not at all without shapes`() {
+    fun `the diagrams are drawn in the instrument's tuning and the keyboard's own for the keyboard and not at all without shapes`() {
         val preferences = testPreferences().copy(tunings = mapOf("guitar" to "guitar_drop_d", "ukulele" to "ukulele_baritone"))
         assertEquals(ChordTuning.GUITAR_DROP_D, preferences.copy(instrument = Instrument.GUITAR).chordTuning())
         assertEquals(ChordTuning.UKULELE_BARITONE, preferences.copy(instrument = Instrument.UKULELE).chordTuning())
@@ -129,7 +129,7 @@ class InstrumentsTest {
     }
 
     @Test
-    fun `the tuner listens for the instrument's tuning, and chromatically for the keyboard and Other`() {
+    fun `the tuner listens for the instrument's tuning and chromatically for the keyboard and Other`() {
         val preferences = testPreferences().copy(tunings = mapOf("bass" to "bass_drop_d"))
         assertEquals(InstrumentTuning.BASS_DROP_D, preferences.copy(instrument = Instrument.BASS).instrumentTuning)
         assertNull(preferences.copy(instrument = Instrument.KEYBOARD).instrumentTuning)

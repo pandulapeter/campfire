@@ -35,14 +35,14 @@ class ChordProFormattingTagsTest {
     }
 
     @Test
-    fun `a tag that is the style itself goes with its closing tag, in any spelling`() {
+    fun `a tag that is the style itself goes with its closing tag - in any spelling`() {
         assertEquals("a |b| c", around("a <B>|b|</B> c"))
         assertEquals("a |b| c", inside("a |<strong>b</strong>| c"))
         assertEquals("|b|", around("<em>|b|</em>", Style.ITALIC))
     }
 
     @Test
-    fun `a span loses only what sets the style, and goes once nothing is left in it`() {
+    fun `a span loses only what sets the style and goes once nothing is left in it`() {
         assertEquals("|b|", around("<span weight=\"bold\">|b|</span>"))
         assertEquals("<span foreground='red'>|b|</span>", around("<span weight=\"bold\" foreground='red'>|b|</span>"))
         assertEquals("<span style=\"italic\">|b|</span>", around("<span font_weight=700 style=\"italic\">|b|</span>"))
@@ -59,7 +59,7 @@ class ChordProFormattingTagsTest {
     }
 
     @Test
-    fun `tags that do not set the style, or do not pair, are not a removal`() {
+    fun `tags that do not set the style or do not pair or are not a removal`() {
         assertNull(around("<span weight=\"normal\">|b|</span>"))
         assertNull(around("<i>|b|</i>"))
         assertNull(around("<b>|b|</strong>"))
@@ -68,7 +68,7 @@ class ChordProFormattingTagsTest {
     }
 
     @Test
-    fun `tags side by side are not a pair, and nested ones of one name are`() {
+    fun `tags side by side are not a pair and nested ones of one name are`() {
         assertNull(inside("|<span weight=\"bold\">a</span> <span color=\"red\">b</span>|"))
         assertNull(inside("|<b>a</b> <b>b</b>|"))
         assertNull(around("<b>|a</b> <b>b|</b>"))

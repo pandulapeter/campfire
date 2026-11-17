@@ -22,7 +22,7 @@ class BulkLabelDraftTest {
     private val draft = BulkLabelDraft.of(listOf(listOf("rock", "live"), listOf("rock"), listOf("rock", "folk")))
 
     @Test
-    fun `a row is on where every song has it, half ticked where some do and off where none does`() {
+    fun `a row is on where every song has it - half ticked where some do and off where none does`() {
         assertEquals(ToggleableState.On, draft.stateOf("rock"))
         assertEquals(ToggleableState.Indeterminate, draft.stateOf("live"))
         assertEquals(ToggleableState.Off, draft.stateOf("jazz"))
@@ -30,7 +30,7 @@ class BulkLabelDraftTest {
     }
 
     @Test
-    fun `a row that started half ticked goes on, off and back`() {
+    fun `a row that started half ticked goes on - off and back`() {
         val on = draft.toggled("live")
         val off = on.toggled("live")
         val back = off.toggled("live")
@@ -61,7 +61,7 @@ class BulkLabelDraftTest {
     fun `an entered label is on`() = assertEquals(setOf("new"), draft.checked("new").added)
 
     @Test
-    fun `the ticked rows lead, half ticked ones included`() {
+    fun `the ticked rows lead - half ticked ones included`() {
         assertEquals(setOf("rock", "live", "folk"), draft.checkedKeys)
         assertEquals(setOf("rock"), draft.onKeys)
     }

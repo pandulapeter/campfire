@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class SettledViewportTest {
 
     @Test
-    fun `an app bar fully expanded, barely moved or fully collapsed is settled`() {
+    fun `an app bar fully expanded - barely moved or fully collapsed is settled`() {
         assertTrue(isAppBarSettled(0f))
         assertTrue(isAppBarSettled(0.005f))
         assertTrue(isAppBarSettled(1f))

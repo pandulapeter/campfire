@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 class SongCatalogTest {
 
     @Test
-    fun `two spellings of a tag are one tag, spelled the way the first song by file name spells it`() {
+    fun `two spellings of a tag are one tag - spelled the way the first song by file name spells it`() {
         val songs = listOf(
             testSong("c.cho", tags = listOf("folk")),
             testSong("a.cho", tags = listOf("Folk", "Ballad")),

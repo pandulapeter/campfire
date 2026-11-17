@@ -29,7 +29,7 @@ class ShortcutListingTest {
         shortcutGroups(build = build, features = features, isApple = isApple, isPreviewWheelZoomed = isPreviewWheelZoomed)
 
     @Test
-    fun `the desktop lists every shortcut once in each of its groups, in the scopes' order, each row led by a described one`() {
+    fun `the desktop lists every shortcut once in each of its groups - in the scopes' order - each row led by a described one`() {
         val groups = listed(AppBuild.WINDOWS)
         assertEquals(ShortcutScope.entries, groups.map { it.scope })
         val shortcuts = groups.flatMap { group -> group.rows.flatMap { it.shortcuts } }
@@ -44,7 +44,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `Find and Save are listed wherever they are heard, saying what they do there`() {
+    fun `Find and Save are listed wherever they are heard - saying what they do there`() {
         val groups = listed(AppBuild.WINDOWS)
         fun scopesOf(shortcut: KeyShortcut) = groups.filter { group -> group.rows.any { shortcut in it.shortcuts } }.map { it.scope }
         assertEquals(listOf(ShortcutScope.MAIN_SCREENS, ShortcutScope.EDITOR), scopesOf(KeyShortcut.FIND))
@@ -56,7 +56,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `a pair is one row, Ctrl+Y beside redo except on an Apple keyboard`() {
+    fun `a pair is one row - Ctrl+Y beside redo except on an Apple keyboard`() {
         val editor = listed(AppBuild.LINUX).single { it.scope == ShortcutScope.EDITOR }
         assertEquals(listOf(KeyShortcut.REDO, KeyShortcut.REDO_ALTERNATE), editor.rows.single { it.lead == KeyShortcut.REDO }.shortcuts)
         assertEquals(listOf(KeyShortcut.FIND_NEXT, KeyShortcut.FIND_PREVIOUS), editor.rows.single { it.lead == KeyShortcut.FIND_NEXT }.shortcuts)
@@ -70,7 +70,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `a phone or a tablet lists no screen numbers and no Escape, and the web no Ctrl+N`() {
+    fun `a phone or a tablet lists no screen numbers and no Escape and the web no Ctrl+N`() {
         listOf(AppBuild.ANDROID, AppBuild.IOS).forEach { build ->
             val shortcuts = listed(build).flatMap { group -> group.rows.flatMap { it.shortcuts } }
             assertTrue(shortcuts.none { it in KeyShortcut.screens || it == KeyShortcut.BACK }, build.name)
@@ -87,7 +87,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `a feature switched off takes its keys, and read only mode every key whose control it hides`() {
+    fun `a feature switched off takes its keys and read only mode every key whose control it hides`() {
         val withoutSongs = listed(AppBuild.WINDOWS, everything.copy(areSongsEnabled = false))
         assertEquals(listOf(ShortcutScope.APP, ShortcutScope.MAIN_SCREENS, ShortcutScope.METRONOME), withoutSongs.map { it.scope })
         assertFalse(ShortcutScope.METRONOME in listed(AppBuild.WINDOWS, everything.copy(isMetronomeEnabled = false)).map { it.scope })
@@ -109,7 +109,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `the system lists name each chord apart, without the screen numbers or the scroll wheel`() {
+    fun `the system lists name each chord apart - without the screen numbers or the scroll wheel`() {
         val android = systemShortcutGroups(build = AppBuild.ANDROID, features = everything, isApple = false)
         val song = android.single { it.first == ShortcutScope.SONG }.second
         assertTrue(KeyShortcut.SONG_UP in song && KeyShortcut.SONG_DOWN in song && KeyShortcut.TRANSPOSE_DOWN in song)
@@ -122,7 +122,7 @@ class ShortcutListingTest {
     }
 
     @Test
-    fun `the four arrows of a song share one row with Page Up and Page Down, and with Shift another`() {
+    fun `the four arrows of a song share one row with Page Up and Page Down and with Shift another`() {
         val rows = listed(AppBuild.WINDOWS).single { it.scope == ShortcutScope.SONG }.rows.map { it.shortcuts.toSet() }
         val steps = setOf(KeyShortcut.SONG_UP, KeyShortcut.SONG_DOWN, KeyShortcut.SONG_LEFT, KeyShortcut.SONG_RIGHT, KeyShortcut.SONG_PAGE_UP, KeyShortcut.SONG_PAGE_DOWN)
         assertTrue(steps in rows)

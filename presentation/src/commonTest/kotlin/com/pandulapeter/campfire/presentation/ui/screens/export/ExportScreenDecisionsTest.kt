@@ -31,7 +31,7 @@ class ExportScreenDecisionsTest {
     private val setlist = PrintSource(title = "Set", kind = PrintSource.Kind.SETLIST, songs = listOf(song("a.cho"), song("b.cho")))
 
     @Test
-    fun `a failure shows over everything, a layout failure only for the PDF`() {
+    fun `a failure shows over everything - a layout failure only for the PDF`() {
         assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = true, isLayoutFailed = false, isPdf = false, hasSource = true))
         assertEquals(PrintScreenContent.FAILED, exportContentOf(isFailed = false, isLayoutFailed = true, isPdf = true, hasSource = true))
         assertEquals(PrintScreenContent.LOADED, exportContentOf(isFailed = false, isLayoutFailed = true, isPdf = false, hasSource = true))
@@ -39,7 +39,7 @@ class ExportScreenDecisionsTest {
     }
 
     @Test
-    fun `a zip can always be exported once read, a setlist with no songs as its manifest alone`() {
+    fun `a zip can always be exported once read - a setlist with no songs as its manifest alone`() {
         assertTrue(canExportFiles(setlist))
         assertTrue(canExportFiles(setlist.copy(songs = emptyList())))
         assertTrue(canExportFiles(setlist.copy(kind = PrintSource.Kind.SONGS)))

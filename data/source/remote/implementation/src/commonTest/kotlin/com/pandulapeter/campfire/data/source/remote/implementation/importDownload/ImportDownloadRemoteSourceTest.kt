@@ -69,7 +69,7 @@ class ImportDownloadRemoteSourceTest {
     }
 
     @Test
-    fun `nothing at the address is missing, and the host's own trouble is unreachable`() = runTest {
+    fun `nothing at the address is missing and the host's own trouble is unreachable`() = runTest {
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.download(URL, MAX))
         assertEquals(ImportDownload.Missing, source { _ -> respondError(HttpStatusCode.Forbidden) }.download(URL, MAX))
         assertEquals(ImportDownload.Missing, source { _ -> respond(ByteArray(0), HttpStatusCode.OK) }.download(URL, MAX))
@@ -108,7 +108,7 @@ class ImportDownloadRemoteSourceTest {
     }
 
     @Test
-    fun `without a header the name is the last segment of the path, and without either it is a fallback`() {
+    fun `without a header the name is the last segment of the path and without either it is a fallback`() {
         assertEquals("summer set.setlist.json", importDownloadFileName(null, "https://example.com/s/abc/summer%20set.setlist.json?dl=1"))
         assertEquals("download", importDownloadFileName(null, "https://example.com/"))
         assertEquals("download", importDownloadFileName("attachment", "https://example.com"))

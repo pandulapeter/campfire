@@ -36,7 +36,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `a picture picked for a missing one is stored under the song, whose held text follows`() = runTest {
+    fun `a picture picked for a missing one is stored under the song - whose held text follows`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT))
         val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope))
         store.addMissingImage(FILE, missingName = "photo.jpg") { listOf(ImportedFile("photo.jpg", byteArrayOf(1, 2))) }
@@ -59,7 +59,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `a missing picture's link that brings no picture is said why, and nothing is written`() = runTest {
+    fun `a missing picture's link that brings no picture is said why and nothing is written`() = runTest {
         val outcomes = listOf(
             PictureDownload.Unreachable to Message.PictureLinkUnreachable,
             PictureDownload.Missing to Message.PictureLinkMissing,
@@ -77,7 +77,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `a refused picture is said why, and nothing is written`() = runTest {
+    fun `a refused picture is said why and nothing is written`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT))
         val sink = MessageSink(backgroundScope)
         val store = files.songTextStore(backgroundScope, sink)
@@ -92,7 +92,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `a picture too large for a song is stored as a smaller copy, which a snackbar says`() = runTest {
+    fun `a picture too large for a song is stored as a smaller copy which a snackbar says`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT))
         val sink = MessageSink(backgroundScope)
         val store = files.songTextStore(backgroundScope, sink)
@@ -103,7 +103,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `a picture too large for a song that cannot be shrunk is refused as too large, and nothing is written`() = runTest {
+    fun `a picture too large for a song that cannot be shrunk is refused as too large and nothing is written`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT)).apply { reencode = { null } }
         val sink = MessageSink(backgroundScope)
         val store = files.songTextStore(backgroundScope, sink)
@@ -125,7 +125,7 @@ class SongTextStoreImageTest {
     }
 
     @Test
-    fun `the missing picture a pick is for is in the saved state while its picker is up, and gone once it answers`() = runTest {
+    fun `the missing picture a pick is for is in the saved state while its picker is up and gone once it answers`() = runTest {
         val files = FakeSongFiles(mapOf(FILE to TEXT))
         val savedState = SavedStateHandle()
         val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope), savedState)

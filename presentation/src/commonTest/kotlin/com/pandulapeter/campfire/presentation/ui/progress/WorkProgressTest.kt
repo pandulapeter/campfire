@@ -83,7 +83,7 @@ class WorkProgressTest {
     }
 
     @Test
-    fun `a picture being made to fit runs the line, before a sync run`() {
+    fun `a picture being made to fit runs the line - before a sync run`() {
         assertEquals(WorkProgress(fraction = null), progress(isFittingPictures = true, syncProgress = SyncProgress(completed = 1, total = 4)))
     }
 

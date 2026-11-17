@@ -41,19 +41,19 @@ class AskForChordNamesOnceTest {
     )
 
     @Test
-    fun `a song opened with a capo asks, one opened without a capo does not`() {
+    fun `a song opened with a capo asks - one opened without a capo does not`() {
         assertTrue(isOwed(capo = 2))
         assertFalse(isOwed(capo = 0))
     }
 
     @Test
-    fun `a capo stepped while the song is read asks, to none included`() {
+    fun `a capo stepped while the song is read asks - to none included`() {
         assertTrue(isOwed(capo = 1, isCapoChanged = true))
         assertTrue(isOwed(capo = 0, isCapoChanged = true))
     }
 
     @Test
-    fun `it waits for the layout question, which the first song asks, so the two never come together`() {
+    fun `it waits for the layout question which the first song asks so the two never come together`() {
         assertFalse(isOwed(preferences = unasked.copy(isSongLayoutChosen = false)))
         assertTrue(isOwed(preferences = unasked.copy(isSongLayoutChosen = true)))
     }
@@ -67,7 +67,7 @@ class AskForChordNamesOnceTest {
     }
 
     @Test
-    fun `it is asked once, a pick in Preferences counting as the answer`() {
+    fun `it is asked once - a pick in Preferences counting as the answer`() {
         assertFalse(isOwed(preferences = unasked.copy(isChordNamesChosen = true)))
     }
 

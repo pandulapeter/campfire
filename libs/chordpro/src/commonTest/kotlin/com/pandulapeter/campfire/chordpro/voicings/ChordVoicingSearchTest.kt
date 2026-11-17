@@ -45,7 +45,7 @@ class ChordVoicingSearchTest {
     }
 
     @Test
-    fun `a rootless shape is still offered, after the ones that keep the root`() {
+    fun `a rootless shape is still offered - after the ones that keep the root`() {
         val chord = ChordProChords.parse("C69")!!
         val all = ChordVoicings.all(chord, ChordTuning.MANDOLIN).map { it as ChordVoicing.Fretted }
         val rootless = all.indexOfFirst { ChordVoicings.write(it) == "0 0 0 0" }

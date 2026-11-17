@@ -33,7 +33,7 @@ class OnboardingPageMotionTest {
     }
 
     @Test
-    fun `the question is never scaled, since the mark follows its place`() {
+    fun `the question is never scaled since the mark follows its place`() {
         listOf(-1f, -0.3f, 0.6f, 1f).forEach { assertEquals(1f, onboardingHeaderMotion(it).scale) }
     }
 

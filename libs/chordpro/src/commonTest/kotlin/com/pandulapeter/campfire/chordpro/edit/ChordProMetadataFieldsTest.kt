@@ -19,7 +19,7 @@ import kotlin.test.assertSame
 class ChordProMetadataFieldsTest {
 
     @Test
-    fun `a value is rewritten where it stands, in the spelling it was written in`() {
+    fun `a value is rewritten where it stands - in the spelling it was written in`() {
         val text = "{t: Old}\n{meta: artist Someone}\n\n[G]La"
 
         val result = ChordProMetadataFields.set(text, mapOf(Field.TITLE to "New", Field.ARTIST to "Somebody"))
@@ -108,7 +108,7 @@ class ChordProMetadataFieldsTest {
     }
 
     @Test
-    fun `the header lines of a field the song changes mid-song are one value, and its body lines are its changes`() {
+    fun `the header lines of a field the song changes mid-song are one value and its body lines are its changes`() {
         assertEquals("{tempo: 120}\nLa", ChordProMetadataFields.set("{tempo: 90}\n{tempo: 100}\nLa", mapOf(Field.TEMPO to "120")))
         assertEquals("{title: T}\nLa", ChordProMetadataFields.set("{title: T}\n{key: G}\nLa", mapOf(Field.KEY to null)))
         assertEquals("[C]la\n{key: A}", ChordProMetadataFields.set("[C]la\n{key: G}", mapOf(Field.KEY to "A")))
@@ -176,7 +176,7 @@ class ChordProMetadataFieldsTest {
     }
 
     @Test
-    fun `mapTempoChanges rewrites the changes in the body only, in their own spelling`() {
+    fun `mapTempoChanges rewrites the changes in the body only - in their own spelling`() {
         assertEquals(
             "{title: S}\n{tempo: 120}\n[C]a\n{tempo: 55}\n[G]b\n",
             ChordProMetadataFields.mapTempoChanges("{title: S}\n{tempo: 120}\n[C]a\n{tempo: 60}\n[G]b\n") { "55" },

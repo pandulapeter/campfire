@@ -53,7 +53,7 @@ class ShareLinkControllerTest {
     private val songB = ShareTarget(SharedLinkKind.SONG, "b.cho")
 
     @Test
-    fun `a share is listed as stopping until its stop is over, and a second request meanwhile is ignored`() = runTest {
+    fun `a share is listed as stopping until its stop is over and a second request meanwhile is ignored`() = runTest {
         val answer = CompletableDeferred<SharingFailure?>()
         val stops = Stops(stop = { answer.await() })
         val (controller, messages) = controller(stops)
@@ -97,7 +97,7 @@ class ShareLinkControllerTest {
     }
 
     @Test
-    fun `an item's link is made while another's is still being made, each ending in its own entry`() = runTest {
+    fun `an item's link is made while another's is still being made - each ending in its own entry`() = runTest {
         val creations = Creations()
         val (controller, _) = controller(creations = creations)
 

@@ -35,7 +35,7 @@ class ChordProMarkupLinesTest {
     }
 
     @Test
-    fun `grid, tab, and delegated lines, other directives, and source comments are read nowhere`() {
+    fun `grid and tab and delegated lines and other directives and source comments are read nowhere`() {
         val ranges = ChordProMarkupLines.markupRanges(song)
 
         listOf(0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).forEach { assertNull(ranges[it], "line $it") }
@@ -49,7 +49,7 @@ class ChordProMarkupLinesTest {
     }
 
     @Test
-    fun `an empty comment value is an empty range at the brace, and a comment with no value is read nowhere`() {
+    fun `an empty comment value is an empty range at the brace and a comment with no value is read nowhere`() {
         assertEquals(4 until 4, rangeOf("{c: }"))
         assertNull(rangeOf("{c}"))
     }
@@ -62,7 +62,7 @@ class ChordProMarkupLinesTest {
     }
 
     @Test
-    fun `a selector name is not a comment, and in delegated notation only a comment with a colon is`() {
+    fun `a selector name is not a comment and in delegated notation only a comment with a colon is`() {
         assertNull(rangeOf("{c-guitar: x}"))
         val abc = "{start_of_abc}\n{c note}\n{c: note}\n{end_of_abc}"
         val ranges = ChordProMarkupLines.markupRanges(abc)
@@ -72,7 +72,7 @@ class ChordProMarkupLinesTest {
     }
 
     @Test
-    fun `a Campfire 3 heading is read nowhere, but the same comment in a section or in italics is`() {
+    fun `a Campfire 3 heading is read nowhere but the same comment in a section or in italics is`() {
         assertNull(rangeOf("{c: Chorus}"))
         val verse = "{start_of_verse}\n{c: Chorus}"
         assertEquals("Chorus", covered(verse, ChordProMarkupLines.markupRanges(verse)[1]))

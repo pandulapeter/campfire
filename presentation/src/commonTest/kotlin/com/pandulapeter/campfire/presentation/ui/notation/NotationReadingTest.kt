@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class NotationReadingTest {
 
     @Test
-    fun `a tune is read by its title, its chords, and its words`() {
+    fun `a tune is read by its title and its chords and its words`() {
         val reading = notationReadingOf(SCARBOROUGH_FAIR, songTitle = null, chordNames = listOf("Am", "G", "Am"))
         assertEquals(NotationReading(titles = listOf("Scarborough Fair"), chords = listOf("Am", "G", "Am"), words = "Are you going to Scarborough Fair"), reading)
     }

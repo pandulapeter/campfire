@@ -29,7 +29,7 @@ class LineRunsTest {
     private fun abc(text: String = "|:GABc dedB:|") = ChordProLine.Verbatim(text = text, environment = "abc")
 
     @Test
-    fun `lines are split into runs of tablature, of grid lines and of everything else, and at a blank line`() {
+    fun `lines are split into runs of tablature and of grid lines and of everything else and at a blank line`() {
         val first = tab()
         val second = tab(continuesEnvironment = true)
         val gridLine = grid()
@@ -59,7 +59,7 @@ class LineRunsTest {
     }
 
     @Test
-    fun `a section of tablature is folded whole with a blank line in it, and a mixed one is not`() {
+    fun `a section of tablature is folded whole with a blank line in it and a mixed one is not`() {
         assertEquals(FoldableKind.TAB, listOf(tab(), ChordProLine.Blank, tab()).wholeFoldableKind())
         assertNull(listOf(tab(), lyrics).wholeFoldableKind())
     }
@@ -94,13 +94,13 @@ class LineRunsTest {
     }
 
     @Test
-    fun `a long tune is cut into a piece for each line and for each wrap of every line, so no column holds the rest whole`() {
+    fun `a long tune is cut into a piece for each line and for each wrap of every line so no column holds the rest whole`() {
         assertEquals(40 * 3, List(40) { abc("abc def gab|" + "abc def gab|" + "abc|") }.runSlotCount(FoldableKind.VERBATIM))
         assertEquals(500, List(1_000) { abc() }.runSlotCount(FoldableKind.VERBATIM))
     }
 
     @Test
-    fun `verbatim lines are a run of their own, folded whole as their section, a short one in as many pieces as tablature`() {
+    fun `verbatim lines are a run of their own - folded whole as their section - a short one in as many pieces as tablature`() {
         val first = abc("X:1")
         val second = abc()
 

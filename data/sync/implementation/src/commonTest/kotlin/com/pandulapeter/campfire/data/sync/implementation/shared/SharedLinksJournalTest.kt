@@ -44,7 +44,7 @@ class SharedLinksJournalTest {
     }
 
     @Test
-    fun `a journal written before stops by name and named renames still reads, its renames by name`() = runTest {
+    fun `a journal written before stops by name and named renames still reads - its renames by name`() = runTest {
         val localSource = FakeSharedLinksLocalSource(
             journal = """{"entries": [{"type": "rename", "from": "a.cho", "to": "b.cho"}, {"type": "stop", "shareId": "aaaaaaaaaaaaaaaa"}]}""",
         )
@@ -56,7 +56,7 @@ class SharedLinksJournalTest {
     }
 
     @Test
-    fun `removing the applied entries keeps one appended meanwhile, and the last removal deletes the file`() = runTest {
+    fun `removing the applied entries keeps one appended meanwhile and the last removal deletes the file`() = runTest {
         val localSource = FakeSharedLinksLocalSource()
         val journal = SharedLinksJournal(localSource, testEnvironment())
         journal.append(listOf(rename))

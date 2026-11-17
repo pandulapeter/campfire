@@ -61,22 +61,22 @@ class AbcGridTest {
     }
 
     @Test
-    fun `bars before the first chord are beats, and a chordless pickup is left out`() {
+    fun `bars before the first chord are beats and a chordless pickup is left out`() {
         assertEquals(listOf("| . | G |"), gridOf("D2|GABc|\"G\"dedB|"))
     }
 
     @Test
-    fun `annotations, alternative chords, and text are not chords`() {
+    fun `annotations and alternative chords and text are not chords`() {
         assertEquals(listOf("| G | D |"), gridOf("\"^Fine\"\"G\"GA\"(Em)\"Bc|\"_rit.\"\"D\"de\"<here\"dB|\"Slowly\"|"))
     }
 
     @Test
-    fun `inline fields, decorations, grace notes, and chords of notes are skipped`() {
+    fun `inline fields and decorations and grace notes and chords of notes are skipped`() {
         assertEquals(listOf("| G | D | A |"), gridOf("\"G\"!trill!G{ga}A[GBd]c|\"D\"dedB|[K:A][M:3/4]\"A\"ABc|"))
     }
 
     @Test
-    fun `a line continued with a backslash is one row, and one ending mid-bar breaks after that bar`() {
+    fun `a line continued with a backslash is one row and one ending mid-bar breaks after that bar`() {
         assertEquals(listOf("| G | D |"), gridOf("\"G\"GABc|\\\n\"D\"dedB|"))
         assertEquals(listOf("| G |", "| D |"), gridOf("\"G\"GA\nBc|\"D\"dedB|"))
     }
@@ -102,7 +102,7 @@ class AbcGridTest {
     }
 
     @Test
-    fun `only the first voice of a tune is read, named on a line of its own or inline`() {
+    fun `only the first voice of a tune is read - named on a line of its own or inline`() {
         assertEquals(
             listOf("| G | C D |", "| G | D |"),
             gridOf("V:1\n\"G\"G2B2 d2B2|\"C\"c2e2 \"D\"d4|\nV:2 clef=bass\nG,,4 D,4|C,4 D,4|\n[V:1]\"G\"G4|\"D\"D4|\n[V:2]G,4|D,4|"),
@@ -115,7 +115,7 @@ class AbcGridTest {
     }
 
     @Test
-    fun `each part a tune names starts a grid of its own, labelled with it`() {
+    fun `each part a tune names starts a grid of its own - labelled with it`() {
         val song = AbcToChordPro.convert(
             "X:1\nT:Tune\nM:4/4\nK:G\n\"^intro\"\"G\"G4|\"D\"D4|\"^Verse 2\"\"C\"C4|\"G\"G2 \"^chorus\"G2|\"D\"D4|\nP:B\n\"Em\"E4|[P:C]\"C\"C4|",
         )

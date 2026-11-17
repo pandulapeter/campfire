@@ -99,7 +99,7 @@ class TabPlayersTest {
     }
 
     @Test
-    fun `a new tab starts as the standard strings of the instrument it is for, the player's where it names none`() {
+    fun `a new tab starts as the standard strings of the instrument it is for - the player's where it names none`() {
         val ukulele = emptyTabStaffFor(Instrument.UKULELE, Instrument.GUITAR, ChordNotation.STANDARD)
         val guitar = emptyTabStaffFor(Instrument.GUITAR, Instrument.UKULELE, ChordNotation.STANDARD)
         val unnamed = emptyTabStaffFor(null, Instrument.UKULELE, ChordNotation.STANDARD)

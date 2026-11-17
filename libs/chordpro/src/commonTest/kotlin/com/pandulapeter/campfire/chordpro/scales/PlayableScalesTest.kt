@@ -25,14 +25,14 @@ class PlayableScalesTest {
     private fun over(root: Int, vararg names: String) = PlayableScales.over(root, names.map { ChordProChords.parse(it)!! }).map { it.id }
 
     @Test
-    fun `a rock riff plays its flat chords as a quarter of its chords at least, not one closing a long I IV V`() {
+    fun `a rock riff plays its flat chords as a quarter of its chords at least not one closing a long I IV V`() {
         fun isRiff(vararg names: String) = PlayableScales.isRockRiff(9, names.map { ChordProChords.parse(it)!! })
         assertTrue(isRiff("A", "C", "D", "A"))
         assertFalse(isRiff("A", "D", "E", "E7", "A", "D", "E", "E7", "G"))
     }
 
     @Test
-    fun `a major key offers the pentatonic and hexatonic inside its scale, right after the common ones`() {
+    fun `a major key offers the pentatonic and hexatonic inside its scale - right after the common ones`() {
         val scales = over(0, "C", "F", "G")
         assertTrue("major_pentatonic" in scales && "major_hexatonic" in scales)
         assertEquals("major", scales.first())
@@ -64,7 +64,7 @@ class PlayableScalesTest {
         assertEquals(listOf("mixolydian", "major_pentatonic", "minor_pentatonic", "blues"), over(4, "E", "D", "A").take(4))
 
     @Test
-    fun `a blues with a seventh on the IV is a dominant blues, a plain V7 cadence is not`() {
+    fun `a blues with a seventh on the IV is a dominant blues - a plain V7 cadence is not`() {
         fun isBlues(vararg names: String) = PlayableScales.isDominantBlues(0, names.map { ChordProChords.parse(it)!! })
         assertTrue(isBlues("C", "F7", "G"))
         assertTrue(isBlues("C7", "F", "G"))
@@ -87,7 +87,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `a lone dominant seventh offers Mixolydian, then the pentatonics and the blues`() =
+    fun `a lone dominant seventh offers Mixolydian then the pentatonics and the blues`() =
         assertEquals(listOf("mixolydian", "major_pentatonic", "minor_pentatonic", "blues", "major_blues"), over(0, "C7").take(5))
 
     @Test
@@ -99,7 +99,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `power chords and a suspended chord passing among them are a riff, a minor chord is not`() {
+    fun `power chords and a suspended chord passing among them are a riff - a minor chord is not`() {
         fun isRiff(vararg names: String) = PlayableScales.isRockRiff(9, names.map { ChordProChords.parse(it)!! })
         assertTrue(isRiff("A5", "C5", "A5", "D5", "A5", "C5", "A5"))
         assertTrue(isRiff("A5", "C4", "A5", "D5", "F", "D", "A", "G"))
@@ -107,7 +107,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `a power chord on the flat fifth is the riff's blues note, a triad there is not`() {
+    fun `a power chord on the flat fifth is the riff's blues note - a triad there is not`() {
         fun isRiff(vararg names: String) = PlayableScales.isRockRiff(7, names.map { ChordProChords.parse(it)!! })
         assertTrue(isRiff("G5", "Bb5", "C5", "G5", "Bb5", "Db5", "C5"))
         assertFalse(isRiff("G5", "Bb5", "C5", "G5", "Bb5", "Db", "C5"))
@@ -125,7 +125,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `every suggestion is a scale on the root, never the chromatic one`() =
+    fun `every suggestion is a scale on the root never the chromatic one`() =
         assertTrue(listOf("C", "C7", "Cm7", "Cdim7", "Caug").none { Scales.CHROMATIC_ID in PlayableScales.over(ChordProChords.parse(it)!!).map { scale -> scale.id } })
 
     @Test
@@ -146,7 +146,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `a jazz blues is a blues on its tonic seventh, its other chords departures`() {
+    fun `a jazz blues is a blues on its tonic seventh - its other chords departures`() {
         assertTrue(isBlues(5, "F7", "Bb7", "F7", "Cm7", "F7", "Bb7", "Bdim7", "F7", "Am7", "D7", "Gm7", "C7", "F7", "D7", "Gm7", "C7"))
         assertTrue(isBlues(10, "Bb7", "Eb7", "Bb7", "Bb7", "Eb7", "Edim7", "Bb7", "G7", "Cm7", "F7", "Bb7", "F7"))
         assertFalse(isBlues(0, "C7", "Dm", "G7", "Am"))
@@ -160,7 +160,7 @@ class PlayableScalesTest {
     }
 
     @Test
-    fun `a twelve-bar of triads with a V to IV turnaround is a blues, a I IV V IV loop is not`() {
+    fun `a twelve-bar of triads with a V to IV turnaround is a blues - a I IV V IV loop is not`() {
         assertTrue(isBlues(4, "E", "E", "E", "E", "A", "A", "E", "E", "B7", "A", "E", "B7"))
         assertTrue(isBlues(9, "A", "A", "A", "A7", "D", "D", "A", "A", "E", "D", "A", "E"))
         assertFalse(isBlues(9, "A", "D", "E", "D"))

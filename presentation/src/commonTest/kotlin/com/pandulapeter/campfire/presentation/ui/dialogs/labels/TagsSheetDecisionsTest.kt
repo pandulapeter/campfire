@@ -22,7 +22,7 @@ class TagsSheetDecisionsTest {
     private val library = listOf(Tag(name = "rock", songCount = 3), Tag(name = "Blues", songCount = 1))
 
     @Test
-    fun `the library's tags lead in their order, spelled as the songs spell them, and each tag is offered once`() {
+    fun `the library's tags lead in their order and spelled as the songs spell them and each tag is offered once`() {
         assertEquals(
             listOf("Rock", "blues", "Folk"),
             offeredTagsOf(libraryTags = library, sortingMode = LabelSortingMode.BY_USAGE, ownTags = listOf("Rock", "Folk", "FOLK", "blues")),
@@ -44,7 +44,7 @@ class TagsSheetDecisionsTest {
     }
 
     @Test
-    fun `save commits a tag still typed, in the offered spelling where there is one`() {
+    fun `save commits a tag still typed - in the offered spelling where there is one`() {
         val draft = BulkLabelDraft.of(listOf(listOf("rock")))
         val (toSave, spellings) = tagsToSave(draft = draft, offeredTags = listOf("Rock", "Blues"), typedTag = "BLUES")
         assertEquals(setOf("rock", "blues"), toSave.onKeys)

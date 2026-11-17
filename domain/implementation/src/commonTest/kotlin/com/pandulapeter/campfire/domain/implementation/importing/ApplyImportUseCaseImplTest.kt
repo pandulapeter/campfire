@@ -72,7 +72,7 @@ class ApplyImportUseCaseImplTest {
     }
 
     @Test
-    fun `each shared link records only the names it wrote, not a numbered copy`() = runTest {
+    fun `each shared link records only the names it wrote not a numbered copy`() = runTest {
         val plan = ImportPlan(songs = listOf(song("riverlight.cho", ImportPlan.Status.CONFLICTING), song("mine.cho", ImportPlan.Status.NEW)))
         written = ImportResult(importedSongFileNames = listOf("riverlight_2.cho", "mine.cho"))
         useCase(

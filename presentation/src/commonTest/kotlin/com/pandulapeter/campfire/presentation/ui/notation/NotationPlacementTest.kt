@@ -22,13 +22,13 @@ class NotationPlacementTest {
         widthFor(tunes, narrowestWidth = 300, widestWidth = widestWidth, availableWidth = availableWidth, unitSize = unitSize, rememberedWidth = rememberedWidth)
 
     @Test
-    fun `tunes not yet placed are engraved for the narrowest column, or for where the song was placed before`() {
+    fun `tunes not yet placed are engraved for the narrowest column or for where the song was placed before`() {
         assertEquals(300, NotationPlacement().width())
         assertEquals(450, NotationPlacement().width(rememberedWidth = 450))
     }
 
     @Test
-    fun `tunes are engraved for the narrowest column any of them was placed in, in units`() {
+    fun `tunes are engraved for the narrowest column any of them was placed in - in units`() {
         val placement = NotationPlacement()
         placement.width()
         placement.place(first, widthPx = 1_000)

@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class RunFoldKeyTest {
 
     @Test
-    fun `runs are keyed by their section, their name and how many of that name came before`() {
+    fun `runs are keyed by their section - their name and how many of that name came before`() {
         val counts = mutableMapOf<String, Int>()
         assertEquals(
             listOf("intro#1/tab#1", "intro#1/picking pattern#1", "intro#1/tab#2", "intro#1/grid#1"),

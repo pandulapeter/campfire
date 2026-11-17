@@ -182,7 +182,7 @@ class PrepareImportUseCaseImplTest {
     }
 
     @Test
-    fun `a README under an unknown name is reported skipped, not imported as prose`() = runTest {
+    fun `a README under an unknown name is reported skipped not imported as prose`() = runTest {
         val readme = "# Campfire\nSee [C](https://example.com) for the details.\n- A\n- B\n"
 
         val plan = prepare()(listOf(ImportedFile("README.md", readme.encodeToByteArray(), isPlainTextByContent = true)))
@@ -213,7 +213,7 @@ class PrepareImportUseCaseImplTest {
     }
 
     @Test
-    fun `a loose document of songs is planned as its songs, each with the document's origin`() = runTest {
+    fun `a loose document of songs is planned as its songs - each with the document's origin`() = runTest {
         val archive = FakeArchiveRepository(songsIn = { file -> if (file.name == "songs.json") listOf(song("One.cho"), song("Two.cho")) else null })
 
         val plan = prepare(archive = archive)(listOf(song("first.cho"), ImportedFile("songs.json", "[]".encodeToByteArray())))
@@ -223,7 +223,7 @@ class PrepareImportUseCaseImplTest {
     }
 
     @Test
-    fun `a loose OnSong file is planned as the song its document holds, not skipped`() = runTest {
+    fun `a loose OnSong file is planned as the song its document holds not skipped`() = runTest {
         val archive = FakeArchiveRepository(songsIn = { file -> if (file.name == "Riverlight.onsong") listOf(song("Riverlight.cho")) else null })
 
         val plan = prepare(archive = archive)(listOf(ImportedFile("Riverlight.onsong", "Riverlight\n\nG D\nLa".encodeToByteArray())))

@@ -33,13 +33,13 @@ class BidiOrderTest {
     }
 
     @Test
-    fun `a Hebrew line is drawn from the right, its Latin words and numbers from the left`() {
+    fun `a Hebrew line is drawn from the right - its Latin words and numbers from the left`() {
         assertEquals("(Psalm 133:1) דחי םג", drawn("גם יחד (Psalm 133:1)", WritingDirection.RIGHT_TO_LEFT))
         assertEquals("Hine ma tov (בוט המ)", drawn("Hine ma tov (מה טוב)", WritingDirection.LEFT_TO_RIGHT))
     }
 
     @Test
-    fun `numbers apart in a Hebrew line are drawn apart, and a number between Hebrew words in a Latin line among them`() {
+    fun `numbers apart in a Hebrew line are drawn apart and a number between Hebrew words in a Latin line among them`() {
         assertEquals("2 1 םולש", drawn("שלום 1 2", WritingDirection.RIGHT_TO_LEFT))
         assertEquals("abc ינש 2 דחא", drawn("abc אחד 2 שני", WritingDirection.LEFT_TO_RIGHT))
         // The one place it parts from UAX #9, so that levels read the same from either end of the line.
@@ -47,7 +47,7 @@ class BidiOrderTest {
     }
 
     @Test
-    fun `a line drawn from the left reads back as it was written, in either direction`() {
+    fun `a line drawn from the left reads back as it was written - in either direction`() {
         val lines = listOf(
             "הנה מה טוב ומה נעים",
             "שבת אחים גם יחד (Psalm 133)",

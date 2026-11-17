@@ -41,7 +41,7 @@ class SharedLinkChoicesTest {
     )
 
     @Test
-    fun `only the taken names the link wrote before start on Replace, whatever their case`() {
+    fun `only the taken names the link wrote before start on Replace - whatever their case`() {
         val choices = sharedLinkChoices(plan, recorded = setOf("songs/Riverlight.cho", "setlists/gig.setlist.json", "songs/new.cho"))
         assertEquals(ImportConflictResolution.REPLACE, choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0)))
         assertEquals(ImportConflictResolution.KEEP_BOTH, choices.resolutionOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 1)))

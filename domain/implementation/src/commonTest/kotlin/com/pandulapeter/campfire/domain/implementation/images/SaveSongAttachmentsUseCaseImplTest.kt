@@ -55,7 +55,7 @@ class SaveSongAttachmentsUseCaseImplTest {
     private val text = "{title: Chart}\n{meta: attachment 0123456789abcdef.mp3 Take}\n\n[C]Line\n"
 
     @Test
-    fun `picked files move into the library and the song names them, written while the files are kept`() = runTest {
+    fun `picked files move into the library and the song names them - written while the files are kept`() = runTest {
         val library = Library(renamed = mapOf("3fa9c2e81b7d4f06.pdf" to "3fa9c2e81b7d4f067.pdf"))
         val songs = Songs(text, library)
         val attachments = listOf(ChordProAttachment("3fa9c2e81b7d4f06.pdf", "Sheet music.pdf"), ChordProAttachment("0123456789abcdef.mp3", "Take"))

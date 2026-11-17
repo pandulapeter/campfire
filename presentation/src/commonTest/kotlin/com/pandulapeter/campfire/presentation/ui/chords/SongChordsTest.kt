@@ -50,7 +50,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `a song's own shape is kept under any capo, moved by the reader's transposition alone`() {
+    fun `a song's own shape is kept under any capo - moved by the reader's transposition alone`() {
         val text = "{capo: 2}\n{define: G base-fret 1 frets 3 2 0 0 0 3}\n[G]la"
         // The page hands over the song moved by the reader's transposition and the capo played, see `soundingTransposition`.
         fun chordOf(transposition: Int, capo: Int, song: String = text, tuning: ChordTuning = ChordTuning.GUITAR) =
@@ -76,7 +76,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `a banjo definition is drawn with its drone muted where its note is not the chord's, written so or transposed into it`() {
+    fun `a banjo definition is drawn with its drone muted where its note is not the chord's - written so or transposed into it`() {
         fun frets(chord: SongChord) = (chord.definition?.voicing as ChordVoicing.Fretted).frets
         val written = songChordsOf(ChordProParser.parse("{define: D frets 0 4 2 3 4}\n[D]la"), ChordNotation.STANDARD, ChordTuning.BANJO)
         assertEquals(listOf<Int?>(null, 4, 2, 3, 4), frets(written.single()))
@@ -85,7 +85,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `every chord is listed once, in the order it is first played`() {
+    fun `every chord is listed once - in the order it is first played`() {
         assertEquals(
             listOf("G", "C", "D", "Em"),
             names("[G]Hello [C]there [G]again\n\n{soc}\n[D]la [Em]la [C]la\n{eoc}\n\n{chorus}").map { it.name },
@@ -93,7 +93,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `grids, tab chord rows, comments and labels are read too`() {
+    fun `grids - tab chord rows - comments and labels are read too`() {
         assertEquals(
             listOf("Am", "F", "G", "C", "E7", "D"),
             names("{comment: Intro: [Am] [F]}\n{start_of_grid}\n| G . C~E7 . |\n{end_of_grid}\n{start_of_tab}\nD\ne|---0---|\n{end_of_tab}").map { it.name },
@@ -143,7 +143,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `annotations, N C and words in brackets are no chords`() {
+    fun `annotations - N C and words in brackets are no chords`() {
         assertEquals(listOf("G"), names("[*softly][G]la [N.C.]la [Bridge]la").map { it.name })
     }
 
@@ -193,7 +193,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `named as shapes, a capoed chord keeps its shape's name and everything else of the chord that sounds`() {
+    fun `named as shapes - a capoed chord keeps its shape's name and everything else of the chord that sounds`() {
         // The reporter's song: written in Em at capo 2, so it sounds in F#m.
         val text = "{key: Em}\n{capo: 2}\n[Em]la [C]la [D]la [Bm]la"
         val sounding = ChordProTransposer.transpose(ChordProParser.parse(text), 2)
@@ -208,7 +208,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `named as shapes under a numbering, a chord keeps its step and spells its shape`() {
+    fun `named as shapes under a numbering - a chord keeps its step and spells its shape`() {
         val text = "{key: Em}\n[Em]la [C]la"
         val chords = songChordsOf(ChordProTransposer.transpose(ChordProParser.parse(text), 2), ChordNotation.NASHVILLE, ChordTuning.GUITAR, capo = 2)
             .namedAsShapes(ChordProParser.parse(text), ChordNotation.NASHVILLE, nameCapo = 2)
@@ -217,7 +217,7 @@ class SongChordsTest {
     }
 
     @Test
-    fun `named as what sounds, nothing is renamed`() {
+    fun `named as what sounds - nothing is renamed`() {
         val sounding = songChordsOf(ChordProParser.parse("[A]la"), ChordNotation.STANDARD, ChordTuning.GUITAR, capo = 2)
         assertEquals(sounding, sounding.namedAsShapes(ChordProParser.parse("[G]la"), ChordNotation.STANDARD, nameCapo = 0))
     }

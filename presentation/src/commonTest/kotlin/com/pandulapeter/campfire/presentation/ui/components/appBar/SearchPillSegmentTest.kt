@@ -28,7 +28,7 @@ class SearchPillSegmentTest {
     )
 
     @Test
-    fun `the closed pill is shared by its buttons edge to edge, meeting halfway between them`() {
+    fun `the closed pill is shared by its buttons edge to edge - meeting halfway between them`() {
         assertEquals(Rect(left = 100f, top = 10f, right = 138f, bottom = 50f), segment(0).bounds)
         assertEquals(Rect(left = 138f, top = 10f, right = 168f, bottom = 50f), segment(1).bounds)
         assertEquals(Rect(left = 168f, top = 10f, right = 200f, bottom = 50f), segment(2).bounds)

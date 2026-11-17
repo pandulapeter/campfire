@@ -49,7 +49,7 @@ class DropboxDeletedFilesTest {
     }
 
     @Test
-    fun `a revision Dropbox will not restore gives way to the one below it, three at most`() = runTest {
+    fun `a revision Dropbox will not restore gives way to the one below it - three at most`() = runTest {
         val provider = dropboxProvider { request ->
             when (request.url.toString()) {
                 LIST_REVISIONS_URL -> respondJson(revisions(isDeleted = true, "rev5", "rev4", "rev3", "rev2"))

@@ -18,7 +18,7 @@ import kotlin.test.assertNull
 class AppShortcutsTest {
 
     @Test
-    fun `Ctrl or Cmd and F opens the search, never with Alt or alone`() {
+    fun `Ctrl or Cmd and F opens the search never with Alt or alone`() {
         assertEquals(AppShortcut.OpenSearch, shortcut(Key.F, isCtrlOrMeta = true))
         assertEquals(AppShortcut.OpenSearch, shortcut(Key.F, isCtrlOrMeta = true, isShift = true))
         assertNull(shortcut(Key.F, isCtrlOrMeta = true, isAlt = true))
@@ -26,7 +26,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and plus, minus or zero zoom the song text, never with Alt or alone`() {
+    fun `Ctrl or Cmd and plus - minus or zero zoom the song text never with Alt or alone`() {
         listOf(Key.Equals, Key.Plus, Key.NumPadAdd).forEach { key -> assertEquals(AppShortcut.ZoomSongText(1), shortcut(key, isCtrlOrMeta = true)) }
         // The plus of a US layout is Shift and equals.
         assertEquals(AppShortcut.ZoomSongText(1), shortcut(Key.Equals, isCtrlOrMeta = true, isShift = true))
@@ -39,7 +39,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `M toggles the metronome only without Ctrl, Cmd or Alt, and Space is no app-wide shortcut`() {
+    fun `M toggles the metronome only without Ctrl and Cmd or Alt and Space is no app-wide shortcut`() {
         assertEquals(AppShortcut.ToggleMetronome, shortcut(Key.M))
         assertNull(shortcut(Key.M, isCtrlOrMeta = true))
         assertNull(shortcut(Key.M, isAlt = true))
@@ -47,7 +47,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and V pastes a song, and the shortcuts of the screens are none of the app's`() {
+    fun `Ctrl or Cmd and V pastes a song and the shortcuts of the screens are none of the app's`() {
         assertEquals(AppShortcut.PasteSong, shortcut(Key.V, isCtrlOrMeta = true))
         listOf(Key.E, Key.R, Key.B, Key.Z, Key.Y).forEach { key -> assertNull(shortcut(key, isCtrlOrMeta = true)) }
         assertNull(shortcut(Key.DirectionUp, isCtrlOrMeta = true, isShift = true))
@@ -55,7 +55,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `T taps the tempo like M, and Ctrl or Cmd with N, A, or S are the list screens' New, Select all, and Share or export`() {
+    fun `T taps the tempo like M and Ctrl or Cmd with N and A or S are the list screens' New and Select all and Share or export`() {
         assertEquals(AppShortcut.TapTempo, shortcut(Key.T))
         assertNull(shortcut(Key.T, isCtrlOrMeta = true))
         assertEquals(AppShortcut.NewItem, shortcut(Key.N, isCtrlOrMeta = true))
@@ -66,7 +66,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and a digit from 1 to 7 select a main screen, from either row of digits`() {
+    fun `Ctrl or Cmd and a digit from 1 to 7 select a main screen - from either row of digits`() {
         assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_1), shortcut(Key.One, isCtrlOrMeta = true))
         assertEquals(AppShortcut.SelectScreen(KeyShortcut.SCREEN_7), shortcut(Key.NumPad7, isCtrlOrMeta = true))
         assertNull(shortcut(Key.Comma, isCtrlOrMeta = true))
@@ -75,7 +75,7 @@ class AppShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and slash, and a question mark, open the shortcuts sheet, while a screen's own keys are no app-wide shortcut`() {
+    fun `Ctrl or Cmd and slash and a question mark and open the shortcuts sheet while a screen's own keys are no app-wide shortcut`() {
         assertEquals(AppShortcut.ShowKeyboardShortcuts(KeyShortcut.SHORTCUTS), shortcut(Key.Slash, isCtrlOrMeta = true))
         assertEquals(AppShortcut.ShowKeyboardShortcuts(KeyShortcut.SHORTCUTS_QUESTION_MARK), shortcut(Key.Slash, isShift = true))
         assertNull(shortcut(Key.Slash))

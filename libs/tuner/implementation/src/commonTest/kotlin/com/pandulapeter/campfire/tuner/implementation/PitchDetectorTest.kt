@@ -31,7 +31,7 @@ class PitchDetectorTest {
     }
 
     @Test
-    fun `a sine is read within a cent up to 1 kHz and within three cents above, at every rate`() {
+    fun `a sine is read within a cent up to 1 kHz and within three cents above - at every rate`() {
         SAMPLE_RATES.forEach { sampleRate ->
             val detector = PitchDetector(sampleRate)
             (21..96).forEach { note ->
@@ -91,7 +91,7 @@ class PitchDetectorTest {
     }
 
     @Test
-    fun `silence, noise and a chord answer nothing`() {
+    fun `silence - noise and a chord answer nothing`() {
         val sampleRate = 48_000
         val detector = PitchDetector(sampleRate)
         val range = PitchDetector.rangeFor(null, 440)

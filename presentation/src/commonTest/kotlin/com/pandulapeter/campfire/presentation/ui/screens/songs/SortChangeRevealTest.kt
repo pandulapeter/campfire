@@ -42,7 +42,7 @@ class SortChangeRevealTest {
     )
 
     @Test
-    fun `a sort picked over the very top is revealed once, when the new order arrives`() {
+    fun `a sort picked over the very top is revealed once - when the new order arrives`() {
         reveal.onSortPicked(LazyGridState(), songGroups("|BY_ARTIST"), isRevealed = true, isReselected = false)
         assertFalse(reveal.takeGlide("|BY_ARTIST"), "The old order, still")
         assertTrue(reveal.takeGlide("|BY_TITLE"))
@@ -70,7 +70,7 @@ class SortChangeRevealTest {
     }
 
     @Test
-    fun `the sort already applied, picked again while the picks are in sight, glides to the first section at once`() {
+    fun `the sort already applied - picked again while the picks are in sight - glides to the first section at once`() {
         reveal.onSortPicked(LazyGridState(), songGroups("|BY_TITLE"), isRevealed = true, isReselected = true)
         val first = assertNotNull(reveal.reselection)
         assertEquals(ledByPicks.firstSectionAfterRandomPicksIndex(), first.index)
@@ -82,7 +82,7 @@ class SortChangeRevealTest {
     }
 
     @Test
-    fun `the sort already applied, picked again in the sections or without picks, moves nothing`() {
+    fun `the sort already applied - picked again in the sections or without picks - moves nothing`() {
         val firstSection = assertNotNull(ledByPicks.firstSectionAfterRandomPicksIndex())
         reveal.onSortPicked(LazyGridState(firstVisibleItemIndex = firstSection), songGroups("|BY_TITLE"), isRevealed = true, isReselected = true)
         assertNull(reveal.reselection)

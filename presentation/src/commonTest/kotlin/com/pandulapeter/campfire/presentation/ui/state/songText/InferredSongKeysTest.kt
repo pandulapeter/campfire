@@ -27,7 +27,7 @@ class InferredSongKeysTest {
     }
 
     @Test
-    fun `a forgotten name is walked again, and one kept is not`() = runTest {
+    fun `a forgotten name is walked again and one kept is not`() = runTest {
         keys.inferFor(listOf("preview" to "[G]Hello", "a.cho" to "[D]World"))
         keys.forget { it == "preview" }
         walks = 0

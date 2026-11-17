@@ -48,7 +48,7 @@ class SongKeysTest {
     }
 
     @Test
-    fun `a capo chart keyed by its shapes' key, or fitting both keys alike, keeps its written key`() {
+    fun `a capo chart keyed by its shapes' key or fitting both keys alike or keeps its written key`() {
         assertNull(SongKeys.capoChartKeyOf(song(key = "D", capo = 2)))
         assertEquals("D", SongKeys.ofChords(song(key = "D", capo = 2)))
         assertNull(SongKeys.capoChartKeyOf(song(key = "A", capo = 2, chords = "G A G A")))

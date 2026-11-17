@@ -93,7 +93,7 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
-    fun `by date the latest day is on top, one day's setlists by title and the archived ones after`() = runTest {
+    fun `by date the latest day is on top - one day's setlists by title and the archived ones after`() = runTest {
         setlists.value = DataState.Idle(
             listOf(
                 setlist("old", day = 1),
@@ -122,7 +122,7 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
-    fun `a failure beats a load, which beats every input being idle`() = runTest {
+    fun `a failure beats a load which beats every input being idle`() = runTest {
         val latest = collectScreenData()
         latest.idle()
 
@@ -144,7 +144,7 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
-    fun `a filter value the other group counts down to nothing stays on the list with a zero, after the rest`() = runTest {
+    fun `a filter value the other group counts down to nothing stays on the list with a zero - after the rest`() = runTest {
         songs.value = DataState.Idle(
             listOf(
                 song("Yesterday", tags = listOf("Ballad"), languages = listOf("en")),
@@ -303,7 +303,7 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
-    fun `the whole library comes sorted the way the song list is, in both orders`() = runTest {
+    fun `the whole library comes sorted the way the song list is - in both orders`() = runTest {
         songs.value = DataState.Idle(
             listOf(song("Yesterday"), song("1999", artist = "Prince"), song("¿Quién será?", artist = "Pedro Infante"), song("Hey Jude")),
         )

@@ -27,7 +27,7 @@ class ShareTargetTest {
     private val shares = listOf(share(SharedLinkKind.SETLIST, "gig.setlist.json"), share(SharedLinkKind.SONG, "song.cho"))
 
     @Test
-    fun `a target finds its share under any case of its name, and only as its own kind`() {
+    fun `a target finds its share under any case of its name and only as its own kind`() {
         assertEquals(shares[0], shareOf(shares, ShareTarget(SharedLinkKind.SETLIST, "Gig.setlist.json")))
         assertEquals(shares[1], shareOf(shares, ShareTarget(SharedLinkKind.SONG, "song.cho")))
         assertNull(shareOf(shares, ShareTarget(SharedLinkKind.SETLIST, "song.cho")))
@@ -35,7 +35,7 @@ class ShareTargetTest {
     }
 
     @Test
-    fun `a link shares the song or the setlist by its file, the song reached through a setlist included`() {
+    fun `a link shares the song or the setlist by its file - the song reached through a setlist included`() {
         assertEquals(
             ShareTarget(SharedLinkKind.SONG, "a.cho"),
             shareTargetOf(DialogType.Export(song = song("a.cho")).copy(songSetlistFileName = "set.setlist.json")),

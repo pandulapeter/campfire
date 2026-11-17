@@ -323,7 +323,7 @@ class SyncRunSchedulerTest {
     }
 
     @Test
-    fun `a run that deleted a song is followed by one more, which deletes the pictures only it named`() = runTest {
+    fun `a run that deleted a song is followed by one more which deletes the pictures only it named`() = runTest {
         val world = world(files = FOLDER, localFiles = FOLDER - song(1) - PHOTO, index = FOLDER.syncedIndex())
 
         world.scheduler.synchronize(SyncDeletionPolicy.ASK)

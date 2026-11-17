@@ -23,7 +23,7 @@ class ChordProLinksTest {
     private val tab = "https://example.com/tabs/song"
 
     @Test
-    fun `links are read from their meta directives, in order and each once`() {
+    fun `links are read from their meta directives - in order and each once`() {
         val metadata = ChordProParser.parseMetadata("{title: T}\n{meta: link $video}\n{meta: Link $tab}\n{meta: link $video}")
 
         assertEquals(listOf(ChordProLink(video), ChordProLink(tab)), metadata.links)
@@ -38,7 +38,7 @@ class ChordProLinksTest {
     }
 
     @Test
-    fun `a link is added after the header, and next to the other links`() {
+    fun `a link is added after the header and next to the other links`() {
         val text = "{title: T}\n{tag: Rock}\n\n[C]Line"
 
         val withOne = ChordProLinks.addLink(text, video)
@@ -49,7 +49,7 @@ class ChordProLinksTest {
     }
 
     @Test
-    fun `adding a link the song already has, or an unusable one, changes nothing`() {
+    fun `adding a link the song already has or an unusable one or changes nothing`() {
         val text = "{title: T}\n{meta: link $video}\n"
 
         assertSame(text, ChordProLinks.addLink(text, " $video "))

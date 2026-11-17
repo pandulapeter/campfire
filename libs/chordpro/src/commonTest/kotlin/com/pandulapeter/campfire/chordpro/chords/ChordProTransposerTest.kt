@@ -357,7 +357,7 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `a key is one that starts with a note, whatever follows it`() {
+    fun `a key is one that starts with a note - whatever follows it`() {
         listOf("F#m", "a", "Bb-Dur", "Dm (capo 2)", "a-moll", "Esz-dúr", "D dorian", "Lam").forEach { key ->
             assertEquals(true, ChordProTransposer.isKey(key), key)
         }
@@ -460,7 +460,7 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `an abc tune's own transpose line is moved further, and gone where it comes back to nothing`() {
+    fun `an abc tune's own transpose line is moved further and gone where it comes back to nothing`() {
         assertEquals(
             "{start_of_abc}\nX:1\n%%transpose 5\nK:C\nC|\n{end_of_abc}",
             ChordProTransposer.transposeText("{start_of_abc}\nX:1\n%%transpose 3\nK:C\nC|\n{end_of_abc}", 2),
@@ -474,7 +474,7 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `every tune of an abc block gets a transpose line of its own, and a block without one is left alone`() {
+    fun `every tune of an abc block gets a transpose line of its own and a block without one is left alone`() {
         assertEquals(
             "{start_of_abc}\nX:1\n%%transpose -1\nK:C\nC|\nX:2\n%%transpose -1\nK:G\nG|\n{end_of_abc}",
             ChordProTransposer.transposeText("{start_of_abc}\nX:1\nK:C\nC|\nX:2\nK:G\nG|\n{end_of_abc}", -1),
@@ -672,7 +672,7 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `transposing text leaves source comments, prose comments and annotations alone and updates the key`() {
+    fun `transposing text leaves source comments - prose comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside
             {key: E}

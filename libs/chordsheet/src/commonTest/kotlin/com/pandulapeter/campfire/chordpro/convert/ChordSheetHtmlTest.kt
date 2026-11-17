@@ -69,7 +69,7 @@ class ChordSheetHtmlTest {
     }
 
     @Test
-    fun `entities are decoded and line breaks, paragraphs, and source whitespace read as a browser lays them out`() {
+    fun `entities are decoded and line breaks and paragraphs and source whitespace read as a browser lays them out`() {
         assertEquals(
             "C\nRock &  roll\n      G\nsweet été\n\nlast",
             ChordSheetHtml.chordSheetText(
@@ -79,7 +79,7 @@ class ChordSheetHtmlTest {
     }
 
     @Test
-    fun `an element with text in it is no chord, whatever its attributes`() {
+    fun `an element with text in it is no chord - whatever its attributes`() {
         assertNull(ChordSheetHtml.chordSheetText("<div><span data-chord=\"Am\">Am</span> walking</div>"))
     }
 

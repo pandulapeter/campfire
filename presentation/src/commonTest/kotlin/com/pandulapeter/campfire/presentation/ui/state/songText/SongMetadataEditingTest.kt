@@ -44,7 +44,7 @@ class SongMetadataEditingTest {
     private val draftTarget = SongEditTarget.EditorDraft(FILE)
 
     @Test
-    fun `a tag the sheet offered and left unticked is taken off, and one it never offered stays`() = runTest {
+    fun `a tag the sheet offered and left unticked is taken off and one it never offered stays`() = runTest {
         editing().setSongTags(draftTarget, tags = listOf("Pop"), offeredTags = listOf("rock", "Pop"))
         val text = "{title: A}\n{tag: Rock}\n{tag: Synced}"
         assertEquals(setOf("Synced", "Pop"), ChordProParser.parse(editedText(text)).metadata.tags.toSet())
@@ -69,7 +69,7 @@ class SongMetadataEditingTest {
     }
 
     @Test
-    fun `only the details changed in the sheet are written, and a field left as offered keeps what a sync run brought in`() = runTest {
+    fun `only the details changed in the sheet are written and a field left as offered keeps what a sync run brought in`() = runTest {
         editing().setSongMetadata(
             draftTarget,
             values = mapOf(Field.ALBUM to "New", Field.COMPOSER to " X "),
@@ -96,7 +96,7 @@ class SongMetadataEditingTest {
     }
 
     @Test
-    fun `the draft's text is read from the editor's field first, then from the draft it last reported for that file`() = runTest {
+    fun `the draft's text is read from the editor's field first then from the draft it last reported for that file`() = runTest {
         val editing = editing()
         draft = SongContent(fileName = FILE, text = "reported")
         assertEquals("reported", editing.songTextOf(draftTarget))

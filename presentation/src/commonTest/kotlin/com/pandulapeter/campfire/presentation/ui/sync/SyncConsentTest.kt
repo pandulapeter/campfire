@@ -66,7 +66,7 @@ class SyncConsentTest {
     }
 
     @Test
-    fun `a connect tapped on the export screen is answered there, for the song or setlist it shares`() {
+    fun `a connect tapped on the export screen is answered there - for the song or setlist it shares`() {
         assertEquals(
             SyncConsentOrigin.Export(ShareTarget(SharedLinkKind.SONG, "a.cho")),
             syncConsentOriginOf(CampfireDestination.Songs, DialogType.Export(song = song("a.cho")), SettingsTab.SHARING),

@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
 class ImportReviewSectionsTest {
 
     @Test
-    fun `the groups come in order, and a repeat is counted on the row it follows rather than listed`() {
+    fun `the groups come in order and a repeat is counted on the row it follows rather than listed`() {
         val sections = importReviewSections(PLAN, LIBRARY_SONGS, emptyList())
 
         assertEquals(listOf(Kind.CONFLICTS, Kind.SONGS, Kind.SETLISTS, Kind.DUPLICATES, Kind.SKIPPED), sections.map { it.kind })
@@ -40,7 +40,7 @@ class ImportReviewSectionsTest {
     }
 
     @Test
-    fun `a taken name names the library song it is about, and what is already there has no box`() {
+    fun `a taken name names the library song it is about and what is already there has no box`() {
         val sections = importReviewSections(PLAN, LIBRARY_SONGS, emptyList())
 
         val conflict = sections.first { it.kind == Kind.CONFLICTS }.rows.single()
@@ -62,7 +62,7 @@ class ImportReviewSectionsTest {
     }
 
     @Test
-    fun `a preview pages through the songs listed, in their order, the one already there included and no setlist`() {
+    fun `a preview pages through the songs listed - in their order - the one already there included and no setlist`() {
         val sections = importReviewSections(PLAN, LIBRARY_SONGS, emptyList())
 
         assertEquals(listOf(2, 0, 1, 3), sections.previewSongIndices)
@@ -134,7 +134,7 @@ class ImportReviewSectionsTest {
     }
 
     @Test
-    fun `a group's box is ticked, empty, or in between by the rows it holds`() {
+    fun `a group's box is ticked or empty or in between by the rows it holds`() {
         val rows = importReviewSections(PLAN, LIBRARY_SONGS, emptyList()).first { it.kind == Kind.SONGS }.rows
 
         assertEquals(ToggleableState.On, groupBoxState(rows, ImportChoices()))
@@ -143,7 +143,7 @@ class ImportReviewSectionsTest {
     }
 
     @Test
-    fun `a search narrows a group, and its box speaks for the rows it shows`() {
+    fun `a search narrows a group and its box speaks for the rows it shows`() {
         val sections = importReviewSections(PLAN, LIBRARY_SONGS, emptyList()).matchingReview("two", fold)
 
         val songs = sections.single { it.kind == Kind.SONGS }.rows

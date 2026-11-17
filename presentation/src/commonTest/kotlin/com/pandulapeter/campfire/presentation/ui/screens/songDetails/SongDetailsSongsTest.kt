@@ -28,7 +28,7 @@ class SongDetailsSongsTest {
         assertNull(songDetailsSongsOf(setlist, lookup(isLibraryRead = false, a, c, d), emptyMap()))
 
     @Test
-    fun `every song in the lookup is resolved before the read, in the destination's order`() =
+    fun `every song in the lookup is resolved before the read - in the destination's order`() =
         assertEquals(listOf(a, b, c, d), songDetailsSongsOf(setlist, lookup(isLibraryRead = false, d, c, b, a), emptyMap()))
 
     @Test

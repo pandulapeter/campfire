@@ -74,7 +74,7 @@ class SyncCredentialsStoreTest {
     }
 
     @Test
-    fun `a document that cannot be parsed is read as none, once`() = runTest {
+    fun `a document that cannot be parsed is read as none - once`() = runTest {
         val storage = StoredSyncCredentials("not json")
         val store = SyncCredentialsStore(storage, Logger.Standard)
 

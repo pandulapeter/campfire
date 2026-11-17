@@ -59,7 +59,7 @@ class ChordSheetRomanChordsTest {
     }
 
     @Test
-    fun `a lyric of the word I, of numeral-like words, or of words like vi and mix stays a lyric among numeral rows`() {
+    fun `a lyric of the word I and of numeral-like words or of words like vi and mix stays a lyric among numeral rows`() {
         val result = convert("Title\n\nKey: G\n\nI          IV\nI walk the line\nI\nI I\nI I I\ni\nvi and mix\nV          I\nBecause you're mine")
 
         assertTrue("\nI\nI I\nI I I\ni\nvi and mix\n" in result, result)
@@ -75,7 +75,7 @@ class ChordSheetRomanChordsTest {
     }
 
     @Test
-    fun `numerals all in capitals or all in small letters take their qualities from words, and are left alone where no word says one`() {
+    fun `numerals all in capitals or all in small letters take their qualities from words and are left alone where no word says one`() {
         assertEquals(
             listOf("C", "Am", "Dm7", "G7"),
             chords(convert("Title\n\nKey: C\n\nI          VIm\nHello there world\nII-7       V7\nGoodbye my friend")),

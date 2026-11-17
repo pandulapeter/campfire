@@ -48,7 +48,7 @@ class SongSelectionGroupsTest {
     }
 
     @Test
-    fun `a song ticked since the refresh is copied once, however many sections hold it`() {
+    fun `a song ticked since the refresh is copied once - however many sections hold it`() {
         val twice = groups + SongGroup(header = SongGroupHeader.Section(SongSection.Header.Letter('D')), songs = listOf(song("a1")))
         val result = twice.withSelectionLeading(ChecklistOrder(setOf("b1.cho")).withCheckedKeys(setOf("b1.cho", "a1.cho")))
         assertEquals(listOf("b1", "a1"), result.first().songs.map { it.title })

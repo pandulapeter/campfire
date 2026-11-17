@@ -54,7 +54,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `no chord over a lyric is kept where it stands, unlike a bar line`() {
+    fun `no chord over a lyric is kept where it stands - unlike a bar line`() {
         assertEquals("[N.C.]Stop right [G]there and [D]go\n", convert("N.C.       G         D\nStop right there and go"))
         assertEquals("[Am]Hello [NC]world [G]again\n", convert("Am  |  NC    G\nHello world again"))
     }
@@ -248,7 +248,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a header labelled with semicolons names the song, its album, and the year its credit ends in, each once`() {
+    fun `a header labelled with semicolons names the song and its album and the year its credit ends in and each once`() {
         assertEquals(
             "{artist: Someone}\n{title: Hello}\n{album: Best of}\n{year: 1972}\n\n[Am]Hello [C]world\n",
             convert("Artist; Someone\nSong; Hello\nAlbum; Best of\nWords & music by Someone 1972\n\nAm     C\nHello world"),
@@ -289,7 +289,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `chord shapes listed one a line become definitions, a chord listed with and without a star neither`() {
+    fun `chord shapes listed one a line become definitions - a chord listed with and without a star neither`() {
         val result = convert(
             "Am C\nHello world\n\nBb(#11)/A = x03330\nC: x32010\nD7 (x-x-0-2-1-2)\nF 2 0 1 0\nBb  = 688766\nBb* = 013331\nDm 2010\nLove 202000",
         )
@@ -412,7 +412,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a word as likely sung as a heading heads a section only where a chord row, a blank line, or the end follows it`() {
+    fun `a word as likely sung as a heading heads a section only where a chord row or a blank line or the end follows it`() {
         assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n[Am]Other [C]words\n", convert("Am    C\nHello world\nBreak\nAm    C\nOther words"))
         assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n\n[Am]Other [C]words\n", convert("Am    C\nHello world\nBreak\n\nAm    C\nOther words"))
         assertEquals("[Am]Hello [C]world\n\n{comment: Break}\n", convert("Am    C\nHello world\nBreak"))
@@ -422,7 +422,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a single chord under a heading is a row of its own only where a blank line, a heading, or the end follows it`() {
+    fun `a single chord under a heading is a row of its own only where a blank line or a heading or the end follows it`() {
         assertEquals("{start_of_verse: Verse 1}\n[C]\n\nHello\n{end_of_verse}\n", convert("[Verse 1]\nC\n\nHello"))
         assertEquals(
             "{start_of_verse: Verse 1}\n[C]\n{end_of_verse}\n{start_of_chorus: Chorus}\n[Am]Hello [C]world\n{end_of_chorus}\n",
@@ -432,13 +432,13 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `single chords on lines of their own under a chord row or a heading are its last bars, not a lyric`() {
+    fun `single chords on lines of their own under a chord row or a heading are its last bars not a lyric`() {
         assertEquals("[Am] [Dm]\n[Dm]\n\n[C]Hello\n", convert("Am  Dm\nDm\n\nC\nHello"))
         assertEquals("{start_of_verse: Verse 1}\n[Dm]\n[Dm]\n\n[Dm]\n[Dm]\n{end_of_verse}\n", convert("[Verse 1]\nDm\nDm\n\nDm\nDm"))
     }
 
     @Test
-    fun `a chord row is set over the lyric under it, never over a chord row taken for a lyric`() {
+    fun `a chord row is set over the lyric under it never over a chord row taken for a lyric`() {
         assertEquals("[Am]Hello [C]world\n[G]more words\n", convert("Am    C\nHello world\nG\nmore words"))
         assertEquals("[Am]Hello [C]world\nG\n\nmore\n", convert("Am    C\nHello world\nG\n\nmore"))
         assertEquals("[Am]Hello [C]world\nG\n", convert("Am    C\nHello world\nG"))
@@ -449,7 +449,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a title is told by its type against the whole document's body, not against the page it opens`() {
+    fun `a title is told by its type against the whole document's body not against the page it opens`() {
         fun line(text: String, size: Double) = ChordSheet.Line(listOf(span(text, 0.0, text.length * size, size = size)))
         fun page(title: String, words: String) = ChordSheet.Page(listOf(line(title, 2.0)) + ChordSheet.ofPlainText("Am    C\n$words").pages.single().lines)
         fun contents(heading: String, entries: List<String>) = ChordSheet.Page(listOf(line(heading, 1.0)) + entries.map { line(it, 0.8) })
@@ -475,7 +475,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a row of chords over a staff stays in the tab, its columns kept`() {
+    fun `a row of chords over a staff stays in the tab - its columns kept`() {
         assertEquals(
             "{start_of_tab}\nAm        C\ne|---0---|---3---|\nB|---1---|---1---|\n{end_of_tab}\n",
             convert("Am        C\ne|---0---|---3---|\nB|---1---|---1---|"),
@@ -483,7 +483,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a staff whose string names are followed by dashes alone is a tab, its repeat count kept`() {
+    fun `a staff whose string names are followed by dashes alone is a tab - its repeat count kept`() {
         val text = "John Williams\nStar Wars Main Theme\n\nINTRO\n" +
             "e---------------3---|\nB-----------3---1-0-|\nG-------0----------|   x2\nD-0-0-0------------|\n" +
             "A------------------|\nE------------------|"
@@ -630,7 +630,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a title set larger than the body opens a song anywhere on a page, a title wrapped in its type staying one`() {
+    fun `a title set larger than the body opens a song anywhere on a page - a title wrapped in its type staying one`() {
         fun title(text: String) = ChordSheet.Line(listOf(span(text, 0.0, text.length * 2.0, size = 2.0, bold = true)))
         val lines = listOf(title("First")) + ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines +
             listOf(title("A song with"), title("a long title")) + ChordSheet.ofPlainText("G     F\nOther words").pages.single().lines
@@ -643,7 +643,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a songbook in one type is split where its contents list a title, not where a lyric sings one`() {
+    fun `a songbook in one type is split where its contents list a title not where a lyric sings one`() {
         val pages = listOf(
             "Songs to sing",
             "Contents\nAlpha\nBeta\nGamma",
@@ -659,7 +659,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a chorus set apart in bold ends where the lyrics return to the verses' type, and a chorus heading over a verse recalls it`() {
+    fun `a chorus set apart in bold ends where the lyrics return to the verses' type and a chorus heading over a verse recalls it`() {
         fun line(text: String, bold: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> span(c.toString(), index * 6.0, (index + 1) * 6.0, bold = bold) })
         val lines = listOf(
             line("Song", bold = true),
@@ -762,7 +762,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `an inset chorus with a wrapped line hanging further in, or typed a space unevenly, still ends where the verses' edge returns`() {
+    fun `an inset chorus with a wrapped line hanging further in or typed a space unevenly or still ends where the verses' edge returns`() {
         val expected = "{end_of_chorus}\nIt's a cool place\nAnd it gets colder\n\n{chorus}\n"
         val wrapped = convert(
             "Somebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star, get your game on\n        go play\n" +
@@ -804,7 +804,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `in a song that heads every section, a chorus heading over new words in another look is that chorus written out`() {
+    fun `in a song that heads every section - a chorus heading over new words in another look is that chorus written out`() {
         val result = convert(
             "Verse 1:\nSomebody told me\nWe were born to sing\n\nChorus:\n    Hey now you're a star\n    Get your game on\n\n" +
                 "Verse 2:\nIt's a cool place\nAnd it gets colder\n\nChorus:\nHey now you're a rock star\nGet the show on, get paid",
@@ -818,7 +818,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a chorus heading over the plain verse after a bold chorus that the verse ended recalls it, in a song that heads its first verse`() {
+    fun `a chorus heading over the plain verse after a bold chorus that the verse ended recalls it - in a song that heads its first verse`() {
         fun line(text: String, bold: Boolean = false, size: Double = 10.0) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, size, isBold = bold) })
         val blank = ChordSheet.Line(emptyList())
@@ -848,7 +848,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `bold lines under the title before anything sung are its credits, not a chorus`() {
+    fun `bold lines under the title before anything sung are its credits not a chorus`() {
         fun line(text: String, bold: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> span(c.toString(), index * 6.0, (index + 1) * 6.0, bold = bold) })
         val chords = line("G       C", bold = true)
         val lines = listOf(
@@ -959,7 +959,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a stanza set in italic among plain verses is a chorus with no heading, and a stray wordless line does not cut it`() {
+    fun `a stanza set in italic among plain verses is a chorus with no heading and a stray wordless line does not cut it`() {
         fun line(text: String, italic: Boolean = false) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(
             ChordSheet.Line(listOf(span("Song", 0.0, 40.0, size = 20.0))),
@@ -981,19 +981,19 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `an inset stanza with no heading stays a verse, as a second column or a bridge starts further in too`() {
+    fun `an inset stanza with no heading stays a verse as a second column or a bridge starts further in too`() {
         val result = convert("Somebody told me\nWe were born to sing\n\n    Hey now you're a star\n    Get your game on\n\nIt's a cool place")
         assertFalse(result.contains("chorus"), result)
     }
 
     @Test
-    fun `a chorus heading over the chorus's own words is that chorus written out, however it is set`() {
+    fun `a chorus heading over the chorus's own words is that chorus written out - however it is set`() {
         val result = convert("Somebody told me\n\nChorus:\n    Hey now you're a star\n    Get your game on\nIt's a cool place\n\nChorus:\nHey now you're a star\nGet the show on")
         assertTrue(result.endsWith("{start_of_chorus: Chorus}\nHey now you're a star\nGet the show on\n{end_of_chorus}\n"), result)
     }
 
     @Test
-    fun `the numbers a songbook counts its songs by are left out of their titles, a title that only starts with one keeping it`() {
+    fun `the numbers a songbook counts its songs by are left out of their titles - a title that only starts with one keeping it`() {
         fun book(vararg titles: String) = ChordSheet(
             listOf(ChordSheet.Page(ChordSheet.ofPlainText("100 songs\nContents\n" + titles.joinToString("\n")).pages.single().lines)) +
                 titles.map { ChordSheet.Page(ChordSheet.ofPlainText("$it\nAm    C\nHello world").pages.single().lines) },
@@ -1034,7 +1034,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a lyric of Campfire's own export reads back unchanged, a word its markup set in bold included`() {
+    fun `a lyric of Campfire's own export reads back unchanged - a word its markup set in bold included`() {
         fun glyphs(text: String, size: Double, bold: Boolean = false) = ChordSheet.Line(
             text.mapIndexed { index, character -> span(character.toString(), index * size * 0.6, (index + 1) * size * 0.6, size, bold) },
         )
@@ -1147,7 +1147,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a chord of a pointed right-to-left row never splits a letter from its points, which share the next letter's glyph`() {
+    fun `a chord of a pointed right-to-left row never splits a letter from its points which share the next letter's glyph`() {
         // "הַמַּעֲלוֹת" as a PDF groups it: each letter's points drawn within the next letter's glyph, and so in its piece.
         val glyphs = listOf(
             span("\u05d4", 92.0, 100.0), span("\u05b7\u05de", 84.0, 92.0), span("\u05bc\u05b7\u05e2", 76.0, 84.0),
@@ -1161,7 +1161,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a right-to-left plain text sets each chord where a right-to-left display shows it, not at its character's index`() {
+    fun `a right-to-left plain text sets each chord where a right-to-left display shows it not at its character's index`() {
         // "הנה מה טוב ומה נעים" under "Dm         Am": shown from the right, the chords and the spaces between them are one
         // left-to-right run, so Am stands over the first word and Dm over the fourth, the other way round from their
         // indices in the row.
@@ -1202,7 +1202,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `an unknown bracketed heading is a heading, not a lyric`() {
+    fun `an unknown bracketed heading is a heading not a lyric`() {
         for (heading in listOf("Instrumental break", "Vamp", "Riff")) {
             val result = convert("[Verse 1]\nC     G\nHello world\n\n[$heading]\nG   D")
             assertTrue(result.endsWith("{comment: $heading}\n[G] [D]\n"), result)
@@ -1259,7 +1259,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a label's chords are their own line, never set into the lyric under it`() {
+    fun `a label's chords are their own line never set into the lyric under it`() {
         assertEquals(
             "{start_of_verse: Verse 1}\n[G] [D] [Em] [C]\nThe river runs beside the road\n{end_of_verse}\n",
             convert("Verse 1: G D Em C\nThe river runs beside the road"),
@@ -1304,7 +1304,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a title, its credit, and a blank line before the chords`() {
+    fun `a title and its credit and a blank line before the chords`() {
         assertTrue(convert("Riverlight\nby The Invented Band\n\nAm     C\nHello world").startsWith("{title: Riverlight}\n{artist: The Invented Band}\n\n"))
         assertTrue(convert("Down by the Riverlight\nSomeone\n\nAm     C\nHello world").startsWith("{title: Down by the Riverlight}\n{artist: Someone}\n\n"))
         assertTrue(convert("Riverlight\nAm     C\nHello world").startsWith("{title: Riverlight}\n\n[Am]Hello [C]world"))
@@ -1563,7 +1563,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `margin labels I and O beside labels of a letter each are an intro and an outro, written as headings of no type are`() {
+    fun `margin labels I and O beside labels of a letter each are an intro and an outro - written as headings of no type are`() {
         val sheet = listOf(
             "        C            G",
             "I       Hum hum hum hum",
@@ -1599,7 +1599,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `margin labels beside a second column open its sections, measured against that column's own body`() {
+    fun `margin labels beside a second column open its sections - measured against that column's own body`() {
         fun column(index: Int, offset: Double, text: String) = ChordSheet.ofPlainText(text).pages.single().lines.map { line ->
             line.copy(spans = line.spans.map { it.copy(start = it.start + offset, end = it.end + offset) }, column = index)
         }
@@ -1629,7 +1629,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `an italic word among a row's upright chords is an annotation where it stands, an italic chord or bar line staying what it is`() {
+    fun `an italic word among a row's upright chords is an annotation where it stands - an italic chord or bar line staying what it is`() {
         fun line(vararg parts: Pair<String, Boolean>): ChordSheet.Line {
             var x = 0.0
             return ChordSheet.Line(parts.flatMap { (text, italic) -> text.map { c -> ChordSheet.Span(c.toString(), x, x + 6.0, 10.0, isItalic = italic).also { x += 6.0 } } })
@@ -1642,7 +1642,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `dashes filling a chord's width at the end of a lyric are left out, sung ones kept`() {
+    fun `dashes filling a chord's width at the end of a lyric are left out - sung ones kept`() {
         assertEquals("[Am]tonight [G]\n", convert("Am       G\ntonight-----"))
         assertEquals("[Am]Oh [C]tonight-----\n", convert("Am C\nOh tonight-----"))
         assertEquals("[Am]Ah - - [G]-\n", convert("Am     G\nAh - - -"))
@@ -1685,7 +1685,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a name dated in parentheses under a centred title is its credit, a phrase in parentheses its subtitle`() {
+    fun `a name dated in parentheses under a centred title is its credit - a phrase in parentheses its subtitle`() {
         fun line(size: Double, text: String, x: Double, bold: Boolean = false) = ChordSheet.Line(
             text.mapIndexed { index, c -> span(c.toString(), x + index * size * 0.6, x + (index + 1) * size * 0.6, size, bold) },
         )
@@ -1722,7 +1722,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a few bold words set smaller than the lyrics are a label, opening the section they name or a verse under their own name`() {
+    fun `a few bold words set smaller than the lyrics are a label - opening the section they name or a verse under their own name`() {
         fun line(text: String, bold: Boolean = false, size: Double = 12.0) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 7.0, (index + 1) * 7.0, size, isBold = bold) })
         val lines = listOf(
@@ -1749,7 +1749,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a row of bars holding chords and beats is a grid, and the rest of one a column wrapped too`() {
+    fun `a row of bars holding chords and beats is a grid and the rest of one a column wrapped too`() {
         assertEquals(
             "{start_of_grid}\n| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |\n{end_of_grid}\n",
             convert("| G . . . | C . . . |\n| D . / . | G . . . |\nD . . . | G . . . |"),
@@ -1757,7 +1757,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a grid keeps a margin label, a repeat count after it, its final bar, and its voltas`() {
+    fun `a grid keeps a margin label and a repeat count after it and its final bar and its voltas`() {
         assertEquals(
             "{start_of_grid}\nIntro |: Am . . . | C . G . :| x2\n| F . . . |1 % :|2 E7 . . . |.\n{end_of_grid}\n",
             convert("Intro |: Am . . . | C . G . :| x2\n| F . . . |1 % :|2 E7 . . . |."),
@@ -1770,7 +1770,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a chord row opening with a bar line is a grid over its lyric, which loses its indent`() {
+    fun `a chord row opening with a bar line is a grid over its lyric which loses its indent`() {
         assertEquals(
             "{start_of_grid}\n| C . . . | Dm . . . |\n{end_of_grid}\nI follow the Moskva\n{start_of_grid}\n| Am | F |\n{end_of_grid}\n" +
                 "Down to Gorky Park\n",
@@ -1787,7 +1787,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a line alone in italics among plain lyrics is a comment, while a run of italic lines is lyrics`() {
+    fun `a line alone in italics among plain lyrics is a comment while a run of italic lines is lyrics`() {
         fun line(text: String, italic: Boolean = false) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0, isItalic = italic) })
         val lines = listOf(
@@ -1810,7 +1810,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a row a narrow column wrapped onto a row of its own continues the lyric above it, a capitalized one starts a line`() {
+    fun `a row a narrow column wrapped onto a row of its own continues the lyric above it - a capitalized one starts a line`() {
         fun line(text: String, column: Int, start: Double) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), start + index * 6.0, start + (index + 1) * 6.0, 10.0) }, column = column)
         val lines = listOf(
@@ -1842,7 +1842,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a column wraps at three of its type's ems from the next one, and a row's first word takes the width of its chord`() {
+    fun `a column wraps at three of its type's ems from the next one and a row's first word takes the width of its chord`() {
         fun line(text: String, column: Int, start: Double) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), start + index * 6.0, start + (index + 1) * 6.0, 10.0) }, column = column)
         val lines = listOf(
@@ -1885,7 +1885,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `no-break spaces padding a lyric under a wide chord are left out, and those only separating words are kept`() {
+    fun `no-break spaces padding a lyric under a wide chord are left out and those only separating words are kept`() {
         fun line(text: String) = ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 6.0, (index + 1) * 6.0, 10.0) })
         fun chords(vararg chords: Pair<String, Double>) = ChordSheet.Line(
             chords.flatMap { (chord, x) -> chord.mapIndexed { index, c -> ChordSheet.Span(c.toString(), x + index * 6.0, x + (index + 1) * 6.0, 10.0, isBold = true) } },
@@ -1944,7 +1944,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a credit under the title naming its words or music, longer than the title, is the song's artist`() {
+    fun `a credit under the title naming its words or music - longer than the title - is the song's artist`() {
         fun convert(credit: String) = ChordSheetConverter.convert(
             ChordSheet(
                 listOf(
@@ -1961,7 +1961,7 @@ class ChordSheetConverterTest {
     }
 
     @Test
-    fun `a line between the title and the song's key row is its artist, however long`() {
+    fun `a line between the title and the song's key row is its artist - however long`() {
         val lines = listOf(ChordSheet.Line(listOf(span("Hello", 0.0, 10.0, size = 2.0, bold = true)))) +
             ChordSheet.ofPlainText("The Band With A Long Name\nKey: C\n\nAm    C\nHello world").pages.single().lines
         assertEquals(

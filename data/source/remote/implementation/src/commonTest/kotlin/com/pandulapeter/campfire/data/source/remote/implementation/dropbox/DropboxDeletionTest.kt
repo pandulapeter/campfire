@@ -92,7 +92,7 @@ class DropboxDeletionTest {
     }
 
     @Test
-    fun `more files than one job takes are deleted in several, every one of them once`() = runTest {
+    fun `more files than one job takes are deleted in several - every one of them once`() = runTest {
         val sentPaths = mutableListOf<List<String>>()
         val provider = dropboxProvider { request ->
             val paths = pathsOf(request)
@@ -130,7 +130,7 @@ class DropboxDeletionTest {
     }
 
     @Test
-    fun `a job that failed for a reason other than a busy folder fails every file in it, without sending them again`() = runTest {
+    fun `a job that failed for a reason other than a busy folder fails every file in it - without sending them again`() = runTest {
         var jobCount = 0
         val provider = dropboxProvider {
             jobCount++

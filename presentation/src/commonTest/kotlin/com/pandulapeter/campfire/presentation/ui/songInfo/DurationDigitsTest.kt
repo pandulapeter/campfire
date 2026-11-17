@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class DurationDigitsTest {
 
     @Test
-    fun `only digits are typed, without leading zeros, six at most`() {
+    fun `only digits are typed - without leading zeros - six at most`() {
         assertEquals("428", durationDigitsTyped("4:28"))
         assertEquals("5", durationDigitsTyped("005"))
         assertEquals("", durationDigitsTyped("0"))
@@ -44,7 +44,7 @@ class DurationDigitsTest {
     }
 
     @Test
-    fun `digits are written in the standard spelling, carrying over what a unit cannot hold`() {
+    fun `digits are written in the standard spelling - carrying over what a unit cannot hold`() {
         assertEquals("", durationTextOf(""))
         assertEquals("4:28", durationTextOf("428"))
         assertEquals("1:15", durationTextOf("75"))

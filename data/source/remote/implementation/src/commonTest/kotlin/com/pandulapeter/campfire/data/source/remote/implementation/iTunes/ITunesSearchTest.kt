@@ -41,7 +41,7 @@ class ITunesSearchTest {
     }
 
     @Test
-    fun `the title stands in for an empty album, and the artist may be left out`() {
+    fun `the title stands in for an empty album and the artist may be left out`() {
         assertEquals("Yesterday", Url(ITunesSearch.url(CoverArtQuery(artist = "", album = " ", title = "Yesterday"))!!).parameters["term"])
     }
 
@@ -58,7 +58,7 @@ class ITunesSearchTest {
     }
 
     @Test
-    fun `songs become the albums they are on, each once, with the artwork at the cover size`() {
+    fun `songs become the albums they are on - each once - with the artwork at the cover size`() {
         val body = """
             {"resultCount":5,"results":[
               {"wrapperType":"track","kind":"song","collectionId":1,"collectionName":"Nimrod","artistName":"Green Day",
@@ -115,7 +115,7 @@ class ITunesSearchTest {
     }
 
     @Test
-    fun `a details lookup searches by the artist and the title, never the album`() {
+    fun `a details lookup searches by the artist and the title never the album`() {
         val url = Url(ITunesSearch.songDetailsUrl(SongDetailsQuery(title = "Wonderwall", artist = "Oasis", album = "Morning Glory"))!!)
 
         assertEquals("Oasis Wonderwall", url.parameters["term"])
@@ -124,7 +124,7 @@ class ITunesSearchTest {
     }
 
     @Test
-    fun `songs become details candidates, a single's name not taken for an album and repeats dropped`() {
+    fun `songs become details candidates - a single's name not taken for an album and repeats dropped`() {
         val body = """
             {"results":[
               {"wrapperType":"track","trackId":1,"trackName":"Wonderwall","artistName":"Oasis","collectionName":"(What's the Story) Morning Glory?",

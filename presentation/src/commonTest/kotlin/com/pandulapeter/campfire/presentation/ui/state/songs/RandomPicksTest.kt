@@ -20,7 +20,7 @@ class RandomPicksTest {
     private val library = (1..40).map(::song)
 
     @Test
-    fun `a list of twenty songs has no picks, one of twenty one has five of its own`() {
+    fun `a list of twenty songs has no picks - one of twenty one has five of its own`() {
         assertEquals(emptyList(), randomPicks(library.take(20), seed = 1L))
         val picks = randomPicks(library.take(21), seed = 1L)
         assertEquals(5, picks.toSet().size)
@@ -28,7 +28,7 @@ class RandomPicksTest {
     }
 
     @Test
-    fun `a seed picks the same songs whatever order the list is in, and another seed others`() {
+    fun `a seed picks the same songs whatever order the list is in and another seed others`() {
         val picks = randomPicks(library, seed = 1L)
         assertEquals(picks, randomPicks(library.reversed(), seed = 1L))
         assertNotEquals(picks, randomPicks(library, seed = 2L))

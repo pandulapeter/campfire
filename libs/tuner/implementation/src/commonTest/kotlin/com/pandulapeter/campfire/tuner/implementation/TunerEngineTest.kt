@@ -84,7 +84,7 @@ class TunerEngineTest {
     }
 
     @Test
-    fun `a stop while the start is pending stops, and the late answer is ignored`() = runTest {
+    fun `a stop while the start is pending stops and the late answer is ignored`() = runTest {
         val gate = CompletableDeferred<Unit>()
         input.gate = gate
         val engine = engine()

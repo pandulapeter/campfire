@@ -265,7 +265,7 @@ class RowSnappingTest {
     }
 
     @Test
-    fun `stepping back from inside a tall row keeps a page's overlap, so a line across the faded edge is read whole`() {
+    fun `stepping back from inside a tall row keeps a page's overlap so a line across the faded edge is read whole`() {
         // The end of a row whose content runs 1900 below its top is read from 2200, where the top edge fades 2200 to 2224.
         // From the row's top only down to 2300 is in view, so a line across 2224 would be whole at neither.
         val rows = rowsWithATallOne.copy(bottoms = listOf(1100, 3200, 3700))

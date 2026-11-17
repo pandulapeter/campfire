@@ -66,7 +66,7 @@ class SongAttachmentEditingTest {
     }
 
     @Test
-    fun `a sheet saving its picks holds them until the song is written, though it closes first`() = runTest {
+    fun `a sheet saving its picks holds them until the song is written - though it closes first`() = runTest {
         val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope))
         store.loadSongContent(FILE)
         val editing = editing(store)
@@ -83,7 +83,7 @@ class SongAttachmentEditingTest {
     }
 
     @Test
-    fun `the sheet's attachments replace the ones it offered over the editor, and one synced in meanwhile stays`() = runTest {
+    fun `the sheet's attachments replace the ones it offered over the editor and one synced in meanwhile stays`() = runTest {
         val offered = ChordProAttachment(source = "0000000000000001.pdf", name = "Old")
         val synced = ChordProAttachment(source = "0000000000000002.mp3")
         val saved = ChordProAttachment(source = "0000000000000003.mp4", name = "New")
@@ -93,7 +93,7 @@ class SongAttachmentEditingTest {
     }
 
     @Test
-    fun `the sheet's attachments are written into the file, whose held text follows`() = runTest {
+    fun `the sheet's attachments are written into the file - whose held text follows`() = runTest {
         val attachment = ChordProAttachment(source = "0000000000000001.pdf", name = "Sheet")
         val store = files.songTextStore(backgroundScope, MessageSink(backgroundScope))
         store.loadSongContent(FILE)
@@ -115,7 +115,7 @@ class SongAttachmentEditingTest {
     }
 
     @Test
-    fun `a draft that names the files the song has, under the same names, writes nothing`() {
+    fun `a draft that names the files the song has - under the same names - writes nothing`() {
         val offered = listOf(ChordProAttachment(source = "0000000000000001.pdf", name = "Sheet"), ChordProAttachment(source = "0000000000000002.mp3"))
         assertNull(songAttachmentsToSave(listOf(offered[0].copy(name = " Sheet "), offered[1].copy(name = " ")), offered))
         assertEquals(offered.reversed(), songAttachmentsToSave(offered.reversed(), offered))

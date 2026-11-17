@@ -31,7 +31,7 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
-    fun `the notes a capo stops ring open as the nut's do, and turn between the two as it slides`() {
+    fun `the notes a capo stops ring open as the nut's do and turn between the two as it slides`() {
         assertEquals(1f, scaleNoteOpenness(fret = 0, start = 0, capo = 0f))
         assertEquals(0f, scaleNoteOpenness(fret = 2, start = 0, capo = 0f))
         assertEquals(1f, scaleNoteOpenness(fret = 2, start = 0, capo = 2f))
@@ -45,7 +45,7 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
-    fun `a capo lies across every string from the nut, the banjo's drone left out`() {
+    fun `a capo lies across every string from the nut - the banjo's drone left out`() {
         assertEquals(listOf(0, 1, 2, 3), fretboard(InstrumentTuning.BANJO.strings, UserPreferences.Instrument.BANJO).nutRows)
         assertEquals((0..5).toList(), fretboard(InstrumentTuning.GUITAR.strings).nutRows)
     }
@@ -54,7 +54,7 @@ class ScaleDiagramGeometryTest {
         assertIs<ScaleDiagramGeometry.Fretboard>(scaleDiagramGeometryOf(major, root, strings, instrument))
 
     @Test
-    fun `the roots of C major are where a guitarist finds them, the high E on top`() {
+    fun `the roots of C major are where a guitarist finds them - the high E on top`() {
         val neck = fretboard(InstrumentTuning.GUITAR.strings)
         val roots = neck.notes.filter { it.isRoot }.map { it.row to it.fret }.toSet()
         // Rows from the top: high E, B, G, D, A, low E.
@@ -80,7 +80,7 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
-    fun `the banjo's drone starts at the fifth fret, at the bottom`() {
+    fun `the banjo's drone starts at the fifth fret - at the bottom`() {
         val neck = fretboard(InstrumentTuning.BANJO.strings, UserPreferences.Instrument.BANJO)
         val drone = neck.strings - 1
         assertEquals(5, neck.stringStarts[drone])
@@ -90,7 +90,7 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
-    fun `a ukulele has its A on top and its re-entrant g at the bottom, and a violin has no frets`() {
+    fun `a ukulele has its A on top and its re-entrant g at the bottom and a violin has no frets`() {
         val ukulele = fretboard(InstrumentTuning.UKULELE.strings, UserPreferences.Instrument.UKULELE)
         assertTrue(ukulele.notes.any { it.row == 0 && it.fret == 3 && it.isRoot })
         assertTrue(ukulele.notes.any { it.row == 3 && it.fret == 5 && it.isRoot })
@@ -110,7 +110,7 @@ class ScaleDiagramGeometryTest {
     }
 
     @Test
-    fun `the short necks are marked at the tenth fret, the guitar's at the ninth`() {
+    fun `the short necks are marked at the tenth fret - the guitar's at the ninth`() {
         assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.UKULELE.strings, UserPreferences.Instrument.UKULELE).markers)
         assertEquals(listOf(3, 5, 7, 10, 12), fretboard(InstrumentTuning.MANDOLIN.strings, UserPreferences.Instrument.MANDOLIN).markers)
         assertEquals(listOf(3, 5, 7, 9, 12), fretboard(InstrumentTuning.GUITAR.strings).markers)

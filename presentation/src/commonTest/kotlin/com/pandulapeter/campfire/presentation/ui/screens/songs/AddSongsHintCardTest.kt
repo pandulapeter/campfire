@@ -32,7 +32,7 @@ class AddSongsHintCardTest {
     }
 
     @Test
-    fun `the hint is not shown with a placeholder, a search, the selection, or performance mode`() {
+    fun `the hint is not shown with a placeholder or a search or the selection or performance mode`() {
         assertFalse(isShown(hasPlaceholder = true))
         assertFalse(isShown(isSearchOpen = true))
         assertFalse(isShown(isSelecting = true))

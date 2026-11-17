@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class TranspositionsTest {
 
     @Test
-    fun `a transposition wraps around the octave, halfway being up`() {
+    fun `a transposition wraps around the octave - halfway being up`() {
         assertEquals(6, wrapTransposition(6))
         assertEquals(6, wrapTransposition(-6))
         assertEquals(-5, wrapTransposition(7))

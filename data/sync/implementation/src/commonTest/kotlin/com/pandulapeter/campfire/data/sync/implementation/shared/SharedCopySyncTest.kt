@@ -40,7 +40,7 @@ class SharedCopySyncTest {
     private val cloud = FakeSyncProvider()
 
     @Test
-    fun `a run with nothing changed reads no song, builds no copy, and writes no registry`() = runTest {
+    fun `a run with nothing changed reads no song and builds no copy and writes no registry`() = runTest {
         val device = sharedDevice()
         val packs = device.sharedContents.packCount
         val registry = cloud.documents.getValue(SharedLinksFormat.NAME).second
@@ -58,7 +58,7 @@ class SharedCopySyncTest {
     }
 
     @Test
-    fun `the setlist, one of its songs, and a song arriving that it names each rebuild the copy`() = runTest {
+    fun `the setlist and one of its songs and a song arriving that it names each rebuild the copy`() = runTest {
         val device = sharedDevice()
 
         device.library.files[GIG] = setlistDocument("Gig", "song_2.cho", "song_1.cho", "song_3.cho")
@@ -338,7 +338,7 @@ class SharedCopySyncTest {
     }
 
     @Test
-    fun `a setlist's copy carries each picture its songs name once, after the songs and in the order of their names`() = runTest {
+    fun `a setlist's copy carries each picture its songs name once - after the songs and in the order of their names`() = runTest {
         val first = picture("first")
         val second = picture("second")
         val (early, late) = listOf(first, second).sortedBy { it.first.name }

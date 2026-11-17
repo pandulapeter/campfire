@@ -33,7 +33,7 @@ class SetlistSearchTest {
     }
 
     @Test
-    fun `a setlist answers by the title, the artist or a tag of a song it holds`() {
+    fun `a setlist answers by the title - the artist or a tag of a song it holds`() {
         val setlist = setlist(entries = listOf("present.cho"))
         assertTrue(setlist.matches("wonder"))
         assertTrue(setlist.matches("oasis"))

@@ -30,14 +30,14 @@ class SongRendererTest {
     private fun spelling(accidentals: UserPreferences.Accidentals) = UserPreferences.ChordSpelling(accidentals = accidentals, notation = Notation.STANDARD)
 
     @Test
-    fun `a key is moved by the file's transpose and the transposition, then spelled and drawn with signs`() {
+    fun `a key is moved by the file's transpose and the transposition then spelled and drawn with signs`() {
         assertEquals("A♯", renderer.renderKey(key = "G", transpose = 0, transposition = 3, spelling = spelling(UserPreferences.Accidentals.SHARPS)))
         assertEquals("B♭", renderer.renderKey(key = "G", transpose = 0, transposition = 3, spelling = spelling(UserPreferences.Accidentals.FLATS)))
         assertEquals("B♭", renderer.renderKey(key = "G", transpose = 1, transposition = 2, spelling = spelling(UserPreferences.Accidentals.FLATS)))
     }
 
     @Test
-    fun `a capo chart's sounding key names the key that sounds over its shapes, as its shapes' key does`() {
+    fun `a capo chart's sounding key names the key that sounds over its shapes as its shapes' key does`() {
         val chords = "\n[D]a [G]b [A]c [Bm]d [D]e [G]f [A]g [D]h"
         val sounding = renderer.transposedSong("{key: G}\n{capo: 5}$chords", transposition = 5, spelling = UserPreferences.ChordSpelling.Default)
         assertEquals("G", sounding.metadata.key)
@@ -46,7 +46,7 @@ class SongRendererTest {
     }
 
     @Test
-    fun `a tab is moved by the capo the player puts on, an octave up where it would leave the neck`() {
+    fun `a tab is moved by the capo the player puts on - an octave up where it would leave the neck`() {
         assertEquals(listOf("e|---5---|"), tabLinesOf("{capo: 2}\n{start_of_tab}\ne|---3---|\n{end_of_tab}", transposition = 2, capo = 0))
         assertEquals(listOf("e|--9--12--|"), tabLinesOf("{start_of_tab}\ne|--0--3--|\n{end_of_tab}", transposition = 0, capo = 3))
     }
@@ -84,7 +84,7 @@ class SongRendererTest {
     }
 
     @Test
-    fun `a numbering counts a song naming no key from the key its chords suggest, moved with the song`() {
+    fun `a numbering counts a song naming no key from the key its chords suggest - moved with the song`() {
         val text = "[G]one [C]two [D]three [G]four"
         val roman = UserPreferences.ChordSpelling(accidentals = UserPreferences.Accidentals.SHARPS, notation = Notation.ROMAN)
         val inferred = renderer.inferredKeyOfText(text)!!

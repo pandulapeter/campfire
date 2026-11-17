@@ -57,7 +57,7 @@ class ChordPaddingTest {
     }
 
     @Test
-    fun `extra padding goes before the offsets asked for, the chords and formatting moving with the text`() {
+    fun `extra padding goes before the offsets asked for - the chords and formatting moving with the text`() {
         val line = lyrics("lo[Em]ve and [C]more").copy(
             formatting = listOf(
                 ChordProLine.Lyrics.Formatting(0, 4, ChordProLine.Lyrics.Formatting.Style.BOLD),
@@ -89,7 +89,7 @@ class ChordPaddingTest {
     }
 
     @Test
-    fun `formatting covers the same words after padding, never the padding`() {
+    fun `formatting covers the same words after padding never the padding`() {
         val line = lyrics("[C]a b [G]cd").copy(
             formatting = listOf(
                 ChordProLine.Lyrics.Formatting(0, 1, ChordProLine.Lyrics.Formatting.Style.BOLD),

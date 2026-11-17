@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class NotationChordNamesTest {
 
     @Test
-    fun `chord symbols are read from the music in order, without annotations, fields, or comments`() {
+    fun `chord symbols are read from the music in order or without annotations or fields or comments`() {
         val tune = """
             X:1
             T:"Not a chord"
@@ -70,7 +70,7 @@ class NotationChordNamesTest {
     }
 
     @Test
-    fun `chords named by the shapes under a capo are named below the notes, which still sound`() {
+    fun `chords named by the shapes under a capo are named below the notes which still sound`() {
         val tune = "K:G\n\"G\"G \"D7\"A"
         val symbols = abcChordSymbols(tune)
         val named = NotationChordSpelling(semitones = 2, preferFlats = null, notation = ChordNotation.STANDARD, nameCapo = 2)
@@ -91,7 +91,7 @@ class NotationChordNamesTest {
     }
 
     @Test
-    fun `each drawn chord takes the name of the symbol it is moved from, in any order`() {
+    fun `each drawn chord takes the name of the symbol it is moved from - in any order`() {
         val renamed = drawingWithChords("B7", "E", "F  (capo: 2)").withChordNames(symbols = listOf("D", "A7"), names = listOf("Re", "La7"), semitones = 2)
         assertEquals(listOf("La7", "Re", "F  (capo: 2)"), renamed.chordTexts())
         assertEquals(listOf("Re", "La7"), renamed.chordNames)

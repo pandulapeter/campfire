@@ -319,7 +319,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a pasted ABC tune opens the editor, and one with no chords is said to keep its notation`() = runTest {
+    fun `a pasted ABC tune opens the editor and one with no chords is said to keep its notation`() = runTest {
         val tune = "{title: Lantern Reel}\n\n{start_of_abc}\nX:1\nT:Lantern Reel\nK:G\nGABc|\n{end_of_abc}\n"
         plannedSongs = listOf(songEntry("new.cho", text = tune, isConverted = true))
         startController()
@@ -375,7 +375,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `with the songs switched off a song handed over is reviewed, written once imported and not opened`() = runTest {
+    fun `with the songs switched off a song handed over is reviewed - written once imported and not opened`() = runTest {
         areSongsEnabled = false
         startController()
         val settled = handOver()
@@ -419,7 +419,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a switch turned off while a share is read ends in its review, not in the editor`() = runTest {
+    fun `a switch turned off while a share is read ends in its review not in the editor`() = runTest {
         onPrepare = { areSongsEnabled = false }
         plannedSongs = listOf(songEntry("new.cho", text = "[G]Hello"))
         startController()
@@ -434,7 +434,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a song handed over is previewed, and nothing is written until it is imported`() = runTest {
+    fun `a song handed over is previewed and nothing is written until it is imported`() = runTest {
         startController()
         val settled = handOver()
         settle()
@@ -510,7 +510,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a preview of a taken name imports as a copy, numbered`() = runTest {
+    fun `a preview of a taken name imports as a copy - numbered`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.CONFLICTING))
         startController()
         handOver()
@@ -554,7 +554,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a batch arriving while a preview is up joins it, putting the import screen in its place`() = runTest {
+    fun `a batch arriving while a preview is up joins it - putting the import screen in its place`() = runTest {
         startController()
         handOver()
         settle()
@@ -573,7 +573,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a song handed over that the library already holds is opened rather than previewed, and said to be there`() = runTest {
+    fun `a song handed over that the library already holds is opened rather than previewed and said to be there`() = runTest {
         plannedSongs = listOf(songEntry("new.cho", status = ImportPlan.Status.IDENTICAL))
         startController()
         handOver()
@@ -598,7 +598,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a pasted songbook is reviewed like the file it would be, with no editor`() = runTest {
+    fun `a pasted songbook is reviewed like the file it would be - with no editor`() = runTest {
         plannedSongs = listOf(songEntry("one.cho"), songEntry("two.cho"))
         startController()
         enqueuePaste()
@@ -611,7 +611,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a pasted song the library already holds is opened, with no editor and no review`() = runTest {
+    fun `a pasted song the library already holds is opened - with no editor and no review`() = runTest {
         plannedSongs = listOf(songEntry("held.cho", status = ImportPlan.Status.IDENTICAL, isConverted = true))
         startController()
         enqueuePaste()
@@ -624,7 +624,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `texts arriving together are opened one editor at a time, the next once the editor is left`() = runTest {
+    fun `texts arriving together are opened one editor at a time - the next once the editor is left`() = runTest {
         nextPlans += listOf(songEntry("first.cho", text = "{title: First}\n[G]Hello"))
         nextPlans += listOf(songEntry("second.cho", text = "{title: Second}\n[G]Hello"))
         startController()
@@ -738,7 +738,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a shared setlist the library holds as it is, songs and all, is opened rather than reviewed, and said to be there`() = runTest {
+    fun `a shared setlist the library holds as it is and songs and all and is opened rather than reviewed and said to be there`() = runTest {
         download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
         plannedSongs = listOf(songEntry("riverlight.cho", status = ImportPlan.Status.IDENTICAL))
         plannedSetlists = listOf(setlistEntry("gig.setlist.json", status = ImportPlan.Status.IDENTICAL))
@@ -776,7 +776,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a shared link answered with a page fails as a link that no longer works, and nothing is read`() = runTest {
+    fun `a shared link answered with a page fails as a link that no longer works and nothing is read`() = runTest {
         download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = "<html>Error</html>".encodeToByteArray())
         startController()
         controller.importSharedLink(sharedLink)
@@ -788,7 +788,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a preparation refused for space fails naming the space needed, and Try again reads the batch again`() = runTest {
+    fun `a preparation refused for space fails naming the space needed and Try again reads the batch again`() = runTest {
         download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
         onPrepare = { throw StagingRefusedException.NoSpace(neededBytes = 2_400_000_000) }
         startController()
@@ -805,7 +805,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `what a batch staged is deleted once it has been imported, and not while it is reviewed or written`() = runTest {
+    fun `what a batch staged is deleted once it has been imported and not while it is reviewed or written`() = runTest {
         plannedSkipped = listOf("notes.txt")
         plannedSongs = listOf(songEntry("new.cho").withStagedPicture())
         val gate = CompletableDeferred<Unit>().also { writeGate = it }
@@ -837,7 +837,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `an Import that finds a staged file gone fails writing nothing, and Try again reads the staged batch again`() = runTest {
+    fun `an Import that finds a staged file gone fails writing nothing and Try again reads the staged batch again`() = runTest {
         plannedSkipped = listOf("notes.txt")
         plannedSongs = listOf(songEntry("new.cho").withStagedPicture())
         importFailure = { StagedFileMissingException(STAGED_PICTURE.name) }
@@ -1000,7 +1000,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `a batch arriving while Replace is being confirmed is not written by it, and is imported after it`() = runTest {
+    fun `a batch arriving while Replace is being confirmed is not written by it and is imported after it`() = runTest {
         plannedSkipped = listOf("notes.txt")
         startController()
         enqueue()
@@ -1038,7 +1038,7 @@ class ImportControllerQueueTest {
     private fun handOver() = controller.importFiles(listOf(ImportedFile(name = "new.cho", bytes = "{title: New}".encodeToByteArray())))
 
     @Test
-    fun `pictures dropped alone open the editor on one new song showing them, and write nothing`() = runTest {
+    fun `pictures dropped alone open the editor on one new song showing them and write nothing`() = runTest {
         val pictures = listOf(ImportedFile(name = "page 1.jpg", bytes = byteArrayOf(1)), ImportedFile(name = "page 2.png", bytes = byteArrayOf(2)))
         plannedSongs = emptyList()
         plannedImages = pictures
@@ -1144,7 +1144,7 @@ class ImportControllerQueueTest {
     }
 
     @Test
-    fun `the work reads downloading, unpacking, idle while the review waits, and writing while it is imported`() = runTest {
+    fun `the work reads downloading and unpacking and idle while the review waits and writing while it is imported`() = runTest {
         download = ImportDownload.File(name = "abcdefghijklmnop.zip", bytes = ZIP_BYTES)
         val states = mutableListOf<ImportWorkState>()
         startController()

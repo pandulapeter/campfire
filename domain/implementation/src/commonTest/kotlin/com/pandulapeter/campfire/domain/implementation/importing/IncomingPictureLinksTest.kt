@@ -49,7 +49,7 @@ class IncomingPictureLinksTest {
     }
 
     @Test
-    fun `an address that brings nothing is left out, and its directive with it`() = runTest {
+    fun `an address that brings nothing is left out and its directive with it`() = runTest {
         val planned = incomingPictureLinks().planned(listOf(song("{title: A}\n{image: src=$FIRST}\n")), ImportLimits.MAX_IMPORT_IMAGES_SIZE) {}
 
         assertTrue(planned.isEmpty())

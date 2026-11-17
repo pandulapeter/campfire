@@ -64,7 +64,7 @@ class ChordVoicingsTest {
     }
 
     @Test
-    fun `the banjo plays the shapes its charts show, its fifth string open only where its note is the chord's`() {
+    fun `the banjo plays the shapes its charts show - its fifth string open only where its note is the chord's`() {
         mapOf(
             "G" to "0 0 0 0 0", "C" to "0 2 0 1 2", "D" to "x 0 2 3 4", "Em" to "0 2 0 0 2", "Am" to "x 2 2 1 2", "D7" to "x 0 2 1 4",
             "G7" to "0 0 0 0 3", "F" to "x 3 2 1 3", "A7" to "0 2 2 2 2", "E7" to "x 0 1 0 2", "Bm" to "x 0 4 3 4",
@@ -140,7 +140,7 @@ class ChordVoicingsTest {
     }
 
     @Test
-    fun `a drop tuning's shapes are its table's, with their fingering`() {
+    fun `a drop tuning's shapes are its table's - with their fingering`() {
         val g = ChordVoicings.default(ChordProChords.parse("G")!!, ChordTuning.GUITAR_DROP_D) as ChordVoicing.Fretted
         assertEquals(listOf(4, 1, 0, 0, 0, 2), g.fingers)
         val d = ChordVoicings.default(ChordProChords.parse("D")!!, ChordTuning.GUITAR_DOUBLE_DROP_D) as ChordVoicing.Fretted
@@ -296,7 +296,7 @@ class ChordVoicingsTest {
     }
 
     @Test
-    fun `only a fretted chord the tables lack needs the search, until it has been looked for`() {
+    fun `only a fretted chord the tables lack needs the search - until it has been looked for`() {
         val unusual = ChordProChords.parse("Dbmaj9#11/Ab")!!
         assertTrue(!ChordVoicings.needsSearch(ChordProChords.parse("G")!!, ChordTuning.GUITAR))
         assertTrue(!ChordVoicings.needsSearch(unusual, ChordTuning.KEYBOARD))

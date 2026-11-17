@@ -65,7 +65,7 @@ class AbcRendererMessagesTest {
     }
 
     @Test
-    fun `a note length divided by zero is reported where it stands, never handed to abc2svg`() = runTest {
+    fun `a note length divided by zero is reported where it stands never handed to abc2svg`() = runTest {
         val rendering = assertIs<AbcRendering.Failed>(renderer.render("X:1\nK:C\nC2 D/0 E|\n", width = 800, transposition = 0))
         assertEquals(listOf(AbcMessage(text = ZERO_DURATION_MESSAGE, line = 2, column = 4)), rendering.messages)
         assertIs<AbcRendering.Systems>(renderer.render(TUNE, width = 800, transposition = 0))

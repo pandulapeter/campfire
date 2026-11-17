@@ -67,7 +67,7 @@ class PlayingOverridesTest {
     }
 
     @Test
-    fun `a tempo for a song a sync run took out of the setlist is reported and let go of, and a reset there is not`() = runTest {
+    fun `a tempo for a song a sync run took out of the setlist is reported and let go of and a reset there is not`() = runTest {
         setlists.value = listOf(setlist())
         val overrides = overrides()
         overrides.setTempo(SONG, SETLIST, 130)
@@ -82,7 +82,7 @@ class PlayingOverridesTest {
     }
 
     @Test
-    fun `a capo is kept on the frets a capo can sit on, and the song's own fret is no override`() = runTest {
+    fun `a capo is kept on the frets a capo can sit on and the song's own fret is no override`() = runTest {
         val overrides = overrides()
         overrides.stepCapo(SONG, null, 100)
         settle()

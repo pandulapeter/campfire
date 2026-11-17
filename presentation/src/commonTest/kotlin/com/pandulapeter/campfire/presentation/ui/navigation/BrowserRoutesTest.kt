@@ -104,7 +104,7 @@ class BrowserRoutesTest {
     )
 
     @Test
-    fun `every screen, search and settings tab is an entry of its own`() =
+    fun `every screen - search and settings tab is an entry of its own`() =
         statesWithPaths.forEach { (state, paths) -> assertEquals(paths, BrowserRoutes.paths(inputs(state))) }
 
     @Test
@@ -130,7 +130,7 @@ class BrowserRoutesTest {
     }
 
     @Test
-    fun `the onboarding repeats the address under it, which opens no onboarding`() {
+    fun `the onboarding repeats the address under it which opens no onboarding`() {
         val state = home.copy(
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Settings, CampfireDestination.Onboarding(isOpenedFromSettings = true)),
         )
@@ -144,7 +144,7 @@ class BrowserRoutesTest {
     }
 
     @Test
-    fun `the unsaved changes question is no overlay, any other dialog and a menu are`() {
+    fun `the unsaved changes question is no overlay - any other dialog and a menu are`() {
         assertFalse(RouteInputs.hasOverlay(dialog = DialogType.UnsavedChanges, isAnyMenuOpen = false))
         assertFalse(RouteInputs.hasOverlay(dialog = null, isAnyMenuOpen = false))
         assertTrue(RouteInputs.hasOverlay(dialog = DialogType.ConfirmExit, isAnyMenuOpen = false))
@@ -246,7 +246,7 @@ class BrowserRoutesTest {
     }
 
     @Test
-    fun `a preview is addressed as the import is, and kept only over the review it was opened over`() {
+    fun `a preview is addressed as the import is and kept only over the review it was opened over`() {
         val preview = CampfireDestination.SongDetails(
             songFileNames = emptyList(),
             setlistFileName = null,

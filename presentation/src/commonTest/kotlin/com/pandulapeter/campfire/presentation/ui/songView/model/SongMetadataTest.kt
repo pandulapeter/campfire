@@ -37,7 +37,7 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `a cover, a capo of zero and blank values create no section`() {
+    fun `a cover - a capo of zero and blank values create no section`() {
         val body = listOf(verse)
 
         assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true, isSongInfoShown = true))
@@ -143,7 +143,7 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `a capo not shown is left out of the line, read only mode's capo of none too`() {
+    fun `a capo not shown is left out of the line - read only mode's capo of none too`() {
         val body = listOf(verse)
         assertEquals(
             listOf(RenderSection.Metadata(metadata = ChordProMetadata(tempo = "96", time = "4/4"), readsDefaults = true), verse),
@@ -152,7 +152,7 @@ class SongMetadataTest {
     }
 
     @Test
-    fun `the line names the key of the shapes after a capo, and nothing of them without one`() {
+    fun `the line names the key of the shapes after a capo and nothing of them without one`() {
         val body = listOf(verse)
         assertEquals(
             listOf(RenderSection.Metadata(metadata = ChordProMetadata(key = "F#m", capo = 2), shapesKey = "Em"), verse),

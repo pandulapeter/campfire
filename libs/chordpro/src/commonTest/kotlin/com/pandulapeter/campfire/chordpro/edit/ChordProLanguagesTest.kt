@@ -173,7 +173,7 @@ class ChordProLanguagesTest {
     }
 
     @Test
-    fun `declaredIn reads every language, past the cap too`() {
+    fun `declaredIn reads every language - past the cap too`() {
         val codes = (0..ChordProMetadata.MAX_LANGUAGES).map { "q$it" }
         val text = "{title: T}\n" + codes.joinToString("\n") { "{meta: language $it}" } + "\n{lang: Q0}"
 

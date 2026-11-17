@@ -266,7 +266,7 @@ class ChordProTabsTest {
     }
 
     @Test
-    fun `a notice is written above the run it is about, in the section it is in`() {
+    fun `a notice is written above the run it is about - in the section it is in`() {
         val song = ChordProParser.parse("{start_of_verse}\nLa la la\n{start_of_tab}\ne|--0--|\n{end_of_tab}\n{end_of_verse}")
 
         val noticed = ChordProTabs.withNotices(song.withTopLineNotice(), player(GUITAR)) { "moved" }

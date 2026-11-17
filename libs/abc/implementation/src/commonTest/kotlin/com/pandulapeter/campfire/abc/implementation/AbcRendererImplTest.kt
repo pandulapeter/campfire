@@ -52,7 +52,7 @@ class AbcRendererImplTest {
     }
 
     @Test
-    fun `a voice in the tab clef is engraved as tablature, its frets as digits`() = runTest {
+    fun `a voice in the tab clef is engraved as tablature - its frets as digits`() = runTest {
         val tune = "X:1\nL:1/8\nV:1 tab stafflines=6 strings=E2,A2,D3,G3,B3,E4 nostems nm=\"Guitar\"\nK:C\nCDEF GABc|"
         val svg = assertIs<AbcRendering.Systems>(renderer.render(tune, width = 800, transposition = 0)).systems.joinToString("")
         assertTrue(">TAB<" in svg)

@@ -438,7 +438,7 @@ class TwoDeviceSyncTest {
     }
 
     @Test
-    fun `a shared song renamed on one device keeps its link, under the new name on the other`() = runTest {
+    fun `a shared song renamed on one device keeps its link - under the new name on the other`() = runTest {
         val (a, b) = devicesInStep()
         cloud.share(SHARED_SONG)
         a.sync(cloud)
@@ -478,7 +478,7 @@ class TwoDeviceSyncTest {
     }
 
     @Test
-    fun `a shared song deleted outside the app is orphaned, and shared again once it is back`() = runTest {
+    fun `a shared song deleted outside the app is orphaned and shared again once it is back`() = runTest {
         val (a, b) = devicesInStep()
         cloud.share(SHARED_SONG)
         a.sync(cloud)

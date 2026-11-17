@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.seconds
 class SongDetailsReviewTest {
 
     @Test
-    fun `an empty field is ticked, a filled one is offered unticked, and an identical one is left out`() {
+    fun `an empty field is ticked and a filled one is offered unticked and an identical one is left out`() {
         val draft = mapOf(Field.TITLE to "Wonderwall", Field.ARTIST to "oasis", Field.ALBUM to "")
 
         val rows = songDetailsReviewRows(draft, CANDIDATE, credits = null)
@@ -41,7 +41,7 @@ class SongDetailsReviewTest {
     }
 
     @Test
-    fun `the title is never ticked, even over an empty one`() {
+    fun `the title is never ticked - even over an empty one`() {
         val row = songDetailsReviewRows(emptyMap(), CANDIDATE, credits = null).first { it.field == Field.TITLE }
 
         assertFalse(row.isTickedByDefault)
@@ -59,7 +59,7 @@ class SongDetailsReviewTest {
     }
 
     @Test
-    fun `the songwriters join the rows once they arrive, and a suggestion is cleaned of braces and line breaks`() {
+    fun `the songwriters join the rows once they arrive and a suggestion is cleaned of braces and line breaks`() {
         val rows = songDetailsReviewRows(emptyMap(), CANDIDATE, SongCredits(composer = "Noel {Gallagher}\n", lyricist = null))
 
         assertEquals("Noel Gallagher", rows.first { it.field == Field.COMPOSER }.suggested)
@@ -74,7 +74,7 @@ class SongDetailsReviewTest {
     }
 
     @Test
-    fun `only the ticked suggestions are filled into the draft, the duration as its digits`() {
+    fun `only the ticked suggestions are filled into the draft - the duration as its digits`() {
         val draft = mapOf(Field.TITLE to "Wonderwall", Field.ARTIST to "oasis", Field.SUBTITLE to "Acoustic")
         val rows = songDetailsReviewRows(draft, CANDIDATE, credits = null)
 

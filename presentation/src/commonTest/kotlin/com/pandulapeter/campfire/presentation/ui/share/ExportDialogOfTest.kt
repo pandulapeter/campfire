@@ -26,7 +26,7 @@ import kotlin.test.assertNull
 class ExportDialogOfTest {
 
     @Test
-    fun `a shared song opens the export screen on the library's song of that name, case and form folded`() {
+    fun `a shared song opens the export screen on the library's song of that name - case and form folded`() {
         val song = song("Café.cho")
         assertEquals(
             DialogType.Export(song = song, format = PrintSettings.Format.LINK),

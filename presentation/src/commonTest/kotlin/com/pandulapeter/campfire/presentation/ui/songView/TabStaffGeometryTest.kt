@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class TabStaffGeometryTest {
 
     @Test
-    fun `a string runs from bar to bar, interrupted by every fret on it`() {
+    fun `a string runs from bar to bar - interrupted by every fret on it`() {
         val geometry = tabStaffGeometryOf(listOf(TabRowLine("e|--3--10-|", isStaffLine = true)))
 
         assertEquals(
@@ -57,7 +57,7 @@ class TabStaffGeometryTest {
     }
 
     @Test
-    fun `a staff line is drawn as text with its strokes blanked out, every character in its column`() {
+    fun `a staff line is drawn as text with its strokes blanked out - every character in its column`() {
         assertEquals("e   3h5    x3", TabRowLine("e|--3h5--| x3", isStaffLine = true).drawnText)
     }
 }

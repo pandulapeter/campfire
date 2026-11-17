@@ -27,7 +27,7 @@ class AsPlayedFilesTest {
     )
 
     @Test
-    fun `songs played differently are written as played, by default, and the others as stored`() {
+    fun `songs played differently are written as played and by default and the others as stored`() {
         val source = PrintSource(title = "Songs", kind = PrintSource.Kind.SONGS, songs = songs)
         assertTrue(isAsPlayedOffered(source))
         assertEquals(mapOf("a.cho" to transposed), asPlayedFilesOf(source, PrintSettings()))
@@ -35,7 +35,7 @@ class AsPlayedFilesTest {
     }
 
     @Test
-    fun `a setlist's zip is never written as played, its manifest saying how each song is played`() {
+    fun `a setlist's zip is never written as played - its manifest saying how each song is played`() {
         val setlist = PrintSource(title = "Gig", kind = PrintSource.Kind.SETLIST, songs = songs)
         assertFalse(isAsPlayedOffered(setlist))
         assertEquals(emptyMap(), asPlayedFilesOf(setlist, PrintSettings()))

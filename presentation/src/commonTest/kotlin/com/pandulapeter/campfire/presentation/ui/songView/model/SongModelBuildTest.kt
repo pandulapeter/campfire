@@ -32,7 +32,7 @@ class SongModelBuildTest {
     }
 
     @Test
-    fun `the page before the target builds in place, at rest and mid-swipe in either direction`() {
+    fun `the page before the target builds in place - at rest and mid-swipe in either direction`() {
         assertTrue(buildsModelInPlace(page = 2, currentPage = 3, targetPage = 3, isVisible = false))
         assertTrue(buildsModelInPlace(page = 3, currentPage = 3, targetPage = 4, isVisible = false))
         assertTrue(buildsModelInPlace(page = 1, currentPage = 3, targetPage = 2, isVisible = false))

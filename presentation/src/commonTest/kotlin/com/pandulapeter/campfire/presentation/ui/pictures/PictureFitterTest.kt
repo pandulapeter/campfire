@@ -49,7 +49,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `a picture the library takes is kept as it is, never re-encoded`() = runTest {
+    fun `a picture the library takes is kept as it is never re-encoded`() = runTest {
         intakes[JPEG.toList()] = ImageIntake.Accepted("photo.jpg")
         val fit = assertIs<PictureFit.Kept>(fitter.fit(JPEG))
         assertSame(JPEG, fit.bytes)
@@ -58,7 +58,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `a picture too large in bytes or in pixels is shrunk, said by its notice`() = runTest {
+    fun `a picture too large in bytes or in pixels is shrunk - said by its notice`() = runTest {
         for (reason in listOf(ImageRefusal.TOO_LARGE, ImageRefusal.TOO_MANY_PIXELS)) {
             intakes[JPEG.toList()] = ImageIntake.Refused(reason)
             val fit = assertIs<PictureFit.Shrunk>(fitter.fit(JPEG), reason.name)
@@ -69,7 +69,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `a HEIC photo is converted, said by its notice`() = runTest {
+    fun `a HEIC photo is converted - said by its notice`() = runTest {
         intakes[HEIC.toList()] = ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT)
         val fit = assertIs<PictureFit.Converted>(fitter.fit(HEIC))
         assertContentEquals(COPY, fit.bytes)
@@ -94,7 +94,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `an SVG is never re-encoded, however it is refused`() = runTest {
+    fun `an SVG is never re-encoded - however it is refused`() = runTest {
         for (reason in listOf(ImageRefusal.UNSUPPORTED_FORMAT, ImageRefusal.TOO_LARGE)) {
             intakes[SVG.toList()] = ImageIntake.Refused(reason)
             assertEquals(PictureFit.Refused(reason), fitter.fit(SVG))
@@ -112,7 +112,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `a PNG, GIF, or WebP is tried as a PNG first, then as ever smaller JPEGs`() {
+    fun `a PNG or GIF or WebP is tried as a PNG first then as ever smaller JPEGs`() {
         for (format in listOf(ImageFormat.PNG, ImageFormat.GIF, ImageFormat.WEBP)) {
             val attempts = pictureAttemptsFor(format)
             assertEquals(PictureEncoding.PNG, attempts.first().encoding, format.name)
@@ -121,7 +121,7 @@ class PictureFitterTest {
     }
 
     @Test
-    fun `a photo is tried as JPEGs, each smaller or lower in quality than the one before`() {
+    fun `a photo is tried as JPEGs - each smaller or lower in quality than the one before`() {
         for (attempts in listOf(pictureAttemptsFor(ImageFormat.JPEG), pictureAttemptsFor(null))) {
             assertTrue(attempts.all { it.encoding == PictureEncoding.JPEG })
             assertEquals(PictureAttempt(encoding = PictureEncoding.JPEG, quality = 0.85f, scale = 1f), attempts.first())

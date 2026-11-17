@@ -51,7 +51,7 @@ internal class GeneratedSongPropertyTest {
     }
 
     @Test
-    fun `transposing a generated text up and back down gives back every chord, perhaps respelled`() = forEachGenerated { text ->
+    fun `transposing a generated text up and back down gives back every chord - perhaps respelled`() = forEachGenerated { text ->
         for (semitones in listOf(1, 2, 5, 6, 7, 11)) {
             val up = ChordProTransposer.transposeText(text, semitones)
             val back = ChordProTransposer.transposeText(up, -semitones)
@@ -69,7 +69,7 @@ internal class GeneratedSongPropertyTest {
     }
 
     @Test
-    fun `transposing a generated song moves every chord by the interval, and back gives its pitches`() = forEachGenerated { text ->
+    fun `transposing a generated song moves every chord by the interval and back gives its pitches`() = forEachGenerated { text ->
         val song = ChordProParser.parse(text)
         // A model's own mid-song transpositions are applied by every move, so the moves are compared with the one as read.
         val unmoved = ChordProTransposer.transpose(song, 0)

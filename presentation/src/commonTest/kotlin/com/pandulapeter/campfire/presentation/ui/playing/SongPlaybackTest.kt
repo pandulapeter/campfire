@@ -54,7 +54,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `a song opened from a setlist reads only that setlist's entry, wrapped around the octave`() {
+    fun `a song opened from a setlist reads only that setlist's entry - wrapped around the octave`() {
         val playback = songPlaybackOf(song, setlistFileName = SETLIST, overrides = overrides)
         assertEquals(-5, playback.transposition)
         assertEquals(1, playback.capo.fret)
@@ -74,7 +74,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `the chords sound at the transposition and the effective capo, wrapped around the octave`() {
+    fun `the chords sound at the transposition and the effective capo - wrapped around the octave`() {
         assertEquals(-4, songPlaybackOf(song, setlistFileName = null, overrides = overrides).soundingTransposition)
         assertEquals(-4, songPlaybackOf(song, setlistFileName = SETLIST, overrides = overrides).soundingTransposition)
         assertEquals(2, songPlaybackOf(song, setlistFileName = "other.setlist.json", overrides = overrides).soundingTransposition)
@@ -128,7 +128,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `a tab's frets move by the transposition alone, whatever the capo`() {
+    fun `a tab's frets move by the transposition alone - whatever the capo`() {
         val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
         val fretMove = { playback: SongPlayback -> playback.soundingTransposition - playback.tabCapoFor(guitar) }
         assertEquals(0, fretMove(songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot())))
@@ -140,7 +140,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `the keyboard plays the sounding chords, the capo counted in`() {
+    fun `the keyboard plays the sounding chords - the capo counted in`() {
         val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
         val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
         assertEquals(-4, playback.soundingTransposition)
@@ -148,7 +148,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `a reader naming shapes reads the chords above the capo, whichever capo, moved by the transposition alone`() {
+    fun `a reader naming shapes reads the chords above the capo - whichever capo - moved by the transposition alone`() {
         val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
         // The file's own capo 2: its chords are the shapes, as written.
         val own = songPlaybackOf(song, setlistFileName = null, overrides = PlayingOverridesSnapshot())
@@ -167,7 +167,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `a reader naming what sounds, and the keyboard whatever it is set to, read the chords with the capo counted in`() {
+    fun `a reader naming what sounds and the keyboard whatever it is set to and read the chords with the capo counted in`() {
         val sounding = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR, chordNames = ChordNames.SOUNDING)
         val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD, chordNames = ChordNames.SHAPES)
         val playback = songPlaybackOf(song, setlistFileName = null, overrides = overrides)
@@ -180,7 +180,7 @@ class SongPlaybackTest {
     }
 
     @Test
-    fun `the capo is hidden only from a keyboard player who keeps the key, for whom it changes nothing`() {
+    fun `the capo is hidden only from a keyboard player who keeps the key - for whom it changes nothing`() {
         val keyboard = testPreferences().copy(instrument = UserPreferences.Instrument.KEYBOARD)
         val guitar = testPreferences().copy(instrument = UserPreferences.Instrument.GUITAR)
         val raising = songPlaybackOf(song, setlistFileName = null, overrides = overrides)

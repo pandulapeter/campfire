@@ -17,14 +17,14 @@ import kotlin.test.assertNull
 class ScreenShortcutsTest {
 
     @Test
-    fun `every main screen is numbered in the chrome's order, Settings included`() {
+    fun `every main screen is numbered in the chrome's order - Settings included`() {
         val all = CampfireDestination.TopLevel.entries
         assertEquals(KeyShortcut.screens, all.map { screenShortcutOf(it, all) })
         all.forEach { destination -> assertEquals(destination, screenOf(screenShortcutOf(destination, all)!!, all)) }
     }
 
     @Test
-    fun `a screen switched off takes no number, and the ones after it move up`() {
+    fun `a screen switched off takes no number and the ones after it move up`() {
         val destinations = listOf(CampfireDestination.Songs, CampfireDestination.Tuner, CampfireDestination.Settings)
         assertEquals(KeyShortcut.SCREEN_2, screenShortcutOf(CampfireDestination.Tuner, destinations))
         assertNull(screenShortcutOf(CampfireDestination.Setlists, destinations))
@@ -34,7 +34,7 @@ class ScreenShortcutsTest {
     }
 
     @Test
-    fun `Ctrl or Cmd and F name only the screens switched on that have a search, in the chrome's order`() {
+    fun `Ctrl or Cmd and F name only the screens switched on that have a search - in the chrome's order`() {
         val all = CampfireDestination.TopLevel.entries
         assertEquals(
             listOf(CampfireDestination.Songs, CampfireDestination.Setlists, CampfireDestination.Chords, CampfireDestination.Scales),

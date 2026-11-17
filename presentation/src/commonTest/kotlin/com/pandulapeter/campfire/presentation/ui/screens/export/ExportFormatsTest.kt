@@ -24,14 +24,14 @@ class ExportFormatsTest {
     private val songsExport = DialogType.Export(songs = listOf(song("a.cho"), song("b.cho")))
 
     @Test
-    fun `a song or a setlist is offered as a link where sync is available, the link first and the pdf last`() {
+    fun `a song or a setlist is offered as a link where sync is available - the link first and the pdf last`() {
         val all = listOf(PrintSettings.Format.LINK, PrintSettings.Format.FILES, PrintSettings.Format.PDF)
         assertEquals(all, exportFormatsOf(songExport, isSyncAvailable = true))
         assertEquals(all, exportFormatsOf(setlistExport, isSyncAvailable = true))
     }
 
     @Test
-    fun `several songs, or a build without sync, are not offered as a link`() {
+    fun `several songs or a build without sync or are not offered as a link`() {
         val files = listOf(PrintSettings.Format.FILES, PrintSettings.Format.PDF)
         assertEquals(files, exportFormatsOf(songsExport, isSyncAvailable = true))
         assertEquals(files, exportFormatsOf(songExport, isSyncAvailable = false))
@@ -45,7 +45,7 @@ class ExportFormatsTest {
     }
 
     @Test
-    fun `an export opened on a format of its own takes it over the stored one, which it leaves as it is`() {
+    fun `an export opened on a format of its own takes it over the stored one which it leaves as it is`() {
         val stored = PrintSettings(format = PrintSettings.Format.PDF, fontSize = 14)
         val formats = exportFormatsOf(songExport, isSyncAvailable = true)
         assertEquals(stored.copy(format = PrintSettings.Format.LINK), openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = null, formats))
@@ -58,7 +58,7 @@ class ExportFormatsTest {
     }
 
     @Test
-    fun `a format the export does not offer opens it on the pdf, whoever named it`() {
+    fun `a format the export does not offer opens it on the pdf - whoever named it`() {
         val stored = PrintSettings(format = PrintSettings.Format.FILES, fontSize = 14)
         val formats = exportFormatsOf(songExport, isSyncAvailable = false)
         assertEquals(stored.copy(format = PrintSettings.Format.PDF), openingSettingsOf(stored, songExport.copy(format = PrintSettings.Format.LINK), pickedFormat = null, formats))

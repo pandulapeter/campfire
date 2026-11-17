@@ -24,7 +24,7 @@ class LiveRescanPauseTest {
     }
 
     @Test
-    fun `a slow rescan waits several times what it cost, in proportion to it`() {
+    fun `a slow rescan waits several times what it cost - in proportion to it`() {
         val pause = liveRescanPauseAfter(3.seconds)
 
         assertTrue(pause >= 3.seconds * 3)

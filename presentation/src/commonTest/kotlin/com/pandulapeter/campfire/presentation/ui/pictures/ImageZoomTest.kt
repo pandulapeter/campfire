@@ -44,7 +44,7 @@ class ImageZoomTest {
     }
 
     @Test
-    fun `toggling zooms in, and out again from any zoom`() {
+    fun `toggling zooms in and out again from any zoom`() {
         val zoomedIn = ImageZoom().toggled(Offset(200f, 400f), viewport, fitted)
         assertEquals(ImageZoom(ImageZoom.TOGGLE_SCALE, Offset.Zero), zoomedIn)
         assertEquals(ImageZoom(), ImageZoom(scale = 1.3f, offset = Offset(10f, 0f)).toggled(Offset.Zero, viewport, fitted))

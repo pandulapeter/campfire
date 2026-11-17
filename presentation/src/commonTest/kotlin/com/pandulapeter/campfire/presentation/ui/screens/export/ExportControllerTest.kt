@@ -80,7 +80,7 @@ class ExportControllerTest {
     private val asStored = { _: String, text: String -> text }
 
     @Test
-    fun `a setlist's files are saved whole, confirmed, and the screen closes`() = runTest {
+    fun `a setlist's files are saved whole and confirmed and the screen closes`() = runTest {
         val (controller, dialogHost, messageSink) = controller(visibleDialog = setlistExport)
         controller.exportFiles(picker, setlistExport, isShare = false, rewrite = asStored)
         runCurrent()

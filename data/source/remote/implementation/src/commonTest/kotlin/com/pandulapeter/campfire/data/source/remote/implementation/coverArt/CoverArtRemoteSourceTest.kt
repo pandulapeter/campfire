@@ -83,7 +83,7 @@ class CoverArtRemoteSourceTest {
     }
 
     @Test
-    fun `nothing at the address is missing, and the service's own trouble is unreachable`() = runTest {
+    fun `nothing at the address is missing and the service's own trouble is unreachable`() = runTest {
         assertEquals(CoverArtDownload.Missing, source { _ -> respondError(HttpStatusCode.NotFound) }.downloadCoverArt(URL))
         assertEquals(CoverArtDownload.Unreachable, source { _ -> respondError(HttpStatusCode.BadGateway) }.downloadCoverArt(URL))
     }

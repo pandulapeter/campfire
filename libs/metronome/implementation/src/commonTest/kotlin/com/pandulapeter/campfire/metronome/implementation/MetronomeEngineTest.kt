@@ -109,7 +109,7 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `an update keeps counting the bar, and one from the next bar counts bars again once it has ended`() = runTest {
+    fun `an update keeps counting the bar and one from the next bar counts bars again once it has ended`() = runTest {
         val engine = engine()
         val beats = beatsOf(engine)
         engine.start(pattern)
@@ -186,7 +186,7 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `a lost output stops the click, unless it belongs to an earlier session`() = runTest {
+    fun `a lost output stops the click - unless it belongs to an earlier session`() = runTest {
         val engine = engine()
         engine.start(pattern)
         runCurrent()
@@ -301,7 +301,7 @@ class MetronomeEngineTest {
     }
 
     @Test
-    fun `no beat is released after a stop, however far the output's position runs`() = runTest {
+    fun `no beat is released after a stop - however far the output's position runs`() = runTest {
         val engine = engine()
         val beats = beatsOf(engine)
         engine.start(pattern)

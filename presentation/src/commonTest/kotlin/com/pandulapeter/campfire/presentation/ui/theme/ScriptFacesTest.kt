@@ -19,7 +19,7 @@ class ScriptFacesTest {
     private val hebrew = scriptFaces.single { it.script == "Hebrew" }
 
     @Test
-    fun `a Hebrew word needs the Hebrew face, pointed or not, and Latin, Cyrillic, and emoji need none`() {
+    fun `a Hebrew word needs the Hebrew face and pointed or not and Latin and Cyrillic and emoji need none`() {
         assertTrue(hebrew.isNeededFor("Hallelujah הללויה"))
         assertTrue(hebrew.isNeededFor("שָׁלוֹם"))
         assertTrue(hebrew.isNeededFor("שׁ"))
@@ -43,7 +43,7 @@ class ScriptFacesTest {
     }
 
     @Test
-    fun `no two faces cover the same character, since the text engine would draw whichever was registered first`() {
+    fun `no two faces cover the same character since the text engine would draw whichever was registered first`() {
         scriptFaces.forEach { face ->
             (scriptFaces - face).forEach { other ->
                 assertTrue(face.ranges.none { range -> other.ranges.any { it.first <= range.last && range.first <= it.last } }, "$face and $other")

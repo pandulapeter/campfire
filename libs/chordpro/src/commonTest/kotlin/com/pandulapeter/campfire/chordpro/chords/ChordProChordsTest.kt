@@ -218,7 +218,7 @@ class ChordProChordsTest {
     }
 
     @Test
-    fun `a song's chords are named once, in the order they are played, its key aside`() {
+    fun `a song's chords are named once - in the order they are played - its key aside`() {
         val song = ChordProParser.parse(
             "{key: Bb}\n{comment: Intro: [Am] [*softly]}\n[G]la [C]la [G]la\n{start_of_grid}\n| D . C~E7 . |\n{end_of_grid}\n" +
                 "{start_of_tab}\nF\ne|--1--|\n{end_of_tab}\n{soc}\n[Em]la\n{eoc}\n{chorus}",
@@ -250,7 +250,7 @@ class ChordProChordsTest {
     """.trimIndent()
 
     @Test
-    fun `every chord name is read with the transposition in force where it stands, recalls and brackets included`() {
+    fun `every chord name is read with the transposition in force where it stands - recalls and brackets included`() {
         val names = mutableListOf<Pair<String, Int>>()
         ChordProChords.forEachName(ChordProParser.parseAsWritten(chordNameFixture)) { name, offset -> names += name to offset }
         assertEquals(

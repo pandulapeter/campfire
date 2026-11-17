@@ -70,7 +70,7 @@ class ImportProgressContentTest {
     }
 
     @Test
-    fun `a copy counts its bytes, never past the whole`() {
+    fun `a copy counts its bytes never past the whole`() {
         val line = importProgressLineOf(ImportProgress(ImportProgress.Phase.RECEIVING, completedBytes = 12, totalBytes = 10))
         assertEquals(1f, line?.fraction)
     }

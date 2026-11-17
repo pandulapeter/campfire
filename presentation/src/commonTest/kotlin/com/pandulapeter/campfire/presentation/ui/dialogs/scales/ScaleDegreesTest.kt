@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class ScaleDegreesTest {
 
     @Test
-    fun `each degree is found where it stands in the line, accidentals included`() {
+    fun `each degree is found where it stands in the line - accidentals included`() {
         val degreesText = scaleDegreesTextOf(listOf("1", "♭3", "5"))
         assertEquals("1  ♭3  5", degreesText.text)
         assertEquals(listOf("1", "♭3", "5"), degreesText.ranges.map { degreesText.text.substring(it) })

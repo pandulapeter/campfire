@@ -18,7 +18,7 @@ import kotlin.test.assertNull
 class ListedSetlistsTest {
 
     @Test
-    fun `the shortcut's setlist is the only one listed, or the one being reordered, never a guess among several`() {
+    fun `the shortcut's setlist is the only one listed or the one being reordered never a guess among several`() {
         val first = setlist("first.setlist.json")
         val second = setlist("second.setlist.json")
         assertEquals(first, listed(first).shortcutSetlist(reorderingFileName = null))

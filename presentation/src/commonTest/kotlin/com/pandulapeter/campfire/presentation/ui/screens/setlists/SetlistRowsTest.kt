@@ -102,7 +102,7 @@ class SetlistRowsTest {
     }
 
     @Test
-    fun `a drag is given up for a setlist that changed its songs, went, or was archived`() {
+    fun `a drag is given up for a setlist that changed its songs or went or was archived`() {
         val dragged = DraggedSetlist(setlistFileName = "first.setlist.json", songFileNames = listOf("b", "a"))
 
         assertTrue(dragged.isSettledBy(first))

@@ -34,7 +34,7 @@ class SharingStageTest {
     )
 
     @Test
-    fun `without a working connection the tab invites to connect, whatever this device last read`() {
+    fun `without a working connection the tab invites to connect - whatever this device last read`() {
         val shares = listOf(share("aaaaaaaaaaaaaaaa"))
         assertEquals(SharingStage.NOT_CONNECTED, sharingStageOf(SyncState.Disconnected, refreshFailure = null, shares = shares))
         assertEquals(
@@ -59,7 +59,7 @@ class SharingStageTest {
     }
 
     @Test
-    fun `a list read afresh, replaced, or explained elsewhere is not called stale`() {
+    fun `a list read afresh or replaced or explained elsewhere is not called stale`() {
         assertFalse(isStaleSharingList(null))
         assertFalse(isStaleSharingList(SharingFailure.SCOPE_MISSING))
         assertFalse(isStaleSharingList(SharingFailure.AUTHORIZATION))

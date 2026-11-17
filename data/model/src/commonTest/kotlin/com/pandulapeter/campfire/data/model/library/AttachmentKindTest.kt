@@ -34,7 +34,7 @@ class AttachmentKindTest {
     }
 
     @Test
-    fun `a file is handed over under its registered type, else as plain bytes`() {
+    fun `a file is handed over under its registered type - else as plain bytes`() {
         assertEquals("application/pdf", AttachmentKind.mimeTypeOf("sheet.pdf"))
         assertEquals("audio/mpeg", AttachmentKind.mimeTypeOf("Take.MP3"))
         assertEquals("application/octet-stream", AttachmentKind.mimeTypeOf("solo.gp5"))

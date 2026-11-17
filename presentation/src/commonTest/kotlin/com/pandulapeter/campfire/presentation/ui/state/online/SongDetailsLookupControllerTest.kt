@@ -32,7 +32,7 @@ import kotlin.test.assertEquals
 class SongDetailsLookupControllerTest {
 
     @Test
-    fun `the lookup is first asked the title, artist and album typed into the form, trimmed`() {
+    fun `the lookup is first asked the title - artist and album typed into the form - trimmed`() {
         val draft = mapOf(
             ChordProMetadataFields.Field.TITLE to "  Wonderwall ",
             ChordProMetadataFields.Field.ARTIST to "Oasis ",

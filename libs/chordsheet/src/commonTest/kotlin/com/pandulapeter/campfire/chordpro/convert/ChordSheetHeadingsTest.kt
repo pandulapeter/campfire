@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class ChordSheetHeadingsTest {
 
     @Test
-    fun `a label opens the section its words name, in every language of the app and with any words after it`() {
+    fun `a label opens the section its words name - in every language of the app and with any words after it`() {
         // The labels for verse, chorus, bridge, pre-chorus, intro, solo, and outro, in each language of the app.
         val labels = listOf(
             listOf("Verse", "Chorus", "Bridge", "Pre-chorus", "Intro", "Solo", "Outro"),
@@ -39,7 +39,7 @@ class ChordSheetHeadingsTest {
     }
 
     @Test
-    fun `a label known to be one opens the section its abbreviation names, numbered or not`() {
+    fun `a label known to be one opens the section its abbreviation names - numbered or not`() {
         assertEquals(
             listOf("verse", "chorus", "chorus", "bridge", "bridge", "pre-chorus", "pre-chorus", "verse"),
             listOf("V1", "Ch1", "Ch 2", "Br", "Br.", "PC", "Pre", "Chimes").map { ChordSheetHeadings.sectionType(it) },

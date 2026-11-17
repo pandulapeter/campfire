@@ -25,7 +25,7 @@ class PickedAttachmentTest {
     }
 
     @Test
-    fun `a file of another type, or of none, is never read`() {
+    fun `a file of another type or of none or is never read`() {
         assertEquals(ImportedFile.unread("setup.exe"), pickedAttachment("setup.exe", size = 2) { fail("read") })
         assertEquals(ImportedFile.unread("README"), pickedAttachment("README", size = 2) { fail("read") })
         assertFalse(isAttachmentFileName("pdf"))
@@ -33,7 +33,7 @@ class PickedAttachmentTest {
     }
 
     @Test
-    fun `a file larger than a song carries is too large, whether its size says so or its read does`() {
+    fun `a file larger than a song carries is too large - whether its size says so or its read does`() {
         val limit = ImportLimits.MAX_PICKED_ATTACHMENT_SIZE
         assertTrue(pickedAttachment("concert.mp4", size = limit + 1) { fail("read") }.isTooLarge)
         assertTrue(pickedAttachment("concert.mp4", size = null) { ByteArray(it.toInt() + 1) }.isTooLarge)

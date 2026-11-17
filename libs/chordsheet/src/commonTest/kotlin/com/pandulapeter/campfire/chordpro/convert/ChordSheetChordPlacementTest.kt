@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class ChordSheetChordPlacementTest {
 
     @Test
-    fun `a chord set a rounding before a glyph's start is sung on that glyph, after a hyphen too`() {
+    fun `a chord set a rounding before a glyph's start is sung on that glyph - after a hyphen too`() {
         val lyric = "Dwelt a miner, forty-niner, and his daughter, Clementine."
         val lyricLine = glyphs(lyric)
         val chordLine = ChordSheet.Line(
@@ -31,7 +31,7 @@ class ChordSheetChordPlacementTest {
     }
 
     @Test
-    fun `chords held with dashes are a chord row, the dashes no part of it`() {
+    fun `chords held with dashes are a chord row - the dashes no part of it`() {
         val sheet = "C-------C-------\n\nG       Am--Am7  C--------\nGive me one more chance now"
         val result = ChordSheetConverter.convert(ChordSheet.ofPlainText(sheet), guessesTitle = false).single()
 
@@ -39,7 +39,7 @@ class ChordSheetChordPlacementTest {
     }
 
     @Test
-    fun `a gap a layout opens in a word for a chord is no word break, a word space with no glyph drawn is`() {
+    fun `a gap a layout opens in a word for a chord is no word break - a word space with no glyph drawn is`() {
         // Each part starts where its chord does, a little past where the part before ends; "nem" and "hat" stand a space apart.
         val parts = listOf("Ma ", "nem", "hat rám a ", "józan", "ság sza", "va.")
         val gaps = listOf(0.0, 2.5, 3.37, 2.5, 2.5, 2.5)

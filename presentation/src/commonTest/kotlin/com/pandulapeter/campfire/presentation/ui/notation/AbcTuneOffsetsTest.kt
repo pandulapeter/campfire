@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 class AbcTuneOffsetsTest {
 
     @Test
-    fun `a tune is moved by the key change it stands after, as the chords around it are`() {
+    fun `a tune is moved by the key change it stands after as the chords around it are`() {
         val song = ChordProParser.parse(
             """
             {start_of_abc}

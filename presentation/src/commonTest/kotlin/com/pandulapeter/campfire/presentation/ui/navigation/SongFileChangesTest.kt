@@ -63,7 +63,7 @@ class SongFileChangesTest {
     }
 
     @Test
-    fun `a new song's first save puts its details screen under its editor, which keeps its key`() {
+    fun `a new song's first save puts its details screen under its editor which keeps its key`() {
         val editor = CampfireDestination.SongEditor.newSong()
         val stack = mutableListOf(CampfireDestination.Songs, editor)
         assertTrue(stack.followNewSongCreated("song.cho"))

@@ -25,7 +25,7 @@ class JsonTest {
      * may only carry ASCII - and Campfire's song files are named after their titles.
      */
     @Test
-    fun `escapes everything above ascii, so that a header can carry it`() = assertEquals(
+    fun `escapes everything above ascii so that a header can carry it`() = assertEquals(
         expected = "\"/songs/\\u00c1rv\\u00edzt\\u0171r\\u0151.cho\"",
         actual = "/songs/Árvíztűrő.cho".toAsciiJsonString(),
     )

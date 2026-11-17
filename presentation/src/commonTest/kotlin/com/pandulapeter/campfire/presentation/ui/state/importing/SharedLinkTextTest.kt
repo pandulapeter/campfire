@@ -32,7 +32,7 @@ class SharedLinkTextTest {
     }
 
     @Test
-    fun `a link beside other words, another address, or an ordinary text is no link`() {
+    fun `a link beside other words or another address or an ordinary text is no link`() {
         assertNull(sharedLinkIn("Look: https://campfire-songbook.com/s/#$PAYLOAD"))
         assertNull(sharedLinkIn("https://example.com/s/#$PAYLOAD"))
         assertNull(sharedLinkIn("Am  C\nHello"))

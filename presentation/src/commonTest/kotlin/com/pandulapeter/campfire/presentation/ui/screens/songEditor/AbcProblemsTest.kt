@@ -17,13 +17,13 @@ import kotlin.test.assertEquals
 class AbcProblemsTest {
 
     @Test
-    fun `each message is marked on the token it names in the song, one without a line nowhere`() {
+    fun `each message is marked on the token it names in the song - one without a line nowhere`() {
         val problems = problemsOf(SONG, AbcMessage("Bad character 'n'", line = 2, column = 11), AbcMessage("Unknown", line = null, column = null))
         assertEquals(listOf("{end_of_abc}"), problems.rangesIn(SONG).map { SONG.substring(it) })
     }
 
     @Test
-    fun `problems are kept above an edit made since the check, moved below it, and dropped inside it`() {
+    fun `problems are kept above an edit made since the check and moved below it and dropped inside it`() {
         val problems = problemsOf(SONG, AbcMessage("Bad", line = 0, column = 0), AbcMessage("Bad", line = 2, column = 11), AbcMessage("Bad", line = 2, column = 2))
         val edited = SONG.replace("C D E", "C Xy E")
         assertEquals(listOf("X:1", "{end_of_abc}"), problems.rangesIn(edited).map { edited.substring(it) })

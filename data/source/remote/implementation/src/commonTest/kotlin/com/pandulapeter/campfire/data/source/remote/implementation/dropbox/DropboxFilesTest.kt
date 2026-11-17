@@ -229,7 +229,7 @@ class DropboxFilesTest {
     }
 
     @Test
-    fun `a library file larger than the caller's limit is one file's failure, asked once`() = runTest {
+    fun `a library file larger than the caller's limit is one file's failure - asked once`() = runTest {
         val declared = """{"rev":"r1","size":${SONG_LIMIT + 1}}"""
         val answers = listOf<MockRequestHandleScope.() -> HttpResponseData>(
             { respond(content = unreadableBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", declared)) },

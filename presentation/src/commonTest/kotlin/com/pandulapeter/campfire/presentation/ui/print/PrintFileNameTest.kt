@@ -33,14 +33,14 @@ internal class PrintFileNameTest {
     )
 
     @Test
-    fun `the library's own files are named as the export names them, a song keeping its stored extension`() {
+    fun `the library's own files are named as the export names them - a song keeping its stored extension`() {
         assertEquals("tukorfurogep-arviz.chopro", filesFileName(songSource(fileName = "Foo Bar (2).chopro", title = "Árvíz", artist = "Tükörfúrógép")))
         assertEquals("hallelujah.cho", filesFileName(songSource(fileName = "hallelujah", title = "Hallelujah", artist = "")))
         assertEquals("summer_set_2026.zip", filesFileName(setlistSource()))
     }
 
     @Test
-    fun `a song that leaves with its pictures is named as the zip it is written as, its pdf as before`() {
+    fun `a song that leaves with its pictures is named as the zip it is written as - its pdf as before`() {
         val source = songSource(fileName = "chart.cho", title = "Chart", artist = "Band").copy(isSongWithPictures = true)
         assertEquals("band-chart.zip", filesFileName(source))
         assertEquals("band-chart.pdf", pdfFileName(source))

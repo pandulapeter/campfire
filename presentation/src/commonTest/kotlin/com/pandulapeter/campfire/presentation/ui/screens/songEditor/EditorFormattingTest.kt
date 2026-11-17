@@ -35,13 +35,13 @@ class EditorFormattingTest {
     }
 
     @Test
-    fun `toggling again takes the tags off, whether they stand around the selection or inside it`() {
+    fun `toggling again takes the tags off - whether they stand around the selection or inside it`() {
         assertEquals("There |is a| house", toggled("There <b>|is a|</b> house"))
         assertEquals("There |is a| house", toggled("There |<B>is a</B>| house"))
     }
 
     @Test
-    fun `the style is taken off whichever way the file sets it, and nothing else is`() {
+    fun `the style is taken off whichever way the file sets it and nothing else is`() {
         assertEquals("There |is a| house", toggled("There <strong>|is a|</strong> house"))
         assertEquals("|is a|", toggled("|<span weight=\"bold\">is a</span>|"))
         assertEquals("<span color=\"red\">|is a|</span>", toggled("<span color=\"red\" weight=\"bold\">|is a|</span>"))
@@ -49,7 +49,7 @@ class EditorFormattingTest {
     }
 
     @Test
-    fun `with nothing selected the caret lands inside an empty pair, which a second toggle takes away`() {
+    fun `with nothing selected the caret lands inside an empty pair which a second toggle takes away`() {
         assertEquals("a <i>||</i>b", toggled("a ||b", style = Style.ITALIC))
         assertEquals("a ||b", toggled("a <i>||</i>b", style = Style.ITALIC))
     }
@@ -60,7 +60,7 @@ class EditorFormattingTest {
     }
 
     @Test
-    fun `a selection of several lines formats each lyric line, leaving directives and whitespace outside`() {
+    fun `a selection of several lines formats each lyric line - leaving directives and whitespace outside`() {
         val formatted = toggled("|{start_of_verse}\n  [Am]One line \n\n# note\nTwo|")
 
         assertEquals("|{start_of_verse}\n  <b>[Am]One line</b> \n\n# note\n<b>Two</b>|", formatted)
@@ -87,7 +87,7 @@ class EditorFormattingTest {
     }
 
     @Test
-    fun `a selection of several lines formats a comment's value, but never a Campfire 3 heading`() {
+    fun `a selection of several lines formats a comment's value but never a Campfire 3 heading`() {
         assertEquals("|<b>One</b>\n{c: <b>note</b>}|", toggled("|One\n{c: note}|"))
         assertEquals("|<b>One</b>\n{c: Verse 1}|", toggled("|One\n{c: Verse 1}|"))
     }
@@ -104,7 +104,7 @@ class EditorFormattingTest {
     }
 
     @Test
-    fun `a whole selected comment line formats only its value, and a selection inside the value toggles as on a lyric`() {
+    fun `a whole selected comment line formats only its value and a selection inside the value toggles as on a lyric`() {
         assertEquals("{c: <b>|note|</b>}", toggled("|{c: note}|"))
         assertEquals("{c: <b>|note|</b>}", toggled("{c: |note|}"))
         assertEquals("{c: |note|}", toggled("{c: <b>|note|</b>}"))

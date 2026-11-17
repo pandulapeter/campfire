@@ -27,7 +27,7 @@ class WhatsNewGateTest {
     }
 
     @Test
-    fun `the onboarding stays off another dialog but not off an import, which follows it`() {
+    fun `the onboarding stays off another dialog but not off an import which follows it`() {
         assertEquals(true, canShowOnboarding(hasDialog = false))
         assertEquals(false, canShowOnboarding(hasDialog = true))
     }

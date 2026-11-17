@@ -354,7 +354,7 @@ class ImageSyncTest {
     }
 
     @Test
-    fun `only names of the picture rule are pictures, and anything else in the files folder is left alone`() = runTest {
+    fun `only names of the picture rule are pictures and anything else in the files folder is left alone`() = runTest {
         val stray = SyncKey(kind = LibraryFileKind.FILE, name = "Holiday.JPG")
         cloud.files[stray] = PHOTO.bytes to "r1"
         val b = Device(mapOf(SyncKey(kind = LibraryFileKind.FILE, name = "notes.txt") to "x".encodeToByteArray()))
@@ -395,7 +395,7 @@ class ImageSyncTest {
     }
 
     @Test
-    fun `files over a picture's limit move one at a time, beside the others`() = runTest {
+    fun `files over a picture's limit move one at a time - beside the others`() = runTest {
         val video = attachment(Random(2).nextBytes(RECORDING.bytes.size))
         val a = Device(mapOf(song(1) to attaching(RECORDING, video), RECORDING.key to RECORDING.bytes, video.key to video.bytes))
         a.sync(cloud)

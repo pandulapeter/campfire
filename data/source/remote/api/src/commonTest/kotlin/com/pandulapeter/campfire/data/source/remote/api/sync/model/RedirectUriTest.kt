@@ -23,7 +23,7 @@ class RedirectUriTest {
     }
 
     @Test
-    fun `reads a loopback redirect, which carries a path as well`() {
+    fun `reads a loopback redirect which carries a path as well`() {
         val parameters = redirectParameters("http://127.0.0.1:53682/?code=abc123&state=deadbeef")
         assertEquals(expected = "abc123", actual = parameters["code"])
     }

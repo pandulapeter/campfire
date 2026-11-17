@@ -56,7 +56,7 @@ class ScaleLibraryTest {
         assertEquals(ScaleLibraryResults("C", "", scaleLibraryScales(3)), results("  "))
 
     @Test
-    fun `a search that starts with a note finds the rest on that note, whatever the key`() {
+    fun `a search that starts with a note finds the rest on that note - whatever the key`() {
         val dorian = results("d dor")
         assertEquals("D", dorian.rootName)
         assertEquals("dor", dorian.query)
@@ -82,14 +82,14 @@ class ScaleLibraryTest {
     }
 
     @Test
-    fun `a search finds scales of every family by their name, ignoring case and accents`() {
+    fun `a search finds scales of every family by their name - ignoring case and accents`() {
         assertEquals(listOf("dorian", "dorian_sharp_4", "phrygian_dominant", "mixolydian_flat_6"), search("DO").filter { it in hungarian })
         assertEquals("major", search("dur").first())
         assertTrue("phrygian_dominant" in search("fríg"))
     }
 
     @Test
-    fun `a search finds a scale by another name, after the ones found by theirs`() {
+    fun `a search finds a scale by another name - after the ones found by theirs`() {
         assertEquals(listOf("phrygian_dominant", "double_harmonic"), search("hijaz"))
         val ionian = search("ionian")
         assertEquals("major", ionian.last())

@@ -24,7 +24,7 @@ import kotlin.test.assertSame
 class HttpClientHolderTest {
 
     @Test
-    fun `callers asking at once share the one client, built once`() = runTest {
+    fun `callers asking at once share the one client - built once`() = runTest {
         var creationCount = 0
         val holder = HttpClientHolder {
             creationCount++

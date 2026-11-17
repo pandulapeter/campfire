@@ -64,7 +64,7 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `a rail holds every item that fits whole, with the gaps between them`() {
+    fun `a rail holds every item that fits whole - with the gaps between them`() {
         assertEquals(7, railCapacityIn(424.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).rail)
         assertEquals(6, railCapacityIn(423.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).rail)
         assertEquals(7, railCapacityIn(536.dp, railLabelHeight = 32.dp, expandedRailLabelHeight = 20.dp).rail)
@@ -78,7 +78,7 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `an expanded rail holds every item that fits whole, with no gaps between them`() {
+    fun `an expanded rail holds every item that fits whole - with no gaps between them`() {
         assertEquals(7, railCapacityIn(396.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).expandedRail)
         assertEquals(6, railCapacityIn(395.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 20.dp).expandedRail)
         assertEquals(7, railCapacityIn(508.dp, railLabelHeight = 16.dp, expandedRailLabelHeight = 40.dp).expandedRail)
@@ -91,7 +91,7 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `five screens are never grouped, however short the rail`() {
+    fun `five screens are never grouped - however short the rail`() {
         assertFalse(areToolsGrouped(NavigationChromeKind.RAIL, all - Setlists - Scales, railCapacity = 4))
     }
 
@@ -103,7 +103,7 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `the four tools are grouped behind one item, which never holds a tool alone`() {
+    fun `the four tools are grouped behind one item which never holds a tool alone`() {
         assertEquals(listOf(Metronome, Tuner, Chords, Scales), CampfireDestination.TopLevel.tools)
         assertTrue(areToolsGrouped(NavigationChromeKind.BAR, all - Setlists, railCapacity = Int.MAX_VALUE))
         assertFalse(areToolsGrouped(NavigationChromeKind.BAR, listOf(Songs, Setlists, Scales, Settings), railCapacity = Int.MAX_VALUE))
@@ -118,7 +118,7 @@ internal class NavigationBarItemsTest {
     }
 
     @Test
-    fun `the tools item opens the tool on screen, then the last one, then the first one switched on`() {
+    fun `the tools item opens the tool on screen then the last one then the first one switched on`() {
         assertEquals(Tuner, toolsItemDestination(current = Tuner, lastTool = Chords, destinations = all))
         assertEquals(Chords, toolsItemDestination(current = Songs, lastTool = Chords, destinations = all))
         assertEquals(Metronome, toolsItemDestination(current = null, lastTool = Metronome, destinations = all))

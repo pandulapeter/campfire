@@ -100,7 +100,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `recordings become the release groups they came out on, each once and dated by its earliest release`() {
+    fun `recordings become the release groups they came out on - each once and dated by its earliest release`() {
         val request = MusicBrainzSearch.request(CoverArtQuery(artist = "", album = "", title = "Good Riddance"))!!
         val body = """
             {"recordings":[
@@ -128,7 +128,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `a details lookup searches the recordings by title, narrowed by the artist and the album`() {
+    fun `a details lookup searches the recordings by title - narrowed by the artist and the album`() {
         val url = Url(MusicBrainzSearch.songDetailsUrl(SongDetailsQuery(title = "Help!", artist = "The Beatles", album = "Help"))!!)
 
         assertEquals("/ws/2/recording", url.encodedPath)
@@ -145,7 +145,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `recordings become candidates with their year, duration and studio album`() {
+    fun `recordings become candidates with their year - duration and studio album`() {
         val body = """
             {"recordings":[
               {"id":"r1","score":100,"title":"Kicsi gesztenye","length":276000,"first-release-date":"2001-12",
@@ -168,7 +168,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `a recording only on singles, live records and compilations has no album`() {
+    fun `a recording only on singles - live records and compilations has no album`() {
         val body = """
             {"recordings":[{"id":"r1","score":100,"title":"Wonderwall","releases":[
               {"date":"1995","release-group":{"title":"Wonderwall","primary-type":"Single"}},
@@ -184,7 +184,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `recordings below the score are other songs, and among one score the studio ones come first`() {
+    fun `recordings below the score are other songs and among one score the studio ones come first`() {
         val body = """
             {"recordings":[
               {"id":"live","score":100,"title":"Wonderwall","first-release-date":"1996","releases":[{"release-group":{"title":"Live","primary-type":"Album","secondary-types":["Live"]}}]},
@@ -229,7 +229,7 @@ class MusicBrainzSearchTest {
     }
 
     @Test
-    fun `a writer stands in for the composer and the lyricist, but not for the lyricist of a work without lyrics`() {
+    fun `a writer stands in for the composer and the lyricist but not for the lyricist of a work without lyrics`() {
         fun body(language: String) = """
             {"relations":[{"type":"performance","work":{"languages":["$language"],"relations":[
               {"type":"writer","artist":{"name":"Joseph Kosma"}}

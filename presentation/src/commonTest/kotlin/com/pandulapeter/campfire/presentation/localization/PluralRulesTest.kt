@@ -21,7 +21,7 @@ class PluralRulesTest {
     }
 
     @Test
-    fun `english, german, and hungarian read 1 as one and every other count as other`() {
+    fun `english and german and hungarian read 1 as one and every other count as other`() {
         listOf("en", "de", "hu").forEach { language ->
             assertEquals(PluralCategory.ONE, pluralCategoryOf(language, 1), language)
             listOf(0, 2, 5, 21, 101, 1_000_000).forEach { assertEquals(PluralCategory.OTHER, pluralCategoryOf(language, it), language) }
@@ -43,7 +43,7 @@ class PluralRulesTest {
     }
 
     @Test
-    fun `spanish, italian, french, and portuguese read a whole million as many`() {
+    fun `spanish and italian and french and portuguese read a whole million as many`() {
         listOf("es", "it", "fr", "pt").forEach { language ->
             assertEquals(PluralCategory.MANY, pluralCategoryOf(language, 2_000_000), language)
             assertEquals(PluralCategory.OTHER, pluralCategoryOf(language, 1_000_001), language)
@@ -60,14 +60,14 @@ class PluralRulesTest {
     }
 
     @Test
-    fun `hebrew reads 1 as one, 2 as two, and every other count as other`() {
+    fun `hebrew reads 1 as one and 2 as two and every other count as other`() {
         assertEquals(PluralCategory.ONE, pluralCategoryOf("he", 1))
         assertEquals(PluralCategory.TWO, pluralCategoryOf("he", 2))
         listOf(0, 3, 10, 20, 100).forEach { assertEquals(PluralCategory.OTHER, pluralCategoryOf("he", it), it.toString()) }
     }
 
     @Test
-    fun `polish reads counts ending in 2 to 4 as few, outside the teens, and every other count but 1 as many`() {
+    fun `polish reads counts ending in 2 to 4 as few and outside the teens and every other count but 1 as many`() {
         assertEquals(PluralCategory.ONE, pluralCategoryOf("pl", 1))
         listOf(2, 4, 22, 104, 1_002).forEach { assertEquals(PluralCategory.FEW, pluralCategoryOf("pl", it), it.toString()) }
         listOf(0, 5, 11, 12, 14, 21, 25, 112, 1_000_000).forEach {

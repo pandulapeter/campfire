@@ -39,7 +39,7 @@ class LinkExportStateTest {
     )
 
     @Test
-    fun `without a connection the screen offers to connect, whatever is shared`() {
+    fun `without a connection the screen offers to connect - whatever is shared`() {
         val shares = listOf(share())
         assertEquals(LinkExportState.NotConnected, stateOf(SyncState.Disconnected, shares))
         assertEquals(LinkExportState.Connecting, stateOf(SyncState.Connecting(SyncProviderId.DROPBOX), shares))
@@ -53,7 +53,7 @@ class LinkExportStateTest {
     }
 
     @Test
-    fun `an item the account lists is shared, whichever device shared it`() {
+    fun `an item the account lists is shared - whichever device shared it`() {
         val share = share()
         assertEquals(LinkExportState.Shared(share), stateOf(connected, listOf(share(fileName = "other.setlist.json"), share)))
         assertEquals(LinkAction.COPY, linkActionOf(LinkExportState.Shared(share)))

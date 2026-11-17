@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class SongStructureTest {
 
     @Test
-    fun `a grid's shape printed over it is the grid's, not a section's label`() {
+    fun `a grid's shape printed over it is the grid's not a section's label`() {
         fun line(text: String, bold: Boolean = false, size: Double = 12.0) =
             ChordSheet.Line(text.mapIndexed { index, c -> ChordSheet.Span(c.toString(), index * 7.0, (index + 1) * 7.0, size, isBold = bold) })
         val lines = listOf(

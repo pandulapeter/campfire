@@ -41,7 +41,7 @@ class PagerIndicatorTest {
     }
 
     @Test
-    fun `a position past either end stays on the end tab, and no tabs is no indicator`() {
+    fun `a position past either end stays on the end tab and no tabs is no indicator`() {
         val spans = listOf(IndicatorSpan(0f, 40f), IndicatorSpan(60f, 80f))
         assertEquals(IndicatorSpan(0f, 40f), pagerIndicatorSpan(position = -0.2f, spans = spans))
         assertEquals(IndicatorSpan(60f, 80f), pagerIndicatorSpan(position = 1.3f, spans = spans))

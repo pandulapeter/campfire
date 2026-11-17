@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 class ChordDiagramGeometryTest {
 
     @Test
-    fun `a shape under a capo is drawn where it is played, the capo across the window's first row`() {
+    fun `a shape under a capo is drawn where it is played - the capo across the window's first row`() {
         // An A played as a G shape at the second fret: the frets 2 to 5, the capo on 2, numbered from the nut.
         val capoed = chordDiagramGeometryOf(ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3)), ChordTuning.GUITAR, root = 9, capo = 2) as ChordDiagramGeometry.Fretted
         assertEquals(2, capoed.baseFret)
@@ -84,7 +84,7 @@ class ChordDiagramGeometryTest {
     }
 
     @Test
-    fun `a barre is found from the fingering, or from the lowest fret where nothing says`() {
+    fun `a barre is found from the fingering or from the lowest fret where nothing says`() {
         val f = fretted(listOf(1, 3, 3, 2, 1, 1), listOf(1, 3, 4, 2, 1, 1), root = 5)
         assertEquals(listOf(ChordDiagramGeometry.Fretted.Barre(row = 0, fromString = 0, toString = 5, finger = 1)), f.barres)
         // The barre's root strings keep their dot, in the root's color, and the others are the barre alone.
@@ -129,7 +129,7 @@ class ChordDiagramGeometryTest {
     }
 
     @Test
-    fun `a keyboard is drawn in as many octaves as its keys reach, two at least`() {
+    fun `a keyboard is drawn in as many octaves as its keys reach - two at least`() {
         val c = chordDiagramGeometryOf(ChordVoicing.Keys(listOf(0, 4, 7)), ChordTuning.KEYBOARD, root = 0) as ChordDiagramGeometry.Keyboard
         assertEquals(2, c.octaves)
         assertEquals(setOf(0), c.roots)

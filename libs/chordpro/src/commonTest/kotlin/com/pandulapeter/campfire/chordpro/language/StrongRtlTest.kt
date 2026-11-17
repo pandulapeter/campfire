@@ -41,7 +41,7 @@ class StrongRtlTest {
     }
 
     @Test
-    fun `marks, digits, punctuation, and left-to-right letters are not strong right-to-left`() {
+    fun `marks and digits and punctuation and left-to-right letters are not strong right-to-left`() {
         mapOf(
             "Latin A" to 'A'.code,
             "digit one" to '1'.code,

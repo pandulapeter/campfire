@@ -72,7 +72,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a solo in another key is a group of its own, and the verse after it goes back to the verses`() {
+    fun `a solo in another key is a group of its own and the verse after it goes back to the verses`() {
         val groups = groups(
             """
             {key: C}
@@ -96,7 +96,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a transpose is read for the key it names, the chords after it as the transposer left them`() {
+    fun `a transpose is read for the key it names - the chords after it as the transposer left them`() {
         val song = ChordProParser.parse(
             """
             {key: C}
@@ -132,7 +132,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `the rest of a cut section is played once, so a chord outside its key there is a moment`() {
+    fun `the rest of a cut section is played once so a chord outside its key there is a moment`() {
         val groups = SongScaleSuggestions.of(
             ChordProTransposer.transpose(
                 ChordProParser.parse(
@@ -174,7 +174,7 @@ class SongScaleGroupsTest {
     fun `a song without chords has no groups`() = assertTrue(groups("Just words\nand more words").isEmpty())
 
     @Test
-    fun `a key is read from the chords, not from the first chord`() {
+    fun `a key is read from the chords not from the first chord`() {
         assertEquals(listOf("C" to "major"), rootAndFirst(song("F G C Am")))
         assertEquals(listOf("C" to "major"), rootAndFirst(song("F G C F G C")))
         assertEquals(listOf("D" to "major"), rootAndFirst(song("G A D Bm")))
@@ -190,7 +190,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `the key names the centre wherever its own scale holds half the section, the chords deciding otherwise`() {
+    fun `the key names the centre wherever its own scale holds half the section - the chords deciding otherwise`() {
         val inKey = groups(song("C F G C", "G D Em C", key = "C")).single()
         assertEquals("C" to listOf("D"), inKey.rootName to inKey.exceptions.map { it.chordName })
         assertEquals(listOf("C" to "major", "F" to "major"), rootAndFirst(song("C F G C", "F Bb C F", key = "C")))
@@ -208,7 +208,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a rock riff is played over the minor pentatonic and the blues on its root, with no exceptions`() {
+    fun `a rock riff is played over the minor pentatonic and the blues on its root - with no exceptions`() {
         listOf("E G A E", "C Eb F C").forEach { chords ->
             val group = groups(song(chords)).single()
             assertEquals(listOf("minor_pentatonic", "blues", "mixolydian"), group.scales.take(3).map { it.id }, chords)
@@ -236,13 +236,13 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a guess on three chords is left out beside a better answer, and kept alone`() {
+    fun `a guess on three chords is left out beside a better answer and kept alone`() {
         assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G C Am F G", "D F G", key = "C")))
         assertEquals(1, groups(song("D F G", key = "A")).size)
     }
 
     @Test
-    fun `a rock verse joins a riff of other chords on its root, and a chorus in another key stands apart`() {
+    fun `a rock verse joins a riff of other chords on its root and a chorus in another key stands apart`() {
         val groups = groups(
             """
             {key: A}
@@ -271,7 +271,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a vamp on one chord is answered as the chord's sheet is, unless a key says otherwise`() {
+    fun `a vamp on one chord is answered as the chord's sheet is - unless a key says otherwise`() {
         assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm7 Dm7 Dm7 Dm7")))
         assertEquals(listOf("A" to "natural_minor"), rootAndFirst(song("Am Am Am Am")))
         assertEquals(listOf("E" to "mixolydian"), rootAndFirst(song("E9 E9 E9 E9")))
@@ -280,7 +280,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a Dorian vamp of triads is Dorian, not melodic minor`() {
+    fun `a Dorian vamp of triads is Dorian not melodic minor`() {
         assertEquals(listOf("A" to "dorian"), rootAndFirst(song("Am D")))
         assertEquals(listOf("D" to "dorian"), rootAndFirst(song("Dm G Dm G")))
         assertEquals(listOf("E" to "dorian"), rootAndFirst(song("Em G D A")))
@@ -332,7 +332,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a secondary dominant and a leading-tone diminished chord are the key's, not against it`() {
+    fun `a secondary dominant and a leading-tone diminished chord are the key's not against it`() {
         listOf("C", null).forEach { key ->
             val gospel = groups(song("C E7 Am C7 F F#dim C/G A7 D7 G7 C G7", key = key)).single()
             assertEquals("C" to "major", gospel.rootName to gospel.scales.first().id)
@@ -359,11 +359,11 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a part in the key of the fifth is no part of the key, its chords leading into it or not`() =
+    fun `a part in the key of the fifth is no part of the key - its chords leading into it or not`() =
         assertEquals(listOf("G" to "major", "D" to "major"), rootAndFirst(song("G C D G Em C D G", "D A Bm F#m G D E A", key = "G")))
 
     @Test
-    fun `a jazz blues is one group on its tonic, led by the blues scales, its departures the exceptions`() {
+    fun `a jazz blues is one group on its tonic - led by the blues scales - its departures the exceptions`() {
         listOf("F", null).forEach { key ->
             val blues = groups(song("F7 Bb7 F7 Cm7 F7 Bb7 Bdim7 F7 Am7 D7 Gm7 C7 F7 D7 Gm7 C7", key = key)).single()
             assertEquals("F" to "minor_pentatonic", blues.rootName to blues.scales.first().id, key)
@@ -378,7 +378,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a passing tonic seventh is a moment of the key, not a blues`() {
+    fun `a passing tonic seventh is a moment of the key not a blues`() {
         val folk = groups(song("G G G7 C C G G D7 G G", key = "G")).single()
         assertEquals("G" to "major", folk.rootName to folk.scales.first().id)
         assertEquals(listOf("G7"), folk.exceptions.map { it.chordName })
@@ -389,13 +389,13 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a blues is heard on its tonic seventh, not on the chord its V leads to`() {
+    fun `a blues is heard on its tonic seventh not on the chord its V leads to`() {
         assertEquals(listOf("F" to "minor_pentatonic"), rootAndFirst(song("F7 Bb7 F7 Cm7 F7 Bb7 Bdim7 F7 Am7 D7 Gm7 C7 F7 D7 Gm7 C7")))
         assertEquals(listOf("E" to "minor_pentatonic"), rootAndFirst(song("E7 A7 E7 B7 A7 E7")))
     }
 
     @Test
-    fun `a tonic seventh needs its target unplayed or played as a seventh, and the first chord's seventh comes first`() {
+    fun `a tonic seventh needs its target unplayed or played as a seventh and the first chord's seventh comes first`() {
         assertEquals(listOf("G" to "major"), rootAndFirst(song("D7 G C D7")))
         assertEquals(listOf("E" to "minor_pentatonic"), rootAndFirst(song("E7 A7 B7 A7")))
     }
@@ -408,14 +408,14 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a guessed root is weighed by its home scale, not by the minor family`() {
+    fun `a guessed root is weighed by its home scale not by the minor family`() {
         val flyMe = groups(song("Am7 Dm7 G7 Cmaj7 Fmaj7 Bm7b5 E7 Am7 A7 Dm7 G7 Cmaj7 Am7 Dm7 G7 Cmaj7 Bm7b5 E7")).single()
         assertEquals("C" to "major", flyMe.rootName to flyMe.scales.first().id)
         assertEquals(listOf("E7", "A7"), flyMe.exceptions.map { it.chordName })
     }
 
     @Test
-    fun `a part on the key's IV, the key's tonic heard as its dominant, is read in the IV's key`() {
+    fun `a part on the key's IV - the key's tonic heard as its dominant - is read in the IV's key`() {
         assertEquals(
             listOf("G" to "major", "C" to "major"),
             rootAndFirst(song("G C D G G C D G Em C D G", "C F G C C F G C Am F G C", key = "G")),
@@ -425,7 +425,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a chorus on the IV that only closes on the key's tonic is still read in the IV's key, a chorus on the V is not`() {
+    fun `a chorus on the IV that only closes on the key's tonic is still read in the IV's key - a chorus on the V is not`() {
         assertEquals(listOf("G" to "major", "C" to "major"), rootAndFirst(song("G D Em C", "C Am F G", key = "G")))
         assertEquals(listOf("A" to "major", "D" to "major"), rootAndFirst(song("A E F#m D", "D G Bm Em A", key = "A")))
         assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am F G", "G D Em C", key = "C")))
@@ -455,7 +455,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `a major V never leads into Mixolydian, so a borrowed flat seven stays the major key's`() =
+    fun `a major V never leads into Mixolydian so a borrowed flat seven stays the major key's`() =
         assertEquals(listOf("C" to "major"), rootAndFirst(song("C Am Bb F G")))
 
     private fun smokeOnTheWater(key: String?) = (listOfNotNull(key?.let { "{key: $it}" }) + listOf(
@@ -465,7 +465,7 @@ class SongScaleGroupsTest {
     )).joinToString("\n")
 
     @Test
-    fun `a riff takes the verse in its root's mode and, where the key names its root, the chorus on its steps`() {
+    fun `a riff takes the verse in its root's mode and where the key names its root - the chorus on its steps`() {
         val withKey = groups(smokeOnTheWater("Gm")).single()
         assertEquals(listOf("Riff", "Verse", "Chorus"), withKey.labels)
         assertEquals(listOf("minor_pentatonic", "blues"), withKey.scales.take(2).map { it.id })
@@ -480,7 +480,7 @@ class SongScaleGroupsTest {
         assertEquals(listOf("E" to "minor_pentatonic", "E" to "major"), rootAndFirst(song("E5 G5 A5 E5 G5 A5", "E A B E E A B E")))
 
     @Test
-    fun `an intro of the chorus's chords joins it, however long it holds the flat seventh`() {
+    fun `an intro of the chorus's chords joins it - however long it holds the flat seventh`() {
         val loop = "[G]x [F]x [C]x [D]x [G]x [F]x [C]x [D]x [G]x [F]x [C]x [D]x"
         val pink = groups(
             """
@@ -526,7 +526,7 @@ class SongScaleGroupsTest {
         assertEquals(listOf("minor_pentatonic", "major"), groups(song("E5 G5 A5 E5 G5 A5", "E B C#m A E B G#7 A")).map { it.scales.first().id })
 
     @Test
-    fun `a flamenco part with a major flat second is Phrygian dominant on its root, its flat third chord the exception`() {
+    fun `a flamenco part with a major flat second is Phrygian dominant on its root - its flat third chord the exception`() {
         val flamenco = groups(song("E F E F E F G F E E F E", "Am G F E Am G F E Am G F E", key = "E")).single()
         assertEquals("E" to "phrygian_dominant", flamenco.rootName to flamenco.scales.first().id)
         assertEquals(listOf("G"), flamenco.exceptions.map { it.chordName })
@@ -650,7 +650,7 @@ class SongScaleGroupsTest {
     }
 
     @Test
-    fun `recalls after a transpose count once, so the song's key stays its home`() {
+    fun `recalls after a transpose count once so the song's key stays its home`() {
         val groups = SongScaleSuggestions.of(ChordProTransposer.transpose(ChordProParser.parse("$modulatedChorus\n{transpose: 2}\n{chorus}\n{chorus}\n{chorus}"), 0))
         assertEquals(listOf("C" to true, "D" to false), groups.map { it.rootName to it.isHome })
     }

@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
 class ImportPreviewingTest {
 
     @Test
-    fun `a preview over the review pages through the rows it was opened on, then what joined since`() {
+    fun `a preview over the review pages through the rows it was opened on then what joined since`() {
         val plan = ImportPlan(songs = listOf(entry("a.cho"), entry("b.cho"), entry("c.cho"), entry("d.cho"), entry("e.cho", repeatedEntryIndex = 3)))
         val preview = ImportPreview(songIndices = listOf(1, 0), planSongCount = 2, isReviewPager = true, reviewId = "review")
 
@@ -31,14 +31,14 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `a page names no library file, and every entry of every review its own`() {
+    fun `a page names no library file and every entry of every review its own`() {
         val names = listOf(importPreviewFileName("a", 0), importPreviewFileName("a", 1), importPreviewFileName("b", 0))
         assertTrue(names.none { it.endsWith(".cho") })
         assertEquals(names.size, names.toSet().size)
     }
 
     @Test
-    fun `a page name is told from a library name, and by its review`() {
+    fun `a page name is told from a library name and by its review`() {
         assertTrue(isImportPreviewFileName(importPreviewFileName("a", 0)))
         assertTrue(isImportPreviewFileName(importPreviewFileName("b", 3)))
         assertTrue(isImportPreviewFileName(importPreviewFileName("a", 0), reviewId = "a"))
@@ -48,7 +48,7 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `a preview's song is read from its text, titled by the file it came in where the text names no title`() {
+    fun `a preview's song is read from its text - titled by the file it came in where the text names no title`() {
         val song = importPreviewSongOf(entry("untitled.cho", text = "{key: G}\n{tempo: 96}\n[G]Hello", title = "Untitled"), importPreviewFileName("review", 0))
 
         assertEquals("Untitled", song.title)
@@ -74,7 +74,7 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `the preview of a free name has one button, which Ctrl S presses`() {
+    fun `the preview of a free name has one button which Ctrl S presses`() {
         val actions = importPreviewActionsOf(review(entry("a.cho")), isReviewPager = false)
 
         assertEquals(ImportPreviewActions(ImportPreviewAction.IMPORT), actions)
@@ -90,7 +90,7 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `a shared link imported here before offers Replace first, which Ctrl S never presses`() {
+    fun `a shared link imported here before offers Replace first which Ctrl S never presses`() {
         val actions = importPreviewActionsOf(review(entry("a.cho", status = ImportPlan.Status.CONFLICTING), sharedLinkUpdateCount = 1), isReviewPager = false)
 
         assertEquals(ImportPreviewActions(ImportPreviewAction.REPLACE, ImportPreviewAction.IMPORT_AS_COPY), actions)
@@ -98,7 +98,7 @@ class ImportPreviewingTest {
     }
 
     @Test
-    fun `a preview over the review has the review's Import, and none where nothing can be ticked`() {
+    fun `a preview over the review has the review's Import and none where nothing can be ticked`() {
         assertEquals(ImportPreviewActions(ImportPreviewAction.IMPORT_REVIEW), importPreviewActionsOf(review(entry("a.cho"), entry("b.cho")), isReviewPager = true))
         assertNull(importPreviewActionsOf(review(entry("a.cho", status = ImportPlan.Status.IDENTICAL)), isReviewPager = true))
     }

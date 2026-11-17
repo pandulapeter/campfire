@@ -57,7 +57,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `the chords tab follows a switch of its own, whatever a song shows`() {
+    fun `the chords tab follows a switch of its own - whatever a song shows`() {
         val preferences = testPreferences()
         assertTrue(FeatureSwitches.of(preferences).isChordLibraryEnabled)
         assertTrue(FeatureSwitches.of(null).isChordLibraryEnabled)
@@ -66,7 +66,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `the scales tab follows a switch of its own, whatever the chords`() {
+    fun `the scales tab follows a switch of its own - whatever the chords`() {
         val preferences = testPreferences()
         assertTrue(FeatureSwitches.of(preferences).areScalesEnabled)
         assertTrue(FeatureSwitches.of(null).areScalesEnabled)
@@ -80,7 +80,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `a song read from a setlist goes with the setlists, and one read from the library stays`() {
+    fun `a song read from a setlist goes with the setlists and one read from the library stays`() {
         val fromSetlist = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = "set.setlist.json", initialIndex = 0)
         val fromLibrary = fromSetlist.copy(setlistFileName = null)
 
@@ -113,7 +113,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `a song read from a setlist is cut off with the setlists, and the screens above it with it`() {
+    fun `a song read from a setlist is cut off with the setlists and the screens above it with it`() {
         val setlistSong = CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = "set.setlist.json", initialIndex = 0)
         val state = NavigationState(
             backStack = listOf(CampfireDestination.Songs, CampfireDestination.Setlists, setlistSong, CampfireDestination.SongEditor(fileName = "a.cho")),
@@ -126,7 +126,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `the songs take the setlists with them, and the first tool left becomes home`() {
+    fun `the songs take the setlists with them and the first tool left becomes home`() {
         val songsOff = FeatureSwitches.of(testPreferences().copy(areSongsEnabled = false))
         assertFalse(songsOff.areSongsEnabled)
         assertFalse(songsOff.areSetlistsEnabled)
@@ -205,7 +205,7 @@ internal class FeatureDestinationsTest {
     }
 
     @Test
-    fun `an address with the songs switched off opens on the first tool, its search closed`() {
+    fun `an address with the songs switched off opens on the first tool - its search closed`() {
         val search = NavigationState(backStack = listOf(CampfireDestination.Songs), isSongsSearchOpen = true, isSetlistsSearchOpen = false, settingsTab = SettingsTab.HOME)
         val tuner = search.copy(backStack = search.backStack + CampfireDestination.Tuner, isSongsSearchOpen = false)
         val songsOff = features(areSongsEnabled = false, areSetlistsEnabled = false)

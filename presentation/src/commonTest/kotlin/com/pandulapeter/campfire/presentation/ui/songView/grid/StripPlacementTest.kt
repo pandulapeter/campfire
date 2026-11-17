@@ -43,7 +43,7 @@ class StripPlacementTest {
     )
 
     @Test
-    fun `a strip's columns are each centered in a slot of the view, and it ends at the first stop showing its last column`() {
+    fun `a strip's columns are each centered in a slot of the view and it ends at the first stop showing its last column`() {
         val placement = place(LayoutDirection.Ltr)
         // What the buttons and a gap before them leave of the viewport, 930, and a gap past it is a slot of 475 for each
         // of the two columns on screen, each centered in its own less the gap, so the third one starts past what is in view.
@@ -57,7 +57,7 @@ class StripPlacementTest {
     }
 
     @Test
-    fun `a column wider than a slot takes whole slots, centered in them, so the next one still starts past the view`() {
+    fun `a column wider than a slot takes whole slots - centered in them so the next one still starts past the view`() {
         val columnWidths = intArrayOf(280, 500, 280, 280)
         val placement = placeStrip(
             grid = SectionGrid(rows = IntArray(4), columns = intArrayOf(0, 1, 2, 3), columnCounts = intArrayOf(4), stripColumns = 3),
@@ -82,7 +82,7 @@ class StripPlacementTest {
     }
 
     @Test
-    fun `a strip read from the right is the one read from the left mirrored, its stops counted from its start edge`() {
+    fun `a strip read from the right is the one read from the left mirrored - its stops counted from its start edge`() {
         val ltr = place(LayoutDirection.Ltr)
         // A song and a screen both read from the right: the buttons, at the screen's end, are on the left.
         val rtl = place(LayoutDirection.Rtl, isInsetAtLeft = true)
@@ -94,7 +94,7 @@ class StripPlacementTest {
     }
 
     @Test
-    fun `a strip read from the right on a screen read from the left leaves its gap at the left, where it reads on to`() {
+    fun `a strip read from the right on a screen read from the left leaves its gap at the left where it reads on to`() {
         // With the step buttons in a row under it, nothing is at the screen's end, so only the song's direction counts.
         val ltr = place(LayoutDirection.Ltr, isInset = false)
         val rtl = place(LayoutDirection.Rtl, isInset = false)

@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 class ImportPlanAdditionTest {
 
     @Test
-    fun `an added batch comes after every entry under review, which keep their places`() {
+    fun `an added batch comes after every entry under review which keep their places`() {
         val plan = plan(songs = listOf(song("a.cho"), song("b.cho")), sourceNames = listOf("first.zip"))
         val added = plan(songs = listOf(song("c.cho", origin = 0)), sourceNames = listOf("second.zip"))
         val merged = plan.withAdded(added)
@@ -68,7 +68,7 @@ class ImportPlanAdditionTest {
     }
 
     @Test
-    fun `a name the review already asks about is asked about once, the added song going in numbered`() {
+    fun `a name the review already asks about is asked about once - the added song going in numbered`() {
         val plan = plan(songs = listOf(song("a.cho", text = "{title: A}\none", status = ImportPlan.Status.CONFLICTING)))
         val merged = plan.withAdded(plan(songs = listOf(song("a.cho", text = "{title: A}\ntwo", status = ImportPlan.Status.CONFLICTING))))
         assertEquals(listOf(ImportPlan.Status.CONFLICTING, ImportPlan.Status.NEW), merged.songs.map { it.status })
@@ -83,7 +83,7 @@ class ImportPlanAdditionTest {
     }
 
     @Test
-    fun `a setlist under review is not listed again, and a second question about a setlist name goes in numbered`() {
+    fun `a setlist under review is not listed again and a second question about a setlist name goes in numbered`() {
         val plan = plan(setlists = listOf(setlist("set.setlist.json", "a.cho", status = ImportPlan.Status.CONFLICTING)))
         val added = plan(
             setlists = listOf(

@@ -87,7 +87,7 @@ class ChordSelectionTest {
     }
 
     @Test
-    fun `a definition is drawn in a tuning whose shapes are the standard ones, and only offered in any other`() {
+    fun `a definition is drawn in a tuning whose shapes are the standard ones and only offered in any other`() {
         val text = "{define: G frets 3 x 0 0 3 3}\n[G]la"
         val lowG = chordsOf("{define: G frets 0 2 3 2}\n[G]la", tuning = ChordTuning.UKULELE_LOW_G).single()
         assertEquals(SelectedShape.Source.DEFINED, selectShape(lowG, ChordTuning.UKULELE_LOW_G, emptyMap()).source)

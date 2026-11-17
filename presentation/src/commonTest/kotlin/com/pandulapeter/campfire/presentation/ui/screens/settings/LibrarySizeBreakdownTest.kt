@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class LibrarySizeBreakdownTest {
 
     @Test
-    fun `the breakdown names every part that takes up space, in order, and the total adds them all`() {
+    fun `the breakdown names every part that takes up space and in order and the total adds them all`() {
         val summary = summary(songsSize = 1_200, setlistsSize = 0, picturesSize = 34_000, attachmentsSize = 210_000)
 
         assertEquals(

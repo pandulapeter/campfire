@@ -28,7 +28,7 @@ class ImportOutcomeTest {
     }
 
     @Test
-    fun `a single song file is read behind no screen, wherever it came from`() {
+    fun `a single song file is read behind no screen - wherever it came from`() {
         assertFalse(requestOf("a.cho", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = true))
         assertFalse(requestOf("a.cho", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
     }
@@ -40,7 +40,7 @@ class ImportOutcomeTest {
     }
 
     @Test
-    fun `pictures alone are read behind no screen, and a picture beside anything else is shown`() {
+    fun `pictures alone are read behind no screen and a picture beside anything else is shown`() {
         assertFalse(requestOf("photo.jpg", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = true))
         assertFalse(requestOf("page 1.PNG", "page 2.jpeg", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
         assertTrue(requestOf("photo.jpg", "a.cho", shouldOpenSong = false).isReportedWhileRead(areSongsEnabled = true))
@@ -53,13 +53,13 @@ class ImportOutcomeTest {
     }
 
     @Test
-    fun `with the songs switched off a single song file is shown on the import screen, the demo library still not`() {
+    fun `with the songs switched off a single song file is shown on the import screen - the demo library still not`() {
         assertTrue(requestOf("a.cho", shouldOpenSong = true).isReportedWhileRead(areSongsEnabled = false))
         assertFalse(requestOf("library.zip", shouldOpenSong = false, shouldReview = false).isReportedWhileRead(areSongsEnabled = false))
     }
 
     @Test
-    fun `an import with everything written is clean, duplicates included`() {
+    fun `an import with everything written is clean - duplicates included`() {
         assertTrue(ImportResult(importedSongFileNames = listOf("a.cho"), duplicateFileNames = listOf("b.cho")).isClean)
     }
 
@@ -85,7 +85,7 @@ class ImportOutcomeTest {
     }
 
     @Test
-    fun `a batch of one new song is previewed, a taken name included`() {
+    fun `a batch of one new song is previewed - a taken name included`() {
         assertTrue(ImportPlan(songs = listOf(entry(ImportPlan.Status.NEW))).isPreviewed)
         assertTrue(ImportPlan(songs = listOf(entry(ImportPlan.Status.CONFLICTING))).isPreviewed)
         assertNull(ImportPlan(songs = listOf(entry(ImportPlan.Status.CONFLICTING))).librarySong)
@@ -100,7 +100,7 @@ class ImportOutcomeTest {
     }
 
     @Test
-    fun `a batch of one setlist the library holds as it is, songs and all, is the library's setlist`() {
+    fun `a batch of one setlist the library holds as it is - songs and all - is the library's setlist`() {
         val setlist = setlistEntry(ImportPlan.Status.IDENTICAL)
 
         assertEquals(setlist, ImportPlan(songs = listOf(entry(ImportPlan.Status.IDENTICAL)), setlists = listOf(setlist)).librarySetlist)

@@ -448,7 +448,7 @@ class ChordProTabWrapperTest {
     }
 
     @Test
-    fun `every piece of a staff line stays a staff line, however few dashes it is cut down to`() {
+    fun `every piece of a staff line stays a staff line - however few dashes it is cut down to`() {
         val rows = ChordProTabWrapper.wrapLines(listOf("  Am", "e|--0--|-3|", "B|--1--|-1|"), maxColumns = 10)
 
         assertEquals(

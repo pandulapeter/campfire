@@ -34,7 +34,7 @@ class SearchIndexTest {
     }
 
     @Test
-    fun `a title and an artist that both start with the query outrank a title alone, and a miss has no rank`() {
+    fun `a title and an artist that both start with the query outrank a title alone and a miss has no rank`() {
         assertNull(searchRank(title = "other", artist = "other", tags = listOf("rock"), query = "love"))
         val both = assertNotNull(searchRank(title = "love song", artist = "lovers", tags = emptyList(), query = "love"))
         val titleOnly = assertNotNull(searchRank(title = "love song", artist = "else", tags = emptyList(), query = "love"))

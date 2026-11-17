@@ -103,7 +103,7 @@ class DropboxChangeFeedTest {
     }
 
     @Test
-    fun `a wait cut off without an answer is the network failing, and is sent once`() = runTest {
+    fun `a wait cut off without an answer is the network failing and is sent once`() = runTest {
         var requests = 0
         val provider = dropboxProvider(configure = { install(HttpTimeout) }) {
             requests++
@@ -166,7 +166,7 @@ class DropboxChangeFeedTest {
     }
 
     @Test
-    fun `the changes since a cursor follow its pages and are sorted into files, deletions, and documents`() = runTest {
+    fun `the changes since a cursor follow its pages and are sorted into files and deletions and documents`() = runTest {
         val cursors = mutableListOf<String>()
         val provider = dropboxProvider { request ->
             val cursor = (Json.parseToJsonElement((request.body as TextContent).text) as JsonObject)["cursor"]

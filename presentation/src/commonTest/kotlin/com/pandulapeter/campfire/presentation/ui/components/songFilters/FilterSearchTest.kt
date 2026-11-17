@@ -29,7 +29,7 @@ class FilterSearchTest {
     }
 
     @Test
-    fun `a query leaves the chips containing it, in their order`() {
+    fun `a query leaves the chips containing it - in their order`() {
         assertEquals(listOf("christmas", "christian"), matching("christ"))
     }
 

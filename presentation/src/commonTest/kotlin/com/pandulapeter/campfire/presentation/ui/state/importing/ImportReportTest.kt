@@ -38,7 +38,7 @@ class ImportReportTest {
     }
 
     @Test
-    fun `a shared link's review is named by the setlist or the one song it holds, not by its download`() {
+    fun `a shared link's review is named by the setlist or the one song it holds not by its download`() {
         val setlist = Setlist(
             fileName = "night.setlist.json", title = "Campfire night", description = "", date = LocalDate(2026, 10, 21),
             isArchived = false, entries = emptyList(), size = 0,
@@ -56,7 +56,7 @@ class ImportReportTest {
     }
 
     @Test
-    fun `a review of several files counts them, the skipped ones included, rather than naming them`() {
+    fun `a review of several files counts them - the skipped ones included - rather than naming them`() {
         val plan = ImportPlan(songs = listOf(song("a.cho", "Riverlight")), skippedFileNames = listOf("cover.jpg"), sourceNames = listOf("a.cho", "cover.jpg"))
         assertNull(review(plan, sharedLinkTitle = null).subtitleName)
         assertEquals(2, review(plan, sharedLinkTitle = null).sourceCount)

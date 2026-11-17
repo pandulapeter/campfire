@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class LanguagesTest {
 
     @Test
-    fun `a language is named in the app's language, capitalized`() {
+    fun `a language is named in the app's language - capitalized`() {
         assertEquals("Hungarian", languageName(code = "hu", appLanguageCode = "en"))
         assertEquals("Magyar", languageName(code = "hu", appLanguageCode = "hu"))
     }
@@ -33,7 +33,7 @@ class LanguagesTest {
     }
 
     @Test
-    fun `the picker offers every known code and the library's own, once each, in the alphabet of their labels`() {
+    fun `the picker offers every known code and the library's own - once each - in the alphabet of their labels`() {
         val languages = pickableLanguages(appLanguageCode = "en", alsoOffer = listOf("hu", "qqq"), normalize = { it.lowercase() })
         assertEquals(LANGUAGE_CODES.size + 1, languages.size)
         assertEquals(languages.size, languages.map { it.code }.distinct().size)
@@ -43,7 +43,7 @@ class LanguagesTest {
     }
 
     @Test
-    fun `a language the platform cannot name is listed only where the library holds it, under its code`() {
+    fun `a language the platform cannot name is listed only where the library holds it - under its code`() {
         val inLibrary = pickableLanguages(appLanguageCode = "en", alsoOffer = listOf("qqq"), normalize = { it.lowercase() }).single { it.code == "qqq" }
         assertNull(inLibrary.name)
         assertEquals("QQQ", inLibrary.label)

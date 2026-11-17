@@ -35,7 +35,7 @@ class PrintPreviewGeometryTest {
     }
 
     @Test
-    fun `a page sits beside the column the floating controls take, at the end of the pane`() {
+    fun `a page sits beside the column the floating controls take - at the end of the pane`() {
         val beside = fitArea(Size(600f, 300f), left = 20f, top = 20f, right = 200f, bottom = 20f)
         assertEquals(Rect(20f, 20f, 400f, 280f), beside)
         assertEquals(Offset(145f, 20f), centeredTopLeft(fittedPageSize(beside.size, ASPECT_RATIO), beside))

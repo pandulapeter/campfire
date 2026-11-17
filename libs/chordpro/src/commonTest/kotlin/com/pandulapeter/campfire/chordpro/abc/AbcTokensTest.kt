@@ -25,7 +25,7 @@ class AbcTokensTest {
     }
 
     @Test
-    fun `quotes, decorations, grace notes, and inline fields are taken whole`() {
+    fun `quotes and decorations and grace notes and inline fields are taken whole`() {
         assertEquals("\"Am7\"", "C \"Am7\"D".tokenAt(3))
         assertEquals("!xyz!", "C !xyz!D".tokenAt(4))
         assertEquals("{end_of_abc}", "F|]{end_of_abc}".tokenAt(5))

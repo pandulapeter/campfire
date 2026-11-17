@@ -27,7 +27,7 @@ class ChordProDefinitionsTest {
     private fun definitions(text: String) = ChordProParser.parse(text).metadata.definitions
 
     @Test
-    fun `a fretted shape is read from its base fret, and its instrument from its frets`() {
+    fun `a fretted shape is read from its base fret and its instrument from its frets`() {
         assertEquals(
             listOf(
                 ChordDefinition("G", ChordInstrument.GUITAR, ChordVoicing.Fretted(listOf(3, 2, 0, 0, 0, 3), listOf(2, 1, 0, 0, 0, 3))),
@@ -44,7 +44,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `an open banjo drone is drawn muted where its note is not the chord's, and nothing else is changed`() {
+    fun `an open banjo drone is drawn muted where its note is not the chord's and nothing else is changed`() {
         val d = definitions("{define: D frets 0 4 2 3 4}").single()
         assertEquals(listOf<Int?>(null, 4, 2, 3, 4), (ChordProDefinitions.sounding(d).voicing as ChordVoicing.Fretted).frets)
         val g = definitions("{define: G frets 0 0 0 0 0}").single()
@@ -56,7 +56,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `five frets are a banjo's, and one that stops its short fifth string is not Campfire's to draw`() {
+    fun `five frets are a banjo's and one that stops its short fifth string is not Campfire's to draw`() {
         assertEquals(ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2))), definitions("{define: C frets 0 2 0 1 2}").single())
         assertEquals(ChordInstrument.BANJO, definitions("{define-banjo: D frets x 0 2 3 4}").single().instrument)
         assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read("A frets 7 2 2 2 2"))
@@ -87,7 +87,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `a selector names the instrument, and one that contradicts the shape is unreadable`() {
+    fun `a selector names the instrument and one that contradicts the shape is unreadable`() {
         assertEquals(ChordInstrument.UKULELE, definitions("{define-ukulele: C frets 0 0 0 3}").single().instrument)
         assertEquals(ChordInstrument.KEYBOARD, definitions("{define-piano: C keys 0 4 7}").single().instrument)
         assertEquals(ChordInstrument.MANDOLIN, definitions("{define-mandolin: G frets 0 0 2 3}").single().instrument)
@@ -100,7 +100,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `what declares no shape is no definition, and what cannot be read is invalid`() {
+    fun `what declares no shape is no definition and what cannot be read is invalid`() {
         listOf("G copy G7", "G copyall G7", "G display G/B", "G frets 0 0 0 0 0 0 0", "G", "G copy G7 frets 3 2 0 0 0 3").forEach {
             assertIs<ChordProDefinitions.Reading.Other>(ChordProDefinitions.read(it), it)
         }
@@ -126,7 +126,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `a finger that is no number Campfire draws is shown as none, and base_fret is read as base-fret`() {
+    fun `a finger that is no number Campfire draws is shown as none and base_fret is read as base-fret`() {
         listOf("F frets 1 3 3 2 1 1 fingers T 3 4 2 1 1", "F frets 1 3 3 2 1 1 fingers 9 3 4 2 1 1").forEach {
             val voicing = assertIs<ChordProDefinitions.Reading.Shape>(ChordProDefinitions.read(it), it).voicing as ChordVoicing.Fretted
             assertEquals(listOf(0, 3, 4, 2, 1, 1), voicing.fingers, it)
@@ -157,7 +157,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `the last shape of a chord on an instrument wins, in the place of the first`() {
+    fun `the last shape of a chord on an instrument wins - in the place of the first`() {
         assertEquals(
             listOf(listOf<Int?>(3, 2, 0, 0, 3, 3), listOf<Int?>(0, 2, 3, 2)),
             definitions(
@@ -167,7 +167,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `a define outranks a chord directive, which counts only where the song defines none`() {
+    fun `a define outranks a chord directive which counts only where the song defines none`() {
         fun frets(text: String) = definitions(text).map { (it.voicing as ChordVoicing.Fretted).frets }
         assertEquals(listOf(listOf<Int?>(3, 2, 0, 0, 0, 3)), frets("{define: G frets 3 2 0 0 0 3}\n{chord: G frets 3 x 0 0 3 3}"))
         assertEquals(
@@ -217,7 +217,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `the highlighter colours the chord a definition names, and a line it cannot read`() {
+    fun `the highlighter colours the chord a definition names and a line it cannot read`() {
         val text = "{define: G frets 3 2 0 0 0 3}\n{define: X frets 3 2 0 0 0 3}\n{define: G frets 3 two}\n{define-ukulele: G frets 3 2 0 0 0 3}\n{define: G base-fret 2147483647 frets 3 2 1 1 1 3}"
         val tokens = ChordProHighlighter.tokenize(text)
         val chords = tokens.filter { it.type == ChordProHighlighter.TokenType.CHORD }.map { text.substring(it.start, it.end) }
@@ -230,7 +230,7 @@ class ChordProDefinitionsTest {
     }
 
     @Test
-    fun `a change of notation renames a definition, a selected one included`() {
+    fun `a change of notation renames a definition - a selected one included`() {
         assertEquals(
             "{define: H frets x 2 4 4 4 2}\n{define-ukulele: B frets 3 2 1 1}\n[H]la",
             ChordProNotation.convertText("{define: B frets x 2 4 4 4 2}\n{define-ukulele: Bb frets 3 2 1 1}\n[B]la", ChordNotation.STANDARD, ChordNotation.GERMAN),

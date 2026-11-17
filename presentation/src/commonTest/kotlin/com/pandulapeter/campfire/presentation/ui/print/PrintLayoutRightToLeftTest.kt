@@ -48,7 +48,7 @@ internal class PrintLayoutRightToLeftTest {
     private fun chord(position: Int, name: String) = ChordProLine.Lyrics.Chord(position, name, false)
     private fun PrintText.end() = x + measure(text, style)
 
-    @Test fun `a right-to-left song's lyrics end at the column's right edge, each chord ending where its letter starts`() = runTest {
+    @Test fun `a right-to-left song's lyrics end at the column's right edge - each chord ending where its letter starts`() = runTest {
         val document = layout(listOf(verse(ChordProLine.Lyrics("שלום עולם", listOf(chord(0, "Am"), chord(5, "G"))))))
         val texts = document.pages.single().texts
         val lyric = texts.single { it.text.startsWith("שלום") }
@@ -96,7 +96,7 @@ internal class PrintLayoutRightToLeftTest {
         }
     }
 
-    @Test fun `a grid moves to the right edge whole, its lines keeping their columns`() = runTest {
+    @Test fun `a grid moves to the right edge whole - its lines keeping their columns`() = runTest {
         val grid = listOf(
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"))),
             ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("C"), GridToken.Bar("|"))),
@@ -126,7 +126,7 @@ internal class PrintLayoutRightToLeftTest {
         assertTrue(texts.last().end() < document.width / 2)
     }
 
-    @Test fun `a printed chord that overflows its chord line is sent on, and one that fits is placed as on screen`() {
+    @Test fun `a printed chord that overflows its chord line is sent on and one that fits is placed as on screen`() {
         assertNull(printChordLeft(anchor = 10f, chordWidth = 20f, lineWidth = 100f, previousChordEdge = 5f, isRunRightToLeft = true, isLineRightToLeft = true))
         assertEquals(30f, printChordLeft(anchor = 50f, chordWidth = 20f, lineWidth = 100f, previousChordEdge = 100f, isRunRightToLeft = true, isLineRightToLeft = true))
         assertEquals(40f, printChordLeft(anchor = 40f, chordWidth = 20f, lineWidth = 100f, previousChordEdge = 100f, isRunRightToLeft = false, isLineRightToLeft = true))

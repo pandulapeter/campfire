@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class IsExportedWithPicturesUseCaseImplTest {
 
     @Test
-    fun `a song naming a picture the library holds is exported with it, one naming none or a missing one is not`() = runTest {
+    fun `a song naming a picture the library holds is exported with it - one naming none or a missing one is not`() = runTest {
         val images = FakeImageRepository()
         val name = images.store(FakeImageRepository.picture(1))
         val useCase = IsExportedWithPicturesUseCaseImpl(images)

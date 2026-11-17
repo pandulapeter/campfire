@@ -42,7 +42,7 @@ class SyncEngineDamagedCopyTest {
     private var index = SyncIndexDocument()
 
     @Test
-    fun `a damaged copy is downloaded once while it does not change, and a repaired one on the next run`() = runTest {
+    fun `a damaged copy is downloaded once while it does not change and a repaired one on the next run`() = runTest {
         cloud.files[PHOTO] = "not the photo".encodeToByteArray() to "r1"
         repeat(3) { assertEquals(listOf(PHOTO.name), run().summary.failed) }
 

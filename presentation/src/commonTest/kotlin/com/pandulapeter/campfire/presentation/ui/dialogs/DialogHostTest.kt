@@ -90,7 +90,7 @@ class DialogHostTest {
     }
 
     @Test
-    fun `the lookup fills the form under it in place, and closing it uncovers that form`() = runTest {
+    fun `the lookup fills the form under it in place and closing it uncovers that form`() = runTest {
         val host = DialogHost(backgroundScope)
         val info = DialogType.SongInfo(song = song, target = file)
         val form = DialogType.SongMetadata(song = song, values = emptyMap(), target = file)
@@ -144,7 +144,7 @@ class DialogHostTest {
     }
 
     @Test
-    fun `a dialog shown only over no dialog is seen by the listeners, and never covers one`() = runTest {
+    fun `a dialog shown only over no dialog is seen by the listeners and never covers one`() = runTest {
         val host = DialogHost(backgroundScope)
         val changes = mutableListOf<List<DialogType>>()
         host.addOpenDialogsChange { _, after -> changes += after }

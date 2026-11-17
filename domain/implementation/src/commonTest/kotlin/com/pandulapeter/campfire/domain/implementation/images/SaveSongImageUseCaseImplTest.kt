@@ -58,7 +58,7 @@ class SaveSongImageUseCaseImplTest {
     private val text = "{title: Chart}\n{image: src=photo.heic}\n{image: src=other.png}\n{image: photo.heic}\n"
 
     @Test
-    fun `a stored picture takes the missing name's place in every directive, written while pictures are kept`() = runTest {
+    fun `a stored picture takes the missing name's place in every directive - written while pictures are kept`() = runTest {
         lateinit var library: Library
         library = Library(ImageIntake.Accepted("3f9a0c1d2e4b5a69.jpg"))
         val songs = Songs(text) { library }

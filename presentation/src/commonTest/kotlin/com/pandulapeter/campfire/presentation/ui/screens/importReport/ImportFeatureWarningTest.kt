@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 class ImportFeatureWarningTest {
 
     @Test
-    fun `an import with the songs switched off is warned about, setlists or not`() {
+    fun `an import with the songs switched off is warned about - setlists or not`() {
         assertEquals(ImportFeatureWarning.SONGS_OFF, importFeatureWarning(areSongsEnabled = false, areSetlistsEnabled = true, hasSetlists = false))
         assertEquals(ImportFeatureWarning.SONGS_OFF, importFeatureWarning(areSongsEnabled = false, areSetlistsEnabled = false, hasSetlists = true))
     }

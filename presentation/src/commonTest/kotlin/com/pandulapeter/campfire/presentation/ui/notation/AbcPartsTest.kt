@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class AbcPartsTest {
 
     @Test
-    fun `an exported score is one part per instrument, a grand staff and a staff with its tablature each one`() {
+    fun `an exported score is one part per instrument - a grand staff and a staff with its tablature each one`() {
         assertEquals(
             listOf(
                 AbcPart(name = "Vocals", voiceId = "1", score = "1"),
@@ -32,7 +32,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a bracket groups instruments, each of them a part`() {
+    fun `a bracket groups instruments - each of them a part`() {
         val tune = "X:1\n%%score [(S A) (T B)]\nV:S nm=\"Soprano\"\nV:A\nV:T name=Tenor\nV:B\nK:C\n"
         assertEquals(
             listOf(
@@ -44,7 +44,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a tune with no score line has a part per voice, unnamed ones by their id`() {
+    fun `a tune with no score line has a part per voice - unnamed ones by their id`() {
         assertEquals(
             listOf(AbcPart(name = null, voiceId = "1", score = "1"), AbcPart(name = "Fiddle", voiceId = "2", score = "2")),
             abcPartsOf("X:1\nK:G\nV:1\nGABc|\nV:2 nm=Fiddle\nDEFG|"),
@@ -52,7 +52,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a single part, voices on one staff, and several tunes offer nothing to choose`() {
+    fun `a single part and voices on one staff and several tunes offer nothing to choose`() {
         assertTrue(abcPartsOf("X:1\nK:G\nGABc|").isEmpty())
         assertTrue(abcPartsOf("X:1\n%%score (1 2)\nV:1\nV:2\nK:G\n").isEmpty())
         assertTrue(abcPartsOf("X:1\nV:1\nV:2\nK:G\n\nX:2\nV:1\nV:2\nK:D\n").isEmpty())
@@ -67,7 +67,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a part leaves the other voices' music out, so they keep no time for it`() {
+    fun `a part leaves the other voices' music out so they keep no time for it`() {
         assertEquals(
             "X:1\n%%score 2\nK:C\nC|\nV:2\nL:1/8\nE|",
             abcTuneWithPart("X:1\nK:C\nC|\nV:1 nm=\"Wind\"\nD|\nV:2 nm=\"Violin\"\nL:1/8\nE|\nV:1\nF|", AbcPart(name = "Violin", voiceId = "2", score = "2")),
@@ -75,7 +75,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a part keeps its music written in inline voice fields, after any voice line`() {
+    fun `a part keeps its music written in inline voice fields - after any voice line`() {
         assertEquals(
             "X:1\n%%score 1\nK:C\nV:1\n[V:1] EFGA|",
             abcTuneWithPart("X:1\nK:C\nV:1 nm=\"Melody\"\nV:2 nm=\"Bass\"\n[V:1] EFGA|\n[V:2] C,C,C,C,|", AbcPart(name = "Melody", voiceId = "1", score = "1")),
@@ -83,7 +83,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a part shown alone names no staff, as what picked it already says which it is`() {
+    fun `a part shown alone names no staff as what picked it already says which it is`() {
         assertEquals(
             "X:1\n%%score 2\nK:C\nV:2 clef=bass\n[V:2 clef=bass] C,|",
             abcTuneWithPart(
@@ -102,7 +102,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `the player's instrument picks its part by name, whatever its strings`() {
+    fun `the player's instrument picks its part by name - whatever its strings`() {
         val parts = abcPartsOf(EXPORT)
         assertEquals(2, abcPartFor(parts, Instrument.GUITAR_TWELVE_STRING))
         assertEquals(3, abcPartFor(parts, Instrument.BASS_FIVE_STRING))
@@ -113,7 +113,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a bass guitar is the bass's, and a bassoon and a violoncello are nobody's`() {
+    fun `a bass guitar is the bass's and a bassoon and a violoncello are nobody's`() {
         val parts = listOf("Bassoon", "Violoncello", "Bass Guitar", "Gitarre").map { AbcPart(name = it, voiceId = it, score = it) }
         assertEquals(2, abcPartFor(parts, Instrument.BASS))
         assertEquals(3, abcPartFor(parts, Instrument.GUITAR))
@@ -121,7 +121,7 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a choir's bass is not the bass player's part, a band's is`() {
+    fun `a choir's bass is not the bass player's part - a band's is`() {
         val choir = listOf("Soprano", "Alto", "Tenor", "Bass", "Piano").map { AbcPart(name = it, voiceId = it, score = it) }
         assertNull(abcPartFor(choir, Instrument.BASS))
         assertEquals(4, abcPartFor(choir, Instrument.KEYBOARD))
@@ -132,14 +132,14 @@ class AbcPartsTest {
     }
 
     @Test
-    fun `a staff voices of several names share is no instrument's part, and makes the score a choir's`() {
+    fun `a staff voices of several names share is no instrument's part and makes the score a choir's`() {
         val parts = abcPartsOf("X:1\n%%score (S A) (T B) 3\nV:S nm=\"Soprano\"\nV:A nm=\"Alto\"\nV:T nm=\"Tenor\"\nV:B nm=\"Bass\"\nV:3 nm=\"Bass\"\nK:C\n")
         assertEquals(listOf("Soprano / Alto", "Tenor / Bass", "Bass"), parts.map { it.name })
         assertNull(abcPartFor(parts, Instrument.BASS))
     }
 
     @Test
-    fun `the part shown is the instrument's, else the one picked, else the first`() {
+    fun `the part shown is the instrument's - else the one picked - else the first`() {
         val parts = abcPartsOf(EXPORT)
         assertEquals(2, shownAbcPartIndex(parts, matched = 2, chosen = 4))
         assertEquals(4, shownAbcPartIndex(parts, matched = null, chosen = 4))

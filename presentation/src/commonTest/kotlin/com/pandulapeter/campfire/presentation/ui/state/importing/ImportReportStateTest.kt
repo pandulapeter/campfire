@@ -94,7 +94,7 @@ class ImportReportStateTest {
     }
 
     @Test
-    fun `a finishing onboarding hands over to the waiting report, else to the song an import opens after it`() = runTest {
+    fun `a finishing onboarding hands over to the waiting report - else to the song an import opens after it`() = runTest {
         startState()
         backStack += CampfireDestination.Onboarding(isOpenedFromSettings = false)
         assertNull(state.screenAfterOnboarding())
@@ -145,7 +145,7 @@ class ImportReportStateTest {
     }
 
     @Test
-    fun `an imported preview becomes the song's screen in place, which leaves the import`() = runTest {
+    fun `an imported preview becomes the song's screen in place which leaves the import`() = runTest {
         startState()
         state.show(songPreview)
         settle()
@@ -157,7 +157,7 @@ class ImportReportStateTest {
     }
 
     @Test
-    fun `the review's rows open in a preview over it, which its Import takes off again`() = runTest {
+    fun `the review's rows open in a preview over it which its Import takes off again`() = runTest {
         startState()
         val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false)
         state.show(review)
@@ -172,7 +172,7 @@ class ImportReportStateTest {
     }
 
     @Test
-    fun `a batch joining the review brings the import screen to the front, closing a preview over it`() = runTest {
+    fun `a batch joining the review brings the import screen to the front - closing a preview over it`() = runTest {
         startState()
         val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry, entry)), choices = ImportChoices(), isDemoLibrary = false)
         state.show(review)
@@ -200,7 +200,7 @@ class ImportReportStateTest {
     }
 
     @Test
-    fun `a review keeps its id through a change of its choices, and two reviews have different ones`() = runTest {
+    fun `a review keeps its id through a change of its choices and two reviews have different ones`() = runTest {
         startState()
         val review = ImportReport.Review(plan = ImportPlan(songs = listOf(entry)), choices = ImportChoices(), isDemoLibrary = false)
         state.report = review

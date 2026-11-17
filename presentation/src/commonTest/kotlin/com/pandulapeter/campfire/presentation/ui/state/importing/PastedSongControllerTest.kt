@@ -81,7 +81,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `an ABC tune is queued as a new song, as a chord sheet is`() = runTest {
+    fun `an ABC tune is queued as a new song as a chord sheet is`() = runTest {
         val tune = "X:1\nT:Lantern Reel\nK:G\n\"G\"GABc|"
         controller().newSongFromText(tune)
         val (files, isNewSongFromText) = queued.single()
@@ -90,7 +90,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `blank text, links alone and an oversized text are answered without an import`() = runTest {
+    fun `blank text - links alone and an oversized text are answered without an import`() = runTest {
         val controller = controller()
         controller.newSongFromText("  \n ")
         controller.newSongFromText("https://example.com/song")
@@ -141,7 +141,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a shared page title beside its address is answered as a link, as is the same text pasted`() = runTest {
+    fun `a shared page title beside its address is answered as a link as is the same text pasted`() = runTest {
         val controller = controller()
         controller.importSharedText(SharedTextPayload(texts = listOf("Wonderwall – Oasis\nhttps://example.com/w"), subject = null))
         controller.newSongFromText("Wonderwall – Oasis\nhttps://example.com/w")
@@ -162,7 +162,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `an empty share still reaches the import, which reports it as skipped`() = runTest {
+    fun `an empty share still reaches the import which reports it as skipped`() = runTest {
         controller().importSharedText(SharedTextPayload(texts = listOf(" "), subject = null))
         assertTrue(queued.single().first.single().bytes.decodeToString().isBlank())
         assertTrue(messages.isEmpty())
@@ -191,7 +191,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a paste is answered only on the song list with nothing over it, outside read only mode`() = runTest {
+    fun `a paste is answered only on the song list with nothing over it - outside read only mode`() = runTest {
         val controller = controller()
         assertTrue(controller.isNewSongPasteAvailable)
         dialogHost.showDialog(DialogType.NewSong)
@@ -205,7 +205,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a dropped text is answered only on the song list with nothing over it, in read only mode too`() = runTest {
+    fun `a dropped text is answered only on the song list with nothing over it - in read only mode too`() = runTest {
         val controller = controller()
         isPerformanceModeEnabled.value = true
         assertTrue(controller.isNewSongDropAvailable)
@@ -217,7 +217,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a pasted or shared Campfire link is imported as the link, not as a song`() = runTest {
+    fun `a pasted or shared Campfire link is imported as the link not as a song`() = runTest {
         val controller = controller()
         controller.newSongFromText(" $LINK\n")
         controller.importSharedText(SharedTextPayload(texts = listOf(LINK), subject = "Riverlight"))
@@ -228,7 +228,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a shared Campfire link is imported under its own title, whatever page title the share carries`() = runTest {
+    fun `a shared Campfire link is imported under its own title - whatever page title the share carries`() = runTest {
         controller().importSharedText(SharedTextPayload(texts = listOf(LINK), subject = "Some page title"))
         assertTrue(links.single().let { it is SharedLink.Readable && it.title == "Riverlight" })
         assertTrue(queued.isEmpty())
@@ -236,7 +236,7 @@ class PastedSongControllerTest {
     }
 
     @Test
-    fun `a Campfire link beside other words is text, as any other address is`() = runTest {
+    fun `a Campfire link beside other words is text as any other address is`() = runTest {
         val controller = controller()
         controller.newSongFromText("Listen to this: $LINK")
         controller.importSharedText(SharedTextPayload(texts = listOf("Riverlight\n$LINK"), subject = null))

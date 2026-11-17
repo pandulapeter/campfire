@@ -54,7 +54,7 @@ class SavedDialogTest {
     }
 
     @Test
-    fun `a song edit sheet is saved with its kind, its target and its setlist`() {
+    fun `a song edit sheet is saved with its kind - its target and its setlist`() {
         fun edit(kind: SavedDialog.SongEdit.Kind, isEditorDraft: Boolean = false, setlistFileName: String? = null) =
             SavedDialog.SongEdit(kind = kind, songFileName = "a.cho", isEditorDraft = isEditorDraft, setlistFileName = setlistFileName)
         assertEquals(edit(SavedDialog.SongEdit.Kind.TAGS), DialogType.SongTags(song, file).toSavedDialog())
@@ -82,7 +82,7 @@ class SavedDialogTest {
     }
 
     @Test
-    fun `confirmations, the export screen, the tuner and sheets with nothing typed are not saved`() {
+    fun `confirmations - the export screen - the tuner and sheets with nothing typed are not saved`() {
         listOf(
             DialogType.DeleteLibrary,
             DialogType.UnsavedChanges,

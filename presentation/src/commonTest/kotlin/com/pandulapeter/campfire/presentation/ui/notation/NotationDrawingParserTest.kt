@@ -52,7 +52,7 @@ class NotationDrawingParserTest {
     }
 
     @Test
-    fun `chord symbols and lyrics are told apart, and a group moves its words`() {
+    fun `chord symbols and lyrics are told apart and a group moves its words`() {
         val texts = parseNotationDrawing(listOf(HEADER, SYSTEM))!!.systems.single().texts
         val chord = texts.single { (it.runs.single() as NotationTextRun.Words).text == "Em" }
         val lyric = texts.single { (it.runs.single() as NotationTextRun.Words).text == "la" }
@@ -117,7 +117,7 @@ class NotationDrawingParserTest {
     }
 
     @Test
-    fun `a boxed tempo's rectangle is a shape, and a page background is left to the page`() {
+    fun `a boxed tempo's rectangle is a shape and a page background is left to the page`() {
         val shapes = parseNotationDrawing(
             listOf(HEADER, system("""<rect width="100%" height="100%" fill="white"/><rect class="slW" x="10" y="20" width="30" height="15"/>""")),
         )!!.systems.single().shapes
@@ -141,7 +141,7 @@ class NotationDrawingParserTest {
     }
 
     @Test
-    fun `a class may set a text's anchor, its box, and a superscript's size and raised baseline`() {
+    fun `a class may set a text's anchor and its box and a superscript's size and raised baseline`() {
         val text = parseNotationDrawing(
             listOf(
                 HEADER,
@@ -204,7 +204,7 @@ class NotationDrawingParserTest {
     }
 
     @Test
-    fun `a tablature's clef naming its strings draws them knocked out, and plays no bar`() {
+    fun `a tablature's clef naming its strings draws them knocked out and plays no bar`() {
         // The clef the app's host writes in place of TAB, and a bar line opening the staff between it and the first fret.
         val names = listOf("E", "A", "D", "G", "B", "e").mapIndexed { string, name ->
             "<text class=\"bg1\" x=\"-7.5\" y=\"${-6 * string + 8.5}\" style=\"font:7px sans-serif\">$name</text>"

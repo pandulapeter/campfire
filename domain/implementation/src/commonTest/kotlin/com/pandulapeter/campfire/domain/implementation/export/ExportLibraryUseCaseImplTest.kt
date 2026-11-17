@@ -127,7 +127,7 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
-    fun `exports a setlist in the folder that the scan could not decode, as it is stored`() = runTest {
+    fun `exports a setlist in the folder that the scan could not decode as it is stored`() = runTest {
         val result = useCase(
             songs = listOf(song("a")),
             setlists = emptyList(),

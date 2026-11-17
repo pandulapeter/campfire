@@ -110,7 +110,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun `the songs switched off under the settings screen leave it over the first tool, and back on over the songs`() = runTest {
+    fun `the songs switched off under the settings screen leave it over the first tool and back on over the songs`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.selectTopLevelDestination(CampfireDestination.Settings)
         navigator.followFeatureSwitches(FeatureSwitches.of(testPreferences().copy(areSongsEnabled = false)))
@@ -198,7 +198,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun `next on the onboarding's last page finishes it, and it opens again on its first`() = runTest {
+    fun `next on the onboarding's last page finishes it and it opens again on its first`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.openOnboarding(isOpenedFromSettings = false)
         repeat(3) { navigator.showNextOnboardingStep(screenAfter = null) }
@@ -208,7 +208,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun `only finishing the onboarding celebrates, and opening it again forgets the celebration`() = runTest {
+    fun `only finishing the onboarding celebrates and opening it again forgets the celebration`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.openOnboarding(isOpenedFromSettings = false)
         navigator.closeOnboarding()
@@ -392,7 +392,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun `pressing the open tool's item names the first tool for a tool at its top, but never the tool itself`() = runTest {
+    fun `pressing the open tool's item names the first tool for a tool at its top but never the tool itself`() = runTest {
         val navigator = navigator(backgroundScope)
         val requests = mutableListOf<ScrollToTopRequest>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { navigator.scrollToTopRequests.toList(requests) }
@@ -471,7 +471,7 @@ class NavigatorTest {
     }
 
     @Test
-    fun `deleting a song closes the editor and the details screen under it, and nothing else`() = runTest {
+    fun `deleting a song closes the editor and the details screen under it and nothing else`() = runTest {
         val navigator = navigator(backgroundScope)
         navigator.updateBackStack {
             add(CampfireDestination.SongDetails(songFileNames = listOf("x.cho"), setlistFileName = null, initialIndex = 0))

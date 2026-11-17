@@ -32,7 +32,7 @@ class AbcTitlesTest {
     }
 
     @Test
-    fun `a tune names the song only by its first title, case and spacing aside`() {
+    fun `a tune names the song only by its first title - case and spacing aside`() {
         assertTrue(abcNamesSongTitle("X:1\nT:The  Reel\nK:G\nGAB|", songTitle = "the reel"))
         assertTrue(abcNamesSongTitle("X:1\nT:Another\nK:G\nGAB|\n\nX:2\nT:The Reel\nK:D\nDEF|", songTitle = "The Reel"))
         assertFalse(abcNamesSongTitle("X:1\nT:Another\nT:The Reel\nK:G\nGAB|", songTitle = "The Reel"))

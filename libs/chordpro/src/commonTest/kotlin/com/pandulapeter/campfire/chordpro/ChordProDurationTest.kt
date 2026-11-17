@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 class ChordProDurationTest {
 
     @Test
-    fun `seconds, minutes and seconds, and hours are read`() {
+    fun `seconds and minutes and seconds and hours are read`() {
         assertEquals(268.seconds, ChordProDuration.parse("268"))
         assertEquals(4.minutes + 28.seconds, ChordProDuration.parse("4:28"))
         assertEquals(4.minutes + 28.seconds, ChordProDuration.parse("04:28"))
@@ -36,7 +36,7 @@ class ChordProDurationTest {
     }
 
     @Test
-    fun `durations are written as minutes and seconds, with hours from an hour on`() {
+    fun `durations are written as minutes and seconds - with hours from an hour on`() {
         assertEquals("0:05", ChordProDuration.format(5.seconds))
         assertEquals("4:28", ChordProDuration.format(268.seconds))
         assertEquals("59:59", ChordProDuration.format(3599.seconds))

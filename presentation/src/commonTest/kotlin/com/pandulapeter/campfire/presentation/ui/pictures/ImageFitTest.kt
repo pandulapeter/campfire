@@ -20,12 +20,12 @@ class ImageFitTest {
     private val plain = ChordProBlock.Image(src = "a.jpg")
 
     @Test
-    fun `a picture wider than the column is fitted to its width, keeping its proportions`() {
+    fun `a picture wider than the column is fitted to its width - keeping its proportions`() {
         assertEquals(FittedImage(400f, 300f), fittedImageSize(plain, pixelWidth = 4000, pixelHeight = 3000, unit = 1f, columnWidth = 400f))
     }
 
     @Test
-    fun `a picture taller than the room is scaled down to it, so it is never cut`() {
+    fun `a picture taller than the room is scaled down to it so it is never cut`() {
         assertEquals(FittedImage(300f, 400f), fittedImageSize(plain, pixelWidth = 3000, pixelHeight = 4000, unit = 1f, columnWidth = 400f, maxHeight = 400f))
     }
 
@@ -60,13 +60,13 @@ class ImageFitTest {
     }
 
     @Test
-    fun `width and height together keep the proportions, taking the smaller`() {
+    fun `width and height together keep the proportions - taking the smaller`() {
         val image = plain.copy(width = ImageLength.Points(300.0), height = ImageLength.Points(50.0))
         assertEquals(FittedImage(100f, 50f), fittedImageSize(image, pixelWidth = 1000, pixelHeight = 500, unit = 1f, columnWidth = 400f))
     }
 
     @Test
-    fun `a scale narrows it further, and a scale above one widens nothing`() {
+    fun `a scale narrows it further and a scale above one widens nothing`() {
         assertEquals(FittedImage(200f, 150f), fittedImageSize(plain.copy(scale = 0.5), pixelWidth = 4000, pixelHeight = 3000, unit = 1f, columnWidth = 400f))
         assertEquals(FittedImage(100f, 50f), fittedImageSize(plain.copy(scale = 3.0), pixelWidth = 100, pixelHeight = 50, unit = 1f, columnWidth = 400f))
     }
@@ -77,7 +77,7 @@ class ImageFitTest {
     }
 
     @Test
-    fun `a narrower picture stands where its alignment says, centred by default`() {
+    fun `a narrower picture stands where its alignment says - centred by default`() {
         assertEquals(0f, imageLeftEdge(ImageAlignment.LEFT, columnWidth = 400f, imageWidth = 100f))
         assertEquals(150f, imageLeftEdge(null, columnWidth = 400f, imageWidth = 100f))
         assertEquals(300f, imageLeftEdge(ImageAlignment.RIGHT, columnWidth = 400f, imageWidth = 100f))

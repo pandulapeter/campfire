@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 
 /** Known zlib streams, checked against zlib's own decoder when they were written down. */
 internal class ZlibTest {
-    @Test fun `empty input is the header, an empty fixed block, and a checksum of one`() = runTest {
+    @Test fun `empty input is the header and an empty fixed block and a checksum of one`() = runTest {
         assertEquals("7801030000000001", zlib(ByteArray(0)))
     }
 

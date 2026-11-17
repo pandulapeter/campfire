@@ -31,7 +31,7 @@ class NewSongFromTextTest {
     )
 
     @Test
-    fun `one song the library does not hold is a new song, declared title and artist or not`() {
+    fun `one song the library does not hold is a new song - declared title and artist or not`() {
         val text = "{title: Song}\n{artist: Band}\n[G]Hello\n"
         assertEquals(text, ImportPlan(songs = listOf(song(text))).newSongOf()?.text)
         assertNotNull(ImportPlan(songs = listOf(song("[G]Hello\n"))).newSongOf())
@@ -48,7 +48,7 @@ class NewSongFromTextTest {
     }
 
     @Test
-    fun `several songs, or a song with something left out, are the import`() {
+    fun `several songs or a song with something left out or are the import`() {
         assertNull(ImportPlan(songs = listOf(song("[G]One\n"), song("[G]Two\n"))).newSongOf())
         assertNull(ImportPlan(songs = listOf(song("[G]One\n")), oversizedFileNames = listOf("big.txt")).newSongOf())
         assertNull(ImportPlan(skippedFileNames = listOf("empty.txt")).newSongOf())

@@ -67,7 +67,7 @@ class SyncEngineRestoreTest {
     }
 
     @Test
-    fun `a restored copy that is not what its name says is a damaged copy, never asked for again`() = runTest {
+    fun `a restored copy that is not what its name says is a damaged copy never asked for again`() = runTest {
         cloud.deletedFiles[PHOTO] = "an older picture".encodeToByteArray()
 
         assertTrue(run().asksForFollowUp)

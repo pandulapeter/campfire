@@ -34,7 +34,7 @@ class OnboardingStepTest {
     }
 
     @Test
-    fun `the instrument is asked before the features, and without the chords the notation is not asked`() {
+    fun `the instrument is asked before the features and without the chords the notation is not asked`() {
         assertEquals(
             listOf(
                 OnboardingStep.WELCOME,

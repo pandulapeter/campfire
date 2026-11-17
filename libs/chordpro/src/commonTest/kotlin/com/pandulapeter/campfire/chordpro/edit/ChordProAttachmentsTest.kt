@@ -22,7 +22,7 @@ class ChordProAttachmentsTest {
     private val take = "0123456789abcdef.mp3"
 
     @Test
-    fun `attachments are read from their meta directives, in order, each file once, keeping its first name`() {
+    fun `attachments are read from their meta directives - in order - each file once - keeping its first name`() {
         val metadata = ChordProParser.parseMetadata(
             "{title: T}\n{meta: attachment $sheet Sheet music.pdf}\n{meta: Attachment $take}\n{meta: attachment $sheet Other name}",
         )
@@ -32,7 +32,7 @@ class ChordProAttachmentsTest {
     }
 
     @Test
-    fun `names keep their spaces and quotes, and a missing name reads as none`() {
+    fun `names keep their spaces and quotes and a missing name reads as none`() {
         val metadata = ChordProParser.parseMetadata("{meta: attachment $sheet  \"Live\" at Joe's   place.pdf }\n{meta: attachment $take   }")
 
         assertEquals(listOf(ChordProAttachment(sheet, "\"Live\" at Joe's   place.pdf"), ChordProAttachment(take)), metadata.attachments)
@@ -48,7 +48,7 @@ class ChordProAttachmentsTest {
     }
 
     @Test
-    fun `the files a song keeps are read generously, and the summary reads the same set`() {
+    fun `the files a song keeps are read generously and the summary reads the same set`() {
         val text = "{title: T}\n{meta: attachment $sheet Sheet}\n# {meta: attachment $take Take}\n{start_of_abc}\n" +
             "{meta: attachment abcdef0123456789.mid}\n{end_of_abc}\n{image: src=0011223344556677.png}\n[C]Line"
 
@@ -76,7 +76,7 @@ class ChordProAttachmentsTest {
     }
 
     @Test
-    fun `setting attachments leaves out addresses and duplicates, and a name cannot write another directive`() {
+    fun `setting attachments leaves out addresses and duplicates and a name cannot write another directive`() {
         val text = ChordProAttachments.setAttachments(
             "{title: T}\n[C]Line",
             listOf(
@@ -91,7 +91,7 @@ class ChordProAttachmentsTest {
     }
 
     @Test
-    fun `rewriting changes only the file, on every line that names one`() {
+    fun `rewriting changes only the file - on every line that names one`() {
         val text = "{title: T}\n{meta:  attachment   $sheet  Sheet music}\n#{meta: attachment $take}\n{meta: link https://x.com}\n"
 
         val rewritten = ChordProAttachments.withAttachmentSourcesRewritten(text) { if (it == sheet) "${sheet.dropLast(4)}0.pdf" else "${it}0" }
@@ -114,7 +114,7 @@ class ChordProAttachmentsTest {
     }
 
     @Test
-    fun `an attachment left out loses every line naming it, commented out or not, and nothing else`() {
+    fun `an attachment left out loses every line naming it and commented out or not and nothing else`() {
         val text = "{title: T}\r\n{meta: attachment $sheet Sheet}\r\n# {meta: attachment $sheet Old}\r\n{meta: attachment $take Take}\r\n[C]Line"
 
         assertEquals(

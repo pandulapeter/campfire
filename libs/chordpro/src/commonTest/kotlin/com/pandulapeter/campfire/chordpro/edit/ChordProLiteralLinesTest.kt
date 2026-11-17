@@ -19,7 +19,7 @@ class ChordProLiteralLinesTest {
         "{start_of_abc}\n[CEG]\n{end_of_abc}\n{start_of_chorus}\n[G]Sing\n{end_of_chorus}\n"
 
     @Test
-    fun `the lines of a grid, a tab, and delegated notation are literal`() {
+    fun `the lines of a grid and a tab and delegated notation are literal`() {
         assertTrue(ChordProLiteralLines.isLiteralAt(song, song.indexOf("| C")))
         assertTrue(ChordProLiteralLines.isLiteralAt(song, song.indexOf("G . |")))
         assertTrue(ChordProLiteralLines.isLiteralAt(song, song.indexOf("e|")))
@@ -27,7 +27,7 @@ class ChordProLiteralLinesTest {
     }
 
     @Test
-    fun `lyrics, sections, and the directives opening an environment are not literal`() {
+    fun `lyrics and sections and the directives opening an environment are not literal`() {
         assertFalse(ChordProLiteralLines.isLiteralAt(song, song.indexOf("[C]Hello")))
         assertFalse(ChordProLiteralLines.isLiteralAt(song, song.indexOf("{sog}") + 2))
         assertFalse(ChordProLiteralLines.isLiteralAt(song, song.indexOf("[G]Sing")))

@@ -63,7 +63,7 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `a banjo's fifth string stays open where it is, and is drawn muted where its note leaves the chord`() {
+    fun `a banjo's fifth string stays open where it is and is drawn muted where its note leaves the chord`() {
         val c = ChordDefinition("C", ChordInstrument.BANJO, ChordVoicing.Fretted(listOf(0, 2, 0, 1, 2), listOf(0, 2, 0, 1, 3)))
         assertEquals(ChordVoicing.Fretted(listOf(0, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), move(c, 2).voicing)
         assertEquals(ChordVoicing.Fretted(listOf(null, 4, 2, 3, 4), listOf(0, 3, 1, 2, 4)), ChordProDefinitions.sounding(move(c, 2)).voicing)
@@ -81,7 +81,7 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `a shape with an open string moves up the neck, also when transposed down`() {
+    fun `a shape with an open string moves up the neck - also when transposed down`() {
         val e = ChordDefinition("E", ChordInstrument.GUITAR, ChordVoicing.Fretted(listOf(0, 2, 2, 1, 0, 0), listOf(0, 2, 3, 1, 0, 0)))
         val f = move(e, 1)
         assertEquals("F", f.name)
@@ -123,7 +123,7 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `the text keeps every character outside the name, the base fret, the frets and the fingers`() {
+    fun `the text keeps every character outside the name - the base fret - the frets and the fingers`() {
         assertEquals(
             "{define-guitar:  F   frets  1 3 3 2 1 1  fingers 1 3 4 2 1 1 display F}",
             ChordProTransposer.transposeText("{define-guitar:  E   frets  0 2 2 1 0 0  fingers 0 2 3 1 0 0 display F}", 1),
@@ -134,7 +134,7 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `the text keeps a fingering up to five fingers, and one the move cannot carry back goes with its keyword`() {
+    fun `the text keeps a fingering up to five fingers and one the move cannot carry back goes with its keyword`() {
         assertEquals(
             "{define: D frets 2 5 4 2 3 5 fingers 1 4 3 1 2 5}",
             ChordProTransposer.transposeText("{define: C frets 0 3 2 0 1 3 fingers 0 3 2 0 1 4}", 2),
@@ -145,7 +145,7 @@ class ChordProDefinitionsTranspositionTest {
     }
 
     @Test
-    fun `a shape no move keeps on the neck is left as it is, named as it was`() {
+    fun `a shape no move keeps on the neck is left as it is - named as it was`() {
         assertEquals("{define: E frets 0 x 14 13 12 0}\n[Eb]x", ChordProTransposer.transposeText("{define: E frets 0 x 14 13 12 0}\n[E]x", -1))
         val parsed = ChordProParser.parse("{define: E frets 0 x 14 13 12 0}\n[E]x")
         assertEquals(parsed.metadata.definitions.single(), ChordProTransposer.transpose(parsed, -1).metadata.definitions.single())

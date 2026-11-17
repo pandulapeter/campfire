@@ -60,7 +60,7 @@ internal class PrintLayoutTest {
         return texts.single { it.text == "Line 2" }.y - texts.single { it.text == "Line 1" }.y
     }
 
-    @Test fun `formatted lyrics print as one text carrying their styles, under their chords`() = runTest {
+    @Test fun `formatted lyrics print as one text carrying their styles - under their chords`() = runTest {
         val line = ChordProLine.Lyrics(
             text = "Some bold and under",
             chords = listOf(ChordProLine.Lyrics.Chord(5, "Am", false)),
@@ -83,7 +83,7 @@ internal class PrintLayoutTest {
         assertEquals(lyric.x + measure("Some ", lyric.style), texts.single { it.text == "Am" }.x, 0.01f)
     }
 
-    @Test fun `a right-to-left line with markup prints as one text, which the renderer lays out in its order`() = runTest {
+    @Test fun `a right-to-left line with markup prints as one text which the renderer lays out in its order`() = runTest {
         val line = ChordProLine.Lyrics(
             text = "שלום עולם",
             chords = emptyList(),
@@ -95,7 +95,7 @@ internal class PrintLayoutTest {
         assertEquals(listOf(ChordProLine.Lyrics.Formatting(5, 9, ChordProLine.Lyrics.Formatting.Style.BOLD)), lyric.formatting)
     }
 
-    @Test fun `markup's bold is not written bold, while the title and the chords are`() = runTest {
+    @Test fun `markup's bold is not written bold while the title and the chords are`() = runTest {
         val line = ChordProLine.Lyrics(
             text = "There is a house",
             chords = emptyList(),
@@ -109,7 +109,7 @@ internal class PrintLayoutTest {
         assertTrue(texts.single { it.text == "D" }.style.bold)
     }
 
-    @Test fun `a comment prints as one text carrying its markup, plain and boxed`() = runTest {
+    @Test fun `a comment prints as one text carrying its markup - plain and boxed`() = runTest {
         listOf(CommentStyle.PLAIN, CommentStyle.BOX).forEach { style ->
             val comment = ChordProBlock.Comment("Play <u>slowly</u> here", style)
             val texts = layout(source(song(emptyList(), blocks = listOf(comment)))).pages.single().texts
@@ -120,7 +120,7 @@ internal class PrintLayoutTest {
         }
     }
 
-    @Test fun `a narrow column breaks the playing row between its values, never between a label and its value`() = runTest {
+    @Test fun `a narrow column breaks the playing row between its values never between a label and its value`() = runTest {
         val entry = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
             ChordProMetadata(key = "Bb", capo = 3, tempo = "96", time = "6/8"), listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(2)))))
         val texts = layout(source(entry), PrintSettings(columns = 4)).pages.single().texts.map { it.text }
@@ -163,7 +163,7 @@ internal class PrintLayoutTest {
         }
     }
 
-    @Test fun `the columns share the printable width evenly, apart from each other`() = runTest {
+    @Test fun `the columns share the printable width evenly - apart from each other`() = runTest {
         listOf(false, true).forEach { isLandscape ->
             (2..PrintSettings.MAX_COLUMNS).forEach { count ->
                 val settings = PrintSettings(isLandscape = isLandscape, columns = count)
@@ -186,7 +186,7 @@ internal class PrintLayoutTest {
         assertTrue(chord.y < lyrics.y)
     }
 
-    @Test fun `chords too wide for their column overflow onto chord lines of their own, alone, over a lyric, and after one`() = runTest {
+    @Test fun `chords too wide for their column overflow onto chord lines of their own and alone and over a lyric and after one`() = runTest {
         val names = listOf("Cmaj7(#11)", "Bbmaj9/D", "Gm7b5", "Am7add11")
         val settings = PrintSettings(columns = 4)
         suspend fun chordLines(line: ChordProLine.Lyrics) = layout(source(song(listOf(line))), settings).pages.single().texts
@@ -255,7 +255,7 @@ internal class PrintLayoutTest {
         assertFalse(text.any { it.contains("comment") || it.contains("Capo") || it.contains("Artist") || it == "D" || it.contains("e|") })
     }
 
-    @Test fun `a chord row's repeat mark prints on the chords' row and goes with the chords, not the comments`() = runTest {
+    @Test fun `a chord row's repeat mark prints on the chords' row and goes with the chords not the comments`() = runTest {
         fun entry(row: String) = song(ChordProParser.parse("$row\nSung words").blocks.filterIsInstance<ChordProBlock.Section>().single().lines)
         val withoutComments = PrintSettings(showComments = false)
         val marked = layout(source(entry("[G] [C] x4")), withoutComments).pages.single().texts
@@ -298,7 +298,7 @@ internal class PrintLayoutTest {
         assertFalse("Tab" in hidden || hidden.any { it.startsWith("e|") })
     }
 
-    @Test fun `tablature is engraved, its strings ruled and its lines selectable as the file has them`() = runTest {
+    @Test fun `tablature is engraved - its strings ruled and its lines selectable as the file has them`() = runTest {
         val staff = listOf("Am      G", "e|---0---|---3---|", "B|---1---|-------|")
         val lines = staff.mapIndexed { index, text -> ChordProLine.Tab(text, continuesEnvironment = index > 0) }
         val page = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, lines))))).pages.single()
@@ -323,7 +323,7 @@ internal class PrintLayoutTest {
         assertTrue(chords.single { !it.isDrawn }.let { !it.style.bold && it.isSelectable })
     }
 
-    @Test fun `tablature is printed or left out apart from the chords, its comments with it`() = runTest {
+    @Test fun `tablature is printed or left out apart from the chords - its comments with it`() = runTest {
         val entry = song(emptyList(), listOf(
             ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Lyrics("Sung words", listOf(ChordProLine.Lyrics.Chord(0, "D", false))))),
             ChordProBlock.Comment("Palm muted", CommentStyle.PLAIN, isInTabOrGrid = true, isInTab = true),
@@ -338,7 +338,7 @@ internal class PrintLayoutTest {
         assertFalse(chordsOnly.any { it.startsWith("e|") } || "Palm muted" in chordsOnly || "Tab" in chordsOnly)
     }
 
-    @Test fun `a grid line is drawn as boxes and reaches the text layer once, as ChordPro writes it`() = runTest {
+    @Test fun `a grid line is drawn as boxes and reaches the text layer once as ChordPro writes it`() = runTest {
         val tokens = listOf(GridToken.Text("Intro"), GridToken.Bar("|:"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Chord("C"), GridToken.Beat, GridToken.Bar(":|"), GridToken.Text("x2"))
         val page = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens))))))).pages.single()
         val written = page.texts.single { !it.isDrawn }
@@ -364,7 +364,7 @@ internal class PrintLayoutTest {
         assertTrue(hiddenPages.all { it.boxes.isEmpty() })
     }
 
-    @Test fun `an abc block prints preformatted and unselectable under its kind, and is left out with the sheet music, not with the chords`() = runTest {
+    @Test fun `an abc block prints preformatted and unselectable under its kind and is left out with the sheet music not with the chords`() = runTest {
         val tied = "|:G2-G2 A2-A2|B2-B2 c2-c2:|"
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, listOf(
             ChordProLine.Verbatim("X:1", "abc"),
@@ -382,7 +382,7 @@ internal class PrintLayoutTest {
         assertFalse("ABC notation" in hidden || "X:1" in hidden)
     }
 
-    @Test fun `an engraved abc block prints a row per staff system, at the size the column allows, under its kind`() = runTest {
+    @Test fun `an engraved abc block prints a row per staff system - at the size the column allows - under its kind`() = runTest {
         val tune = listOf(ChordProLine.Verbatim("X:1", "abc"), ChordProLine.Verbatim("K:G", "abc"), ChordProLine.Verbatim("GAB|", "abc"))
         val abc = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("abc"), null, tune)))
         val system = NotationSystem(width = 400f, height = 60f, shapes = emptyList(), glyphs = emptyList(), texts = emptyList(), bars = 2)
@@ -461,7 +461,7 @@ internal class PrintLayoutTest {
             layout(source(entry), settings.copy(showComments = false)))
     }
 
-    @Test fun `a setlist's running order page keeps every slot's number and key, and marks missing songs`() = runTest {
+    @Test fun `a setlist's running order page keeps every slot's number and key and marks missing songs`() = runTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val missing = first.copy(fileName = "missing.cho", title = "Missing song", index = 3, song = null)
         val last = first.copy(title = "Last", index = 5)
@@ -471,7 +471,7 @@ internal class PrintLayoutTest {
         assertFalse("First lyrics" in text)
     }
 
-    @Test fun `the running order's details follow their own switch, not the song sheets' artist`() = runTest {
+    @Test fun `the running order's details follow their own switch not the song sheets' artist`() = runTest {
         val entry = song(lyrics(1)).copy(title = "First", index = 1)
         val source = PrintSource("Concert", "Notes", date = "Today", kind = PrintSource.Kind.SETLIST, songs = listOf(entry))
         val withDetails = layout(source, PrintSettings(showMetadata = false)).pages.first().texts.map { it.text }
@@ -481,7 +481,7 @@ internal class PrintLayoutTest {
         assertTrue("Artist" in layout(source, PrintSettings(showOverviewDetails = false)).pages[1].texts.map { it.text })
     }
 
-    @Test fun `the running order has columns of its own, starting under the heading that spans the page`() = runTest {
+    @Test fun `the running order has columns of its own - starting under the heading that spans the page`() = runTest {
         val entries = (1..120).map { song(lyrics(1)).copy(title = "Song $it", index = it) }
         val source = PrintSource("Concert", "A description", kind = PrintSource.Kind.SETLIST, songs = entries)
         val page = layout(source, PrintSettings(columns = 1, overviewColumns = 3)).pages.first()
@@ -501,7 +501,7 @@ internal class PrintLayoutTest {
         assertEquals(listOf("Concert", "1. First", "2. Last"), document.pages.map { it.texts.first().text })
     }
 
-    @Test fun `a setlist's running order can be printed without its song sheets, which only a setlist can leave out`() = runTest {
+    @Test fun `a setlist's running order can be printed without its song sheets which only a setlist can leave out`() = runTest {
         val first = song(listOf(ChordProLine.Lyrics("First lyrics", emptyList()))).copy(title = "First", index = 1)
         val last = first.copy(title = "Last", index = 2)
         val runningOrderOnly = layout(PrintSource("Concert", kind = PrintSource.Kind.SETLIST, songs = listOf(first, last)), PrintSettings(includeSongSheets = false))
@@ -664,7 +664,7 @@ internal class PrintLayoutTest {
         assertEquals(listOf("Verse", "Verse 2"), texts.filter { it.style.bold && it.style.size == labelSize }.map { it.text })
     }
 
-    @Test fun `a wrapped grid run breaks every line after the same bar, keeping its columns`() = runTest {
+    @Test fun `a wrapped grid run breaks every line after the same bar - keeping its columns`() = runTest {
         fun line(vararg chords: String) = ChordProLine.Grid(
             chords.flatMap { listOf(GridToken.Bar("|"), GridToken.Chord(it), GridToken.Beat, GridToken.Beat, GridToken.Beat) } + GridToken.Bar("|"),
         )
@@ -681,7 +681,7 @@ internal class PrintLayoutTest {
         assertTrue(written.first().style.size < 20f)
     }
 
-    @Test fun `a grid line taller than a page goes on over the next pages, every bar inside one`() = runTest {
+    @Test fun `a grid line taller than a page goes on over the next pages - every bar inside one`() = runTest {
         val bars = 400
         val line = ChordProLine.Grid((1..bars).flatMap { listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Beat, GridToken.Beat) } + GridToken.Bar("|"))
         val document = layout(source(song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(line))))))
@@ -917,7 +917,7 @@ internal class PrintLayoutTest {
 
     private fun guitarChord(name: String) = PrintChord(name, geometry = ChordDiagramGeometry.Fretted(6, 1, 4, List(6) { null }, emptyList(), emptyList()))
 
-    @Test fun `chord diagrams are printed under the heading only when asked for, with or without the chords`() = runTest {
+    @Test fun `chord diagrams are printed under the heading only when asked for - with or without the chords`() = runTest {
         val entry = song(lyrics(2)).copy(chords = listOf(guitarChord("D"), guitarChord("G")))
         assertTrue(layout(source(entry), PrintSettings(showChordDiagrams = false)).pages.single().diagrams.isEmpty())
         assertEquals(2, layout(source(entry), PrintSettings(showChordDiagrams = true, showChords = false)).pages.single().diagrams.size)
@@ -930,7 +930,7 @@ internal class PrintLayoutTest {
         assertTrue(page.diagrams.all { diagram -> diagram.y + diagram.height <= page.texts.first { it.text == "Line 1" }.y })
     }
 
-    @Test fun `suggested scales are printed under the diagrams only when asked for, with or without the chords, and are not selectable`() = runTest {
+    @Test fun `suggested scales are printed under the diagrams only when asked for and with or without the chords and are not selectable`() = runTest {
         val scales = listOf(PrintScaleRow(title = null, text = "D major · B minor"), PrintScaleRow(title = "Over E7", text = "E Mixolydian"))
         val entry = song(lyrics(1)).copy(chords = listOf(guitarChord("D")), scales = scales)
         val scaleLabels = labels.copy(scales = "Scales")
@@ -991,7 +991,7 @@ internal class PrintLayoutTest {
         }
     }
 
-    @Test fun `a second name is printed on a line over its name, the same line for every cell`() = runTest {
+    @Test fun `a second name is printed on a line over its name - the same line for every cell`() = runTest {
         val chords = listOf(guitarChord("5").copy(letterName = "G"), guitarChord("G7").copy(degree = "V7"), guitarChord("Xyz"))
         val texts = layout(source(song(lyrics(1)).copy(chords = chords)), PrintSettings(showChordDiagrams = true)).pages.single().texts
         val names = listOf("5", "G7", "Xyz").map { name -> texts.single { it.text == name } }

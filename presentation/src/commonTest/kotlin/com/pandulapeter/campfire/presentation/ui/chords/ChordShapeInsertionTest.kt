@@ -32,7 +32,7 @@ class ChordShapeInsertionTest {
     private val song = "{title: X}\n{key: C}\n\n[C]Hello [Am]there"
 
     @Test
-    fun `a chord at the caret is defined with the shape the player would see, its frets selected`() {
+    fun `a chord at the caret is defined with the shape the player would see - its frets selected`() {
         assertEquals(
             "{title: X}\n{key: C}\n{define: Am base-fret 1 frets x 0 2 2 1 0 fingers 0 0 2 3 1 0}\n\n[C]Hello [Am]there" to "x 0 2 2 1 0",
             apply(song, song.indexOf("Am")),
@@ -50,7 +50,7 @@ class ChordShapeInsertionTest {
     }
 
     @Test
-    fun `the mandolin names itself, since its four frets would otherwise read as a ukulele's`() {
+    fun `the mandolin names itself since its four frets would otherwise read as a ukulele's`() {
         val (text, selected) = apply(song, song.indexOf("Am"), instrument = ChordInstrument.MANDOLIN)
         assertEquals("2 2 3 0", selected)
         assertEquals(true, "{define-mandolin: Am base-fret 1 frets 2 2 3 0 fingers 1 2 3 0}" in text)
@@ -60,7 +60,7 @@ class ChordShapeInsertionTest {
     }
 
     @Test
-    fun `with the caret in no chord a whole placeholder is written, its name selected to be typed over`() {
+    fun `with the caret in no chord a whole placeholder is written - its name selected to be typed over`() {
         val caret = song.indexOf("Hello") + 2
         val (text, selected) = apply(song, caret)
         assertEquals(true, "{define: C base-fret 1 frets x 3 2 0 1 0" in text)
@@ -70,7 +70,7 @@ class ChordShapeInsertionTest {
     }
 
     @Test
-    fun `a chord already defined gets no second line, the caret goes to its frets`() {
+    fun `a chord already defined gets no second line - the caret goes to its frets`() {
         val defined = "{title: X}\n{define: Am frets x 0 2 2 1 0}\n\n[Am]there"
         val insertion = chordShapeInsertion(defined, defined.lastIndexOf("Am"), ChordNotation.STANDARD, ChordInstrument.GUITAR, emptyMap())
         assertEquals("", insertion.text)
@@ -80,7 +80,7 @@ class ChordShapeInsertionTest {
     }
 
     @Test
-    fun `a placeholder the text already defines gets no second line, the caret goes to its frets`() {
+    fun `a placeholder the text already defines gets no second line - the caret goes to its frets`() {
         val defined = "{title: X}\n{define: C base-fret 3 frets x 1 3 3 3 1}\n\nHello"
         val caret = defined.indexOf("Hello") + 2
         val insertion = chordShapeInsertion(defined, caret, ChordNotation.STANDARD, ChordInstrument.GUITAR, emptyMap())

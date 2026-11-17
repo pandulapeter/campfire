@@ -30,7 +30,7 @@ class ToolCapoTest {
     }
 
     @Test
-    fun `the Scales tab takes the capo on every fretted neck, with or without chord shapes`() {
+    fun `the Scales tab takes the capo on every fretted neck - with or without chord shapes`() {
         assertEquals(2, on(Instrument.GUITAR).scaleLibraryCapo())
         assertEquals(2, on(Instrument.BASS_FIVE_STRING).scaleLibraryCapo())
         assertEquals(2, on(Instrument.GUITAR_SEVEN_STRING).scaleLibraryCapo())

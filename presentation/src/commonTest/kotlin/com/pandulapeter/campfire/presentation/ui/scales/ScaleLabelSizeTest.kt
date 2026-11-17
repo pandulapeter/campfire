@@ -27,7 +27,7 @@ internal class ScaleLabelSizeTest {
     }
 
     @Test
-    fun `the widest label decides, so a wider one is never drawn larger`() {
+    fun `the widest label decides so a wider one is never drawn larger`() {
         assertTrue(scaleLabelFontSize(radius = 10f, widestAtDefault = 30f) < scaleLabelFontSize(radius = 10f, widestAtDefault = 24f))
     }
 }

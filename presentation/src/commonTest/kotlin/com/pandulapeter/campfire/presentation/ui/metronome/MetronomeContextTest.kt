@@ -130,7 +130,7 @@ class MetronomeContextTest {
         assertFalse(isMetronomeContextMoved(MetronomeContext.Song("a.cho", null), MetronomeContext.Song("a.cho", null), emptyMap()))
 
     @Test
-    fun `only the metronome tab and a song can start a click, and only with the feature on`() {
+    fun `only the metronome tab and a song can start a click and only with the feature on`() {
         val startable = listOf(
             CampfireDestination.Metronome,
             CampfireDestination.SongDetails(songFileNames = listOf("a.cho"), setlistFileName = null, initialIndex = 0),
@@ -149,7 +149,7 @@ class MetronomeContextTest {
     }
 
     @Test
-    fun `the bar the panel draws is the stretch's, then the song's, then the default, and the tab's own standalone`() {
+    fun `the bar the panel draws is the stretch's then the song's then the default and the tab's own standalone`() {
         val song = Song(
             fileName = "a.cho",
             title = "A",

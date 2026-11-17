@@ -30,7 +30,7 @@ class SetlistSummaryTextTest {
     }
 
     @Test
-    fun `a description, a countdown or a single song's duration is a summary`() {
+    fun `a description - a countdown or a single song's duration is a summary`() {
         assertTrue(setlistWithSongs(description = "For the encore").hasSummary)
         assertTrue(setlistWithSongs(isCountdownShown = true).hasSummary)
         assertTrue(setlistWithSongs(durations = listOf(null, 3.minutes), missing = 1).hasSummary)

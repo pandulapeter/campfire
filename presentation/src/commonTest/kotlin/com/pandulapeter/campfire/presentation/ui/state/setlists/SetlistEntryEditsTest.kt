@@ -64,7 +64,7 @@ internal class SetlistEntryEditsTest {
     }
 
     @Test
-    fun `songs added together go to the end in the order given, skipping the ones it names`() = assertEquals(
+    fun `songs added together go to the end in the order given - skipping the ones it names`() = assertEquals(
         listOf("a", "b", "c", "e", "d"),
         setlist.withSongsAdded(listOf("e", "b", "d", "e"), preferences = null).entries.map { it.songFileName },
     )

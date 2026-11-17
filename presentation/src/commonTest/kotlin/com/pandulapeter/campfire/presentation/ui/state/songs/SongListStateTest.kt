@@ -103,7 +103,7 @@ class SongListStateTest {
     }
 
     @Test
-    fun `a long list is led by its random picks and their question, a search by neither`() {
+    fun `a long list is led by its random picks and their question - a search by neither`() {
         val songs = (1..21).map { song("song$it") }
         val sections = listOf(SongSection(header = SongSection.Header.Letter('S'), songs = songs))
         val searchable = songs.map { SearchableSong(song = it, title = it.title, artist = "", tags = emptyList()) }

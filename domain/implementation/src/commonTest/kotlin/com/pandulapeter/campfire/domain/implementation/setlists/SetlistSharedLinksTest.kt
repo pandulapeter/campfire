@@ -32,7 +32,7 @@ class SetlistSharedLinksTest {
     }
 
     @Test
-    fun `an edit that keeps the file name, or writes nothing, tells the links nothing`() = runTest {
+    fun `an edit that keeps the file name or writes nothing or tells the links nothing`() = runTest {
         edit(renamedTo = "gig.setlist.json", title = "Gig")
         edit(renamedTo = null, title = "Summer gig")
 

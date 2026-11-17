@@ -24,13 +24,13 @@ class PictureAttemptTest {
     }
 
     @Test
-    fun `a long picture is shrunk to the longest side, its proportions kept`() {
+    fun `a long picture is shrunk to the longest side - its proportions kept`() {
         assertEquals(ImageSize(width = 4_096, height = 1_024), reencodedSizeOf(16_384, 4_096))
         assertEquals(ImageSize(width = 512, height = 4_096), reencodedSizeOf(1_000, 8_000))
     }
 
     @Test
-    fun `a large photo is shrunk to the most pixels, its proportions kept`() {
+    fun `a large photo is shrunk to the most pixels - its proportions kept`() {
         val size = reencodedSizeOf(6_000, 4_500)
         assertEquals(ImageSize(width = 4_000, height = 3_000), size)
         for ((width, height) in listOf(7_000 to 5_000, 9_999 to 7_777, 4_096 to 4_096, 32_768 to 32_768)) {

@@ -247,7 +247,7 @@ class SyncedPreferencesTest {
     }
 
     @Test
-    fun `a song's scroll speed is read and written beside its other values, one out of range left out`() {
+    fun `a song's scroll speed is read and written beside its other values - one out of range left out`() {
         val preferences = SyncedPreferences(capos = mapOf("a.cho" to 2), autoScrollSpeeds = mapOf("a.cho" to 130))
         val document = document("""{"a.cho":{"capo":2,"autoScrollSpeed":130}}""")
         assertEquals(document, SyncedPreferencesDocument.localDocument(base = null, preferences = preferences))
@@ -279,7 +279,7 @@ class SyncedPreferencesTest {
     )
 
     @Test
-    fun `two devices that chose shapes for different chords both keep their choice, and this device's wins for one chord`() = assertEquals(
+    fun `two devices that chose shapes for different chords both keep their choice and this device's wins for one chord`() = assertEquals(
         chordsDocument("""{"guitar":{"F:0.4.7":"x x 3 2 1 1","G:0.4.7":"3 2 0 0 3 3","C:0.4.7":"x 3 5 5 5 3"}}"""),
         SyncedPreferencesDocument.merge(
             base = chordsDocument("""{"guitar":{"C:0.4.7":"x 3 2 0 1 0"}}"""),
@@ -299,7 +299,7 @@ class SyncedPreferencesTest {
     )
 
     @Test
-    fun `an instrument each side took a different shape off is left out, and settling it again changes nothing`() {
+    fun `an instrument each side took a different shape off is left out and settling it again changes nothing`() {
         val merged = SyncedPreferencesDocument.merge(
             base = chordsDocument("""{"guitar":{"F":"a","G":"b"}}"""),
             local = chordsDocument("""{"guitar":{"G":"b"}}"""),
@@ -317,7 +317,7 @@ class SyncedPreferencesTest {
     }
 
     @Test
-    fun `an instrument still holding a shape is kept, one this version cannot read included`() = assertEquals(
+    fun `an instrument still holding a shape is kept - one this version cannot read included`() = assertEquals(
         chordsDocument("""{"guitar":{"C":"c"},"banjo":{"G":7}}"""),
         SyncedPreferencesDocument.merge(
             base = chordsDocument("""{"guitar":{"F":"a","C":"c"},"banjo":{"G":7}}"""),
@@ -327,7 +327,7 @@ class SyncedPreferencesTest {
     )
 
     @Test
-    fun `the chords are read and written beside the songs, what this version cannot read passing through`() {
+    fun `the chords are read and written beside the songs - what this version cannot read passing through`() {
         val base = chordsDocument("""{"guitar":{"C:0.4.7":"x 3 2 0 1 0","D:0.4.7":7},"banjo":{"G:0.4.7":"0 0 0 0 0"}}""")
         assertEquals(
             SyncedPreferences(chords = mapOf("guitar" to mapOf("C:0.4.7" to "x 3 2 0 1 0"), "banjo" to mapOf("G:0.4.7" to "0 0 0 0 0"))),
@@ -344,7 +344,7 @@ class SyncedPreferencesTest {
     }
 
     @Test
-    fun `a chord's choice is applied value by value, and never dropped with a song`() {
+    fun `a chord's choice is applied value by value and never dropped with a song`() {
         val preferences = defaultUserPreferences().copy(chordVoicings = mapOf("guitar" to mapOf("C:0.4.7" to "x 3 2 0 1 0", "A:0.4.7" to "x 0 2 2 2 0")))
         val applied = SyncedPreferences(chords = mapOf("guitar" to mapOf("C:0.4.7" to "x 3 5 5 5 3"), "keyboard" to mapOf("C:0.4.7" to "4 7 12"))).applyTo(
             preferences = preferences,
@@ -365,7 +365,7 @@ class SyncedPreferencesTest {
     )
 
     @Test
-    fun `two devices that colored different tags both keep their color, and a reset on one side gives way to a change`() = assertEquals(
+    fun `two devices that colored different tags both keep their color and a reset on one side gives way to a change`() = assertEquals(
         tagsDocument("""{"christmas":"green","folk":"blue","rock":"pink"}"""),
         SyncedPreferencesDocument.merge(
             base = tagsDocument("""{"christmas":"red","rock":"red"}"""),
@@ -375,7 +375,7 @@ class SyncedPreferencesTest {
     )
 
     @Test
-    fun `the tag colors are read and written beside the songs, what this version cannot read passing through`() {
+    fun `the tag colors are read and written beside the songs - what this version cannot read passing through`() {
         val base = tagsDocument("""{"christmas":"red","folk":7}""")
         assertEquals(SyncedPreferences(tags = mapOf("christmas" to "red")), SyncedPreferencesDocument.preferencesOf(base))
         assertEquals(
@@ -385,7 +385,7 @@ class SyncedPreferencesTest {
     }
 
     @Test
-    fun `a tag's color is applied value by value, and never dropped with a song`() {
+    fun `a tag's color is applied value by value and never dropped with a song`() {
         val preferences = defaultUserPreferences().copy(tagColors = mapOf("christmas" to "red", "folk" to "blue", "rock" to "pink"))
         val applied = SyncedPreferences(tags = mapOf("christmas" to "green", "jazz" to "teal")).applyTo(
             preferences = preferences,
@@ -591,7 +591,7 @@ class SyncedPreferencesTest {
     }
 
     @Test
-    fun `a document written elsewhere after the listing, with nothing to upload, is not paired with its revision`() = runTest {
+    fun `a document written elsewhere after the listing - with nothing to upload - is not paired with its revision`() = runTest {
         val provider = FakeSyncProvider()
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":1},"b.cho":{"tempo":90}}""") to "r2"
         provider.onUploadDocument = { throw AssertionError("Uploaded a document that was in step.") }

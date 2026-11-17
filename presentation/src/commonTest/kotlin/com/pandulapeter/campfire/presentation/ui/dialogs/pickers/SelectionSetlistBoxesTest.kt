@@ -36,7 +36,7 @@ internal class SelectionSetlistBoxesTest {
     private val selection = setOf("a", "b", "c")
 
     @Test
-    fun `a selection box is ticked, empty or half ticked by what the setlist holds of the selection`() {
+    fun `a selection box is ticked - empty or half ticked by what the setlist holds of the selection`() {
         val selection = setOf("a", "b")
         assertEquals(ToggleableState.Off, selectionBoxState(selection, held = emptySet(), added = emptySet()))
         assertEquals(ToggleableState.Indeterminate, selectionBoxState(selection, held = setOf("a"), added = emptySet()))
@@ -72,7 +72,7 @@ internal class SelectionSetlistBoxesTest {
     )
 
     @Test
-    fun `a tap records what the setlist holds then, once`() {
+    fun `a tap records what the setlist holds then - once`() {
         val recorded = withHeldRecorded(emptyMap(), setlistOf("a"), selection)
 
         assertEquals(mapOf(setlist.fileName to setOf("a")), recorded)

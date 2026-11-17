@@ -25,7 +25,7 @@ class NoteNamesTest {
     }
 
     @Test
-    fun `a note is named in the reader's notation, and in letters for a numbering`() {
+    fun `a note is named in the reader's notation and in letters for a numbering`() {
         assertEquals("H", noteName(59, ChordNotation.GERMAN))
         assertEquals("E", noteName(40, ChordNotation.GERMAN))
         assertEquals("Mi", noteName(40, ChordNotation.LATIN))
@@ -42,7 +42,7 @@ class NoteNamesTest {
     }
 
     @Test
-    fun `a natural note is spoken by its name, then its octave`() {
+    fun `a natural note is spoken by its name then its octave`() {
         assertEquals("H 3", spokenNoteNameWithOctave(59, ChordNotation.GERMAN) { error("") })
         assertEquals("E 2", spokenNoteNameWithOctave(40, ChordNotation.STANDARD) { error("") })
     }

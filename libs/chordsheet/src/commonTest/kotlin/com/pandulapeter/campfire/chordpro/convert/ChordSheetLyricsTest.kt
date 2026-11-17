@@ -18,7 +18,7 @@ import kotlin.test.assertNull
 class ChordSheetLyricsTest {
 
     @Test
-    fun `brackets, a line in braces, and a leading hash are escaped as the converter escapes prose`() {
+    fun `brackets and a line in braces and a leading hash are escaped as the converter escapes prose`() {
         val escaped = ChordSheetLyrics.escaped("Sing [loud] now\n{title: Not a title}\n# not a comment\nPlain line").lines()
 
         assertEquals(4, escaped.size)

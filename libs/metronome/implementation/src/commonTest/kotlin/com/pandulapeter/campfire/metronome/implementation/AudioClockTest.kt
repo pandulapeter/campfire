@@ -35,7 +35,7 @@ class AudioClockTest {
     }
 
     @Test
-    fun `a track hears nothing before its first timestamp, and only one that never reports one goes by its head`() {
+    fun `a track hears nothing before its first timestamp and only one that never reports one goes by its head`() {
         assertEquals(-1L, AudioClock.heardFrameBeforeTimestamp(headFrame = 0, elapsedNanos = 0))
         assertEquals(-1L, AudioClock.heardFrameBeforeTimestamp(headFrame = 9_600, elapsedNanos = 200_000_000))
         assertEquals(96_000L, AudioClock.heardFrameBeforeTimestamp(headFrame = 96_000, elapsedNanos = 2_000_000_000))

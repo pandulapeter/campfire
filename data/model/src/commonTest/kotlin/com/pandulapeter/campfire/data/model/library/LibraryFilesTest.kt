@@ -35,7 +35,7 @@ internal class LibraryFilesTest {
     }
 
     @Test
-    fun `a song is named after its artist and title, or its title alone without an artist`() {
+    fun `a song is named after its artist and title or its title alone without an artist`() {
         assertEquals("tukorfurogep-arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = "Tükörfúrógép"))
         assertEquals("arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = ""))
         assertEquals("arviz", LibraryFiles.songBaseName(title = "Árvíz", artist = " "))

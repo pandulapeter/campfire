@@ -78,7 +78,7 @@ class SyncRunnerPreferencesRevisionTest {
     }
 
     @Test
-    fun `an oversized preferences document is written over with this device's values, and the next run leaves it alone`() = runTest {
+    fun `an oversized preferences document is written over with this device's values and the next run leaves it alone`() = runTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to ONE), account = TEST_ACCOUNT)
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = "not read".encodeToByteArray() to "r1"
         provider.oversizedDocuments += SyncedPreferencesDocument.FILE_NAME

@@ -24,7 +24,7 @@ class OnboardingMarkTest {
     }
 
     @Test
-    fun `a turn is between the two pages it is between, by its offset`() {
+    fun `a turn is between the two pages it is between - by its offset`() {
         assertEquals(OnboardingMarkFrame(OnboardingStep.LOOK, OnboardingStep.FEATURES, 0.25f), onboardingMarkFrame(steps, 1.25f))
     }
 
@@ -46,7 +46,7 @@ class OnboardingMarkTest {
     }
 
     @Test
-    fun `a page whose top is not known yet borrows the other one's, and none known is no top`() {
+    fun `a page whose top is not known yet borrows the other one's and none known is no top`() {
         val tops = mapOf(OnboardingStep.WELCOME to 100f)
         assertEquals(100f, onboardingMarkTop(OnboardingMarkFrame(OnboardingStep.WELCOME, OnboardingStep.LOOK, 0.5f), tops))
         assertEquals(100f, onboardingMarkTop(OnboardingMarkFrame(OnboardingStep.LOOK, OnboardingStep.WELCOME, 0.5f), tops))

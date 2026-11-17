@@ -27,7 +27,7 @@ class TagColorTest {
     }
 
     @Test
-    fun `a tag with no color, and one whose color this version does not know, have none`() {
+    fun `a tag with no color and one whose color this version does not know and have none`() {
         val tagColors = mapOf("folk" to "ultraviolet")
         assertNull(tagColorOf(tagColors, "folk"))
         assertNull(tagColorOf(tagColors, "rock"))

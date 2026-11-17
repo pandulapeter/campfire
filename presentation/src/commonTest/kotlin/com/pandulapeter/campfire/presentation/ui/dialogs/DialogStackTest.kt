@@ -30,7 +30,7 @@ class DialogStackTest {
     }
 
     @Test
-    fun `a dialog in the place of an open one goes back to it, closing everything above it`() {
+    fun `a dialog in the place of an open one goes back to it - closing everything above it`() {
         val filledForm = form.copy(draft = emptyMap())
 
         assertEquals(listOf(info), nextUnderlyingDialogs(openDialogs = listOf(info, form, lookup), next = filledForm))
@@ -43,7 +43,7 @@ class DialogStackTest {
     }
 
     @Test
-    fun `a dialog about another text, or about nothing that is open, replaces the stack`() {
+    fun `a dialog about another text or about nothing that is open or replaces the stack`() {
         val draftLookup = lookup.copy(target = SongEditTarget.EditorDraft(song.fileName))
 
         assertEquals(emptyList(), nextUnderlyingDialogs(openDialogs = listOf(info, form), next = draftLookup))
@@ -52,7 +52,7 @@ class DialogStackTest {
     }
 
     @Test
-    fun `a scale stacks over the chord sheet it is suggested in, and a chord over the scale sheet it is in`() {
+    fun `a scale stacks over the chord sheet it is suggested in and a chord over the scale sheet it is in`() {
         val chordReference = DialogType.ChordReference(SongChord(name = "C", chord = Chord(root = 0, intervals = listOf(0, 4, 7))))
         val chordShape = DialogType.ChordShape(song = song, setlistFileName = null, chordName = "C")
         val scale = DialogType.Scale(scaleId = "mixolydian", rootName = "C")
@@ -65,7 +65,7 @@ class DialogStackTest {
     }
 
     @Test
-    fun `the choices the Preferences sheet's chips open stack over it, and replace anything else`() {
+    fun `the choices the Preferences sheet's chips open stack over it and replace anything else`() {
         val preferences = DialogType.Preferences(PreferencesContext.SONG_DETAILS, PreferencesPage.SONG)
         listOf(DialogType.Notation, DialogType.Instrument, DialogType.Tuning).forEach { choice ->
             assertEquals(listOf(preferences), nextUnderlyingDialogs(openDialogs = listOf(preferences), next = choice))

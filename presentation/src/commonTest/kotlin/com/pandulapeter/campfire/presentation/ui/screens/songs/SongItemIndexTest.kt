@@ -34,7 +34,7 @@ class SongItemIndexTest {
     }
 
     @Test
-    fun `the first section after the random picks is found past their songs, question, and divider`() {
+    fun `the first section after the random picks is found past their songs and question and divider`() {
         val picks = SongGroup(header = SongGroupHeader.RandomPicks, songs = listOf(song("b1"), song("a2")), isRandomPicksQuestionAfter = true)
         val led = listOf(picks) + groups
         val index = assertNotNull(led.firstSectionAfterRandomPicksIndex())

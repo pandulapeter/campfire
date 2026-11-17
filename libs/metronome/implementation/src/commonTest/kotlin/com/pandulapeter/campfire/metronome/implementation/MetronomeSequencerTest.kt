@@ -87,7 +87,7 @@ class MetronomeSequencerTest {
     }
 
     @Test
-    fun `a change from the next bar lets the bar being played end, then counts a new one from beat one`() {
+    fun `a change from the next bar lets the bar being played end then counts a new one from beat one`() {
         val sequencer = sequencer(MetronomePattern(bpm = 60))
         val before = sequencer.ticksUntil(SAMPLE_RATE * 6L)
         assertEquals(listOf(0L, 0L, 0L, 0L, 1L, 1L), before.map { it.barIndex })
