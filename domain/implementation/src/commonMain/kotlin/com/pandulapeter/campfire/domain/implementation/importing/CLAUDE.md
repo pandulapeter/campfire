@@ -65,7 +65,10 @@
   adopted before the block ends, so no prune falls between a picture and its song. Inside it, before anything is
   written, every staged file the plan names must still be there whole (`ImportStagingRepository.isIntact`), else
   `StagedFileMissingException` with nothing written. A staged file is moved in by the first song bringing it; a move that
-  fails is a write failure like any other, the files moved before it left for the prune. A picture whose planned name a
+  fails is a write failure like any other, the files moved before it left for the prune. Once the staged files moved in
+  pass `MAX_STAGED_BYTES_PER_HOLD` (256 MiB) the block is let go of after the song, the songs written so far adopted
+  first, and taken again: on the web a move writes the file (about 130 MB a second on a desktop browser), and sync's
+  deletions and Save wait for the block. An import of files in memory stays one block. A picture whose planned name a
   different one took meanwhile is stored under a longer one, which the written text names. An identical song stores its
   pictures too: a library restored without them (Android's backup leaves them out) gets them back.
 - Songs before setlists. A disregarded duplicate maps to the library copy; a renamed collision (`x_2.cho`) makes the

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.domain.implementation.FakeExportFileRepository
 import com.pandulapeter.campfire.domain.implementation.export.ExportSongsUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.FakeImportDownloadRepository
 import com.pandulapeter.campfire.domain.implementation.FakeImageRepository
+import com.pandulapeter.campfire.domain.implementation.ImageRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SetlistRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongContentRepositoryStub
 import com.pandulapeter.campfire.domain.implementation.SongRepositoryStub
@@ -35,6 +36,7 @@ import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.image.ImageIntake
@@ -47,6 +49,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
+import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 import com.pandulapeter.campfire.domain.implementation.importing.ImportPlanner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -1178,6 +1181,46 @@ class ImportFilesUseCaseImplTest {
         assertEquals(emptyMap(), songs.files)
         assertTrue(songs.adopted.isEmpty())
         assertTrue(images.library.isEmpty())
+    }
+
+    @Test
+    fun `a large staged import lets go of the kept pictures between shares, with the songs written so far adopted first`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val adoptedAtEachRelease = mutableListOf<List<String>>()
+        val images = object : ImageRepositoryStub() {
+            override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = block(
+                object : LibraryImageWriter {
+                    override val heldNames = emptySet<String>()
+
+                    override suspend fun addImage(content: IncomingContent) = ImageIntake.Accepted((content as IncomingContent.Staged).file.name)
+
+                    override suspend fun addAttachment(content: IncomingContent, extension: String): ImageIntake = error("Not expected.")
+
+                    override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = error("Not expected.")
+                },
+            ).also { adoptedAtEachRelease += songs.adopted.toList() }
+        }
+        val half = ImportFilesUseCaseImpl.MAX_STAGED_BYTES_PER_HOLD / 2
+        val plan = ImportPlan(
+            songs = listOf("a", "b", "c").map { title ->
+                val picture = StagedFile(name = "$title.png", size = half, sha256Hex = title)
+                ImportPlan.SongEntry(
+                    fileName = "$title.cho",
+                    text = "{title: $title}\n{image: src=$title.png}\n",
+                    status = ImportPlan.Status.NEW,
+                    sourceFileName = "$title.cho",
+                    images = listOf(ImportPlan.SongImage(source = "$title.png", name = "$title.png", content = IncomingContent.Staged(picture), problem = null)),
+                )
+            },
+        )
+        val staging = object : FakeStaging() {
+            override suspend fun isIntact(file: StagedFile) = true
+        }
+
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images, importStagingRepository = staging).invoke(plan, ImportChoices())
+
+        assertEquals(listOf("a.cho", "b.cho", "c.cho"), result.importedSongFileNames)
+        assertEquals(listOf(listOf("a.cho", "b.cho"), listOf("a.cho", "b.cho", "c.cho")), adoptedAtEachRelease)
     }
 
     /** An archive of a song naming two pictures and an attachment, and a song of the library brought again with one of them. */

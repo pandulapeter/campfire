@@ -57,6 +57,12 @@ internal class ImportFilesUseCaseImpl(
      *
      * Every staged file the plan names is asked for first, inside the block (so that nothing the block holds off can take
      * one in between), and one gone or no longer of its size throws [StagedFileMissingException] with nothing written.
+     *
+     * The block is let go of, and taken again, after the song with which the staged files moved in since it was taken
+     * pass [MAX_STAGED_BYTES_PER_HOLD], the songs written so far adopted first, so a prune in between finds every file
+     * moved in named: sync's deletions and the editor's Save, which wait for the block, wait for one share of a large
+     * import rather than all of it (on the web, where a move writes the file, gigabytes take minutes). An import of files
+     * in memory is written in one block, as before.
      */
     override suspend operator fun invoke(
         plan: ImportPlan,
@@ -64,26 +70,35 @@ internal class ImportFilesUseCaseImpl(
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
         val run = ImportRun(plan = plan, choices = choices, onProgress = onProgress)
-        imageRepository.withImagesKept { writer ->
-            requireStagedFiles(plan)
-            try {
-                run.writeSongs(writer)
-                run.writeSetlists()
-                onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, run.total, run.total))
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
-                run.failAt(exception)
-            } finally {
-                // One change to each list at the end rather than one per file, each of which would rebuild the lists
-                // downstream, and no read of the directory at all: every file written is in hand as what it became. It
-                // runs even when a write failed or the import was cancelled halfway, since the files written before that
-                // are on disk and would otherwise be missing from the lists until something else rescanned them.
-                onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
-                withContext(NonCancellable) {
-                    songRepository.adoptImported(run.importedSongs)
-                    setlistRepository.adoptImported(run.importedSetlists)
+        var isFirst = true
+        var isDone = false
+        while (!isDone) {
+            imageRepository.withImagesKept { writer ->
+                if (isFirst) {
+                    requireStagedFiles(plan)
+                    isFirst = false
+                }
+                try {
+                    isDone = run.writeSongs(writer)
+                    if (isDone) {
+                        run.writeSetlists()
+                        onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, run.total, run.total))
+                    }
+                } catch (exception: CancellationException) {
+                    isDone = true
+                    throw exception
+                } catch (exception: Exception) {
+                    // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
+                    run.failAt(exception)
+                    isDone = true
+                } finally {
+                    // One change to each list at the end (or at the end of each hold) rather than one per file, each of
+                    // which would rebuild the lists downstream, and no read of the directory at all: every file written is
+                    // in hand as what it became. It runs even when a write failed or the import was cancelled halfway,
+                    // since the files written before that are on disk and would otherwise be missing from the lists until
+                    // something else rescanned them.
+                    if (isDone) onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
+                    withContext(NonCancellable) { run.adoptWritten() }
                 }
             }
         }
@@ -105,6 +120,8 @@ internal class ImportFilesUseCaseImpl(
         private val onProgress: (ImportProgress) -> Unit,
     ) {
         val importedSongs = mutableListOf<Song>()
+        private var adoptedSongCount = 0
+        private var adoptedSetlistCount = 0
         private val duplicateFileNames = mutableListOf<String>()
         private val convertedSongFileNames = mutableListOf<String>()
         private val songsWithFilesLeftOut = mutableListOf<ImportResult.SongWithFilesLeftOut>()
@@ -126,30 +143,60 @@ internal class ImportFilesUseCaseImpl(
         private var failedFileNames = emptyList<String>()
         private var unprocessedFileNames = emptyList<String>()
 
-        suspend fun writeSongs(writer: LibraryImageWriter) {
-            val storedImages = mutableMapOf<String, ImageIntake>()
-            // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
-            // is wherever that one went, which was not known when the plan was made.
-            val storedNames = arrayOfNulls<String>(plan.songs.size)
-            // The songs of the plan the review left out, by their place in it: a repeat of one of them is left out with it
-            // rather than being the duplicate of the different library song whose name they both wanted.
-            val leftAloneIndices = mutableSetOf<Int>()
-            val replacedSongFileNames = mutableSetOf<String>()
-            // The planner never asks about a name whose library file this import brings back unchanged; held here too,
-            // since this is the one place anything is overwritten and the song lost would be one the import carries.
-            val keptSongFileNames = plan.songs
-                .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
-                .mapTo(hashSetOf()) { it.fileName }
-            // A plan is held against the library as it was when it was reviewed; a sync run may have deleted, since
-            // then, the file an identical song was going to be left as. The names come from the same list the planner used,
-            // folded the way the storage layer compares names (LibraryFiles.identityKey), so a file another device re-spelt in
-            // case only is still there. Read here rather than at plan time, so that a sync run during the review is included.
-            val libraryNames = songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
-            // The same names, grown by every file this import writes, stand in for the listing of the songs folder the
-            // storage would otherwise make for every song: on the web and iOS that made a large import quadratic. Kept
-            // apart from libraryNames, since a song written by this batch is not the library file an identical one matched.
-            val takenNames = libraryNames?.let(::HashSet)
-            plan.songs.forEachIndexed { index, entry ->
+        private val storedImages = mutableMapOf<String, ImageIntake>()
+
+        /**
+         * Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch is
+         * wherever that one went, which was not known when the plan was made.
+         */
+        private val storedNames = arrayOfNulls<String>(plan.songs.size)
+
+        /**
+         * The songs of the plan the review left out, by their place in it: a repeat of one of them is left out with it
+         * rather than being the duplicate of the different library song whose name they both wanted.
+         */
+        private val leftAloneIndices = mutableSetOf<Int>()
+        private val replacedSongFileNames = mutableSetOf<String>()
+
+        /**
+         * The planner never asks about a name whose library file this import brings back unchanged; held here too, since
+         * this is the one place anything is overwritten and the song lost would be one the import carries.
+         */
+        private val keptSongFileNames = plan.songs
+            .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
+            .mapTo(hashSetOf()) { it.fileName }
+
+        /**
+         * A plan is held against the library as it was when it was reviewed; a sync run may have deleted, since then, the
+         * file an identical song was going to be left as. The names come from the same list the planner used, folded the
+         * way the storage layer compares names (LibraryFiles.identityKey), so a file another device re-spelt in case only is
+         * still there. Read as the writing starts rather than at plan time, so that a sync run during the review is included.
+         */
+        private var libraryNames: Set<String>? = null
+
+        /**
+         * The same names, grown by every file this import writes, standing in for the listing of the songs folder the
+         * storage would otherwise make for every song: on the web and iOS that made a large import quadratic. Kept apart
+         * from [libraryNames], since a song written by this batch is not the library file an identical one matched.
+         */
+        private var takenNames: HashSet<String>? = null
+        private var nextSongIndex = 0
+
+        /**
+         * Writes the songs from where the last call stopped, and answers whether every one is written: false where it
+         * stopped after a song with which the staged files it moved in passed [MAX_STAGED_BYTES_PER_HOLD].
+         */
+        suspend fun writeSongs(writer: LibraryImageWriter): Boolean {
+            if (nextSongIndex == 0) {
+                libraryNames = songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { LibraryFiles.identityKey(it.fileName) }
+                takenNames = libraryNames?.let(::HashSet)
+            }
+            val libraryNames = libraryNames
+            val takenNames = takenNames
+            var stagedBytes = 0L
+            while (nextSongIndex < plan.songs.size) {
+                val index = nextSongIndex
+                val entry = plan.songs[index]
                 currentFileName = entry.sourceFileName ?: entry.fileName
                 onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs, total, currentFileName))
                 yield()
@@ -225,7 +272,19 @@ internal class ImportFilesUseCaseImpl(
                 }
                 processedSongs++
                 currentFileName = null
+                nextSongIndex++
+                stagedBytes += entry.images.sumOf { image -> (image.content as? IncomingContent.Staged)?.size ?: 0L }
+                if (stagedBytes >= MAX_STAGED_BYTES_PER_HOLD && nextSongIndex < plan.songs.size) return false
             }
+            return true
+        }
+
+        /** Puts the songs and setlists written since the last call into their lists, in one change each. */
+        suspend fun adoptWritten() {
+            songRepository.adoptImported(importedSongs.subList(adoptedSongCount, importedSongs.size).toList())
+            setlistRepository.adoptImported(importedSetlists.subList(adoptedSetlistCount, importedSetlists.size).toList())
+            adoptedSongCount = importedSongs.size
+            adoptedSetlistCount = importedSetlists.size
         }
 
         suspend fun writeSetlists() {
@@ -340,4 +399,13 @@ internal class ImportFilesUseCaseImpl(
 
     /** An identical song that matched a library file rather than an earlier song of the same batch. */
     private val ImportPlan.SongEntry.isIdenticalToLibraryFile get() = status == ImportPlan.Status.IDENTICAL && repeatedEntryIndex == null
+
+    internal companion object {
+
+        /**
+         * How much an import moves in from the staging folder while it holds `withImagesKept` before it lets go once: a
+         * few seconds of the web's moves (about 130 MB a second on a desktop browser), nothing on a platform that renames.
+         */
+        const val MAX_STAGED_BYTES_PER_HOLD = 256L * 1024 * 1024
+    }
 }

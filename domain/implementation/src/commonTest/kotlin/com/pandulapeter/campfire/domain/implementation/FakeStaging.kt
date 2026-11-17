@@ -25,7 +25,7 @@ import kotlin.test.assertFailsWith
  * `ImportStagingRepository` too. [files] is what the folder holds; a file [moveOut] took into the library is found where
  * it went, as the real staging finds it, until [deleteRequestsOf] settles its request.
  */
-internal class FakeStaging : ImportStagingRepository {
+internal open class FakeStaging : ImportStagingRepository {
 
     val files = mutableMapOf<String, ByteArray>()
     private val moved = mutableMapOf<String, ByteArray>()
