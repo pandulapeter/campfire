@@ -80,7 +80,7 @@ internal fun withMetadataSection(
                 ?: TimeSignature.COMMON_TIME.toString().takeIf { readsBoth }
         },
     )
-    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo)) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
+    return if ((isSongInfoShown && (isSongInfoEditable || shownMetadata.hasSongInfo(areAttachmentsShown = false))) || hasControls || readsBoth || shownMetadata.hasPlayingValues) {
         val section = RenderSection.Metadata(
             metadata = shownMetadata,
             hasPlayingControls = hasControls,

@@ -158,8 +158,8 @@ internal fun SongDetailsScreen(
     // there it is only offered where it has something in it, and it is read from the song's text, so nowhere before that
     // is at hand. Outside performance mode it is offered wherever the text is, so nothing of the text needs to be read
     // for it.
-    val hasSongInfo = remember(currentSongText, isReadOnly) {
-        isReadOnly && currentSongText?.let(viewModel.songMetadataEditing::hasSongInfo) == true
+    val hasSongInfo = remember(currentSongText, isReadOnly, userPreferences?.isAttachmentsEnabled) {
+        isReadOnly && currentSongText?.let { viewModel.songMetadataEditing.hasSongInfo(it, userPreferences?.isAttachmentsEnabled != false) } == true
     }
     // A preview offers none: the sheet reads and writes the library's file, which the preview's song is not yet.
     val openCurrentSongInfo = currentSong?.takeIf { !isImportPreview }?.let { song ->

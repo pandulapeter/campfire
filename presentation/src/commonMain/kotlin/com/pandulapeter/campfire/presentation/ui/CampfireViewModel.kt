@@ -126,7 +126,6 @@ import com.pandulapeter.campfire.presentation.ui.state.setlists.SetlistWithSongs
 import com.pandulapeter.campfire.presentation.ui.state.logBreadcrumbs
 import com.pandulapeter.campfire.presentation.ui.state.SongLookup
 import com.pandulapeter.campfire.presentation.ui.state.editor.EditorSession
-import com.pandulapeter.campfire.presentation.ui.songInfo.hasSongInfo
 import com.pandulapeter.campfire.presentation.ui.state.AppExitController
 import com.pandulapeter.campfire.presentation.ui.state.online.CoverArtSearchController
 import com.pandulapeter.campfire.presentation.ui.state.online.SongDetailsLookupController

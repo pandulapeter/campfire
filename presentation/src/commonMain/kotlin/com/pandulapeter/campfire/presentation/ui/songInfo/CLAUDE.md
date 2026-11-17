@@ -27,7 +27,8 @@ The About the song body, shared by its sheet and the editor's preview card.
   press opens it (`SongAttachmentEditing.open`, read only mode too). A file this device lacks (sync not done, a song
   copied in by hand) is the same row disabled, "Not on this device" in place of the size; presence and size are
   `LibraryFileSizes.fileSizes`, the draft shelf's included. The compact card shows them as chips. The group is left
-  out where `SongInfoEditing.onEditAttachments` is null (the Features switch).
+  out where `SongInfoEditing.onEditAttachments` is null (the Features switch), and then they do not count towards
+  `hasSongInfo`, which offers read only mode the sheet only where it has something to show.
 - The Attachments sheet (`SongAttachmentsDialog`) is the links' sheet's twin: Add file in the header
   (`SongAttachmentEditing.pick`, kept on the draft shelf, arriving through `picked` for the sheet of its target), a name
   field and Remove per row, keyed by file, Save writing once (`SaveSongAttachmentsUseCase` for a file, the draft's text

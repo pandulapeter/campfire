@@ -14,6 +14,10 @@ import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 private val ChordProMetadata.hasInfoRows
     get() = listOf(album, year, composer, lyricist, duration).any { !it.isNullOrBlank() }
 
-/** Whether the song says anything about itself beyond how it is played, which is what the card and the sheet hold. */
-internal val ChordProMetadata.hasSongInfo
-    get() = hasInfoRows || tags.isNotEmpty() || languages.isNotEmpty() || links.isNotEmpty() || attachments.isNotEmpty()
+/**
+ * Whether the song says anything about itself beyond how it is played, which is what the card and the sheet hold; its
+ * attachments only where [areAttachmentsShown] (the Features switch on, and a place that lists them), since otherwise a
+ * song that has nothing else would open on an empty sheet.
+ */
+internal fun ChordProMetadata.hasSongInfo(areAttachmentsShown: Boolean) =
+    hasInfoRows || tags.isNotEmpty() || languages.isNotEmpty() || links.isNotEmpty() || (areAttachmentsShown && attachments.isNotEmpty())

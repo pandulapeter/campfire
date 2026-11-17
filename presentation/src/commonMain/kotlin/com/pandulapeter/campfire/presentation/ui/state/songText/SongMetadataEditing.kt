@@ -149,9 +149,10 @@ internal class SongMetadataEditing(
     /**
      * Whether the sheet of what the song is has anything to show for [text], from a scan of its directives alone: none
      * of what the sheet shows is changed by the notation a full parse brings the chords into, and the scan is a
-     * fraction of the parse, which matters on the frame of a swipe that makes another song the current one.
+     * fraction of the parse, which matters on the frame of a swipe that makes another song the current one. Its attachments
+     * count only where [areAttachmentsEnabled] (the Features switch).
      */
-    fun hasSongInfo(text: String): Boolean = ChordProParser.parseMetadata(text).hasSongInfo
+    fun hasSongInfo(text: String, areAttachmentsEnabled: Boolean): Boolean = ChordProParser.parseMetadata(text).hasSongInfo(areAttachmentsShown = areAttachmentsEnabled)
 
     /**
      * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay
