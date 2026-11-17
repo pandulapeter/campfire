@@ -35,6 +35,13 @@
     <string name="import_progress_importing">מוסיפים את הקבצים לספרייה</string>
     <string name="import_progress_finishing">מעדכנים את הספרייה</string>
     <string name="import_progress_count">%1$d מתוך %2$d עובדו</string>
+    <string name="import_progress_receiving">מעתיקים את הקבצים שנבחרו</string>
+    <string name="import_progress_bytes_receiving">הועתקו %1$s מתוך %2$s</string>
+    <string name="import_progress_bytes_receiving_so_far">הועתקו %1$s עד עכשיו</string>
+    <string name="import_progress_bytes_downloading">הורדו %1$s מתוך %2$s</string>
+    <string name="import_progress_bytes_downloading_so_far">הורדו %1$s עד עכשיו</string>
+    <string name="import_progress_bytes_unpacking">חולצו %1$s מתוך %2$s</string>
+    <string name="import_progress_bytes_unpacking_so_far">חולצו %1$s עד עכשיו</string>
     <string name="import_progress_wait">יש להשאיר את Campfire פתוח עד שהייבוא יסתיים.</string>
     <string name="import_status_title">הייבוא הושלם</string>
     <string name="import_status_stopped">הייבוא נעצר</string>

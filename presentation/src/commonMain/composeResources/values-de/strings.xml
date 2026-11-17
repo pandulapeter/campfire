@@ -35,6 +35,13 @@
     <string name="import_progress_importing">Dateien werden deiner Bibliothek hinzugefügt</string>
     <string name="import_progress_finishing">Deine Bibliothek wird aktualisiert</string>
     <string name="import_progress_count">%1$d von %2$d verarbeitet</string>
+    <string name="import_progress_receiving">Ausgewählte Dateien werden kopiert</string>
+    <string name="import_progress_bytes_receiving">%1$s von %2$s kopiert</string>
+    <string name="import_progress_bytes_receiving_so_far">Bisher %1$s kopiert</string>
+    <string name="import_progress_bytes_downloading">%1$s von %2$s heruntergeladen</string>
+    <string name="import_progress_bytes_downloading_so_far">Bisher %1$s heruntergeladen</string>
+    <string name="import_progress_bytes_unpacking">%1$s von %2$s entpackt</string>
+    <string name="import_progress_bytes_unpacking_so_far">Bisher %1$s entpackt</string>
     <string name="import_progress_wait">Lass Campfire bitte geöffnet, bis der Import abgeschlossen ist.</string>
     <string name="import_status_title">Import abgeschlossen</string>
     <string name="import_status_stopped">Import angehalten</string>

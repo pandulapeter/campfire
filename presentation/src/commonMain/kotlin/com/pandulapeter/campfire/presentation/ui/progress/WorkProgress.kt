@@ -29,8 +29,9 @@ internal data class WorkProgress(
  * first launch is no work anybody asked for, and the bar is drawn over the launch screen that hides it. A sync run shows
  * only once it has files to transfer: the run on every return to the front mostly only lists both sides, and a line for
  * that would flash on nearly every return. Once up, the bar stays for the rest of the run, whose second pass lists again. An import fills
- * only while it writes, the one phase whose count runs once from zero to the end; the reading and comparing before it
- * each count again from zero, which would send the fill back.
+ * while it writes, the one phase whose file count runs once from zero to the end (the reading and comparing before it
+ * each count again from zero, which would send the fill back), and while it receives, downloads, or unpacks an archive
+ * whose size it knows, by bytes.
  */
 internal fun workProgress(
     isImporting: Boolean,
@@ -42,7 +43,7 @@ internal fun workProgress(
     syncProgress: SyncProgress?,
 ): WorkProgress? = when {
     (isImporting && !isDemoLibraryPending) || isAddingToReview || isEditingSongs || isFittingPictures -> WorkProgress(
-        fraction = importProgress
+        fraction = importProgress?.byteFraction ?: importProgress
             ?.takeIf { it.phase == ImportProgress.Phase.IMPORTING }
             ?.total
             ?.takeIf { it > 0 }

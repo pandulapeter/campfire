@@ -49,6 +49,33 @@ class WorkProgressTest {
     }
 
     @Test
+    fun `an import moving an archive of known size fills the bar by its bytes`() {
+        ImportProgress.Phase.entries.filter { it.countsBytes }.forEach { phase ->
+            assertEquals(
+                WorkProgress(fraction = 0.25f),
+                progress(isImporting = true, importProgress = ImportProgress(phase, completedBytes = 250, totalBytes = 1_000)),
+                "$phase",
+            )
+        }
+    }
+
+    @Test
+    fun `an import moving bytes of unknown size runs the line without a fill`() {
+        assertEquals(
+            WorkProgress(fraction = null),
+            progress(isImporting = true, importProgress = ImportProgress(ImportProgress.Phase.DOWNLOADING, completedBytes = 250)),
+        )
+    }
+
+    @Test
+    fun `an unpacking without bytes runs the line without a fill`() {
+        assertEquals(
+            WorkProgress(fraction = null),
+            progress(isImporting = true, importProgress = ImportProgress(ImportProgress.Phase.UNPACKING, completed = 1, total = 4)),
+        )
+    }
+
+    @Test
     fun `work the user started comes before a sync run`() {
         val syncProgress = SyncProgress(completed = 1, total = 4)
         assertEquals(WorkProgress(fraction = null), progress(isAddingToReview = true, syncProgress = syncProgress))

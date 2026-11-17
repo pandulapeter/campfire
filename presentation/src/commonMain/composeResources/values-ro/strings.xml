@@ -35,6 +35,13 @@
     <string name="import_progress_importing">Se adaugă fișierele în bibliotecă</string>
     <string name="import_progress_finishing">Se actualizează biblioteca</string>
     <string name="import_progress_count">%1$d din %2$d procesate</string>
+    <string name="import_progress_receiving">Se copiază fișierele selectate</string>
+    <string name="import_progress_bytes_receiving">S-au copiat %1$s din %2$s</string>
+    <string name="import_progress_bytes_receiving_so_far">S-au copiat %1$s până acum</string>
+    <string name="import_progress_bytes_downloading">S-au descărcat %1$s din %2$s</string>
+    <string name="import_progress_bytes_downloading_so_far">S-au descărcat %1$s până acum</string>
+    <string name="import_progress_bytes_unpacking">S-au dezarhivat %1$s din %2$s</string>
+    <string name="import_progress_bytes_unpacking_so_far">S-au dezarhivat %1$s până acum</string>
     <string name="import_progress_wait">Ține Campfire deschis până se termină importul.</string>
     <string name="import_status_title">Import finalizat</string>
     <string name="import_status_stopped">Import oprit</string>

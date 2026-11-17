@@ -31,7 +31,9 @@ Importing, Finished), crossfading rather than replacing dialogs. What the review
 
 ## Stages
 
-- **Loading**: Cancel only while the phase only reads; Close does the same.
+- **Loading**: Cancel only while the phase only reads; Close does the same. A phase that reports bytes (receiving,
+  downloading, unpacking an archive) says them ("Unpacking 340 MB of 1.2 GB", or only what has arrived where the size
+  is unknown) instead of its file count (`importProgressLineOf`, tested).
 - **Failed**: one sentence and **Try again** (a failed download is downloaded again; once downloaded, the same bytes are
   read again). A shared link answering 4xx, or anything but a zip (a page in its place), "no longer works"; only no
   answer or a 5xx is unreachable.

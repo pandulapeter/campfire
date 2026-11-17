@@ -35,6 +35,13 @@
     <string name="import_progress_importing">Přidávání souborů do knihovny</string>
     <string name="import_progress_finishing">Aktualizace knihovny</string>
     <string name="import_progress_count">Zpracováno %1$d z %2$d</string>
+    <string name="import_progress_receiving">Kopírování vybraných souborů</string>
+    <string name="import_progress_bytes_receiving">Zkopírováno %1$s z %2$s</string>
+    <string name="import_progress_bytes_receiving_so_far">Zatím zkopírováno %1$s</string>
+    <string name="import_progress_bytes_downloading">Staženo %1$s z %2$s</string>
+    <string name="import_progress_bytes_downloading_so_far">Zatím staženo %1$s</string>
+    <string name="import_progress_bytes_unpacking">Rozbaleno %1$s z %2$s</string>
+    <string name="import_progress_bytes_unpacking_so_far">Zatím rozbaleno %1$s</string>
     <string name="import_progress_wait">Nech prosím Campfire otevřený, dokud import neskončí.</string>
     <string name="import_status_title">Import dokončen</string>
     <string name="import_status_stopped">Import zastaven</string>
