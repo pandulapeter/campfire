@@ -43,9 +43,7 @@ import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
-import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.InputStream
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -191,7 +189,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
             }
             pickedAttachment(name = name, size = size) { limit ->
                 try {
-                    context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit.toInt() + 1) }
+                    context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit = limit.toInt() + 1, size = size) }
                 } catch (exception: Exception) {
                     println("Could not read \"$uri\": ${exception.message}")
                     null
@@ -437,7 +435,7 @@ fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
         try {
             budget.read(name = name, size = size) { limit ->
                 // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
-                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit.toInt() + 1) }
+                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit = limit.toInt() + 1, size = size) }
             }
         } catch (exception: Exception) {
             println("Could not read \"$uri\": ${exception.message}")
@@ -457,15 +455,3 @@ private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.con
 private const val SONG_EXPORT_MIME_TYPE = "application/octet-stream"
 
 private val Uri.fallbackName get() = lastPathSegment.orEmpty().substringAfterLast('/')
-
-/** To the end of the stream or to [limit] bytes, whichever comes first. `readNBytes` would do, from API 33 on. */
-private fun InputStream.readAtMost(limit: Int): ByteArray {
-    val output = ByteArrayOutputStream()
-    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-    while (output.size() < limit) {
-        val count = read(buffer, 0, minOf(buffer.size, limit - output.size()))
-        if (count < 0) break
-        output.write(buffer, 0, count)
-    }
-    return output.toByteArray()
-}

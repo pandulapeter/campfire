@@ -38,6 +38,8 @@ internal class LibraryFileLocalSourceImpl(
 
     override suspend fun readLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.readBytes(kind.directory, name)
 
+    override suspend fun libraryFileSize(kind: LibraryFileKind, name: String) = fileStorage.info(kind.directory, name)?.size
+
     override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = if (fileStorage.exists(kind.directory, name)) {
         name
     } else {

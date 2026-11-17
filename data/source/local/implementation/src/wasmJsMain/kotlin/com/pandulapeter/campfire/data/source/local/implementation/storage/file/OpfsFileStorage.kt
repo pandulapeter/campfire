@@ -11,6 +11,8 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.web.toByteArray
+import com.pandulapeter.campfire.data.model.web.toUint8Array
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.CancellationException

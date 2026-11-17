@@ -23,6 +23,8 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.exhausted
+import io.ktor.utils.io.readAvailable
 import io.ktor.utils.io.readBuffer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.SerializationException
@@ -104,11 +106,26 @@ internal class DropboxDownloads(
         return Download(response, metadata, bytes)
     }
 
-    /** Null, without reading the body, where Dropbox declares it over [maxSize], and null where more than that arrives. */
+    /**
+     * Null, without reading the body, where Dropbox declares it over [maxSize], and null where more than that arrives. A
+     * declared size is read straight into an array of that size, which holds a 50 MB file once; only an undeclared one
+     * goes through a growing buffer. What a body shorter or longer than declared brings is the caller's to check, as it
+     * checks every download's hash.
+     */
     private suspend fun boundedBody(response: HttpResponse, declaredSize: Long?, maxSize: Long): ByteArray? {
         if (declaredSize != null && declaredSize > maxSize) return null
-        val bytes = response.bodyAsChannel().readBuffer(maxSize + 1L).readByteArray()
-        return bytes.takeIf { it.size <= maxSize }
+        val channel = response.bodyAsChannel()
+        if (declaredSize == null || declaredSize < 0) return channel.readBuffer(maxSize + 1L).readByteArray().takeIf { it.size <= maxSize }
+        val bytes = ByteArray(declaredSize.toInt())
+        var filled = 0
+        while (filled < bytes.size) {
+            val read = channel.readAvailable(bytes, filled, bytes.size - filled)
+            if (read < 0) return bytes.copyOf(filled)
+            filled += read
+        }
+        if (channel.exhausted()) return bytes
+        val rest = channel.readBuffer(maxSize + 1L - declaredSize).readByteArray()
+        return (bytes + rest).takeIf { it.size <= maxSize }
     }
 
     /**

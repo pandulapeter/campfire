@@ -61,6 +61,8 @@ internal class FakeLibraryFileLocalSource(
         return held(kind, name)?.let(files::get)
     }
 
+    override suspend fun libraryFileSize(kind: LibraryFileKind, name: String) = held(kind, name)?.let(files::get)?.size?.toLong()
+
     override suspend fun existingSpellingOf(kind: LibraryFileKind, name: String) = if (held(kind, name) != null) {
         name
     } else {

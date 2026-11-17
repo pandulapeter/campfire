@@ -35,6 +35,9 @@ interface LibraryFileLocalSource {
      */
     suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray?
 
+    /** The file's size without reading it, null where it is not there. */
+    suspend fun libraryFileSize(kind: LibraryFileKind, name: String): Long?
+
     /**
      * The name a file here has that is [name] under any case or Unicode form (`LibraryFiles.isSameLibraryName`):
      * [name] itself where the file system finds it, else the first listed spelling of it, or null where there is none.

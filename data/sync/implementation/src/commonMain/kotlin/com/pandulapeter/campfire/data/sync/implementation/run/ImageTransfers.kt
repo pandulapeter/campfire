@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.sync.implementation.run
 
 import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
+import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
@@ -18,7 +19,6 @@ import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
-import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -100,24 +100,17 @@ internal class ImageTransfers(
      * replaces.
      */
     suspend fun bringDown(pass: SyncPass, key: SyncKey, revision: String): SyncEngine.OperationOutcome {
-        val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-        if (local != null && isIntact(key, local)) {
-            val remoteHash = pass.remoteFiles[key]?.contentHash
-            val localHash = pass.run.provider.contentHashOf(local)
-            // Where either side cannot say, nothing says the folder's copy is damaged, and a copy that is would be refused
-            // by every device that tried to download it rather than spread.
-            return if (remoteHash == null || localHash == null || localHash == remoteHash) {
-                SyncEngine.OperationOutcome(entries = mapOf(key to SyncIndexEntry(localHashOf(key, local), revision)))
-            } else {
-                upload(pass, key, local, expectedRevision = revision)
-            }
-        }
+        val (settled, sizeHere) = settleWithCopyHere(pass, key, revision)
+        if (settled != null) return settled
         val downloaded = pass.downloadWithinLimit(key)
         if (!isIntact(key, downloaded.bytes)) return failed(key, "the cloud folder's copy is not the picture its name says")
         val isWritten = libraryFileLock.withLock {
-            val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-            // Anything intact under this name is this very picture, written meanwhile by an import or a Save.
-            if (current != null && isIntact(key, current)) {
+            // Anything intact under this name is this very picture, written meanwhile by an import or a Save. Only a file
+            // that was not there before the download, or is of another size now, can be one, so only such a file is read.
+            val currentSize = libraryFileLocalSource.libraryFileSize(key.kind, key.name)
+            val isWrittenMeanwhile = currentSize != null && currentSize != sizeHere &&
+                libraryFileLocalSource.readLibraryFile(key.kind, key.name)?.let { isIntact(key, it) } == true
+            if (isWrittenMeanwhile) {
                 false
             } else {
                 // Finished together once started, as SyncEngine's download is.
@@ -132,6 +125,25 @@ internal class ImageTransfers(
             entries = mapOf(key to SyncIndexEntry(localHashOf(key, downloaded.bytes), downloaded.revision)),
             summary = if (isWritten) SyncSummary(downloaded = 1) else SyncSummary(),
         )
+    }
+
+    /**
+     * What [bringDown] settles with the copy here alone: the outcome where it is intact, with the size of the copy that
+     * was there. The copy is read and let go of here, so a 50 MB picture is never held beside its download.
+     */
+    private suspend fun settleWithCopyHere(pass: SyncPass, key: SyncKey, revision: String): Pair<SyncEngine.OperationOutcome?, Long?> {
+        val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return null to null
+        if (!isIntact(key, local)) return null to local.size.toLong()
+        val remoteHash = pass.remoteFiles[key]?.contentHash
+        val localHash = pass.run.provider.contentHashOf(local)
+        // Where either side cannot say, nothing says the folder's copy is damaged, and a copy that is would be refused
+        // by every device that tried to download it rather than spread.
+        val outcome = if (remoteHash == null || localHash == null || localHash == remoteHash) {
+            SyncEngine.OperationOutcome(entries = mapOf(key to SyncIndexEntry(localHashOf(key, local), revision)))
+        } else {
+            upload(pass, key, local, expectedRevision = revision)
+        }
+        return outcome to local.size.toLong()
     }
 
     /** An upload: of an intact picture only, a damaged one being replaced from the folder where the folder has it. */
@@ -155,7 +167,8 @@ internal class ImageTransfers(
             RemoteWriteResult.Conflict -> SyncEngine.OperationOutcome(isUnresolved = true)
         }
 
-    private fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, localContentHash(bytes))
+    /** Hashed a slice at a time with a yield between them, since a picture or an attachment may be 50 MB. */
+    private suspend fun isIntact(key: SyncKey, bytes: ByteArray) = LibraryFiles.isLibraryFileNamedFor(key.name, Sha256.hashToHexYielding(bytes))
 
     /** The index is left alone, so the next run sees this file as it was and tries again. */
     private fun failed(key: SyncKey, reason: String): SyncEngine.OperationOutcome {

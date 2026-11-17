@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import com.pandulapeter.campfire.data.model.web.toByteArray
 import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.model.library.ExportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportBudget
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import org.khronos.webgl.Int8Array
-import org.khronos.webgl.toByteArray
 import org.khronos.webgl.toInt8Array
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.JsAny
@@ -68,7 +68,7 @@ internal object WebFilePicker : FilePicker {
         }
         return pickedAttachment(name = name, size = size) {
             try {
-                fileBytes(file).await<Int8Array?>()?.toByteArray()
+                fileBytes(file).await<JsAny?>()?.toByteArray()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Throwable) {
@@ -209,9 +209,9 @@ private fun fileName(file: JsAny): JsString = js("file.name")
 private fun fileSize(file: JsAny): Double = js("file.size")
 
 /** The first [length] bytes of [file], or null where the browser cannot read it, as [fileBytes] does. */
-private fun fileHead(file: JsAny, length: Int): Promise<Int8Array?> = js(
+private fun fileHead(file: JsAny, length: Int): Promise<JsAny?> = js(
     """file.slice(0, length).arrayBuffer().then(
-        function (buffer) { return new Int8Array(buffer); },
+        function (buffer) { return new Uint8Array(buffer); },
         function () { return null; }
     )"""
 )
@@ -222,11 +222,12 @@ private fun isDroppedInFolder(item: JsAny): Boolean = js("item.isInFolder")
 
 /**
  * Resolves with null instead of rejecting for a file the browser cannot read: a dropped directory where the
- * browser hands one over as a `File`, or a file that was moved or deleted after it was chosen.
+ * browser hands one over as a `File`, or a file that was moved or deleted after it was chosen. A `Uint8Array`, which
+ * `toByteArray` carries across in chunks, where an `Int8Array`'s own conversion makes one call per byte.
  */
-private fun fileBytes(file: JsAny): Promise<Int8Array?> = js(
+private fun fileBytes(file: JsAny): Promise<JsAny?> = js(
     """file.arrayBuffer().then(
-        function (buffer) { return new Int8Array(buffer); },
+        function (buffer) { return new Uint8Array(buffer); },
         function () { return null; }
     )"""
 )
@@ -302,7 +303,7 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boole
     }
     return budget.read(name = name, size = size) {
         try {
-            fileBytes(this).await<Int8Array?>()?.toByteArray()
+            fileBytes(this).await<JsAny?>()?.toByteArray()
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Throwable) {
@@ -313,7 +314,7 @@ private suspend fun JsAny.toImportedFile(budget: ImportBudget, isInFolder: Boole
 }
 
 private suspend fun JsAny.isWorthReading() = try {
-    fileHead(this, ImportLimits.SNIFF_LENGTH).await<Int8Array?>()?.toByteArray()?.let(ImportBudget::isWorthReadingUnknown) == true
+    fileHead(this, ImportLimits.SNIFF_LENGTH).await<JsAny?>()?.toByteArray()?.let(ImportBudget::isWorthReadingUnknown) == true
 } catch (exception: CancellationException) {
     throw exception
 } catch (_: Throwable) {

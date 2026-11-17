@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.web.toUint8Array
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
