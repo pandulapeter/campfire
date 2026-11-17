@@ -142,6 +142,13 @@ Shared by every provider; service specifics come from its `SyncHttpErrorMapper`.
   repository's download slots.
 - Import: declared length over the ceiling → `TooLarge` before the body; otherwise read one byte past it. 408, 429, 5xx,
   transport failure, refused CORS, or a short body → `Unreachable`; other refusals or an empty body → `Missing`.
+- Import streamed into a sink (`StreamedBody.kt`): the same answers, the body read from `bodyAsChannel()` in 64 KiB
+  chunks, the sink opened at the first byte. No total bound, the browser's 10 minutes lifted per request; instead
+  `withStallLimit`: no byte (headers included) for 60 s → `Unreachable`. A body past its declared length reads on within
+  the ceiling (a decoded body is longer); one closed by an error is `Unreachable`, since `readAvailable` reports it as
+  the end. What the sink throws (staging out of room) passes through `SinkFailure` unchanged. Ktor's wasmJs engine
+  streams the body (the response stream's reader feeds a channel whose `flush` waits once 1 MiB is buffered), so no
+  `fetch` of its own is needed.
 - Picture (`downloadPicture`): the import's rules, plus the cover's host guard on every hop (a refused one is `Missing`)
   and at most two minutes, the ceiling the caller's (40 MB for the user's own, 8 MB for an import's). No content type is
   trusted: the domain tells a picture by its bytes. On the web a host without CORS headers is `Unreachable`, which the

@@ -63,8 +63,9 @@ A second sync provider must be one new class, not an engine change; the rules ar
 
 - `CoverArtRemoteSource` never throws but cancellation; `Missing` (asking again won't help) vs. `Unreachable` (may
   change soon) lets the caller choose how long to remember a failure.
-- `ImportDownloadRemoteSource`: nothing kept, never reads past the given ceiling, never throws but cancellation, does
-  not judge by content type. `downloadPicture` asks only public `https` hosts, since its address comes from a file.
+- `ImportDownloadRemoteSource`: nothing kept, never reads past the given ceiling, never throws but cancellation (and,
+  streamed into a sink, what the sink throws), does not judge by content type. `downloadPicture` asks only public
+  `https` hosts, since its address comes from a file. The streamed `download` has no total time limit, only a stall one.
 - Catalogue searches keep their own pace, wait out refusals themselves (reporting via `onBusy`), and throw
   `CatalogueSearchException` only once they give up. A catalogue's pace is shared between both searches, so one object
   implements both per catalogue. `loadSongCredits` answers null without a request for a catalogue that never names

@@ -23,6 +23,25 @@ interface ImportDownloadRemoteSource {
     suspend fun download(url: String, maxSizeBytes: Long): ImportDownload
 
     /**
+     * [download] streamed rather than read into memory: the body is handed to a sink chunk by chunk as it arrives, so its
+     * size is bounded by [maxSizeBytes] alone. [openSink] is called at most once, with the length the host declared
+     * (null where it sent none), just before the first byte is written, and never for an answer that is not the file; a
+     * [ImportDownload.File] answer carries no bytes, its name only, since they all went to the sink. Any other answer, or
+     * a cancellation, means that what the sink was given is not the file and is the caller's to throw away.
+     *
+     * No time limit applies to the whole download, which may take as long as a large file over a slow line does; it
+     * ends as [ImportDownload.Unreachable] once no byte has arrived for a minute. [onProgress] is told the bytes received
+     * so far and the declared length, if any, as they arrive. What [openSink] or the sink throws (no room for the file)
+     * is thrown on unchanged, never read as the network failing.
+     */
+    suspend fun download(
+        url: String,
+        maxSizeBytes: Long,
+        openSink: suspend (announcedSize: Long?) -> suspend (bytes: ByteArray, offset: Int, length: Int) -> Unit,
+        onProgress: (receivedBytes: Long, totalBytes: Long?) -> Unit,
+    ): ImportDownload
+
+    /**
      * The picture a song's `{image: src=…}` names by its address, downloaded as [download] would, except that it is asked
      * only of a public `https` host on every hop (never the local network, since the address comes from a file rather
      * than from the user's own hand alone) and gives up after a bounded time; any other address is

@@ -61,7 +61,7 @@ internal class CoverArtRemoteSourceImpl(
                         val bytes = response.bodyAsChannel().readBuffer(MAXIMUM_SIZE_BYTES + 1L).readByteArray()
                         when {
                             bytes.isEmpty() || bytes.size > MAXIMUM_SIZE_BYTES -> CoverArtDownload.Missing
-                            response.isCutShort(bytes.size) -> CoverArtDownload.Unreachable
+                            response.isCutShort(bytes.size.toLong()) -> CoverArtDownload.Unreachable
                             else -> CoverArtDownload.Image(bytes)
                         }
                     }

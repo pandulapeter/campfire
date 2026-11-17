@@ -20,7 +20,7 @@ import io.ktor.http.contentLength
  * visible encoding answers false, and only a body shorter by more than gzip's worst-case expansion of incompressible
  * data counts, which a body cut short nearly always is by far.
  */
-internal fun HttpResponse.isCutShort(received: Int): Boolean {
+internal fun HttpResponse.isCutShort(received: Long): Boolean {
     val declared = contentLength() ?: return false
     val encoding = headers[HttpHeaders.ContentEncoding]
     if (encoding != null && !encoding.trim().equals("identity", ignoreCase = true)) return false
