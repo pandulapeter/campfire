@@ -75,6 +75,12 @@ internal class ImportStaging(
     }
 
     /**
+     * Gives back what [request] reserved with [reserve] and no file took, once the walks it was reserved for have ended,
+     * however they ended; see [StagingLedger.releasePool]. Finishes even when cancelled.
+     */
+    suspend fun releaseUnused(request: StagingRequest) = withContext(NonCancellable) { ledger.releasePool(request.id) }
+
+    /**
      * A sink for an archive [request] receives or finds nested in another, [announcedSize] bytes long where that is known
      * (reserved before the file is made), else reserved as it grows. Its [StagedFile] has no hash.
      */

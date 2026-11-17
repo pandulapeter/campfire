@@ -149,6 +149,56 @@ class StreamingArchiveUnpackTest {
         assertEquals((pictures + staged.name).sorted(), storage.stagedNames())
     }
 
+    @Test
+    fun `room reserved for a picture the walk leaves unread is given back when the unpack ends`() = runBlocking {
+        val storage = LimitedFileStorage(capacity = 1L shl 30)
+        val unpacks = ArchiveUnpacks(storage)
+        val staged = unpacks.stage(withUnknownMethod(picturesArchive(), entryName = "two.png"))
+        val request = unpacks.staging.requestOf(staged)
+
+        val unpacked = unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        val picture = unpacked.files.single().images.mapNotNull { (it.content as? IncomingContent.Staged)?.file }.single()
+        assertEquals(staged.size + picture.size, unpacks.staging.ledger.reservedBy(request.id))
+        assertEquals(0, unpacks.staging.ledger.outstanding())
+    }
+
+    @Test
+    fun `room reserved for pictures a failed walk never reached is given back`() = runBlocking {
+        val storage = LimitedFileStorage(capacity = 1L shl 30)
+        val unpacks = ArchiveUnpacks(storage)
+        val staged = unpacks.stage(picturesArchive())
+        val request = unpacks.staging.requestOf(staged)
+        var writes = 0
+        storage.beforeWrite = { if (++writes == 2) throw LibraryStorageException("The disk went away.") }
+
+        assertFailsWith<LibraryStorageException> { unpacks.archiveLocalSource.unpack(archive = staged, maxSize = ImportLimits.MAX_IMPORT_SIZE) }
+
+        assertEquals(staged.size, unpacks.staging.ledger.reservedBy(request.id))
+        assertEquals(0, unpacks.staging.ledger.outstanding())
+    }
+
+    /**
+     * [archive] with the entry called [entryName] marked as compressed by a method no reader knows, in its local and its
+     * central header, so that a walk leaves it out before opening a sink for it.
+     */
+    private fun withUnknownMethod(archive: ByteArray, entryName: String): ByteArray {
+        val bytes = archive.copyOf()
+        fun u16(at: Int) = (bytes[at].toInt() and 0xFF) or ((bytes[at + 1].toInt() and 0xFF) shl 8)
+        fun u32(at: Int) = u16(at) or (u16(at + 2) shl 16)
+        val name = entryName.encodeToByteArray()
+        var at = 0
+        while (at < bytes.size - 4) {
+            if (u32(at) == CENTRAL_HEADER_SIGNATURE && bytes.copyOfRange(at + 46, at + 46 + u16(at + 28)).contentEquals(name)) {
+                bytes[at + 10] = UNKNOWN_METHOD
+                bytes[u32(at + 42) + 8] = UNKNOWN_METHOD
+                return bytes
+            }
+            at++
+        }
+        error("No entry called \"$entryName\".")
+    }
+
     /** A song naming two pictures of 100 kB each, which take several writes to stage. */
     private suspend fun picturesArchive() = ZipWriter.write(
         listOf(
@@ -164,5 +214,10 @@ class StreamingArchiveUnpackTest {
     private fun longFolders(count: Int, nameLength: Int, seed: Int): List<ZipEntry> {
         val random = Random(seed)
         return List(count) { ZipEntry(random.nextBytes(nameLength / 2).toHexString() + "/", ByteArray(0)) }
+    }
+
+    private companion object {
+        const val CENTRAL_HEADER_SIGNATURE = 0x02014b50
+        const val UNKNOWN_METHOD: Byte = 99
     }
 }

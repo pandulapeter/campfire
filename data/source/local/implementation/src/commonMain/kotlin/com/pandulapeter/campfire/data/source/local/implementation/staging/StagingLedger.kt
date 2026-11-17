@@ -92,6 +92,16 @@ internal class StagingLedger(private val fileStorage: FileStorage) {
         if (isUnpacked) account.unpacked = (account.unpacked - reserved).coerceAtLeast(0)
     }
 
+    /**
+     * Gives back what [request] reserved up front and no file took: the declared size of an entry the walk then left
+     * unread (encrypted, damaged before its sink opened, past its limit) or never reached (a walk that failed).
+     */
+    suspend fun releasePool(request: Long) = mutex.withLock {
+        val account = accounts[request] ?: return@withLock
+        account.reserved -= account.pool
+        account.pool = 0
+    }
+
     /** Gives back everything [request] holds, once its files are deleted. */
     suspend fun close(request: Long) = mutex.withLock {
         accounts -= request

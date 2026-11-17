@@ -233,11 +233,19 @@ internal class StreamingArchiveUnpack(
             }
             if (declaredSizes[index] <= limit) reserved += declaredSizes[index]
         }
-        if (reserved > 0) staging.reserve(request, reserved)
         val staged = mutableMapOf<String, StagedFile>()
         val unreadByName = mutableMapOf<String, UnreadZipEntry.Reason>()
-        val pictureSize = stageWalk(directory, wanted.pictures, isAttachment = false, staged, unreadByName)
-        val attachmentSize = stageWalk(directory, wanted.attachments, isAttachment = true, staged, unreadByName)
+        var pictureSize = 0L
+        var attachmentSize = 0L
+        try {
+            if (reserved > 0) staging.reserve(request, reserved)
+            pictureSize = stageWalk(directory, wanted.pictures, isAttachment = false, staged, unreadByName)
+            attachmentSize = stageWalk(directory, wanted.attachments, isAttachment = true, staged, unreadByName)
+        } finally {
+            // What an entry left unread or never reached was reserved for would otherwise stay reserved until the
+            // request settles, keeping a share arriving meanwhile from the room.
+            staging.releaseUnused(request)
+        }
         imageCharged += pictureSize
         attachmentCharged += attachmentSize
         return ArchiveSongImages.found(
