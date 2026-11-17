@@ -47,3 +47,20 @@ tasks.named<Test>("desktopTest") {
     // The corpus lives outside the project, so Gradle is told to rerun when a document or its .cho changes.
     if (corpus.isNotBlank()) inputs.files(fileTree(corpus) { exclude(".runs/**") }).withPropertyName("importCorpus")
 }
+
+/**
+ * The large-file memory proof (`LargeFileMemoryTest`) in a JVM capped well below three copies of a 50 MiB attachment,
+ * which is what a phone's heap spares; `desktopTest` runs it, and leaves it out of its own uncapped JVM.
+ */
+val largeFileMemoryTest = tasks.register<Test>("largeFileMemoryTest") {
+    val desktopTest = tasks.named<Test>("desktopTest").get()
+    testClassesDirs = desktopTest.testClassesDirs
+    classpath = desktopTest.classpath
+    maxHeapSize = "128m"
+    filter.includeTestsMatching("*LargeFileMemoryTest")
+}
+
+tasks.named<Test>("desktopTest") {
+    filter.excludeTestsMatching("*LargeFileMemoryTest")
+    dependsOn(largeFileMemoryTest)
+}

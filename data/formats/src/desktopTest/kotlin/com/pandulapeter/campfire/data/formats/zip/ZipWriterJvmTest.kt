@@ -51,6 +51,20 @@ internal class ZipWriterJvmTest {
         entries.forEachIndexed { index, entry -> assertContentEquals(entry.bytes, read[index].third) }
     }
 
+    @Test
+    fun `large entries stored and deflated both read back`() {
+        val noise = Random(9).nextBytes(2 * 1024 * 1024)
+        val text = ByteArray(2 * 1024 * 1024) { "[Am]Down by the [C]river\n".encodeToByteArray()[it % 25] }
+        val entries = listOf(ZipEntry("recording.mp3", noise), ZipEntry("songbook.txt", text))
+
+        val read = ZipInputStream(runBlocking { ZipWriter.write(entries) }.inputStream()).use { zip ->
+            generateSequence { zip.nextEntry }.map { Triple(it.name, it.method, zip.readBytes()) }.toList()
+        }
+
+        assertEquals(listOf(java.util.zip.ZipEntry.STORED, java.util.zip.ZipEntry.DEFLATED), read.map { it.second })
+        entries.forEachIndexed { index, entry -> assertContentEquals(entry.bytes, read[index].third) }
+    }
+
     private fun modifiedAt(timestamp: DosTimestamp) =
         ZipInputStream(runBlocking { ZipWriter.write(listOf(ZipEntry("song.cho", byteArrayOf(1))), modifiedAt = timestamp) }.inputStream()).use { zip ->
             zip.nextEntry!!.timeLocal

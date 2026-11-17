@@ -50,7 +50,8 @@ Skipped or unreadable files are logged to the injected `Logger`.
 - **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage`, on the iOS
   simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job), and in headless Chrome over
   `OpfsFileStorage` under a folder of its own per test (`wasmJsBrowserTest`, filtered to that class, CI's `compile` job);
-  what only the JVM does stays in `JvmFileStorageTest`.
+  what only the JVM does stays in `JvmFileStorageTest`. `LargeFileMemoryTest` exports two 50 MiB attachments and
+  copies a 50 MiB draft file in a JVM capped at 128 MB (`largeFileMemoryTest`, which `desktopTest` depends on).
 - **Random reads, moves, copies, free space** (`openSource`, `moveInto`, `copyInto`, `availableSpace`): a `FileSource`
   reads at 64-bit positions (JVM `FileChannel` opened `READ` only, iOS `pread`, the web slices of one `File` snapshot);
   a move is a rename (JVM `ATOMIC_MOVE`, iOS `rename`, every directory on one volume), on the web a read, a `writeBytes`,

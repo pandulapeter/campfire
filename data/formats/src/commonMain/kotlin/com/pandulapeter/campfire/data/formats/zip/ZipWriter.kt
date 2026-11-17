@@ -46,7 +46,7 @@ object ZipWriter {
         val compressedSizes = LongArray(entries.size)
         val sizes = LongArray(entries.size)
         val deflater = Deflater()
-        val deflated = ByteArrayBuilder()
+        var deflated = ByteArrayBuilder()
         val header = ByteArrayBuilder()
         var count = 0
         entries.forEach { read ->
@@ -58,9 +58,13 @@ object ZipWriter {
             val index = count++
             names += name
             checksums[index] = Crc32.of(bytes)
+            val isLarge = bytes.size > LARGE_ENTRY_SIZE
             deflated.clear()
-            deflater.deflate(bytes, deflated::u8)
-            val isDeflated = deflated.size < bytes.size
+            val isDeflated = if (isLarge) {
+                deflateLarge(deflater, bytes)?.also { deflated = it } != null
+            } else {
+                deflateSmall(deflater, bytes, deflated)
+            }
             methods[index] = if (isDeflated) METHOD_DEFLATED else METHOD_STORED
             compressedSizes[index] = (if (isDeflated) deflated.size else bytes.size).toLong()
             sizes[index] = bytes.size.toLong()
@@ -79,7 +83,9 @@ object ZipWriter {
             header.u16(0) // Extra field length.
             header.bytes(names[index])
             header.writeTo(sink)
-            if (isDeflated) deflated.writeTo(sink) else sink.write(bytes, 0, bytes.size)
+            if (isDeflated) deflated.writeTo(sink) else sink.writeInSlices(bytes, bytes.size)
+            // Let go of a large entry's buffer at once, rather than keep its peak until the archive ends.
+            if (isLarge) deflated = ByteArrayBuilder()
         }
         val centralDirectoryOffset = sink.position.checkedOffset()
         header.clear()
@@ -117,7 +123,39 @@ object ZipWriter {
         return ZipSummary(entryCount = count, unpackedSize = sizes.sum())
     }
 
-    private fun Long.checkedOffset() = also { if (it > MAX_OFFSET) throw ZipException("An archive cannot be larger than 4 GiB.") }
+    /** Whether [bytes] deflated into [output] is smaller than they are, the whole entry deflated as it always was. */
+    private suspend fun deflateSmall(deflater: Deflater, bytes: ByteArray, output: ByteArrayBuilder): Boolean {
+        deflater.deflate(bytes, output::u8)
+        return output.size < bytes.size
+    }
+
+    /**
+     * [deflateSmall] for an entry over [LARGE_ENTRY_SIZE], which never deflates into more memory than the entry: its
+     * first [TRIAL_SIZE] bytes are deflated first, and an entry whose head does not shrink by [MIN_TRIAL_SAVING] percent
+     * (a recording, a photo, a PDF of scans) is stored without deflating the rest. One that does is deflated into a buffer
+     * sized to the entry, given up on as soon as it would be no smaller than stored. Null where the entry is stored.
+     */
+    private suspend fun deflateLarge(deflater: Deflater, bytes: ByteArray): ByteArrayBuilder? {
+        var trialSize = 0
+        deflater.deflate(bytes.copyOfRange(0, TRIAL_SIZE)) { trialSize++ }
+        if (trialSize > TRIAL_SIZE - TRIAL_SIZE * MIN_TRIAL_SAVING / 100) return null
+        val output = ByteArrayBuilder(bytes.size)
+        return try {
+            deflater.deflate(bytes) { value ->
+                if (output.size + 1 >= bytes.size) throw NoSmallerThanStored
+                output.u8(value)
+            }
+            output
+        } catch (_: NoSmallerThanStored) {
+            null
+        }
+    }
+
+    /** Thrown out of a deflate that has reached its entry's own size, where storing it is no larger. */
+    private object NoSmallerThanStored : RuntimeException()
+
+    /** 0xFFFFFFFF itself is ZIP64's marker in a 32-bit field, so the largest offset a plain archive can hold is one less. */
+    private fun Long.checkedOffset() = also { if (it >= MAX_OFFSET) throw ZipException("An archive cannot be larger than 4 GiB.") }
 
     private const val LOCAL_HEADER_SIGNATURE = 0x04034B50L
     private const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L
@@ -129,4 +167,7 @@ object ZipWriter {
     private const val ZIP64_MARKER = 0xFFFF
     private const val MAX_NAME_SIZE = 0xFFFF
     private const val MAX_OFFSET = 0xFFFFFFFFL
+    private const val LARGE_ENTRY_SIZE = 1024 * 1024
+    private const val TRIAL_SIZE = 64 * 1024
+    private const val MIN_TRIAL_SAVING = 3
 }

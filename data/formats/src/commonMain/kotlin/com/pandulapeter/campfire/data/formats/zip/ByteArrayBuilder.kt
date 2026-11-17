@@ -50,7 +50,7 @@ internal class ByteArrayBuilder(initialCapacity: Int = 64) {
     }
 
     /** Hands what the buffer holds so far to [sink], without the copy [build] would make. */
-    suspend fun writeTo(sink: ZipSink) = sink.write(buffer, 0, size)
+    suspend fun writeTo(sink: ZipSink) = sink.writeInSlices(buffer, size)
 
     /** Empties the buffer and keeps its capacity, for the next entry. */
     fun clear() {

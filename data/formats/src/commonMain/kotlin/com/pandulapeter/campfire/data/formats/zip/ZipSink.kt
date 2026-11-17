@@ -21,3 +21,15 @@ interface ZipSink {
     /** Appends [length] bytes of [bytes] from [offset]. May throw whatever the destination throws, ending the archive. */
     suspend fun write(bytes: ByteArray, offset: Int, length: Int)
 }
+
+/** One call per [WRITE_SLICE_SIZE] bytes at most: the web's sink converts each call's bytes whole for the browser. */
+internal suspend fun ZipSink.writeInSlices(bytes: ByteArray, size: Int) {
+    var offset = 0
+    while (offset < size) {
+        val length = minOf(WRITE_SLICE_SIZE, size - offset)
+        write(bytes, offset, length)
+        offset += length
+    }
+}
+
+private const val WRITE_SLICE_SIZE = 1024 * 1024

@@ -31,11 +31,22 @@ class Deflater {
 
     /**
      * Appends the deflate stream of [data] to [destination], ending on a byte boundary, yielding (and so checking for
-     * cancellation) every 256 KB.
+     * cancellation) every 256 KB. Neither is held once it returns or throws (a [destination] may throw to give up), so a
+     * large entry is not kept alive by the instance a writer keeps for the next one.
      */
     suspend fun deflate(data: ByteArray, destination: DeflateOutput) {
         input = data
         output = destination
+        try {
+            deflateInput()
+        } finally {
+            input = NO_INPUT
+            output = NO_OUTPUT
+        }
+    }
+
+    private suspend fun deflateInput() {
+        val data = input
         head.fill(-1)
         previous.fill(-1)
         bitBuffer = 0L
@@ -161,6 +172,8 @@ class Deflater {
         const val MAX_CHAIN = 32
         const val END_OF_BLOCK = 256
         const val YIELD_INTERVAL = 256 * 1024
+        val NO_INPUT = ByteArray(0)
+        val NO_OUTPUT = DeflateOutput { }
         val LENGTH_BASES = intArrayOf(
             3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258,
         )

@@ -84,6 +84,9 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
 - **The writer streams into a `ZipSink`** (a file for an export, a buffer for the in-memory `write`, which is the same
   bytes): each entry is read (name and bytes, or null to leave it out), deflated, and written before the next is read, its header after its CRC and
   sizes are known (no data descriptors), so it holds one entry and the central directory's offsets, never the archive.
+  An entry over 1 MiB is first tried on its first 64 KiB: one that does not shrink by 3% is stored undeflated, one that
+  does is deflated into a buffer of its own size, given up on once no smaller (`LargeFileMemoryTest`, in a 128 MB JVM,
+  is the proof); entries up to 1 MiB come out bit for bit as before. Data reaches the sink in slices of at most 1 MiB.
 - **Declared sizes are only a first guess.** Entries are judged by name and declared size before inflating
   (`EntryPolicy`), or under an uninformative name by a 512-byte peek (`Sniff`); a declined peek costs no budget. The
   caller's import budget is charged before an entry is read; inflation stops at the declared size. Each entry's
