@@ -85,8 +85,8 @@ interface ArchiveLocalSource {
     /**
      * [pack], streamed into [sink] one entry at a time, each read only when it is its turn and let go of before the
      * next, so that the archive is never in memory whole. An entry read as nothing is left out; the answer says how
-     * many were written. Throws what [sink] throws, and a `ZipException` past what a zip without ZIP64 holds, leaving
-     * [sink] to be abandoned by its owner.
+     * many were written; one past 4 GiB or of 65,535 entries or more is ZIP64. Throws what [sink] throws, and a
+     * `ZipException` for an entry name longer than a zip holds, leaving [sink] to be abandoned by its owner.
      */
     suspend fun pack(entries: List<suspend () -> ArchiveEntry?>, isDated: Boolean, sink: ExportSink): PackedArchive
 }

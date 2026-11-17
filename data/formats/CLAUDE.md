@@ -81,7 +81,14 @@ it, as the reference the other is held to.
   with `Deflater`'s fixed Huffman codes. Every Campfire version reads both. The output depends on the entries alone,
   since a shared copy is rebuilt from the library's files and must come out as the same bytes. An archive is smaller
   than what it unpacks to, so whether an import would take an export is judged by its entries' sizes
-  (`ExportedFile.unpackedSize`). Over 65,534 entries or 4 GiB are refused rather than written as ZIP64.
+  (`ExportedFile.unpackedSize`).
+- **ZIP64 is written only past what the 32-bit format holds**, so an archive within it is byte for byte what it was
+  before (`ZipWriterStreamingTest`'s and `ZipRoundTripTest`'s digests): an entry whose local header starts at or past
+  `0xFFFFFFFF` gets its offset in a central `0x0001` field and version 45 (sizes never need one, an entry being one
+  `ByteArray`); 65,535 entries or more, a central directory starting at or past `0xFFFFFFFF`, or an archive that would end
+  past it add the ZIP64 record and locator, the end record's overflowing fields at their markers. An archive merely
+  ending past 4 GiB needs them too, or the reader takes it for a wrapped one. Only a name over 65,535 bytes is refused.
+  The tests lower the limits through `write`'s internal overload, never production's.
 - **The writer streams into a `ZipSink`** (a file for an export, a buffer for the in-memory `write`, which is the same
   bytes): each entry is read (name and bytes, or null to leave it out), deflated, and written before the next is read, its header after its CRC and
   sizes are known (no data descriptors), so it holds one entry and the central directory's offsets, never the archive.

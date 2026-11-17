@@ -177,9 +177,3 @@ internal class Zip64TestArchive(
         const val MARKER = 0xFFFFFFFFL
     }
 }
-
-/** Appends [value] as a little-endian 64-bit field. */
-internal fun ByteArrayBuilder.u64(value: Long) {
-    u32(value and 0xFFFFFFFFL)
-    u32(value ushr 32)
-}

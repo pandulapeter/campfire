@@ -34,6 +34,11 @@ internal class ByteArrayBuilder(initialCapacity: Int = 64) {
         u8(((value ushr 24) and 0xFF).toInt())
     }
 
+    fun u64(value: Long) {
+        u32(value and 0xFFFFFFFFL)
+        u32(value ushr 32)
+    }
+
     fun bytes(value: ByteArray) = bytes(value, 0, value.size)
 
     fun bytes(value: ByteArray, offset: Int, length: Int) {

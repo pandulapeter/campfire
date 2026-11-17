@@ -17,6 +17,10 @@ import kotlinx.coroutines.yield
  * Campfire version reads both, and the same entries always make the same bytes, which shared copies rely on. An
  * archive is smaller than what an import unpacks it to, so whether an import takes it is a question for the entries'
  * own sizes, not the archive's.
+ *
+ * ZIP64 is written only where an archive passes what the 32-bit format holds (an entry starting at or past
+ * `0xFFFFFFFF`, a central directory reaching that far, 65,535 entries or more), so every archive within those limits
+ * comes out byte for byte as one written before ZIP64 was.
  */
 object ZipWriter {
 
@@ -31,14 +35,27 @@ object ZipWriter {
      * Writes the archive of [entries] to [sink] as it goes: each entry is read (called once, when it is its turn),
      * deflated, and written whole before the next is read, its CRC and sizes known before its header, so no data
      * descriptor is needed and what stays in memory is one entry and, for the central directory, each entry's offset,
-     * CRC, and sizes. An archive past 4 GiB is refused rather than written as ZIP64, part of it already in [sink]. Yields
-     * (and so checks for cancellation) between entries and every 256 KB of deflating.
+     * CRC, and sizes. One past 4 GiB or of 65,535 entries or more is written as ZIP64. Yields (and so checks for
+     * cancellation) between entries and every 256 KB of deflating.
      *
      * An entry read as null is left out, nothing of it written: a file that turned out to be missing or unreadable. Its
      * name comes with its bytes, since a file read by one name may be stored under another spelling of it.
      */
-    suspend fun write(entries: List<suspend () -> ZipEntry?>, sink: ZipSink, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ZipSummary {
-        if (entries.size >= ZIP64_MARKER) throw ZipException("An archive cannot hold ${entries.size} entries, the most is ${ZIP64_MARKER - 1}.")
+    suspend fun write(entries: List<suspend () -> ZipEntry?>, sink: ZipSink, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ZipSummary =
+        write(entries = entries, sink = sink, modifiedAt = modifiedAt, offsetLimit = OFFSET_MARKER, entryLimit = ENTRY_COUNT_MARKER)
+
+    /**
+     * [write] with the limits from which ZIP64 is written lowered by the tests, so that small archives can be read by
+     * other tools as ZIP64: an offset or size of [offsetLimit] or more, and an entry count of [entryLimit] or more, is
+     * put at its marker and given its ZIP64 value. Production passes the format's own limits.
+     */
+    internal suspend fun write(
+        entries: List<suspend () -> ZipEntry?>,
+        sink: ZipSink,
+        modifiedAt: DosTimestamp,
+        offsetLimit: Long,
+        entryLimit: Int,
+    ): ZipSummary {
         val names = ArrayList<ByteArray>(entries.size)
         val offsets = LongArray(entries.size)
         val checksums = LongArray(entries.size)
@@ -68,7 +85,7 @@ object ZipWriter {
             methods[index] = if (isDeflated) METHOD_DEFLATED else METHOD_STORED
             compressedSizes[index] = (if (isDeflated) deflated.size else bytes.size).toLong()
             sizes[index] = bytes.size.toLong()
-            offsets[index] = sink.position.checkedOffset()
+            offsets[index] = sink.position
             header.clear()
             header.u32(LOCAL_HEADER_SIGNATURE)
             header.u16(VERSION)
@@ -87,12 +104,15 @@ object ZipWriter {
             // Let go of a large entry's buffer at once, rather than keep its peak until the archive ends.
             if (isLarge) deflated = ByteArrayBuilder()
         }
-        val centralDirectoryOffset = sink.position.checkedOffset()
+        val centralDirectoryOffset = sink.position
         header.clear()
         repeat(count) { index ->
+            // Sizes never need ZIP64: an entry is one ByteArray, and its local header carries its sizes, so no data
+            // descriptor or local extra field is needed either.
+            val isOffsetZip64 = offsets[index] >= offsetLimit
             header.u32(CENTRAL_DIRECTORY_SIGNATURE)
             header.u16(VERSION) // Version made by.
-            header.u16(VERSION) // Version needed to extract.
+            header.u16(if (isOffsetZip64) VERSION_ZIP64 else VERSION) // Version needed to extract.
             header.u16(FLAG_UTF8_NAMES)
             header.u16(methods[index])
             header.u16(modifiedAt.time)
@@ -101,23 +121,45 @@ object ZipWriter {
             header.u32(compressedSizes[index])
             header.u32(sizes[index])
             header.u16(names[index].size)
-            header.u16(0) // Extra field length.
+            header.u16(if (isOffsetZip64) ZIP64_EXTRA_SIZE else 0) // Extra field length.
             header.u16(0) // Comment length.
             header.u16(0) // Disk number.
             header.u16(0) // Internal attributes.
             header.u32(0) // External attributes.
-            header.u32(offsets[index])
+            header.u32(if (isOffsetZip64) OFFSET_MARKER else offsets[index])
             header.bytes(names[index])
+            if (isOffsetZip64) {
+                header.u16(ZIP64_EXTRA_TAG)
+                header.u16(ZIP64_EXTRA_SIZE - 4)
+                header.u64(offsets[index])
+            }
         }
         val centralDirectorySize = header.size.toLong()
-        (centralDirectoryOffset + centralDirectorySize).checkedOffset()
+        val centralDirectoryEnd = centralDirectoryOffset + centralDirectorySize
+        // An archive longer than 0xFFFFFFFF bytes without a locator reads as one some tool wrapped past 4 GiB, so an end
+        // record alone crossing the limit takes the ZIP64 records too.
+        if (count >= entryLimit || centralDirectoryOffset >= offsetLimit || centralDirectoryEnd + END_OF_CENTRAL_DIRECTORY_SIZE > offsetLimit) {
+            header.u32(ZIP64_END_OF_CENTRAL_DIRECTORY_SIGNATURE)
+            header.u64(ZIP64_END_OF_CENTRAL_DIRECTORY_SIZE - 12L) // Size of the rest of the record.
+            header.u16(VERSION_ZIP64) // Version made by.
+            header.u16(VERSION_ZIP64) // Version needed to extract.
+            header.u32(0) // Disk number.
+            header.u32(0) // Disk where the central directory starts.
+            header.u64(count.toLong())
+            header.u64(count.toLong())
+            header.u64(centralDirectorySize)
+            header.u64(centralDirectoryOffset)
+            header.u32(ZIP64_LOCATOR_SIGNATURE)
+            header.u32(0) // Disk where the ZIP64 record is.
+            header.u64(centralDirectoryEnd)
+            header.u32(1) // Number of disks.
+        }
         header.u32(END_OF_CENTRAL_DIRECTORY_SIGNATURE)
         header.u16(0) // Disk number.
         header.u16(0) // Disk where the central directory starts.
-        header.u16(count)
-        header.u16(count)
-        header.u32(centralDirectorySize)
-        header.u32(centralDirectoryOffset)
+        repeat(2) { header.u16(if (count >= entryLimit) ENTRY_COUNT_MARKER else count) }
+        header.u32(if (centralDirectorySize >= offsetLimit) OFFSET_MARKER else centralDirectorySize)
+        header.u32(if (centralDirectoryOffset >= offsetLimit) OFFSET_MARKER else centralDirectoryOffset)
         header.u16(0) // Comment length.
         header.writeTo(sink)
         return ZipSummary(entryCount = count, unpackedSize = sizes.sum())
@@ -154,19 +196,23 @@ object ZipWriter {
     /** Thrown out of a deflate that has reached its entry's own size, where storing it is no larger. */
     private object NoSmallerThanStored : RuntimeException()
 
-    /** 0xFFFFFFFF itself is ZIP64's marker in a 32-bit field, so the largest offset a plain archive can hold is one less. */
-    private fun Long.checkedOffset() = also { if (it >= MAX_OFFSET) throw ZipException("An archive cannot be larger than 4 GiB.") }
-
     private const val LOCAL_HEADER_SIGNATURE = 0x04034B50L
     private const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L
     private const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
+    private const val ZIP64_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06064B50L
+    private const val ZIP64_LOCATOR_SIGNATURE = 0x07064B50L
+    private const val END_OF_CENTRAL_DIRECTORY_SIZE = 22
+    private const val ZIP64_END_OF_CENTRAL_DIRECTORY_SIZE = 56
+    private const val ZIP64_EXTRA_TAG = 0x0001
+    private const val ZIP64_EXTRA_SIZE = 12
     private const val VERSION = 20
+    private const val VERSION_ZIP64 = 45
     private const val FLAG_UTF8_NAMES = 0x0800
     private const val METHOD_STORED = 0
     private const val METHOD_DEFLATED = 8
-    private const val ZIP64_MARKER = 0xFFFF
+    private const val ENTRY_COUNT_MARKER = 0xFFFF
+    private const val OFFSET_MARKER = 0xFFFFFFFFL
     private const val MAX_NAME_SIZE = 0xFFFF
-    private const val MAX_OFFSET = 0xFFFFFFFFL
     private const val LARGE_ENTRY_SIZE = 1024 * 1024
     private const val TRIAL_SIZE = 64 * 1024
     private const val MIN_TRIAL_SAVING = 3

@@ -15,7 +15,6 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 internal class ZipWriterLargeEntryTest {
@@ -71,21 +70,6 @@ internal class ZipWriterLargeEntryTest {
 
         assertEquals(METHOD_STORED, firstMethodOf(archive))
         assertContentEquals(bytes, readBack(archive))
-    }
-
-    @Test
-    fun `an archive whose central directory would start at the 32-bit marker's offset is refused`() = runTest {
-        // The offset itself is 0xFFFFFFFF, which in a 32-bit field means "look in the ZIP64 record" to every reader.
-        val sink = object : ZipSink {
-            override var position = 0xFFFFFFFFL
-                private set
-
-            override suspend fun write(bytes: ByteArray, offset: Int, length: Int) {
-                position += length
-            }
-        }
-
-        assertFailsWith<ZipException> { ZipWriter.write(entries = emptyList(), sink = sink) }
     }
 
     private fun readBack(archive: ByteArray) = ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE).entries.single().bytes
