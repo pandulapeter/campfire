@@ -24,6 +24,7 @@ import kotlinx.coroutines.coroutineScope
 /**
  * What [readLocalListing] found: the files it read, the ones it left alone for their size, and the ones it could not read.
  *
+ * @param largeFiles The library files within their limit that a run still moves alone ([isLargeFile]).
  * @param imageReferences The library files each song of this device names (pictures and attachments), or null where a song could not be read (or was too
  *   large to be), which may name any of them: the planner then deletes no picture on either side.
  */
@@ -31,13 +32,14 @@ internal class LocalListing(
     val states: List<LocalFileState>,
     val tooLarge: Set<SyncKey>,
     val unreadable: Set<SyncKey>,
+    val largeFiles: Set<SyncKey>,
     val imageReferences: Map<SyncKey, Set<String>>?,
 )
 
 /**
  * Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. A file over
- * [maxSize] is not read at all: nothing the app writes is that large, so it was put into the folder from outside, and
- * it is no song any other device would download.
+ * its limit ([maximumSize]) is not read at all: nothing the app writes is that large, so it was put into the folder from
+ * outside, and it is no file any other device would download.
  *
  * A picture is not read either: its name is its content and nothing writes another content under it, so its size
  * stands for its hash ([localImageHash]), and the library's photos are not read and hashed on every return to the front.
@@ -51,10 +53,9 @@ internal class LocalListing(
 internal suspend fun readLocalListing(
     libraryFileLocalSource: LibraryFileLocalSource,
     logger: Logger,
-    maxSize: Long,
     batchSize: Int,
 ): LocalListing = coroutineScope {
-    val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > maxSize }
+    val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > SyncKey(kind = it.kind, name = it.name).maximumSize }
     tooLarge.forEach { logger.log("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
     val (images, documents) = files.partition { it.kind == LibraryFileKind.FILE }
     // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is thousands of
@@ -71,6 +72,7 @@ internal suspend fun readLocalListing(
         states = read.map { it.state } + imageStates,
         tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
         unreadable = failures.mapTo(mutableSetOf()) { it.key },
+        largeFiles = images.filter { isLargeFile(it.size) }.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
         imageReferences = if (isEverySongRead) read.filter { it.state.key.kind == LibraryFileKind.SONG }.associate { it.state.key to it.imageReferences } else null,
     )
 }

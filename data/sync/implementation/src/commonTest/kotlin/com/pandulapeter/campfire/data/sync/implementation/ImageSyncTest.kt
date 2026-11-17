@@ -9,11 +9,14 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation
 
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -23,8 +26,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Pictures between two devices, through the real engine: they follow the songs naming them, a song naming one keeps it
- * on both sides, and a copy that is not what its name says never travels.
+ * Pictures and attachments between two devices, through the real engine: they follow the songs naming them, a song
+ * naming one keeps it on both sides, and a copy that is not what its name says never travels.
  */
 class ImageSyncTest {
 
@@ -246,6 +249,97 @@ class ImageSyncTest {
         assertTrue(b.library.files.keys.none { it.kind == LibraryFileKind.FILE })
     }
 
+    @Test
+    fun `an attachment over a picture's limit reaches the other device`() = runTest {
+        val a = Device(mapOf(song(1) to attaching(RECORDING), RECORDING.key to RECORDING.bytes))
+        val b = Device()
+        a.sync(cloud)
+        b.sync(cloud)
+
+        assertContentEquals(RECORDING.bytes, cloud.files[RECORDING.key]?.first)
+        assertContentEquals(RECORDING.bytes, b.library.files[RECORDING.key])
+        assertConverges(a, b)
+    }
+
+    @Test
+    fun `files over a picture's limit move one at a time, beside the others`() = runTest {
+        val video = attachment(Random(2).nextBytes(RECORDING.bytes.size))
+        val a = Device(mapOf(song(1) to attaching(RECORDING, video), RECORDING.key to RECORDING.bytes, video.key to video.bytes))
+        a.sync(cloud)
+        var inFlight = 0
+        var largeInFlight = 0
+        var mostLargeInFlight = 0
+        var mostInFlight = 0
+        cloud.onDownload = { key ->
+            val isLarge = key.kind == LibraryFileKind.FILE
+            inFlight++
+            if (isLarge) largeInFlight++
+            mostInFlight = maxOf(mostInFlight, inFlight)
+            mostLargeInFlight = maxOf(mostLargeInFlight, largeInFlight)
+            yield()
+            inFlight--
+            if (isLarge) largeInFlight--
+        }
+        Device().sync(cloud)
+
+        assertEquals(1, mostLargeInFlight)
+        assertEquals(2, mostInFlight, "The song moves beside a large file.")
+    }
+
+    @Test
+    fun `an attachment deleted on one device stays where a song still names it and comes back`() = runTest {
+        val sheet = attachment("sheet music")
+        val (a, b) = inStep(mapOf(song(1) to attaching(sheet), sheet.key to sheet.bytes))
+        a.library.files -= song(1)
+        a.library.files -= sheet.key
+        b.library.files[song(2)] = attaching(sheet)
+        a.sync(cloud)
+        b.sync(cloud)
+        a.sync(cloud)
+        assertConverges(a, b)
+
+        assertContentEquals(sheet.bytes, cloud.files[sheet.key]?.first)
+        assertContentEquals(sheet.bytes, a.library.files[sheet.key])
+        assertContentEquals(sheet.bytes, b.library.files[sheet.key])
+    }
+
+    @Test
+    fun `an attachment here over its limit is reported and neither uploaded nor taken for a deletion`() = runTest {
+        val huge = attachment(ByteArray((ImportLimits.MAX_ATTACHMENT_FILE_SIZE + 1).toInt()))
+        val a = Device(mapOf(song(1) to attaching(huge), huge.key to huge.bytes))
+
+        val result = assertIs<SyncEngine.Result.Completed>(a.attempt(cloud, SyncDeletionPolicy.ASK))
+
+        assertEquals(listOf(huge.key.name), result.summary.failed)
+        assertEquals(setOf(song(1)), cloud.files.keys)
+        assertContentEquals(huge.bytes, a.library.files[huge.key])
+    }
+
+    @Test
+    fun `an attachment in the folder over its limit is reported and never downloaded`() = runTest {
+        val cloud = FakeSyncProvider(sizes = mapOf(RECORDING.key to ImportLimits.MAX_ATTACHMENT_FILE_SIZE + 1))
+        cloud.files[RECORDING.key] = RECORDING.bytes to "r1"
+        cloud.files[song(1)] = attaching(RECORDING) to "r1"
+        val b = Device()
+
+        val result = assertIs<SyncEngine.Result.Completed>(b.attempt(cloud, SyncDeletionPolicy.ASK))
+
+        assertEquals(listOf(RECORDING.key.name), result.summary.failed)
+        assertNull(b.library.files[RECORDING.key])
+        assertContentEquals(RECORDING.bytes, cloud.files[RECORDING.key]?.first)
+    }
+
+    @Test
+    fun `an attachment in the folder that is not what its name says is never written into the library`() = runTest {
+        cloud.files[RECORDING.key] = "planted".encodeToByteArray() to "r1"
+        cloud.files[song(1)] = attaching(RECORDING) to "r1"
+        val b = Device()
+        b.sync(cloud)
+
+        assertNull(b.library.files[RECORDING.key])
+        assertTrue(b.library.files.containsKey(song(1)))
+    }
+
     /** With a few other songs, so that the deletions of a test are not the whole library, which the guard asks about. */
     private suspend fun inStep(files: Map<SyncKey, ByteArray>): Pair<Device, Device> {
         val a = Device(librarySongs(3).mapKeys { (key, _) -> song("other_${key.name.removeSuffix(".cho")}") } + files)
@@ -277,6 +371,7 @@ class ImageSyncTest {
 
     private fun FakeSyncProvider.snapshot() = files.entries.associate { (key, file) -> key.path to localContentHash(file.first) }
 
+    /** A picture or an attachment: a library file named by its content. */
     private class Picture(val key: SyncKey, val bytes: ByteArray)
 
     private class LibraryStorageFailure : Exception("Not readable now.")
@@ -287,12 +382,22 @@ class ImageSyncTest {
 
         val PHOTO = picture("photo")
 
-        fun picture(content: String): Picture {
-            val bytes = content.encodeToByteArray()
-            return Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + ".png"), bytes)
-        }
+        /** Larger than a picture may be, as a recording is, so that it moves alone. */
+        val RECORDING = attachment(Random(1).nextBytes((ImportLimits.MAX_IMAGE_FILE_SIZE + 1).toInt()))
+
+        fun picture(content: String) = libraryFile(content.encodeToByteArray(), extension = ".png")
+
+        fun attachment(content: String) = attachment(content.encodeToByteArray())
+
+        fun attachment(bytes: ByteArray) = libraryFile(bytes, extension = ".m4a")
+
+        private fun libraryFile(bytes: ByteArray, extension: String) =
+            Picture(SyncKey(kind = LibraryFileKind.FILE, name = localContentHash(bytes).take(16) + extension), bytes)
 
         fun naming(vararg pictures: Picture, extra: String = "") =
             (pictures.joinToString("\n") { "{image: src=${it.key.name}}" } + "\n" + extra).encodeToByteArray()
+
+        fun attaching(vararg attachments: Picture) =
+            attachments.joinToString("\n", postfix = "\n") { "{meta: attachment ${it.key.name} Rehearsal take.m4a}" }.encodeToByteArray()
     }
 }

@@ -33,8 +33,8 @@ object ImportLimits {
     const val MAX_TEXT_FILE_SIZE = 8L shl 20
 
     /**
-     * One picture a song shows, however it arrives (picked, dropped, shared, in an archive, or by sync): the size sync
-     * moves a file up to, so a picture the library holds can always reach the other devices. A larger one the user adds
+     * One picture a song shows, however it arrives (picked, dropped, shared, in an archive, or by sync): within what sync
+     * moves, so a picture the library holds can always reach the other devices. A larger one the user adds
      * themselves is re-encoded on the device until it fits (read within [MAX_PICKED_IMAGE_FILE_SIZE]); one that cannot be
      * is refused with a message naming this as 8 MB in every language. One in an archive or arriving by sync is never
      * re-encoded, only refused.

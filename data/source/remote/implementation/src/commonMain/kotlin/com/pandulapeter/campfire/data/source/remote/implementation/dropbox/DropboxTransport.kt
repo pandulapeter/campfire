@@ -87,8 +87,17 @@ internal class DropboxTransport(
         /** A gzipped listing page of up to about 200 KB, at about 2 KB/s. */
         const val LISTING_BROWSER_TIMEOUT_MILLIS = 120_000L
 
-        /** A download, whose size is not known when it is asked for: a song at any rate, 8 MB at about 70 KB/s. */
+        /** A download's least bound, whatever its limit: a song at any rate, 8 MB at about 70 KB/s. */
         const val DOWNLOAD_BROWSER_TIMEOUT_MILLIS = 120_000L
+
+        /**
+         * The rate a download's limit is given time at, since its size is not known when it is asked for: a 50 MB
+         * attachment gets about 12 minutes.
+         */
+        const val DOWNLOAD_BROWSER_BYTES_PER_SECOND = 70_000L
+
+        /** The browser's bound on a download of at most [maxSize] bytes. */
+        fun downloadBrowserTimeoutMillis(maxSize: Long) = maxOf(DOWNLOAD_BROWSER_TIMEOUT_MILLIS, maxSize * 1000L / DOWNLOAD_BROWSER_BYTES_PER_SECOND)
 
         /** An upload's bound before its size is counted: a song of a few KB gets this. */
         const val UPLOAD_BROWSER_TIMEOUT_MILLIS = 60_000L

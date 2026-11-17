@@ -76,10 +76,11 @@ interface SyncFolder {
      * The file as it is now, with the revision of what was fetched rather than the one [list] named: another device may
      * have written the file again in between, and the engine records the revision of the content it actually holds.
      * The bytes are the whole file as the service holds it: a transfer that cannot be shown to be whole is a failure
-     * of this download, thrown, never a shorter file. A file over the provider's download limit, whatever [list] said
-     * of its size, is that file's failure too, refused before its body is read.
+     * of this download, thrown, never a shorter file. A file over [maxSize], whatever [list] said of its size, is that
+     * file's failure too, refused before its body is read where the service says its size first and never held whole
+     * where it does not: the caller holds the file in memory, and its limit depends on what the file is.
      */
-    suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument
+    suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument
 
     /**
      * The hash of [bytes] in the same format as [RemoteFile.contentHash], or null where the provider offers none.

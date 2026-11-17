@@ -32,8 +32,8 @@ import kotlinx.serialization.SerializationException
  * [DropboxSyncProvider.downloadDocument].
  *
  * The body is streamed inside the one call [DropboxTransport.request] retries, so a transfer that breaks mid-body is
- * retried like any other, and one over [MAXIMUM_DOWNLOAD_SIZE] is never held in memory: leaving `execute` drops the rest
- * of it. Nothing is thrown inside that call for a body over the limit, because the retry loop would send the call again
+ * retried like any other, and one over its limit (the caller's for a library file, [MAXIMUM_DOCUMENT_SIZE] for a document)
+ * is never held in memory: leaving `execute` drops the rest of it. Nothing is thrown inside that call for a body over the limit, because the retry loop would send the call again
  * and its last attempt would become the run's network failure; it is refused once the call returns, sent once.
  */
 internal class DropboxDownloads(
@@ -42,18 +42,18 @@ internal class DropboxDownloads(
 ) {
 
     /** A library file over the limit fails as that one file, like any other answer that is not the whole file. */
-    suspend fun download(path: String): RemoteDocument {
-        val download = streamed(path)
+    suspend fun download(path: String, maxSize: Long): RemoteDocument {
+        val download = streamed(path, maxSize)
         download.response.ensureSuccessful()
         val metadata = download.metadataOrThrow()
         val bytes = download.bytes
-            ?: throw DropboxApiException(download.response.status.value, "the download is larger than $MAXIMUM_DOWNLOAD_SIZE bytes")
+            ?: throw DropboxApiException(download.response.status.value, "the download is larger than $maxSize bytes")
         return downloadedDocument(download.response, metadata, bytes)
     }
 
     /** A document over the limit is refused with its revision, read from the header before the body. */
     suspend fun downloadDocument(path: String): RemoteDocument? {
-        val download = streamed(path)
+        val download = streamed(path, MAXIMUM_DOCUMENT_SIZE)
         val response = download.response
         if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
         response.ensureSuccessful()
@@ -79,20 +79,20 @@ internal class DropboxDownloads(
         return RemoteDocument(bytes = bytes, revision = metadata.rev)
     }
 
-    private suspend fun streamed(path: String): Download {
+    private suspend fun streamed(path: String, maxSize: Long): Download {
         var metadata: DropboxFileMetadata? = null
         var bytes: ByteArray? = null
         val response = requests.request { accessToken ->
             metadata = null
             bytes = null
             httpClientHolder.client().preparePost(DropboxSyncProvider.DOWNLOAD_URL) {
-                attributes.put(BrowserCallTimeout, DropboxTransport.DOWNLOAD_BROWSER_TIMEOUT_MILLIS)
+                attributes.put(BrowserCallTimeout, DropboxTransport.downloadBrowserTimeoutMillis(maxSize))
                 header("Authorization", "Bearer $accessToken")
                 header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
             }.execute { response ->
                 if (response.status.isSuccess()) {
                     metadata = downloadMetadataOrNull(response)
-                    bytes = boundedBody(response, declaredSize = metadata?.size)
+                    bytes = boundedBody(response, declaredSize = metadata?.size, maxSize = maxSize)
                     response
                 } else {
                     // The retry loop, ensureSuccessful, and downloadDocument's not_found check each read an error's body,
@@ -104,11 +104,11 @@ internal class DropboxDownloads(
         return Download(response, metadata, bytes)
     }
 
-    /** Null, without reading the body, where Dropbox declares it over the limit, and null where more than that arrives. */
-    private suspend fun boundedBody(response: HttpResponse, declaredSize: Long?): ByteArray? {
-        if (declaredSize != null && declaredSize > MAXIMUM_DOWNLOAD_SIZE) return null
-        val bytes = response.bodyAsChannel().readBuffer(MAXIMUM_DOWNLOAD_SIZE + 1L).readByteArray()
-        return bytes.takeIf { it.size <= MAXIMUM_DOWNLOAD_SIZE }
+    /** Null, without reading the body, where Dropbox declares it over [maxSize], and null where more than that arrives. */
+    private suspend fun boundedBody(response: HttpResponse, declaredSize: Long?, maxSize: Long): ByteArray? {
+        if (declaredSize != null && declaredSize > maxSize) return null
+        val bytes = response.bodyAsChannel().readBuffer(maxSize + 1L).readByteArray()
+        return bytes.takeIf { it.size <= maxSize }
     }
 
     /**
@@ -133,9 +133,10 @@ internal class DropboxDownloads(
     companion object {
 
         /**
-         * The library's own limit for a text file. A `preferences.json` of thousands of songs with chords and tags, and a
-         * shared links list of thousands of shares, stay far under it, so it never refuses a document of a real library.
+         * The limit of a folder document: the library's own limit for a text file. A `preferences.json` of thousands of
+         * songs with chords and tags, and a shared links list of thousands of shares, stay far under it, so it never
+         * refuses a document of a real library.
          */
-        const val MAXIMUM_DOWNLOAD_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
+        const val MAXIMUM_DOCUMENT_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
     }
 }

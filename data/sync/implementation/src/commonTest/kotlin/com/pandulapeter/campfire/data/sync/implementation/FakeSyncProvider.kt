@@ -36,8 +36,8 @@ import kotlinx.coroutines.flow.first
  *
  * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
  * through a run or changes the local library under an operation that is already under way; [onList] runs before a
- * listing answers, which is where a test makes the whole run fail. [sizes] lets a listing
- * report a large file without the test allocating it. [account] is who the service says is connected, which is what a
+ * listing answers, which is where a test makes the whole run fail. [sizes] lets a listing, and the download limit,
+ * see a large file without the test allocating it. [account] is who the service says is connected, which is what a
  * repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
  * that differ only by case or Unicode form for one file. [resolvesListedNames] makes it a service with exact names
  * whose provider resolves a request through the spellings its last listing (and its own uploads since) named, as
@@ -145,11 +145,14 @@ internal class FakeSyncProvider(
         },
     )
 
-    override suspend fun download(kind: LibraryFileKind, name: String): RemoteDocument {
+    override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument {
         val key = SyncKey(kind = kind, name = name)
         downloadCounts[key] = (downloadCounts[key] ?: 0) + 1
         onDownload(key)
-        return files.getValue(stored(key)).let { (bytes, revision) -> RemoteDocument(bytes, revision) }
+        val (bytes, revision) = files.getValue(stored(key))
+        val size = sizes[key] ?: bytes.size.toLong()
+        if (size > maxSize) error("\"${key.path}\" is $size bytes, more than the $maxSize asked for.")
+        return RemoteDocument(bytes, revision)
     }
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)

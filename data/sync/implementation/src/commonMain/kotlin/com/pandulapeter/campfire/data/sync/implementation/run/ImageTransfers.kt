@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.data.model.sync.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLock
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
-import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
@@ -42,7 +41,6 @@ internal class ImageTransfers(
     private val libraryFileLocalSource: LibraryFileLocalSource,
     private val libraryFileLock: LibraryFileLock,
     private val logger: Logger,
-    private val downloadWithinLimit: suspend (SyncPass, SyncKey) -> RemoteDocument,
     private val imageWritesGate: suspend (suspend (held: Set<String>) -> Unit) -> Unit,
 ) {
 
@@ -114,7 +112,7 @@ internal class ImageTransfers(
                 upload(pass, key, local, expectedRevision = revision)
             }
         }
-        val downloaded = downloadWithinLimit(pass, key)
+        val downloaded = pass.downloadWithinLimit(key)
         if (!isIntact(key, downloaded.bytes)) return failed(key, "the cloud folder's copy is not the picture its name says")
         val isWritten = libraryFileLock.withLock {
             val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)

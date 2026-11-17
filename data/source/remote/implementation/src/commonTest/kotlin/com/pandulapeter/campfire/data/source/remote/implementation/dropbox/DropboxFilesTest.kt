@@ -122,7 +122,7 @@ class DropboxFilesTest {
         val provider = dropboxProvider {
             respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r7"}"""))
         }
-        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho")
+        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
         assertEquals("song", downloaded.bytes.decodeToString())
         assertEquals("r7", downloaded.revision)
     }
@@ -130,7 +130,7 @@ class DropboxFilesTest {
     @Test
     fun `a download that names no revision fails`() = runTest {
         val provider = dropboxProvider { respond(content = "song", status = HttpStatusCode.OK) }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     /** An empty object from something in between would otherwise read as an empty folder, and every song as deleted. */
@@ -160,21 +160,21 @@ class DropboxFilesTest {
     @Test
     fun `a download shorter than the file Dropbox describes fails`() = runTest {
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4000}""") }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     @Test
     fun `a download whose bytes do not hash to Dropbox's hash fails`() = runTest {
         val hash = dropboxContentHash("sing".encodeToByteArray())
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
-        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+        assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
     }
 
     @Test
     fun `a download that matches its size and hash is accepted`() = runTest {
         val hash = dropboxContentHash("song".encodeToByteArray())
         val provider = dropboxProvider { downloadAnswer("""{"rev":"r7","size":4,"content_hash":"$hash"}""") }
-        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho")
+        val downloaded = provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
         assertEquals("song", downloaded.bytes.decodeToString())
         assertEquals("r7", downloaded.revision)
     }
@@ -204,7 +204,7 @@ class DropboxFilesTest {
             respond(
                 content = unreadableBody(),
                 status = HttpStatusCode.OK,
-                headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE + 1}}"""),
+                headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOCUMENT_SIZE + 1}}"""),
             )
         }
 
@@ -229,11 +229,11 @@ class DropboxFilesTest {
     }
 
     @Test
-    fun `a library file larger than the limit is one file's failure, asked once`() = runTest {
-        val declared = """{"rev":"r1","size":${DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE + 1}}"""
+    fun `a library file larger than the caller's limit is one file's failure, asked once`() = runTest {
+        val declared = """{"rev":"r1","size":${SONG_LIMIT + 1}}"""
         val answers = listOf<MockRequestHandleScope.() -> HttpResponseData>(
             { respond(content = unreadableBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", declared)) },
-            { respond(content = oversizedBody(), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}""")) },
+            { respond(content = ByteArray(SONG_LIMIT.toInt() + 1), status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1"}""")) },
         )
         for (answer in answers) {
             var requests = 0
@@ -242,9 +242,21 @@ class DropboxFilesTest {
                 answer()
             }
 
-            assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+            assertFailsWith<DropboxApiException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
             assertEquals(1, requests)
         }
+    }
+
+    @Test
+    fun `a library file is held to the caller's limit rather than the documents'`() = runTest {
+        val attachment = oversizedBody()
+        val provider = dropboxProvider {
+            respond(content = attachment, status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", """{"rev":"r1","size":${attachment.size}}"""))
+        }
+
+        val downloaded = provider.download(LibraryFileKind.FILE, "3fa9c2e81b7d4f06.pdf", maxSize = attachment.size.toLong())
+
+        assertEquals(attachment.size, downloaded.bytes.size)
     }
 
     private fun JsonElement.field(name: String) = (this as JsonObject)[name]
@@ -253,9 +265,15 @@ class DropboxFilesTest {
     private fun MockRequestHandleScope.downloadAnswer(metadata: String) =
         respond(content = "song", status = HttpStatusCode.OK, headers = headersOf("Dropbox-API-Result", metadata))
 
-    /** A body one byte past the limit. */
-    private fun oversizedBody() = ByteArray(DropboxDownloads.MAXIMUM_DOWNLOAD_SIZE.toInt() + 1)
+    /** A body one byte past the limit of a folder document. */
+    private fun oversizedBody() = ByteArray(DropboxDownloads.MAXIMUM_DOCUMENT_SIZE.toInt() + 1)
 
     /** A body that fails the moment anything reads it, so a refusal that reads it is retried and ends as a network failure. */
     private fun unreadableBody(): ByteReadChannel = ByteChannel().apply { cancel(IllegalStateException("The body was read.")) }
+
+    private companion object {
+
+        /** A library file's limit small enough for a test to pass it. */
+        const val SONG_LIMIT = 1024L
+    }
 }

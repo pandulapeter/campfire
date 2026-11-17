@@ -14,7 +14,8 @@
 - Names match ignoring case and Unicode form: a remote name takes the local spelling, and an index entry neither listing
   has moves to the listed spelling that folds to it.
 - **What cannot be read is left out of the plan on both sides and named among the failures, never read as a deletion**:
-  a download above `MAXIMUM_FILE_SIZE`, a local file above it (its index entry too), a remote name this device cannot
+  a download above its name's limit (`maximumSize`: 8 MiB for a song or setlist, 50 MiB for a library file, whose
+  picture names are attachment names too), a local file above it (its index entry too), a remote name this device cannot
   hold (split off before name folding, named once), and a local file whose read fails (its index entry kept). If no file
   at all can be read, the run ends as a storage failure.
 - **Conflicts**: the incoming version is written next to the local one *before* the local one is uploaded, as ` (2)` or
@@ -56,3 +57,5 @@
   - A pass's local picture deletions run as one batch inside `ImageRepository.withImagesKept` and `LibraryFileLock`,
     after reading what every song names *now*, plus what the editor's unsaved text names (`LibraryImageWriter.heldNames`):
     either sends the picture back up instead.
+  - Every file is held whole while it moves; one over 8 MiB on either side (`SyncPass.largeFiles`) moves alone, beside
+    the other transfers, since six attachments at once are more than a phone's heap.

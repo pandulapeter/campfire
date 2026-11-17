@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocumen
 import com.pandulapeter.campfire.data.sync.implementation.SyncIndexEntry
 import com.pandulapeter.campfire.data.sync.implementation.SyncKey
 import com.pandulapeter.campfire.data.sync.implementation.SyncOperation
-import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.sync.SyncDeletionDirection
@@ -27,7 +26,6 @@ import com.pandulapeter.campfire.data.source.local.api.SetlistComparison
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncFolder
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncRunEndingException
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDeletion
-import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteSharedFile
 import com.pandulapeter.campfire.data.source.remote.api.sync.model.RemoteWriteResult
@@ -85,7 +83,7 @@ internal class SyncEngine(
 ) {
 
     private val conflictResolver = ConflictResolver(libraryFileLocalSource, libraryFileLock, setlistComparison, plantedContentHash, logger)
-    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, ::downloadWithinLimit, imageWritesGate)
+    private val imageTransfers = ImageTransfers(libraryFileLocalSource, libraryFileLock, logger, imageWritesGate)
 
     suspend fun synchronize(
         provider: SyncFolder,
@@ -129,7 +127,7 @@ internal class SyncEngine(
             documentRevisions = listing.documentRevisions
             sharedFiles = listing.sharedFiles
             index = withoutForeignEntries(index = index, listed = listed)
-            val localListing = readLocalListing(libraryFileLocalSource, logger, maxSize = MAXIMUM_FILE_SIZE, batchSize = READ_BATCH_SIZE)
+            val localListing = readLocalListing(libraryFileLocalSource, logger, batchSize = READ_BATCH_SIZE)
             val tooLarge = localListing.tooLarge
             val unreadable = localListing.unreadable
             if (pass == 0) summary = summary.plus(SyncSummary(failed = tooLarge.map { it.name }))
@@ -178,6 +176,7 @@ internal class SyncEngine(
                     remoteFiles = remote.associateBy { it.key },
                     caseCollisions = caseCollisions,
                     syncedPreferences = syncedPreferences,
+                    largeFiles = localListing.largeFiles + remote.filter { isLargeFile(it.size) }.map { it.key },
                 ),
                 plan = plan,
             )
@@ -216,7 +215,8 @@ internal class SyncEngine(
      * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
      * deletions. A download has to be on disk before anything that reads the library acts on it, and a deletion that
      * ran before a download would undo it. Remote deletions go to the provider together ([deleteRemotely]), and a
-     * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits.
+     * picture's here as one batch ([ImageTransfers.deleteLocally]), neither spread over the permits. A large file moves
+     * alone besides ([isLargeFile]): a few attachments at 50 MB each, held whole, are more than a phone's heap.
      *
      * [SyncRun.onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in
      * the order they were taken and the last one handed out is always the most complete. What is handed out is a way to
@@ -234,6 +234,7 @@ internal class SyncEngine(
         // Whichever request finishes first writes to all four of those, so the merging is done in one place.
         val results = Mutex()
         val permits = Semaphore(CONCURRENT_TRANSFERS)
+        val largeFilePermit = Semaphore(1)
         run.onProgress(SyncProgress(completed = 0, total = plan.size))
 
         suspend fun record(operation: SyncOperation, outcome: OperationOutcome) = results.withLock {
@@ -260,7 +261,9 @@ internal class SyncEngine(
             val pictureDeletions = group.filter { it is SyncOperation.DeleteLocal && it.isImage }
             imageTransfers.deleteLocally(pass, pictureDeletions).forEach { (operation, outcome) -> record(operation, outcome) }
             group.filterNot { it is SyncOperation.DeleteRemote || it in pictureDeletions }.map { operation ->
-                async { record(operation, permits.withPermit { runOperation(pass, operation) }) }
+                // A large file takes its own permit first, so that one waiting for it holds none of the others' meanwhile.
+                val gate = if (operation.key in pass.largeFiles) largeFilePermit else null
+                async { record(operation, gate.withOptionalPermit { permits.withPermit { runOperation(pass, operation) } }) }
             }.awaitAll()
         }
         PassOutcome(summary = summary, index = updated, unresolved = unresolved)
@@ -351,7 +354,7 @@ internal class SyncEngine(
             // it is resolved as that rather than written over.
             return resolve(pass, SyncOperation.Resolve(key, operation.revision), isFirstMeeting = false)
         }
-        val downloaded = downloadWithinLimit(pass, key)
+        val downloaded = pass.downloadWithinLimit(key)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile, under
         // any spelling: decided again on what is there now, and the conflict it may be is resolved without the lock.
         val changed = libraryFileLock.withLock {
@@ -463,7 +466,7 @@ internal class SyncEngine(
         if (isSameContent(pass, local, pass.remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localHashOf(key, local), operation.revision)))
         }
-        val remote = downloadWithinLimit(pass, key)
+        val remote = pass.downloadWithinLimit(key)
         // Uploaded over the revision it was compared with, so that a version that moved on again since is a conflict.
         return conflictResolver.resolveWith(
             pass = pass,
@@ -478,18 +481,6 @@ internal class SyncEngine(
 
     private fun isSameContent(pass: SyncPass, local: ByteArray, remoteContentHash: String?) =
         remoteContentHash != null && pass.run.provider.contentHashOf(local) == remoteContentHash
-
-    /**
-     * A song is a few kilobytes of text, and a download is held in memory whole. Refused here rather than left out
-     * of the listing: a file the planner cannot see on the remote is a file it takes for deleted there, and a
-     * large one that is already in the library would be deleted locally for it. Thrown, it is one file's failure
-     * like any other - logged, the index left alone, tried again by the next run.
-     */
-    private suspend fun downloadWithinLimit(pass: SyncPass, key: SyncKey): RemoteDocument {
-        val size = pass.remoteFiles[key]?.size ?: 0
-        if (size > MAXIMUM_FILE_SIZE) error("The remote file is $size bytes, which is more than the $MAXIMUM_FILE_SIZE a run downloads.")
-        return pass.run.provider.download(key.kind, key.name)
-    }
 
     /**
      * Drops the index entries of files that are not library files, which only an index from before the remote
@@ -580,13 +571,6 @@ internal class SyncEngine(
 
         /** How many library files are read and hashed at once while the run is preparing. */
         const val READ_BATCH_SIZE = 64
-
-        /**
-         * The largest file a run reads or downloads: what an import accepts, since a larger one is not a song and no
-         * other device would take it either. Generous for ChordPro text, and small enough that [CONCURRENT_TRANSFERS]
-         * of them in memory at once do not trouble a phone.
-         */
-        const val MAXIMUM_FILE_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
 
         /**
          * Chosen for the round trip rather than for the CPU: the transfers are small text files and almost all of

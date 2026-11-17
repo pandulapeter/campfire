@@ -44,7 +44,10 @@ internal data class RemoteFileState(
     val key: SyncKey,
     val revision: String,
     val contentHash: String?,
-    /** In bytes. Never part of any decision about what changed; only what keeps the engine from downloading a video. */
+    /**
+     * In bytes. Never part of any decision about what changed; only what keeps the engine from downloading a file over
+     * its limit, and what moves a large one alone.
+     */
     val size: Long = 0,
 )
 

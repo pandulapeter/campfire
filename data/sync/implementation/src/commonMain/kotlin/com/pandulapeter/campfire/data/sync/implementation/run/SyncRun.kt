@@ -29,7 +29,7 @@ internal class SyncRun(
 
 /**
  * What stays the same for one pass of a run: the [index] the pass was planned from, the cloud folder's files as it
- * listed them, and what [preparePass] worked out.
+ * listed them, and what [preparePass] worked out. [largeFiles] are the ones large on either side ([isLargeFile]).
  */
 internal class SyncPass(
     val run: SyncRun,
@@ -37,4 +37,5 @@ internal class SyncPass(
     val remoteFiles: Map<SyncKey, RemoteFileState>,
     val caseCollisions: Set<SyncKey>,
     val syncedPreferences: JsonObject?,
+    val largeFiles: Set<SyncKey>,
 )

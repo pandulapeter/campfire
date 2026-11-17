@@ -46,8 +46,8 @@
   changed since is left for the next run to bring back.
 - A download's revision comes from the `Dropbox-API-Result` header (its absence is a failure), with `size` and
   `content_hash` the bytes must match, or that file fails (not the run). Downloads stream (`DropboxDownloads`) and are
-  refused before the body once the declared size, or the body, passes 8 MiB: a library file fails alone, a folder
-  document is `SyncDocumentTooLargeException`; neither is retried or a network failure. An undecodable answer is
+  refused before the body once the declared size, or the body, passes the limit (the caller's for a library file, 8 MiB
+  for a folder document): a library file fails alone, a folder document is `SyncDocumentTooLargeException`; neither is retried or a network failure. An undecodable answer is
   `SyncNetworkException`: a 200 HTML page comes from something in between, not Dropbox.
 - Watching (`DropboxChangeFeed`): `list_folder/longpoll` on `notify.dropboxapi.com` (cursor, no token), held 240 s
   (under the ~5 minutes mobile carriers keep a silent connection) plus Dropbox's documented 90 s (104 s measured), the
@@ -63,7 +63,7 @@
   not atomic. Entries refused as busy are retried with the normal back-off.
 - Errors (`DropboxErrors`): 409 `too_many_write_operations` is retried too, the body's `retry_after` before
   `Retry-After`; 409 `insufficient_space` → `SyncRemoteStorageFullException`; any other 409 fails that one file. In the
-  browser, calls carry a bound of their own (60 s RPC, 120 s listing pages and downloads, uploads by size). Every call
+  browser, calls carry a bound of their own (60 s RPC, 120 s listing pages, downloads by their limit, uploads by size). Every call
   is safe to resend; the longpoll alone is sent once, and the watcher decides what its failure means.
 - Shared copies (`DropboxSharing`): `/shared/<shareId>.zip`, uploaded like library files. `toSharedFiles` is called by
   `list` only, never through `toRemoteFiles`, which the change feed shares.

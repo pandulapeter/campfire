@@ -139,7 +139,7 @@ internal class ConflictResolver(
         if (uploaded !is RemoteWriteResult.Written) {
             // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
             // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
-            val isOwnWrite = provider.download(key.kind, key.name).bytes.contentEquals(localBytes)
+            val isOwnWrite = provider.download(key.kind, key.name, maxSize = key.maximumSize).bytes.contentEquals(localBytes)
             if (!isOwnWrite && !isReused) discardCopy(copyKey, remote, onLocalFileChanged)
             return SyncEngine.OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),

@@ -215,7 +215,7 @@ class DropboxRequestTest {
     fun `a request the browser could not send is the service not being reached`() = runTest {
         val provider = dropboxProvider { throw Error("Fail to fetch") }
         assertFailsWith<SyncNetworkException> { provider.list() }
-        assertFailsWith<SyncNetworkException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+        assertFailsWith<SyncNetworkException> { provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT) }
         assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
@@ -451,7 +451,7 @@ class DropboxRequestTest {
         }
         provider.loadAccount()
         provider.list()
-        provider.download(LibraryFileKind.SONG, "song.cho")
+        provider.download(LibraryFileKind.SONG, "song.cho", maxSize = SONG_LIMIT)
         provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(uploadSize), expectedRevision = null)
         return bounds
     }
@@ -486,6 +486,7 @@ class DropboxRequestTest {
         respond(content = "<html>portal</html>", status = HttpStatusCode.OK, headers = headersOf(HttpHeaders.ContentType, "text/html"))
 
     private companion object {
+        const val SONG_LIMIT = 1024L
         const val STORED_NAME = ""","accountId":"dbid:1","displayName":"Jane","email":"jane@example.com""""
     }
 }

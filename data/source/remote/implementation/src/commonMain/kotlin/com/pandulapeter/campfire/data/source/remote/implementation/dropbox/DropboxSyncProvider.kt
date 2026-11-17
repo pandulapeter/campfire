@@ -268,7 +268,7 @@ internal class DropboxSyncProvider(
 
     override suspend fun changesSince(cursor: String) = changeFeed.changesSince(cursor)
 
-    override suspend fun download(kind: LibraryFileKind, name: String) = downloads.download(remotePath(kind, name))
+    override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long) = downloads.download(remotePath(kind, name), maxSize)
 
     override suspend fun downloadDocument(name: String) = downloads.downloadDocument(documentPath(name))
 
