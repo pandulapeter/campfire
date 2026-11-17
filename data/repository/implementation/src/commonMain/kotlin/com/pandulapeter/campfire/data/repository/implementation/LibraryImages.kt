@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 
-/** The rules a picture is taken into the library by, the same for every way it arrives. */
+/** The rules a picture or an attachment is taken into the library by, the same for every way it arrives. */
 internal object LibraryImages {
 
     /** What [examine] found: why the picture is refused, else the extension it is named with and its size. */
@@ -36,6 +36,19 @@ internal object LibraryImages {
             size = null,
         )
         return Examined(refusal = null, extension = info.format.extension, size = ImageSize(width = info.width, height = info.height))
+    }
+
+    /**
+     * Judged by its size and the [extension] it arrived with alone, lowercased (with or without its dot): an attachment
+     * may be anything of [LibraryFiles.ATTACHMENT_EXTENSIONS], so its bytes say nothing a header could check.
+     */
+    fun examineAttachment(bytes: ByteArray, extension: String): Examined {
+        val named = extension.lowercase().let { if (it.startsWith('.')) it else ".$it" }
+        return when {
+            bytes.size > ImportLimits.MAX_ATTACHMENT_FILE_SIZE -> Examined(ImageRefusal.TOO_LARGE, "", null)
+            named !in LibraryFiles.ATTACHMENT_EXTENSIONS -> Examined(ImageRefusal.UNSUPPORTED_FORMAT, "", null)
+            else -> Examined(refusal = null, extension = named, size = null)
+        }
     }
 
     /**

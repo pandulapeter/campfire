@@ -197,9 +197,9 @@ internal class SharedCopySync(
             val images = if (!index.hasImages) {
                 emptyList()
             } else if (kind == SharedLinkKind.SETLIST) {
-                imagesNamedBy(songNames.orEmpty().mapNotNull { name -> libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name)) })
+                filesNamedBy(songNames.orEmpty().mapNotNull { name -> libraryFileLocalSource.readLibraryFile(LibraryFileKind.SONG, index.localNameOf(name)) })
             } else {
-                imagesNamedBy(listOfNotNull(item ?: libraryFileLocalSource.readLibraryFile(libraryKind, localName)))
+                filesNamedBy(listOfNotNull(item ?: libraryFileLocalSource.readLibraryFile(libraryKind, localName)))
             }
             val expected = sharedCopyFingerprint(
                 kind = kind,
@@ -238,7 +238,7 @@ internal class SharedCopySync(
             }
             // Then the pictures under images/, in the order of their names, as the export puts them, read one at a time
             // and no further than the limit: a setlist of photos may name more than a phone has room for.
-            val intended = imagesNamedBy(if (kind == SharedLinkKind.SONG) listOf(itemBytes) else songTexts)
+            val intended = filesNamedBy(if (kind == SharedLinkKind.SONG) listOf(itemBytes) else songTexts)
             val included = mutableListOf<String>()
             var size = files.values.sumOf { it.size.toLong() }
             for (name in intended) {
@@ -298,11 +298,11 @@ internal class SharedCopySync(
         }
 
         /**
-         * The library's pictures [songs] name, by the run's index, in the order of their names: what a copy carries besides
-         * its songs, and what its fingerprint names.
+         * The library's files [songs] name, pictures and attachments, by the run's index, in the order of their names: what
+         * a copy carries besides its songs, and what its fingerprint names.
          */
-        private suspend fun imagesNamedBy(songs: List<ByteArray>) = songs.flatMap { contents.imageNamesOf(it) }.toSet()
-            .filter { LibraryFiles.isLibraryImageName(it) && index.find(LibraryFileKind.FILE, it) != null }
+        private suspend fun filesNamedBy(songs: List<ByteArray>) = songs.flatMap { contents.libraryFileNamesOf(it) }.toSet()
+            .filter { LibraryFiles.isLibraryFileName(it) && index.find(LibraryFileKind.FILE, it) != null }
             .sorted()
 
         private fun orphan(entry: SharedLinksEntry) {

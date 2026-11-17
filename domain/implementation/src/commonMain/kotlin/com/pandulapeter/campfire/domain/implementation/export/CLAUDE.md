@@ -12,8 +12,9 @@
 - A single song exported alone is the `.cho` as on disk, unless it shows a picture (below); anything else is a zip.
   Transposition is never baked in.
 - **Pictures** (`ExportedImages`): a song showing a picture the library holds leaves as a zip named after it, the song
-  plus `images/<name>`; every zip carries under `images/` the library's pictures its songs name, each once, after all
-  else, in the order of their names (a shared copy is rebuilt in the same order). One lazy entry per library picture,
+  plus `images/<name>`; every zip carries under `images/` the library's files its songs name (`libraryFilesNamedBy`:
+  pictures and attachments), each once, after all else, in the order of their names (a shared copy is rebuilt in the
+  same order). One lazy entry per library file,
   each left out unless a song written before it named it, since songs are read only as the writer reaches them.
   Versions before pictures skip `images/` and keep the directives.
 - **An archive is a file, never held whole** (`exportedArchive`): written into `exports/` entry by entry, each read

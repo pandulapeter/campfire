@@ -36,6 +36,7 @@ class SaveSongImageUseCaseImplTest {
                 override val heldNames: Set<String> = emptySet()
 
                 override suspend fun addImage(bytes: ByteArray) = intake.also { stored += bytes }
+                override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = error("Not expected.")
                 override suspend fun moveDraftImages(names: Set<String>) = emptyMap<String, String>()
             }).also { isKept = false }
         }

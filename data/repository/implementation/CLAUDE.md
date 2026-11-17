@@ -91,6 +91,10 @@ New cached repositories extend it. `commonTest` covers these rules, none visible
   nothing at all where the draft is there and cannot be read, which `EditorDraftLocalSource` throws for) and emptied by
   `clearDraftImages`; nothing else deletes from it.
 - Sync decides its deletions of pictures inside `withImagesKept` and keeps `heldNames` (the editor's) too.
+- **Attachments are kept exactly as pictures are**: the same shelves, pruning, and holds, every "named" set being
+  `libraryFilesNamedBy` / `Song.libraryFileNames`. An attachment is judged by its size and the extension it arrived with
+  only (`LibraryImages.examineAttachment`); a draft file moves into the library as a picture where its name and bytes
+  are one, else as an attachment. `librarySizes` splits `library/files` by name for Settings.
 
 ## The cover copies
 

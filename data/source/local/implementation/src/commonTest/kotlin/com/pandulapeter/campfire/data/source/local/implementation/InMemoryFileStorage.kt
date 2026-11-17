@@ -37,7 +37,9 @@ internal class InMemoryFileStorage(private val foldsNames: Boolean = false) : Fi
     fun namesInDeviceBackup(directory: StorageDirectory) = files.filter { (key, file) -> key.first == directory && !file.isKeptOutOfDeviceBackup }
         .map { it.value.name }
 
-    override suspend fun list(directory: StorageDirectory): List<StoredFileInfo> = TODO()
+    override suspend fun list(directory: StorageDirectory) = files.filterKeys { it.first == directory }.values
+        .map { StoredFileInfo(name = it.name, size = it.bytes.size.toLong(), lastModified = 0) }
+        .also { listCalls++ }
 
     override suspend fun listNames(directory: StorageDirectory) = files.filterKeys { it.first == directory }.values.map { it.name }.also { listCalls++ }
 

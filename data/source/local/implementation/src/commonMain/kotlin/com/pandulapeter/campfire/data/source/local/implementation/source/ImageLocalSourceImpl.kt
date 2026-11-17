@@ -21,33 +21,33 @@ internal class ImageLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : ImageLocalSource {
 
-    override suspend fun readImage(shelf: ImageShelf, name: String) = if (LibraryFiles.isLibraryImageName(name)) {
+    override suspend fun readImage(shelf: ImageShelf, name: String) = if (LibraryFiles.isLibraryFileName(name)) {
         fileStorage.readBytes(shelf.directory, name)
     } else {
         null
     }
 
     override suspend fun hasImage(shelf: ImageShelf, name: String) =
-        LibraryFiles.isLibraryImageName(name) && fileStorage.exists(shelf.directory, name)
+        LibraryFiles.isLibraryFileName(name) && fileStorage.exists(shelf.directory, name)
 
     /**
-     * The draft's pictures are kept out of the device backup the way the draft's text is, after every write, since an
-     * atomic write replaces the file and the mark with it. The library's go wherever the library goes.
+     * The draft's files are kept out of the device backup the way the draft's text is, after every write, since an
+     * atomic write replaces the file and the mark with it; the library's as [isLibraryFileKeptOutOfDeviceBackup] says.
      */
     override suspend fun writeImage(shelf: ImageShelf, name: String, bytes: ByteArray) {
-        require(LibraryFiles.isLibraryImageName(name)) { "Not a picture's name: \"$name\"." }
+        require(LibraryFiles.isLibraryFileName(name)) { "Not a library file's name: \"$name\"." }
         fileStorage.writeBytes(shelf.directory, name, bytes)
-        if (shelf == ImageShelf.DRAFT) fileStorage.keepOutOfDeviceBackup(shelf.directory, name)
+        if (shelf == ImageShelf.DRAFT || isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(shelf.directory, name)
     }
 
-    override suspend fun listImageNames(shelf: ImageShelf) = fileStorage.listNames(shelf.directory).filter(LibraryFiles::isLibraryImageName)
+    override suspend fun listImageNames(shelf: ImageShelf) = fileStorage.listNames(shelf.directory).filter(LibraryFiles::isLibraryFileName)
 
     override suspend fun listImageSizes(shelf: ImageShelf) = fileStorage.list(shelf.directory)
-        .filter { LibraryFiles.isLibraryImageName(it.name) }
+        .filter { LibraryFiles.isLibraryFileName(it.name) }
         .associate { it.name to it.size }
 
     override suspend fun deleteImage(shelf: ImageShelf, name: String) {
-        if (LibraryFiles.isLibraryImageName(name)) fileStorage.delete(shelf.directory, name)
+        if (LibraryFiles.isLibraryFileName(name)) fileStorage.delete(shelf.directory, name)
     }
 
     private val ImageShelf.directory

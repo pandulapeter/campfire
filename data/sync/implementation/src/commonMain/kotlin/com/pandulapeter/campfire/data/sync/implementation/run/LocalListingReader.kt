@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
@@ -24,7 +24,7 @@ import kotlinx.coroutines.coroutineScope
 /**
  * What [readLocalListing] found: the files it read, the ones it left alone for their size, and the ones it could not read.
  *
- * @param imageReferences The pictures each song of this device names, or null where a song could not be read (or was too
+ * @param imageReferences The library files each song of this device names (pictures and attachments), or null where a song could not be read (or was too
  *   large to be), which may name any of them: the planner then deletes no picture on either side.
  */
 internal class LocalListing(
@@ -83,7 +83,7 @@ private suspend fun readLocalState(libraryFileLocalSource: LibraryFileLocalSourc
         LocalRead.Read(
             state = LocalFileState(key = key, hash = localHashOf(key, bytes)),
             // The same generous reading the library's pruning uses, so that sync never deletes a picture the library keeps.
-            imageReferences = if (key.kind == LibraryFileKind.SONG) ChordProImages.referencedSources(bytes.decodeLibraryText()) else emptySet(),
+            imageReferences = if (key.kind == LibraryFileKind.SONG) libraryFilesNamedBy(bytes.decodeLibraryText()) else emptySet(),
         )
     } ?: LocalRead.Absent
 }

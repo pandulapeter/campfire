@@ -44,8 +44,11 @@ internal class LibraryFileLocalSourceImpl(
         fileStorage.listNames(kind.directory).firstOrNull { LibraryFiles.isSameLibraryName(it, name) }
     }
 
-    override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) =
+    /** Sync's download of an attachment is kept out of the device backup as the app's own write is (`ImageLocalSourceImpl`). */
+    override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {
         fileStorage.writeBytes(kind.directory, name, bytes)
+        if (kind == LibraryFileKind.FILE && isLibraryFileKeptOutOfDeviceBackup(name)) fileStorage.keepOutOfDeviceBackup(kind.directory, name)
+    }
 
     override suspend fun writeLibraryFileToFreeName(
         kind: LibraryFileKind,

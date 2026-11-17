@@ -26,7 +26,7 @@ internal class FakeImageLocalSource : ImageLocalSource {
         shelves.getValue(shelf)[name] = bytes
     }
 
-    override suspend fun listImageNames(shelf: ImageShelf) = shelves.getValue(shelf).keys.filter(LibraryFiles::isLibraryImageName)
+    override suspend fun listImageNames(shelf: ImageShelf) = shelves.getValue(shelf).keys.filter(LibraryFiles::isLibraryFileName)
 
     override suspend fun listImageSizes(shelf: ImageShelf) = listImageNames(shelf).associateWith { shelves.getValue(shelf).getValue(it).size.toLong() }
 

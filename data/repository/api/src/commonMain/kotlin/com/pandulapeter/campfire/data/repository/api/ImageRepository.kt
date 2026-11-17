@@ -15,8 +15,10 @@ import com.pandulapeter.campfire.data.model.library.LibraryFileSizes
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The pictures songs show (`{image: src=…}`): files of the library named by their content, kept while a song names
- * them, plus the pictures the editor's unsaved text names, which wait outside the library until Save.
+ * The pictures songs show (`{image: src=…}`) and the files attached to them (`{meta: attachment …}`): files of the
+ * library named by their content, kept while a song names them (`libraryFilesNamedBy`), plus the ones the editor's
+ * unsaved text names, which wait outside the library until Save. Named for pictures, which it held first; everything it
+ * says of a picture's keeping holds for an attachment too.
  *
  * **A picture's name is its content**: the lowercase hex of its SHA-256 (16 digits, more where a different picture took
  * the shorter name) and its format's extension, so a picture is never edited, only added or deleted, and the same
@@ -54,7 +56,7 @@ interface ImageRepository {
      */
     suspend fun readImageSize(bytes: ByteArray): ImageSize?
 
-    /** The names of the library's pictures (never the draft's), sorted: what an export may carry. */
+    /** The names of the library's files, pictures and attachments (never the draft's), sorted: what an export may carry. */
     suspend fun loadLibraryImageNames(): List<String>
 
     /**
@@ -69,6 +71,14 @@ interface ImageRepository {
      * name it by. Refused when it is too large or not a picture every platform can show.
      */
     suspend fun addDraftImage(bytes: ByteArray): ImageIntake
+
+    /**
+     * Keeps [bytes], a file to attach to a song, for the editor's unsaved text, outside the library, under the name its
+     * attachment line is to name it by: its content and [extension], the one it arrived with, lowercased. Nothing is
+     * read from its bytes; refused only where it is larger than `ImportLimits.MAX_ATTACHMENT_FILE_SIZE` or the extension
+     * is not among `LibraryFiles.ATTACHMENT_EXTENSIONS`.
+     */
+    suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake
 
     /**
      * The names the editor's open text names, held from the library's pruning (and the draft's) until the editor
@@ -95,8 +105,11 @@ interface LibraryImageWriter {
     /** Stores [bytes] in the library under its content name, refused as [ImageRepository.addDraftImage] refuses. */
     suspend fun addImage(bytes: ByteArray): ImageIntake
 
+    /** Stores [bytes] in the library as an attachment, named and refused as [ImageRepository.addDraftAttachment] says. */
+    suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake
+
     /**
-     * Moves the draft's pictures among [names] into the library, and answers the ones that had to take another name
+     * Moves the draft's pictures and attachments among [names] into the library, and answers the ones that had to take another name
      * there (a different picture having taken that one meanwhile), whose directives the caller rewrites before saving.
      * A name neither shelf holds is left alone: the song shows it as missing.
      */

@@ -12,11 +12,11 @@ package com.pandulapeter.campfire.domain.api.images
 interface SaveWithDraftImagesUseCase {
 
     /**
-     * Runs [save], the write of the editor's [text] as a song, with the draft pictures [text] names moved into the library
-     * first, both under one hold of the library's pruning, so that no picture is deleted before the song naming it is
-     * written. A picture that had to take another name in the library (a different one took its name meanwhile) is
-     * renamed in the text [save] is handed, which is then the text to keep. A text naming no picture is handed to [save]
-     * as it is, with nothing else done. Not cancellable once started; what [save] throws is thrown, the moved pictures
+     * Runs [save], the write of the editor's [text] as a song, with the draft pictures and attachments [text] names
+     * (`libraryFilesNamedBy`) moved into the library first, both under one hold of the library's pruning, so that no file
+     * is deleted before the song naming it is written. A file that had to take another name in the library (a different
+     * one took its name meanwhile) is renamed in the text [save] is handed, which is then the text to keep. A text naming
+     * no such file is handed to [save] as it is, with nothing else done. Not cancellable once started; what [save] throws is thrown, the moved pictures
      * then left to the next pruning, the draft's still where they were.
      */
     suspend operator fun <T> invoke(text: String, save: suspend (text: String) -> T): T

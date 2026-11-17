@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.domain.implementation.images
 
+import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.domain.api.images.SaveWithDraftImagesUseCase
 import kotlinx.coroutines.NonCancellable
@@ -22,12 +24,19 @@ internal class SaveWithDraftImagesUseCaseImpl(
 ) : SaveWithDraftImagesUseCase {
 
     override suspend operator fun <T> invoke(text: String, save: suspend (text: String) -> T): T = withContext(NonCancellable) {
-        val names = ChordProImages.referencedSources(text)
-        // A song without pictures is saved exactly as it was before there were any, the pruning's hold not waited for.
+        val names = libraryFilesNamedBy(text)
+        // A song without pictures or attachments is saved exactly as it was before there were any, the pruning's hold not
+        // waited for.
         if (names.isEmpty()) return@withContext save(text)
         imageRepository.withImagesKept { writer ->
             val renamed = writer.moveDraftImages(names)
-            save(if (renamed.isEmpty()) text else ChordProImages.withSourcesRewritten(text) { renamed[it] })
+            save(
+                if (renamed.isEmpty()) {
+                    text
+                } else {
+                    ChordProAttachments.withAttachmentSourcesRewritten(ChordProImages.withSourcesRewritten(text) { renamed[it] }) { renamed[it] }
+                },
+            )
         }
     }
 }

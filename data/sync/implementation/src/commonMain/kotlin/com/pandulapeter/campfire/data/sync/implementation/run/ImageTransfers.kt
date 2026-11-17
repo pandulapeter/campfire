@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.run
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.library.LibraryFileKind
@@ -81,13 +81,13 @@ internal class ImageTransfers(
         return SyncEngine.OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
     }
 
-    /** Every picture a song here names as the files are now, or null where one of them cannot be read. */
+    /** Every library file a song here names as the files are now (`libraryFilesNamedBy`), or null where one cannot be read. */
     private suspend fun namedNow(): Set<String>? = try {
         libraryFileLocalSource.loadLibraryFiles()
             .filter { it.kind == LibraryFileKind.SONG }
             .flatMapTo(mutableSetOf()) { file ->
                 if (file.size > ImportLimits.MAX_TEXT_FILE_SIZE) return null
-                libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let { ChordProImages.referencedSources(it.decodeLibraryText()) }.orEmpty()
+                libraryFileLocalSource.readLibraryFile(file.kind, file.name)?.let { libraryFilesNamedBy(it.decodeLibraryText()) }.orEmpty()
             }
     } catch (exception: CancellationException) {
         throw exception

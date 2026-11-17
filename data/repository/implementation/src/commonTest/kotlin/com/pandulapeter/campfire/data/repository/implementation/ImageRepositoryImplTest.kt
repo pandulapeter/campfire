@@ -165,6 +165,47 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `a file only an attachment names is kept by the pruning, and counted as an attachment`() = runTest {
+        val repository = repository()
+        val attached = assertAccepted(repository.withImagesKept { it.addAttachment(DOCUMENT, "PDF") })
+        val dropped = assertAccepted(repository.withImagesKept { it.addAttachment(OTHER_DOCUMENT, ".mp3") })
+        publish(song("a.cho").copy(attachmentNames = setOf(attached)))
+        runCurrent()
+
+        assertEquals(Sha256.hashToHex(DOCUMENT).take(16) + ".pdf", attached)
+        assertEquals(setOf(attached), local.shelves.getValue(ImageShelf.LIBRARY).keys)
+        assertTrue(dropped !in local.shelves.getValue(ImageShelf.LIBRARY))
+        assertEquals(LibraryFileSizes(picturesSize = 0, attachmentsSize = DOCUMENT.size.toLong()), repository.librarySizes.value)
+    }
+
+    @Test
+    fun `an attachment of a type not taken, or past its limit, is refused and nothing is written`() = runTest {
+        val repository = repository()
+
+        assertEquals(ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT), repository.addDraftAttachment(DOCUMENT, "exe"))
+        assertEquals(ImageIntake.Refused(ImageRefusal.UNSUPPORTED_FORMAT), repository.addDraftAttachment(DOCUMENT, ""))
+        assertEquals(
+            ImageIntake.Refused(ImageRefusal.TOO_LARGE),
+            repository.addDraftAttachment(ByteArray(ImportLimits.MAX_ATTACHMENT_FILE_SIZE.toInt() + 1), "pdf"),
+        )
+        assertTrue(local.shelves.values.all { it.isEmpty() })
+    }
+
+    @Test
+    fun `a draft attachment moves into the library under its name, and a picture attached past a picture's limit too`() = runTest {
+        val repository = repository()
+        val document = assertAccepted(repository.addDraftAttachment(DOCUMENT, "pdf"))
+        val largePhoto = PHOTO + ByteArray(ImportLimits.MAX_IMAGE_FILE_SIZE.toInt())
+        val photo = assertAccepted(repository.addDraftAttachment(largePhoto, "png"))
+
+        val renamed = repository.withImagesKept { it.moveDraftImages(setOf(document, photo)) }
+
+        assertEquals(emptyMap(), renamed)
+        assertContentEquals(DOCUMENT, local.shelves.getValue(ImageShelf.LIBRARY)[document])
+        assertContentEquals(largePhoto, local.shelves.getValue(ImageShelf.LIBRARY)[photo])
+    }
+
+    @Test
     fun `nothing is pruned while a song file of the folder is missing from the list`() = runTest {
         repository()
         local.shelves.getValue(ImageShelf.LIBRARY)[NAME] = PHOTO
@@ -276,6 +317,8 @@ class ImageRepositoryImplTest {
         val PHOTO = png(width = 40, height = 30)
         val OTHER = png(width = 10, height = 10)
         val NAME = Sha256.hashToHex(PHOTO).take(16) + ".png"
+        val DOCUMENT = "%PDF-1.7 a sheet of music".encodeToByteArray()
+        val OTHER_DOCUMENT = "a recording".encodeToByteArray()
 
         fun song(fileName: String, vararg imageNames: String) = Song(
             fileName = fileName,

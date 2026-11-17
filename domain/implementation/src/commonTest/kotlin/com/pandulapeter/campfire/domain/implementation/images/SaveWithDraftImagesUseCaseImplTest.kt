@@ -29,6 +29,7 @@ class SaveWithDraftImagesUseCaseImplTest {
                     override val heldNames: Set<String> = emptySet()
 
                     override suspend fun addImage(bytes: ByteArray): ImageIntake = error("Not expected.")
+                    override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = error("Not expected.")
                     override suspend fun moveDraftImages(names: Set<String>) = renamed.also { moved += names }
                 })
             } finally {
@@ -59,5 +60,16 @@ class SaveWithDraftImagesUseCaseImplTest {
         val library = Library(renamed = mapOf("a.png" to "a0.png"))
         val saved = SaveWithDraftImagesUseCaseImpl(library)("{title: Chart}\n{image: src=a.png}\n{image: src=b.png}\n") { it }
         assertEquals("{title: Chart}\n{image: src=a0.png}\n{image: src=b.png}\n", saved)
+    }
+
+    @Test
+    fun `the attachments a text names move with its pictures, and one renamed in the library is saved under that name`() = runTest {
+        val library = Library(renamed = mapOf("3fa9c2e81b7d4f06.pdf" to "3fa9c2e81b7d4f067.pdf"))
+        val text = "{title: Chart}\n{image: src=a.png}\n{meta: attachment 3fa9c2e81b7d4f06.pdf Sheet music.pdf}\n"
+
+        val saved = SaveWithDraftImagesUseCaseImpl(library)(text) { it }
+
+        assertEquals(listOf(setOf("a.png", "3fa9c2e81b7d4f06.pdf")), library.moved)
+        assertEquals("{title: Chart}\n{image: src=a.png}\n{meta: attachment 3fa9c2e81b7d4f067.pdf Sheet music.pdf}\n", saved)
     }
 }

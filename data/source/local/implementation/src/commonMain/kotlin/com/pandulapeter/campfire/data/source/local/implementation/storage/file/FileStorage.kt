@@ -22,9 +22,10 @@ enum class StorageDirectory {
     SETLISTS,
 
     /**
-     * The pictures songs show, named by their content (`LibraryFiles.isLibraryImageName`) and kept while a song names
-     * one. Part of the library: exported, synced, and in the iOS backup, but not in Android's, whose 25 MB quota photos
-     * would use up and cost the user the backup of their songs.
+     * The pictures songs show and the files attached to them, named by their content (`LibraryFiles.isLibraryFileName`)
+     * and kept while a song names one. Part of the library: exported and synced; the pictures are in the iOS backup, the
+     * attachments are not, and none are in Android's, whose 25 MB quota photos would use up and cost the user the backup
+     * of their songs.
      */
     FILES,
     PREFERENCES,

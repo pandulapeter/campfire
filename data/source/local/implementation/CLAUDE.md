@@ -85,8 +85,10 @@ Skipped or unreadable files are logged to the injected `Logger`.
 
 ## Sources
 
-- `ImageLocalSourceImpl`: reads, lists, and deletes only `LibraryFiles.isLibraryImageName` names, on both shelves
-  (`library/files`, and the draft's `editor-draft-images`, kept out of the iOS backup after every write).
+- `ImageLocalSourceImpl`: reads, lists, and deletes only `LibraryFiles.isLibraryFileName` names (pictures and
+  attachments), on both shelves (`library/files`, and the draft's `editor-draft-images`, kept out of the iOS backup
+  after every write). A library attachment is kept out too (`isLibraryFileKeptOutOfDeviceBackup`, a name a picture
+  could have counting as a picture), here and in sync's `LibraryFileLocalSourceImpl.writeLibraryFile`.
 - `CoverArtLocalSourceImpl`: prune deletes only key-shaped names (64 lowercase hex): the directory also holds an
   in-progress temp file.
 - `SongLocalSourceImpl` reads the ChordPro family but writes only `.cho`, `importFileName` included. Metadata comes from

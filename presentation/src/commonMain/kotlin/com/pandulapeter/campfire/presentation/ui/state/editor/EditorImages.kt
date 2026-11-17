@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.state.editor
 
 import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
@@ -21,7 +22,6 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFit
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureFitter
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureLinkDownloader
-import com.pandulapeter.campfire.presentation.ui.pictures.imageNamesOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -74,7 +74,8 @@ internal class EditorImages(
     val insertions = _insertions.receiveAsFlow()
 
     /**
-     * Holds from the library's pruning what the editor's text names, a beat after the typing pauses: [texts] is the open
+     * Holds from the library's pruning every file the editor's text names, its pictures and its attachments, a beat after
+     * the typing pauses: [texts] is the open
      * editor's text, null once none is open. Started only once the draft a previous run left has been reopened, since
      * until then the repository holds what that draft names on its own, and an empty set reported meanwhile would let go
      * of it.
@@ -83,7 +84,7 @@ internal class EditorImages(
     fun followEditorText(texts: Flow<String?>) = scope.launch {
         texts.distinctUntilChanged()
             .debounce(HOLD_DELAY_MILLIS)
-            .map { text -> if (text == null) emptySet() else withContext(computation) { imageNamesOf(text) } }
+            .map { text -> if (text == null) emptySet() else withContext(computation) { libraryFilesNamedBy(text) } }
             .distinctUntilChanged()
             .collect { holdEditorImages(it) }
     }

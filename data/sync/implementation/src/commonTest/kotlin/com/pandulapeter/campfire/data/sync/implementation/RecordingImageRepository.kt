@@ -41,6 +41,8 @@ internal class RecordingImageRepository : ImageRepository {
 
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
 
+    override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = throw UnsupportedOperationException()
+
     override fun holdEditorImages(names: Set<String>) = throw UnsupportedOperationException()
 
     override suspend fun clearDraftImages() = throw UnsupportedOperationException()
@@ -50,6 +52,8 @@ internal class RecordingImageRepository : ImageRepository {
             override val heldNames: Set<String> = emptySet()
 
             override suspend fun addImage(bytes: ByteArray): ImageIntake = throw UnsupportedOperationException()
+
+            override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = throw UnsupportedOperationException()
 
             override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = throw UnsupportedOperationException()
         },

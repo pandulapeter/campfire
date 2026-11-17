@@ -10,10 +10,11 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 /**
- * The pictures songs show, by name, on one of two shelves: the library's (`library/files`), which syncs, exports, and
- * holds only what a saved song names, and the editor draft's, where a picture picked for unsaved text waits for Save.
+ * The files songs keep, the pictures they show and the files attached to them, by name, on one of two shelves: the
+ * library's (`library/files`), which syncs, exports, and holds only what a saved song names, and the editor draft's,
+ * where a file picked for unsaved text waits for Save. Named for pictures, which it held first.
  *
- * Only names `LibraryFiles.isLibraryImageName` accepts are listed or deleted: anything else in either folder (a storage's
+ * Only names `LibraryFiles.isLibraryFileName` accepts are listed or deleted: anything else in either folder (a storage's
  * temporary file, something put there by hand) is not this source's. A read answers null only for a picture that is not
  * there; one that is there and cannot be read, and a write or deletion that fails, throw `LibraryStorageException`.
  */

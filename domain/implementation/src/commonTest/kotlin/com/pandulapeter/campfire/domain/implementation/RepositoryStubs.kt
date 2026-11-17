@@ -259,6 +259,7 @@ internal open class ImageRepositoryStub : ImageRepository {
     override suspend fun loadLibraryImageNames(): List<String> = unexpected()
     override suspend fun libraryNameOf(bytes: ByteArray): ImageIntake = unexpected()
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
+    override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
     override suspend fun clearDraftImages(): Unit = unexpected()
     override suspend fun <T> withImagesKept(block: suspend (LibraryImageWriter) -> T): T = unexpected()
@@ -306,6 +307,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
 
     override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = unexpected()
 
+    override suspend fun addDraftAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
+
     override fun holdEditorImages(names: Set<String>): Unit = unexpected()
 
     override suspend fun clearDraftImages(): Unit = unexpected()
@@ -323,6 +326,8 @@ internal class FakeImageRepository(val library: MutableMap<String, ByteArray> = 
                         library[intake.name] = bytes
                     }
                 }
+
+                override suspend fun addAttachment(bytes: ByteArray, extension: String): ImageIntake = unexpected()
 
                 override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = unexpected()
             })

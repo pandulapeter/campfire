@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.data.model.image
 
-/** What became of a picture handed to the library or to the editor's draft. */
+/** What became of a picture or an attachment handed to the library or to the editor's draft. */
 sealed interface ImageIntake {
 
-    /** Kept under [name], which is the name a song's `{image}` directive names it by. */
+    /** Kept under [name], which is the name a song's `{image}` directive or attachment line names it by. */
     data class Accepted(val name: String) : ImageIntake
 
     data class Refused(val reason: ImageRefusal) : ImageIntake
@@ -25,13 +25,13 @@ sealed interface ImageIntake {
  */
 enum class ImageRefusal {
 
-    /** Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, the most sync moves. */
+    /** Larger than `ImportLimits.MAX_IMAGE_FILE_SIZE`, or for an attachment `ImportLimits.MAX_ATTACHMENT_FILE_SIZE`. */
     TOO_LARGE,
 
     /** More pixels than every platform can decode safely (`ImageInfo.MAX_PIXELS`, 25 megapixels), whatever its file size. */
     TOO_MANY_PIXELS,
 
-    /** A picture of a format some platform cannot show (HEIC, AVIF, SVG). */
+    /** A picture of a format some platform cannot show (HEIC, AVIF, SVG), or an attachment of a type not taken (`LibraryFiles.ATTACHMENT_EXTENSIONS`). */
     UNSUPPORTED_FORMAT,
 
     /** Not a picture at all, or one whose header cannot be read. */

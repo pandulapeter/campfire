@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.export
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 
@@ -36,11 +36,11 @@ internal class ExportedImages private constructor(
     var size = 0L
         private set
 
-    /** Notes the pictures [text] names, as it goes into the archive, and answers it unchanged. */
-    fun named(text: String) = text.also { named += ChordProImages.referencedSources(it) }
+    /** Notes the library files [text] names (pictures and attachments), as it goes into the archive, and answers it unchanged. */
+    fun named(text: String) = text.also { named += libraryFilesNamedBy(it) }
 
-    /** Whether [text] names a picture the library holds, which makes a song exported alone an archive. */
-    fun isNamedBy(text: String) = ChordProImages.referencedSources(text).any { it in held }
+    /** Whether [text] names a file the library holds, which makes a song exported alone an archive. */
+    fun isNamedBy(text: String) = libraryFilesNamedBy(text).any { it in held }
 
     /** The archive entries of the pictures, to come after every song's. */
     val entries: List<suspend () -> ArchiveEntry?> = libraryImageNames.map { name ->

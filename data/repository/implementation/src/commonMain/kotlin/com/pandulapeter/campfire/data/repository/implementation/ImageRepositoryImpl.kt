@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
@@ -82,7 +82,7 @@ internal class ImageRepositoryImpl(
             // Null where the draft could not be read: it may name any of the draft's pictures, so they are all kept, for the
             // editor that reads it after all and for the next launch's tidying.
             val draftNames = environment.logger.recovering(describe = { "Could not read the editor's draft: ${it::class.simpleName}" }, fallback = { null }) {
-                editorDraftRepository.loadEditorDraft()?.text?.let(ChordProImages::referencedSources).orEmpty()
+                editorDraftRepository.loadEditorDraft()?.text?.let(::libraryFilesNamedBy).orEmpty()
             }
             keeping.withLock {
                 // An editor that has already said what it holds knows better than the draft it was restored from.
@@ -122,9 +122,13 @@ internal class ImageRepositoryImpl(
             ?: ImageIntake.Refused(ImageRefusal.NOT_AN_IMAGE)
     }
 
-    override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = withContext(NonCancellable) {
+    override suspend fun addDraftImage(bytes: ByteArray): ImageIntake = addDraft(bytes) { LibraryImages.examine(bytes) }
+
+    override suspend fun addDraftAttachment(bytes: ByteArray, extension: String) = addDraft(bytes) { LibraryImages.examineAttachment(bytes, extension) }
+
+    private suspend fun addDraft(bytes: ByteArray, examine: () -> LibraryImages.Examined): ImageIntake = withContext(NonCancellable) {
         keeping.withLock {
-            store(bytes, shelf = ImageShelf.DRAFT, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY, ImageShelf.DRAFT) })
+            store(bytes, shelf = ImageShelf.DRAFT, examine = examine, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY, ImageShelf.DRAFT) })
                 .also { intake -> if (intake is ImageIntake.Accepted) draftImagesWrittenHere += intake.name }
         }
     }
@@ -166,27 +170,41 @@ internal class ImageRepositoryImpl(
         /** Read only inside [withImagesKept], under [keeping], which guards [editorImages]. */
         override val heldNames get() = editorImages
 
-        override suspend fun addImage(bytes: ByteArray): ImageIntake = withContext(NonCancellable) {
-            store(bytes, shelf = ImageShelf.LIBRARY, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY) })
+        override suspend fun addImage(bytes: ByteArray): ImageIntake = addToLibrary(bytes) { LibraryImages.examine(bytes) }
+
+        override suspend fun addAttachment(bytes: ByteArray, extension: String) = addToLibrary(bytes) { LibraryImages.examineAttachment(bytes, extension) }
+
+        private suspend fun addToLibrary(bytes: ByteArray, examine: () -> LibraryImages.Examined) = withContext(NonCancellable) {
+            store(bytes, shelf = ImageShelf.LIBRARY, examine = examine, isTaken = { name -> otherBytesUnder(name, bytes, ImageShelf.LIBRARY) })
         }
 
         override suspend fun moveDraftImages(names: Set<String>): Map<String, String> = withContext(NonCancellable) {
             val renamed = mutableMapOf<String, String>()
             names.forEach { name ->
                 val bytes = imageLocalSource.readImage(ImageShelf.DRAFT, name) ?: return@forEach
-                when (val intake = addImage(bytes)) {
+                when (val intake = addDraftFile(name, bytes)) {
                     is ImageIntake.Accepted -> if (intake.name != name) renamed[name] = intake.name
                     // Taken in as a draft, so it passes again; were it ever refused, the song shows it as missing.
-                    is ImageIntake.Refused -> environment.logger.log("Could not keep the picture \"$name\": ${intake.reason}")
+                    is ImageIntake.Refused -> environment.logger.log("Could not keep the file \"$name\": ${intake.reason}")
                 }
             }
             renamed
         }
+
+        /**
+         * A draft file stored as what its name says: an attachment keeps the extension it was taken in with, and a name
+         * that is a picture's is stored as a picture, or as an attachment where it is none (a picture attached rather than
+         * shown may be larger than a picture can be).
+         */
+        private suspend fun addDraftFile(name: String, bytes: ByteArray): ImageIntake {
+            val asPicture = if (LibraryFiles.isLibraryImageName(name)) addImage(bytes) else null
+            return if (asPicture is ImageIntake.Accepted) asPicture else addAttachment(bytes, name.substringAfterLast('.'))
+        }
     }
 
     /** Must be called under [keeping]. */
-    private suspend fun store(bytes: ByteArray, shelf: ImageShelf, isTaken: suspend (String) -> Boolean): ImageIntake {
-        val examined = withContext(environment.computation) { LibraryImages.examine(bytes) }
+    private suspend fun store(bytes: ByteArray, shelf: ImageShelf, examine: () -> LibraryImages.Examined, isTaken: suspend (String) -> Boolean): ImageIntake {
+        val examined = withContext(environment.computation) { examine() }
         val refusal = examined.refusal
         if (refusal != null) return ImageIntake.Refused(refusal)
         // Every name taken by another picture would take 49 pictures sharing a SHA-256 prefix of 64 digits.
@@ -236,18 +254,18 @@ internal class ImageRepositoryImpl(
             // The repository's list as it is now, rather than the state that asked for the prune, which may be from before
             // the songs a kept block just wrote.
             val songs = songRepository.loadSongsIfNeeded() ?: return@withLock
-            val named = songs.flatMapTo(mutableSetOf()) { it.imageNames }
+            val named = songs.flatMapTo(mutableSetOf()) { it.libraryFileNames }
             if (named == prunedFor && !mayHaveStrays) return@withLock
             val unnamed = imageLocalSource.listImageNames(ImageShelf.LIBRARY).filter { it !in named && it !in editorImages }
             if (unnamed.isNotEmpty()) {
                 val read = songs.mapTo(mutableSetOf()) { it.fileName }
                 val unread = songRepository.loadSongFileSizes().keys.filter { it !in read }
                 if (unread.isNotEmpty()) {
-                    environment.logger.log("Kept ${unnamed.size} pictures no song names: ${unread.size} song files could not be read.")
+                    environment.logger.log("Kept ${unnamed.size} files no song names: ${unread.size} song files could not be read.")
                     return@withLock
                 }
                 unnamed.forEach { imageLocalSource.deleteImage(ImageShelf.LIBRARY, it) }
-                environment.logger.log("Deleted ${unnamed.size} pictures no song names.")
+                environment.logger.log("Deleted ${unnamed.size} files no song names.")
                 _changes.update { it + 1 }
             }
             prunedFor = named

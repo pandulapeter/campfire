@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.sync.implementation.shared
 
-import com.pandulapeter.campfire.chordpro.edit.ChordProImages
+import com.pandulapeter.campfire.chordpro.edit.libraryFilesNamedBy
 import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.share.SharedLinkKind
@@ -39,7 +39,7 @@ internal class FakeSharedCopyContents : SharedCopyContents {
     override suspend fun titleOf(kind: SharedLinkKind, fileName: String, bytes: ByteArray) = bytes.decodeToString().lines().first()
 
     /** A song's pictures are named as ChordPro names them, on any line after its title. */
-    override fun imageNamesOf(bytes: ByteArray) = ChordProImages.referencedSources(bytes.decodeToString())
+    override fun libraryFileNamesOf(bytes: ByteArray) = libraryFilesNamedBy(bytes.decodeToString())
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray {
         packCount++
