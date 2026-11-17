@@ -16,7 +16,6 @@ What's planned for Campfire, grouped by area.
 - **Streaming archive import — critical for the next release**: archives of any size imported without holding them
   in memory, safety and reliability first, checked by hand on every platform before it ships.
   Plan: [streaming-archive-import.md](plans/streaming-archive-import.md)
-- Song attachments. Plan: [song-attachments.md](plans/song-attachments.md)
 - Add Slovak, Ukrainian and Dutch translations
 - Add an option to pin chord diagrams / scales. In once-column mode, with enough horizontal space, chord diagrams could be displayed on the side.
 
