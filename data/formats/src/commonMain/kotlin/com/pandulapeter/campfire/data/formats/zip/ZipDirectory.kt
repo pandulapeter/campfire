@@ -19,6 +19,10 @@ import com.pandulapeter.campfire.data.model.importing.ImportLimits
  */
 class ZipDirectory internal constructor(
     internal val source: ZipSource,
+    /** How many bytes of central directory records were read, which is what holding the directory is charged as. */
+    val centralDirectorySize: Long,
+    /** How many records the central directory holds, directories included. */
+    val recordCount: Int,
     private val names: ByteArray,
     private val nameStarts: IntArray,
     internal val flags: IntArray,

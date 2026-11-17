@@ -101,6 +101,18 @@ internal class ZipReaderStreamingTest {
     }
 
     @Test
+    fun `a directory says what it holds of both caps, directories counted among its records`() = runTest {
+        val archive = ZipWriter.write(listOf(ZipEntry("songs/", ByteArray(0)), ZipEntry("songs/a.cho", "a".encodeToByteArray())))
+        val directorySize = archive.u32(archive.size - 22 + 12)
+
+        val directory = ZipReader.open(ByteArrayZipSource(archive))
+
+        assertEquals(1, directory.entryCount)
+        assertEquals(2, directory.recordCount)
+        assertEquals(directorySize, directory.centralDirectorySize)
+    }
+
+    @Test
     fun `refuses a declared entry count past the cap before reading the directory`() = runTest {
         val archive = ZipWriter.write(List(11) { ZipEntry("song $it.cho", "a".encodeToByteArray()) })
         val source = TailSource(size = archive.size.toLong(), tail = archive)

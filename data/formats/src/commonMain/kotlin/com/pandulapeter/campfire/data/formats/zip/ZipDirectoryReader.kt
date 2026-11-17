@@ -80,7 +80,7 @@ internal suspend fun readZipDirectory(source: ZipSource, maxCentralDirectorySize
         }
         position = checkedSum(position, recordLength)
     }
-    return builder.build(source)
+    return builder.build(source, centralDirectorySize = walked, recordCount = totalEntries)
 }
 
 /**
@@ -152,8 +152,10 @@ private class DirectoryBuilder(initialCapacity: Int) {
         count++
     }
 
-    fun build(source: ZipSource) = ZipDirectory(
+    fun build(source: ZipSource, centralDirectorySize: Long, recordCount: Int) = ZipDirectory(
         source = source,
+        centralDirectorySize = centralDirectorySize,
+        recordCount = recordCount,
         names = names.build(),
         nameStarts = nameStarts.copyOf(count + 1),
         flags = flags.copyOf(count),

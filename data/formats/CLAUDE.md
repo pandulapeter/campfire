@@ -98,6 +98,8 @@ archives are rejected, ZIP64, encrypted, or otherwise compressed entries left ou
   `readAlike` and the fuzz test hold it to; keep them alike until the in-memory one is removed. Its own additions:
   `MAX_CENTRAL_DIRECTORY_SIZE` and `MAX_ARCHIVE_ENTRIES` refused before anything is allocated, the directory kept as
   primitive arrays and name bytes, each local header read once, and every sum of declared numbers through `checkedSum`.
+  A `ZipDirectory` says what it cost of both caps (`centralDirectorySize`, `recordCount`), so a caller can carry what
+  is left of them across nested archives.
   `ByteArrayEntrySink` refuses an entry over 50 MiB for memory's sake, stored ones too.
 - **The streaming inflater** (`StreamingInflater.kt`) is `puff.c`'s structure again over a `ZipSource` range, with a
   64 KiB input buffer and a 64 KiB output window that slides to keep 32 KiB of history; only its block loops suspend,
