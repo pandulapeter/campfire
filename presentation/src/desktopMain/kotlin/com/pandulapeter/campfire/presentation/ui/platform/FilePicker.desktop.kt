@@ -60,7 +60,9 @@ internal object DesktopFilePicker : FilePicker {
                 this.files.orEmpty().toList()
             }
         }
-        return withContext(Dispatchers.IO) { files.map { it.absolutePath }.readAsImportedFiles() }
+        return withContext(Dispatchers.IO) {
+            files.map { it.absolutePath }.readAsImportedFiles(receiver = if (isPicturesOnly) null else archiveReceiverWhileStaging())
+        }
     }
 
     override suspend fun pickAttachment(): ImportedFile? {
@@ -156,8 +158,13 @@ private fun File.withExtensionOf(offeredName: String): File {
  * folder of photos is not read whole one file at a time. A file that was named itself is read whatever it is called. A
  * file that cannot be read is handed over empty, which the import reports as skipped, as on Android; one bad file still
  * does not lose the ones next to it.
+ *
+ * With a [receiver] (while archives are staged), an archive is not read but received into the staging folder, its copy
+ * starting at once over a stream opened as it arrives (`Files.newInputStream`, which Windows opens with delete sharing,
+ * so the user's file is never locked against a rename or a deletion) and closed as soon as the copy ends; whatever else
+ * is read whole as before, once its first bytes have told it from an archive. Pictures picked for a song pass none.
  */
-fun List<String>.readAsImportedFiles(): List<ImportedFile> {
+fun List<String>.readAsImportedFiles(receiver: ArchiveReceiver? = archiveReceiverWhileStaging()): List<ImportedFile> {
     val budget = ImportBudget()
     return flatMap { path ->
         val file = File(path)
@@ -166,6 +173,15 @@ fun List<String>.readAsImportedFiles(): List<ImportedFile> {
         try {
             if (isInFolder && !LibraryFiles.isImportableFileName(file.name) && (LibraryFiles.isBinaryFileName(file.name) || !file.isWorthReadingUnknown())) {
                 ImportedFile.unread(file.name)
+            } else if (file.isFile && receiver != null) {
+                val head = Files.newInputStream(file.toPath()).use { it.readHead() }
+                budget.take(
+                    name = file.name,
+                    size = file.length(),
+                    head = head,
+                    readBytes = { file.readBytes() },
+                    stage = { receiver.receiveStream(name = file.name, size = file.length(), head = ByteArray(0), input = Files.newInputStream(file.toPath())) },
+                )
             } else if (file.isFile) {
                 budget.read(name = file.name, size = file.length()) { file.readBytes() }
             } else {

@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
+import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
 import com.pandulapeter.campfire.data.model.importing.StagedFile
 import com.pandulapeter.campfire.data.model.importing.StagedFileMissingException
 import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
@@ -1250,6 +1251,74 @@ class ImportControllerQueueTest {
         assertEquals(1, importCount)
     }
 
+    @Test
+    fun `an archive being received is awaited with its bytes as progress and read as its staged copy`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        val reception = FakeReception(announcedSize = 10)
+        startController()
+        controller.enqueueImport(ImportSource.Files(listOf(ImportedFile(name = "library.zip", bytes = ByteArray(0), receiving = reception))))
+        settle()
+        assertEquals(ImportWorkState.RECEIVING, work.state.value)
+        assertIs<ImportReport.Loading>(reportState.importReport.value)
+        // The whole of a known total passes the progress throttle at once.
+        reception.receivedBytes.value = 10
+        settle()
+        assertEquals(ImportProgress(ImportProgress.Phase.RECEIVING, fileName = "library.zip", completedBytes = 10, totalBytes = 10), controller.importProgress.value)
+        assertEquals(0, prepareCount)
+        reception.result.complete(STAGED_ARCHIVE.staged!!)
+        settle()
+        assertEquals(listOf(listOf(STAGED_ARCHIVE)), preparedFiles)
+        assertIs<ImportReport.Review>(reportState.importReport.value)
+        leaveImportReport()
+        settle()
+        assertEquals(setOf(STAGED_ARCHIVE.staged!!), deletedStaging.toSet())
+        assertFalse(reception.isDiscarded)
+    }
+
+    @Test
+    fun `Cancel while an archive is received discards it before the loading screen leaves`() = runTest {
+        val reception = FakeReception()
+        startController()
+        val settled = controller.enqueueImport(ImportSource.Files(listOf(ImportedFile(name = "library.zip", bytes = ByteArray(0), receiving = reception))))
+        settle()
+        controller.cancelImportPreparation()
+        settle()
+        assertTrue(reception.isDiscarded)
+        assertNull(reportState.importReport.value)
+        assertTrue(settled.isCompleted)
+        assertEquals(0, prepareCount)
+        assertEquals(ImportWorkState.IDLE, work.state.value)
+    }
+
+    @Test
+    fun `a received archive too large or unreadable is that file unread and a disk too full fails the batch`() = runTest {
+        plannedSkipped = listOf("notes.txt")
+        val tooLarge = FakeReception().apply { result.completeExceptionally(StagingRefusedException.TooLarge(1)) }
+        val unreadable = FakeReception().apply { result.completeExceptionally(IllegalStateException("The pipe broke.")) }
+        startController()
+        controller.enqueueImport(
+            ImportSource.Files(
+                listOf(
+                    ImportedFile(name = "huge.zip", bytes = ByteArray(0), receiving = tooLarge),
+                    ImportedFile(name = "broken.zip", bytes = ByteArray(0), receiving = unreadable),
+                ),
+            ),
+        )
+        settle()
+        assertEquals(listOf(listOf(ImportedFile.unread("huge.zip", isTooLarge = true), ImportedFile.unread("broken.zip"))), preparedFiles)
+        leaveImportReport()
+        settle()
+        val full = FakeReception().apply { result.completeExceptionally(StagingRefusedException.NoSpace(neededBytes = 100)) }
+        controller.enqueueImport(ImportSource.Files(listOf(ImportedFile(name = "library.zip", bytes = ByteArray(0), receiving = full))))
+        settle()
+        val failed = assertIs<ImportReport.Failed>(reportState.importReport.value)
+        assertEquals(ImportFailure.NO_SPACE, failed.reason)
+        assertEquals(100, failed.neededBytes)
+        leaveImportReport()
+        settle()
+        assertTrue(full.isDiscarded)
+    }
+
     /**
      * Two song files, which the import screen is put up for while they are read (see [isReportedWhileRead]), planned as
      * two songs, which it reviews rather than previews.
@@ -1266,6 +1335,21 @@ class ImportControllerQueueTest {
         isNewSongFromText = true,
         suggestion = suggestion,
     )
+}
+
+/** An archive whose copy into the staging folder ends as its [result] says, discarded once [isDiscarded]. */
+private class FakeReception(override val announcedSize: Long? = null) : ReceivingArchive {
+
+    val result = CompletableDeferred<StagedFile>()
+    override val receivedBytes = MutableStateFlow(0L)
+    var isDiscarded = false
+
+    override suspend fun await() = result.await()
+
+    override suspend fun discard() {
+        isDiscarded = true
+        result.cancel()
+    }
 }
 
 private val CampfireDestination.isSongPreview get() = this is CampfireDestination.SongDetails && importPreview?.isReviewPager == false

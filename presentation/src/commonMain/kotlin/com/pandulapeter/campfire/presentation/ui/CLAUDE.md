@@ -40,7 +40,9 @@ The view model facade, the composition root, and the product rules every screen 
   `ImportWork.settle` lets it go, never before, so Try again reads the same staged archive. An Import that finds a
   staged file gone (`StagedFileMissingException`, nothing written) turns into the failure stage, whose Try again reads
   what of the batch and of every batch that joined its review was staged (`ImportRequest.readAgainAfter`) again, the
-  joined ones sent back into the queue to join the new review.
+  joined ones sent back into the queue to join the new review. An archive still being received
+  (`ImportedFile.receiving`, see `ui/platform`) is awaited first, as `RECEIVING` with its bytes, and the batch's source
+  becomes its staged copy; a Cancel then, or a batch settled before its preparation took it, discards it.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
   snackbar, not a crash; a write refused for space says so (`MessageSink.sendFailure`, `Message.StorageFull`). An import's writes and the selection's tag/language writes run `NonCancellable` once started
   (no half-imported archive, no tag on half the songs); planning stays cancellable.

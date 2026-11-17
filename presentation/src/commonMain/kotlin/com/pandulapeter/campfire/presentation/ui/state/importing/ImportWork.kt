@@ -15,19 +15,27 @@ import com.pandulapeter.campfire.data.model.importing.ImportDownload
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportResult
+import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.ReceivingArchive
+import com.pandulapeter.campfire.data.model.importing.StagingRefusedException
+import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.presentation.ApplicationScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import kotlin.time.TimeSource
 
@@ -129,6 +137,12 @@ class ImportWork(
     internal fun settle(request: ImportRequest) {
         if (counted.remove(request)) queuedImportCount.update { it - 1 }
         request.settled.complete(Unit)
+        // A batch let go of before its preparation took its files holds them still: archives being received, and ones
+        // already staged.
+        val arrived = (request.source as? ImportSource.Files)?.files.orEmpty()
+        val receptions = arrived.mapNotNull { it.receiving }
+        request.stagedFiles += arrived.mapNotNull { it.staged }
+        if (receptions.isNotEmpty()) scope.launch { receptions.forEach { it.discard() } }
         if (request.stagedFiles.isNotEmpty()) {
             val staged = request.stagedFiles.toList()
             request.stagedFiles.clear()
@@ -237,7 +251,7 @@ class ImportWork(
         val enter = { state: ImportWorkState -> if (count == preparationCount && !isWriting) _state.value = state }
         val throttle = ImportProgressThrottle(TimeSource.Monotonic) { progress.value = it }
         try {
-            val files = when (val source = request.source) {
+            val arrived = when (val source = request.source) {
                 is ImportSource.Files -> source.files
                 is ImportSource.Address -> {
                     enter(ImportWorkState.DOWNLOADING)
@@ -266,6 +280,7 @@ class ImportWork(
                     }
                 }
             }
+            val files = received(request = request, files = arrived, enter = enter, throttle = throttle)
             request.stagedFiles += files.mapNotNull { it.staged }
             enter(ImportWorkState.UNPACKING)
             val plan = useCases.prepareImport(files) { if (request.shouldAnnounceResult) throttle.offer(it) }
@@ -275,6 +290,59 @@ class ImportWork(
         } finally {
             enter(ImportWorkState.IDLE)
         }
+    }
+
+    /**
+     * [files] with every archive still being received ([ImportedFile.receiving], whose copy started as it arrived) taken
+     * once it is whole, the batch's source changed to them, so that Try again reads the same staged copies: the
+     * preparation's first phase, [ImportWorkState.RECEIVING], its bytes the [progress]. One that turns out too large or
+     * unreadable is that file unread, as it would have been read whole; a disk too full for one fails the preparation
+     * ([ImportFailure.NO_SPACE]), the others left for the batch's settling. Cancelled, the preparation discards every one
+     * before it ends, so the loading screen goes only once nothing of them is left; [interrupt]ed, it leaves them to go on
+     * in the app's scope for Try again to take, since what the platform stopped was only the preparation, and the batch's
+     * settling discards them whichever way it ends.
+     */
+    private suspend fun received(
+        request: ImportRequest,
+        files: List<ImportedFile>,
+        enter: (ImportWorkState) -> Unit,
+        throttle: ImportProgressThrottle,
+    ): List<ImportedFile> {
+        val receptions = files.mapNotNull { it.receiving }
+        if (receptions.isEmpty()) return files
+        enter(ImportWorkState.RECEIVING)
+        val fileName = request.source.name
+        val totalBytes = receptions.map { it.announcedSize }.takeIf { sizes -> sizes.none { it == null } }?.sumOf { it ?: 0L }
+        try {
+            val received = coroutineScope {
+                val reporting = launch {
+                    combine(receptions.map { it.receivedBytes }) { it.sum() }.collect { bytes ->
+                        throttle.offer(ImportProgress(ImportProgress.Phase.RECEIVING, fileName = fileName, completedBytes = bytes, totalBytes = totalBytes))
+                    }
+                }
+                files.map { file -> file.receiving?.let { receivedFile(file.name, it) } ?: file }.also {
+                    reporting.cancel()
+                    throttle.flush()
+                }
+            }
+            request.source = ImportSource.Files(received)
+            return received
+        } catch (exception: CancellationException) {
+            if (preparationInterruption?.isCompleted != true) withContext(NonCancellable) { receptions.forEach { it.discard() } }
+            throw exception
+        }
+    }
+
+    private suspend fun receivedFile(name: String, reception: ReceivingArchive): ImportedFile = try {
+        ImportedFile(name = name, bytes = ByteArray(0), staged = reception.await())
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: StagingRefusedException.TooLarge) {
+        ImportedFile.unread(name, isTooLarge = true)
+    } catch (exception: Exception) {
+        if (exception.isOutOfSpace()) throw exception
+        println("Could not receive \"$name\": ${exception.message}")
+        ImportedFile.unread(name)
     }
 
     /**
