@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.formats.zip.ZipContent
 import com.pandulapeter.campfire.data.formats.zip.ZipReader
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.library.LibraryFiles
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 
@@ -135,7 +136,7 @@ internal object ArchiveSongImages {
         val bytes = name?.let(bytesByName::get)
         return ImportedImage(
             source = source,
-            bytes = bytes,
+            content = bytes?.let(IncomingContent::Bytes),
             problem = when {
                 bytes != null -> null
                 name == null -> ImportedImage.Problem.MISSING

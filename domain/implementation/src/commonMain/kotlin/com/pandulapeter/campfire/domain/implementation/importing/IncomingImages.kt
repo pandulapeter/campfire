@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.LibraryImageWriter
 
@@ -33,7 +34,12 @@ internal object IncomingImages {
      */
     suspend fun planned(images: List<ImportedImage>, imageRepository: ImageRepository): Map<String, ImportPlan.SongImage> =
         images.associate { image ->
-            val bytes = image.bytes
+            val bytes = when (val content = image.content) {
+                null -> null
+                is IncomingContent.Bytes -> content.bytes
+                // Nothing unpacks into the staging folder for an import to plan yet: the in-memory unpack is the only one run.
+                is IncomingContent.Staged -> error("A staged file is not planned from memory.")
+            }
             val intake = bytes?.let {
                 if (image.isAttachment) imageRepository.libraryNameOfAttachment(it, image.source.substringAfterLast('.', "")) else imageRepository.libraryNameOf(it)
             }

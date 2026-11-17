@@ -11,25 +11,24 @@ package com.pandulapeter.campfire.data.model.importing
 
 /**
  * A picture an incoming song's image directive names, or with [isAttachment] a file its attachment line names, as the
- * archive it arrived in held it: [bytes] where the archive had it and it was read, else why not ([problem]). [source] is
+ * archive it arrived in held it: its [content] where the archive had it and it was read, else why not ([problem]). [source] is
  * the file the directive names, exactly as written, which is what the import rewrites once it knows the name the library
  * keeps the file under.
  */
 class ImportedImage(
     val source: String,
-    val bytes: ByteArray?,
+    val content: IncomingContent?,
     val problem: Problem?,
     val isAttachment: Boolean = false,
 ) {
 
     override fun equals(other: Any?) = this === other || (
-        other is ImportedImage && source == other.source && problem == other.problem && isAttachment == other.isAttachment &&
-            (bytes === other.bytes || (bytes != null && other.bytes != null && bytes.contentEquals(other.bytes)))
+        other is ImportedImage && source == other.source && problem == other.problem && isAttachment == other.isAttachment && content == other.content
         )
 
-    override fun hashCode() = 31 * (31 * (31 * source.hashCode() + problem.hashCode()) + isAttachment.hashCode()) + (bytes?.contentHashCode() ?: 0)
+    override fun hashCode() = 31 * (31 * (31 * source.hashCode() + problem.hashCode()) + isAttachment.hashCode()) + content.hashCode()
 
-    override fun toString() = "ImportedImage(source=$source, size=${bytes?.size}, problem=$problem, isAttachment=$isAttachment)"
+    override fun toString() = "ImportedImage(source=$source, content=$content, problem=$problem, isAttachment=$isAttachment)"
 
     /** Why a picture or an attachment a song names does not come into the library with it. The song comes all the same. */
     enum class Problem {

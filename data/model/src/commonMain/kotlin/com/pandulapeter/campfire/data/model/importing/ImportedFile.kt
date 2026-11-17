@@ -23,6 +23,9 @@ package com.pandulapeter.campfire.data.model.importing
  *
  * [images] are the pictures a ChordPro song out of an archive names, found in the same archive (see
  * `ArchiveLocalSource.unpack`), one per file its directives name; empty for every other file.
+ *
+ * [staged] is a file whose content is in the staging folder rather than in [bytes], which are then empty: an archive
+ * received there, or one an archive being unpacked from there holds.
  */
 data class ImportedFile(
     val name: String,
@@ -30,6 +33,7 @@ data class ImportedFile(
     val isTooLarge: Boolean = false,
     val isPlainTextByContent: Boolean = false,
     val images: List<ImportedImage> = emptyList(),
+    val staged: StagedFile? = null,
 ) {
 
     /**
@@ -46,11 +50,13 @@ data class ImportedFile(
 
     override fun equals(other: Any?) = this === other || (
         other is ImportedFile && name == other.name && isTooLarge == other.isTooLarge &&
-            isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images
+            isPlainTextByContent == other.isPlainTextByContent && bytes.contentEquals(other.bytes) && images == other.images &&
+            staged == other.staged
         )
 
     override fun hashCode() =
-        31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()
+        31 * (31 * (31 * (31 * (31 * name.hashCode() + isTooLarge.hashCode()) + isPlainTextByContent.hashCode()) + bytes.contentHashCode()) + images.hashCode()) +
+            staged.hashCode()
 
     companion object {
 

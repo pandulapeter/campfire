@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.importing.ImportPlan
 import com.pandulapeter.campfire.data.model.importing.ImportProgress
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.library.decodeLibraryText
 import com.pandulapeter.campfire.data.repository.api.ImageRepository
 import com.pandulapeter.campfire.data.repository.api.ImportDownloadRepository
@@ -74,12 +75,12 @@ internal class IncomingPictureLinks(
         val images = links.zip(downloads).mapNotNull { (link, download) ->
             when (download) {
                 is ImportDownload.File -> if (download.bytes.size > remaining) {
-                    ImportedImage(source = link, bytes = null, problem = ImportedImage.Problem.TOO_LARGE)
+                    ImportedImage(source = link, content = null, problem = ImportedImage.Problem.TOO_LARGE)
                 } else {
                     remaining -= download.bytes.size
-                    ImportedImage(source = link, bytes = download.bytes, problem = null)
+                    ImportedImage(source = link, content = IncomingContent.Bytes(download.bytes), problem = null)
                 }
-                ImportDownload.TooLarge -> ImportedImage(source = link, bytes = null, problem = ImportedImage.Problem.TOO_LARGE)
+                ImportDownload.TooLarge -> ImportedImage(source = link, content = null, problem = ImportedImage.Problem.TOO_LARGE)
                 ImportDownload.Missing, ImportDownload.Unreachable -> null
             }
         }

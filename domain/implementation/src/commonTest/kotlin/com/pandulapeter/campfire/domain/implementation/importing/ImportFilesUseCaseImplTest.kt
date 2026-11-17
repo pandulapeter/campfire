@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.model.song.Song
 import com.pandulapeter.campfire.data.model.song.SongContent
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.image.ImageIntake
 import com.pandulapeter.campfire.chordpro.edit.ChordProAttachments
@@ -884,10 +885,10 @@ class ImportFilesUseCaseImplTest {
                     name = "a.cho",
                     bytes = "{title: A}\n{image: src=chart.png}\n{image: src=gone.png}\n{image: src=photo.heic}\n{image: src=notes.png}\n".encodeToByteArray(),
                     images = listOf(
-                        ImportedImage("chart.png", chart, null),
+                        ImportedImage("chart.png", IncomingContent.Bytes(chart), null),
                         ImportedImage("gone.png", null, ImportedImage.Problem.MISSING),
-                        ImportedImage("photo.heic", FakeImageRepository.HEIC, null),
-                        ImportedImage("notes.png", "{title: B}".encodeToByteArray(), null),
+                        ImportedImage("photo.heic", IncomingContent.Bytes(FakeImageRepository.HEIC), null),
+                        ImportedImage("notes.png", IncomingContent.Bytes("{title: B}".encodeToByteArray()), null),
                     ),
                 ),
             )
@@ -966,8 +967,8 @@ class ImportFilesUseCaseImplTest {
         val name = (images.libraryNameOf(chart) as ImageIntake.Accepted).name
         val library = ChordProPrettifier.prettify("{title: A}\n{image: src=$name}\n")
         val songs = FakeSongRepository(mutableMapOf("a.cho" to library))
-        val asExported = ImportedFile("a.cho", library.encodeToByteArray(), images = listOf(ImportedImage(name, chart, null)))
-        val renamed = ImportedFile("b.cho", "{title: A}\n{image: src=\"My chart.png\"}\n".encodeToByteArray(), images = listOf(ImportedImage("My chart.png", chart, null)))
+        val asExported = ImportedFile("a.cho", library.encodeToByteArray(), images = listOf(ImportedImage(name, IncomingContent.Bytes(chart), null)))
+        val renamed = ImportedFile("b.cho", "{title: A}\n{image: src=\"My chart.png\"}\n".encodeToByteArray(), images = listOf(ImportedImage("My chart.png", IncomingContent.Bytes(chart), null)))
 
         listOf(asExported, renamed).forEach { file ->
             val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
@@ -987,7 +988,7 @@ class ImportFilesUseCaseImplTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
         val chart = FakeImageRepository.picture(1)
-        val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", chart, null)))
+        val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(chart), null)))
         val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
         val planned = plan.songs.single().images.single().name!!
         images.library[planned] = FakeImageRepository.picture(2)
@@ -1020,7 +1021,7 @@ class ImportFilesUseCaseImplTest {
         val exported = ImportedFile(
             name = "a.cho",
             bytes = archive.packed.getValue("a.cho"),
-            images = listOf(ImportedImage(name, archive.packed.getValue("images/$name"), null)),
+            images = listOf(ImportedImage(name, IncomingContent.Bytes(archive.packed.getValue("images/$name")), null)),
         )
         val songs = FakeSongRepository(mutableMapOf())
         val target = FakeImageRepository()
@@ -1045,9 +1046,9 @@ class ImportFilesUseCaseImplTest {
                     name = "a.cho",
                     bytes = text.encodeToByteArray(),
                     images = listOf(
-                        ImportedImage("sheet.pdf", sheet, null, isAttachment = true),
+                        ImportedImage("sheet.pdf", IncomingContent.Bytes(sheet), null, isAttachment = true),
                         ImportedImage("gone.mp3", null, ImportedImage.Problem.MISSING, isAttachment = true),
-                        ImportedImage("run.exe", byteArrayOf(1), null, isAttachment = true),
+                        ImportedImage("run.exe", IncomingContent.Bytes(byteArrayOf(1)), null, isAttachment = true),
                     ),
                 ),
             )
@@ -1091,7 +1092,7 @@ class ImportFilesUseCaseImplTest {
     fun `a song left out of the import leaves its pictures out too`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val images = FakeImageRepository()
-        val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", FakeImageRepository.picture(1), null)))
+        val file = ImportedFile("a.cho", "{title: A}\n{image: src=chart.png}\n".encodeToByteArray(), images = listOf(ImportedImage("chart.png", IncomingContent.Bytes(FakeImageRepository.picture(1)), null)))
         val plan = prepare(songs, archive = FakeArchiveRepository { _, _ -> listOf(file) }, images = images)(listOf(ImportedFile("songs.zip", byteArrayOf(1))))
 
         ImportFilesUseCaseImpl(songs, FakeSetlistRepository(), Logger.Standard, images).invoke(plan, ImportChoices(leftOut = setOf(ImportEntryKey(ImportEntryKey.Kind.SONG, 0))))
@@ -1129,7 +1130,7 @@ class ImportFilesUseCaseImplTest {
         val archive = object : ArchiveRepository by FakeArchiveRepository() {
             override suspend fun unpack(archive: ByteArray, maxSize: Long, maxImageSize: Long, maxAttachmentSize: Long): UnpackedArchive {
                 budgets += maxSize to maxImageSize
-                val song = ImportedFile("${budgets.size}.cho", "{title: ${budgets.size}}\n{image: src=x.png}\n".encodeToByteArray(), images = listOf(ImportedImage("x.png", picture, null)))
+                val song = ImportedFile("${budgets.size}.cho", "{title: ${budgets.size}}\n{image: src=x.png}\n".encodeToByteArray(), images = listOf(ImportedImage("x.png", IncomingContent.Bytes(picture), null)))
                 return UnpackedArchive(files = listOf(song), imageSize = 1_000)
             }
         }

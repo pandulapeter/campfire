@@ -48,6 +48,8 @@ What an import stages on disk (`imports/`) is bounded by time and disk, not memo
 `MAX_STAGED_ARCHIVE_SIZE` and what one import unpacks by `MAX_IMPORT_STAGED_SIZE` (16 GiB each), and both by the free
 space less `minFreeSpaceFor` (a quarter of what the import needs, at most 512 MiB; 32 MiB of the web's quota).
 `StagedFile` exists only for a file closed whole; a refusal is a `StagingRefusedException`.
+`ImportedImage.content` is an `IncomingContent`: `Bytes` in memory, or `Staged` (a `StagedFile` the streaming unpack
+wrote), never read whole; `ImportedFile.staged` is an archive whose bytes are in `imports/`.
 
 ## Other
 

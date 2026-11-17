@@ -15,13 +15,13 @@ import com.pandulapeter.campfire.data.model.Logger
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
 import com.pandulapeter.campfire.data.model.importing.ImportedImage
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportSink
 import kotlinx.coroutines.test.runTest
 import kotlin.random.Random
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -278,12 +278,12 @@ internal class ArchiveImagesTest {
 
     private fun assertFound(expected: ByteArray, image: ImportedImage) {
         assertNull(image.problem)
-        assertContentEquals(expected, image.bytes)
+        assertEquals(IncomingContent.Bytes(expected), image.content)
     }
 
     private fun assertProblem(expected: ImportedImage.Problem, image: ImportedImage) {
         assertEquals(expected, image.problem)
-        assertNull(image.bytes)
+        assertNull(image.content)
     }
 
     private class BufferSink : ExportSink {

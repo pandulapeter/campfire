@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.image.ImageRefusal
 import com.pandulapeter.campfire.data.model.image.ImageSize
 import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.importing.IncomingContent
 import com.pandulapeter.campfire.data.model.importing.UnpackedArchive
 import com.pandulapeter.campfire.data.model.library.ArchiveEntry
 import com.pandulapeter.campfire.data.model.library.ExportFileWriter
@@ -200,8 +201,8 @@ internal class FakeArchiveRepository(
         val (attachments, pictures) = files.flatMap { it.images }.partition { it.isAttachment }
         UnpackedArchive(
             files = files,
-            imageSize = pictures.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() },
-            attachmentSize = attachments.mapNotNull { it.bytes }.toSet().sumOf { it.size.toLong() },
+            imageSize = pictures.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
+            attachmentSize = attachments.mapNotNull { (it.content as? IncomingContent.Bytes)?.bytes }.toSet().sumOf { it.size.toLong() },
         )
     }
 
