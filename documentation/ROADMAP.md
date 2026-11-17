@@ -13,6 +13,9 @@ What's planned for Campfire, grouped by area.
 
 ## In progress
 
+- **Testing sync and shared links as thoroughly as the streaming import**: the cases sync's deletion guard and
+  shared links' publishing do not reach yet, live Dropbox checks first, and real other apps' backups for the import
+  corpus. Plan: [high-risk-testing.md](plans/high-risk-testing.md)
 - **Streaming archive import — critical for the next release**: archives of any size imported without holding them
   in memory, safety and reliability first, checked by hand on every platform before it ships. Its first storage steps
   (1 and 6) have landed.
