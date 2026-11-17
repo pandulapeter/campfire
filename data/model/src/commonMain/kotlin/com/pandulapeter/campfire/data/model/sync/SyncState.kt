@@ -191,5 +191,8 @@ enum class SyncFailureReason {
 
     /** The cloud folder has no room left, so nothing more can be uploaded until the user frees some. */
     REMOTE_STORAGE_FULL,
+
+    /** This device has no room left, so nothing more can be downloaded until the user frees some. */
+    LOCAL_STORAGE_FULL,
     UNKNOWN,
 }

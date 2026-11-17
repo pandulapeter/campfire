@@ -272,6 +272,7 @@
     <string name="error_no_data">Nie udało się niczego wczytać</string>
     <string name="error_no_data_hint">Nie udało się odczytać biblioteki.</string>
     <string name="error_operation_failed">Coś poszło nie tak</string>
+    <string name="error_storage_full">Na tym urządzeniu nie ma wystarczająco dużo wolnego miejsca.</string>
     <string name="error_link_not_opened">Nie udało się otworzyć %1$s</string>
 
     <!-- Songs screen -->
@@ -1297,6 +1298,7 @@
     <string name="settings_sync_failed_storage">Nie można odczytać ani zapisać biblioteki.</string>
     <string name="settings_sync_failed_unknown">Synchronizacja nie została ukończona.</string>
     <string name="settings_sync_failed_remote_full">Folder w chmurze jest pełny, więc nie można już nic wysłać. Zwolnij tam trochę miejsca i zsynchronizuj ponownie.</string>
+    <string name="settings_sync_failed_local_full">To urządzenie jest pełne, więc nie można już nic pobrać. Zwolnij na nim trochę miejsca i zsynchronizuj ponownie.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Nie udało się zsynchronizować jednego pliku: %2$s</item>
         <item quantity="other">Nie udało się zsynchronizować %1$d plików. Wśród nich: %2$s</item>

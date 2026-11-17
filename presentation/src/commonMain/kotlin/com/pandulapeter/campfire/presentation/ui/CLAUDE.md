@@ -33,7 +33,7 @@ The view model facade, the composition root, and the product rules every screen 
   picker after a new setlist and What's new show only over no dialog (`DialogHost.showIfNoneIsShown`).
 - The import is parked on the import screen and dropped however that screen leaves the back stack.
 - Intent handlers are non-suspend; library writes go through `launchLibraryChange`, which turns a failure into a
-  snackbar, not a crash. An import's writes and the selection's tag/language writes run `NonCancellable` once started
+  snackbar, not a crash; a write refused for space says so (`MessageSink.sendFailure`, `Message.StorageFull`). An import's writes and the selection's tag/language writes run `NonCancellable` once started
   (no half-imported archive, no tag on half the songs); planning stays cancellable.
 - **Search** runs over `indexedSongs`, normalized once per library change, not per keystroke. It also holds the
   *unfiltered* library by file name (`songLookup`), since a setlist names its songs whatever the filters hide. A query

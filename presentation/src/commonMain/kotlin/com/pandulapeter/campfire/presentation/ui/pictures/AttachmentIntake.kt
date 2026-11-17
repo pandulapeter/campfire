@@ -46,7 +46,7 @@ internal class AttachmentIntake(
             throw exception
         } catch (exception: Exception) {
             println("Could not keep an attachment: ${exception::class.simpleName}")
-            return null.also { messageSink.sendMessage(Message.OperationFailed) }
+            return null.also { messageSink.sendFailure(exception, Message.OperationFailed) }
         }
         return when (intake) {
             is ImageIntake.Accepted -> ChordProAttachment(source = intake.name, name = file.name)

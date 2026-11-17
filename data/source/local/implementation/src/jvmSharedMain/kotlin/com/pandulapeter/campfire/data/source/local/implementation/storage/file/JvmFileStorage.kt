@@ -312,7 +312,7 @@ internal class JvmFileStorage(
     private inline fun <T> failingAsStorage(name: String, operation: () -> T): T = try {
         operation()
     } catch (exception: IOException) {
-        throw LibraryStorageException("Could not access \"$name\".", exception)
+        throw LibraryStorageException("Could not access \"$name\".", exception.asStorageCause())
     }
 
     /**

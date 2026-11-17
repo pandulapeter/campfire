@@ -308,20 +308,21 @@ internal class SongTextStore(
     /**
      * Writes the song [fileName] with [save] (`SaveSongAttachmentsUseCase`, which moves the files it names into the library
      * first), given the text the write is built on, holding [songWriteMutex] as [editSongText] does: a file changed
-     * meanwhile is read again and tried once more.
+     * meanwhile is read again and tried once more. Answers whether the file now holds them.
      */
-    suspend fun writeAttachments(fileName: String, save: suspend (expectedText: String) -> SaveSongAttachmentsResult) {
+    suspend fun writeAttachments(fileName: String, save: suspend (expectedText: String) -> SaveSongAttachmentsResult): Boolean {
         songWriteMutex.withLock {
             repeat(SONG_EDIT_ATTEMPTS) { attempt ->
-                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
+                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return false
                 val result = save(text)
                 if (result is SaveSongAttachmentsResult.Saved) {
                     _songTexts.update { it + (fileName to result.text) }
-                    return
+                    return true
                 }
             }
         }
         messageSink.sendMessage(Message.OperationFailed)
+        return false
     }
 
     fun updateSongTexts(update: (Map<String, String>) -> Map<String, String>) = _songTexts.update(update)

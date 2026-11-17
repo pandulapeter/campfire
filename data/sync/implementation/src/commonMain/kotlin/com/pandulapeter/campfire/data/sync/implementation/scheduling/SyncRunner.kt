@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.sync.implementation.scheduling
 
+import com.pandulapeter.campfire.data.model.isOutOfSpace
 import com.pandulapeter.campfire.data.sync.implementation.SyncEnvironment
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexDocument
 import com.pandulapeter.campfire.data.sync.implementation.index.SyncIndexStore
@@ -360,8 +361,9 @@ private fun describe(outcome: SyncOutcome?) = when (outcome) {
     is SyncOutcome.Failure -> "failed, ${outcome.reason}"
 }
 
-internal fun Throwable.toFailureReason() = when (this) {
-    is SyncRunEndingException -> reason
-    is LibraryStorageException -> SyncFailureReason.STORAGE
+internal fun Throwable.toFailureReason() = when {
+    this is SyncRunEndingException -> reason
+    isOutOfSpace() -> SyncFailureReason.LOCAL_STORAGE_FULL
+    this is LibraryStorageException -> SyncFailureReason.STORAGE
     else -> SyncFailureReason.UNKNOWN
 }

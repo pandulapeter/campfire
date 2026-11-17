@@ -245,6 +245,7 @@
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
     <string name="error_no_data_hint">A könyvtárat nem sikerült beolvasni.</string>
     <string name="error_operation_failed">Hiba történt</string>
+    <string name="error_storage_full">Nincs elég szabad hely ezen az eszközön.</string>
     <string name="error_link_not_opened">Nem sikerült megnyitni: %1$s</string>
 
     <!-- Songs screen -->
@@ -1258,6 +1259,7 @@
     <string name="settings_sync_failed_storage">A könyvtárat nem sikerült olvasni vagy írni.</string>
     <string name="settings_sync_failed_unknown">A szinkronizálás nem fejeződött be.</string>
     <string name="settings_sync_failed_remote_full">A felhőmappa megtelt, így több fájl nem tölthető fel. Szabadíts fel helyet, majd szinkronizálj újra.</string>
+    <string name="settings_sync_failed_local_full">Ez az eszköz megtelt, így több fájl nem tölthető le. Szabadíts fel rajta helyet, majd szinkronizálj újra.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Egy fájlt nem sikerült szinkronizálni: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült szinkronizálni. Köztük: %2$s</item>

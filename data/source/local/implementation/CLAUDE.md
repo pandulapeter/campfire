@@ -47,6 +47,9 @@ Skipped or unreadable files are logged to the injected `Logger`.
   other `IOException`s; OPFS folds only `NotFoundError` into null, and drops an entry that vanishes between listing and
   stat (sync deletes while the live rescan lists).
 - Every `catch (Exception)` around a read rethrows `CancellationException` first.
+- **Out of space**: a write refused for room carries `OutOfSpaceException` (`:data:model`) as its cause, told by the
+  message on the JVM (`ENOSPC`, Windows' wording; `JvmOutOfSpace.kt`), Cocoa's or POSIX's error on iOS, and
+  `QuotaExceededError` on the web, so the app and sync say the device is full.
 - **Contract**: `FileStorageContractTest` (`commonTest`), run on the desktop over `JvmFileStorage`, on the iOS
   simulator over `FoundationFileStorage` (`iosSimulatorArm64Test`, CI's `compile-ios` job), and in headless Chrome over
   `OpfsFileStorage` under a folder of its own per test (`wasmJsBrowserTest`, filtered to that class, CI's `compile` job);

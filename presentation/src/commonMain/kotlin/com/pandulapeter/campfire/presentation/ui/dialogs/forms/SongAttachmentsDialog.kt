@@ -27,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -66,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.songInfo.attachmentIcon
 import com.pandulapeter.campfire.presentation.ui.songInfo.attachmentLabel
 import com.pandulapeter.campfire.presentation.ui.state.songText.SongAttachmentEditing
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -85,6 +88,8 @@ internal fun SongAttachmentsDialog(
     val fileSizes by songAttachmentEditing.fileSizes.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    var isSaving by remember { mutableStateOf(false) }
     HideKeyboardWhenScrolledDown(listState)
     LaunchedEffect(songAttachmentEditing, dialog.target) {
         songAttachmentEditing.picked.collect { picked ->
@@ -135,11 +140,18 @@ internal fun SongAttachmentsDialog(
         confirmButton = { close ->
             val attachmentsToSave = songAttachmentsToSave(draft = rows, offered = dialog.attachments)
             BottomSheetConfirmButton(
-                enabled = attachmentsToSave != null,
+                enabled = attachmentsToSave != null && !isSaving,
                 onClick = {
                     if (attachmentsToSave != null) {
-                        songAttachmentEditing.save(target = dialog.target, attachments = attachmentsToSave, offered = dialog.attachments)
-                        close()
+                        isSaving = true
+                        // Closed once written: a write that fails (a full disk) leaves the rows as they are, its message said.
+                        scope.launch {
+                            if (songAttachmentEditing.save(target = dialog.target, attachments = attachmentsToSave, offered = dialog.attachments).await()) {
+                                close()
+                            } else {
+                                isSaving = false
+                            }
+                        }
                     }
                 },
             ) { Text(stringResource(if (dialog.target is SongEditTarget.EditorDraft) Res.string.done else Res.string.save)) }

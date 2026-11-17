@@ -31,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
+import platform.Foundation.NSDataWritingAtomic
 import platform.Foundation.NSDate
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
@@ -147,8 +148,11 @@ internal class FoundationFileStorage(
         createDirectory(directory)
         val path = filePath(directory, name)
         // `atomically` writes to a neighbouring temporary file and swaps it in, so a failure never truncates the file.
-        if (!bytes.toNSData().writeToFile(path, atomically = true)) {
-            throw LibraryStorageException("Could not write \"$name\".")
+        memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            if (!bytes.toNSData().writeToFile(path, options = NSDataWritingAtomic, error = error.ptr)) {
+                throw LibraryStorageException("Could not write \"$name\": ${error.value?.localizedDescription}", error.value.asStorageCause())
+            }
         }
     }
 
@@ -181,7 +185,7 @@ internal class FoundationFileStorage(
         memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
             if (!fileManager.copyItemAtPath(source, toPath = temporary, error = error.ptr)) {
-                throw LibraryStorageException("Could not copy \"$fromName\": ${error.value?.localizedDescription}")
+                throw LibraryStorageException("Could not copy \"$fromName\": ${error.value?.localizedDescription}", error.value.asStorageCause())
             }
         }
         if (rename(temporary, target) != 0) {

@@ -275,6 +275,7 @@
     <string name="error_no_data">Nic se nepodařilo načíst</string>
     <string name="error_no_data_hint">Knihovnu nešlo přečíst.</string>
     <string name="error_operation_failed">Něco se pokazilo</string>
+    <string name="error_storage_full">V tomto zařízení není dostatek volného místa.</string>
     <string name="error_link_not_opened">Nepodařilo se otevřít %1$s</string>
 
     <!-- Songs screen -->
@@ -1300,6 +1301,7 @@
     <string name="settings_sync_failed_storage">Knihovnu se nepodařilo načíst nebo zapsat.</string>
     <string name="settings_sync_failed_unknown">Synchronizace se nedokončila.</string>
     <string name="settings_sync_failed_remote_full">Složka v cloudu je plná, takže už nejde nic nahrát. Uvolni v ní místo a synchronizuj znovu.</string>
+    <string name="settings_sync_failed_local_full">Toto zařízení je plné, takže už nejde nic stáhnout. Uvolni v něm místo a synchronizuj znovu.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Jeden soubor se nepodařilo synchronizovat: %2$s</item>
         <item quantity="few">%1$d soubory se nepodařilo synchronizovat. Mezi nimi: %2$s</item>

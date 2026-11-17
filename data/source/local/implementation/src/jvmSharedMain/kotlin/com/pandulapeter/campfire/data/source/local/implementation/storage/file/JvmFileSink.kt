@@ -52,7 +52,7 @@ internal class JvmFileSink(
     private inline fun <T> failingAsStorage(operation: () -> T): T = try {
         operation()
     } catch (exception: IOException) {
-        throw LibraryStorageException("Could not write \"$name\".", exception)
+        throw LibraryStorageException("Could not write \"$name\".", exception.asStorageCause())
     }
 
     private companion object {

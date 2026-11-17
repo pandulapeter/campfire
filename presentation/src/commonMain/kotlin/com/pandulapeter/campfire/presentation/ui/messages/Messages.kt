@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.presentation.localization.joinIsolated
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
+import com.pandulapeter.campfire.presentation.resources.error_storage_full
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.export_library_saved
 import com.pandulapeter.campfire.presentation.resources.export_log_saved
@@ -207,6 +208,7 @@ private fun messageText(current: Message?): String? =
             }
         )
         Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
+        Message.StorageFull -> stringResource(Res.string.error_storage_full)
         is Message.ImageNotAdded -> stringResource(
             when (current.reason) {
                 ImageRefusal.TOO_LARGE -> Res.string.song_image_refused_too_large

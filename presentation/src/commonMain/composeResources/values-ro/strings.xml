@@ -279,6 +279,7 @@
     <string name="error_no_data">Nu s-a putut încărca nimic</string>
     <string name="error_no_data_hint">Biblioteca nu a putut fi citită.</string>
     <string name="error_operation_failed">Ceva nu a mers bine</string>
+    <string name="error_storage_full">Nu există suficient spațiu liber pe acest dispozitiv.</string>
     <string name="error_link_not_opened">Nu s-a putut deschide %1$s</string>
 
     <!-- Songs screen -->
@@ -1308,6 +1309,7 @@
     <string name="settings_sync_failed_storage">Biblioteca nu a putut fi citită sau scrisă.</string>
     <string name="settings_sync_failed_unknown">Sincronizarea nu s-a încheiat.</string>
     <string name="settings_sync_failed_remote_full">Dosarul din cloud este plin, așa că nu se mai poate încărca nimic. Eliberează spațiu acolo și sincronizează din nou.</string>
+    <string name="settings_sync_failed_local_full">Acest dispozitiv este plin, așa că nu se mai poate descărca nimic. Eliberează spațiu pe el și sincronizează din nou.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Un fișier nu a putut fi sincronizat: %2$s</item>
         <item quantity="few">%1$d fișiere nu au putut fi sincronizate. Printre ele: %2$s</item>

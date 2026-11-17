@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_files_fail
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preferences_failed
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_authorization
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_network
+import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_local_full
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_remote_full
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
@@ -243,6 +244,7 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
                 SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_failed_authorization
                 SyncFailureReason.STORAGE -> Res.string.settings_sync_failed_storage
                 SyncFailureReason.REMOTE_STORAGE_FULL -> Res.string.settings_sync_failed_remote_full
+                SyncFailureReason.LOCAL_STORAGE_FULL -> Res.string.settings_sync_failed_local_full
                 SyncFailureReason.UNKNOWN -> Res.string.settings_sync_failed_unknown
             }
         )

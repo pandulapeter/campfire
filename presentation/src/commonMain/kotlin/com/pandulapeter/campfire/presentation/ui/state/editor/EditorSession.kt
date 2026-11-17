@@ -408,7 +408,7 @@ internal class EditorSession(
         throw exception
     } catch (exception: Exception) {
         println("Could not save the song \"$fileName\": ${exception.message}")
-        messageSink.sendMessage(Message.SaveFailed)
+        messageSink.sendFailure(exception, Message.SaveFailed)
         false
     } finally {
         _isSavingSong.update { false }

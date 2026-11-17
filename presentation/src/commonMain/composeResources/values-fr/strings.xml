@@ -248,6 +248,7 @@
     <string name="error_no_data">Impossible de charger quoi que ce soit</string>
     <string name="error_no_data_hint">La bibliothèque n\'a pas pu être lue.</string>
     <string name="error_operation_failed">Un problème est survenu</string>
+    <string name="error_storage_full">Il n\'y a pas assez d\'espace libre sur cet appareil.</string>
     <string name="error_link_not_opened">Impossible d\'ouvrir %1$s</string>
 
     <!-- Songs screen -->
@@ -1264,6 +1265,7 @@
     <string name="settings_sync_failed_storage">Impossible de lire ou d\'écrire la bibliothèque.</string>
     <string name="settings_sync_failed_unknown">La synchronisation n\'est pas allée jusqu\'au bout.</string>
     <string name="settings_sync_failed_remote_full">Le dossier cloud est plein : plus rien ne peut y être envoyé. Libère de l\'espace et synchronise à nouveau.</string>
+    <string name="settings_sync_failed_local_full">Cet appareil est plein : plus rien ne peut y être téléchargé. Libère de l\'espace et synchronise à nouveau.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Un fichier n\'a pas pu être synchronisé : %2$s</item>
         <item quantity="other">%1$d fichiers n\'ont pas pu être synchronisés, dont : %2$s</item>

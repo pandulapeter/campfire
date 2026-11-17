@@ -278,6 +278,7 @@
     <string name="error_no_data">לא ניתן היה לטעון דבר</string>
     <string name="error_no_data_hint">לא ניתן היה לקרוא את הספרייה.</string>
     <string name="error_operation_failed">משהו השתבש</string>
+    <string name="error_storage_full">אין מספיק שטח פנוי במכשיר הזה.</string>
     <string name="error_link_not_opened">לא ניתן היה לפתוח את %1$s</string>
 
     <!-- Songs screen -->
@@ -1305,6 +1306,7 @@
     <string name="settings_sync_failed_storage">לא ניתן היה לקרוא או לכתוב את הספרייה.</string>
     <string name="settings_sync_failed_unknown">הסנכרון לא הושלם.</string>
     <string name="settings_sync_failed_remote_full">תיקיית הענן מלאה, ולכן אי אפשר להעלות אליה עוד. פנו בה מקום וסנכרנו שוב.</string>
+    <string name="settings_sync_failed_local_full">המכשיר הזה מלא, ולכן אי אפשר להוריד אליו עוד. פנו בו מקום וסנכרנו שוב.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">קובץ אחד לא סונכרן: %2$s</item>
         <item quantity="two">שני קבצים לא סונכרנו. ביניהם: %2$s</item>

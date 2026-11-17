@@ -280,7 +280,7 @@ internal class OpfsFileStorage(private val rootSegments: List<String>) : FileSto
     } catch (exception: LibraryStorageException) {
         throw exception
     } catch (exception: Throwable) {
-        throw LibraryStorageException("Could not access \"$name\".", exception)
+        throw LibraryStorageException("Could not access \"$name\".", exception.asStorageCause())
     }
 
     private val StorageDirectory.displayName get() = (rootSegments + pathSegments).joinToString("/")

@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.OutOfSpaceException
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import platform.posix.ENOSPC
 import platform.posix.FILE
 import platform.posix.errno
 import platform.posix.fclose
@@ -65,5 +67,7 @@ internal class PosixFileSink(
         Unit
     }
 
-    private fun failure() = LibraryStorageException("Could not write \"$name\": ${strerror(errno)?.toKString()}")
+    private fun failure() = errno.let { code ->
+        LibraryStorageException("Could not write \"$name\": ${strerror(code)?.toKString()}", if (code == ENOSPC) OutOfSpaceException() else null)
+    }
 }

@@ -149,6 +149,9 @@ sealed interface Message {
     /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
     data object OperationFailed : Message
 
+    /** A write refused because the device has no room left, said instead of the failure it would otherwise be. */
+    data object StorageFull : Message
+
     /** The tags or the languages of the selection, written into [count] songs. */
     data class SongsUpdated(val count: Int) : Message
 

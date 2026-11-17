@@ -56,7 +56,7 @@ internal class OpfsFileSink(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Throwable) {
-        throw LibraryStorageException("Could not write \"$name\".", exception)
+        throw LibraryStorageException("Could not write \"$name\".", exception.asStorageCause())
     }
 }
 

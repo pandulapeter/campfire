@@ -52,7 +52,8 @@ internal val SyncFailureReason.connectionFailedMessage
     get() = when (this) {
         SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
         SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
-        SyncFailureReason.STORAGE -> Res.string.settings_sync_connection_failed_storage
+        SyncFailureReason.STORAGE,
+        SyncFailureReason.LOCAL_STORAGE_FULL -> Res.string.settings_sync_connection_failed_storage
         SyncFailureReason.REMOTE_STORAGE_FULL,
         SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
     }

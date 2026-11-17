@@ -523,6 +523,9 @@ of the decisions; a mock-engine test stalls a body and sees that limit end it wi
 
 ### 13. Progress, Cancel, and the new failures in the UI
 
+`OutOfSpaceException` and `Throwable.isOutOfSpace()` (`:data:model`, from the fixes plan's M7) are the predicate `NO_SPACE`
+reuses: every platform's storage sets it as the cause of a write refused for space.
+
 `ImportProgress` bytes, `RECEIVING`, the Loading stage's byte text (`ImportProgressContent`, tested), `WorkProgressBar`
 filling for those phases (`workProgress`, tested), `ImportFailure.NO_SPACE` and `TOO_LARGE` naming 16 GB in every
 language (`values`, `-hu`, `-ro`, `-de`, `-es`, `-fr`, `-it`, `-he`, `-pt`, `-pl`, `-cs`), with plurals where counted.

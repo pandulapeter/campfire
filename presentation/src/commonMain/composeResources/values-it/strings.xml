@@ -245,6 +245,7 @@
     <string name="error_no_data">Impossibile caricare i dati</string>
     <string name="error_no_data_hint">Non è stato possibile leggere la libreria.</string>
     <string name="error_operation_failed">Si è verificato un errore</string>
+    <string name="error_storage_full">Non c\'è abbastanza spazio libero su questo dispositivo.</string>
     <string name="error_link_not_opened">Impossibile aprire %1$s</string>
 
     <!-- Songs screen -->
@@ -1259,6 +1260,7 @@
     <string name="settings_sync_failed_storage">Impossibile leggere o scrivere la libreria.</string>
     <string name="settings_sync_failed_unknown">La sincronizzazione non è stata completata.</string>
     <string name="settings_sync_failed_remote_full">La cartella cloud è piena, quindi non si può caricare altro. Libera un po\' di spazio e sincronizza di nuovo.</string>
+    <string name="settings_sync_failed_local_full">Questo dispositivo è pieno, quindi non si può scaricare altro. Libera un po\' di spazio e sincronizza di nuovo.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Impossibile sincronizzare un file: %2$s</item>
         <item quantity="other">Impossibile sincronizzare %1$d file, tra cui: %2$s</item>

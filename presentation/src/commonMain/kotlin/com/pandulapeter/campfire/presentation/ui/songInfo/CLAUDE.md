@@ -32,7 +32,8 @@ The About the song body, shared by its sheet and the editor's preview card.
 - The Attachments sheet (`SongAttachmentsDialog`) is the links' sheet's twin: Add file in the header
   (`SongAttachmentEditing.pick`, kept on the draft shelf, arriving through `picked` for the sheet of its target), a name
   field and Remove per row, keyed by file, Save writing once (`SaveSongAttachmentsUseCase` for a file, the draft's text
-  over the editor), the close button cancelling; attachments synced in while it was open are kept.
+  over the editor), the close button cancelling; attachments synced in while it was open are kept. It closes once the
+  write is done: one that fails (a full disk) leaves it open with its rows and picks, the failure said over it.
 - Song details: the duration's digits fill from the right like a timer (`428` is `4:28`, since a number pad has no
   colon), at most `99:59:59`; a duration it cannot read is left alone on Save. Opens unfocused. **Writes only the fields
   changed**, so a field synced in meanwhile survives. A blank field removes the directive. A new title or artist is not

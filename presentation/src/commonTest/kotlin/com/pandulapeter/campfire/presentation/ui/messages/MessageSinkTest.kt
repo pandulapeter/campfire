@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.messages
 
+import com.pandulapeter.campfire.data.model.OutOfSpaceException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,5 +38,12 @@ class MessageSinkTest {
         val sink = MessageSink(this)
         sink.launchLibraryChange("test") { throw IllegalStateException("The disk is full.") }.join()
         assertEquals(listOf<Message>(Message.OperationFailed), sink.messageQueue.value.map { it.value })
+    }
+
+    @Test
+    fun `a library change refused for space says the device is full`() = runTest {
+        val sink = MessageSink(this)
+        sink.launchLibraryChange("test") { throw IllegalStateException("Could not write.", OutOfSpaceException()) }.join()
+        assertEquals(listOf<Message>(Message.StorageFull), sink.messageQueue.value.map { it.value })
     }
 }

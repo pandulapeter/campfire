@@ -24,6 +24,8 @@ import com.pandulapeter.campfire.presentation.ui.messages.MessageSink
 import com.pandulapeter.campfire.presentation.ui.pictures.AttachmentIntake
 import com.pandulapeter.campfire.presentation.ui.pictures.PictureWork
 import com.pandulapeter.campfire.presentation.ui.platform.FileOpener
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -113,14 +115,17 @@ internal class SongAttachmentEditing(
      * Makes [attachments] the song's, from the Attachments sheet, keeping the ones synced in while it was open that it
      * never offered ([offered] being what it opened with), as links are kept. Over the editor the draft's text changes,
      * which Save moves its files in with; otherwise the files picked meanwhile are moved into the library and the file
-     * written in one step (`SaveSongAttachmentsUseCase`), under the store's write lock.
+     * written in one step (`SaveSongAttachmentsUseCase`), under the store's write lock. Answers whether the song now has
+     * them, which the sheet waits for before it closes: a write that fails (a full disk) keeps its rows and its picks.
      */
-    fun save(target: SongEditTarget, attachments: List<ChordProAttachment>, offered: List<ChordProAttachment>) {
+    fun save(target: SongEditTarget, attachments: List<ChordProAttachment>, offered: List<ChordProAttachment>): Deferred<Boolean> {
         val offeredSources = offered.mapTo(mutableSetOf()) { it.source }
         fun withAddedElsewhere(text: String) = attachments + ChordProParser.parseMetadata(text).attachments.filterNot { it.source in offeredSources }
+        val isSaved = CompletableDeferred<Boolean>()
         when (target) {
-            is SongEditTarget.EditorDraft -> songMetadataEditing.editSong(target) { text ->
-                ChordProAttachments.setAttachments(text = text, attachments = withAddedElsewhere(text))
+            is SongEditTarget.EditorDraft -> {
+                songMetadataEditing.editSong(target) { text -> ChordProAttachments.setAttachments(text = text, attachments = withAddedElsewhere(text)) }
+                isSaved.complete(true)
             }
             is SongEditTarget.File -> {
                 // Counted before the sheet closes, so that its picks stay held until the files are moved into the library.
@@ -128,18 +133,22 @@ internal class SongAttachmentEditing(
                 messageSink.launchLibraryChange("set a song's attachments") {
                     try {
                         // Tracked, since moving a large file into the library takes a while: the work bar says so.
-                        work.track {
-                            songTextStore.writeAttachments(target.fileName) { text ->
-                                saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
-                            }
-                        }
+                        isSaved.complete(
+                            work.track {
+                                songTextStore.writeAttachments(target.fileName) { text ->
+                                    saveSongAttachments(fileName = target.fileName, expectedText = text, attachments = withAddedElsewhere(text))
+                                }
+                            },
+                        )
                     } finally {
+                        isSaved.complete(false)
                         savesUnderway--
                         reportHeldPicks()
                     }
                 }
             }
         }
+        return isSaved
     }
 
     private suspend fun reportHeldPicks() {

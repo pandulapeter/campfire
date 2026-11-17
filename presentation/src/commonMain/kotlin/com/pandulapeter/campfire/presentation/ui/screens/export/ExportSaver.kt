@@ -59,7 +59,7 @@ internal class ExportSaver(
         } catch (exception: Exception) {
             made?.let { discardExportedFile(it) }
             println("Could not export: ${exception.message}")
-            messageSink.sendMessage(Message.ExportFailed)
+            messageSink.sendFailure(exception, Message.ExportFailed)
         }
     }
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.messages
 
+import com.pandulapeter.campfire.data.model.isOutOfSpace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,9 @@ internal class MessageSink(
         _messageQueue.update { it + indexedMessage }
     }
 
+    /** [fallback] for a write that failed with [exception], unless the device ran out of room, which is said instead. */
+    fun sendFailure(exception: Throwable, fallback: Message) = sendMessage(if (exception.isOutOfSpace()) Message.StorageFull else fallback)
+
     /** Called by the snackbar host once [message] has been on screen for its whole duration, or dismissed. */
     fun onMessageShown(message: IndexedValue<Message>) = _messageQueue.update { queue -> queue.filterNot { it.index == message.index } }
 
@@ -56,7 +60,7 @@ internal class MessageSink(
             throw exception
         } catch (exception: Exception) {
             println("The change could not be written ($action): ${exception.message}")
-            sendMessage(Message.OperationFailed)
+            sendFailure(exception, Message.OperationFailed)
         }
     }
 }

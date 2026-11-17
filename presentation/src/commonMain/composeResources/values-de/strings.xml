@@ -245,6 +245,7 @@
     <string name="error_no_data">Es konnte nichts geladen werden</string>
     <string name="error_no_data_hint">Die Bibliothek konnte nicht gelesen werden.</string>
     <string name="error_operation_failed">Etwas ist schiefgelaufen</string>
+    <string name="error_storage_full">Auf diesem Gerät ist nicht genügend freier Speicherplatz.</string>
     <string name="error_link_not_opened">%1$s konnte nicht geöffnet werden</string>
 
     <!-- Songs screen -->
@@ -1259,6 +1260,7 @@
     <string name="settings_sync_failed_storage">Die Bibliothek konnte nicht gelesen oder geschrieben werden.</string>
     <string name="settings_sync_failed_unknown">Die Synchronisierung wurde nicht abgeschlossen.</string>
     <string name="settings_sync_failed_remote_full">Der Cloud-Ordner ist voll, daher kann nichts mehr hochgeladen werden. Schaffe dort etwas Platz und synchronisiere erneut.</string>
+    <string name="settings_sync_failed_local_full">Dieses Gerät ist voll, daher kann nichts mehr heruntergeladen werden. Schaffe darauf etwas Platz und synchronisiere erneut.</string>
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Eine Datei konnte nicht synchronisiert werden: %2$s</item>
         <item quantity="other">%1$d Dateien konnten nicht synchronisiert werden, darunter: %2$s</item>
