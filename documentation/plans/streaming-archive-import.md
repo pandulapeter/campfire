@@ -285,6 +285,8 @@ Safety: sync's fingerprints and content names are unchanged (existing sync tests
 
 ### 2. `ZipSource` and the reader over it
 
+**Landed** (37fe8217c): `ZipReader.open(source, maxCentralDirectorySize, maxEntries)`, `ZipDirectory.walk(…, sinkOf)`; the caps are parameters so step 8 passes what remains of a request's budget. A source's read failure ends the walk as a storage failure (`ZipException` is internal).
+
 - `zip/ZipSource.kt` and `ByteArrayZipSource`; `ZipReader.open(source): ZipDirectory` and a `suspend` walk with the same
   `EntryPolicy` / `sniffedLimitOf` callbacks, reading entries through `EntrySink`s (`ByteArrayEntrySink` for texts).
   The old `ZipReader.read(ByteArray)` is left exactly as it is.
@@ -389,6 +391,8 @@ back by every ZIP64 reader the tests can reach.
 
 ### 5. The streaming inflater
 
+**Landed** (b7ffaff9d), before step 2, whose walk inflates through it.
+
 The second `Inflater` entry point described in the decisions, writing to an `EntrySink` with CRC-32 and SHA-256 updated
 per chunk, yielding every 256 KiB. Tests: random and real-world streams (every fixture, `Deflater`'s output, stored
 blocks, dynamic and fixed blocks, distances of 32,768, a stream ending exactly on a buffer boundary) inflate to the
@@ -424,6 +428,8 @@ its contract test has a folder of its own per test.
 Safety: the library's directories behave exactly as before (the existing contract tests pass untouched).
 
 ### 7. The staging sink and the session
+
+**Landed** (e190478f8, ea839387a): an unpacked file is written as `<session>-<request>-<n>.part` and renamed to its hash on finish (on the web a rename rewrites the file, one extra copy of at most 50 MB); a received archive is not hashed (`StagedFile.sha256Hex` is nullable); `MIN_FREE_SPACE` is `ImportLimits.minFreeSpaceFor(needed, isQuota)`.
 
 `local/commonMain/.../staging/ImportStaging`: names (`<session>-<request>-<n>.zip` for a received archive,
 `<session>-<request>-<sha256>.<ext>` for an unpacked file), a sink that writes, hashes, and counts against a budget and
@@ -509,7 +515,7 @@ against the corpus again before the release.
 ### 12. Downloads into staging
 
 `ImportDownloadRemoteSource.download` with a sink and a byte progress callback; `ImportDownloadRepositoryImpl` stages
-into `imports/`; `SharedLinkDownload` and `ImportController.prepare` carry a `StagedFile`, so Try again reads the same
+into `imports/`; `SharedLinkDownload` and `ImportWork.prepare` carry a `StagedFile`, so Try again reads the same
 staged copy again. Tests (`:data:source:remote:implementation` desktop, with Ktor's mock engine): a body streamed in
 chunks, cut short, larger than announced, larger than the cap, cancelled midway, each leaving no staged file. On the web,
 check that Ktor's wasmJs engine reads the body as a stream (`body.getReader()`); where it buffers, the download is a
@@ -531,6 +537,8 @@ staged unpack, Cancel mid-unpack returning to where the user was with `imports/`
 again, and every existing import UI test passing unchanged.
 
 ### 14. Leaving the app never loses an import: a foreground service and its equivalents
+
+**First commit landed** (28ce45130): the holder is `ui/state/importing/ImportWork` over an `ApplicationScope`, with `state` (`ImportWorkState`) and `cancel()`; it runs the launch's staging cleanup once per process. The platform parts below remain.
 
 Every import that downloads (a shared link) or unpacks an archive keeps the app working while that work runs, on every
 platform, the way a sync run already does, so leaving the app never loses an import halfway, whatever its size. Today's
