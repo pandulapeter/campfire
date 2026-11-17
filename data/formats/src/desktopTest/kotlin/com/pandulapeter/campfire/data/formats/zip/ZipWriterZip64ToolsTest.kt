@@ -62,6 +62,10 @@ internal class ZipWriterZip64ToolsTest {
     @Test
     fun `info-zip's unzip tests the writer's ZIP64 archives as sound`() {
         assumeTrue("unzip is not installed.", isInstalled("unzip", "-v"))
+        // Git for Windows' unzip decodes a local header's UTF-8 name in the console's code page while it decodes the
+        // central one as UTF-8, and counts the mismatch as an error in any archive with a name outside ASCII, ZIP64 or
+        // not, so it cannot judge these archives; Python and Java still read them on Windows.
+        assumeTrue("Windows' unzip misreads UTF-8 names.", !System.getProperty("os.name").startsWith("Windows"))
 
         archives.forEach { archive ->
             val (exitCode, output) = run(archive, "unzip", "-t")
