@@ -78,7 +78,13 @@ internal class FakeImageLocalSource : ImageLocalSource {
 
     override suspend fun listImageNames(shelf: ImageShelf) = shelves.getValue(shelf).keys.filter(LibraryFiles::isLibraryFileName)
 
-    override suspend fun listImageSizes(shelf: ImageShelf) = listImageNames(shelf).associateWith { shelves.getValue(shelf).getValue(it).size.toLong() }
+    /** How often the library shelf's sizes were listed: a listing stats every file of the folder. */
+    var librarySizeListings = 0
+
+    override suspend fun listImageSizes(shelf: ImageShelf): Map<String, Long> {
+        if (shelf == ImageShelf.LIBRARY) librarySizeListings++
+        return listImageNames(shelf).associateWith { shelves.getValue(shelf).getValue(it).size.toLong() }
+    }
 
     override suspend fun deleteImage(shelf: ImageShelf, name: String) {
         shelves.getValue(shelf).remove(name)

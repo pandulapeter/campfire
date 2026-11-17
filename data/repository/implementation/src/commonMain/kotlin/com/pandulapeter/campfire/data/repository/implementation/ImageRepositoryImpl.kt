@@ -98,7 +98,15 @@ internal class ImageRepositoryImpl(
                 if (draftNames != null) tidyDraftShelf(keep = draftNames + editorImages + pickedAttachments)
             }
             launch { songRepository.songs.filterIsInstance<DataState.Idle<*>>().collect { pruneRequests.send(Unit) } }
-            launch { changes.collectLatest { _librarySizes.value = listLibrarySizes() } }
+            launch {
+                changes.collectLatest {
+                    // An import stores thousands of files inside one kept block, each a change, and a listing stats every
+                    // file of the folder (opens it, on the web) without stopping for a newer change: the sizes are listed
+                    // once the block lets go, not over and over behind the import.
+                    keeping.withLock { }
+                    _librarySizes.value = listLibrarySizes()
+                }
+            }
             for (request in pruneRequests) prune()
         }
     }

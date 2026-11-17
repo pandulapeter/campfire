@@ -174,6 +174,25 @@ class ImageRepositoryImplTest {
     }
 
     @Test
+    fun `the library's sizes are listed once a kept block lets go rather than for every file stored in it`() = runTest {
+        val repository = repository()
+        runCurrent()
+        val listings = local.librarySizeListings
+
+        repository.withImagesKept { writer ->
+            val names = List(FILES_IN_ONE_BLOCK) { index ->
+                assertAccepted(writer.addImage(png(width = 20 + index, height = 20))).also { runCurrent() }
+            }
+            publish(song("a.cho", *names.toTypedArray()))
+            assertEquals(listings, local.librarySizeListings, "Listings while the block holds")
+        }
+        runCurrent()
+
+        assertEquals(listings + 1, local.librarySizeListings)
+        assertEquals(FILES_IN_ONE_BLOCK, repository.librarySizes.value?.fileSizes?.size)
+    }
+
+    @Test
     fun `a file only an attachment names is kept by the pruning and counted as an attachment`() = runTest {
         val repository = repository()
         val attached = assertAccepted(repository.withImagesKept { it.addAttachment(DOCUMENT, "PDF") })
@@ -505,6 +524,7 @@ class ImageRepositoryImplTest {
     private companion object {
 
         val PHOTO = png(width = 40, height = 30)
+        const val FILES_IN_ONE_BLOCK = 5
         val OTHER = png(width = 10, height = 10)
         val NAME = Sha256.hashToHex(PHOTO).take(16) + ".png"
         val DOCUMENT = "%PDF-1.7 a sheet of music".encodeToByteArray()
