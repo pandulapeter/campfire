@@ -362,6 +362,9 @@ internal class FakeSyncProvider(
     /** Runs before a shared copy's upload answers, which is where a test lets another device upload it first. */
     var onUploadSharedFile: suspend (String) -> Unit = {}
 
+    /** Told of every shared copy an upload wrote. */
+    var onSharedFileWritten: (String) -> Unit = {}
+
     override suspend fun uploadSharedFile(
         shareId: String,
         bytes: ByteArray,
@@ -373,6 +376,7 @@ internal class FakeSyncProvider(
         recordHistory()
         val revision = "r${nextRevision++}"
         sharedFiles[shareId] = bytes to revision
+        onSharedFileWritten(shareId)
         return RemoteWriteResult.Written(revision)
     }
 

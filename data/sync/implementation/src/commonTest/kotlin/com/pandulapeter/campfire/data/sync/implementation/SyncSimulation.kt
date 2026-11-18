@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.sync.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.source.remote.api.sync.SyncNetworkException
 import com.pandulapeter.campfire.data.sync.implementation.run.DeletionGuard
 import com.pandulapeter.campfire.data.sync.implementation.run.SyncEngine
+import com.pandulapeter.campfire.data.sync.implementation.shared.registry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -41,7 +42,8 @@ import kotlin.time.Instant
  * step checks what sync promises at all times, and the end lets every device sync until nothing moves and checks that
  * they all hold one library. Odd seeds stand a service with exact names in for Dropbox. Each device's file system
  * compares names as one of the platforms' does ([PLATFORMS]), so one library meets case-sensitive and case-insensitive,
- * composing and decomposing devices at once. Items are shared too, and the shared links checked ([SimulatedSharing]);
+ * composing and decomposing devices at once. Items are shared and stopped too, setlists naming songs of the pool, and
+ * the shared links checked ([SimulatedSharing]);
  * a device may disconnect and connect again, meeting the folder with no index. A run's first listing may be partial or
  * stale, as a service's with a paging bug or an eventually consistent one may be, and a batch deletion may be seen in
  * pieces. Songs show pictures and attach files, a device's editor may hold unsaved text naming some, a writer outside
@@ -76,7 +78,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     /** The files each device's editor named when its unsaved text last changed and the device held them. */
     private val drafts = mutableMapOf<Device, Set<SyncKey>>()
     private val log = mutableListOf<String>()
-    private val sharing = SimulatedSharing(cloud)
+    private val sharing = SimulatedSharing(cloud, random)
 
     /** Every version a user saved that no user has replaced or deleted since: what sync must never lose. */
     private val saved = mutableSetOf<String>()
@@ -92,6 +94,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private var running: Job? = null
     private var runningDevice: Device? = null
     private val lostLibraries = mutableSetOf<Device>()
+
+    /** The devices whose runs are under way, one inside another's where a fault started it. */
+    private val syncing = mutableSetOf<Device>()
+
+    /** The devices a stop is under way on. */
+    private val stopping = mutableSetOf<Device>()
 
     /**
      * The files no promise of sync's covers any more, until a save stores one again: those that went with a lost library
@@ -132,7 +140,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         }
         // The run's last step, bringing the shared copies and the list up to date, fails and is stopped like the rest.
         cloud.onUploadDocument = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
-        cloud.onUploadSharedFile = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
+        cloud.onUploadSharedFile = {
+            dueFault(canRunElsewhere = false)?.let { strike(it, key = null) }
+            // A stop on another device while this run's step uploads a copy it read the list for before the stop.
+            if (actor?.isSettlingSharedCopies == true && random.nextInt(4) == 0) stopElsewhere()
+        }
+        cloud.onSharedFileWritten = { shareId -> sharing.onCopyWritten(shareId, actor) }
         cloud.onDeleteSharedFile = { dueFault(canRunElsewhere = false)?.let { strike(it, key = null) } }
     }
 
@@ -144,7 +157,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 val roll = random.nextInt(100)
                 when {
                     roll == 0 -> loseLibrary(device)
-                    roll == 1 -> device.reconnect().also { log += "${device.label} disconnects and connects again" }
+                    roll == 1 -> reconnect(device, "disconnects and connects again")
                     roll == 2 -> damageFolderFile()
                     roll < 50 -> userStep(device)
                     else -> syncStep(scope, device)
@@ -154,6 +167,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             log += "-- every device syncs until nothing moves"
             settle(scope)
             checkSettled()
+            if (random.nextBoolean()) stopEverythingSettled()
         } catch (throwable: Throwable) {
             throw AssertionError("Seed $seed: ${throwable.message}\n${describeWorld()}", throwable)
         }
@@ -167,10 +181,15 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         val files = device.library.files
         // Pictures are added and deleted only with the songs naming them: a save stores them, [prune] deletes them.
         val existing = files.keys.filter { it.kind.isDocument }.sortedBy { it.path }
+        // Never a sharing action from inside the device's own shared-copy step, which a save during the run may come
+        // from: the app's actions wait for that step, which here would wait for them.
+        val canShare = !device.isSettlingSharedCopies && device !in stopping
         when {
-            existing.isNotEmpty() && random.nextInt(8) == 0 -> existing.random(random).let { key ->
+            canShare && existing.isNotEmpty() && random.nextInt(8) == 0 -> existing.random(random).let { key ->
                 log += "${device.label} shares ${key.name}: ${sharing.share(device, key)}"
             }
+
+            canShare && random.nextInt(14) == 0 -> stop(device)
 
             random.nextInt(12) == 0 -> editDraft(device)
             random.nextInt(6) == 0 -> prune(device)
@@ -204,6 +223,36 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         log += "${device.label} loses its library folder"
     }
 
+    /** Stop sharing for one share, or now and then Stop sharing everything, and a disconnect while a stop is still noted. */
+    private suspend fun stop(device: Device) {
+        stopping += device
+        log += "${device.label} " + try {
+            if (random.nextInt(6) == 0) sharing.stopEverything(device) else sharing.stop(device)
+        } finally {
+            stopping -= device
+        }
+        if (sharing.hasPendingStops(device) && random.nextBoolean()) {
+            reconnect(device, "disconnects with a stop still noted, and connects again")
+        }
+    }
+
+    /**
+     * Disconnecting [device] and connecting the same account again, which forgets the index, the mirror, and the journal,
+     * a stop still noted there included, whose entry then stays in the list (an accepted edge, which the Disconnect
+     * confirmation names).
+     */
+    private suspend fun reconnect(device: Device, described: String) {
+        device.reconnect()
+        log += "${device.label} $described"
+    }
+
+    /** A stop on a device other than the one whose step is uploading a copy, which waits for it, and not stopping already. */
+    private suspend fun stopElsewhere() {
+        val other = devices.filter { it !== actor && it !in stopping && !it.isSettlingSharedCopies }.randomOrNull(random) ?: return
+        log += "  meanwhile:"
+        stop(other)
+    }
+
     /**
      * A name from the pool, or the file already holding it under another spelling, which a save then edits. A new file
      * may take another spelling than the folder's, also while the device's own run is going.
@@ -226,8 +275,10 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             if (file.key !in device.library.files) device.library.put(file.key, file.bytes)
             lostOutsideSync -= file.key.name
         }
+        // A setlist names songs of the pool, in any spelling, which its shared copy then holds where the library does.
+        val songs = if (key.kind == LibraryFileKind.SETLIST) SONG_NAMES.shuffled(random).take(random.nextInt(4)) else emptyList()
         val version = "v${++versions} by ${device.label}" + shown.joinToString("") { "\n{image: src=${it.key.name}}" } +
-            attached.joinToString("") { "\n{meta: attachment ${it.key.name} Rehearsal take.pdf}" }
+            attached.joinToString("") { "\n{meta: attachment ${it.key.name} Rehearsal take.pdf}" } + songs.joinToString("") { "\n$it" }
         device.library.put(key, version.encodeToByteArray())?.let { saved -= it.decodeToString() }
         // A save during the device's own run may come before the run lists the library, which then lists something.
         deletedByRun[device]?.listsAnything = true
@@ -292,6 +343,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     private suspend fun delete(device: Device, key: SyncKey) {
         device.library.remove(key)?.let { saved -= it.decodeToString() }
+        // A deletion during the device's own run is of a file the run may have brought down, after a pass that listed
+        // nothing: the next pass lists the rest, and may delete this one from the folder as the user asked.
+        deletedByRun[device]?.listsAnything = true
         log += "${device.label} deletes ${key.name}"
         sharing.noteDeletion(device, key)
     }
@@ -339,6 +393,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private suspend fun runOn(scope: TestScope, device: Device, policy: SyncDeletionPolicy, described: String = ""): Attempt {
         log += "${device.label} syncs, $policy$described"
         var attempt: Attempt = Attempt.Stopped
+        var violation: AssertionError? = null
         startCounting(device, policy)
         val job = scope.launch {
             attempt = try {
@@ -349,11 +404,17 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
                 Attempt.Failed(exception.message.orEmpty())
             } catch (_: ProcessKilled) {
                 Attempt.Killed
+            } catch (error: AssertionError) {
+                // A check that failed inside the run, which the run's job would otherwise take past this simulation.
+                violation = error
+                Attempt.Stopped
             }
         }
         running = job
         runningDevice = device
         job.join()
+        syncing -= device
+        violation?.let { throw it }
         running = null
         runningDevice = null
         actor = null
@@ -362,6 +423,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             attempt = Attempt.Killed
         }
         if (attempt == Attempt.Killed) device.killed(random)
+        sharing.onRunEnded(device, isClean = attempt.isClean(device))
         fault = null
         device.library.onRead = {}
         device.library.onWrite = {}
@@ -383,8 +445,10 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     /** A user step and a run on another device while a request of the running device's waits. */
     private suspend fun runElsewhere() {
-        // Never the device whose run this is: a device runs one sync at a time.
-        val other = devices.filter { it !== runningDevice }.random(random)
+        // Never a device whose run is under way, this one's or one that started this one: a device runs one sync at a
+        // time. Nor one in the middle of a stop, whose listing this may be: its run's step would wait for the stop, which
+        // here waits for the run.
+        val other = devices.filter { it !in syncing && it !in stopping }.randomOrNull(random) ?: return
         userStep(other)
         // The names a share takes on the way, since two of these may come within one step: a rename, then a deletion.
         sharing.observe()
@@ -399,8 +463,10 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             Attempt.Failed(exception.message.orEmpty())
         } finally {
             actor = outer
+            syncing -= other
         }
         log += "  meanwhile ${other.label}'s run ${attempt.described()}"
+        sharing.onRunEnded(other, isClean = attempt.isClean(other))
         seenWrites[other] = cloud.writes
         checkGuard(other)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= other
@@ -416,6 +482,8 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             policy = policy,
         )
         actor = device
+        syncing += device
+        sharing.onRunStarted(device, mayListStale = cloud.listingFault != null)
     }
 
     /** The pending [fault] if this request is the one it waits for; a request that cannot suspend never runs another device. */
@@ -429,6 +497,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
 
     /** What [fault] does to the run, whose request is about the file [key] where it is about one. */
     private suspend fun strike(fault: Fault, key: SyncKey?) {
+        if (fault != Fault.SAVE_DURING_RUN && fault != Fault.ANOTHER_DEVICE_SYNCS) sharing.onFault()
         when (fault) {
             Fault.OFFLINE -> throw SyncNetworkException("Offline")
             Fault.REFUSED -> throw IllegalStateException("Refused")
@@ -569,6 +638,14 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         sharing.checkSettled()
     }
 
+    /** Stop sharing everything on a settled library, with nothing failing: no copy and no share is left, leftovers included. */
+    private suspend fun stopEverythingSettled() {
+        val device = devices.random(random)
+        log += "${device.label} " + sharing.stopEverything(device)
+        check(cloud.sharedFiles.isEmpty()) { "Stop sharing everything left the copies ${cloud.sharedFiles.keys}" }
+        check(cloud.registry().links.isEmpty()) { "Stop sharing everything left the shares ${cloud.registry().links.map { it.shareId }}" }
+    }
+
     /**
      * Every library, the folder, the shares, and every index, since a picture a device prunes and its run brings down
      * again leaves the files as they were but its index knowing it, which the next round then deletes.
@@ -599,6 +676,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         data object Stopped : Attempt
         data object Killed : Attempt
     }
+
+    /** Whether a run got through its shared-copy step's final edit and everything after it. */
+    private fun Attempt.isClean(device: Device) = (this as? Attempt.Ended)?.result is SyncEngine.Result.Completed && device.areSharedCopiesSettled
 
     private fun Attempt.described() = when (this) {
         is Attempt.Ended -> when (val result = result) {

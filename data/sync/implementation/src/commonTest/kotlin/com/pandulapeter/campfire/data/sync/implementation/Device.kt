@@ -67,6 +67,10 @@ internal class Device(
      */
     var heldPictures = emptySet<String>()
 
+    /** Whether a run's shared-copy step is under way, which holds the journal's lock that every stop takes too. */
+    var isSettlingSharedCopies = false
+        private set
+
     /** Whether the last run's shared-copy step settled every copy. */
     var areSharedCopiesSettled = true
         private set
@@ -173,8 +177,10 @@ internal class Device(
                 onLocalSettled = {},
             )
         }
-        areSharedCopiesSettled = afterRun {
-            SharedCopySync(
+        isSettlingSharedCopies = true
+        areSharedCopiesSettled = try {
+            afterRun {
+                SharedCopySync(
                 libraryFileLocalSource = library,
                 contents = sharedContents,
                 registry = registry,
@@ -188,7 +194,10 @@ internal class Device(
                 sharedFiles = completed.sharedFiles,
                 registryRevision = completed.documentRevisions[SharedLinksFormat.NAME],
             )
-        } ?: false
+            } ?: false
+        } finally {
+            isSettlingSharedCopies = false
+        }
         index = completed.index.copy(
             syncedPreferences = settled?.document ?: completed.index.syncedPreferences,
             syncedPreferencesRevision = settled?.revision,

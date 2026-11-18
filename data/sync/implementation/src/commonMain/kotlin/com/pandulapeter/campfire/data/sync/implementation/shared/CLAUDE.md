@@ -61,8 +61,11 @@
   sharing, Stop sharing everything, the journal's) deletes its copies again once the edit removing their entries is
   done, and a run's step deletes a copy it uploaded whose entry any read of its final edit finds gone or marked
   `copyMissing` (`deleteStoppedCopies`): uploads before the removal meet the first, later ones the second, and an
-  entry never comes back. An upload whose run fails before that edit reads the list stays, a leftover Stop sharing
-  everything removes.
+  entry never comes back. An upload whose run fails before that edit reads the list stays, as does one whose second deletion fails (both
+  are best effort), a leftover no link serves, which Stop sharing everything removes. `SimulatedSharing` allows a
+  stopped share's copy only there: uploaded after the stop began by a run still under way, or one that ended short of
+  its final edit or met a fault since. A stop answered while the list still names the share (its edit failed, the stop
+  waits in the journal) promises nothing until applied: other devices keep its copy current meanwhile, a dead link.
 
 ## Keeping copies current (`SharedCopySync`, the run's last step)
 
