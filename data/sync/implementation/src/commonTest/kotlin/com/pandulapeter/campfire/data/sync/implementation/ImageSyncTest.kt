@@ -57,9 +57,35 @@ class ImageSyncTest {
         }
         assertFailsWith<ProcessKilled> { a.sync(cloud) }
 
+        assertNoSongNamesAFileTheFolderLacks()
+    }
+
+    @Test
+    fun `a run killed while the picture of an edit that conflicts goes up leaves no song in the folder naming a file it lacks`() = runTest {
+        val a = Device(mapOf(song(1) to "One".encodeToByteArray()))
+        val b = Device()
+        a.sync(cloud)
+        b.sync(cloud)
+        b.library.files[song(1)] = "One, edited elsewhere".encodeToByteArray()
+        b.sync(cloud)
+        a.library.files[PHOTO.key] = PHOTO.bytes
+        a.library.files[song(1)] = naming(PHOTO)
+        cloud.onUpload = { key ->
+            if (key.kind == LibraryFileKind.FILE) {
+                repeat(10) { yield() }
+                throw ProcessKilled()
+            }
+        }
+
+        assertFailsWith<ProcessKilled> { a.sync(cloud) }
+
+        assertNoSongNamesAFileTheFolderLacks()
+    }
+
+    private fun assertNoSongNamesAFileTheFolderLacks() {
         val held = cloud.files.keys.filter { it.kind == LibraryFileKind.FILE }.map { it.name }.toSet()
         cloud.files.filterKeys { it.kind == LibraryFileKind.SONG }.forEach { (key, file) ->
-            val named = Regex("""(?:src=|attachment )(\S+)""").findAll(file.first.decodeToString()).map { it.groupValues[1] }.toSet()
+            val named = Regex("""(?:src=|attachment )([^\s}]+)""").findAll(file.first.decodeToString()).map { it.groupValues[1] }.toSet()
             assertTrue(held.containsAll(named), "${key.name} names ${named - held}, which the folder lacks.")
         }
     }
