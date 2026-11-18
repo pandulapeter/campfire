@@ -153,7 +153,7 @@ class ExportControllerTest {
 
     @Test
     fun `a library too large to export says so rather than that the export failed`() = runTest {
-        libraryExportFailure = ExportLibraryUseCase.TooLargeException(fileCount = ExportLibraryUseCase.MAX_FILE_COUNT + 1)
+        libraryExportFailure = ExportLibraryUseCase.TooLargeException(fileCount = 20_000, largestFileSize = 50L * 1024 * 1024)
         val (controller, _, messageSink) = controller(visibleDialog = null)
         controller.exportLibrary(picker)
         runCurrent()

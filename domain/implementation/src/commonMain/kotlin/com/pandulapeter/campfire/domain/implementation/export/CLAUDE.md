@@ -40,11 +40,12 @@
 - A library export whose song or setlist scan failed returns null, never a partial archive. Files are taken from the
   folder, not the scan, so new files are included and undecodable setlist JSON is backed up as stored. Unreadable or
   oversized files are named beside the archive.
-- **A library export writes at most `ExportLibraryUseCase.MAX_FILE_COUNT` files** (10,000: songs, setlists, and every
-  library file, counted from the listings): one of more throws `TooLargeException` before its file is made, which the
-  app says in a sentence of its own. The writer's per-entry bookkeeping beside the largest attachment deflated whole
-  (100 MiB) must fit a 128 MiB heap; the KDoc has the measurements, and `LargeArchiveImportTest` exports that many
-  files ending in such an attachment under that heap. `DomainModule` passes the limit, so the tests can lower it.
+- **A library export must fit `ExportLibraryUseCase.MEMORY_BUDGET`** (115 MiB of a 128 MiB heap): the writer's
+  per-file bookkeeping (`BYTES_PER_FILE`, every song, setlist, and library file counted from the listings) plus twice
+  the largest file, read whole beside its deflated copy. One that does not throws `TooLargeException` before its file
+  is made, which the app says in a sentence of its own; about 100,000 small files fit, or 14,000 beside a 50 MiB
+  attachment. The KDoc has the measurements, and `LargeArchiveImportTest` exports a library at the budget's edge under
+  that heap. `DomainModule` passes the budget, so the tests can lower it.
 - An attachment opened from a song is copied whole into `exports/` under the name the song shows it by
   (`attachmentFileName`: no character a file system refuses, its file's extension kept), numbered (`_2`, `_3`…) where a
   copy of that name is there, which the app it went to may still have open; the platform's opener owns it from then on.

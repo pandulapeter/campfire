@@ -25,7 +25,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
-/** Built in `DomainModule`, which passes [maxFileCount] ([ExportLibraryUseCase.MAX_FILE_COUNT]; the tests' is smaller). */
+/** Built in `DomainModule`, which passes [memoryBudget] ([ExportLibraryUseCase.MEMORY_BUDGET]; the tests' is smaller). */
 internal class ExportLibraryUseCaseImpl(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
@@ -33,7 +33,7 @@ internal class ExportLibraryUseCaseImpl(
     private val archiveRepository: ArchiveRepository,
     private val exportFileRepository: ExportFileRepository,
     private val imageRepository: ImageRepository,
-    private val maxFileCount: Int,
+    private val memoryBudget: Long,
 ) : ExportLibraryUseCase {
 
     /**
@@ -53,8 +53,8 @@ internal class ExportLibraryUseCaseImpl(
      * all of it runs on [Dispatchers.Default] rather than on the caller's main thread. The archive and the list of
      * skipped files keep the sorted order all the same.
      *
-     * A library of more files than [maxFileCount] is refused before the archive's file is made: counted from the listings
-     * alone, every library file included, since which ones the songs name is known only as they are written.
+     * A library whose export would not fit [memoryBudget] is refused before the archive's file is made: judged from the
+     * listings alone, every library file included, since which ones the songs name is known only as they are written.
      */
     override suspend operator fun invoke(): ExportLibraryUseCase.Result? = withContext(Dispatchers.Default) {
         // A scan that failed is not an empty library. Exporting what it managed to read would hand the user an archive
@@ -67,7 +67,14 @@ internal class ExportLibraryUseCaseImpl(
         val skipped = mutableListOf<String>()
         val images = ExportedImages.of(imageRepository, isSharedCopy = false)
         val fileCount = songFileSizes.size + setlistFileSizes.size + images.entries.size
-        if (fileCount > maxFileCount) throw ExportLibraryUseCase.TooLargeException(fileCount)
+        val largestFileSize = maxOf(
+            imageRepository.loadLibraryFileSizes().values.maxOrNull() ?: 0L,
+            songFileSizes.values.maxOrNull() ?: 0L,
+            setlistFileSizes.values.maxOrNull() ?: 0L,
+        )
+        if (!ExportLibraryUseCase.fits(fileCount, largestFileSize, memoryBudget)) {
+            throw ExportLibraryUseCase.TooLargeException(fileCount = fileCount, largestFileSize = largestFileSize)
+        }
         val songNames = songFileSizes.keys.sorted()
         val batch = mutableMapOf<String, SongContent?>()
         val songs = songNames.mapIndexed { index, fileName ->

@@ -191,11 +191,11 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
-    fun `a library of more files than an export writes is refused before anything is read or written`() = runTest {
+    fun `a library whose export would not fit its memory is refused before anything is read or written`() = runTest {
         images.store(FakeImageRepository.picture(1))
 
         val refused = assertFailsWith<ExportLibraryUseCase.TooLargeException> {
-            useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), maxFileCount = 3).invoke()
+            useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), memoryBudget = budgetFor(fileCount = 4) - 1).invoke()
         }
 
         assertEquals(4, refused.fileCount)
@@ -205,14 +205,23 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
-    fun `a library of as many files as an export writes is exported`() = runTest {
+    fun `a library whose export just fits its memory is exported`() = runTest {
         val name = images.store(FakeImageRepository.picture(1))
         songContents.texts = mapOf("a.cho" to "{title: A}\n{image: src=$name}")
 
-        val result = useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), maxFileCount = 4).invoke()
+        val result = useCase(songs = listOf(song("a"), song("b")), setlists = listOf(setlist("x")), memoryBudget = budgetFor(fileCount = 4)).invoke()
 
         assertNotNull(result)
         assertEquals(setOf("songs/a.cho", "songs/b.cho", "setlists/x.setlist.json", "images/$name"), archive.packed.keys)
+    }
+
+    @Test
+    fun `many small files export where the same count beside a large attachment would not`() {
+        val attachment = 50L * 1024 * 1024
+
+        assertTrue(ExportLibraryUseCase.fits(fileCount = 100_000, largestFileSize = 20_000))
+        assertTrue(ExportLibraryUseCase.fits(fileCount = 10_000, largestFileSize = attachment))
+        assertFalse(ExportLibraryUseCase.fits(fileCount = 20_000, largestFileSize = attachment))
     }
 
     private fun useCase(
@@ -222,7 +231,7 @@ class ExportLibraryUseCaseImplTest {
         unreadable: Set<String> = emptySet(),
         setlistFolder: Map<String, Long> = setlists.orEmpty().associate { it.fileName to 2L },
         setlistDocument: String = "{}",
-        maxFileCount: Int = ExportLibraryUseCase.MAX_FILE_COUNT,
+        memoryBudget: Long = ExportLibraryUseCase.MEMORY_BUDGET,
     ) = ExportLibraryUseCaseImpl(
         songRepository = object : SongRepositoryStub() {
             override suspend fun loadSongsIfNeeded() = songs
@@ -237,8 +246,12 @@ class ExportLibraryUseCaseImplTest {
         archiveRepository = archive,
         exportFileRepository = exportFiles,
         imageRepository = images,
-        maxFileCount = maxFileCount,
+        memoryBudget = memoryBudget,
     )
+
+    /** The budget a library of [fileCount] files exactly fits, the largest of them a song of [useCase]'s 10 bytes or the stored picture. */
+    private fun budgetFor(fileCount: Int) =
+        fileCount * ExportLibraryUseCase.BYTES_PER_FILE + 2 * maxOf(10L, FakeImageRepository.picture(1).size.toLong())
 
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */
     private class FakeSongContentRepository : SongContentRepositoryStub() {

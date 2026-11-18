@@ -25,7 +25,7 @@ import org.koin.core.annotation.Module
 @ComponentScan
 object DomainModule {
 
-    /** Built here rather than declared on the class, since the most files an export writes is a constant its tests lower. */
+    /** Built here rather than declared on the class, since the memory an export may need is a constant its tests lower. */
     @Factory
     internal fun exportLibraryUseCase(
         songRepository: SongRepository,
@@ -41,6 +41,6 @@ object DomainModule {
         archiveRepository = archiveRepository,
         exportFileRepository = exportFileRepository,
         imageRepository = imageRepository,
-        maxFileCount = ExportLibraryUseCase.MAX_FILE_COUNT,
+        memoryBudget = ExportLibraryUseCase.MEMORY_BUDGET,
     )
 }
