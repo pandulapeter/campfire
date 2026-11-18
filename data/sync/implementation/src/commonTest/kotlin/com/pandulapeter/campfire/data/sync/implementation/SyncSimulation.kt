@@ -44,8 +44,9 @@ import kotlin.random.Random
  *   counting what it deleted itself against the index it started from, unless an answer waived that side;
  * - every device, settled, holds what the folder does, names compared the way the service compares them, and another
  *   round of runs moves nothing;
- * - no picture a saved song names is gone from every device and the folder, while each device deletes the pictures its
- *   own songs do not name whenever it likes, as the app's pruning does; settled, no picture is left that no song names.
+ * - no picture a saved song names is gone from every device, the folder, and its history, while each device deletes the
+ *   pictures its own songs do not name whenever it likes, as the app's pruning does; settled, every one is back and no
+ *   picture is left that no song names.
  *
  * What a user saved is a version no other save has, so that whether it survived is a question of its bytes alone.
  */
@@ -62,6 +63,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
     private var versions = 0
     private var fault: Fault? = null
     private var faultCountdown = 0
+
+    /** How many writes the folder had taken when each device's last run ended, which no listing of its own goes behind. */
+    private val seenWrites = mutableMapOf<Device, Int>()
 
     /** Whether the running step's next batch deletion stops part way for another device's run, as Dropbox's may. */
     private var deletesInPieces = false
@@ -224,7 +228,9 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         // folder as this device's own deletion, the version with it. A known limit, `run/CLAUDE.md`.
         val listingFault = if (fault == Fault.KILLED) null else when (random.nextInt(LISTING_FAULT_ODDS)) {
             0 -> FakeSyncProvider.ListingFault.Partial { random.nextInt(3) == 0 } to ", the first listing partial"
-            1 -> (1 + random.nextInt(4)).let { FakeSyncProvider.ListingFault.Stale(it) to ", the first listing $it writes behind" }
+            1 -> (1 + random.nextInt(4)).let {
+                FakeSyncProvider.ListingFault.Stale(writesAgo = it, notBefore = seenWrites[device] ?: 0) to ", the first listing $it writes behind"
+            }
             else -> null
         }
         cloud.listingFault = listingFault?.first
@@ -272,6 +278,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         device.library.onWrite = {}
         device.library.onDelete = {}
         log += "  ${device.label}'s run ${attempt.described()}"
+        seenWrites[device] = cloud.writes
         checkGuard(device)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= device
         return attempt
@@ -304,6 +311,7 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
             actor = outer
         }
         log += "  meanwhile ${other.label}'s run ${attempt.described()}"
+        seenWrites[other] = cloud.writes
         checkGuard(other)
         if ((attempt as? Attempt.Ended)?.result is SyncEngine.Result.Completed) lostLibraries -= other
     }
@@ -407,9 +415,12 @@ internal class SyncSimulation(private val seed: Int, private val steps: Int) {
         val everywhere = devices.flatMap { it.library.files.values } + cloud.files.values.map { it.first }
         val held = everywhere.mapTo(mutableSetOf()) { it.decodeToString() }
         check(held.containsAll(saved)) { "Saved versions lost from every device and the folder: ${saved - held}" }
-        val heldPictures = (devices.flatMap { it.library.files.keys } + cloud.files.keys).filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
+        // The folder's history counts: a picture whose only song is a conflict copy a run left on one device, unsent,
+        // may be deleted everywhere else meanwhile, and that device's next completed run asks it back from there.
+        val heldPictures = (devices.flatMap { it.library.files.keys } + cloud.files.keys + cloud.deletedFiles.keys)
+            .filter { it.kind == LibraryFileKind.FILE }.mapTo(mutableSetOf()) { it.name }
         val namedBySaved = saved.flatMapTo(mutableSetOf()) { namedIn(it) }
-        check(heldPictures.containsAll(namedBySaved)) { "Pictures saved songs name lost from every device and the folder: ${namedBySaved - heldPictures}" }
+        check(heldPictures.containsAll(namedBySaved)) { "Pictures saved songs name lost from every device, the folder, and its history: ${namedBySaved - heldPictures}" }
         (devices.map { it.label to it.library.files.keys } + ("cloud" to cloud.files.keys)).forEach { (label, keys) ->
             val twice = keys.groupBy { it.folded() }.filterValues { it.size > 1 }
             check(twice.isEmpty()) { "$label holds one name in several spellings: ${twice.values}" }

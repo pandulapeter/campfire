@@ -62,6 +62,9 @@
   the version with it. A provider whose listings may be wrong (the planned Google Drive one) needs that closed first,
   by saving the index without those entries before deleting, or by asking the folder about each file before deleting
   it here. `SyncSimulation` never kills a run whose listing it falsified.
+  - A listing older than what this device last read or wrote is outside the contract (`SyncFolder.list`): one still
+    naming a file deleted since makes a local file of the same bytes look in step, so it is never uploaded, and the
+    next run deletes it here. The simulation's stale listings go back no further than the device's last run.
 - **Failures**: only `SyncRunEndingException`s end a run. `CancellationException` is caught *first* and rethrown. A
   failed or still contested file is named beside `lastSyncedAt`, which any run that got to the end moves. A run ending
   in a non-`Exception` throwable rescans the whole library if any operation had finished, since it may have come

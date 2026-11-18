@@ -48,6 +48,9 @@ interface SyncFolder {
      * listing carries is only for [awaitChanges] and [changesSince]. Whatever else the user
      * keeps in the folder may be listed too. The engine leaves out what [LibraryFileKind.matches] does not recognise
      * and refuses to download what is too large to be a song, so a provider does neither.
+     *
+     * A listing is whole, and never older than what this device last read or wrote through the folder: the engine
+     * reads a file missing from it as a deletion, and one it still names as there.
      */
     suspend fun list(): RemoteListing
 

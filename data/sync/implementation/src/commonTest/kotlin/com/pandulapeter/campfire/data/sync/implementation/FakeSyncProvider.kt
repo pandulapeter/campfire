@@ -147,7 +147,9 @@ internal class FakeSyncProvider(
         onList()
         val fault = listingFault.also { listingFault = null }
         val folder = when (fault) {
-            is ListingFault.Stale -> history.getOrNull(history.size - fault.writesAgo) ?: history.firstOrNull() ?: snapshot()
+            is ListingFault.Stale -> maxOf(writes - fault.writesAgo, fault.notBefore).let { at ->
+                if (at >= writes) snapshot() else history.firstOrNull { it.writes == at } ?: history.firstOrNull() ?: snapshot()
+            }
             else -> snapshot()
         }
         val isLeftOut = (fault as? ListingFault.Partial)?.isLeftOut ?: { false }
@@ -175,13 +177,15 @@ internal class FakeSyncProvider(
     /**
      * What the next [list] answers in place of the folder as it is, taken by that listing: [ListingFault.Partial] leaves
      * out the files and shared copies whose paths it picks while claiming to be whole, as a paging bug would, and
-     * [ListingFault.Stale] answers the folder as it was some writes ago, as an eventually consistent service may.
+     * [ListingFault.Stale] answers the folder as it was some writes ago, as an eventually consistent service may, but
+     * never as it was before [writes] stood at [ListingFault.Stale.notBefore]: a session's reads are never older than
+     * what it read or wrote before, which the engine needs of a provider.
      */
     var listingFault: ListingFault? = null
 
     sealed interface ListingFault {
         class Partial(val isLeftOut: (path: String) -> Boolean) : ListingFault
-        class Stale(val writesAgo: Int) : ListingFault
+        class Stale(val writesAgo: Int, val notBefore: Int) : ListingFault
     }
 
     /** The folder as a listing would see it. */
@@ -190,6 +194,7 @@ internal class FakeSyncProvider(
         val documentRevisions: Map<String, String>,
         val sharedFiles: Map<String, Pair<ByteArray, String>>,
         val feedSize: Int,
+        val writes: Int,
     )
 
     private fun snapshot() = Snapshot(
@@ -197,15 +202,21 @@ internal class FakeSyncProvider(
         documentRevisions = documents.mapValues { it.value.second },
         sharedFiles = sharedFiles.toMap(),
         feedSize = feed.value.size,
+        writes = writes,
     )
 
     /** The folder before each of the last writes, newest last, for [ListingFault.Stale]. */
     private val history = ArrayDeque<Snapshot>()
 
+    /** How many writes and deletions the folder has taken. */
+    var writes = 0
+        private set
+
     /** Called before every write and deletion, so that a stale listing can answer what was there before it. */
     private fun recordHistory() {
         history.addLast(snapshot())
         if (history.size > HISTORY_SIZE) history.removeFirst()
+        writes++
     }
 
     override suspend fun download(kind: LibraryFileKind, name: String, maxSize: Long): RemoteDocument {
