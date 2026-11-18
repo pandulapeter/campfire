@@ -11,14 +11,19 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.hashing.Sha256
 import com.pandulapeter.campfire.data.model.importing.ImportBookkeeping
+import com.pandulapeter.campfire.data.model.importing.ImportBudget
 import com.pandulapeter.campfire.data.model.importing.ImportChoices
 import com.pandulapeter.campfire.data.model.importing.ImportDownload
+import com.pandulapeter.campfire.data.model.importing.ImportIntake
+import com.pandulapeter.campfire.data.model.importing.ImportLimits
 import com.pandulapeter.campfire.data.model.importing.ImportedFile
+import com.pandulapeter.campfire.data.model.library.ExportedContent
 import com.pandulapeter.campfire.data.repository.api.ImportDownloadRepository
 import com.pandulapeter.campfire.data.source.local.api.ImportStagingLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.domain.api.export.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.importing.ApplyImportUseCase
 import com.pandulapeter.campfire.domain.api.importing.DeleteImportStagingUseCase
 import com.pandulapeter.campfire.domain.api.importing.PrepareImportUseCase
@@ -26,6 +31,7 @@ import kotlinx.coroutines.CancellationException
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 /**
  * One device with an empty library in a folder of its own, wired as the app wires it (every data module and the domain's
@@ -58,6 +64,34 @@ internal class ImportPathApp : AutoCloseable {
             null
         }
         val file = if (staged == null) ImportedFile(name = name, bytes = archive) else ImportedFile(name = name, bytes = ByteArray(0), staged = staged)
+        return importFile(file)
+    }
+
+    /**
+     * A file picked as the platforms read one ([ImportIntake.decide] on its head, then [ImportBudget]): an archive by its
+     * name or its bytes received into the staging folder, anything else read whole or left unread as a picker leaves it.
+     */
+    suspend fun importPicked(name: String, bytes: ByteArray): ImportOutcome {
+        val head = bytes.copyOf(minOf(bytes.size, ImportLimits.SNIFF_LENGTH))
+        return when (val decision = ImportIntake.decide(name = name, size = bytes.size.toLong(), head = head)) {
+            ImportIntake.Decision.Stage -> import(name = name, archive = bytes, isStaged = true)
+            is ImportIntake.Decision.LeaveUnread -> importFile(ImportedFile.unread(name, isTooLarge = decision.isTooLarge))
+            is ImportIntake.Decision.ReadWhole -> importFile(ImportBudget().read(name = name, size = bytes.size.toLong()) { bytes } ?: fail("$name was not read"))
+        }
+    }
+
+    /** The whole library as the app exports it, failing where the export leaves anything out. */
+    suspend fun exportLibrary(): ByteArray {
+        val result = koin.get<ExportLibraryUseCase>()() ?: fail("The library did not export")
+        if (result.skippedFileNames.isNotEmpty()) fail("The export left out ${result.skippedFileNames}")
+        return when (val content = result.file.content) {
+            is ExportedContent.Bytes -> content.bytes
+            is ExportedContent.TemporaryFile -> File(content.path).readBytes()
+        }
+    }
+
+    private suspend fun importFile(file: ImportedFile): ImportOutcome {
+        val staged = file.staged
         val outcome = try {
             val plan = koin.get<PrepareImportUseCase>()(listOf(file))
             val result = koin.get<ApplyImportUseCase>()(plan = plan, choices = ImportChoices(), bookkeeping = ImportBookkeeping())
@@ -68,12 +102,12 @@ internal class ImportPathApp : AutoCloseable {
             ImportOutcome(plan = null, result = null, library = library(), failure = exception::class.simpleName + ": " + exception.message)
         }
         koin.get<DeleteImportStagingUseCase>()(listOfNotNull(staged))
-        assertEquals(emptyList(), storage.listNames(StorageDirectory.IMPORTS), "The staging folder after importing $name settled")
+        assertEquals(emptyList(), storage.listNames(StorageDirectory.IMPORTS), "The staging folder after importing ${file.name} settled")
         return outcome
     }
 
     /** Every file under `library/` by its path, as the SHA-256 of its bytes. */
-    private fun library(): Map<String, String> {
+    fun library(): Map<String, String> {
         val library = File(root, "library")
         return library.walkTopDown().filter { it.isFile }.associate { it.relativeTo(library).invariantSeparatorsPath to Sha256.hashToHex(it.readBytes()) }
     }

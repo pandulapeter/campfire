@@ -160,6 +160,9 @@ it; iOS marks the folder) and no sync, and is emptied of other sessions' names o
   `campfire.importCorpus` the corpus's archives and its folders packed. Allowed, each checked: files past the in-memory
   budgets (`BudgetDifference`), ZIP64 read as its twin without it (`Zip64Twin`), and the streaming-only caps across
   nested archives (`StreamingCaps`). Keep the CI part within a minute.
+- `BackupCorpusTest` (desktop, only with `campfire.importCorpus`) imports every file of the corpus's `backups/` as a
+  pick would: each song and set `BackupListing` reads from it (SongbookPro, OpenSong, JustChords) is planned or reported,
+  and an export of the library imports into an identical one; its report goes to the corpus's `.runs/backups.txt`.
 - `LargeArchiveImportTest` (desktop, its own task `largeArchiveImportTest` under a 128 MiB heap, out of `desktopTest`
   and so of the pre-commit hook; a step of CI's tests) imports archives generated on the fly through the same graph
   (`importGraph`) over `MeteredFileStorage`, which fails a write into `imports/` past what the ledger reserved: the
