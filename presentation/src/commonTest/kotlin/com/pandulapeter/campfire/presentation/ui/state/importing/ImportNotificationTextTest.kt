@@ -62,6 +62,23 @@ class ImportNotificationTextTest {
     }
 
     @Test
+    fun `bytes that change neither the size it writes nor a step of the bar show the same notification`() {
+        fun unpacked(bytes: Long) = WORDS.contentOf(ImportWorkState.UNPACKING, ImportProgress(ImportProgress.Phase.UNPACKING, completedBytes = bytes, totalBytes = 3_400_000_000))
+
+        assertEquals(unpacked(1_250_000), unpacked(1_260_000))
+        assertEquals(ImportNotificationContent(text = "Unpacking 1,3 MB of 3,4 GB", isCancellable = true, progress = 0), unpacked(1_250_000))
+        assertEquals(1, unpacked(3_400_000).progress)
+        assertEquals("Unpacking 1,4 MB of 3,4 GB", unpacked(1_420_000).text)
+    }
+
+    @Test
+    fun `the write shows its line without Cancel and with a bar that runs on its own`() {
+        val content = WORDS.contentOf(ImportWorkState.WRITING, ImportProgress(ImportProgress.Phase.IMPORTING, completed = 2, total = 5))
+
+        assertEquals(ImportNotificationContent(text = "Adding files", isCancellable = false, progress = null), content)
+    }
+
+    @Test
     fun `Cancel is offered for everything before the write`() {
         assertTrue(ImportWorkState.RECEIVING.isCancellable)
         assertTrue(ImportWorkState.DOWNLOADING.isCancellable)

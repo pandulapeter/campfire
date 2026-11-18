@@ -53,6 +53,32 @@ fun ImportNotification.textOf(state: ImportWorkState, progress: ImportProgress?)
     }
 }
 
+/**
+ * What an import's notification shows: its [text], whether it offers Cancel, and its bar at [progress] of
+ * [IMPORT_NOTIFICATION_PROGRESS_STEPS], or none (null) where it runs without one. Two equal ones look the same, so a
+ * shell posts only a change: every post rebuilds the notification, and a tap on its Cancel while it is being rebuilt
+ * can be lost.
+ */
+data class ImportNotificationContent(
+    val text: String,
+    val isCancellable: Boolean,
+    val progress: Int?,
+)
+
+/** What the notification shows of the work in [state], see [ImportNotificationContent]. */
+fun ImportNotification.contentOf(state: ImportWorkState, progress: ImportProgress?): ImportNotificationContent {
+    val bytes = importBytesOf(state, progress)
+    val total = bytes?.total
+    return ImportNotificationContent(
+        text = textOf(state, progress) ?: title,
+        isCancellable = state.isCancellable,
+        progress = if (bytes == null || total == null) null else (bytes.completed.coerceIn(0, total) * IMPORT_NOTIFICATION_PROGRESS_STEPS / total).toInt(),
+    )
+}
+
+/** How many steps a notification's progress bar moves in: more would only re-post it for what nobody can see. */
+const val IMPORT_NOTIFICATION_PROGRESS_STEPS = 1000
+
 /** [bytes] as the screen writes a size (`formattedSize`), in the words handed over. */
 internal fun ImportNotification.sizeOf(bytes: Long): String {
     val size = byteSizeOf(bytes)

@@ -26,10 +26,11 @@ import com.pandulapeter.campfire.CampfireMainActivity
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.presentation.ui.platform.BackgroundNotificationScheduler
 import com.pandulapeter.campfire.presentation.ui.platform.ImportNotification
+import com.pandulapeter.campfire.presentation.ui.state.importing.IMPORT_NOTIFICATION_PROGRESS_STEPS
+import com.pandulapeter.campfire.presentation.ui.state.importing.ImportNotificationContent
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWork
 import com.pandulapeter.campfire.presentation.ui.state.importing.ImportWorkState
-import com.pandulapeter.campfire.presentation.ui.state.importing.importBytesOf
-import com.pandulapeter.campfire.presentation.ui.state.importing.textOf
+import com.pandulapeter.campfire.presentation.ui.state.importing.contentOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,7 +38,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -63,9 +63,17 @@ class CampfireImportService : Service() {
 
     /** The last state with something to show, which the notification keeps saying through the grace after the work. */
     private var shownState = ImportWorkState.IDLE
+
+    /** What the notification posted last shows, so that a post changing nothing is not made. */
+    private var postedContent: ImportNotificationContent? = null
+
+    /**
+     * Once a second, not sync's twice: the unpacking counts bytes several times a second, and every post rebuilds the
+     * notification, during which a tap on its Cancel can be lost.
+     */
     private val scheduler = BackgroundNotificationScheduler(
         scope = scope,
-        updateInterval = 500.milliseconds,
+        updateInterval = 1.seconds,
         handoverGrace = 2.seconds,
         postUpdate = ::updateNotification,
         release = ::stop,
@@ -77,7 +85,7 @@ class CampfireImportService : Service() {
     /**
      * The work's end is watched from here rather than reported by the activity, which may be gone by then. A change of
      * phase is posted at once, since it changes the notification's shape (its Cancel action comes or goes); the bytes
-     * within a phase at the scheduler's pace.
+     * within a phase at the scheduler's pace, and only where what the notification shows changes.
      */
     override fun onCreate() {
         super.onCreate()
@@ -106,13 +114,15 @@ class CampfireImportService : Service() {
             else -> {
                 words = intent?.getStringArrayListExtra(EXTRA_WORDS)?.let(ImportNotification::fromWords) ?: return START_NOT_STICKY
                 if (work.state.value != ImportWorkState.IDLE) shownState = work.state.value
-                val notification = buildNotification() ?: return START_NOT_STICKY
+                val content = currentContent() ?: return START_NOT_STICKY
+                val notification = buildNotification(content)
                 ServiceCompat.startForeground(
                     this,
                     NOTIFICATION_ID,
                     notification,
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
                 )
+                postedContent = content
                 isInForeground = true
                 isRunning = true
                 // The work may have ended between the intent being sent and its arrival here.
@@ -151,15 +161,21 @@ class CampfireImportService : Service() {
         if (isInForeground) scheduler.scheduleRelease()
     }
 
-    /** Re-posted under the same id, which is how a foreground service's notification is updated; only once it is one. */
+    /**
+     * Re-posted under the same id, which is how a foreground service's notification is updated; only once it is one, and
+     * only where it would show something else.
+     */
     private fun updateNotification() {
         if (!isInForeground) return
-        val notification = buildNotification() ?: return
-        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, notification)
+        val content = currentContent() ?: return
+        if (content == postedContent) return
+        postedContent = content
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, buildNotification(content))
     }
 
     private fun stop() {
         isInForeground = false
+        postedContent = null
         isRunning = false
         scheduler.cancelRelease()
         scheduler.cancelUpdate()
@@ -167,16 +183,20 @@ class CampfireImportService : Service() {
         stopSelf()
     }
 
-    private fun buildNotification(): Notification? {
+    /** What the notification is to show now, null before the words have arrived. */
+    private fun currentContent(): ImportNotificationContent? {
         val words = words ?: return null
         val state = work.state.value.takeIf { it != ImportWorkState.IDLE } ?: shownState
-        val progress = work.currentProgress.value
-        val bytes = importBytesOf(state, progress)
+        return words.contentOf(state, work.currentProgress.value)
+    }
+
+    private fun buildNotification(content: ImportNotificationContent): Notification {
+        val words = checkNotNull(words)
         createChannel(words.channelName)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_import)
             .setContentTitle(words.title)
-            .setContentText(words.textOf(state, progress) ?: words.title)
+            .setContentText(content.text)
             .setOngoing(true)
             .setSilent(true)
             .setContentIntent(
@@ -189,7 +209,7 @@ class CampfireImportService : Service() {
             )
             .apply {
                 // The write is never cancelled, so its notification offers nothing that would pretend to.
-                if (state.isCancellable) {
+                if (content.isCancellable) {
                     addAction(
                         NotificationCompat.Action.Builder(
                             0,
@@ -205,12 +225,8 @@ class CampfireImportService : Service() {
                 }
             }
             .apply {
-                val total = bytes?.total
-                if (bytes != null && total != null) {
-                    setProgress(PROGRESS_MAX.toInt(), (bytes.completed.coerceIn(0, total) * PROGRESS_MAX / total).toInt(), false)
-                } else {
-                    setProgress(0, 0, true)
-                }
+                val progress = content.progress
+                if (progress != null) setProgress(IMPORT_NOTIFICATION_PROGRESS_STEPS, progress, false) else setProgress(0, 0, true)
             }
             .build()
     }
@@ -235,7 +251,6 @@ class CampfireImportService : Service() {
 
         /** Beside sync's 1 and the metronome's 2, so that an import and a sync at once show a notification each. */
         private const val NOTIFICATION_ID = 3
-        private const val PROGRESS_MAX = 1000L
         private const val ACTION_CANCEL = "com.pandulapeter.campfire.action.CANCEL_IMPORT"
         private const val ACTION_DISMISS = "com.pandulapeter.campfire.action.DISMISS_IMPORT"
         private const val EXTRA_WORDS = "words"
