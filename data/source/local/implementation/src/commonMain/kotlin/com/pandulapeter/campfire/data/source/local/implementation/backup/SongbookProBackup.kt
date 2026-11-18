@@ -148,12 +148,13 @@ internal object SongbookProBackup {
 
     private fun parseObject(text: String) = ShallowJson.parse(text) as? JsonObject
 
-    private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>) =
-        ForeignSongHeader.songText(shapesOf(content, capo = song.capo ?: 0)) {
+    private fun songText(song: JsonObject, title: String?, content: String, folderNames: Map<Int, String>): String {
+        val shift = shapesShift(content, capo = song.capo ?: 0)
+        return ForeignSongHeader.songText(content.shapes(shift)) {
             directive("title", title, "t")
             directive("subtitle", song.text("subTitle"), "st", "su")
             directive("artist", song.text("author"))
-            directive("key", song.int("key")?.let { (KEYS + MINOR_KEYS).getOrNull(it) })
+            directive("key", song.int("key")?.let { (KEYS + MINOR_KEYS).getOrNull(it) }?.let { key -> keyShapes(key, shift) })
             directive("capo", song.capo?.takeIf { it > 0 }?.toString())
             directive("tempo", song.int("TempoInt")?.takeIf { it in MetronomeSettings.TEMPO_RANGE }?.toString())
             directive("time", song.text("timeSig")?.takeIf { ChordProTime.parse(it) != null })
@@ -164,18 +165,22 @@ internal object SongbookProBackup {
             val folders = song.textList("_folders").mapNotNull { folder -> folder.toIntOrNull()?.let(folderNames::get) ?: folder.takeIf { it.toIntOrNull() == null } }
             tags(folders + song.textList("_tags"))
         }
+    }
 
     /**
-     * [content] with its chords as the hands play them under [capo]. SongbookPro keeps a song's chords as they sound and
-     * shows them moved down by its capo (a song in Am with a capo on 2 reads "Am (Gm)" and is played in Gm shapes), where
-     * a Campfire file's chords are the shapes its capo raises. A capo the text declares itself is the text's own
-     * statement about its chords, so such a text is left as written. Tab frets are counted from the capo, so they stay.
+     * How far [content]'s chords move to be the ones the hands play under [capo]. SongbookPro keeps a song's chords and
+     * key as they sound and shows them moved down by its capo (a song in Am with a capo on 2 reads "Am (Gm)" and is
+     * played in Gm shapes), where a Campfire file's chords and `{key}` are the shapes its capo raises. A capo the text
+     * declares itself is the text's own statement about its chords, so such a text is left as written.
      */
-    private fun shapesOf(content: String, capo: Int) = if (capo == 0 || ChordProParser.parse(content).metadata.capo != null) {
-        content
-    } else {
-        ChordProTransposer.transposeText(content, semitones = -capo, capo = -capo)
-    }
+    private fun shapesShift(content: String, capo: Int) = if (capo == 0 || ChordProParser.parse(content).metadata.capo != null) 0 else -capo
+
+    /** The text moved by [shift]; tab frets are counted from the capo, so they stay. */
+    private fun String.shapes(shift: Int) = if (shift == 0) this else ChordProTransposer.transposeText(this, semitones = shift, capo = shift)
+
+    /** SongbookPro's sounding [key] moved by [shift] as the chords are, so the header names the key Campfire sounds. */
+    private fun keyShapes(key: String, shift: Int) =
+        if (shift == 0) key else ChordProParser.parse(ChordProTransposer.transposeText("{key: $key}", semitones = shift)).metadata.key ?: key
 
     private val JsonObject.capo get() = int("Capo")?.takeIf { it in Song.CAPO_RANGE }
 

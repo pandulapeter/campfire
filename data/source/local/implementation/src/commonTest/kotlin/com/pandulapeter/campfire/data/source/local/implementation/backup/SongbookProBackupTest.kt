@@ -33,7 +33,7 @@ internal class SongbookProBackupTest {
             """
             {title: Amazing Grace}
             {artist: John Newton}
-            {key: D}
+            {key: C}
             {capo: 2}
             {tempo: 72}
             {time: 3/4}
@@ -50,14 +50,14 @@ internal class SongbookProBackupTest {
     }
 
     @Test
-    fun `chords SongbookPro keeps as they sound under a capo are written as the shapes the capo raises`() {
+    fun `chords and the key SongbookPro keeps as they sound under a capo are written as the shapes the capo raises`() {
         val files = read(
             """{"Id": 1, "name": "One", "key": 15, "Capo": 2, "content": "{sov}\n[Am]La [F]la [C/E]la\n{eov}\n{sot}\ne|--3--|\n{eot}"}""",
-            """{"Id": 2, "name": "Two", "Capo": 2, "content": "{capo: 2}\n[Am]La"}""",
+            """{"Id": 2, "name": "Two", "key": 15, "Capo": 2, "content": "{capo: 2}\n[Am]La"}""",
         )
 
-        assertEquals("{title: One}\n{key: Am}\n{capo: 2}\n{sov}\n[Gm]La [Eb]la [Bb/D]la\n{eov}\n{sot}\ne|--3--|\n{eot}\n", files[0].bytes.decodeToString())
-        assertEquals("{title: Two}\n{capo: 2}\n[Am]La\n", files[1].bytes.decodeToString())
+        assertEquals("{title: One}\n{key: Gm}\n{capo: 2}\n{sov}\n[Gm]La [Eb]la [Bb/D]la\n{eov}\n{sot}\ne|--3--|\n{eot}\n", files[0].bytes.decodeToString())
+        assertEquals("{title: Two}\n{key: Am}\n{capo: 2}\n[Am]La\n", files[1].bytes.decodeToString())
     }
 
     @Test
