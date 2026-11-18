@@ -151,7 +151,7 @@ internal object SongbookProBackup {
             directive("title", title, "t")
             directive("subtitle", song.text("subTitle"), "st", "su")
             directive("artist", song.text("author"))
-            directive("key", song.int("key")?.let(KEYS::getOrNull))
+            directive("key", song.int("key")?.let { (KEYS + MINOR_KEYS).getOrNull(it) })
             directive("capo", song.capo?.takeIf { it > 0 }?.toString())
             directive("tempo", song.int("TempoInt")?.takeIf { it in MetronomeSettings.TEMPO_RANGE }?.toString())
             directive("time", song.text("timeSig")?.takeIf { ChordProTime.parse(it) != null })
@@ -197,6 +197,9 @@ internal object SongbookProBackup {
 
     /** The keys in the order SongbookPro numbers them, from A, spelled the way the charts of those keys usually are. */
     private val KEYS = listOf("A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab")
+
+    /** The minor keys SongbookPro numbers after [KEYS], each the relative minor of the major key twelve places before it. */
+    private val MINOR_KEYS = listOf("F#m", "Gm", "G#m", "Am", "Bbm", "Bm", "Cm", "C#m", "Dm", "D#m", "Em", "Fm")
 
     private val VERSION_LINE = Regex("""\d+(\.\d+)+""")
 

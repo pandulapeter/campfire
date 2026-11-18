@@ -50,6 +50,18 @@ internal class SongbookProBackupTest {
     }
 
     @Test
+    fun `minor keys numbered after the major ones are written as the relative minor of their major key`() {
+        val files = read(
+            """{"Id": 1, "name": "One", "key": 12, "content": "[F#m]La"}""",
+            """{"Id": 2, "name": "Two", "key": "15", "content": "[Am]La"}""",
+            """{"Id": 3, "name": "Three", "key": 23, "content": "[Fm]La"}""",
+            """{"Id": 4, "name": "Four", "key": 24, "content": "[C]La"}""",
+        )
+
+        assertEquals(listOf("F#m", "Am", "Fm", null), files.map { ChordProParser.parse(it.bytes.decodeToString()).metadata.key })
+    }
+
+    @Test
     fun `header values are flattened onto one line without braces`() {
         val files = read(
             """{"Id": 1, "name": "Song", "author": "A\nB", "Copyright": "Line1\r\nLine2", "Url": "https://x.com/a b",
