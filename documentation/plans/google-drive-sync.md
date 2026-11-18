@@ -323,9 +323,11 @@ download address is Dropbox's alone.
 ## Order
 
 1. Spikes S1–S5. Stop if S1 fails (see Risks).
-2. D1–D5 with the provider hidden behind an empty key in release builds.
-3. P1, P2, and D6 + P3 together with the website.
-4. P4 and P5 in the release that turns it on.
+2. [sync-seams.md](sync-seams.md) (C1–C7), which rewrites `SyncFolder` over collections and passes the redirect in;
+   D2 and D4 build on it.
+3. D1–D5 with the provider hidden behind an empty key in release builds.
+4. P1, P2, and D6 + P3 together with the website.
+5. P4 and P5 in the release that turns it on.
 
 ## Risks
 
